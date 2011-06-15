@@ -179,7 +179,6 @@ public class JabberPubsubTest extends TestCase {
 		eventMsg = (Message)pubsubEngine.outQueue.getQueue().poll();
 		assertNull(eventMsg); // We test that playboy.com is send only once
 		
-		
 	}
 	
 	public void testSubscribeExternalWithDiscoverySuccess() throws InterruptedException {

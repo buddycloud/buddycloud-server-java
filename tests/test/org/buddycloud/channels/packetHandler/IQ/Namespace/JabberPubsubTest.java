@@ -2,6 +2,7 @@ package test.org.buddycloud.channels.packetHandler.IQ.Namespace;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -13,6 +14,8 @@ import org.buddycloud.channels.jedis.JedisKeys;
 import org.buddycloud.channels.packet.ErrorPacket;
 import org.buddycloud.channels.packetHandler.IQ.Namespace.JabberDiscoItems;
 import org.buddycloud.channels.packetHandler.IQ.Namespace.JabberPubsub;
+import org.buddycloud.channels.pubsub.Subscription;
+import org.buddycloud.channels.pubsub.subscription.Type;
 import org.buddycloud.channels.queue.ErrorQueue;
 import org.buddycloud.channels.queue.OutQueue;
 import org.dom4j.Element;
@@ -20,6 +23,7 @@ import org.dom4j.dom.DOMElement;
 import org.junit.After;
 import org.junit.Before;
 import org.xmpp.packet.IQ;
+import org.xmpp.packet.Message;
 
 import redis.clients.jedis.Jedis;
 
@@ -46,7 +50,28 @@ public class JabberPubsubTest extends TestCase {
 
 	public void testPublishStatusSuccess() {
 		
-		jedis.sadd(JedisKeys.LOCAL_NODES, "/user/tuomas@koski.com/status");
+		String node = "/user/tuomas@koski.com/status";
+		
+		jedis.sadd(JedisKeys.LOCAL_NODES, node);
+		
+		jedis.sadd("node:" + node + ":subscribers", "tuomas@koski.com");
+		Subscription sub = new Subscription(Type.unconfigured,
+				org.buddycloud.channels.pubsub.affiliation.Type.publisher,
+				null);
+		jedis.hmset("node:" + node + ":subscriber:tuomas@koski.com", sub.getAsMap());
+		
+		jedis.sadd("node:" + node + ":subscribers", "pamela@playboy.com");
+		sub = new Subscription(Type.unconfigured,
+				org.buddycloud.channels.pubsub.affiliation.Type.publisher,
+				"bc.playboy.com");
+		jedis.hmset("node:" + node + ":subscriber:pamela@playboy.com", sub.getAsMap());
+		
+		jedis.sadd("node:" + node + ":subscribers", "cindy@playboy.com");
+		sub = new Subscription(Type.unconfigured,
+				org.buddycloud.channels.pubsub.affiliation.Type.publisher,
+				"bc.playboy.com");
+		jedis.hmset("node:" + node + ":subscriber:cindy@playboy.com", sub.getAsMap());
+		
 		
 		JabberPubsub pubsubEngine = new JabberPubsub(this.outQueue, this.errorQueue, this.jedis);
 		
@@ -116,6 +141,8 @@ public class JabberPubsubTest extends TestCase {
 		// let's test that the item is added to the unique set
 		jedis.sismember("node:/user/tuomas@koski.com/status:items", itemID);
 		
+		//System.out.println(itemID);
+		
 		// let's test that the item is added to the 
 		List<String> items = jedis.lrange("node:/user/tuomas@koski.com/status:itemlist", 0, 1);
 		assertTrue(items.contains(itemID));
@@ -134,6 +161,25 @@ public class JabberPubsubTest extends TestCase {
 		entry.addElement("updated").setText(sdf.format(new Date()));
 		assertEquals(entry.asXML(), jedis.get("node:/user/tuomas@koski.com/status:item:" + itemID));
 		//System.out.println(jedis.get("node:/user/tuomas@koski.com/status:item:" + itemID));
+		
+		Set<String> possibleReceivers = new HashSet<String>();
+		possibleReceivers.add("tuomas@koski.com");
+		possibleReceivers.add("bc.playboy.com");
+		
+		Message eventMsg = (Message)pubsubEngine.outQueue.getQueue().poll();
+		//assertEquals(eventMsg.getTo().toBareJID(), "tuomas@koski.com");
+		assertTrue(possibleReceivers.contains(eventMsg.getTo().toBareJID()));
+		possibleReceivers.remove(eventMsg.getTo().toBareJID());
+		
+		System.out.println(eventMsg.toXML());
+		
+		eventMsg = (Message)pubsubEngine.outQueue.getQueue().poll();
+		assertTrue(possibleReceivers.contains(eventMsg.getTo().toBareJID()));
+		
+		eventMsg = (Message)pubsubEngine.outQueue.getQueue().poll();
+		assertNull(eventMsg); // We test that playboy.com is send only once
+		
+		
 	}
 	
 	public void testSubscribeExternalWithDiscoverySuccess() throws InterruptedException {

@@ -3,8 +3,10 @@ package org.buddycloud.channels.packetHandler.IQ.Namespace;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.TimeZone;
 import java.util.UUID;
 
@@ -192,16 +194,46 @@ public class JabberPubsub extends AbstractNamespace {
 			Message msg = new Message();
 			msg.setType(Message.Type.headline);
 			msg.setID(id);
-			Element event = msg.addChildElement("evet", JabberPubsubEvent.NAMESPACE_URI);
+			Element event = msg.addChildElement("event", JabberPubsubEvent.NAMESPACE_URI);
 			Element items = event.addElement("items");
 			items.addAttribute("node", node);
 			Element i = items.addElement("item");
+			i.addAttribute("id", id);
 			i.add(entry.createCopy());
 			
-			System.out.println(msg.toXML());
+			//System.out.println(msg.toXML());
+			
+			Set<String> externalChannelServerReceivers = new HashSet<String>();
+			
+			Set<String> subscriberJIDs = jedis.smembers("node:" + node + ":subscribers");
+			if(subscriberJIDs.isEmpty()) {
+				System.out.println("Weird, there is no subscribers....");
+				return;
+			}
+			
+			for (String subscriber : subscriberJIDs) {
+				Map<String, String> subscription = jedis.hgetAll("node:" + node + ":subscriber:" + subscriber);
+				if(subscription.get(Subscription.KEY_EXTERNAL_CHANNEL_SERVER) != null) {
+					if(externalChannelServerReceivers.contains(subscription.get(Subscription.KEY_EXTERNAL_CHANNEL_SERVER))) {
+						continue;
+					}
+					externalChannelServerReceivers.add(subscription.get(Subscription.KEY_EXTERNAL_CHANNEL_SERVER));
+					subscriber = subscription.get(Subscription.KEY_EXTERNAL_CHANNEL_SERVER);
+				} else {
+					
+					/** TODO
+					 *  Add here think to deliver only to online local users.
+					 */
+					
+				}
+				
+				msg.setTo(subscriber);
+				outQueue.put(msg.createCopy());
+			}
 			
 			/*
-			 * let's clean if we have too many items on the node.
+			 * TODO
+			 * Let's clean if we have too many items on the node.
 			 */
 		}
 		

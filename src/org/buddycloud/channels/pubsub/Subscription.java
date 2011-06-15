@@ -6,17 +6,22 @@ import java.util.Map;
 
 public final class Subscription {
 
+	public static final String KEY_SUBSCRIPTION = "subscription";
+	public static final String KEY_AFFILIATION  = "affiliation";
+	public static final String KEY_EXTERNAL_CHANNEL_SERVER = "channel-server";
+	
+	
 	private Map<String, String> params = new HashMap<String, String>();
 	
 	public Subscription(org.buddycloud.channels.pubsub.subscription.Type sub, 
 						org.buddycloud.channels.pubsub.affiliation.Type aff,
 						String remoteChannelServer) {
 		
-		this.params.put("subscription", sub.toString());
-		this.params.put("affiliation", aff.toString());
+		this.params.put(KEY_SUBSCRIPTION, sub.toString());
+		this.params.put(KEY_AFFILIATION, aff.toString());
 		
 		if(remoteChannelServer != null) {
-			this.params.put("channel-server", remoteChannelServer);
+			this.params.put(KEY_EXTERNAL_CHANNEL_SERVER, remoteChannelServer);
 		}
 	}
 	

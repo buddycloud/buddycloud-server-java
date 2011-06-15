@@ -111,6 +111,12 @@ public class JabberPubsub extends AbstractNamespace {
 				
 			} 
 			
+			/** 
+			 * TODO Check here the sender. 
+			 * TODO The sender can be even a local user, or external "actor user".
+			 * 
+			 * TODO Check also that the user is allowed to publish.
+			 */
 			
 			Element item = elm.element("item");
 			if(item == null) {
@@ -123,6 +129,7 @@ public class JabberPubsub extends AbstractNamespace {
 			
 			// TODO, add this:
 			// 7.1.3.5 Bad Payload
+			// Verify that the entry is as it should be for buddycloud.
 			Element entry = item.element("entry");
 			
 			//String id = item.attributeValue("id");
@@ -185,6 +192,7 @@ public class JabberPubsub extends AbstractNamespace {
 			
 			outQueue.put(result);
 			
+			
 			/*
 			 * Let's send notifications.
 			 */
@@ -230,6 +238,7 @@ public class JabberPubsub extends AbstractNamespace {
 				msg.setTo(subscriber);
 				outQueue.put(msg.createCopy());
 			}
+			
 			
 			/*
 			 * TODO

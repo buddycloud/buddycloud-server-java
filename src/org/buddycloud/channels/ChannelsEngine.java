@@ -2,6 +2,7 @@ package org.buddycloud.channels;
 
 import java.util.Properties;
 
+import org.apache.log4j.Logger;
 import org.buddycloud.channels.queue.ErrorQueue;
 import org.buddycloud.channels.queue.InQueue;
 import org.buddycloud.channels.queue.OutQueue;
@@ -13,6 +14,8 @@ import org.xmpp.packet.Packet;
 
 public class ChannelsEngine implements Component {
 
+	private static Logger LOGGER = Logger.getLogger(ChannelsEngine.class);
+	
 	private JID jid = null;
 	private ComponentManager manager = null;
 	
@@ -46,7 +49,7 @@ public class ChannelsEngine implements Component {
 		this.errorQueue = new ErrorQueue(this.outQueue);
 		this.inQueue = new InQueue(this.outQueue, this.errorQueue, this.conf);
 		
-		System.out.println("XMPP Component started. We are '" + jid.toBareJID() + "' and ready to accept packages.");
+		LOGGER.info("XMPP Component started. We are '" + jid.toBareJID() + "' and ready to accept packages.");
 	}
 
 	public OutQueue getOutQueue() {

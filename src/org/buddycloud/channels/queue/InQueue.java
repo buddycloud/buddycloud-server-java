@@ -5,6 +5,8 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.LinkedBlockingQueue;
 
+import org.apache.log4j.Logger;
+import org.buddycloud.channels.ChannelsEngine;
 import org.buddycloud.channels.packetHandler.IPacketHandler;
 import org.buddycloud.channels.packetHandler.IQ.IQHandler;
 import org.xmpp.packet.Packet;
@@ -44,6 +46,8 @@ public class InQueue {
 	
 	private class Consumer implements Runnable {
 		
+		private Logger LOGGER = Logger.getLogger(Consumer.class);
+		
 		private static final String IQ_PACKET_TYPE 			= "org.xmpp.packet.IQ";
 		private static final String PRESENCE_PACKET_TYPE 	= "org.xmpp.packet.Presence";
 		private static final String MESSAGE_PACKET_TYPE 	= "org.xmpp.packet.Message";
@@ -74,16 +78,15 @@ public class InQueue {
 					
 					start = System.currentTimeMillis();
 
-					System.out.println("IN ->");
-					System.out.println(p.toXML());
+					LOGGER.debug("IN -> " + p.toXML());
 					
 					if( this.packetHandlers.get(p.getClass().getName()) != null ) {
 						packetHandlers.get(p.getClass().getName()).ingestPacket(p);
 					} else {
-						System.out.println("Packet was not handled in any way.");
+						LOGGER.debug("Packet was not handled in any way.");
 					}
 					
-					System.out.println("Packet handled in '" + Long.toString((System.currentTimeMillis() - start)) + "' milliseconds.");
+					LOGGER.debug("Packet handled in '" + Long.toString((System.currentTimeMillis() - start)) + "' milliseconds.");
 					
 				} catch (InterruptedException e) {
 					

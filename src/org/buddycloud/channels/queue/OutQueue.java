@@ -2,6 +2,7 @@ package org.buddycloud.channels.queue;
 
 import java.util.concurrent.LinkedBlockingQueue;
 
+import org.apache.log4j.Logger;
 import org.buddycloud.channels.ChannelsEngine;
 import org.xmpp.component.ComponentException;
 import org.xmpp.component.ComponentManager;
@@ -45,26 +46,23 @@ public class OutQueue implements IOutQueue {
 	
 	private class Consumer implements Runnable {
 		
+		private Logger LOGGER = Logger.getLogger(Consumer.class);
+		
 		public Consumer() {
 			
 		}
 		
 		@Override
 		public void run() {
-			Long start;
+			
 			String componentJID = component.getJID().toBareJID();
+			
 			while (true) {
 				try {
-					
 					Packet p = queue.take();
-					
-					start = System.currentTimeMillis();
-	
 					try {
 						
-						//if(p.getFrom() == null) {
 						p.setFrom(componentJID);
-						//}
 						
 						if(p.getFrom().equals(p.getTo())) {
 							// Sender and the receiver are the same! Skipping!
@@ -73,13 +71,12 @@ public class OutQueue implements IOutQueue {
 						}
 						
 						manager.sendPacket(component, p);
-						System.out.println("OUT:" + p.toXML());
+						
+						LOGGER.debug("OUT -> " + p.toXML());
 						
 					} catch (ComponentException e) {
 						e.printStackTrace();
 					}
-					
-					System.out.println("Packet sent in '" + Long.toString((System.currentTimeMillis() - start)) + "' milliseconds.");
 					
 				} catch (InterruptedException e) {
 					//LogMe.warning("Error consuming OutQueue: '" + e.getMessage() + "'!");

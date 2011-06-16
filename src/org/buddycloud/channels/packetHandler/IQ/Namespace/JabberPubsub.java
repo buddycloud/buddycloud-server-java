@@ -17,6 +17,8 @@ import org.buddycloud.channels.pubsub.Subscription;
 import org.buddycloud.channels.pubsub.subscription.Type;
 import org.buddycloud.channels.queue.ErrorQueue;
 import org.buddycloud.channels.queue.OutQueue;
+import org.buddycloud.channels.statefull.State;
+import org.buddycloud.channels.statefull.StateMachine;
 import org.dom4j.Element;
 import org.dom4j.Namespace;
 import org.dom4j.dom.DOMElement;
@@ -34,7 +36,7 @@ public class JabberPubsub extends AbstractNamespace {
 		
 		super(outQueue, errorQueue, jedis);
 		setProcessors.put(SetPubSub.ELEMENT_NAME, new SetPubSub());
-		
+		resultProcessors.put(ResultPubSub.ELEMENT_NAME, new ResultPubSub());
 	}
 	
 	private class SetPubSub implements IAction {
@@ -269,10 +271,11 @@ public class JabberPubsub extends AbstractNamespace {
 				return;
 			}
 			
-			if(subsJID.getNode() != null && !jedis.sismember(JedisKeys.LOCAL_USERS, subsJID.toBareJID())) {
-				errorQueue.put(ErrorPacketBuilder.registrationRequired(reqIQ));
-				return;
-			}
+			// We should allow anyone to subscribe
+//			if(subsJID.getNode() != null && !jedis.sismember(JedisKeys.LOCAL_USERS, subsJID.toBareJID())) {
+//				errorQueue.put(ErrorPacketBuilder.registrationRequired(reqIQ));
+//				return;
+//			}
 			
 			String remoteChannelServer = null;
 			String buddycloudPrefix = "";
@@ -324,7 +327,7 @@ public class JabberPubsub extends AbstractNamespace {
 			if(!jedis.sismember(JedisKeys.LOCAL_NODES, node)) {
 				
 				if(!jedis.sismember(JedisKeys.REMOTE_NODES, node)) {
-					// We need to discover if the channel exists.  
+					// We need to discover if the channel exists.
 					
 					String[] splittedNode = node.split("/");
 					
@@ -344,7 +347,7 @@ public class JabberPubsub extends AbstractNamespace {
 					outQueue.put(discoItemsGet);
 					
 					Map <String, String> store = new HashMap<String, String>();
-					store.put("type", "subscribe-items");
+					store.put(State.KEY_STATE, State.STATE_DISCO_ITEMS_TO_FIND_BC_CHANNEL_COMPONENT);
 					store.put("id", reqIQ.getID());
 					store.put("jid", reqIQ.getFrom().toString());
 					store.put("node", node);
@@ -385,6 +388,19 @@ public class JabberPubsub extends AbstractNamespace {
 			result.setChildElement(pubsub);
 			
 			outQueue.put(result);
+		}
+	}
+	
+	private class ResultPubSub implements IAction {
+
+		public static final String ELEMENT_NAME = "pubsub";
+
+		@Override
+		public void process() {
+			
+			StateMachine sm = new StateMachine(jedis, outQueue, errorQueue);
+			sm.ingest(reqIQ);
+			
 		}
 	}
 }

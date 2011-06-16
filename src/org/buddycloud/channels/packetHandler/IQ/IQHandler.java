@@ -8,6 +8,8 @@ import org.buddycloud.channels.packet.ErrorPacketBuilder;
 import org.buddycloud.channels.packetHandler.APacketHandler;
 import org.buddycloud.channels.packetHandler.IPacketHandler;
 import org.buddycloud.channels.packetHandler.IQ.Namespace.INamespace;
+import org.buddycloud.channels.packetHandler.IQ.Namespace.JabberDiscoInfo;
+import org.buddycloud.channels.packetHandler.IQ.Namespace.JabberDiscoItems;
 import org.buddycloud.channels.packetHandler.IQ.Namespace.JabberPubsub;
 import org.buddycloud.channels.packetHandler.IQ.Namespace.JabberRegister;
 import org.buddycloud.channels.queue.ErrorQueue;
@@ -38,6 +40,12 @@ public class IQHandler extends APacketHandler implements IPacketHandler {
 		namespaceHandlers.put(JabberPubsub.NAMESPACE_URI, new JabberPubsub(outQueue, 
 																		   errorQueue, 
 																		   this.jedis));
+		namespaceHandlers.put(JabberDiscoItems.NAMESPACE_URI, new JabberDiscoItems(outQueue, 
+																			       errorQueue, 
+																			       this.jedis));
+		namespaceHandlers.put(JabberDiscoInfo.NAMESPACE_URI, new JabberDiscoInfo(outQueue, 
+				   							   							         errorQueue, 
+				   														         this.jedis));
 	}
 	
 	@Override
@@ -58,14 +66,15 @@ public class IQHandler extends APacketHandler implements IPacketHandler {
 			System.out.println("NOT SO QUIETLY SKIPPING RECEIVED ERROR IQ without namespace:" + iq.toXML());
 			return;
 		} else if (iq.getType() == IQ.Type.result) {
-			System.out.println("NOT SO QUIETLY skipping result IQ's without namespace.");
+			System.out.println("NOT SO QUIETLY skipping result IQ's without handled namespaces." + iq.toXML());
             return;
 		}
 		
 		if(iq.getChildElement() == null) {
-			
+			System.out.println("Received packet without a namespace: " + iq.toXML());
 		} else {
 			//System.out.println("'IQHandler' received IQ with childElement with namespace '" + iq.getChildElement().getNamespaceURI() + "' that we did not find a handler for!");
+			System.out.println("Something weird: " + iq.toXML());
 		}
 		
 		ErrorPacket ep = ErrorPacketBuilder.featureNotImplemented(iq);

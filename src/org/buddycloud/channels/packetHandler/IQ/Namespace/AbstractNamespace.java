@@ -53,7 +53,11 @@ abstract class AbstractNamespace implements INamespace {
 			
 			System.out.println("Errors not yet handled for namespace '" + this.getClass().getName() + "'.");
 		
-		} else {
+		} else if(reqIQ.getType() == IQ.Type.result) {
+			
+			System.out.println("This result was not handled in any way: '" + this.reqIQ.toXML() + "'.");
+		
+	    } else {
 			
 			ErrorPacket ep = ErrorPacketBuilder.unexpectedRequest(this.reqIQ);
 			this.errorQueue.put(ep);

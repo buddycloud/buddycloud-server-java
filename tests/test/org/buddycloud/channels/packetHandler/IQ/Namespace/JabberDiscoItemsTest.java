@@ -9,6 +9,7 @@ import org.buddycloud.channels.packetHandler.IQ.Namespace.JabberDiscoInfo;
 import org.buddycloud.channels.packetHandler.IQ.Namespace.JabberDiscoItems;
 import org.buddycloud.channels.queue.ErrorQueue;
 import org.buddycloud.channels.queue.OutQueue;
+import org.buddycloud.channels.statefull.State;
 import org.dom4j.Element;
 import org.junit.After;
 import org.junit.Before;
@@ -43,7 +44,7 @@ public class JabberDiscoItemsTest extends TestCase {
 		String id = "testDiscoItemsResultSuccess";
 		
 		Map <String, String> store = new HashMap<String, String>();
-		store.put("type", "subscribe-items");
+		store.put(State.KEY_STATE, State.STATE_DISCO_ITEMS_TO_FIND_BC_CHANNEL_COMPONENT);
 		store.put("id", "original-subs-id-123456");
 		store.put("jid", "tuomas@koski.com/client");
 		store.put("node", "/user/nelly@heriveau.fr/status");
@@ -79,8 +80,8 @@ public class JabberDiscoItemsTest extends TestCase {
 		assertEquals("original-subs-id-123456", store.get("id"));
 		assertEquals("/user/nelly@heriveau.fr/status", store.get("node"));
 		assertEquals("tuomas@koski.com/client", store.get("jid"));
-		assertEquals("subscribe-info", store.get("type"));
-		assertEquals("bc.heriveau.fr", store.get("components"));
+		assertEquals(State.STATE_DISCO_INFO_TO_COMPONENTS, store.get(State.KEY_STATE));
+		assertEquals("bc.heriveau.fr", store.get(State.KEY_COMPONENTS));
 		
 		IQ expectedIQ = new IQ();
 		expectedIQ.setID(discoInfoReq.getID());

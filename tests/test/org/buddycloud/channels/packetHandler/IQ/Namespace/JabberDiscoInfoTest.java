@@ -9,6 +9,7 @@ import org.buddycloud.channels.packetHandler.IQ.Namespace.JabberDiscoInfo;
 import org.buddycloud.channels.packetHandler.IQ.Namespace.JabberPubsub;
 import org.buddycloud.channels.queue.ErrorQueue;
 import org.buddycloud.channels.queue.OutQueue;
+import org.buddycloud.channels.statefull.State;
 import org.dom4j.Element;
 import org.dom4j.dom.DOMElement;
 import org.junit.After;
@@ -72,11 +73,11 @@ public class JabberDiscoInfoTest extends TestCase {
 		String id = "testRestulDiscoInfoSuccess";
 		
 		Map <String, String> store = new HashMap<String, String>();
-		store.put("type", "subscribe-info");
+		store.put(State.KEY_STATE, State.STATE_DISCO_INFO_TO_COMPONENTS);
 		store.put("id", "original-subs-id-123456");
 		store.put("jid", "tuomas@koski.com/client");
 		store.put("node", "/user/nelly@heriveau.fr/status");
-		store.put("components", "bc.heriveau.fr");
+		store.put(State.KEY_COMPONENTS, "bc.heriveau.fr");
 		
 		jedis.hmset("store:" + id, store);
 		
@@ -107,7 +108,7 @@ public class JabberDiscoInfoTest extends TestCase {
 		assertEquals("original-subs-id-123456", store.get("id"));
 		assertEquals("/user/nelly@heriveau.fr/status", store.get("node"));
 		assertEquals("tuomas@koski.com/client", store.get("jid"));
-		assertEquals("subscribe-info", store.get("type"));
+		assertEquals(State.STATE_DISCO_INFO_TO_COMPONENTS, store.get(State.KEY_STATE));
 		assertEquals("", store.get("components"));
 		
 		IQ expectedIQ = new IQ();
@@ -124,11 +125,11 @@ public class JabberDiscoInfoTest extends TestCase {
 		String id = "testResultDiscoInfoFoundsBuddycloudChannelAndSendsSubscribe";
 		
 		Map <String, String> store = new HashMap<String, String>();
-		store.put("type", "subscribe-info");
+		store.put(State.KEY_STATE, State.STATE_DISCO_INFO_TO_COMPONENTS);
 		store.put("id", "original-subs-id-123456");
 		store.put("jid", "tuomas@koski.com/client");
 		store.put("node", "/user/nelly@heriveau.fr/status");
-		store.put("components", "");
+		store.put(State.KEY_COMPONENTS, "");
 		
 		jedis.hmset("store:" + id, store);
 		
@@ -169,7 +170,7 @@ public class JabberDiscoInfoTest extends TestCase {
 		//System.out.println(subsReq.toXML());
 		
 		store = jedis.hgetAll("store:" + subsReq.getID());
-		assertEquals(store.get("type"), "subscribe");
+		assertEquals(store.get(State.KEY_STATE), "subscribe");
 		assertEquals(store.get("id"), "original-subs-id-123456");
 		assertEquals(store.get("jid"), "tuomas@koski.com/client");
 		assertEquals(store.get("node"), "/user/nelly@heriveau.fr/status");

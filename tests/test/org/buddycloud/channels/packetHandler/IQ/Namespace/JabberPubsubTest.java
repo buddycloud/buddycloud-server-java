@@ -18,6 +18,7 @@ import org.buddycloud.channels.pubsub.Subscription;
 import org.buddycloud.channels.pubsub.subscription.Type;
 import org.buddycloud.channels.queue.ErrorQueue;
 import org.buddycloud.channels.queue.OutQueue;
+import org.buddycloud.channels.statefull.State;
 import org.dom4j.Element;
 import org.dom4j.dom.DOMElement;
 import org.junit.After;
@@ -171,7 +172,7 @@ public class JabberPubsubTest extends TestCase {
 		assertTrue(possibleReceivers.contains(eventMsg.getTo().toBareJID()));
 		possibleReceivers.remove(eventMsg.getTo().toBareJID());
 		
-		System.out.println(eventMsg.toXML());
+		//System.out.println(eventMsg.toXML());
 		
 		eventMsg = (Message)pubsubEngine.outQueue.getQueue().poll();
 		assertTrue(possibleReceivers.contains(eventMsg.getTo().toBareJID()));
@@ -181,11 +182,11 @@ public class JabberPubsubTest extends TestCase {
 		
 	}
 	
-	public void testSubscribeExternalWithDiscoverySuccess() throws InterruptedException {
+	public void testSubscribeExternalStartsDiscoverySuccess() throws InterruptedException {
 		
 		JabberPubsub pubsubEngine = new JabberPubsub(this.outQueue, this.errorQueue, this.jedis);
 		
-		String id = "testSubscribeExternalWithDiscoverySuccess";
+		String id = "testSubscribeExternalStartsDiscoverySuccess";
 		
 		IQ mockIQ = new IQ();
 		mockIQ.setType(IQ.Type.set);
@@ -224,39 +225,7 @@ public class JabberPubsubTest extends TestCase {
 		assertEquals(id, store.get("id"));
 		assertEquals("/user/nelly@heriveau.fr/status", store.get("node"));
 		assertEquals("tuomas@koski.com/client", store.get("jid"));
-		assertEquals("subscribe-items", store.get("type"));
-		
-		/**
-		 *  When we are here, channel server has send the following backet to heriveau.fr
-		 *  
-		 *  <iq type="get" 
-		 *      id="ee0c0f97-0e8e-4309-b619-fc0599f3d1be" 
-		 *      from="channels.koski.com" to="heriveau.fr">
-		 *     <query xmlns="http://jabber.org/protocol/disco#items"/>
-		 *  </iq>
-		 *  
-		 *  We will expect to get back something like this:
-		 *  
-		 *  <iq type="result" 
-		 *      id="ee0c0f97-0e8e-4309-b619-fc0599f3d1be" 
-		 *      from="channels.koski.com" to="heriveau.fr">
-		 *     <query xmlns="http://jabber.org/protocol/disco#items"/>
-		 *     <item jid='people.shakespeare.lit'
-		 *           name='Directory of Characters'/>
-		 *     <item jid='bc.hervieau.fr'/>
-    	 *     </query>
-		 *  </iq>
-		 */
-		
-		IQ discoItemsReply = IQ.createResultIQ(result);
-		query = discoItemsReply.setChildElement("query", JabberDiscoItems.NAMESPACE_URI);
-		query.addElement("item")
-			 .addAttribute("jid", "people.hervieau.fr")
-			 .addAttribute("name", "Directory of Characters");
-		query.addElement("item")
-		     .addAttribute("jid", "bc.heriveau.fr");
-	
-		// continue here. Add http://jabber.org/protocol/disco#items handler and a first time in our life, a result handler :-)
+		assertEquals(State.STATE_DISCO_ITEMS_TO_FIND_BC_CHANNEL_COMPONENT, store.get(State.KEY_STATE));
 		
 	}
 	
@@ -300,49 +269,49 @@ public class JabberPubsubTest extends TestCase {
 		
 	}
 	
-	public void testSubscribeLocalFailsRegistrationRequired() throws InterruptedException {
-		
-		jedis.sadd(JedisKeys.LOCAL_NODES, "/user/tuomas@koski.com/status");
-		
-		JabberPubsub pubsubEngine = new JabberPubsub(this.outQueue, this.errorQueue, this.jedis);
-		
-		String id = "testSubscribeLocalFailsRegistrationRequired";
-		
-		IQ mockIQ = new IQ();
-		mockIQ.setType(IQ.Type.set);
-		mockIQ.setID(id);
-		mockIQ.setTo("channels.koski.com");
-		mockIQ.setFrom("j@koski.com/client");
-		
-		Element pubsub = mockIQ.setChildElement("pubsub", JabberPubsub.NAMESPACE_URI);
-		pubsub.addElement("subscribe")
-		      .addAttribute("node", "/user/tuomas@koski.com/status")
-		      .addAttribute("jid", mockIQ.getFrom().toString());
-		
-		pubsubEngine.ingestPacket(mockIQ.createCopy());
-		
-		Thread.sleep(50);
-		
-		IQ result = (IQ)pubsubEngine.outQueue.getQueue().poll();
-		//System.out.println(result.toXML());
-		
-		Element error = new DOMElement("error");
-		error.addAttribute("type", "auth");
-		Element conflict = new DOMElement("registration-required",
-					 								 new org.dom4j.Namespace("", ErrorPacket.NS_XMPP_STANZAS));
-		error.add(conflict);
-		
-		assertEquals(result.getError().toXML(), error.asXML());
-		
-		
-		Set<String> subscribers = jedis.smembers("node:/user/tuomas@koski.com/status:subscribers");
-		assertFalse(subscribers.contains("j@koski.com"));
-		
-		Map<String, String> sub = jedis.hgetAll("node:/user/tuomas@koski.com/status:subscriber:j@koski.com");
-	
-		assertTrue(sub.isEmpty());
-		
-	}
+//	public void testSubscribeLocalFailsRegistrationRequired() throws InterruptedException {
+//		
+//		jedis.sadd(JedisKeys.LOCAL_NODES, "/user/tuomas@koski.com/status");
+//		
+//		JabberPubsub pubsubEngine = new JabberPubsub(this.outQueue, this.errorQueue, this.jedis);
+//		
+//		String id = "testSubscribeLocalFailsRegistrationRequired";
+//		
+//		IQ mockIQ = new IQ();
+//		mockIQ.setType(IQ.Type.set);
+//		mockIQ.setID(id);
+//		mockIQ.setTo("channels.koski.com");
+//		mockIQ.setFrom("j@koski.com/client");
+//		
+//		Element pubsub = mockIQ.setChildElement("pubsub", JabberPubsub.NAMESPACE_URI);
+//		pubsub.addElement("subscribe")
+//		      .addAttribute("node", "/user/tuomas@koski.com/status")
+//		      .addAttribute("jid", mockIQ.getFrom().toString());
+//		
+//		pubsubEngine.ingestPacket(mockIQ.createCopy());
+//		
+//		Thread.sleep(50);
+//		
+//		IQ result = (IQ)pubsubEngine.outQueue.getQueue().poll();
+//		//System.out.println(result.toXML());
+//		
+//		Element error = new DOMElement("error");
+//		error.addAttribute("type", "auth");
+//		Element conflict = new DOMElement("registration-required",
+//					 								 new org.dom4j.Namespace("", ErrorPacket.NS_XMPP_STANZAS));
+//		error.add(conflict);
+//		
+//		assertEquals(result.getError().toXML(), error.asXML());
+//		
+//		
+//		Set<String> subscribers = jedis.smembers("node:/user/tuomas@koski.com/status:subscribers");
+//		assertFalse(subscribers.contains("j@koski.com"));
+//		
+//		Map<String, String> sub = jedis.hgetAll("node:/user/tuomas@koski.com/status:subscriber:j@koski.com");
+//	
+//		assertTrue(sub.isEmpty());
+//		
+//	}
 	
 	public void testSubscribeLocalFailsMalformedJid() throws InterruptedException {
 		

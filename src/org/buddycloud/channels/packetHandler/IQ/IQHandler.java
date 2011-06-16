@@ -71,7 +71,7 @@ public class IQHandler extends APacketHandler implements IPacketHandler {
 		}
 		
 		if(iq.getChildElement() == null) {
-			System.out.println("Received packet without a namespace: " + iq.toXML());
+			//System.out.println("Received packet without a namespace: " + iq.toXML());
 		} else {
 			//System.out.println("'IQHandler' received IQ with childElement with namespace '" + iq.getChildElement().getNamespaceURI() + "' that we did not find a handler for!");
 			System.out.println("Something weird: " + iq.toXML());

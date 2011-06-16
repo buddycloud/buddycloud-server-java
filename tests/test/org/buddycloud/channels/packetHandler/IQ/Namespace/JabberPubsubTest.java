@@ -207,7 +207,7 @@ public class JabberPubsubTest extends TestCase {
 		Thread.sleep(50);
 		
 		IQ result = (IQ)pubsubEngine.outQueue.getQueue().poll();
-		
+		result.setFrom("channels.koski.com");
 		//System.out.println(result.toXML());
 		
 		assertEquals(IQ.Type.get, result.getType());

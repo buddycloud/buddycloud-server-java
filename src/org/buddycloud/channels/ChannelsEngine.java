@@ -1,5 +1,7 @@
 package org.buddycloud.channels;
 
+import java.util.Properties;
+
 import org.buddycloud.channels.queue.ErrorQueue;
 import org.buddycloud.channels.queue.InQueue;
 import org.buddycloud.channels.queue.OutQueue;
@@ -17,6 +19,12 @@ public class ChannelsEngine implements Component {
 	private OutQueue outQueue = null;
 	private InQueue inQueue = null;
 	private ErrorQueue errorQueue = null;
+
+	private Properties conf;
+	
+	public ChannelsEngine(Properties conf) {
+		this.conf = conf;
+	}
 	
 	@Override
 	public String getDescription() {
@@ -36,7 +44,7 @@ public class ChannelsEngine implements Component {
 		
 		this.outQueue = new OutQueue(manager, this, true);
 		this.errorQueue = new ErrorQueue(this.outQueue);
-		this.inQueue = new InQueue(this.outQueue, this.errorQueue);
+		this.inQueue = new InQueue(this.outQueue, this.errorQueue, this.conf);
 		
 		System.out.println("XMPP Component started. We are '" + jid.toBareJID() + "' and ready to accept packages.");
 	}

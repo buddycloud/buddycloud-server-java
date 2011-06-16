@@ -340,7 +340,6 @@ public class JabberPubsub extends AbstractNamespace {
 					String id = UUID.randomUUID().toString();
 					discoItemsGet.setType(IQ.Type.get);
 					discoItemsGet.setID(id);
-					discoItemsGet.setFrom("channels.koski.com");
 					discoItemsGet.setTo(user.getDomain());
 					
 					discoItemsGet.setChildElement("query", "http://jabber.org/protocol/disco#items");

@@ -2,6 +2,7 @@ package org.buddycloud.channels.queue;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Properties;
 import java.util.concurrent.LinkedBlockingQueue;
 
 import org.buddycloud.channels.packetHandler.IPacketHandler;
@@ -19,10 +20,13 @@ public class InQueue {
 	
 	Thread[] consumers = new Thread[3];
 	
-	public InQueue(OutQueue outQueue, ErrorQueue errorQueue) {
+	private Properties conf;
+	
+	public InQueue(OutQueue outQueue, ErrorQueue errorQueue, Properties conf) {
 		
 		this.outQueue = outQueue;
 		this.errorQueue = errorQueue;
+		this.conf = conf;
 		
 		for (int i = 0; i < consumers.length; i++) {
 			this.consumers[i] = new Thread(new Consumer());
@@ -50,7 +54,8 @@ public class InQueue {
 		
 		public Consumer() {
 			
-			this.jedis = new Jedis("localhost", 6379);
+			this.jedis = new Jedis(conf.getProperty("redis.host"), 
+								   Integer.valueOf(conf.getProperty("redis.port")));
 			this.jedis.configSet("timeout", "0");
 			
 			//	this.packetHandlers.put(PRESENCE_PACKET_TYPE, new PresenceHandler());
@@ -73,13 +78,9 @@ public class InQueue {
 					System.out.println(p.toXML());
 					
 					if( this.packetHandlers.get(p.getClass().getName()) != null ) {
-						
 						packetHandlers.get(p.getClass().getName()).ingestPacket(p);
-						
 					} else {
-						
 						System.out.println("Packet was not handled in any way.");
-					
 					}
 					
 					System.out.println("Packet handled in '" + Long.toString((System.currentTimeMillis() - start)) + "' milliseconds.");

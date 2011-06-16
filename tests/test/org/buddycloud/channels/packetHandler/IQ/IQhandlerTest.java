@@ -183,7 +183,7 @@ public class IQhandlerTest extends TestCase {
 		
 		
 		IQ result = (IQ)iqHandler.outQueue.getQueue().poll();
-		
+		result.setFrom("channels.koski.com");
 		/**
 		 * Next in the workflow our channel server will send disco-items backage to heriveau.fr.
 		 * 

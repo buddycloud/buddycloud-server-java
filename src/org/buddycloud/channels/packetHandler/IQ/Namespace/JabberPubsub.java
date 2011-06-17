@@ -199,8 +199,6 @@ public class JabberPubsub extends AbstractNamespace {
 			 * Let's send notifications.
 			 */
 			
-			jedis.smembers("node:" + node + ":subscribers");
-			
 			Message msg = new Message();
 			msg.setType(Message.Type.headline);
 			msg.setID(id);

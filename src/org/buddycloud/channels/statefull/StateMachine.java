@@ -164,7 +164,7 @@ public class StateMachine {
 				originalReq.setFrom(store.get("jid"));
 				originalReq.setTo("channels.koski.com");
 				
-				if("subscribe-info".equals(store.get(State.KEY_STATE))) {
+				if(State.STATE_DISCO_INFO_TO_COMPONENTS.equals(store.get(State.KEY_STATE))) {
 					ErrorPacket ep = ErrorPacketBuilder.itemNotFound(originalReq);
 					ep.setMsg("No bc components found from remove server (" + iq.getFrom().toBareJID() + ") when doing disco#infos to them.");
 					errorQueue.put(ErrorPacketBuilder.itemNotFound(originalReq));

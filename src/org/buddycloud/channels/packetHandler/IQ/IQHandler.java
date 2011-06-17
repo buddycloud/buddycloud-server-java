@@ -23,11 +23,6 @@ public class IQHandler extends APacketHandler implements IPacketHandler {
 
 	private Map <String, INamespace> namespaceHandlers = new HashMap<String, INamespace>();
 	
-	public OutQueue outQueue;
-	public ErrorQueue errorQueue;
-	
-	private Jedis jedis;
-	
 	public IQHandler(OutQueue outQueue, ErrorQueue errorQueue, Jedis jedis) {
 		
 		this.outQueue   = outQueue;

@@ -3,11 +3,9 @@ package org.buddycloud.channels.packetHandler.Message;
 import java.util.Map;
 import java.util.Set;
 
-import org.buddycloud.channels.packet.ErrorPacket;
-import org.buddycloud.channels.packet.ErrorPacketBuilder;
+import org.apache.log4j.Logger;
 import org.buddycloud.channels.packetHandler.APacketHandler;
 import org.buddycloud.channels.packetHandler.IPacketHandler;
-import org.buddycloud.channels.pubsub.Subscription;
 import org.buddycloud.channels.queue.ErrorQueue;
 import org.buddycloud.channels.queue.OutQueue;
 import org.dom4j.Element;
@@ -21,6 +19,8 @@ public class MessageHandler extends APacketHandler implements IPacketHandler {
 	public OutQueue outQueue;
 	public ErrorQueue errorQueue;
 	private Jedis jedis;
+	
+	private Logger LOGGER = Logger.getLogger(MessageHandler.class);
 	
 	public MessageHandler(OutQueue outQueue, ErrorQueue errorQueue, Jedis jedis) {
 		
@@ -42,22 +42,42 @@ public class MessageHandler extends APacketHandler implements IPacketHandler {
 		
 		Element event = msg.getChildElement("event", "http://jabber.org/protocol/pubsub#event");
 		if(event == null) {
+			LOGGER.debug("Did not find event element. Returning.");
 			return;
 		}
 		
 		Element items = event.element("items");
+		if(items == null) {
+			LOGGER.debug("Did not find items element. Returning.");
+			return;
+		}
 		String node   = items.attributeValue("node");
+		if(node == null) {
+			LOGGER.debug("Did not find node element. Returning.");
+			return;
+		}
+		
+		String externalChannelServer = jedis.get("remove-node:" + node + ":jid");
+		if(!msg.getFrom().toBareJID().equals(externalChannelServer)) {
+			LOGGER.info("Received post to node from different jid than the one that is allowed (" + externalChannelServer + "). Returning.");
+			return;
+		}
 		
 		Element item  = items.element("item");
+		if(item == null) {
+			LOGGER.debug("Did not find item element. Returning.");
+			return;
+		}
+		
 		String id     = item.attributeValue("id");
+		if(id == null) {
+			LOGGER.debug("We did not have ID in the item element. Returning.");
+			return;
+		}
 		
 		Element entry  = item.element("entry");
 		
 		// TODO create "verify entry" or something similart to verify that the entry is ok.
-		
-		if(!jedis.exists("node:" + node + ":subscribers")) {
-			return;
-		}
 		
 		jedis.sadd("node:" + node + ":itemset", id);
 		jedis.lpush("node:" + node + ":itemlist", id);
@@ -65,7 +85,7 @@ public class MessageHandler extends APacketHandler implements IPacketHandler {
 		
 		Set<String> subscriberJIDs = jedis.smembers("node:" + node + ":subscribers");
 		if(subscriberJIDs.isEmpty()) {
-			System.out.println("Weird, there is no subscribers....");
+			LOGGER.debug("Weird, there is no subscribers....");
 			return;
 		}
 		

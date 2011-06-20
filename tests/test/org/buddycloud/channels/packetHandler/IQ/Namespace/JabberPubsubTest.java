@@ -149,7 +149,7 @@ public class JabberPubsubTest extends TestCase {
 		assertTrue(items.contains(itemID));
 		
 		// let's check that the item exists.
-		entry.addElement("id").setText("/user/tuomas@koski.com/status:" + itemID);
+		entry.addElement("id").setText("tag:channels.koski.com,/user/tuomas@koski.com/status," + itemID);
 		
 		/**
 		 * There is a bug here. Will fail if second changes... bad bad tuomas.
@@ -158,6 +158,9 @@ public class JabberPubsubTest extends TestCase {
 		DATE_FORMAT = "yyyy-MM-dd'T'H:m:s'Z'";
 		sdf = new SimpleDateFormat(DATE_FORMAT);
 		sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
+		
+		//System.out.println(jedis.get("node:/user/tuomas@koski.com/status:item:" + itemID));
+		
 		
 		entry.addElement("updated").setText(sdf.format(new Date()));
 		assertEquals(entry.asXML(), jedis.get("node:/user/tuomas@koski.com/status:item:" + itemID));

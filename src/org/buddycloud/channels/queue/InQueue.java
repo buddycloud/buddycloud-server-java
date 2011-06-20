@@ -6,7 +6,6 @@ import java.util.Properties;
 import java.util.concurrent.LinkedBlockingQueue;
 
 import org.apache.log4j.Logger;
-import org.buddycloud.channels.ChannelsEngine;
 import org.buddycloud.channels.packetHandler.IPacketHandler;
 import org.buddycloud.channels.packetHandler.IQ.IQHandler;
 import org.xmpp.packet.Packet;

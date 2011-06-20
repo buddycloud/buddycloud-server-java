@@ -412,6 +412,8 @@ public class IQhandlerTest extends TestCase {
 		assertEquals("publisher", store.get("affiliation"));
 		assertEquals("bc.heriveau.fr", store.get("channel-server"));
 		
+		assertTrue(jedis.sismember(JedisKeys.REMOTE_NODES, "/user/nelly@heriveau.fr/status"));
+		assertEquals("bc.heriveau.fr", jedis.get("remove-node:/user/nelly@heriveau.fr/status:jid"));
 	}
 	
 }

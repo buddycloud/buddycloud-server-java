@@ -53,8 +53,11 @@ public class JabberPubsub extends AbstractNamespace {
 			boolean handled = false;
 			String feature = "";
 			for (Element x : elements) {
-				feature = x.getName(); 
-				if (feature.equals("publish")) {
+				feature = x.getName();
+				if(feature.equals("create")) {
+					this.create(x);
+					handled = true;
+				} else if (feature.equals("publish")) {
 					this.publish(x);
 					handled = true;
 				} else if(feature.equals("subscribe")) {
@@ -85,6 +88,74 @@ public class JabberPubsub extends AbstractNamespace {
 				errorQueue.put(ep);
 				
 			}
+		}
+		
+		private void create(Element elm) {
+			String node = elm.attributeValue("node");
+			if (node == null || node.equals("")) {
+				// TODO:
+				// Launch error
+				// <iq type='error'
+				// from='pubsub.shakespeare.lit'
+				// to='hamlet@denmark.lit/elsinore'
+				// id='create2'>
+				// <error type='modify'>
+				// <not-acceptable xmlns='urn:ietf:params:xml:ns:xmpp-stanzas'/>
+				// <nodeid-required
+				// xmlns='http://jabber.org/protocol/pubsub#errors'/>
+				// </error>
+				// </iq>
+
+				ErrorPacket ep = ErrorPacketBuilder.nodeIdRequired(reqIQ);
+				ep.setMsg("Tried to create a node without passing node ID.");
+				errorQueue.put(ep);
+				return;
+			}
+			
+			if (jedis.sadd(JedisKeys.LOCAL_NODES, node) == 0) {
+				
+				// We could not add the node, it means it already exists.
+				// <iq type='error'
+				// from='pubsub.shakespeare.lit'
+				// to='hamlet@denmark.lit/elsinore'
+				// id='create1'>
+				// <error type='cancel'>
+				// <conflict xmlns='urn:ietf:params:xml:ns:xmpp-stanzas'/>
+				// </error>
+				// </iq>
+
+				ErrorPacket ep = ErrorPacketBuilder.conflict(reqIQ);
+				ep.setMsg("User tried to create a node that already existed.");
+				errorQueue.put(ep);
+				return;
+			}
+			
+			Subscription sub = new Subscription(Type.subscribed,
+					org.buddycloud.channels.pubsub.affiliation.Type.owner,
+					null);
+
+			jedis.hmset("node:" + node + ":subscriber:" + reqIQ.getFrom().toBareJID(), sub.getAsMap());
+			jedis.set("node:" + node + ":owner", reqIQ.getFrom().toBareJID());
+
+			String DATE_FORMAT = "yyyy-MM-dd'T'H:m:s'Z'";
+			SimpleDateFormat sdf = new SimpleDateFormat(DATE_FORMAT);
+			sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
+			
+			Map <String, String> conf = new HashMap<String, String>();
+			conf.put("pubsub#type", "http://www.w3.org/2005/Atom");
+			conf.put("pubsub#title", "");
+			conf.put("pubsub#description", "");
+			conf.put("pubsub#publish_model", "publishers");
+			conf.put("pubsub#access_model", "open");
+			conf.put("pubsub#creation_date", sdf.format(new Date()));
+			conf.put("pubsub#owner", reqIQ.getFrom().toBareJID());
+			conf.put("pubsub#default_affiliation", org.buddycloud.channels.pubsub.affiliation.Type.publisher.toString());
+			conf.put("pubsub#num_subscribers", "1");
+			
+			jedis.hmset("node:" + node + ":conf", conf);
+			
+			IQ result = IQ.createResultIQ(reqIQ);
+			outQueue.put(result);
 		}
 		
 		private void publish(Element elm) {
@@ -144,7 +215,7 @@ public class JabberPubsub extends AbstractNamespace {
 			if(idElm == null) {
 				idElm = entry.addElement("id");
 			}
-			idElm.setText(node + ":" + id);
+			idElm.setText("tag:" + reqIQ.getTo().toBareJID() + "," + node + "," + id);
 			
 			String DATE_FORMAT = "yyyy-MM-dd'T'H:m:s'Z'";
 			SimpleDateFormat sdf = new SimpleDateFormat(DATE_FORMAT);
@@ -315,16 +386,20 @@ public class JabberPubsub extends AbstractNamespace {
 				return;
 			}
 			
-			if(!reqIQ.getFrom().toBareJID().equals(subsJID)) {
-				// TODO check that fromJID is allowed to act behalf of subsJID.
-				//
-				// Because we are nice guys, we let everyone to subscribe now :)
-			}
+//			if(!reqIQ.getFrom().toBareJID().equals(subsJID)) {
+//				// TODO check that fromJID is allowed to act behalf of subsJID.
+//				//
+//				// Because we are nice guys, we let everyone to subscribe now :)
+//			}
 			
 			// 7.1.3.3 Node Does Not Exist
 			if(!jedis.sismember(JedisKeys.LOCAL_NODES, node)) {
 				
-				if(!jedis.sismember(JedisKeys.REMOTE_NODES, node)) {
+				/**
+				 * Let's discover every time now.
+				 */
+				
+				//if(!jedis.sismember(JedisKeys.REMOTE_NODES, node)) {
 					// We need to discover if the channel exists.
 					
 					String[] splittedNode = node.split("/");
@@ -351,8 +426,8 @@ public class JabberPubsub extends AbstractNamespace {
 					
 					jedis.hmset("store:" + id, store);
 					
-					return;
-				}
+				//	return;
+				//}
 				
 				return;
 			}

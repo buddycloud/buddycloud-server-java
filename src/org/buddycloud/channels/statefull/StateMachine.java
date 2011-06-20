@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import org.buddycloud.channels.jedis.JedisKeys;
 import org.buddycloud.channels.packet.ErrorPacket;
 import org.buddycloud.channels.packet.ErrorPacketBuilder;
 import org.buddycloud.channels.packetHandler.IQ.Namespace.JabberDiscoInfo;
@@ -199,6 +200,9 @@ public class StateMachine {
 			String node = state.getStore().get(State.KEY_NODE);
 			String jid  = state.getStore().get(State.KEY_JID);
 			String id   = state.getStore().get(State.KEY_ID);
+			
+			jedis.sadd(JedisKeys.REMOTE_NODES, node);
+			jedis.set("remove-node:" + node + ":jid", iq.getFrom().toBareJID());
 			
 			IQ result = new IQ();
 			result.setID(id);

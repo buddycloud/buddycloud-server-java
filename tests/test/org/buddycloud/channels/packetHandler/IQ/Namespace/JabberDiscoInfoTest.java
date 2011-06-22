@@ -1,10 +1,12 @@
 package test.org.buddycloud.channels.packetHandler.IQ.Namespace;
 
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
 import junit.framework.TestCase;
 
+import org.buddycloud.channels.jedis.JedisKeys;
 import org.buddycloud.channels.packetHandler.IQ.Namespace.JabberDiscoInfo;
 import org.buddycloud.channels.packetHandler.IQ.Namespace.JabberPubsub;
 import org.buddycloud.channels.queue.ErrorQueue;
@@ -63,6 +65,50 @@ public class JabberDiscoInfoTest extends TestCase {
 		assertEquals(id, result.getID());
 		
 		String expected = "<iq type=\"result\" id=\"testGetDiscoInfoSuccess\" from=\"channels.koski.com\" to=\"channels.buddycloud.com\"><query xmlns=\"http://jabber.org/protocol/disco#info\"><identity category=\"pubsub\" type=\"channels\" name=\"Koski's buddycloud channel server!\"/><feature var=\"http://jabber.org/protocol/disco#info\"/></query></iq>";
+		assertEquals(expected, result.toXML());
+		
+		//System.out.println(result.toXML());
+	}
+
+	public void testGetDiscoInfoNodeSuccess() {
+		
+		String id = "testGetDiscoInfoNodeSuccess";
+		
+		JabberDiscoInfo discoInfoEngine = new JabberDiscoInfo(this.outQueue, this.errorQueue, this.jedis);
+		
+		String node = "/user/tuomas@koski.com/status";
+		jedis.sadd(JedisKeys.LOCAL_NODES, node);
+		
+		Map <String, String> conf = new HashMap<String, String>();
+		conf.put("pubsub#type", "http://www.w3.org/2005/Atom");
+		conf.put("pubsub#title", "Tuomas's status.");
+		conf.put("pubsub#description", "Tuomas's status feed. This is a bit like his \"twitter timeline\".");
+		conf.put("pubsub#publish_model", "publishers");
+		conf.put("pubsub#access_model", "open");
+		conf.put("pubsub#creation_date", "2011-06-01T12:56:22Z");
+		conf.put("pubsub#owner", "tuomas@koski.com");
+		conf.put("pubsub#default_affiliation", org.buddycloud.channels.pubsub.affiliation.Type.member.toString());
+		conf.put("pubsub#num_subscribers", "1");
+		
+		jedis.hmset("node:/" + node + ":conf", conf);
+		
+		IQ mockIQ = new IQ();
+		mockIQ.setType(IQ.Type.get);
+		mockIQ.setID(id);
+		mockIQ.setFrom("channels.buddycloud.com");
+		mockIQ.setTo("channels.koski.com");
+		
+		Element query = mockIQ.setChildElement("query", JabberDiscoInfo.NAMESPACE_URI);
+		query.addAttribute("node", node);
+		
+		discoInfoEngine.ingestPacket(mockIQ.createCopy());
+		
+		IQ result = (IQ)discoInfoEngine.outQueue.getQueue().poll();
+		
+		assertEquals(IQ.Type.result, result.getType());
+		assertEquals(id, result.getID());
+		
+		String expected = "<iq type=\"result\" id=\"testGetDiscoInfoNodeSuccess\" from=\"channels.koski.com\" to=\"channels.buddycloud.com\"><query xmlns=\"http://jabber.org/protocol/disco#info\" node=\"/user/tuomas@koski.com/status\"><identity category=\"pubsub\" type=\"leaf\"/><feature xmlns=\"http://jabber.org/protocol/pubsub\"/><x xmlns=\"jabber:x:data\" type=\"result\"><field var=\"FORM_TYPE\" type=\"hidden\"><value>http://jabber.org/protocol/pubsub#meta-data</value></field></x></query></iq>";
 		assertEquals(expected, result.toXML());
 		
 		//System.out.println(result.toXML());

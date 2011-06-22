@@ -1,17 +1,14 @@
 package test.org.buddycloud.channels.packetHandler.IQ.Namespace;
 
-import java.util.HashMap;
 import java.util.Map;
 
 import junit.framework.TestCase;
 
 import org.buddycloud.channels.jedis.JedisKeys;
 import org.buddycloud.channels.packet.ErrorPacket;
-import org.buddycloud.channels.packet.ErrorPacketBuilder;
 import org.buddycloud.channels.packetHandler.IQ.IQHandler;
-import org.buddycloud.channels.packetHandler.IQ.Namespace.JabberDiscoInfo;
-import org.buddycloud.channels.packetHandler.IQ.Namespace.JabberDiscoItems;
 import org.buddycloud.channels.packetHandler.IQ.Namespace.JabberRegister;
+import org.buddycloud.channels.pubsub.Subscription;
 import org.buddycloud.channels.queue.ErrorQueue;
 import org.buddycloud.channels.queue.OutQueue;
 import org.dom4j.Element;
@@ -19,7 +16,6 @@ import org.dom4j.dom.DOMElement;
 import org.junit.After;
 import org.junit.Before;
 import org.xmpp.packet.IQ;
-import org.xmpp.packet.IQ.Type;
 
 import redis.clients.jedis.Jedis;
 
@@ -70,6 +66,18 @@ public class JabberRegisterTest extends TestCase {
 		assertEquals("hash", type);
 		
 		assertTrue(jedis.sismember(JedisKeys.LOCAL_USERS, mockIQ.getFrom().toBareJID()));
+		
+		//jedis.sadd("node:" + node + ":subscribers", reqIQ.getFrom().toBareJID());
+		assertTrue(jedis.sismember("node:/user/tuomas@koski.com/status:subscribers", mockIQ.getFrom().toBareJID()));
+		
+		//jedis.hmset("node:" + node + ":subscriber:" + reqIQ.getFrom().toBareJID(), sub.getAsMap());
+		Map<String, String> sub = jedis.hgetAll("node:/user/tuomas@koski.com/status:subscriber:" + mockIQ.getFrom().toBareJID());
+		
+		assertEquals("subscribed", sub.get(Subscription.KEY_SUBSCRIPTION));
+		assertEquals("owner", sub.get(Subscription.KEY_AFFILIATION));
+		assertNull(sub.get(Subscription.KEY_EXTERNAL_CHANNEL_SERVER));
+		
+		assertEquals(mockIQ.getFrom().toBareJID(), jedis.get("node:/user/tuomas@koski.com/status:owner"));
 		
 	}
 

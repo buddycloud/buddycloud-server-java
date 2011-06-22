@@ -50,6 +50,7 @@ public final class JabberRegister extends AbstractNamespace {
 												org.buddycloud.channels.pubsub.affiliation.Type.owner,
 												null);
 
+			jedis.sadd("node:" + node + ":subscribers", reqIQ.getFrom().toBareJID());
 			jedis.hmset("node:" + node + ":subscriber:" + reqIQ.getFrom().toBareJID(), sub.getAsMap());
 			jedis.set("node:" + node + ":owner", reqIQ.getFrom().toBareJID());
 			
@@ -71,6 +72,8 @@ public final class JabberRegister extends AbstractNamespace {
 			conf.put("pubsub#num_subscribers", "1");
 			
 			jedis.hmset("node:/user/" + reqIQ.getFrom().toBareJID() + "/status:conf", conf);
+			
+			jedis.sadd(reqIQ.getFrom().toBareJID() + ":subs", node);
 			
 			IQ result = IQ.createResultIQ(reqIQ);
 			outQueue.put(result);

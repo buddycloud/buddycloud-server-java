@@ -91,6 +91,12 @@ public class JabberPubsub extends AbstractNamespace {
 		}
 		
 		private void create(Element elm) {
+			
+			if(!jedis.sismember(JedisKeys.LOCAL_USERS, reqIQ.getFrom().toBareJID())) {
+				errorQueue.put(ErrorPacketBuilder.registrationRequired(reqIQ));
+				return;
+			}
+			
 			String node = elm.attributeValue("node");
 			if (node == null || node.equals("")) {
 				// TODO:
@@ -136,7 +142,8 @@ public class JabberPubsub extends AbstractNamespace {
 
 			jedis.hmset("node:" + node + ":subscriber:" + reqIQ.getFrom().toBareJID(), sub.getAsMap());
 			jedis.set("node:" + node + ":owner", reqIQ.getFrom().toBareJID());
-
+			jedis.sadd(reqIQ.getFrom().toBareJID() + ":subs", node);
+			
 			String DATE_FORMAT = "yyyy-MM-dd'T'H:m:s'Z'";
 			SimpleDateFormat sdf = new SimpleDateFormat(DATE_FORMAT);
 			sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
@@ -154,6 +161,57 @@ public class JabberPubsub extends AbstractNamespace {
 			
 			jedis.hmset("node:" + node + ":conf", conf);
 			
+			jedis.sadd("node:" + node + ":subscribers", reqIQ.getFrom().toBareJID());
+			
+			
+			// Success.
+			// BUT since pubsub create can have configure in it as well...
+			// http://xmpp.org/extensions/xep-0060.html#owner-create-and-configure
+			// This is a big of a hack.
+			//
+			// THIS WHOLE THING IS JUST A MOCKUP NOW! i'M JUST GETTING THIS RUNNING
+			// AND WILL AFTER DO A WHOLE REWRITE AFTER!
+			//
+			Set <String> configurableValues = new HashSet<String>();
+			configurableValues.add("pubsub#title");
+			configurableValues.add("pubsub#description");
+			Element pubsub = reqIQ.getChildElement();
+			List<Element> elements = pubsub.elements();
+			for (Element configure : elements) {
+				if (!configure.getName().equals("configure")) {
+					continue;
+				}
+				
+				Element x = configure.element("x");
+				
+				if(x == null) {
+					continue;
+				}
+				
+				List<Element> elmFields = x.elements();
+				for (Element elmField : elmFields) {
+					
+					if(!"field".equals(elmField.getName())) {
+						continue;
+					}
+					
+					String var = elmField.attributeValue("var");
+					
+					Element value = elmField.element("value");
+					if(value == null) {
+						continue;
+					}
+					
+					String val = value.getTextTrim(); 
+					
+					if(!configurableValues.contains(elmField.attributeValue("var"))) {
+						continue;
+					}
+					jedis.hset("node:" + node + ":conf", var, val);
+				}
+				
+			} 
+			
 			IQ result = IQ.createResultIQ(reqIQ);
 			outQueue.put(result);
 		}
@@ -168,7 +226,6 @@ public class JabberPubsub extends AbstractNamespace {
 				return;
 			}
 			
-			
 			// 7.1.3.3 Node Does Not Exist
 			if(!jedis.sismember(JedisKeys.LOCAL_NODES, node)) {
 				
@@ -180,8 +237,9 @@ public class JabberPubsub extends AbstractNamespace {
 					return;
 				}
 				
-				// TODO We do a post behalf of the sender here.
+				// TODO We do a post behalf of the sender here to external inbox server.
 				
+				return;
 			} 
 			
 			/** 
@@ -461,6 +519,72 @@ public class JabberPubsub extends AbstractNamespace {
 			
 			outQueue.put(result);
 		}
+	
+	}
+	
+	private class GetPubSub implements IAction {
+		
+		public static final String ELEMENT_NAME = "pubsub";
+		
+		@Override
+		public void process() {
+			
+			Element pubsub = reqIQ.getChildElement();
+			@SuppressWarnings("unchecked")
+			List<Element> elements = pubsub.elements();
+
+			boolean handled = false;
+			String feature = "";
+			for (Element x : elements) {
+				feature = x.getName();
+				if(feature.equals("create")) {
+					this.subscriptions(x);
+					handled = true;
+				} 
+				break;
+			}
+			
+			if (handled == false) {
+				
+				// <iq type='error'
+				//	   from='pubsub.shakespeare.lit'
+				//	   to='hamlet@denmark.lit/elsinore'
+				//	   id='create1'>
+				//	   <error type='cancel'>
+				//	     <feature-not-implemented xmlns='urn:ietf:params:xml:ns:xmpp-stanzas'/>
+				//       <unsupported xmlns='http://jabber.org/protocol/pubsub#errors' feature='create-nodes'/>
+				//	   </error>
+				// </iq>
+
+				ErrorPacket ep = ErrorPacketBuilder.featureNotImplemented(reqIQ);
+				Element unsupported = new DOMElement("unsupported",
+						 							 new org.dom4j.Namespace("", ErrorPacket.NS_PUBSUB_ERROR));
+				unsupported.addAttribute("feature", feature);
+				ep.addCondition(unsupported);
+				
+				errorQueue.put(ep);
+				
+			}
+		}
+		
+		private void subscriptions(Element elm) {
+			
+			IQ result = IQ.createResultIQ(reqIQ);
+			
+			Element pubsub = result.setChildElement(ELEMENT_NAME, NAMESPACE_URI);
+			Element subscriptions = pubsub.addElement("subscriptions");
+			
+			Set<String> subs = jedis.smembers(reqIQ.getFrom().toBareJID() + ":subs");
+			for (String node : subs) {
+				subscriptions.addElement("subscription")
+							 .addAttribute("node", node)
+							 .addAttribute("subscription", jedis.hget("node:" + node + ":subscriber:" + reqIQ.getFrom().toBareJID(), Subscription.KEY_SUBSCRIPTION));
+			}
+			
+			outQueue.put(result);
+			
+		}
+
 	}
 	
 	private class ResultPubSub implements IAction {

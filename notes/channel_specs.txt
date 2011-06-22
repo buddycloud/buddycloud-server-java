@@ -1,12 +1,12 @@
 Channel specs
 =============
 
-Reqisterin to channel server:
+Reqistering to channel server:
 
 http://xmpp.org/extensions/xep-0077.html
 
 Request:
-<iq from="channeluser@example.com/ChannelCompatibleClient" to="channels.example.com" type='set'>
+<iq to="channels.localhost" type='set'>
   <query xmlns='jabber:iq:register'/>
 </iq>
 
@@ -21,8 +21,32 @@ We need to create the following channels.
 
 
 
+Creating a topic channel:
+=============================================================================
+<iq type="set" 
+    id="testCreateWithoutConfSuccess" 
+    to="channels.localhost">
+   <pubsub xmlns="http://jabber.org/protocol/pubsub">
+      <create node="status_of_the_development@channels.localhost"/>
+      <configure>
+         <x xmlns="jabber:x:data" type="submit">
+            <field var="FORM_TYPE" type="hidden">
+               <value>http://jabber.org/protocol/pubsub#node_config</value>
+            </field>
+            <field var="pubsub#title">
+               <value>The Awesome Title!</value>
+            </field>
+            <field var="pubsub#description">*
+               <value>The Awesome Description!</value>
+            </field>
+         </x>
+      </configure>
+   </pubsub>
+</iq>
+
 
 Posting an item:
+=============================================================================
 <entry xmlns="http://www.w3.org/2005/Atom">
    <id>1</id>
    <title>Status update.</title>

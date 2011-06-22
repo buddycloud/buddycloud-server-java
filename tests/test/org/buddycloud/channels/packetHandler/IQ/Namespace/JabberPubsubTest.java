@@ -506,4 +506,126 @@ public class JabberPubsubTest extends TestCase {
 		assertEquals(expected, result.toXML());
 	}
 	
+	public void testCreateWithoutConfSuccess() throws InterruptedException {
+		
+		JabberPubsub pubsubEngine = new JabberPubsub(this.outQueue, this.errorQueue, this.jedis);
+		
+		String id = "testCreateWithoutConfSuccess";
+		String node = "status_of_the_development";
+		
+		IQ mockIQ = new IQ();
+		mockIQ.setType(IQ.Type.set);
+		mockIQ.setID(id);
+		mockIQ.setTo("channels.koski.com");
+		mockIQ.setFrom("j@koski.com/client");
+		
+		// We add user as registered
+		jedis.sadd(JedisKeys.LOCAL_USERS, mockIQ.getFrom().toBareJID());
+		
+		Element pubsub = mockIQ.setChildElement("pubsub", JabberPubsub.NAMESPACE_URI);
+		pubsub.addElement("create")
+		      .addAttribute("node", node);
+		
+		pubsubEngine.ingestPacket(mockIQ.createCopy());
+		
+		Thread.sleep(50);
+		
+		IQ result = (IQ)pubsubEngine.outQueue.getQueue().poll();
+		
+		//System.out.println(result.toXML());
+		
+		String type = jedis.type("node:" + node + ":conf");
+		assertEquals("hash", type);
+		
+		Map<String, String> conf = jedis.hgetAll("node:" + node + ":conf");
+		assertEquals("http://www.w3.org/2005/Atom", conf.get("pubsub#type"));
+		assertEquals("", conf.get("pubsub#title"));
+		assertEquals("", conf.get("pubsub#description"));
+		assertEquals("publishers", conf.get("pubsub#publish_model"));
+		assertEquals("open", conf.get("pubsub#access_model"));
+		assertEquals(mockIQ.getFrom().toBareJID(), conf.get("pubsub#owner"));
+		assertEquals(org.buddycloud.channels.pubsub.affiliation.Type.publisher.toString(), conf.get("pubsub#default_affiliation"));
+		assertEquals("1", conf.get("pubsub#num_subscribers"));
+	}
+	
+	public void testCreateWithConfSuccess() throws InterruptedException {
+		
+		JabberPubsub pubsubEngine = new JabberPubsub(this.outQueue, this.errorQueue, this.jedis);
+		
+		String id = "testCreateWithoutConfSuccess";
+		String node = "status_of_the_development";
+		
+		IQ mockIQ = new IQ();
+		mockIQ.setType(IQ.Type.set);
+		mockIQ.setID(id);
+		mockIQ.setTo("channels.koski.com");
+		mockIQ.setFrom("j@koski.com/client");
+		
+		// We add user as registered
+		jedis.sadd(JedisKeys.LOCAL_USERS, mockIQ.getFrom().toBareJID());
+		
+		Element pubsub = mockIQ.setChildElement("pubsub", JabberPubsub.NAMESPACE_URI);
+		pubsub.addElement("create")
+		      .addAttribute("node", node);
+		
+		Element x = new DOMElement("x", new org.dom4j.Namespace("", "jabber:x:data"));
+		x.addAttribute("type", "submit");
+		Element field = x.addElement("field");
+		field.addAttribute("var", "FORM_TYPE")
+			 .addAttribute("type", "hidden")
+			 .addElement("value").setText("http://jabber.org/protocol/pubsub#node_config");
+		
+		field = x.addElement("field");
+		field.addAttribute("var", "pubsub#title")
+			 .addElement("value").setText("The Awesome Title!");
+		
+		field = x.addElement("field");
+		field.addAttribute("var", "pubsub#description")
+			 .addElement("value").setText("The Awesome Description!");
+		
+		field = x.addElement("field");
+		field.addAttribute("var", "pubsub#type")
+			 .addElement("value").setText("Something that should not be set!");
+		
+        pubsub.addElement("configure").add(x);
+		
+        System.out.println(mockIQ.toXML());
+        
+		pubsubEngine.ingestPacket(mockIQ.createCopy());
+		
+		Thread.sleep(50);
+		
+		IQ result = (IQ)pubsubEngine.outQueue.getQueue().poll();
+		
+		//System.out.println(result.toXML());
+		
+		assertEquals(IQ.Type.result, result.getType());
+		
+		String type = jedis.type("node:" + node + ":conf");
+		assertEquals("hash", type);
+		
+		Map<String, String> conf = jedis.hgetAll("node:" + node + ":conf");
+		assertEquals("http://www.w3.org/2005/Atom", conf.get("pubsub#type"));
+		assertEquals("The Awesome Title!", conf.get("pubsub#title"));
+		assertEquals("The Awesome Description!", conf.get("pubsub#description"));
+		assertEquals("publishers", conf.get("pubsub#publish_model"));
+		assertEquals("open", conf.get("pubsub#access_model"));
+		assertEquals(mockIQ.getFrom().toBareJID(), conf.get("pubsub#owner"));
+		assertEquals(org.buddycloud.channels.pubsub.affiliation.Type.publisher.toString(), conf.get("pubsub#default_affiliation"));
+		assertEquals("1", conf.get("pubsub#num_subscribers"));
+		
+		assertTrue(jedis.sismember(JedisKeys.LOCAL_NODES, node));
+		
+		//jedis.sadd("node:" + node + ":subscribers", reqIQ.getFrom().toBareJID());
+		assertTrue(jedis.sismember("node:" + node + ":subscribers", mockIQ.getFrom().toBareJID()));
+		
+		//jedis.hmset("node:" + node + ":subscriber:" + reqIQ.getFrom().toBareJID(), sub.getAsMap());
+		Map<String, String> sub = jedis.hgetAll("node:" + node + ":subscriber:" + mockIQ.getFrom().toBareJID());
+		
+		assertEquals("subscribed", sub.get(Subscription.KEY_SUBSCRIPTION));
+		assertEquals("owner", sub.get(Subscription.KEY_AFFILIATION));
+		assertNull(sub.get(Subscription.KEY_EXTERNAL_CHANNEL_SERVER));
+		
+		assertEquals(mockIQ.getFrom().toBareJID(), jedis.get("node:" + node + ":owner"));
+	}
 }

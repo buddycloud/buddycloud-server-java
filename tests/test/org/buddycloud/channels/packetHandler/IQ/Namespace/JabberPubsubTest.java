@@ -478,12 +478,12 @@ public class JabberPubsubTest extends TestCase {
 		mockIQ.setFrom("bc.heriveau.fr");
 		
 		Element pubsub = mockIQ.setChildElement("pubsub", JabberPubsub.NAMESPACE_URI);
-		pubsub.add(new org.dom4j.Namespace("bc", "http://buddycloud.org/v1"));
+		//pubsub.add(new org.dom4j.Namespace("bc", "http://buddycloud.org/v1"));
 		pubsub.addElement("subscribe")
 		      .addAttribute("node", "/user/tuomas@koski.com/status")
-		      .addAttribute("jid", mockIQ.getFrom().toString())
-		      .addAttribute("bc:actor", "nelly@heriveau.fr");
-		
+		      .addAttribute("jid", mockIQ.getFrom().toString());
+		      //.addAttribute("bc:actor", "nelly@heriveau.fr");
+		pubsub.addElement("actor", "http://buddycloud.org/v1").setText("nelly@heriveau.fr");
 		
 		//System.out.println(mockIQ.toXML());
 		pubsubEngine.ingestPacket(mockIQ.createCopy());
@@ -874,6 +874,72 @@ public class JabberPubsubTest extends TestCase {
 		assertFalse(jedis.sismember("node:" + node + ":itemset", iid));
 		assertTrue(0 == jedis.llen("node:" + node + ":itemlist"));
 		assertNull(jedis.get("node:" + node + ":item:" + iid));
+	}
+	
+	public void testPublishToExternalNode() throws InterruptedException {
+			
+		String node = "/user/pamela@anderson.us/status";
+		
+		jedis.sadd(JedisKeys.REMOTE_NODES, node);
+		
+		jedis.sadd("node:" + node + ":subscribers", "tuomas@koski.com");
+		Subscription sub = new Subscription(Type.subscribed,
+				org.buddycloud.channels.pubsub.affiliation.Type.publisher,
+				"channelbunnies.anderson.us");
+		jedis.hmset("node:" + node + ":subscriber:tuomas@koski.com", sub.getAsMap());
+		
+		JabberPubsub pubsubEngine = new JabberPubsub(this.outQueue, this.errorQueue, this.jedis);
+		
+		String id = "testPublishToExternalNode";
+		
+		IQ mockIQ = new IQ();
+		mockIQ.setType(IQ.Type.set);
+		mockIQ.setID(id);
+		mockIQ.setTo("channels.koski.com");
+		mockIQ.setFrom("tuomas@koski.com/client");
+		
+		Element pubsub = mockIQ.setChildElement("pubsub", JabberPubsub.NAMESPACE_URI);
+		Element publish = pubsub.addElement("publish");
+		publish.addAttribute("node", node);
+		Element item = publish.addElement("item"); 
+		
+		Element entry = new DOMElement("entry", new org.dom4j.Namespace("", "http://www.w3.org/2005/Atom"));
+		entry.add(new org.dom4j.Namespace("activity", "http://activitystrea.ms/spec/1.0/"));
+		
+		String DATE_FORMAT = "yyyy-MM-dd'T'H:m:s'Z'";
+		SimpleDateFormat sdf = new SimpleDateFormat(DATE_FORMAT);
+		sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
+
+		entry.addElement("published").setText(sdf.format(new Date()));
+		
+		Element author = entry.addElement("author");
+		author.addElement("name").setText("Tuomas Koski");
+		author.addElement("jid", "http://buddycloud.com/atom-elements-0").setText("tuomas@koski.com");
+		
+		entry.addElement("content")
+		     .addAttribute("type", "text")
+		     .setText("Hello Federation!");
+		
+		Element geoloc = entry.addElement("geoloc", "http://jabber.org/protocol/geoloc");
+		geoloc.addElement("text").setText("Home Sweet Home!");
+		geoloc.addElement("locality").setText("Paris");
+		geoloc.addElement("country").setText("Ffance");
+		
+		entry.addElement("activity:verb")
+		     .setText("post");
+		entry.addElement("activity:object")
+		     .addElement("activity:object-type")
+		     .setText("note");
+		
+		item.add(entry);
+		
+		pubsubEngine.ingestPacket(mockIQ.createCopy());
+		
+		Thread.sleep(50);
+		
+		IQ copy = (IQ)pubsubEngine.outQueue.getQueue().poll();
+		
+		System.out.println(copy.toXML());
 	}
 	
 }

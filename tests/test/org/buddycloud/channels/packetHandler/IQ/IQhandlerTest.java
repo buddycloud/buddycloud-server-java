@@ -294,8 +294,7 @@ public class IQhandlerTest extends TestCase {
 		result = (IQ)iqHandler.outQueue.getQueue().poll();
 		
 		/**
-		 * Now we know that we have a component bc.heriveau.fr. Next we suppose to send it a disco#info
-		 * To find out if it's a buddycloud channel.
+		 * Now we subscribe.
 		 * 
 		 * So in our outqueue we'll have something similar to this:
 		 * 
@@ -305,8 +304,8 @@ public class IQhandlerTest extends TestCase {
 		 *    <pubsub xmlns="http://jabber.org/protocol/pubsub" 
 		 *            xmlns:bc="http://buddycloud.org/v1">
 		 *       <subscribe node="/user/nelly@heriveau.fr/status" 
-		 *                  jid="channels.koski.com" 
-		 *                  bc:actor="tuomas@koski.com"/>
+		 *                  jid="channels.koski.com"/>
+         *       <actor xmlns='http://buddycloud.org/v1'>tuomas@koski.com</actor>   
 		 *       </pubsub>
 		 * </iq>
 		 */
@@ -318,11 +317,13 @@ public class IQhandlerTest extends TestCase {
 		
 		query = new DOMElement("query", new org.dom4j.Namespace("", JabberDiscoInfo.NAMESPACE_URI));
 		pubsub = new DOMElement("pubsub", new org.dom4j.Namespace("", JabberPubsub.NAMESPACE_URI));
-		pubsub.add(new org.dom4j.Namespace("bc", "http://buddycloud.org/v1"));
-		pubsub.addElement("subscribe")
-		      .addAttribute("node", store.get("node"))
-		      .addAttribute("jid", result.getFrom().toBareJID())
-		      .addAttribute("bc:actor", new JID("tuomas@koski.com").toBareJID());
+		//pubsub.add(new org.dom4j.Namespace("bc", "http://buddycloud.org/v1"));
+		Element subscribe = pubsub.addElement("subscribe");
+		subscribe.addAttribute("node", store.get("node"))
+		         .addAttribute("jid", result.getFrom().toBareJID());
+		         //.addAttribute("bc:actor", new JID("tuomas@koski.com").toBareJID());
+		pubsub.addElement("actor", "http://buddycloud.org/v1").setText("tuomas@koski.com");
+		
 		
 		assertEquals(pubsub.asXML(), result.getChildElement().asXML());
 		
@@ -340,12 +341,10 @@ public class IQhandlerTest extends TestCase {
 		 * 	   id="testRemoteSubscribeSuccess" 
 		 *     to="channels.koski.com" 
 		 *     from="bc.heriveau.fr">
-		 *    <pubsub xmlns="http://jabber.org/protocol/pubsub" 
-		 *            xmlns:bc="http://buddycloud.org/v1">
+		 *    <pubsub xmlns="http://jabber.org/protocol/pubsub">
 		 *       <subscription node="/user/nelly@heriveau.fr/status" 
 		 *                     jid="channels.koski.com" 
-		 *                     subscription="unconfigured" 
-		 *                     bc:actor="tuomas@koski.com"/>
+		 *                     subscription="unconfigured"/>
 		 *    </pubsub>
 		 * </iq>";
 		 */
@@ -358,9 +357,6 @@ public class IQhandlerTest extends TestCase {
 		subscription.addAttribute("node", "/user/nelly@heriveau.fr/status");
 		subscription.addAttribute("jid", "channels.koski.com");
 		subscription.addAttribute("subscription", "unconfigured");
-		
-		pubsub.add(new org.dom4j.Namespace("bc", "http://buddycloud.org/v1"));
-		subscription.addAttribute("bc:actor", "koski@buddycloud.com");
 		
 		subscriptionReply.setChildElement(pubsub);
 		

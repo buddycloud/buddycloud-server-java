@@ -203,11 +203,12 @@ public class JabberDiscoInfoTest extends TestCase {
 		//System.out.println(subsReq.toXML());
 		
 		Element pubsub = new DOMElement("pubsub", new org.dom4j.Namespace("", JabberPubsub.NAMESPACE_URI));
-		pubsub.add(new org.dom4j.Namespace("bc", "http://buddycloud.org/v1"));
+		//pubsub.add(new org.dom4j.Namespace("bc", "http://buddycloud.org/v1"));
 		pubsub.addElement("subscribe")
 		      .addAttribute("node", "/user/nelly@heriveau.fr/status")
-		      .addAttribute("jid", "channels.koski.com")
-		      .addAttribute("bc:actor", "tuomas@koski.com");
+		      .addAttribute("jid", "channels.koski.com");
+		      //.addAttribute("bc:actor", "tuomas@koski.com");
+		pubsub.addElement("actor", "http://buddycloud.org/v1").setText("tuomas@koski.com");
 		
 		assertEquals(null, subsReq.getFrom());
 		assertEquals("bc.heriveau.fr", subsReq.getTo().toBareJID());

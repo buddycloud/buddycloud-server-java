@@ -14,6 +14,8 @@ public class State {
 	public static final String STATE_DISCO_INFO_TO_COMPONENTS                 = "subscribe-disco-info";
 	public static final String STATE_SUBSCRIBE                                = "subscribe";
 	
+	public static final String STATE_PUBLISH = "publish";
+	
 	//public static final String STATE_DISCO_ITEMS_TO_FIND_BC_CHANNEL_COMPONENT = "bc-disco-items";
 	
 	public static final String STATE_NOT_KNOWN = "not-known";

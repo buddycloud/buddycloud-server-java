@@ -22,7 +22,6 @@ import org.buddycloud.channels.statefull.State;
 import org.buddycloud.channels.statefull.StateMachine;
 import org.dom4j.DocumentException;
 import org.dom4j.Element;
-import org.dom4j.Namespace;
 import org.dom4j.dom.DOMElement;
 import org.dom4j.io.SAXReader;
 import org.xmpp.packet.IQ;
@@ -51,6 +50,18 @@ public class JabberPubsub extends AbstractNamespace {
 		public void process() {
 			
 			Element pubsub = reqIQ.getChildElement();
+			
+			//Let's get the possible actor
+			String actor = null;
+			if(pubsub.element("actor") != null) {
+				JID actorJID = new JID(pubsub.element("actor").getTextTrim());
+				/**
+				 * TODO validate here that the JID is somehow sane.
+				 *      We could check that the domains are the same etc.
+				 */
+				actor = actorJID.toBareJID();
+			}
+			
 			@SuppressWarnings("unchecked")
 			List<Element> elements = pubsub.elements();
 
@@ -65,7 +76,7 @@ public class JabberPubsub extends AbstractNamespace {
 					this.publish(x);
 					handled = true;
 				} else if(feature.equals("subscribe")) {
-					this.subscribe(x);
+					this.subscribe(x, actor);
 					handled = true;
 				} else if(feature.equals("retract")) {
 					this.retract(x);
@@ -327,7 +338,26 @@ public class JabberPubsub extends AbstractNamespace {
 					return;
 				}
 				
+				System.out.println("No aijaa");
+				
+				String channelServer = jedis.hget("node:" + node + ":subscriber:" + reqIQ.getTo().toBareJID(), Subscription.KEY_EXTERNAL_CHANNEL_SERVER);
+				
 				// TODO We do a post behalf of the sender here to external inbox server.
+				IQ copy = reqIQ.createCopy();
+				String id = UUID.randomUUID().toString();
+				copy.setID(id);
+				copy.setTo(channelServer);
+				copy.getChildElement()
+				    .addElement("actor", "http://buddycloud.org/v1")
+				    .setText(reqIQ.getFrom().toBareJID());
+				
+				Map <String, String> store = new HashMap<String, String>();
+				store.put(State.KEY_STATE, State.STATE_PUBLISH);
+				store.put("id", reqIQ.getID());
+				store.put("jid", reqIQ.getFrom().toString());
+				jedis.hmset("store:" + id, store);
+				
+				outQueue.put(copy);
 				
 				return;
 			} 
@@ -465,7 +495,7 @@ public class JabberPubsub extends AbstractNamespace {
 			 */
 		}
 		
-		private void subscribe(Element elm) {
+		private void subscribe(Element elm, String actor) {
 			
 			String node = elm.attributeValue("node");
 			
@@ -495,12 +525,13 @@ public class JabberPubsub extends AbstractNamespace {
 //			}
 			
 			String remoteChannelServer = null;
-			String buddycloudPrefix = "";
-			Namespace namespace = elm.getNamespaceForURI("http://buddycloud.org/v1");
-			if(namespace != null) {
-				buddycloudPrefix = namespace.getPrefix() + ":";
-			}
-			String actor = elm.attributeValue(buddycloudPrefix + "actor");
+//			String buddycloudPrefix = "";
+//			Namespace namespace = elm.getNamespaceForURI("http://buddycloud.org/v1");
+//			if(namespace != null) {
+//				buddycloudPrefix = namespace.getPrefix() + ":";
+//			}
+//			String actor = elm.attributeValue(buddycloudPrefix + "actor");
+			
 			if(actor == null && subsJID.getNode() == null) {
 				
 				/** 
@@ -541,7 +572,7 @@ public class JabberPubsub extends AbstractNamespace {
 //			}
 			
 			// 7.1.3.3 Node Does Not Exist
-			if(!jedis.sismember(JedisKeys.LOCAL_NODES, node)) {
+			if(!jedis.sismember(JedisKeys.LOCAL_NODES, node) && actor != null) {
 				
 				/**
 				 * Let's discover every time now.
@@ -564,7 +595,6 @@ public class JabberPubsub extends AbstractNamespace {
 					discoItemsGet.setTo(user.getDomain());
 					
 					discoItemsGet.setChildElement("query", "http://jabber.org/protocol/disco#items");
-					outQueue.put(discoItemsGet);
 					
 					Map <String, String> store = new HashMap<String, String>();
 					store.put(State.KEY_STATE, State.STATE_DISCO_ITEMS_TO_FIND_BC_CHANNEL_COMPONENT);
@@ -574,9 +604,16 @@ public class JabberPubsub extends AbstractNamespace {
 					
 					jedis.hmset("store:" + id, store);
 					
+					outQueue.put(discoItemsGet);
+					
 				//	return;
 				//}
 				
+				return;
+			} else if(!jedis.sismember(JedisKeys.LOCAL_NODES, node)) {
+				ErrorPacket ep = ErrorPacketBuilder.itemNotFound(reqIQ);
+				ep.setMsg("External server tried to subscribe to a node that does not exists!");
+				errorQueue.put(ep);
 				return;
 			}
 			

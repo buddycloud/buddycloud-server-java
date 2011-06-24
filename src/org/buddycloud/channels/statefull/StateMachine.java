@@ -132,11 +132,13 @@ public class StateMachine {
 				subscribe.setTo(iq.getFrom().toString());
 				
 				Element pubsub = subscribe.setChildElement("pubsub", JabberPubsub.NAMESPACE_URI);
-				pubsub.add(new org.dom4j.Namespace("bc", "http://buddycloud.org/v1"));
+				//pubsub.add(new org.dom4j.Namespace("bc", "http://buddycloud.org/v1"));
 				pubsub.addElement("subscribe")
 				      .addAttribute("node", store.get("node"))
-				      .addAttribute("jid", iq.getTo().toString())
-				      .addAttribute("bc:actor", new JID(store.get("jid")).toBareJID());
+				      .addAttribute("jid", iq.getTo().toString());
+				      //.addAttribute("bc:actor", new JID(store.get("jid")).toBareJID());
+				pubsub.addElement("actor", "http://buddycloud.org/v1")
+				      .setText(new JID(store.get("jid")).toBareJID());
 				
 				store.put(State.KEY_STATE, State.STATE_SUBSCRIBE);
 				
@@ -228,6 +230,20 @@ public class StateMachine {
 			jedis.del("store:" + iq.getID());
 			
 			outQueue.put(result);
+			
+		} else if(state.getState().equals(State.STATE_PUBLISH)) {
+			
+			String jid  = state.getStore().get(State.KEY_JID);
+			String id   = state.getStore().get(State.KEY_ID);
+			
+			IQ copy = iq.createCopy();
+			copy.setID(id);
+			copy.setFrom(copy.getTo());
+			copy.setTo(jid);
+			
+			jedis.del("store:" + iq.getID());
+			
+			outQueue.put(copy);
 			
 		} else {
 			System.out.println("Did not found handler for state '" + state.getState() + "'.");

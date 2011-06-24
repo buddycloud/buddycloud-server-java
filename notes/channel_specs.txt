@@ -47,6 +47,43 @@ Creating a topic channel:
 
 Posting an item:
 =============================================================================
+
+Final good one:
+
+<iq to="channels.localhost" type="set" id="publish:20"> 
+   <pubsub xmlns="http://jabber.org/protocol/pubsub"> 
+      <publish node="status_of_the_development@channels.localhost"> 
+         <item> 
+            <entry xmlns="http://www.w3.org/2005/Atom" xmlns:activity="http://activitystrea.ms/spec/1.0/"> 
+            
+               <id>1</id>
+            
+               <updated>2010-01-06T21:41:32Z</updated> 
+               <author> 
+               	  <activity:object-type>person</activity:object-type>
+                  <name>koski@buddycloud.com</name> 
+                  <jid xmlns="http://buddycloud.com/atom-elements-0">koski@buddycloud.com</jid> 
+               </author>
+               <title>Channel post</title>
+               <content type="text">Welcome to the world of tomorrow!</content> 
+               
+               <geoloc xmlns="http://jabber.org/protocol/geoloc"> 
+                  <text>Paris, France</text> 
+                  <locality>Paris</locality> 
+                  <country>France</country> 
+               </geoloc> 
+            
+               <activity:verb>post</activity:verb>
+               <activity:object-type>note</activity:object-type>
+   			   
+            </entry> 
+         </item> 
+      </publish> 
+   </pubsub> 
+</iq>
+
+
+
 <entry xmlns="http://www.w3.org/2005/Atom">
    <id>1</id>
    <title>Status update.</title>
@@ -107,20 +144,21 @@ Channel server SHOULD make the post also compatible with activity streams:
 
 <entry xmlns="http://www.w3.org/2005/Atom" xmlns:activity="http://activitystrea.ms/spec/1.0/">
 
-   <activity:object-type>note</activity:object-type>
-   <activity:verb>post</activity:verb>
-
    <id>bc.heriveau.fr,/user/nelly@heriveau.fr/status,1dfs5-6s8e-zerf-4494</id>
    <title>Status update.</title>
    <content>This is my new status!</content>
    <updated>2011-06-18T9:8:57Z</updated>
    <author>
-
-      <activity:object-type>person</activity:object-type>
-
       <name>nelly@heriveau.fr</name>
       <jid xmlns="http://buddycloud.com/atom-elements-0">nelly@heriveau.fr</jid>
+      
+      <activity:object-type>person</activity:object-type>
+      
    </author>
+   
+   <activity:verb>post</activity:verb>
+   <activity:object-type>note</activity:object-type>
+   
 </entry>
 
 

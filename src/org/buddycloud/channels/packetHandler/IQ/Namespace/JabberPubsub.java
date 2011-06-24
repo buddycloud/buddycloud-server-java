@@ -1,5 +1,6 @@
 package org.buddycloud.channels.packetHandler.IQ.Namespace;
 
+import java.io.StringReader;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
@@ -19,9 +20,11 @@ import org.buddycloud.channels.queue.ErrorQueue;
 import org.buddycloud.channels.queue.OutQueue;
 import org.buddycloud.channels.statefull.State;
 import org.buddycloud.channels.statefull.StateMachine;
+import org.dom4j.DocumentException;
 import org.dom4j.Element;
 import org.dom4j.Namespace;
 import org.dom4j.dom.DOMElement;
+import org.dom4j.io.SAXReader;
 import org.xmpp.packet.IQ;
 import org.xmpp.packet.JID;
 import org.xmpp.packet.Message;
@@ -36,6 +39,7 @@ public class JabberPubsub extends AbstractNamespace {
 		
 		super(outQueue, errorQueue, jedis);
 		setProcessors.put(SetPubSub.ELEMENT_NAME, new SetPubSub());
+		getProcessors.put(GetPubSub.ELEMENT_NAME, new GetPubSub());
 		resultProcessors.put(ResultPubSub.ELEMENT_NAME, new ResultPubSub());
 	}
 	
@@ -62,6 +66,9 @@ public class JabberPubsub extends AbstractNamespace {
 					handled = true;
 				} else if(feature.equals("subscribe")) {
 					this.subscribe(x);
+					handled = true;
+				} else if(feature.equals("retract")) {
+					this.retract(x);
 					handled = true;
 				}
 				break;
@@ -214,6 +221,89 @@ public class JabberPubsub extends AbstractNamespace {
 			
 			IQ result = IQ.createResultIQ(reqIQ);
 			outQueue.put(result);
+		}
+		
+		private void retract(Element elm) {
+			
+			String node = elm.attributeValue("node");
+			if(node == null || node.equals("")) {
+				ErrorPacket ep = ErrorPacketBuilder.nodeIdRequired(reqIQ);
+				ep.setMsg("Node attribute was missing when trying to retract an item.");
+				errorQueue.put(ep);
+				return;
+			}
+			
+			// 7.1.3.3 Node Does Not Exist
+			if(!jedis.sismember(JedisKeys.LOCAL_NODES, node)) {
+				
+				if(!jedis.sismember(JedisKeys.REMOTE_NODES, node)) {
+					// 7.1.3.3 Node Does Not Exist
+					// TODO, this is not a good place here. It is possible that we want to do 
+					// discovery here and send the packet. All open nodes for everyone can exists.
+					errorQueue.put(ErrorPacketBuilder.itemNotFound(reqIQ));
+					return;
+				}
+				
+				// TODO We do a post behalf of the sender here to external inbox server.
+				
+				return;
+			} 
+			
+			Element item = elm.element("item");
+			if(item == null) {
+				errorQueue.put(ErrorPacketBuilder.badRequest(reqIQ));
+				return;
+			}
+			
+			String id = item.attributeValue("id");
+			if(id == null) {
+				errorQueue.put(ErrorPacketBuilder.badRequest(reqIQ));
+				return;
+			}
+			
+			jedis.srem("node:" + node + ":itemset", id);
+			jedis.lrem("node:" + node + ":itemlist", 1, id);
+			jedis.del("node:" + node + ":item:" + id);
+			
+			outQueue.put(IQ.createResultIQ(reqIQ));
+			
+			Message msg = new Message();
+			msg.setType(Message.Type.headline);
+			msg.setID(UUID.randomUUID().toString());
+			Element event = msg.addChildElement("event", JabberPubsubEvent.NAMESPACE_URI);
+			Element items = event.addElement("items");
+			items.addAttribute("node", node);
+			Element retract = items.addElement("retract");
+			retract.addAttribute("id", id);
+			
+			Set<String> externalChannelServerReceivers = new HashSet<String>();
+			
+			Set<String> subscriberJIDs = jedis.smembers("node:" + node + ":subscribers");
+			if(subscriberJIDs.isEmpty()) {
+				System.out.println("Weird, there is no subscribers.... (Just retracting here)");
+				return;
+			}
+			
+			for (String subscriber : subscriberJIDs) {
+				Map<String, String> subscription = jedis.hgetAll("node:" + node + ":subscriber:" + subscriber);
+				if(subscription.get(Subscription.KEY_EXTERNAL_CHANNEL_SERVER) != null) {
+					if(externalChannelServerReceivers.contains(subscription.get(Subscription.KEY_EXTERNAL_CHANNEL_SERVER))) {
+						continue;
+					}
+					externalChannelServerReceivers.add(subscription.get(Subscription.KEY_EXTERNAL_CHANNEL_SERVER));
+					subscriber = subscription.get(Subscription.KEY_EXTERNAL_CHANNEL_SERVER);
+				} else {
+					
+					/** TODO
+					 *  Add here to deliver only to online local users.
+					 */
+					
+				}
+				
+				msg.setTo(subscriber);
+				outQueue.put(msg.createCopy());
+			}
+			
 		}
 		
 		private void publish(Element elm) {
@@ -537,10 +627,16 @@ public class JabberPubsub extends AbstractNamespace {
 			String feature = "";
 			for (Element x : elements) {
 				feature = x.getName();
-				if(feature.equals("create")) {
+				if(feature.equals("subscriptions")) {
 					this.subscriptions(x);
 					handled = true;
-				} 
+				} else if(feature.equals("affiliations")) {
+					this.affiliations(x);
+					handled = true;
+				} else if(feature.equals("items")) {
+					this.items(x);
+					handled = true;
+				}
 				break;
 			}
 			
@@ -574,17 +670,94 @@ public class JabberPubsub extends AbstractNamespace {
 			Element pubsub = result.setChildElement(ELEMENT_NAME, NAMESPACE_URI);
 			Element subscriptions = pubsub.addElement("subscriptions");
 			
+			String node = elm.attributeValue("node");
 			Set<String> subs = jedis.smembers(reqIQ.getFrom().toBareJID() + ":subs");
-			for (String node : subs) {
-				subscriptions.addElement("subscription")
-							 .addAttribute("node", node)
-							 .addAttribute("subscription", jedis.hget("node:" + node + ":subscriber:" + reqIQ.getFrom().toBareJID(), Subscription.KEY_SUBSCRIPTION));
+			if(node == null || subs.contains(node)) {
+
+				if(node != null) {
+					subs.clear();
+					subs.add(node);
+				}
+				
+				for (String n : subs) {
+					subscriptions.addElement("subscription")
+								 .addAttribute("node", n)
+								 .addAttribute("subscription", jedis.hget("node:" + n + ":subscriber:" + reqIQ.getFrom().toBareJID(), Subscription.KEY_SUBSCRIPTION))
+								 .addAttribute("jid", reqIQ.getFrom().toBareJID());
+				}
 			}
 			
 			outQueue.put(result);
 			
 		}
+		
+		private void affiliations(Element elm) {
+			
+			IQ result = IQ.createResultIQ(reqIQ);
+			
+			Element pubsub = result.setChildElement(ELEMENT_NAME, NAMESPACE_URI);
+			Element affiliations = pubsub.addElement("affiliations");
+			
+			String node = elm.attributeValue("node");
+			Set<String> subs = jedis.smembers(reqIQ.getFrom().toBareJID() + ":subs");
+			if(node == null || subs.contains(node)) {
 
+				if(node != null) {
+					subs.clear();
+					subs.add(node);
+				}
+
+				for (String n : subs) {
+					affiliations.addElement("affiliation")
+								.addAttribute("node", n)
+								.addAttribute("affiliation", jedis.hget("node:" + n + ":subscriber:" + reqIQ.getFrom().toBareJID(), Subscription.KEY_AFFILIATION));
+				}
+			
+			} 
+
+			outQueue.put(result);
+			
+		}
+		
+		private void items(Element elm) {
+			
+			String node = elm.attributeValue("node");
+			if (node == null || node.equals("")) {
+				ErrorPacket ep = ErrorPacketBuilder.nodeIdRequired(reqIQ);
+				ep.setMsg("Tried to fetch node items without passing a node ID.");
+				errorQueue.put(ep);
+				return;
+			}
+			
+			List<String> itemsList = jedis.lrange("node:" + node + ":itemlist", 0, -1);
+			
+			Element pubsub = new DOMElement("pubsub",
+   											new org.dom4j.Namespace("", NAMESPACE_URI));
+			
+			Element items = pubsub.addElement("items");
+			items.addAttribute("node", node);
+			
+			for (String itemID : itemsList) {
+				
+				Element item = items.addElement("item");
+				item.addAttribute("id", itemID);
+				
+				SAXReader xmlReader = new SAXReader();
+				Element entry = null;
+				try {
+					entry = xmlReader.read(new StringReader(jedis.get("node:" + node + ":item:" + itemID))).getRootElement();
+					item.add(entry);
+				} catch (DocumentException e) {
+					System.out.println("Something went very wrong here.");
+				}
+				
+			}
+			
+			IQ result = IQ.createResultIQ(reqIQ);
+			result.setChildElement(pubsub);
+			
+			outQueue.put(result);
+		}
 	}
 	
 	private class ResultPubSub implements IAction {

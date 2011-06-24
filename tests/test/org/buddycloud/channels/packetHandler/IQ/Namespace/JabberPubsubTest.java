@@ -14,6 +14,7 @@ import org.buddycloud.channels.jedis.JedisKeys;
 import org.buddycloud.channels.packet.ErrorPacket;
 import org.buddycloud.channels.packetHandler.IQ.Namespace.JabberDiscoItems;
 import org.buddycloud.channels.packetHandler.IQ.Namespace.JabberPubsub;
+import org.buddycloud.channels.packetHandler.IQ.Namespace.JabberPubsubEvent;
 import org.buddycloud.channels.pubsub.Subscription;
 import org.buddycloud.channels.pubsub.subscription.Type;
 import org.buddycloud.channels.queue.ErrorQueue;
@@ -589,7 +590,7 @@ public class JabberPubsubTest extends TestCase {
 		
         pubsub.addElement("configure").add(x);
 		
-        System.out.println(mockIQ.toXML());
+        //System.out.println(mockIQ.toXML());
         
 		pubsubEngine.ingestPacket(mockIQ.createCopy());
 		
@@ -628,4 +629,251 @@ public class JabberPubsubTest extends TestCase {
 		
 		assertEquals(mockIQ.getFrom().toBareJID(), jedis.get("node:" + node + ":owner"));
 	}
+	
+	public void testGetAllSubscriptions() throws InterruptedException {
+		
+		JabberPubsub pubsubEngine = new JabberPubsub(this.outQueue, this.errorQueue, this.jedis);
+		
+		jedis.sadd("j@koski.com:subs", "beer_and_babes@bc.hoituu.com");
+		jedis.hset("node:beer_and_babes@bc.hoituu.com:subscriber:j@koski.com", Subscription.KEY_SUBSCRIPTION, "subscribed");
+		jedis.sadd("j@koski.com:subs", "babes_and_boobs@channels.koski.com");
+		jedis.hset("node:babes_and_boobs@channels.koski.com:subscriber:j@koski.com", Subscription.KEY_SUBSCRIPTION, "subscribed");
+		
+		String id = "testGetAllSubscriptions";
+		
+		IQ mockIQ = new IQ();
+		mockIQ.setType(IQ.Type.get);
+		mockIQ.setID(id);
+		mockIQ.setTo("channels.koski.com");
+		mockIQ.setFrom("j@koski.com/client");
+		
+		// We add user as registered
+		jedis.sadd(JedisKeys.LOCAL_USERS, mockIQ.getFrom().toBareJID());
+		
+		Element pubsub = mockIQ.setChildElement("pubsub", JabberPubsub.NAMESPACE_URI);
+		pubsub.addElement("subscriptions");
+		
+		//System.out.println(mockIQ.toXML());
+        
+		pubsubEngine.ingestPacket(mockIQ.createCopy());
+		
+		Thread.sleep(50);
+		
+		IQ result = (IQ)pubsubEngine.outQueue.getQueue().poll();
+		
+		//System.out.println(result.toXML());
+		
+		Element expected = new DOMElement("pubsub",
+										  new org.dom4j.Namespace("", "http://jabber.org/protocol/pubsub"));
+		Element subscriptions = expected.addElement("subscriptions");
+		subscriptions.addElement("subscription")
+		             .addAttribute("node", "babes_and_boobs@channels.koski.com")
+		             .addAttribute("subscription", "subscribed")
+		             .addAttribute("jid", "j@koski.com");
+		subscriptions.addElement("subscription")
+					 .addAttribute("node", "beer_and_babes@bc.hoituu.com")
+					 .addAttribute("subscription", "subscribed")
+					 .addAttribute("jid", "j@koski.com");
+		
+		assertEquals(expected.asXML(), result.getChildElement().asXML());
+	}	
+	
+	public void testGetOneSubscriptions() throws InterruptedException {
+		
+		JabberPubsub pubsubEngine = new JabberPubsub(this.outQueue, this.errorQueue, this.jedis);
+		
+		jedis.sadd("j@koski.com:subs", "beer_and_babes@bc.hoituu.com");
+		jedis.hset("node:beer_and_babes@bc.hoituu.com:subscriber:j@koski.com", Subscription.KEY_SUBSCRIPTION, "subscribed");
+		jedis.sadd("j@koski.com:subs", "babes_and_boobs@channels.koski.com");
+		jedis.hset("node:babes_and_boobs@channels.koski.com:subscriber:j@koski.com", Subscription.KEY_SUBSCRIPTION, "subscribed");
+		
+		String id = "testGetOneSubscriptions";
+		
+		IQ mockIQ = new IQ();
+		mockIQ.setType(IQ.Type.get);
+		mockIQ.setID(id);
+		mockIQ.setTo("channels.koski.com");
+		mockIQ.setFrom("j@koski.com/client");
+		
+		// We add user as registered
+		jedis.sadd(JedisKeys.LOCAL_USERS, mockIQ.getFrom().toBareJID());
+		
+		Element pubsub = mockIQ.setChildElement("pubsub", JabberPubsub.NAMESPACE_URI);
+		pubsub.addElement("subscriptions").addAttribute("node", "babes_and_boobs@channels.koski.com");
+		
+		pubsubEngine.ingestPacket(mockIQ.createCopy());
+		
+		Thread.sleep(50);
+		
+		IQ result = (IQ)pubsubEngine.outQueue.getQueue().poll();
+		
+		Element expected = new DOMElement("pubsub",
+										  new org.dom4j.Namespace("", "http://jabber.org/protocol/pubsub"));
+		Element subscriptions = expected.addElement("subscriptions");
+		subscriptions.addElement("subscription")
+		             .addAttribute("node", "babes_and_boobs@channels.koski.com")
+		             .addAttribute("subscription", "subscribed")
+		             .addAttribute("jid", "j@koski.com");
+		
+		assertEquals(expected.asXML(), result.getChildElement().asXML());
+	}
+	
+	public void testGetAllAffiliations() throws InterruptedException {
+		
+		JabberPubsub pubsubEngine = new JabberPubsub(this.outQueue, this.errorQueue, this.jedis);
+		
+		jedis.sadd("j@koski.com:subs", "beer_and_babes@bc.hoituu.com");
+		jedis.hset("node:beer_and_babes@bc.hoituu.com:subscriber:j@koski.com", Subscription.KEY_AFFILIATION, "owner");
+		jedis.sadd("j@koski.com:subs", "babes_and_boobs@channels.koski.com");
+		jedis.hset("node:babes_and_boobs@channels.koski.com:subscriber:j@koski.com", Subscription.KEY_AFFILIATION, "publisher");
+		
+		String id = "testGetAllAffiliations";
+		
+		IQ mockIQ = new IQ();
+		mockIQ.setType(IQ.Type.get);
+		mockIQ.setID(id);
+		mockIQ.setTo("channels.koski.com");
+		mockIQ.setFrom("j@koski.com/client");
+		
+		// We add user as registered
+		jedis.sadd(JedisKeys.LOCAL_USERS, mockIQ.getFrom().toBareJID());
+		
+		Element pubsub = mockIQ.setChildElement("pubsub", JabberPubsub.NAMESPACE_URI);
+		pubsub.addElement("affiliations");
+		
+		//System.out.println(mockIQ.toXML());
+        
+		pubsubEngine.ingestPacket(mockIQ.createCopy());
+		
+		Thread.sleep(50);
+		
+		IQ result = (IQ)pubsubEngine.outQueue.getQueue().poll();
+		
+		//System.out.println(result.toXML());
+		
+		Element expected = new DOMElement("pubsub",
+										  new org.dom4j.Namespace("", "http://jabber.org/protocol/pubsub"));
+		Element subscriptions = expected.addElement("affiliations");
+		subscriptions.addElement("affiliation")
+		             .addAttribute("node", "babes_and_boobs@channels.koski.com")
+		             .addAttribute("affiliation", "publisher");
+		subscriptions.addElement("affiliation")
+					 .addAttribute("node", "beer_and_babes@bc.hoituu.com")
+					 .addAttribute("affiliation", "owner");
+		
+		assertEquals(expected.asXML(), result.getChildElement().asXML());
+	}	
+	
+	public void testGetOneAffiliation() throws InterruptedException {
+		
+		JabberPubsub pubsubEngine = new JabberPubsub(this.outQueue, this.errorQueue, this.jedis);
+		
+		jedis.sadd("j@koski.com:subs", "beer_and_babes@bc.hoituu.com");
+		jedis.hset("node:beer_and_babes@bc.hoituu.com:subscriber:j@koski.com", Subscription.KEY_AFFILIATION, "owner");
+		jedis.sadd("j@koski.com:subs", "babes_and_boobs@channels.koski.com");
+		jedis.hset("node:babes_and_boobs@channels.koski.com:subscriber:j@koski.com", Subscription.KEY_AFFILIATION, "publisher");
+		
+		String id = "testGetOneAffiliation";
+		
+		IQ mockIQ = new IQ();
+		mockIQ.setType(IQ.Type.get);
+		mockIQ.setID(id);
+		mockIQ.setTo("channels.koski.com");
+		mockIQ.setFrom("j@koski.com/client");
+		
+		// We add user as registered
+		jedis.sadd(JedisKeys.LOCAL_USERS, mockIQ.getFrom().toBareJID());
+		
+		Element pubsub = mockIQ.setChildElement("pubsub", JabberPubsub.NAMESPACE_URI);
+		pubsub.addElement("affiliations").addAttribute("node", "beer_and_babes@bc.hoituu.com");
+		
+		
+		//System.out.println(mockIQ.toXML());
+        
+		pubsubEngine.ingestPacket(mockIQ.createCopy());
+		
+		Thread.sleep(50);
+		
+		IQ result = (IQ)pubsubEngine.outQueue.getQueue().poll();
+		
+		assertEquals(IQ.Type.result, result.getType());
+		
+		//System.out.println(result.toXML());
+		
+		Element expected = new DOMElement("pubsub",
+										  new org.dom4j.Namespace("", "http://jabber.org/protocol/pubsub"));
+		Element subscriptions = expected.addElement("affiliations");
+		subscriptions.addElement("affiliation")
+					 .addAttribute("node", "beer_and_babes@bc.hoituu.com")
+					 .addAttribute("affiliation", "owner");
+		
+		assertEquals(expected.asXML(), result.getChildElement().asXML());
+	}	
+	
+	public void testRetract() throws InterruptedException {
+		
+		JabberPubsub pubsubEngine = new JabberPubsub(this.outQueue, this.errorQueue, this.jedis);
+		String node = "beer_and_babes@bc.hoituu.com";
+		
+		jedis.sadd(JedisKeys.LOCAL_NODES, node);
+		
+		jedis.sadd("node:" + node + ":subscribers", "tuomas@koski.com");
+		Subscription sub = new Subscription(Type.unconfigured,
+				org.buddycloud.channels.pubsub.affiliation.Type.publisher,
+				null);
+		jedis.hmset("node:" + node + ":subscriber:tuomas@koski.com", sub.getAsMap());
+		
+		String iid = "ae890ac52d0df67ed7cfdf51b644e901";
+		jedis.sadd("node:" + node + ":itemset", iid);
+		jedis.lpush("node:" + node + ":itemlist", iid);
+		jedis.set("node:" + node + ":item:" + iid, "t");
+		
+		String id = "testRetract";
+		
+		IQ mockIQ = new IQ();
+		mockIQ.setType(IQ.Type.set);
+		mockIQ.setID(id);
+		mockIQ.setTo("channels.koski.com");
+		mockIQ.setFrom("j@koski.com/client");
+		
+		// We add user as registered
+		jedis.sadd(JedisKeys.LOCAL_USERS, mockIQ.getFrom().toBareJID());
+		
+		Element pubsub = mockIQ.setChildElement("pubsub", JabberPubsub.NAMESPACE_URI);
+		Element retract = pubsub.addElement("retract");
+		retract.addAttribute("node", node);
+		retract.addElement("item").addAttribute("id", iid);
+		
+		pubsubEngine.ingestPacket(mockIQ.createCopy());
+		
+		Thread.sleep(50);
+		
+		IQ result = (IQ)pubsubEngine.outQueue.getQueue().poll();
+		
+		//System.out.println(result.toXML());
+		
+		assertEquals(IQ.Type.result, result.getType());
+		
+		Message notify = (Message)pubsubEngine.outQueue.getQueue().poll();
+		
+		assertEquals(Message.Type.headline, notify.getType());
+		
+		//System.out.print(notify.toXML());
+		
+		Element e = notify.getChildElement("event", "http://jabber.org/protocol/pubsub#event");
+		
+		Element event = new DOMElement("event",
+				  					   new org.dom4j.Namespace("", "http://jabber.org/protocol/pubsub#event"));
+		Element items = event.addElement("items");
+		items.addAttribute("node", node);
+		Element r = items.addElement("retract");
+		r.addAttribute("id", iid);
+		
+		assertEquals(e.asXML(), event.asXML());
+		
+		assertFalse(jedis.sismember("node:" + node + ":itemset", iid));
+		assertTrue(0 == jedis.llen("node:" + node + ":itemlist"));
+		assertNull(jedis.get("node:" + node + ":item:" + iid));
+	}
+	
 }

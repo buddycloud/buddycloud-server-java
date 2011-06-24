@@ -78,6 +78,7 @@ public class InQueue {
 					start = System.currentTimeMillis();
 
 					LOGGER.debug("IN -> " + p.toXML());
+					System.out.println("IN -> " + p.toXML());
 					
 					if( this.packetHandlers.get(p.getClass().getName()) != null ) {
 						packetHandlers.get(p.getClass().getName()).ingestPacket(p);

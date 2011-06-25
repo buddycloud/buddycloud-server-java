@@ -338,9 +338,7 @@ public class JabberPubsub extends AbstractNamespace {
 					return;
 				}
 				
-				System.out.println("No aijaa");
-				
-				String channelServer = jedis.hget("node:" + node + ":subscriber:" + reqIQ.getTo().toBareJID(), Subscription.KEY_EXTERNAL_CHANNEL_SERVER);
+				String channelServer = jedis.hget("node:" + node + ":subscriber:" + reqIQ.getFrom().toBareJID(), Subscription.KEY_EXTERNAL_CHANNEL_SERVER);
 				
 				// TODO We do a post behalf of the sender here to external inbox server.
 				IQ copy = reqIQ.createCopy();

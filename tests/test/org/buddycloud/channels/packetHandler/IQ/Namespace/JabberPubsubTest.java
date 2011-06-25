@@ -2,6 +2,7 @@ package test.org.buddycloud.channels.packetHandler.IQ.Namespace;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -261,6 +262,8 @@ public class JabberPubsubTest extends TestCase {
 		
 		IQ result = (IQ)pubsubEngine.outQueue.getQueue().poll();
 		//System.out.println(result.toXML());
+		assertEquals(IQ.Type.result, result.getType());
+		
 		
 		Set<String> subscribers = jedis.smembers("node:/user/tuomas@koski.com/status:subscribers");
 		assertTrue(subscribers.contains("j@koski.com"));
@@ -884,8 +887,8 @@ public class JabberPubsubTest extends TestCase {
 		
 		jedis.sadd("node:" + node + ":subscribers", "tuomas@koski.com");
 		Subscription sub = new Subscription(Type.subscribed,
-				org.buddycloud.channels.pubsub.affiliation.Type.publisher,
-				"channelbunnies.anderson.us");
+											org.buddycloud.channels.pubsub.affiliation.Type.publisher,
+											"channelbunnies.anderson.us");
 		jedis.hmset("node:" + node + ":subscriber:tuomas@koski.com", sub.getAsMap());
 		
 		JabberPubsub pubsubEngine = new JabberPubsub(this.outQueue, this.errorQueue, this.jedis);
@@ -939,7 +942,81 @@ public class JabberPubsubTest extends TestCase {
 		
 		IQ copy = (IQ)pubsubEngine.outQueue.getQueue().poll();
 		
-		System.out.println(copy.toXML());
+		//System.out.println(copy.toXML());
+		
+		assertEquals("channelbunnies.anderson.us", copy.getTo().toBareJID());
+		assertEquals(IQ.Type.set, copy.getType());
+		String actorValue = copy.getChildElement()
+						    	.element("actor")
+						    	.getText();
+		assertEquals(actorValue, "tuomas@koski.com");
+	}
+	
+	public void testExternalNodeSuccessReply() throws InterruptedException {
+		
+		/**
+		 * We should receive something like this:
+		 * <iq type='result'
+		 *	    from='channelbunnies.anderson.us'
+		 *	    to='channels.koski.com'
+		 *	    id='publish1'>
+		 *	  <pubsub xmlns='http://jabber.org/protocol/pubsub'>
+		 *	    <publish node='/user/pamela@anderson.us/status'>
+		 *	      <item id='ae890ac52d0df67-ed7cfdf51b-644e901'/>
+		 *	    </publish>
+		 *	  </pubsub>
+		 *	</iq>
+		 */
+		
+		JabberPubsub pubsubEngine = new JabberPubsub(this.outQueue, this.errorQueue, this.jedis);
+		
+		String id = "testExternalNodeSuccessReply";
+		String node = "/user/pamela@anderson.us/status";
+		String origID = "123456ssssssss";
+		String origFrom = "j@koski.com/client";
+		
+		Map <String, String> store = new HashMap<String, String>();
+		store.put(State.KEY_STATE, State.STATE_PUBLISH);
+		store.put("id", origID);
+		store.put("jid", origFrom);
+		jedis.hmset("store:" + id, store);
+		
+		IQ mockIQ = new IQ();
+		mockIQ.setType(IQ.Type.result);
+		mockIQ.setID(id);
+		mockIQ.setTo("channels.koski.com");
+		mockIQ.setFrom("channelbunnies.anderson.us");
+		
+		Element pubsub = mockIQ.setChildElement("pubsub", JabberPubsub.NAMESPACE_URI);
+		Element publish = pubsub.addElement("publish");
+		publish.addAttribute("node", node);
+		publish.addElement("item").addAttribute("id", "ae890ac52d0df67-ed7cfdf51b-644e901");
+
+
+		pubsubEngine.ingestPacket(mockIQ.createCopy());
+		
+		Thread.sleep(50);
+		
+		
+		IQ result = (IQ)pubsubEngine.outQueue.getQueue().poll();
+
+		System.out.println(result.toXML());
+		
+		assertEquals(IQ.Type.result, result.getType());
+		assertEquals(origID, result.getID());
+		
+		Element pubsubElm = result.getChildElement();
+		assertNotNull(pubsubElm);
+		
+		Element publishElm = pubsubElm.element("publish");
+		assertNotNull(publishElm);
+		
+		assertEquals(node, publish.attributeValue("node"));
+		
+		Element itemElm = publishElm.element("item");
+		assertNotNull(itemElm);
+		
+		assertEquals(result.getTo().toString(), origFrom);
 	}
 	
 }

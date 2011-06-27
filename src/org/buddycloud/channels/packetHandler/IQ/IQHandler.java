@@ -11,6 +11,7 @@ import org.buddycloud.channels.packetHandler.IQ.Namespace.INamespace;
 import org.buddycloud.channels.packetHandler.IQ.Namespace.JabberDiscoInfo;
 import org.buddycloud.channels.packetHandler.IQ.Namespace.JabberDiscoItems;
 import org.buddycloud.channels.packetHandler.IQ.Namespace.JabberPubsub;
+import org.buddycloud.channels.packetHandler.IQ.Namespace.JabberPubsubOwner;
 import org.buddycloud.channels.packetHandler.IQ.Namespace.JabberRegister;
 import org.buddycloud.channels.queue.ErrorQueue;
 import org.buddycloud.channels.queue.OutQueue;
@@ -35,6 +36,9 @@ public class IQHandler extends APacketHandler implements IPacketHandler {
 		namespaceHandlers.put(JabberPubsub.NAMESPACE_URI, new JabberPubsub(outQueue, 
 																		   errorQueue, 
 																		   this.jedis));
+		namespaceHandlers.put(JabberPubsubOwner.NAMESPACE_URI, new JabberPubsubOwner(outQueue, 
+																		   			 errorQueue, 
+																		   			 this.jedis));
 		namespaceHandlers.put(JabberDiscoItems.NAMESPACE_URI, new JabberDiscoItems(outQueue, 
 																			       errorQueue, 
 																			       this.jedis));

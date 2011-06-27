@@ -176,6 +176,7 @@ public class JabberPubsub extends AbstractNamespace {
 			conf.put("pubsub#owner", reqIQ.getFrom().toBareJID());
 			conf.put("pubsub#default_affiliation", org.buddycloud.channels.pubsub.affiliation.Type.publisher.toString());
 			conf.put("pubsub#num_subscribers", "1");
+			conf.put("pubsub#notify_config", "1");
 			
 			jedis.hmset("node:" + node + ":conf", conf);
 			
@@ -578,7 +579,7 @@ public class JabberPubsub extends AbstractNamespace {
 				
 				//if(!jedis.sismember(JedisKeys.REMOTE_NODES, node)) {
 					// We need to discover if the channel exists.
-					
+				if(node.startsWith("/user/")) {
 					String[] splittedNode = node.split("/");
 					
 					// 0 1    2     3
@@ -592,7 +593,7 @@ public class JabberPubsub extends AbstractNamespace {
 					discoItemsGet.setID(id);
 					discoItemsGet.setTo(user.getDomain());
 					
-					discoItemsGet.setChildElement("query", "http://jabber.org/protocol/disco#items");
+					discoItemsGet.setChildElement("query", JabberDiscoItems.NAMESPACE_URI);
 					
 					Map <String, String> store = new HashMap<String, String>();
 					store.put(State.KEY_STATE, State.STATE_DISCO_ITEMS_TO_FIND_BC_CHANNEL_COMPONENT);
@@ -603,9 +604,32 @@ public class JabberPubsub extends AbstractNamespace {
 					jedis.hmset("store:" + id, store);
 					
 					outQueue.put(discoItemsGet);
+				} else {
+					JID user = new JID(node);
 					
-				//	return;
-				//}
+					IQ subscribe = new IQ();
+					subscribe.setType(IQ.Type.set);
+					String id = UUID.randomUUID().toString();
+					subscribe.setID(id);
+					subscribe.setTo(user.getDomain());
+					
+					Element pubsub = subscribe.setChildElement("pubsub", JabberPubsub.NAMESPACE_URI);
+					pubsub.addElement("subscribe")
+					      .addAttribute("node", node)
+					      .addAttribute("jid", reqIQ.getTo().toString());
+					pubsub.addElement("actor", "http://buddycloud.org/v1")
+					      .setText(reqIQ.getFrom().toBareJID());
+					
+					Map <String, String> store = new HashMap<String, String>();
+					store.put(State.KEY_STATE, State.STATE_SUBSCRIBE);
+					store.put("id", reqIQ.getID());
+					store.put("jid", reqIQ.getFrom().toString());
+					store.put("node", node);
+					
+					jedis.hmset("store:" + id, store);
+					
+					outQueue.put(subscribe);
+				}
 				
 				return;
 			} else if(!jedis.sismember(JedisKeys.LOCAL_NODES, node)) {

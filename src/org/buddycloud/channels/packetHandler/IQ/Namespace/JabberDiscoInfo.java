@@ -1,15 +1,19 @@
 package org.buddycloud.channels.packetHandler.IQ.Namespace;
 
+import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
 import org.buddycloud.channels.jedis.JedisKeys;
 import org.buddycloud.channels.packet.ErrorPacket;
 import org.buddycloud.channels.packet.ErrorPacketBuilder;
 import org.buddycloud.channels.queue.ErrorQueue;
 import org.buddycloud.channels.queue.OutQueue;
+import org.buddycloud.channels.statefull.State;
 import org.buddycloud.channels.statefull.StateMachine;
 import org.dom4j.Element;
 import org.xmpp.packet.IQ;
+import org.xmpp.packet.JID;
 
 import redis.clients.jedis.Jedis;
 
@@ -32,6 +36,12 @@ public class JabberDiscoInfo extends AbstractNamespace {
 		@Override
 		public void process() {
 			
+			/**
+			 * THIS STARTS TO BE A TERRIBLE TERRIBLE HACK.
+			 * 
+			 * BUT IT SHOULD. THIS IS A PROOF OF CONCEPT MOCK UP.
+			 */
+			
 			IQ result = IQ.createResultIQ(reqIQ);
 			
 			Element elm = reqIQ.getChildElement();
@@ -49,7 +59,61 @@ public class JabberDiscoInfo extends AbstractNamespace {
 			} else {
 				
 				if(!jedis.sismember(JedisKeys.LOCAL_NODES, node)) {
-					errorQueue.put(ErrorPacketBuilder.itemNotFound(reqIQ));
+					
+					if("".equals(reqIQ.getFrom().getNode()) || reqIQ.getFrom().getNode() == null) { 
+						// This means that the info is requested from another channel server
+						errorQueue.put(ErrorPacketBuilder.itemNotFound(reqIQ));
+						return;
+					}
+					
+					if(node.startsWith("/user/")) {
+						String[] splittedNode = node.split("/");
+						// 0 1    2     3
+						// /user/JID/something
+						JID user = new JID(splittedNode[2]);
+						
+						IQ discoItemsGet = new IQ();
+						String id = UUID.randomUUID().toString();
+						discoItemsGet.setType(IQ.Type.get);
+						discoItemsGet.setID(id);
+						discoItemsGet.setTo(user.getDomain());
+						
+						discoItemsGet.setChildElement("query", JabberDiscoItems.NAMESPACE_URI);
+						
+						Map <String, String> store = new HashMap<String, String>();
+						store.put(State.KEY_STATE, State.STATE_DISCOINFO_DISCO_ITEMS_TO_FIND_BC_CHANNEL_COMPONENT);
+						store.put("id", reqIQ.getID());
+						store.put("jid", reqIQ.getFrom().toString());
+						store.put("node", node);
+						
+						jedis.hmset("store:" + id, store);
+						
+						outQueue.put(discoItemsGet);
+					} else {
+						JID user = new JID(node);
+						
+						IQ discoItemsGet = new IQ();
+						String id = UUID.randomUUID().toString();
+						discoItemsGet.setType(IQ.Type.get);
+						discoItemsGet.setID(id);
+						discoItemsGet.setTo(user.getDomain());
+						
+						Element query = discoItemsGet.setChildElement("query", JabberDiscoInfo.NAMESPACE_URI);
+		                query.addAttribute("node", node);
+		                query.addElement("actor", "http://buddycloud.org/v1")
+					         .setText(reqIQ.getFrom().toBareJID());
+		                
+						Map <String, String> store = new HashMap<String, String>();
+						store.put(State.KEY_STATE, State.STATE_DISCOINFO);
+						store.put("id", reqIQ.getID());
+						store.put("jid", reqIQ.getFrom().toString());
+						store.put("node", node);
+						
+						jedis.hmset("store:" + id, store);
+						
+						outQueue.put(discoItemsGet);
+					}
+					
 					return;
 				}
 				

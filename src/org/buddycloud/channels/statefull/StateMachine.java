@@ -52,7 +52,7 @@ public class StateMachine {
 		 * I'll move them to proper classes when i have time.
 		 * Now I have only 5 mins.
 		 */
-		if(state.getState().equals(State.STATE_DISCO_ITEMS_TO_FIND_BC_CHANNEL_COMPONENT)) {
+		if(state.getState().equals(State.STATE_DISCOINFO_DISCO_ITEMS_TO_FIND_BC_CHANNEL_COMPONENT)) {
 			
 			@SuppressWarnings("unchecked")
 			List<Element> items = iq.getChildElement().elements("item");
@@ -76,15 +76,152 @@ public class StateMachine {
 				originalReq.setFrom(store.get("jid"));
 				originalReq.setTo("channels.koski.com");
 				
-				if("subscribe-items".equals(store.get(State.KEY_STATE))) {
-					ErrorPacket ep = ErrorPacketBuilder.itemNotFound(originalReq);
-					ep.setMsg("No items found from remove server (" + iq.getFrom().toBareJID() + ") when doing disco#items.");
-					errorQueue.put(ErrorPacketBuilder.itemNotFound(originalReq));
-				} else {
-					ErrorPacket ep = ErrorPacketBuilder.internalServerError(originalReq);
-					ep.setMsg("We had a type of store item that was not yet handled: '" + store.get(State.KEY_STATE) + "'.");
-					errorQueue.put(ep);
+				ErrorPacket ep = ErrorPacketBuilder.itemNotFound(originalReq);
+				ep.setMsg("No items found from remove server (" + iq.getFrom().toBareJID() + ") when doing disco#items.");
+				errorQueue.put(ErrorPacketBuilder.itemNotFound(originalReq));
+				
+				return;
+			}
+			
+			String firstComponentJid = itemsToBeDiscovered.poll();
+			
+			store.put("components", Helpers.collectionToString(itemsToBeDiscovered));
+			store.put(State.KEY_STATE, State.STATE_DISCOINFO_DISCO_INFO_TO_COMPONENTS);
+			
+			String id = UUID.randomUUID().toString();
+			jedis.hmset("store:" + id, store);
+			jedis.del("store:" + iq.getID());
+			
+			IQ discoInfoIQ = new IQ();
+			discoInfoIQ.setTo(firstComponentJid);
+			discoInfoIQ.setID(id);
+			discoInfoIQ.setType(Type.get);
+			
+			discoInfoIQ.setChildElement("query", JabberDiscoInfo.NAMESPACE_URI);
+			
+			outQueue.put(discoInfoIQ);
+			
+		} else if(state.getState().equals(State.STATE_DISCOINFO_DISCO_INFO_TO_COMPONENTS)) {
+			
+			@SuppressWarnings("unchecked")
+			List<Element> identities = iq.getChildElement().elements("identity");
+			
+			boolean isBcComponent = false;
+			for(Element identity : identities) {
+				if("pubsub".equals(identity.attributeValue("category")) && 
+				   "channels".equals(identity.attributeValue("type"))) {
+					isBcComponent = true;
 				}
+			}
+			
+			if(isBcComponent) {
+				
+				// We found bc component! Let's check the info :-)
+				
+				String id = UUID.randomUUID().toString();
+				
+				IQ discoinfo = new IQ();
+				discoinfo.setType(IQ.Type.set);
+				discoinfo.setID(id);
+				discoinfo.setTo(iq.getFrom().toString());
+				
+				Element query = discoinfo.setChildElement("query", JabberDiscoInfo.NAMESPACE_URI);
+				query.addAttribute("node", store.get("node"));
+				query.addElement("actor", "http://buddycloud.org/v1")
+				     .setText(new JID(store.get("jid")).toBareJID());
+				
+				store.put(State.KEY_STATE, State.STATE_DISCOINFO);
+				
+				jedis.hmset("store:" + id, store);
+				jedis.del("store:" + iq.getID());
+				
+				outQueue.put(discoinfo);
+				
+				return;
+			}
+			
+			/*
+			 * Component was not a buddycloud channel component. Let's look for another one.
+			 */
+			ArrayList<String> itemsToBeDiscovered = (ArrayList<String>) Helpers.stringToCollection(store.get("components"));
+			
+			if(itemsToBeDiscovered.isEmpty()) {
+				
+				/* 
+				 * TODO, fallback to buddycloud.com here. Maybe. :-)
+				 */
+				
+				IQ originalReq = new IQ();
+				originalReq.setType(IQ.Type.set);
+				originalReq.setID(store.get("id"));
+				originalReq.setFrom(store.get("jid"));
+				originalReq.setTo("channels.koski.com");
+				
+				ErrorPacket ep = ErrorPacketBuilder.itemNotFound(originalReq);
+				ep.setMsg("No bc components found from remove server (" + iq.getFrom().toBareJID() + ") when doing disco#infos to them.");
+				errorQueue.put(ErrorPacketBuilder.itemNotFound(originalReq));
+				
+				return;
+			}
+			
+			String firstComponentJid = itemsToBeDiscovered.remove(0);
+			
+			store.put("components", Helpers.collectionToString(itemsToBeDiscovered));
+			
+			String id = UUID.randomUUID().toString();
+			jedis.hmset("store:" + id, store);
+			jedis.del("store:" + iq.getID());
+			
+			IQ discoInfoIQ = new IQ();
+			discoInfoIQ.setTo(firstComponentJid);
+			discoInfoIQ.setID(id);
+			discoInfoIQ.setType(Type.get);
+			
+			discoInfoIQ.setChildElement("query", JabberDiscoInfo.NAMESPACE_URI);
+			
+			outQueue.put(discoInfoIQ);
+		
+		} else if(state.getState().equals(State.STATE_DISCOINFO)) {
+			
+			String jid  = state.getStore().get(State.KEY_JID);
+			String id   = state.getStore().get(State.KEY_ID);
+			
+			IQ copy = iq.createCopy();
+			copy.setID(id);
+			copy.setFrom(copy.getTo());
+			copy.setTo(jid);
+			
+			jedis.del("store:" + iq.getID());
+			
+			outQueue.put(copy);
+			
+		} else if(state.getState().equals(State.STATE_DISCO_ITEMS_TO_FIND_BC_CHANNEL_COMPONENT)) {
+			
+			@SuppressWarnings("unchecked")
+			List<Element> items = iq.getChildElement().elements("item");
+			
+			LinkedList<String> itemsToBeDiscovered = new LinkedList<String>();
+			for(Element item : items) {
+				JID jid = new JID(item.attributeValue("jid"));
+				itemsToBeDiscovered.add(jid.toBareJID());
+			}
+			
+			if(itemsToBeDiscovered.isEmpty()) {
+				
+				// If we are here, it means that there is no items to be discovered
+				// on the remove server we wanted to do an action with.
+				//
+				// At the moment only possibilities are subscribe so let's answer not found then.
+				
+				IQ originalReq = new IQ();
+				originalReq.setType(IQ.Type.set);
+				originalReq.setID(store.get("id"));
+				originalReq.setFrom(store.get("jid"));
+				originalReq.setTo("channels.koski.com");
+				
+				ErrorPacket ep = ErrorPacketBuilder.itemNotFound(originalReq);
+				ep.setMsg("No items found from remove server (" + iq.getFrom().toBareJID() + ") when doing disco#items.");
+				errorQueue.put(ErrorPacketBuilder.itemNotFound(originalReq));
 				
 				return;
 			}
@@ -167,15 +304,9 @@ public class StateMachine {
 				originalReq.setFrom(store.get("jid"));
 				originalReq.setTo("channels.koski.com");
 				
-				if(State.STATE_DISCO_INFO_TO_COMPONENTS.equals(store.get(State.KEY_STATE))) {
-					ErrorPacket ep = ErrorPacketBuilder.itemNotFound(originalReq);
-					ep.setMsg("No bc components found from remove server (" + iq.getFrom().toBareJID() + ") when doing disco#infos to them.");
-					errorQueue.put(ErrorPacketBuilder.itemNotFound(originalReq));
-				} else {
-					ErrorPacket ep = ErrorPacketBuilder.internalServerError(originalReq);
-					ep.setMsg("We had a type of store item in disco#info that was not yet handled: '" + store.get(State.KEY_STATE) + "'.");
-					errorQueue.put(ep);
-				}
+				ErrorPacket ep = ErrorPacketBuilder.itemNotFound(originalReq);
+				ep.setMsg("No bc components found from remove server (" + iq.getFrom().toBareJID() + ") when doing disco#infos to them.");
+				errorQueue.put(ErrorPacketBuilder.itemNotFound(originalReq));
 				
 				return;
 			}

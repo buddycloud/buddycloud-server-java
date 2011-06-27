@@ -8,6 +8,7 @@ import junit.framework.TestCase;
 
 import org.buddycloud.channels.jedis.JedisKeys;
 import org.buddycloud.channels.packetHandler.IQ.Namespace.JabberDiscoInfo;
+import org.buddycloud.channels.packetHandler.IQ.Namespace.JabberDiscoItems;
 import org.buddycloud.channels.packetHandler.IQ.Namespace.JabberPubsub;
 import org.buddycloud.channels.queue.ErrorQueue;
 import org.buddycloud.channels.queue.OutQueue;
@@ -223,4 +224,146 @@ public class JabberDiscoInfoTest extends TestCase {
 		assertEquals(store.get("node"), "/user/nelly@heriveau.fr/status");
 		
 	}
+	
+	public void testDiscoInfoExternalUserChannelStartsDiscoItems() {
+		
+		String id = "testDiscoInfoExternalUserChannelStartsDiscoItems";
+		
+		JabberDiscoInfo discoInfoEngine = new JabberDiscoInfo(this.outQueue, this.errorQueue, this.jedis);
+		
+		String node = "/user/tuomas@somewhere-else.com/status";
+		
+		IQ mockIQ = new IQ();
+		mockIQ.setType(IQ.Type.get);
+		mockIQ.setID(id);
+		mockIQ.setFrom("tuomas@koski.com/client-2");
+		mockIQ.setTo("channels.koski.com");
+		
+		Element query = mockIQ.setChildElement("query", JabberDiscoInfo.NAMESPACE_URI);
+		query.addAttribute("node", node);
+		
+		discoInfoEngine.ingestPacket(mockIQ.createCopy());
+		
+		IQ result = (IQ)discoInfoEngine.outQueue.getQueue().poll();
+		result.setFrom("channels.koski.com");
+		//System.out.println(result.toXML());
+		
+		assertEquals(IQ.Type.get, result.getType());
+		assertEquals(mockIQ.getTo(), result.getFrom());
+		assertEquals("somewhere-else.com", result.getTo().toString());
+		
+		query = new DOMElement("query", new org.dom4j.Namespace("", JabberDiscoItems.NAMESPACE_URI));
+		
+		assertEquals(query.asXML(), result.getChildElement().asXML());
+		
+		Map<String, String> store = jedis.hgetAll("store:" + result.getID());
+		
+		assertEquals(id, store.get("id"));
+		assertEquals(node, store.get("node"));
+		assertEquals("tuomas@koski.com/client-2", store.get("jid"));
+		assertEquals(State.STATE_DISCOINFO_DISCO_ITEMS_TO_FIND_BC_CHANNEL_COMPONENT, store.get(State.KEY_STATE));
+		
+	}
+	
+	
+	public void testResultlDiscoInfoNotBuddycloudChannleAndRequestNextInfoRequestWhenDoingChannelInfo() throws InterruptedException {
+		
+		String id = "testResultlDiscoInfoNotBuddycloudChannleAndRequestNextInfoRequestWhenDoingChannelInfo";
+		
+		Map <String, String> store = new HashMap<String, String>();
+		store.put(State.KEY_STATE, State.STATE_DISCOINFO_DISCO_INFO_TO_COMPONENTS);
+		store.put("id", "original-subs-id-123456");
+		store.put("jid", "tuomas@koski.com/client");
+		store.put("node", "/user/nelly@heriveau.fr/status");
+		store.put(State.KEY_COMPONENTS, "bc.heriveau.fr");
+		
+		jedis.hmset("store:" + id, store);
+		
+		JabberDiscoInfo discoInfoEngine = new JabberDiscoInfo(this.outQueue, this.errorQueue, this.jedis);
+		
+		IQ mockIQ = new IQ();
+		mockIQ.setType(IQ.Type.result);
+		mockIQ.setID(id);
+		mockIQ.setTo("channels.koski.com");
+		mockIQ.setFrom("people.heriveau.fr");
+		
+		Element query = mockIQ.setChildElement("query", JabberDiscoInfo.NAMESPACE_URI);
+		query.addElement("identity")
+			 .addAttribute("category", "humppaa")
+			 .addAttribute("type", "numbbaa");
+		
+		discoInfoEngine.ingestPacket(mockIQ.createCopy());
+		
+		Thread.sleep(50);
+		
+		IQ discoInfoReq = (IQ)discoInfoEngine.outQueue.getQueue().poll();
+		//System.out.println(discoInfoReq.toXML());
+		
+		assertEquals(IQ.Type.get, discoInfoReq.getType());
+		
+		store = jedis.hgetAll("store:" + discoInfoReq.getID());
+		
+		assertEquals("original-subs-id-123456", store.get("id"));
+		assertEquals("/user/nelly@heriveau.fr/status", store.get("node"));
+		assertEquals("tuomas@koski.com/client", store.get("jid"));
+		assertEquals(State.STATE_DISCOINFO_DISCO_INFO_TO_COMPONENTS, store.get(State.KEY_STATE));
+		assertEquals("", store.get("components"));
+		
+		IQ expectedIQ = new IQ();
+		expectedIQ.setID(discoInfoReq.getID());
+		expectedIQ.setType(Type.get);
+		expectedIQ.setTo("bc.heriveau.fr");
+		expectedIQ.setChildElement("query", JabberDiscoInfo.NAMESPACE_URI);
+		
+		assertEquals(expectedIQ.toXML(), discoInfoReq.toXML());
+	}
+	
+	public void testResultDiscoInfoFoundsBuddycloudChannelAndSendsDiscoInfo() throws InterruptedException {
+		
+		String id = "testResultDiscoInfoFoundsBuddycloudChannelAndSendsSubscribe";
+		
+		Map <String, String> store = new HashMap<String, String>();
+		store.put(State.KEY_STATE, State.STATE_DISCOINFO_DISCO_INFO_TO_COMPONENTS);
+		store.put("id", "original-subs-id-123456");
+		store.put("jid", "tuomas@koski.com/client");
+		store.put("node", "/user/nelly@heriveau.fr/status");
+		store.put(State.KEY_COMPONENTS, "");
+		
+		jedis.hmset("store:" + id, store);
+		
+		JabberDiscoInfo discoInfoEngine = new JabberDiscoInfo(this.outQueue, this.errorQueue, this.jedis);
+		
+		IQ mockIQ = new IQ();
+		mockIQ.setType(IQ.Type.result);
+		mockIQ.setID(id);
+		mockIQ.setTo("channels.koski.com");
+		mockIQ.setFrom("bc.heriveau.fr");
+		
+		Element query = mockIQ.setChildElement("query", JabberDiscoInfo.NAMESPACE_URI);
+		query.addElement("identity")
+			 .addAttribute("category", "pubsub")
+			 .addAttribute("type", "channels");
+		
+		discoInfoEngine.ingestPacket(mockIQ.createCopy());
+		
+		Thread.sleep(50);
+		
+		IQ subsReq = (IQ)discoInfoEngine.outQueue.getQueue().poll();
+		
+		query = new DOMElement("query", new org.dom4j.Namespace("", JabberDiscoInfo.NAMESPACE_URI));
+		query.addAttribute("node", "/user/nelly@heriveau.fr/status");
+		query.addElement("actor", "http://buddycloud.org/v1")
+	     	 .setText("tuomas@koski.com");
+		
+		assertEquals(null, subsReq.getFrom());
+		assertEquals("bc.heriveau.fr", subsReq.getTo().toBareJID());
+		assertEquals(query.asXML(), subsReq.getChildElement().asXML());
+		
+		store = jedis.hgetAll("store:" + subsReq.getID());
+		assertEquals(store.get(State.KEY_STATE), State.STATE_DISCOINFO);
+		assertEquals(store.get("id"), "original-subs-id-123456");
+		assertEquals(store.get("jid"), "tuomas@koski.com/client");
+		assertEquals(store.get("node"), "/user/nelly@heriveau.fr/status");
+	}
+	
 }

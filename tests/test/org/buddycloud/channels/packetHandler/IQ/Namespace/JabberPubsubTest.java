@@ -13,9 +13,7 @@ import junit.framework.TestCase;
 
 import org.buddycloud.channels.jedis.JedisKeys;
 import org.buddycloud.channels.packet.ErrorPacket;
-import org.buddycloud.channels.packetHandler.IQ.Namespace.JabberDiscoItems;
 import org.buddycloud.channels.packetHandler.IQ.Namespace.JabberPubsub;
-import org.buddycloud.channels.packetHandler.IQ.Namespace.JabberPubsubEvent;
 import org.buddycloud.channels.pubsub.Subscription;
 import org.buddycloud.channels.pubsub.subscription.Type;
 import org.buddycloud.channels.queue.ErrorQueue;
@@ -1017,6 +1015,54 @@ public class JabberPubsubTest extends TestCase {
 		assertNotNull(itemElm);
 		
 		assertEquals(result.getTo().toString(), origFrom);
+	}
+	
+	public void testSubscribeExternalNormalNodeStartsSubscribeSuccessfully() throws InterruptedException {
+		
+		JabberPubsub pubsubEngine = new JabberPubsub(this.outQueue, this.errorQueue, this.jedis);
+		
+		String id = "testSubscribeExternalNormalNodeStartsSubscribeSuccessfully";
+		
+		IQ mockIQ = new IQ();
+		mockIQ.setType(IQ.Type.set);
+		mockIQ.setID(id);
+		mockIQ.setTo("channels.koski.com");
+		mockIQ.setFrom("tuomas@koski.com/client");
+		
+		// We add user as registered
+		jedis.sadd(JedisKeys.LOCAL_USERS, mockIQ.getFrom().toBareJID());
+		
+		Element pubsub = mockIQ.setChildElement("pubsub", JabberPubsub.NAMESPACE_URI);
+		pubsub.addElement("subscribe")
+		      .addAttribute("node", "bunnies@channels.playboy.com")
+		      .addAttribute("jid", mockIQ.getFrom().toString());
+		
+		pubsubEngine.ingestPacket(mockIQ.createCopy());
+		
+		Thread.sleep(50);
+		
+		IQ subsReq = (IQ)pubsubEngine.outQueue.getQueue().poll();
+		
+		//System.out.println(subsReq.toXML());
+		
+		pubsub = new DOMElement("pubsub", new org.dom4j.Namespace("", JabberPubsub.NAMESPACE_URI));
+		pubsub.addElement("subscribe")
+		      .addAttribute("node", "bunnies@channels.playboy.com")
+		      .addAttribute("jid", "channels.koski.com");
+		pubsub.addElement("actor", "http://buddycloud.org/v1").setText("tuomas@koski.com");
+		
+		assertEquals(null, subsReq.getFrom());
+		assertEquals("channels.playboy.com", subsReq.getTo().toBareJID());
+		assertEquals(pubsub.asXML(), subsReq.getChildElement().asXML());
+		
+		//System.out.println(subsReq.toXML());
+		
+		Map <String, String> store = jedis.hgetAll("store:" + subsReq.getID());
+		assertEquals(store.get(State.KEY_STATE), State.STATE_SUBSCRIBE);
+		assertEquals(store.get("id"), id);
+		assertEquals(store.get("jid"), "tuomas@koski.com/client");
+		assertEquals(store.get("node"), "bunnies@channels.playboy.com");
+		
 	}
 	
 }

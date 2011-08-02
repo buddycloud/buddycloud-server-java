@@ -17,6 +17,7 @@ abstract class AbstractNamespace implements INamespace {
 	protected Map <String, IAction> setProcessors = new HashMap<String, IAction>();
 	protected Map <String, IAction> getProcessors = new HashMap<String, IAction>();
 	protected Map <String, IAction> resultProcessors = new HashMap<String, IAction>();
+	protected Map <String, IAction> errorProcessors = new HashMap<String, IAction>();
 	
 	public IQ reqIQ;
 	
@@ -49,9 +50,9 @@ abstract class AbstractNamespace implements INamespace {
 			
 			resultProcessors.get(reqIQ.getChildElement().getName()).process();
 			
-		} else if(reqIQ.getType() == IQ.Type.error) {
+		} else if(reqIQ.getType() == IQ.Type.error && errorProcessors.get(reqIQ.getChildElement().getName()) != null) {
 			
-			System.out.println("Errors not yet handled for namespace '" + this.getClass().getName() + "'.");
+			errorProcessors.get(reqIQ.getChildElement().getName()).process();
 		
 		} else if(reqIQ.getType() == IQ.Type.result) {
 			

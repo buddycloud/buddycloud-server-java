@@ -25,6 +25,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.xmpp.packet.IQ;
 import org.xmpp.packet.Message;
+import org.xmpp.packet.PacketError;
 
 import redis.clients.jedis.Jedis;
 
@@ -1063,6 +1064,104 @@ public class JabberPubsubTest extends TestCase {
 		assertEquals(store.get("jid"), "tuomas@koski.com/client");
 		assertEquals(store.get("node"), "bunnies@channels.playboy.com");
 		
+	}
+	
+	public void testSubscribeExternalNormalNodeNotFoundReturnsErrorToUser() throws InterruptedException {
+		
+		JabberPubsub pubsubEngine = new JabberPubsub(this.outQueue, this.errorQueue, this.jedis);
+		
+		String id = "testSubscribeExternalNormalNodeNotFoundReturnsErrorToUser";
+		
+		IQ mockIQ = new IQ();
+		mockIQ.setType(IQ.Type.set);
+		mockIQ.setID(id);
+		mockIQ.setTo("channels.koski.com");
+		mockIQ.setFrom("tuomas@koski.com/client");
+		
+		// We add user as registered
+		jedis.sadd(JedisKeys.LOCAL_USERS, mockIQ.getFrom().toBareJID());
+		
+		Element pubsub = mockIQ.setChildElement("pubsub", JabberPubsub.NAMESPACE_URI);
+		pubsub.addElement("subscribe")
+		      .addAttribute("node", "bunnies@channels.playboy.com")
+		      .addAttribute("jid", mockIQ.getFrom().toString());
+		
+		pubsubEngine.ingestPacket(mockIQ.createCopy());
+		
+		Thread.sleep(50);
+		
+		IQ subsReq = (IQ)pubsubEngine.outQueue.getQueue().poll();
+		
+		//System.out.println(subsReq.toXML());
+		
+		pubsub = new DOMElement("pubsub", new org.dom4j.Namespace("", JabberPubsub.NAMESPACE_URI));
+		pubsub.addElement("subscribe")
+		      .addAttribute("node", "bunnies@channels.playboy.com")
+		      .addAttribute("jid", "channels.koski.com");
+		pubsub.addElement("actor", "http://buddycloud.org/v1").setText("tuomas@koski.com");
+		
+		assertEquals(null, subsReq.getFrom());
+		assertEquals("channels.playboy.com", subsReq.getTo().toBareJID());
+		assertEquals(pubsub.asXML(), subsReq.getChildElement().asXML());
+		
+		//System.out.println(subsReq.toXML());
+		
+		Map <String, String> store = jedis.hgetAll("store:" + subsReq.getID());
+		assertEquals(store.get(State.KEY_STATE), State.STATE_SUBSCRIBE);
+		assertEquals(store.get("id"), id);
+		assertEquals(store.get("jid"), "tuomas@koski.com/client");
+		assertEquals(store.get("node"), "bunnies@channels.playboy.com");
+		
+		// We receive and error because remove server not found
+		/* <iq type="error" 
+		       id="96ec76ce-391e-46b6-a6cc-04b308433619" 
+		       to="channels.koski.com" 
+		       from="channels.playboy.com">
+		      <pubsub xmlns="http://jabber.org/protocol/pubsub">
+		         <subscribe node="bunnies@channels.playboy.com" jid="channels.koski.com"/>
+		         <actor xmlns="http://buddycloud.org/v1">tuomas@koski.com</actor>
+		      </pubsub>
+		      <error code="404" type="cancel">
+		         <remote-server-not-found xmlns="urn:ietf:params:xml:ns:xmpp-stanzas"/>
+		      </error>
+		   </iq>
+		*/
+		mockIQ = new IQ();
+		mockIQ.setType(IQ.Type.set);
+		mockIQ.setID(subsReq.getID());
+		mockIQ.setTo("channels.koski.com");
+		mockIQ.setFrom("tuomas@koski.com/client");
+		
+		pubsub = mockIQ.setChildElement("pubsub", JabberPubsub.NAMESPACE_URI);
+		pubsub.addElement("subscribe")
+		      .addAttribute("node", "bunnies@channels.playboy.com")
+		      .addAttribute("jid", "channels.koski.com");
+		pubsub.addElement("actor", "http://buddycloud.org/v1").setText("tuomas@koski.com");
+		
+		Element error = new DOMElement("error");
+		error.addAttribute("type", "cancel")
+		     .addAttribute("code", "404");
+		Element notFound = new DOMElement("remote-server-not-found",
+					 					  new org.dom4j.Namespace("", ErrorPacket.NS_XMPP_STANZAS));
+		error.add(notFound);
+		PacketError e = new PacketError(error);
+		mockIQ.setError(e);
+		
+		System.out.println(mockIQ.toXML());
+		
+		pubsubEngine.ingestPacket(mockIQ.createCopy());
+		
+		Thread.sleep(50);
+		
+		subsReq = (IQ)pubsubEngine.outQueue.getQueue().poll();
+		
+		System.out.println(subsReq.toXML());
+		
+		store = jedis.hgetAll("store:" + subsReq.getID());
+	    assertTrue(store.isEmpty());
+	    
+	    assertEquals(subsReq.getType(), IQ.Type.error);
+	    assertEquals("tuomas@koski.com/client", subsReq.getTo().toString());
 	}
 	
 }

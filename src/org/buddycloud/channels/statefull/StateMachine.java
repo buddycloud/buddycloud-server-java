@@ -20,6 +20,7 @@ import org.dom4j.dom.DOMElement;
 import org.xmpp.packet.IQ;
 import org.xmpp.packet.IQ.Type;
 import org.xmpp.packet.JID;
+import org.xmpp.packet.PacketError;
 
 import redis.clients.jedis.Jedis;
 
@@ -375,6 +376,50 @@ public class StateMachine {
 			jedis.del("store:" + iq.getID());
 			
 			outQueue.put(copy);
+			
+		} else {
+			System.out.println("Did not found handler for state '" + state.getState() + "'.");
+		}
+		
+	}
+	
+	/**
+	 * This is A TERRIBLE HACK :)
+	 * 
+	 * I promise all of this will be cleaned.
+	 */
+	public void ingestError(IQ iq) {
+			
+		Map<String, String> store = jedis.hgetAll("store:" + iq.getID());
+		
+		if(store == null || store.isEmpty()) {
+			System.out.println("Could not recover state from store with key 'store:" + iq.getID() + "'.");
+			return;
+		}
+		
+		State state = new State(store);
+		
+		if(state.getState().equals(State.STATE_SUBSCRIBE)) {
+			
+			String node = state.getStore().get(State.KEY_NODE);
+			String jid  = state.getStore().get(State.KEY_JID);
+			String id   = state.getStore().get(State.KEY_ID);
+			
+			IQ result = new IQ();
+			result.setID(id);
+			result.setType(Type.error);
+			result.setTo(jid);
+			
+			Element pubsub = result.setChildElement("pubsub", JabberPubsub.NAMESPACE_URI);
+			pubsub.addElement("subscribe")
+			      .addAttribute("node", node)
+			      .addAttribute("jid", result.getTo().toBareJID());
+			
+			result.setError(new PacketError(iq.getError().getElement().createCopy()));
+			
+			jedis.del("store:" + iq.getID());
+			
+			outQueue.put(result);
 			
 		} else {
 			System.out.println("Did not found handler for state '" + state.getState() + "'.");

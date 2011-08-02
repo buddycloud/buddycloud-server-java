@@ -40,6 +40,7 @@ public class JabberPubsub extends AbstractNamespace {
 		setProcessors.put(SetPubSub.ELEMENT_NAME, new SetPubSub());
 		getProcessors.put(GetPubSub.ELEMENT_NAME, new GetPubSub());
 		resultProcessors.put(ResultPubSub.ELEMENT_NAME, new ResultPubSub());
+		errorProcessors.put(ErrorPubSub.ELEMENT_NAME, new ErrorPubSub());
 	}
 	
 	private class SetPubSub implements IAction {
@@ -828,6 +829,19 @@ public class JabberPubsub extends AbstractNamespace {
 			
 			StateMachine sm = new StateMachine(jedis, outQueue, errorQueue);
 			sm.ingest(reqIQ);
+			
+		}
+	}
+	
+	private class ErrorPubSub implements IAction {
+		
+		public static final String ELEMENT_NAME = "pubsub";
+
+		@Override
+		public void process() {
+			
+			StateMachine sm = new StateMachine(jedis, outQueue, errorQueue);
+			sm.ingestError(reqIQ);
 			
 		}
 	}

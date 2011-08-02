@@ -65,7 +65,7 @@ public class JabberDiscoInfoTest extends TestCase {
 		assertEquals(IQ.Type.result, result.getType());
 		assertEquals(id, result.getID());
 		
-		String expected = "<iq type=\"result\" id=\"testGetDiscoInfoSuccess\" from=\"channels.koski.com\" to=\"channels.buddycloud.com\"><query xmlns=\"http://jabber.org/protocol/disco#info\"><identity category=\"pubsub\" type=\"channels\" name=\"Koski's buddycloud channel server!\"/><feature var=\"http://jabber.org/protocol/disco#info\"/></query></iq>";
+		String expected = "<iq type=\"result\" id=\"testGetDiscoInfoSuccess\" from=\"channels.koski.com\" to=\"channels.buddycloud.com\"><query xmlns=\"http://jabber.org/protocol/disco#info\"><identity category=\"pubsub\" type=\"channels\" name=\"Koski's buddycloud channel server!\"/><identity category=\"pubsub\" type=\"inbox\" name=\"Let's federate.\"/><feature var=\"http://jabber.org/protocol/disco#info\"/></query></iq>";
 		assertEquals(expected, result.toXML());
 		
 		//System.out.println(result.toXML());

@@ -77,7 +77,7 @@ public class MessageHandler extends APacketHandler implements IPacketHandler {
 		
 		Element entry  = item.element("entry");
 		
-		// TODO create "verify entry" or something similart to verify that the entry is ok.
+		// TODO create "verify entry" or something similar to verify that the entry is ok.
 		
 		jedis.sadd("node:" + node + ":itemset", id);
 		jedis.lpush("node:" + node + ":itemlist", id);

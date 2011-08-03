@@ -7,4 +7,6 @@ public class JedisKeys {
 	
 	public static final String LOCAL_USERS  = "local_users";
 	
+	public static final String STATE_TIMEOUTS = "state_timeouts";
+	
 }

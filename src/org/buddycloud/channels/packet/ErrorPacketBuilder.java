@@ -79,5 +79,11 @@ public class ErrorPacketBuilder {
 		ep.addCondition(badRequest);
 		ep.addCondition(nodeIdRequired);
 		return ep;
-}
+	}
+	
+	public static ErrorPacket remoteServerTimeout(IQ reqIQ) {
+		Element removeServerTimeout = new DOMElement("remote-server-timeout",
+													  new org.dom4j.Namespace("", ErrorPacket.NS_XMPP_STANZAS));
+		return new ErrorPacket(reqIQ, "wait", removeServerTimeout);
+	}
 }

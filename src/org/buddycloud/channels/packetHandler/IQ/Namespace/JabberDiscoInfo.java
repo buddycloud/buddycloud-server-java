@@ -91,7 +91,9 @@ public class JabberDiscoInfo extends AbstractNamespace {
 						store.put("jid", reqIQ.getFrom().toString());
 						store.put("node", node);
 						
-						jedis.hmset("store:" + id, store);
+						//jedis.hmset("store:" + id, store);
+						StateMachine st = new StateMachine(jedis, outQueue, errorQueue);
+						st.store(id, store);
 						
 						outQueue.put(discoItemsGet);
 					} else {
@@ -114,7 +116,9 @@ public class JabberDiscoInfo extends AbstractNamespace {
 						store.put("jid", reqIQ.getFrom().toString());
 						store.put("node", node);
 						
-						jedis.hmset("store:" + id, store);
+						//jedis.hmset("store:" + id, store);
+						StateMachine st = new StateMachine(jedis, outQueue, errorQueue);
+						st.store(id, store);
 						
 						outQueue.put(discoItemsGet);
 					}

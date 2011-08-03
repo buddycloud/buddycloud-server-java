@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import org.apache.log4j.Logger;
 import org.buddycloud.channels.jedis.JedisKeys;
 import org.buddycloud.channels.packet.ErrorPacket;
 import org.buddycloud.channels.packet.ErrorPacketBuilder;
@@ -26,6 +27,8 @@ import redis.clients.jedis.Jedis;
 
 public class StateMachine {
 
+	private Logger LOGGER = Logger.getLogger(StateMachine.class);
+	
 	private Jedis jedis;
 	private OutQueue outQueue;
 	private ErrorQueue errorQueue;
@@ -36,9 +39,23 @@ public class StateMachine {
 		this.errorQueue = errorQueue;
 	}
 	
+	public void store(String id, Map<String, String> store) {
+		this.jedis.hmset("store:" + id, store);
+		String currTimeSec = Integer.toString((int)(System.currentTimeMillis() / 1000));
+		jedis.hset(JedisKeys.STATE_TIMEOUTS, id, currTimeSec);
+	}
+	
+	private Map<String, String> getStore(String id) {
+		Map<String, String> store = jedis.hgetAll("store:" + id);
+		this.jedis.hdel(JedisKeys.STATE_TIMEOUTS, id);
+		return store;
+	}
+	
 	public void ingest(IQ iq) {
 		
-		Map<String, String> store = jedis.hgetAll("store:" + iq.getID());
+		//Map<String, String> store = jedis.hgetAll("store:" + iq.getID());
+		//jedis.hdel(JedisKeys.STATE_TIMEOUTS, iq.getID());
+		Map<String, String> store = this.getStore(iq.getID());
 		
 		if(store == null || store.isEmpty()) {
 			System.out.println("Could not recover state from store with key 'store:" + iq.getID() + "'.");
@@ -79,7 +96,7 @@ public class StateMachine {
 				
 				ErrorPacket ep = ErrorPacketBuilder.itemNotFound(originalReq);
 				ep.setMsg("No items found from remove server (" + iq.getFrom().toBareJID() + ") when doing disco#items.");
-				errorQueue.put(ErrorPacketBuilder.itemNotFound(originalReq));
+				errorQueue.put(ep);
 				
 				return;
 			}
@@ -90,7 +107,8 @@ public class StateMachine {
 			store.put(State.KEY_STATE, State.STATE_DISCOINFO_DISCO_INFO_TO_COMPONENTS);
 			
 			String id = UUID.randomUUID().toString();
-			jedis.hmset("store:" + id, store);
+			//jedis.hmset("store:" + id, store);
+			this.store(id, store);
 			jedis.del("store:" + iq.getID());
 			
 			IQ discoInfoIQ = new IQ();
@@ -133,7 +151,8 @@ public class StateMachine {
 				
 				store.put(State.KEY_STATE, State.STATE_DISCOINFO);
 				
-				jedis.hmset("store:" + id, store);
+				//jedis.hmset("store:" + id, store);
+				this.store(id, store);
 				jedis.del("store:" + iq.getID());
 				
 				outQueue.put(discoinfo);
@@ -170,7 +189,8 @@ public class StateMachine {
 			store.put("components", Helpers.collectionToString(itemsToBeDiscovered));
 			
 			String id = UUID.randomUUID().toString();
-			jedis.hmset("store:" + id, store);
+			//jedis.hmset("store:" + id, store);
+			this.store(id, store);
 			jedis.del("store:" + iq.getID());
 			
 			IQ discoInfoIQ = new IQ();
@@ -222,7 +242,7 @@ public class StateMachine {
 				
 				ErrorPacket ep = ErrorPacketBuilder.itemNotFound(originalReq);
 				ep.setMsg("No items found from remove server (" + iq.getFrom().toBareJID() + ") when doing disco#items.");
-				errorQueue.put(ErrorPacketBuilder.itemNotFound(originalReq));
+				errorQueue.put(ep);
 				
 				return;
 			}
@@ -233,7 +253,8 @@ public class StateMachine {
 			store.put(State.KEY_STATE, State.STATE_DISCO_INFO_TO_COMPONENTS);
 			
 			String id = UUID.randomUUID().toString();
-			jedis.hmset("store:" + id, store);
+			//jedis.hmset("store:" + id, store);
+			this.store(id, store);
 			jedis.del("store:" + iq.getID());
 			
 			IQ discoInfoIQ = new IQ();
@@ -280,7 +301,8 @@ public class StateMachine {
 				
 				store.put(State.KEY_STATE, State.STATE_SUBSCRIBE);
 				
-				jedis.hmset("store:" + id, store);
+				//jedis.hmset("store:" + id, store);
+				this.store(id, store);
 				jedis.del("store:" + iq.getID());
 				
 				outQueue.put(subscribe);
@@ -307,7 +329,7 @@ public class StateMachine {
 				
 				ErrorPacket ep = ErrorPacketBuilder.itemNotFound(originalReq);
 				ep.setMsg("No bc components found from remove server (" + iq.getFrom().toBareJID() + ") when doing disco#infos to them.");
-				errorQueue.put(ErrorPacketBuilder.itemNotFound(originalReq));
+				errorQueue.put(ep);
 				
 				return;
 			}
@@ -317,7 +339,8 @@ public class StateMachine {
 			store.put("components", Helpers.collectionToString(itemsToBeDiscovered));
 			
 			String id = UUID.randomUUID().toString();
-			jedis.hmset("store:" + id, store);
+			//jedis.hmset("store:" + id, store);
+			this.store(id, store);
 			jedis.del("store:" + iq.getID());
 			
 			IQ discoInfoIQ = new IQ();
@@ -390,7 +413,9 @@ public class StateMachine {
 	 */
 	public void ingestError(IQ iq) {
 			
-		Map<String, String> store = jedis.hgetAll("store:" + iq.getID());
+		Map<String, String> store = this.getStore(iq.getID());
+		//Map<String, String> store = jedis.hgetAll("store:" + iq.getID());
+		//jedis.hdel(JedisKeys.STATE_TIMEOUTS, iq.getID());
 		
 		if(store == null || store.isEmpty()) {
 			System.out.println("Could not recover state from store with key 'store:" + iq.getID() + "'.");
@@ -425,6 +450,30 @@ public class StateMachine {
 			System.out.println("Did not found handler for state '" + state.getState() + "'.");
 		}
 		
+	}
+	
+	public void timeout(String id) {
+
+		this.LOGGER.debug("State with id '" + id + "' timed out.");
+		
+		Map<String, String> store = this.getStore(id);
+		
+		if(store == null || store.isEmpty()) {
+			this.LOGGER.info("Could not recover state from store with key 'store:" + id + "'. Skipping timing out.");
+			return;
+		}
+		
+		State state = new State(store);
+		
+		IQ originalReq = new IQ();
+		originalReq.setType(IQ.Type.set);
+		originalReq.setID(store.get("id"));
+		originalReq.setFrom(store.get("jid"));
+		originalReq.setTo("channels.koski.com");
+		
+		ErrorPacket ep = ErrorPacketBuilder.remoteServerTimeout(originalReq);
+		ep.setMsg("External component timed out. State was '" + state.getState() + "'.");
+		errorQueue.put(ep);
 	}
 	
 }

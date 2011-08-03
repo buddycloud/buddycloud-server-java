@@ -351,11 +351,13 @@ public class JabberPubsub extends AbstractNamespace {
 				    .addElement("actor", "http://buddycloud.org/v1")
 				    .setText(reqIQ.getFrom().toBareJID());
 				
-				Map <String, String> store = new HashMap<String, String>();
+				Map<String, String> store = new HashMap<String, String>();
 				store.put(State.KEY_STATE, State.STATE_PUBLISH);
 				store.put("id", reqIQ.getID());
 				store.put("jid", reqIQ.getFrom().toString());
-				jedis.hmset("store:" + id, store);
+				//jedis.hmset("store:" + id, store);
+				StateMachine st = new StateMachine(jedis, outQueue, errorQueue);
+				st.store(id, store);
 				
 				outQueue.put(copy);
 				
@@ -602,7 +604,9 @@ public class JabberPubsub extends AbstractNamespace {
 					store.put("jid", reqIQ.getFrom().toString());
 					store.put("node", node);
 					
-					jedis.hmset("store:" + id, store);
+					//jedis.hmset("store:" + id, store);
+					StateMachine st = new StateMachine(jedis, outQueue, errorQueue);
+					st.store(id, store);
 					
 					outQueue.put(discoItemsGet);
 				} else {
@@ -627,7 +631,9 @@ public class JabberPubsub extends AbstractNamespace {
 					store.put("jid", reqIQ.getFrom().toString());
 					store.put("node", node);
 					
-					jedis.hmset("store:" + id, store);
+					//jedis.hmset("store:" + id, store);
+					StateMachine st = new StateMachine(jedis, outQueue, errorQueue);
+					st.store(id, store);
 					
 					outQueue.put(subscribe);
 				}

@@ -97,15 +97,19 @@ public class JabberPubsubTest extends TestCase {
 		SimpleDateFormat sdf = new SimpleDateFormat(DATE_FORMAT);
 		sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
 
-		entry.addElement("published").setText(sdf.format(new Date()));
-		
-		Element author = entry.addElement("author");
-		author.addElement("name").setText("Tuomas Koski");
-		author.addElement("jid", "http://buddycloud.com/atom-elements-0").setText("tuomas@koski.com");
+		entry.addElement("id").setText("1");
+		entry.addElement("title").setText("Status post.");
 		
 		entry.addElement("content")
-		     .addAttribute("type", "text")
+		     //.addAttribute("type", "text")
 		     .setText("Hello Federation!");
+		
+		entry.addElement("published").setText(sdf.format(new Date()));
+		entry.addElement("updated").setText(sdf.format(new Date()));
+		
+		Element author = entry.addElement("author");
+		author.addElement("name").setText("tuomas@koski.com");
+		author.addElement("jid", "http://buddycloud.com/atom-elements-0").setText("tuomas@koski.com");
 		
 		Element geoloc = entry.addElement("geoloc", "http://jabber.org/protocol/geoloc");
 		geoloc.addElement("text").setText("Home Sweet Home!");
@@ -150,7 +154,7 @@ public class JabberPubsubTest extends TestCase {
 		assertTrue(items.contains(itemID));
 		
 		// let's check that the item exists.
-		entry.addElement("id").setText("tag:channels.koski.com,/user/tuomas@koski.com/status," + itemID);
+		entry.element("id").setText("tag:channels.koski.com,/user/tuomas@koski.com/status," + itemID);
 		
 		/**
 		 * There is a bug here. Will fail if second changes... bad bad tuomas.
@@ -162,11 +166,225 @@ public class JabberPubsubTest extends TestCase {
 		
 		//System.out.println(jedis.get("node:/user/tuomas@koski.com/status:item:" + itemID));
 		
+		entry.element("author").addElement("uri").setText("acct:tuomas@koski.com");
+		entry.element("author").element("jid").detach();
+		entry.element("author").addElement("activity:object-type").setText("person");
 		
-		entry.addElement("updated").setText(sdf.format(new Date()));
+		//entry.addElement("updated").setText(sdf.format(new Date()));
 		assertEquals(entry.asXML(), jedis.get("node:/user/tuomas@koski.com/status:item:" + itemID));
 		//System.out.println(jedis.get("node:/user/tuomas@koski.com/status:item:" + itemID));
 		
+		Set<String> possibleReceivers = new HashSet<String>();
+		possibleReceivers.add("tuomas@koski.com");
+		possibleReceivers.add("bc.playboy.com");
+		
+		Message eventMsg = (Message)pubsubEngine.outQueue.getQueue().poll();
+		//assertEquals(eventMsg.getTo().toBareJID(), "tuomas@koski.com");
+		assertTrue(possibleReceivers.contains(eventMsg.getTo().toBareJID()));
+		possibleReceivers.remove(eventMsg.getTo().toBareJID());
+		
+		//System.out.println(eventMsg.toXML());
+		
+		eventMsg = (Message)pubsubEngine.outQueue.getQueue().poll();
+		assertTrue(possibleReceivers.contains(eventMsg.getTo().toBareJID()));
+		
+		eventMsg = (Message)pubsubEngine.outQueue.getQueue().poll();
+		assertNull(eventMsg); // We test that playboy.com is send only once
+		
+	}
+	
+	public void testPublishStatusSuccessWithMiniEntry() {
+		
+		String node = "/user/tuomas@koski.com/status";
+		
+		jedis.sadd(JedisKeys.LOCAL_NODES, node);
+		
+		jedis.sadd("node:" + node + ":subscribers", "tuomas@koski.com");
+		Subscription sub = new Subscription(Type.unconfigured,
+				org.buddycloud.channels.pubsub.affiliation.Type.publisher,
+				null);
+		jedis.hmset("node:" + node + ":subscriber:tuomas@koski.com", sub.getAsMap());
+		
+		jedis.sadd("node:" + node + ":subscribers", "pamela@playboy.com");
+		sub = new Subscription(Type.unconfigured,
+				org.buddycloud.channels.pubsub.affiliation.Type.publisher,
+				"bc.playboy.com");
+		jedis.hmset("node:" + node + ":subscriber:pamela@playboy.com", sub.getAsMap());
+		
+		jedis.sadd("node:" + node + ":subscribers", "cindy@playboy.com");
+		sub = new Subscription(Type.unconfigured,
+				org.buddycloud.channels.pubsub.affiliation.Type.publisher,
+				"bc.playboy.com");
+		jedis.hmset("node:" + node + ":subscriber:cindy@playboy.com", sub.getAsMap());
+		
+		
+		JabberPubsub pubsubEngine = new JabberPubsub(this.outQueue, this.errorQueue, this.jedis);
+		
+		String id = "testPublishStatusSuccess";
+		
+		IQ mockIQ = new IQ();
+		mockIQ.setType(IQ.Type.set);
+		mockIQ.setID(id);
+		mockIQ.setTo("channels.koski.com");
+		mockIQ.setFrom("tuomas@koski.com");
+		
+		Element pubsub = mockIQ.setChildElement("pubsub", JabberPubsub.NAMESPACE_URI);
+		Element publish = pubsub.addElement("publish");
+		publish.addAttribute("node", "/user/tuomas@koski.com/status");
+		Element item = publish.addElement("item"); 
+		
+		Element entry = new DOMElement("entry", new org.dom4j.Namespace("", "http://www.w3.org/2005/Atom"));
+		//entry.add(new org.dom4j.Namespace("activity", "http://activitystrea.ms/spec/1.0/"));
+		
+		String DATE_FORMAT = "yyyy-MM-dd'T'H:m:s'Z'";
+		SimpleDateFormat sdf = new SimpleDateFormat(DATE_FORMAT);
+		sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
+
+		//entry.addElement("id").setText("1");
+		//entry.addElement("title").setText("Status post.");
+		
+		entry.addElement("content")
+		     //.addAttribute("type", "text")
+		     .setText("Hello Federation!");
+		
+		//entry.addElement("published").setText(sdf.format(new Date()));
+		//entry.addElement("updated").setText(sdf.format(new Date()));
+		
+		Element author = entry.addElement("author");
+		author.addElement("name").setText("tuomas@koski.com");
+		//author.addElement("jid", "http://buddycloud.com/atom-elements-0").setText("tuomas@koski.com");
+		
+		Element geoloc = entry.addElement("geoloc", "http://jabber.org/protocol/geoloc");
+		geoloc.addElement("text").setText("Home Sweet Home!");
+		geoloc.addElement("locality").setText("Paris");
+		geoloc.addElement("country").setText("Ffance");
+		
+//		entry.addElement("activity:verb")
+//		     .setText("post");
+//		entry.addElement("activity:object")
+//		     .addElement("activity:object-type")
+//		     .setText("note");
+		
+		item.add(entry);
+		
+		pubsubEngine.ingestPacket(mockIQ.createCopy());
+		
+		IQ result = (IQ)pubsubEngine.outQueue.getQueue().poll();
+		
+		assertEquals(IQ.Type.result, result.getType());
+		assertEquals(id, result.getID());
+		
+		Element pubsubElm = result.getChildElement();
+		assertNotNull(pubsubElm);
+		
+		Element publishElm = pubsubElm.element("publish");
+		assertNotNull(publishElm);
+		
+		assertEquals("/user/tuomas@koski.com/status", publish.attributeValue("node"));
+		
+		Element itemElm = publishElm.element("item");
+		assertNotNull(itemElm);
+		
+		String itemID = itemElm.attributeValue("id");
+		
+		// let's test that the item is added to the unique set
+		jedis.sismember("node:/user/tuomas@koski.com/status:items", itemID);
+		
+		//System.out.println(itemID);
+		
+		// let's test that the item is added to the 
+		List<String> items = jedis.lrange("node:/user/tuomas@koski.com/status:itemlist", 0, 1);
+		assertTrue(items.contains(itemID));
+		
+		// let's check that the item exists.
+		//entry.addElement("id").setText("tag:channels.koski.com,/user/tuomas@koski.com/status," + itemID);
+		
+		/**
+		 * There is a bug here. Will fail if second changes... bad bad tuomas.
+		 * But no time now!
+		 */
+		DATE_FORMAT = "yyyy-MM-dd'T'H:m:s'Z'";
+		sdf = new SimpleDateFormat(DATE_FORMAT);
+		sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
+		
+		//System.out.println(jedis.get("node:/user/tuomas@koski.com/status:item:" + itemID));
+		
+		entry.element("author").addElement("name").setText("tuomas@koski.com");
+		//entry.element("author").element("jid").detach();
+		//entry.element("author").addElement("activity:object-type").setText("person");
+		
+		
+		/*
+		 <entry xmlns="http://www.w3.org/2005/Atom" 
+		        xmlns:activity="http://activitystrea.ms/spec/1.0/">
+		    <id>tag:channels.koski.com,/user/tuomas@koski.com/status,2f60ae3c-cf1e-4cf7-ba3c-3cacaa80cb21</id>
+		    <title>Post</title>
+		    <content>Hello Federation!</content>
+		    <published>2011-08-13T10:14:43Z</published>
+		    <updated>2011-08-13T10:14:43Z</updated>
+		    <author>
+		       <name>tuomas@koski.com</name>
+		       <uri>acct:tuomas@koski.com</uri>
+		       <activity:object-type>person</activity:object-type>
+		    </author>
+		    <geoloc xmlns="http://jabber.org/protocol/geoloc">
+		       <text>Home Sweet Home!</text>
+		       <locality>Paris</locality>
+		       <country>Ffance</country>
+	        </geoloc>
+		    <activity:verb>post</activity:verb>
+		    <activity:object>
+		       <activity:object-type>note</activity:object-type>
+		    </activity:object>
+		 </entry>
+		 */
+		
+		Element expectedEntry = new DOMElement("entry", new org.dom4j.Namespace("", "http://www.w3.org/2005/Atom"));
+		expectedEntry.add(new org.dom4j.Namespace("activity", "http://activitystrea.ms/spec/1.0/"));
+		
+		expectedEntry.addElement("id")
+	     	         .setText("tag:channels.koski.com,/user/tuomas@koski.com/status," + itemID);
+	
+		expectedEntry.addElement("title")
+			         .setText("Post");
+		
+		expectedEntry.addElement("content")
+		             .setText("Hello Federation!");
+		
+		String leData = sdf.format(new Date());
+		
+		expectedEntry.addElement("published")
+		             .setText(leData);
+		
+		expectedEntry.addElement("updated")
+		             .setText(leData);
+		
+		author = expectedEntry.addElement("author");
+		
+		author.addElement("name")
+			  .setText("tuomas@koski.com");
+		
+		author.addElement("uri")
+		      .setText("acct:tuomas@koski.com");
+	
+		author.addElement("activity:object-type")
+	         .setText("person");
+	
+		expectedEntry.add(geoloc.createCopy());
+		
+		expectedEntry.addElement("activity:verb")
+	                 .setText("post");
+		
+		Element activity_object = expectedEntry.addElement("activity:object");
+		activity_object.addElement("activity:object-type")
+		               .setText("note");
+		
+		//return entry;
+		
+		//entry.addElement("updated").setText(sdf.format(new Date()));
+		assertEquals(expectedEntry.asXML(), jedis.get("node:/user/tuomas@koski.com/status:item:" + itemID));
+		//System.out.println(jedis.get("node:/user/tuomas@koski.com/status:item:" + itemID));
+		//entry.appendContent(new Element("id"));
 		Set<String> possibleReceivers = new HashSet<String>();
 		possibleReceivers.add("tuomas@koski.com");
 		possibleReceivers.add("bc.playboy.com");
@@ -205,6 +423,52 @@ public class JabberPubsubTest extends TestCase {
 		pubsub.addElement("subscribe")
 		      .addAttribute("node", "/user/nelly@heriveau.fr/status")
 		      .addAttribute("jid", mockIQ.getFrom().toString());
+		
+		pubsubEngine.ingestPacket(mockIQ.createCopy());
+		
+		Thread.sleep(50);
+		
+		IQ result = (IQ)pubsubEngine.outQueue.getQueue().poll();
+		result.setFrom("channels.koski.com");
+		//System.out.println(result.toXML());
+		
+		assertEquals(IQ.Type.get, result.getType());
+		assertEquals(mockIQ.getTo(), result.getFrom());
+		assertEquals("heriveau.fr", result.getTo().toString());
+		
+		Element query = new DOMElement("query", new org.dom4j.Namespace("", "http://jabber.org/protocol/disco#items"));
+		
+		assertEquals(query.asXML(), result.getChildElement().asXML());
+		
+		//System.out.println(result.toXML());
+		
+		Map<String, String> store = jedis.hgetAll("store:" + result.getID());
+		
+		assertEquals(id, store.get("id"));
+		assertEquals("/user/nelly@heriveau.fr/status", store.get("node"));
+		assertEquals("tuomas@koski.com/client", store.get("jid"));
+		assertEquals(State.STATE_DISCO_ITEMS_TO_FIND_BC_CHANNEL_COMPONENT, store.get(State.KEY_STATE));
+		
+	}
+	
+	public void testSubscribeExternalStartsDiscoverySuccessNoJidNeeded() throws InterruptedException {
+		
+		JabberPubsub pubsubEngine = new JabberPubsub(this.outQueue, this.errorQueue, this.jedis);
+		
+		String id = "testSubscribeExternalStartsDiscoverySuccessNoJidNeeded";
+		
+		IQ mockIQ = new IQ();
+		mockIQ.setType(IQ.Type.set);
+		mockIQ.setID(id);
+		mockIQ.setTo("channels.koski.com");
+		mockIQ.setFrom("tuomas@koski.com/client");
+		
+		// We add user as registered
+		jedis.sadd(JedisKeys.LOCAL_USERS, mockIQ.getFrom().toBareJID());
+		
+		Element pubsub = mockIQ.setChildElement("pubsub", JabberPubsub.NAMESPACE_URI);
+		pubsub.addElement("subscribe")
+		      .addAttribute("node", "/user/nelly@heriveau.fr/status");
 		
 		pubsubEngine.ingestPacket(mockIQ.createCopy());
 		
@@ -275,6 +539,47 @@ public class JabberPubsubTest extends TestCase {
 		
 	}
 	
+	public void testSubscribeLocalSuccessJidNotNeeded() throws InterruptedException {
+		
+		jedis.sadd(JedisKeys.LOCAL_NODES, "/user/tuomas@koski.com/status");
+		
+		JabberPubsub pubsubEngine = new JabberPubsub(this.outQueue, this.errorQueue, this.jedis);
+		
+		String id = "testSubscribeLocalSuccessJidNotNeeded";
+		
+		IQ mockIQ = new IQ();
+		mockIQ.setType(IQ.Type.set);
+		mockIQ.setID(id);
+		mockIQ.setTo("channels.koski.com");
+		mockIQ.setFrom("j@koski.com/client");
+		
+		// We add user as registered
+		jedis.sadd(JedisKeys.LOCAL_USERS, mockIQ.getFrom().toBareJID());
+		
+		Element pubsub = mockIQ.setChildElement("pubsub", JabberPubsub.NAMESPACE_URI);
+		pubsub.addElement("subscribe")
+		      .addAttribute("node", "/user/tuomas@koski.com/status");
+		
+		pubsubEngine.ingestPacket(mockIQ.createCopy());
+		
+		Thread.sleep(50);
+		
+		IQ result = (IQ)pubsubEngine.outQueue.getQueue().poll();
+		//System.out.println(result.toXML());
+		assertEquals(IQ.Type.result, result.getType());
+		
+		
+		Set<String> subscribers = jedis.smembers("node:/user/tuomas@koski.com/status:subscribers");
+		assertTrue(subscribers.contains("j@koski.com"));
+		
+		Map<String, String> sub = jedis.hgetAll("node:/user/tuomas@koski.com/status:subscriber:j@koski.com");
+	
+		assertEquals("unconfigured", sub.get("subscription"));
+		assertEquals("publisher", sub.get("affiliation"));
+		assertNull(sub.get("channel-server"));
+		
+	}
+	
 //	public void testSubscribeLocalFailsRegistrationRequired() throws InterruptedException {
 //		
 //		jedis.sadd(JedisKeys.LOCAL_NODES, "/user/tuomas@koski.com/status");
@@ -319,55 +624,55 @@ public class JabberPubsubTest extends TestCase {
 //		
 //	}
 	
-	public void testSubscribeLocalFailsMalformedJid() throws InterruptedException {
-		
-		jedis.sadd(JedisKeys.LOCAL_NODES, "/user/tuomas@koski.com/status");
-		
-		JabberPubsub pubsubEngine = new JabberPubsub(this.outQueue, this.errorQueue, this.jedis);
-		
-		String id = "testSubscribeLocalFailsMalformedJid";
-		
-		IQ mockIQ = new IQ();
-		mockIQ.setType(IQ.Type.set);
-		mockIQ.setID(id);
-		mockIQ.setTo("channels.koski.com");
-		mockIQ.setFrom("j@koski.com/client");
-		
-		// We add user as registered
-		jedis.sadd(JedisKeys.LOCAL_USERS, mockIQ.getFrom().toBareJID());
-		
-		Element pubsub = mockIQ.setChildElement("pubsub", JabberPubsub.NAMESPACE_URI);
-		pubsub.addElement("subscribe")
-		      .addAttribute("node", "/user/tuomas@koski.com/status")
-		      .addAttribute("jid", "somethingwrong");
-		
-		pubsubEngine.ingestPacket(mockIQ.createCopy());
-		
-		Thread.sleep(50);
-		
-		IQ result = (IQ)pubsubEngine.outQueue.getQueue().poll();
-		//System.out.println(result.toXML());
-		
-		Element error = new DOMElement("error");
-		error.addAttribute("type", "modify");
-		Element conflict = new DOMElement("bad-request",
-					 								 new org.dom4j.Namespace("", ErrorPacket.NS_XMPP_STANZAS));
-		Element ij = new DOMElement("invalid-jid",
-				 					new org.dom4j.Namespace("", ErrorPacket.NS_PUBSUB_ERROR));
-		error.add(conflict);
-		error.add(ij);
-		
-		assertEquals(result.getError().toXML(), error.asXML());
-		
-		
-		Set<String> subscribers = jedis.smembers("node:/user/tuomas@koski.com/status:subscribers");
-		assertFalse(subscribers.contains("j@koski.com"));
-		
-		Map<String, String> sub = jedis.hgetAll("node:/user/tuomas@koski.com/status:subscriber:j@koski.com");
-	
-		assertTrue(sub.isEmpty());
-		
-	}
+//	public void testSubscribeLocalFailsMalformedJid() throws InterruptedException {
+//		
+//		jedis.sadd(JedisKeys.LOCAL_NODES, "/user/tuomas@koski.com/status");
+//		
+//		JabberPubsub pubsubEngine = new JabberPubsub(this.outQueue, this.errorQueue, this.jedis);
+//		
+//		String id = "testSubscribeLocalFailsMalformedJid";
+//		
+//		IQ mockIQ = new IQ();
+//		mockIQ.setType(IQ.Type.set);
+//		mockIQ.setID(id);
+//		mockIQ.setTo("channels.koski.com");
+//		mockIQ.setFrom("j@koski.com/client");
+//		
+//		// We add user as registered
+//		jedis.sadd(JedisKeys.LOCAL_USERS, mockIQ.getFrom().toBareJID());
+//		
+//		Element pubsub = mockIQ.setChildElement("pubsub", JabberPubsub.NAMESPACE_URI);
+//		pubsub.addElement("subscribe")
+//		      .addAttribute("node", "/user/tuomas@koski.com/status")
+//		      .addAttribute("jid", "somethingwrong");
+//		
+//		pubsubEngine.ingestPacket(mockIQ.createCopy());
+//		
+//		Thread.sleep(50);
+//		
+//		IQ result = (IQ)pubsubEngine.outQueue.getQueue().poll();
+//		//System.out.println(result.toXML());
+//		
+//		Element error = new DOMElement("error");
+//		error.addAttribute("type", "modify");
+//		Element conflict = new DOMElement("bad-request",
+//					 								 new org.dom4j.Namespace("", ErrorPacket.NS_XMPP_STANZAS));
+//		Element ij = new DOMElement("invalid-jid",
+//				 					new org.dom4j.Namespace("", ErrorPacket.NS_PUBSUB_ERROR));
+//		error.add(conflict);
+//		error.add(ij);
+//		
+//		assertEquals(result.getError().toXML(), error.asXML());
+//		
+//		
+//		Set<String> subscribers = jedis.smembers("node:/user/tuomas@koski.com/status:subscribers");
+//		assertFalse(subscribers.contains("j@koski.com"));
+//		
+//		Map<String, String> sub = jedis.hgetAll("node:/user/tuomas@koski.com/status:subscriber:j@koski.com");
+//	
+//		assertTrue(sub.isEmpty());
+//		
+//	}
 	
 	public void testSubscribeFromRemoteFailsNoActor() throws InterruptedException {
 		
@@ -504,6 +809,49 @@ public class JabberPubsubTest extends TestCase {
 		IQ result = (IQ)pubsubEngine.outQueue.getQueue().poll();
 		
 		String expected = "<iq type=\"result\" id=\"testRemoteSubscribeSuccess\" from=\"channels.koski.com\" to=\"bc.heriveau.fr\"><pubsub xmlns=\"http://jabber.org/protocol/pubsub\" xmlns:bc=\"http://buddycloud.org/v1\"><subscription node=\"/user/tuomas@koski.com/status\" jid=\"bc.heriveau.fr\" subscription=\"unconfigured\" bc:actor=\"nelly@heriveau.fr\"/></pubsub></iq>";
+
+		//System.out.println(result.toXML());
+		assertEquals(expected, result.toXML());
+	}
+	
+	public void testRemoteSubscribeSuccessNoJidNeeded() throws InterruptedException {
+		
+		jedis.sadd(JedisKeys.LOCAL_NODES, "/user/tuomas@koski.com/status");
+		
+		JabberPubsub pubsubEngine = new JabberPubsub(this.outQueue, this.errorQueue, this.jedis);
+		
+		String id = "testRemoteSubscribeSuccessNoJidNeeded";
+		
+		IQ mockIQ = new IQ();
+		mockIQ.setType(IQ.Type.set);
+		mockIQ.setID(id);
+		mockIQ.setTo("channels.koski.com");
+		mockIQ.setFrom("bc.heriveau.fr");
+		
+		Element pubsub = mockIQ.setChildElement("pubsub", JabberPubsub.NAMESPACE_URI);
+		//pubsub.add(new org.dom4j.Namespace("bc", "http://buddycloud.org/v1"));
+		pubsub.addElement("subscribe")
+		      .addAttribute("node", "/user/tuomas@koski.com/status");
+		      //.addAttribute("bc:actor", "nelly@heriveau.fr");
+		pubsub.addElement("actor", "http://buddycloud.org/v1").setText("nelly@heriveau.fr");
+		
+		//System.out.println(mockIQ.toXML());
+		pubsubEngine.ingestPacket(mockIQ.createCopy());
+		
+		Thread.sleep(50);
+		
+		Set<String> subscribers = jedis.smembers("node:/user/tuomas@koski.com/status:subscribers");
+		assertTrue(subscribers.contains("nelly@heriveau.fr"));
+		
+		Map<String, String> sub = jedis.hgetAll("node:/user/tuomas@koski.com/status:subscriber:nelly@heriveau.fr");
+	
+		assertEquals("unconfigured", sub.get("subscription"));
+		assertEquals("publisher", sub.get("affiliation"));
+		assertEquals("bc.heriveau.fr", sub.get("channel-server"));
+		
+		IQ result = (IQ)pubsubEngine.outQueue.getQueue().poll();
+		
+		String expected = "<iq type=\"result\" id=\"testRemoteSubscribeSuccessNoJidNeeded\" from=\"channels.koski.com\" to=\"bc.heriveau.fr\"><pubsub xmlns=\"http://jabber.org/protocol/pubsub\" xmlns:bc=\"http://buddycloud.org/v1\"><subscription node=\"/user/tuomas@koski.com/status\" jid=\"bc.heriveau.fr\" subscription=\"unconfigured\" bc:actor=\"nelly@heriveau.fr\"/></pubsub></iq>";
 
 		//System.out.println(result.toXML());
 		assertEquals(expected, result.toXML());
@@ -1035,7 +1383,7 @@ public class JabberPubsubTest extends TestCase {
 		
 		Element pubsub = mockIQ.setChildElement("pubsub", JabberPubsub.NAMESPACE_URI);
 		pubsub.addElement("subscribe")
-		      .addAttribute("node", "bunnies@channels.playboy.com")
+		      .addAttribute("node", "/user/bunnies@playboy.com")
 		      .addAttribute("jid", mockIQ.getFrom().toString());
 		
 		pubsubEngine.ingestPacket(mockIQ.createCopy());
@@ -1046,122 +1394,135 @@ public class JabberPubsubTest extends TestCase {
 		
 		//System.out.println(subsReq.toXML());
 		
-		pubsub = new DOMElement("pubsub", new org.dom4j.Namespace("", JabberPubsub.NAMESPACE_URI));
-		pubsub.addElement("subscribe")
-		      .addAttribute("node", "bunnies@channels.playboy.com")
-		      .addAttribute("jid", "channels.koski.com");
-		pubsub.addElement("actor", "http://buddycloud.org/v1").setText("tuomas@koski.com");
+//		pubsub = new DOMElement("pubsub", new org.dom4j.Namespace("", JabberPubsub.NAMESPACE_URI));
+//		pubsub.addElement("subscribe")
+//		      .addAttribute("node", "bunnies@channels.playboy.com")
+//		      .addAttribute("jid", "channels.koski.com");
+//		pubsub.addElement("actor", "http://buddycloud.org/v1").setText("tuomas@koski.com");
 		
 		assertEquals(null, subsReq.getFrom());
-		assertEquals("channels.playboy.com", subsReq.getTo().toBareJID());
-		assertEquals(pubsub.asXML(), subsReq.getChildElement().asXML());
+		assertEquals("playboy.com", subsReq.getTo().toBareJID());
+//		assertEquals(pubsub.asXML(), subsReq.getChildElement().asXML());
+//		
+//		//System.out.println(subsReq.toXML());
+//		
+//		Map <String, String> store = jedis.hgetAll("store:" + subsReq.getID());
+//		assertEquals(store.get(State.KEY_STATE), State.STATE_SUBSCRIBE);
+//		assertEquals(store.get("id"), id);
+//		assertEquals(store.get("jid"), "tuomas@koski.com/client");
+//		assertEquals(store.get("node"), "/user/bunnies@playboy.com");
 		
-		//System.out.println(subsReq.toXML());
 		
-		Map <String, String> store = jedis.hgetAll("store:" + subsReq.getID());
-		assertEquals(store.get(State.KEY_STATE), State.STATE_SUBSCRIBE);
-		assertEquals(store.get("id"), id);
-		assertEquals(store.get("jid"), "tuomas@koski.com/client");
-		assertEquals(store.get("node"), "bunnies@channels.playboy.com");
+		Element query = new DOMElement("query", new org.dom4j.Namespace("", "http://jabber.org/protocol/disco#items"));
+		
+		assertEquals(query.asXML(), subsReq.getChildElement().asXML());
+		
+		//System.out.println(result.toXML());
+		
+		Map<String, String> store = jedis.hgetAll("store:" + subsReq.getID());
+		
+		assertEquals(id, store.get("id"));
+		assertEquals("/user/bunnies@playboy.com", store.get("node"));
+		assertEquals("tuomas@koski.com/client", store.get("jid"));
+		assertEquals(State.STATE_DISCO_ITEMS_TO_FIND_BC_CHANNEL_COMPONENT, store.get(State.KEY_STATE));
 		
 	}
 	
-	public void testSubscribeExternalNormalNodeNotFoundReturnsErrorToUser() throws InterruptedException {
-		
-		JabberPubsub pubsubEngine = new JabberPubsub(this.outQueue, this.errorQueue, this.jedis);
-		
-		String id = "testSubscribeExternalNormalNodeNotFoundReturnsErrorToUser";
-		
-		IQ mockIQ = new IQ();
-		mockIQ.setType(IQ.Type.set);
-		mockIQ.setID(id);
-		mockIQ.setTo("channels.koski.com");
-		mockIQ.setFrom("tuomas@koski.com/client");
-		
-		// We add user as registered
-		jedis.sadd(JedisKeys.LOCAL_USERS, mockIQ.getFrom().toBareJID());
-		
-		Element pubsub = mockIQ.setChildElement("pubsub", JabberPubsub.NAMESPACE_URI);
-		pubsub.addElement("subscribe")
-		      .addAttribute("node", "bunnies@channels.playboy.com")
-		      .addAttribute("jid", mockIQ.getFrom().toString());
-		
-		pubsubEngine.ingestPacket(mockIQ.createCopy());
-		
-		Thread.sleep(50);
-		
-		IQ subsReq = (IQ)pubsubEngine.outQueue.getQueue().poll();
-		
-		//System.out.println(subsReq.toXML());
-		
-		pubsub = new DOMElement("pubsub", new org.dom4j.Namespace("", JabberPubsub.NAMESPACE_URI));
-		pubsub.addElement("subscribe")
-		      .addAttribute("node", "bunnies@channels.playboy.com")
-		      .addAttribute("jid", "channels.koski.com");
-		pubsub.addElement("actor", "http://buddycloud.org/v1").setText("tuomas@koski.com");
-		
-		assertEquals(null, subsReq.getFrom());
-		assertEquals("channels.playboy.com", subsReq.getTo().toBareJID());
-		assertEquals(pubsub.asXML(), subsReq.getChildElement().asXML());
-		
-		//System.out.println(subsReq.toXML());
-		
-		Map <String, String> store = jedis.hgetAll("store:" + subsReq.getID());
-		assertEquals(store.get(State.KEY_STATE), State.STATE_SUBSCRIBE);
-		assertEquals(store.get("id"), id);
-		assertEquals(store.get("jid"), "tuomas@koski.com/client");
-		assertEquals(store.get("node"), "bunnies@channels.playboy.com");
-		
-		// We receive and error because remove server not found
-		/* <iq type="error" 
-		       id="96ec76ce-391e-46b6-a6cc-04b308433619" 
-		       to="channels.koski.com" 
-		       from="channels.playboy.com">
-		      <pubsub xmlns="http://jabber.org/protocol/pubsub">
-		         <subscribe node="bunnies@channels.playboy.com" jid="channels.koski.com"/>
-		         <actor xmlns="http://buddycloud.org/v1">tuomas@koski.com</actor>
-		      </pubsub>
-		      <error code="404" type="cancel">
-		         <remote-server-not-found xmlns="urn:ietf:params:xml:ns:xmpp-stanzas"/>
-		      </error>
-		   </iq>
-		*/
-		mockIQ = new IQ();
-		mockIQ.setType(IQ.Type.set);
-		mockIQ.setID(subsReq.getID());
-		mockIQ.setTo("channels.koski.com");
-		mockIQ.setFrom("tuomas@koski.com/client");
-		
-		pubsub = mockIQ.setChildElement("pubsub", JabberPubsub.NAMESPACE_URI);
-		pubsub.addElement("subscribe")
-		      .addAttribute("node", "bunnies@channels.playboy.com")
-		      .addAttribute("jid", "channels.koski.com");
-		pubsub.addElement("actor", "http://buddycloud.org/v1").setText("tuomas@koski.com");
-		
-		Element error = new DOMElement("error");
-		error.addAttribute("type", "cancel")
-		     .addAttribute("code", "404");
-		Element notFound = new DOMElement("remote-server-not-found",
-					 					  new org.dom4j.Namespace("", ErrorPacket.NS_XMPP_STANZAS));
-		error.add(notFound);
-		PacketError e = new PacketError(error);
-		mockIQ.setError(e);
-		
-		System.out.println(mockIQ.toXML());
-		
-		pubsubEngine.ingestPacket(mockIQ.createCopy());
-		
-		Thread.sleep(50);
-		
-		subsReq = (IQ)pubsubEngine.outQueue.getQueue().poll();
-		
-		System.out.println(subsReq.toXML());
-		
-		store = jedis.hgetAll("store:" + subsReq.getID());
-	    assertTrue(store.isEmpty());
-	    
-	    assertEquals(subsReq.getType(), IQ.Type.error);
-	    assertEquals("tuomas@koski.com/client", subsReq.getTo().toString());
-	}
+//	public void testSubscribeExternalNormalNodeNotFoundReturnsErrorToUser() throws InterruptedException {
+//		
+//		JabberPubsub pubsubEngine = new JabberPubsub(this.outQueue, this.errorQueue, this.jedis);
+//		
+//		String id = "testSubscribeExternalNormalNodeNotFoundReturnsErrorToUser";
+//		
+//		IQ mockIQ = new IQ();
+//		mockIQ.setType(IQ.Type.set);
+//		mockIQ.setID(id);
+//		mockIQ.setTo("channels.koski.com");
+//		mockIQ.setFrom("tuomas@koski.com/client");
+//		
+//		// We add user as registered
+//		jedis.sadd(JedisKeys.LOCAL_USERS, mockIQ.getFrom().toBareJID());
+//		
+//		Element pubsub = mockIQ.setChildElement("pubsub", JabberPubsub.NAMESPACE_URI);
+//		pubsub.addElement("subscribe")
+//		      .addAttribute("node", "/user/bunnies@playboy.com");
+//		
+//		pubsubEngine.ingestPacket(mockIQ.createCopy());
+//		
+//		Thread.sleep(50);
+//		
+//		IQ subsReq = (IQ)pubsubEngine.outQueue.getQueue().poll();
+//		
+//		//System.out.println(subsReq.toXML());
+//		
+//		pubsub = new DOMElement("pubsub", new org.dom4j.Namespace("", JabberPubsub.NAMESPACE_URI));
+//		pubsub.addElement("subscribe")
+//		      .addAttribute("node", "bunnies@channels.playboy.com")
+//		      .addAttribute("jid", "channels.koski.com");
+//		pubsub.addElement("actor", "http://buddycloud.org/v1").setText("tuomas@koski.com");
+//		
+//		//assertEquals(null, subsReq.getFrom());
+//		assertEquals("channels.playboy.com", subsReq.getTo().toBareJID());
+//		assertEquals(pubsub.asXML(), subsReq.getChildElement().asXML());
+//		
+//		//System.out.println(subsReq.toXML());
+//		
+//		Map <String, String> store = jedis.hgetAll("store:" + subsReq.getID());
+//		assertEquals(store.get(State.KEY_STATE), State.STATE_SUBSCRIBE);
+//		assertEquals(store.get("id"), id);
+//		assertEquals(store.get("jid"), "tuomas@koski.com/client");
+//		assertEquals(store.get("node"), "bunnies@channels.playboy.com");
+//		
+//		// We receive and error because remove server not found
+//		/* <iq type="error" 
+//		       id="96ec76ce-391e-46b6-a6cc-04b308433619" 
+//		       to="channels.koski.com" 
+//		       from="channels.playboy.com">
+//		      <pubsub xmlns="http://jabber.org/protocol/pubsub">
+//		         <subscribe node="bunnies@channels.playboy.com" jid="channels.koski.com"/>
+//		         <actor xmlns="http://buddycloud.org/v1">tuomas@koski.com</actor>
+//		      </pubsub>
+//		      <error code="404" type="cancel">
+//		         <remote-server-not-found xmlns="urn:ietf:params:xml:ns:xmpp-stanzas"/>
+//		      </error>
+//		   </iq>
+//		*/
+//		mockIQ = new IQ();
+//		mockIQ.setType(IQ.Type.set);
+//		mockIQ.setID(subsReq.getID());
+//		mockIQ.setTo("channels.koski.com");
+//		mockIQ.setFrom("tuomas@koski.com/client");
+//		
+//		pubsub = mockIQ.setChildElement("pubsub", JabberPubsub.NAMESPACE_URI);
+//		pubsub.addElement("subscribe")
+//		      .addAttribute("node", "bunnies@channels.playboy.com")
+//		      .addAttribute("jid", "channels.koski.com");
+//		pubsub.addElement("actor", "http://buddycloud.org/v1").setText("tuomas@koski.com");
+//		
+//		Element error = new DOMElement("error");
+//		error.addAttribute("type", "cancel")
+//		     .addAttribute("code", "404");
+//		Element notFound = new DOMElement("remote-server-not-found",
+//					 					  new org.dom4j.Namespace("", ErrorPacket.NS_XMPP_STANZAS));
+//		error.add(notFound);
+//		PacketError e = new PacketError(error);
+//		mockIQ.setError(e);
+//		
+//		System.out.println(mockIQ.toXML());
+//		
+//		pubsubEngine.ingestPacket(mockIQ.createCopy());
+//		
+//		Thread.sleep(50);
+//		
+//		subsReq = (IQ)pubsubEngine.outQueue.getQueue().poll();
+//		
+//		System.out.println(subsReq.toXML());
+//		
+//		store = jedis.hgetAll("store:" + subsReq.getID());
+//	    assertTrue(store.isEmpty());
+//	    
+//	    assertEquals(subsReq.getType(), IQ.Type.error);
+//	    assertEquals("tuomas@koski.com/client", subsReq.getTo().toString());
+//	}
 	
 }

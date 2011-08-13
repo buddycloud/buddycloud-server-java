@@ -359,7 +359,7 @@ public class StateMachine {
 			String id   = state.getStore().get(State.KEY_ID);
 			
 			jedis.sadd(JedisKeys.REMOTE_NODES, node);
-			jedis.set("remove-node:" + node + ":jid", iq.getFrom().toBareJID());
+			jedis.set(JedisKeys.REMOTE_NODE + ":" + node + ":jid", iq.getFrom().toBareJID());
 			
 			IQ result = new IQ();
 			result.setID(id);

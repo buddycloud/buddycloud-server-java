@@ -55,9 +55,9 @@ public class JabberDiscoInfo extends AbstractNamespace {
 					 .addAttribute("name", "Koski's buddycloud channel server!");
 				
 				query.addElement("identity")
-				 .addAttribute("category", "pubsub")
-				 .addAttribute("type", "inbox")
-				 .addAttribute("name", "Let's federate.");
+				 	 .addAttribute("category", "pubsub")
+				 	 .addAttribute("type", "inbox")
+				 	 .addAttribute("name", "Let's federate.");
 				
 				query.addElement("feature")
 					 .addAttribute("var", "http://jabber.org/protocol/disco#info");

@@ -11,6 +11,7 @@ import java.util.Set;
 import java.util.TimeZone;
 import java.util.UUID;
 
+import org.buddycloud.channels.entry.Validator;
 import org.buddycloud.channels.jedis.JedisKeys;
 import org.buddycloud.channels.packet.ErrorPacket;
 import org.buddycloud.channels.packet.ErrorPacketBuilder;
@@ -383,35 +384,46 @@ public class JabberPubsub extends AbstractNamespace {
 			// TODO, add this:
 			// 7.1.3.5 Bad Payload
 			// Verify that the entry is as it should be for buddycloud.
-			Element entry = item.element("entry");
+			Validator entryValidator = new Validator(item.element("entry"));
+			if(!entryValidator.isValid()) {
+				System.out.println("Entry is not valid: '" + entryValidator.getErrorMsg() + "'.");
+				ErrorPacket ep = ErrorPacketBuilder.badRequest(reqIQ);
+				Element itemRequired = new DOMElement("invalid-payload",
+						                              new org.dom4j.Namespace("", ErrorPacket.NS_PUBSUB_ERROR));
+				ep.addCondition(itemRequired);
+				ep.setMsg(entryValidator.getErrorMsg());
+				return;
+			}
 			
-			//String id = item.attributeValue("id");
+			//Element entry = item.element("entry");
+			Element entry = entryValidator.createBcCompatible(reqIQ.getFrom().toBareJID(), reqIQ.getTo().toBareJID(), node);
+			
+			String id = entry.element("id").getText();
+			String[] idParts = id.split(",");
+			id = idParts[2];
 			//if(id == null || id.equals("")) {
-			String id = UUID.randomUUID().toString();
+			//String id = UUID.randomUUID().toString();
 			//	item.addAttribute("id", id);
 			//}
 			
-			Element idElm = entry.element("id");
-			if(idElm == null) {
-				idElm = entry.addElement("id");
-			}
-			idElm.setText("tag:" + reqIQ.getTo().toBareJID() + "," + node + "," + id);
+			//Element idElm = entry.element("id");
+			//idElm.setText("tag:" + reqIQ.getTo().toBareJID() + "," + node + "," + id);
 			
-			String DATE_FORMAT = "yyyy-MM-dd'T'H:m:s'Z'";
-			SimpleDateFormat sdf = new SimpleDateFormat(DATE_FORMAT);
-			sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
+			//String DATE_FORMAT = "yyyy-MM-dd'T'H:m:s'Z'";
+			//SimpleDateFormat sdf = new SimpleDateFormat(DATE_FORMAT);
+			//sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
 			
-			Element publishedElm = entry.element("published");
-			if(publishedElm == null) {
-				publishedElm = entry.addElement("published");
-			}
-			publishedElm.setText(sdf.format(new Date()));
-			
-			Element updatedElm = entry.element("updated");
-			if(updatedElm == null) {
-				updatedElm = entry.addElement("updated");
-			}
-			updatedElm.setText(sdf.format(new Date()));
+//			Element publishedElm = entry.element("published");
+//			if(publishedElm == null) {
+//				publishedElm = entry.addElement("published");
+//			}
+//			publishedElm.setText(sdf.format(new Date()));
+//			
+//			Element updatedElm = entry.element("updated");
+//			if(updatedElm == null) {
+//				updatedElm = entry.addElement("updated");
+//			}
+//			updatedElm.setText(sdf.format(new Date()));
 			
 			/*
 			 * All good, let's store the item.
@@ -445,7 +457,6 @@ public class JabberPubsub extends AbstractNamespace {
 			
 			outQueue.put(result);
 			
-			
 			/*
 			 * Let's send notifications.
 			 */
@@ -466,7 +477,7 @@ public class JabberPubsub extends AbstractNamespace {
 			
 			Set<String> subscriberJIDs = jedis.smembers("node:" + node + ":subscribers");
 			if(subscriberJIDs.isEmpty()) {
-				System.out.println("Weird, there is no subscribers....");
+				System.out.println("Weird, there is no subscribers ...");
 				return;
 			}
 			
@@ -508,16 +519,22 @@ public class JabberPubsub extends AbstractNamespace {
 				return;
 			}
 			
-			String jid = elm.attributeValue("jid");
-			JID subsJID = new JID(jid);
-			if(!subsJID.toBareJID().equals(reqIQ.getFrom().toBareJID())) {
-				ErrorPacket ep = ErrorPacketBuilder.badRequest(reqIQ);
-				Element invalidJid = new DOMElement("invalid-jid",
-													new org.dom4j.Namespace("", ErrorPacket.NS_PUBSUB_ERROR));
-				ep.addCondition(invalidJid);
-				ep.setMsg("JID was not passed as it should. E.g was not same as from in Bare form.");
-				errorQueue.put(ep);
-				return;
+//			String jid = elm.attributeValue("jid");
+//			JID subsJID = new JID(jid);
+//			if(!subsJID.toBareJID().equals(reqIQ.getFrom().toBareJID())) {
+//				ErrorPacket ep = ErrorPacketBuilder.badRequest(reqIQ);
+//				Element invalidJid = new DOMElement("invalid-jid",
+//													new org.dom4j.Namespace("", ErrorPacket.NS_PUBSUB_ERROR));
+//				ep.addCondition(invalidJid);
+//				ep.setMsg("JID was not passed as it should. E.g was not same as from in Bare form.");
+//				errorQueue.put(ep);
+//				return;
+//			}
+			JID subsJID;
+			if(actor != null) {
+				subsJID = new JID(actor);
+			} else {
+				subsJID = reqIQ.getFrom();
 			}
 			
 			// We should allow anyone to subscribe
@@ -610,32 +627,41 @@ public class JabberPubsub extends AbstractNamespace {
 					
 					outQueue.put(discoItemsGet);
 				} else {
-					JID user = new JID(node);
 					
-					IQ subscribe = new IQ();
-					subscribe.setType(IQ.Type.set);
-					String id = UUID.randomUUID().toString();
-					subscribe.setID(id);
-					subscribe.setTo(user.getDomain());
+					ErrorPacket ep = ErrorPacketBuilder.notAcceptable(reqIQ);
+					Element invalidJid = new DOMElement("invalid-nodename",
+														new org.dom4j.Namespace("", ErrorPacket.NS_PUBSUB_ERROR));
+					ep.addCondition(invalidJid);
+					ep.setMsg("Every node must start with /user/ prefix. Was not the case man!");
+					errorQueue.put(ep);
+					return;
 					
-					Element pubsub = subscribe.setChildElement("pubsub", JabberPubsub.NAMESPACE_URI);
-					pubsub.addElement("subscribe")
-					      .addAttribute("node", node)
-					      .addAttribute("jid", reqIQ.getTo().toString());
-					pubsub.addElement("actor", "http://buddycloud.org/v1")
-					      .setText(reqIQ.getFrom().toBareJID());
-					
-					Map <String, String> store = new HashMap<String, String>();
-					store.put(State.KEY_STATE, State.STATE_SUBSCRIBE);
-					store.put("id", reqIQ.getID());
-					store.put("jid", reqIQ.getFrom().toString());
-					store.put("node", node);
-					
-					//jedis.hmset("store:" + id, store);
-					StateMachine st = new StateMachine(jedis, outQueue, errorQueue);
-					st.store(id, store);
-					
-					outQueue.put(subscribe);
+//					JID user = new JID(node);
+//					
+//					IQ subscribe = new IQ();
+//					subscribe.setType(IQ.Type.set);
+//					String id = UUID.randomUUID().toString();
+//					subscribe.setID(id);
+//					subscribe.setTo(user.getDomain());
+//					
+//					Element pubsub = subscribe.setChildElement("pubsub", JabberPubsub.NAMESPACE_URI);
+//					pubsub.addElement("subscribe")
+//					      .addAttribute("node", node)
+//					      .addAttribute("jid", reqIQ.getTo().toString());
+//					pubsub.addElement("actor", "http://buddycloud.org/v1")
+//					      .setText(reqIQ.getFrom().toBareJID());
+//					
+//					Map <String, String> store = new HashMap<String, String>();
+//					store.put(State.KEY_STATE, State.STATE_SUBSCRIBE);
+//					store.put("id", reqIQ.getID());
+//					store.put("jid", reqIQ.getFrom().toString());
+//					store.put("node", node);
+//					
+//					//jedis.hmset("store:" + id, store);
+//					StateMachine st = new StateMachine(jedis, outQueue, errorQueue);
+//					st.store(id, store);
+//					
+//					outQueue.put(subscribe);
 				}
 				
 				return;

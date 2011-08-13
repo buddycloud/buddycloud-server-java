@@ -73,7 +73,7 @@ public class OutQueue implements IOutQueue {
 						manager.sendPacket(component, p);
 						
 						LOGGER.debug("OUT -> " + p.toXML());
-						System.out.println("OUT -> " + p.toXML());
+						//System.out.println("OUT -> " + p.toXML());
 						
 					} catch (ComponentException e) {
 						e.printStackTrace();

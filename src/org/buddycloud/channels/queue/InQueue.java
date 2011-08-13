@@ -8,6 +8,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 import org.apache.log4j.Logger;
 import org.buddycloud.channels.packetHandler.IPacketHandler;
 import org.buddycloud.channels.packetHandler.IQ.IQHandler;
+import org.buddycloud.channels.packetHandler.Message.MessageHandler;
 import org.xmpp.packet.Packet;
 
 import redis.clients.jedis.Jedis;
@@ -63,6 +64,7 @@ public class InQueue {
 			
 			//	this.packetHandlers.put(PRESENCE_PACKET_TYPE, new PresenceHandler());
 			this.packetHandlers.put(IQ_PACKET_TYPE, new IQHandler(outQueue, errorQueue, this.jedis));
+			this.packetHandlers.put(MESSAGE_PACKET_TYPE, new MessageHandler(outQueue, errorQueue, this.jedis));
 		}
 		
 		@Override
@@ -78,7 +80,7 @@ public class InQueue {
 					start = System.currentTimeMillis();
 
 					LOGGER.debug("IN -> " + p.toXML());
-					System.out.println("IN -> " + p.toXML());
+					//System.out.println("IN -> " + p.toXML());
 					
 					if( this.packetHandlers.get(p.getClass().getName()) != null ) {
 						packetHandlers.get(p.getClass().getName()).ingestPacket(p);

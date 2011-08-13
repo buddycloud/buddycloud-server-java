@@ -168,3 +168,34 @@ Channel server SHOULD make the post also compatible with activity streams:
 
 
 
+
+
+<iq type='set'
+    to='comptest.xmpp.lobstermonster.org'
+    id='sub1'>
+  <pubsub xmlns='http://jabber.org/protocol/pubsub'>
+    <subscribe
+        node='/user/tuomas@buddycloud.org/posts'
+        jid='tuomas@xmpp.lobstermonster.org'/>
+  </pubsub>
+</iq>
+
+<iq to="comptest.xmpp.lobstermonster.org" type="set" id="publish:20"> 
+   <pubsub xmlns="http://jabber.org/protocol/pubsub"> 
+      <publish node="/user/tuomas@buddycloud.org/posts"> 
+         <item>
+         	<entry xmlns="http://www.w3.org/2005/Atom">
+		        <id>1</id>
+				<title>Status update.</title>
+				<content>Hello from lobstermonster! Again!</content>
+				<updated>2011-06-18T09:08:57Z</updated>
+				<author>
+				   <name>tuomas@xmpp.lobstermonster.org</name>
+				</author>
+			</entry>
+         </item> 
+      </publish> 
+   </pubsub> 
+</iq>
+
+

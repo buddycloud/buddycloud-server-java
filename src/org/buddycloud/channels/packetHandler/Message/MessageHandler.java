@@ -4,6 +4,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.log4j.Logger;
+import org.buddycloud.channels.jedis.JedisKeys;
 import org.buddycloud.channels.packetHandler.APacketHandler;
 import org.buddycloud.channels.packetHandler.IPacketHandler;
 import org.buddycloud.channels.queue.ErrorQueue;
@@ -57,7 +58,7 @@ public class MessageHandler extends APacketHandler implements IPacketHandler {
 			return;
 		}
 		
-		String externalChannelServer = jedis.get("remove-node:" + node + ":jid");
+		String externalChannelServer = jedis.get(JedisKeys.REMOTE_NODE + ":" + node + ":jid");
 		if(!msg.getFrom().toBareJID().equals(externalChannelServer)) {
 			LOGGER.info("Received post to node from different jid than the one that is allowed (" + externalChannelServer + "). Returning.");
 			return;
@@ -79,8 +80,9 @@ public class MessageHandler extends APacketHandler implements IPacketHandler {
 		
 		// TODO create "verify entry" or something similar to verify that the entry is ok.
 		
-		jedis.sadd("node:" + node + ":itemset", id);
-		jedis.lpush("node:" + node + ":itemlist", id);
+		if(jedis.sadd("node:" + node + ":itemset", id) != 0) {
+			jedis.lpush("node:" + node + ":itemlist", id);
+		}
 		jedis.set("node:" + node + ":item:" + id, entry.asXML());
 		
 		Set<String> subscriberJIDs = jedis.smembers("node:" + node + ":subscribers");

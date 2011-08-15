@@ -71,7 +71,6 @@ public class JabberPubsub extends AbstractNamespace {
 			String feature = "";
 			for (Element x : elements) {
 				feature = x.getName();
-				System.out.println("Starting feature " + feature);
 				if(feature.equals("create")) {
 					this.create(x);
 					handled = true;
@@ -196,9 +195,6 @@ public class JabberPubsub extends AbstractNamespace {
 			jedis.hmset("node:" + node + ":conf", conf);
 			
 			jedis.sadd("node:" + node + ":subscribers", reqIQ.getFrom().toBareJID());
-			
-			
-			System.out.println("Stored.");
 			
 			// Success.
 			// BUT since pubsub create can have configure in it as well...

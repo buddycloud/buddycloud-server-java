@@ -86,4 +86,10 @@ public class ErrorPacketBuilder {
 													  new org.dom4j.Namespace("", ErrorPacket.NS_XMPP_STANZAS));
 		return new ErrorPacket(reqIQ, "wait", removeServerTimeout);
 	}
+	
+	public static ErrorPacket forbidden(IQ reqIQ) {
+		Element forbidden = new DOMElement("forbidden",
+													  new org.dom4j.Namespace("", ErrorPacket.NS_XMPP_STANZAS));
+		return new ErrorPacket(reqIQ, "auth", forbidden);
+	}
 }

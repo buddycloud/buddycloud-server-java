@@ -8,7 +8,7 @@ import java.util.Set;
 import junit.framework.TestCase;
 
 import org.buddycloud.channels.jedis.JedisKeys;
-import org.buddycloud.channels.packetHandler.IQ.Namespace.JabberPubsub;
+import org.buddycloud.channels.packet.ErrorPacket;
 import org.buddycloud.channels.packetHandler.IQ.Namespace.JabberPubsubOwner;
 import org.buddycloud.channels.pubsub.Subscription;
 import org.buddycloud.channels.pubsub.subscription.Type;
@@ -47,7 +47,7 @@ public class JabberPubsubOwnerTest extends TestCase {
 	public void testConfigure() throws InterruptedException {
 		
 		String id = "testConfigure";
-		String node = "my_little_paris@koski.com";
+		String node = "/user/my_little_paris@koski.com";
 		jedis.sadd(JedisKeys.LOCAL_NODES, node);
 		
 		jedis.sadd("node:" + node + ":subscribers", "tuomas@koski.com");
@@ -124,7 +124,7 @@ public class JabberPubsubOwnerTest extends TestCase {
 		
 		IQ result = (IQ)pubsubEngine.outQueue.getQueue().poll();
 		
-		//System.out.println(result.toXML());
+		System.out.println(result.toXML());
 		
 		assertEquals(IQ.Type.result, result.getType());
 		
@@ -157,4 +157,114 @@ public class JabberPubsubOwnerTest extends TestCase {
 		// TODO, add here the verification of the event.
 	}
 
+	public void testConfigureAllowedOnlyByOwner() throws InterruptedException {
+		
+		String id = "testConfigure";
+		String node = "my_little_paris@koski.com";
+		jedis.sadd(JedisKeys.LOCAL_NODES, node);
+		
+		jedis.sadd("node:" + node + ":subscribers", "tuomas@koski.com");
+		Subscription sub = new Subscription(Type.unconfigured,
+				org.buddycloud.channels.pubsub.affiliation.Type.publisher,
+				null);
+		jedis.hmset("node:" + node + ":subscriber:tuomas@koski.com", sub.getAsMap());
+		
+		jedis.sadd("node:" + node + ":subscribers", "pamela@playboy.com");
+		sub = new Subscription(Type.unconfigured,
+				org.buddycloud.channels.pubsub.affiliation.Type.publisher,
+				"bc.playboy.com");
+		jedis.hmset("node:" + node + ":subscriber:pamela@playboy.com", sub.getAsMap());
+		
+		jedis.sadd("node:" + node + ":subscribers", "cindy@playboy.com");
+		sub = new Subscription(Type.unconfigured,
+				org.buddycloud.channels.pubsub.affiliation.Type.publisher,
+				"bc.playboy.com");
+		jedis.hmset("node:" + node + ":subscriber:cindy@playboy.com", sub.getAsMap());
+		
+		Map <String, String> conf = new HashMap<String, String>();
+		conf.put("pubsub#type", "http://www.w3.org/2005/Atom");
+		conf.put("pubsub#title", "My little paris.");
+		conf.put("pubsub#description", "Description here.");
+		conf.put("pubsub#publish_model", "publishers");
+		conf.put("pubsub#access_model", "open");
+		conf.put("pubsub#creation_date", "2011-07-27T13:21:00Z");
+		conf.put("pubsub#owner", "tuomas@koski.com");
+		conf.put("pubsub#default_affiliation", org.buddycloud.channels.pubsub.affiliation.Type.member.toString());
+		conf.put("pubsub#num_subscribers", "1");
+		conf.put("pubsub#notify_config", "1");
+		
+		jedis.hmset("node:" + node + ":conf", conf);
+		
+		IQ mockIQ = new IQ();
+		mockIQ.setType(IQ.Type.set);
+		mockIQ.setID(id);
+		mockIQ.setTo("channels.koski.com");
+		mockIQ.setFrom("nelly@heriveau.fr/client");
+		
+		// We add user as registered
+		jedis.sadd(JedisKeys.LOCAL_USERS, mockIQ.getFrom().toBareJID());
+		
+		Element pubsub = mockIQ.setChildElement("pubsub", JabberPubsubOwner.NAMESPACE_URI);
+		Element configure = pubsub.addElement("configure")
+		      					  .addAttribute("node", node);
+		
+		Element x = new DOMElement("x", new org.dom4j.Namespace("", "jabber:x:data"));
+		x.addAttribute("type", "submit");
+		Element field = x.addElement("field");
+		field.addAttribute("var", "FORM_TYPE")
+			 .addAttribute("type", "hidden")
+			 .addElement("value").setText("http://jabber.org/protocol/pubsub#node_config");
+		
+		field = x.addElement("field");
+		field.addAttribute("var", "pubsub#title")
+			 .addElement("value").setText("The Awesome Title!");
+		
+		field = x.addElement("field");
+		field.addAttribute("var", "pubsub#description")
+			 .addElement("value").setText("The Awesome Description!");
+		
+		field = x.addElement("field");
+		field.addAttribute("var", "pubsub#type")
+			 .addElement("value").setText("Something that should not be set!");
+		
+        configure.add(x);
+        
+        JabberPubsubOwner pubsubEngine = new JabberPubsubOwner(this.outQueue, this.errorQueue, this.jedis);
+        
+        pubsubEngine.ingestPacket(mockIQ.createCopy());
+		
+		Thread.sleep(50);
+		
+		IQ result = (IQ)pubsubEngine.outQueue.getQueue().poll();
+		System.out.println(result.toXML());
+		
+		assertEquals(IQ.Type.error, result.getType());
+		
+		Element error = new DOMElement("error");
+		error.addAttribute("type", "auth");
+		Element conflict = new DOMElement("forbidden",
+					 					  new org.dom4j.Namespace("", ErrorPacket.NS_XMPP_STANZAS));
+		error.add(conflict);
+		
+		assertEquals(result.getError().toXML(), error.asXML());
+		
+		conf = jedis.hgetAll("node:" + node + ":conf");
+		assertEquals("http://www.w3.org/2005/Atom", conf.get("pubsub#type"));
+		assertEquals("My little paris.", conf.get("pubsub#title"));
+		assertEquals("Description here.", conf.get("pubsub#description"));
+		assertEquals("publishers", conf.get("pubsub#publish_model"));
+		assertEquals("open", conf.get("pubsub#access_model"));
+		assertEquals("tuomas@koski.com", conf.get("pubsub#owner"));
+		assertEquals(org.buddycloud.channels.pubsub.affiliation.Type.member.toString(), conf.get("pubsub#default_affiliation"));
+        
+		Set<String> possibleReceivers = new HashSet<String>();
+		possibleReceivers.add("tuomas@koski.com");
+		possibleReceivers.add("bc.playboy.com");
+		
+		Message eventMsg = (Message)pubsubEngine.outQueue.getQueue().poll();
+
+		assertNull(eventMsg);
+		
+	}
+	
 }

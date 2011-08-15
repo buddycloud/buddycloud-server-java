@@ -85,9 +85,15 @@ public class JabberPubsubOwner extends AbstractNamespace {
 				errorQueue.put(ep);
 				return;
 			}
-			
+
 			if(!jedis.sismember(JedisKeys.LOCAL_NODES, node)) {
 				errorQueue.put(ErrorPacketBuilder.itemNotFound(reqIQ));
+				return;
+			}
+
+			// Let's check that the owner is always an owner.
+			if(!reqIQ.getFrom().toBareJID().equals(jedis.hget("node:" + node + ":conf", "pubsub#owner"))) {
+				errorQueue.put(ErrorPacketBuilder.forbidden(reqIQ));
 				return;
 			}
 			

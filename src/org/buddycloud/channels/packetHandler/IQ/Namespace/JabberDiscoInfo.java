@@ -97,6 +97,9 @@ public class JabberDiscoInfo extends AbstractNamespace {
 						
 						outQueue.put(discoItemsGet);
 					} else {
+						
+						// This is not needed anymore since everything starts with /user/
+						
 						JID user = new JID(node);
 						
 						IQ discoItemsGet = new IQ();

@@ -1,10 +1,14 @@
 package test.org.buddycloud.channels.packetHandler.IQ.Namespace;
 
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import junit.framework.TestCase;
 
+import org.buddycloud.channels.jedis.JedisKeys;
 import org.buddycloud.channels.packetHandler.IQ.Namespace.JabberDiscoInfo;
 import org.buddycloud.channels.packetHandler.IQ.Namespace.JabberDiscoItems;
 import org.buddycloud.channels.queue.ErrorQueue;
@@ -93,4 +97,176 @@ public class JabberDiscoItemsTest extends TestCase {
 		
 	}
 
+	public void testLocalDiscoItems() throws InterruptedException {
+	
+		String node = "/user/channel1@local.com";
+		jedis.sadd(JedisKeys.LOCAL_NODES, node);
+		jedis.hset("node:" + node + ":conf", "pubsub#title", "Channel 1 Title");
+		node = "/user/channel2@local.com";
+		jedis.sadd(JedisKeys.LOCAL_NODES, node);
+		jedis.hset("node:" + node + ":conf", "pubsub#title", "Channel 2 Title");
+		node = "/user/channel3@local.com";
+		jedis.sadd(JedisKeys.LOCAL_NODES, node);
+		jedis.hset("node:" + node + ":conf", "pubsub#title", "Channel 3 Title");
+	
+		JabberDiscoItems discoItemsEngine = new JabberDiscoItems(this.outQueue, this.errorQueue, this.jedis);
+		
+		IQ mockIQ = new IQ();
+		mockIQ.setType(IQ.Type.get);
+		mockIQ.setID("testLocalDiscoItemsSuccess");
+		mockIQ.setTo("channels.koski.com");
+		mockIQ.setFrom("tuomas@koski.com/client");
+		
+		Element query = mockIQ.setChildElement("query", JabberDiscoItems.NAMESPACE_URI);
+		
+		discoItemsEngine.ingestPacket(mockIQ);
+		
+		IQ result = (IQ)discoItemsEngine.outQueue.getQueue().poll();
+		
+		//System.out.println(result.toXML());
+		
+		/*
+		  <iq type="result" 
+		      id="testLocalDiscoItemsSuccess" 
+		      from="channels.koski.com" 
+		      to="tuomas@koski.com/client">
+		     <query xmlns="http://jabber.org/protocol/disco#items">
+		        <item jid="channels.koski.com" node="/user/channel1@local.com" name="Channel 1 Title"/>
+		        <item jid="channels.koski.com" node="/user/channel3@local.com" name="Channel 3 Title"/>
+		        <item jid="channels.koski.com" node="/user/channel2@local.com" name="Channel 2 Title"/>
+	         </query>
+	      </iq>
+		 */
+		
+		mockIQ = new IQ();
+		mockIQ.setType(IQ.Type.result);
+		mockIQ.setID("testLocalDiscoItemsSuccess");
+		mockIQ.setFrom("channels.koski.com");
+		mockIQ.setTo("tuomas@koski.com/client");
+		Element qry = mockIQ.setChildElement("query", JabberDiscoItems.NAMESPACE_URI);
+		
+		Set<String> possibleItems = new HashSet<String>();
+		Element i = qry.addElement("item")
+		   .addAttribute("jid", "channels.koski.com")
+		   .addAttribute("node", "/user/channel1@local.com")
+		   .addAttribute("name", "Channel 1 Title");
+		possibleItems.add(i.asXML());
+		
+		i = qry.addElement("item")
+		   .addAttribute("jid", "channels.koski.com")
+		   .addAttribute("node", "/user/channel2@local.com")
+		   .addAttribute("name", "Channel 2 Title");
+		possibleItems.add(i.asXML());
+		
+		i = qry.addElement("item")
+		   .addAttribute("jid", "channels.koski.com")
+		   .addAttribute("node", "/user/channel3@local.com")
+		   .addAttribute("name", "Channel 3 Title");
+		possibleItems.add(i.asXML());
+		
+		Element q = result.getChildElement();
+		
+		assertEquals("query", q.getName());
+		
+		List<Element> elements = q.elements("item");
+		
+		for (Element element : elements) {
+			assertTrue(possibleItems.contains(element.asXML()));
+		}
+		
+	}
+	
+	public void testLocalDiscoItemsofNode() throws InterruptedException {
+		
+		String node = "/user/channel1@local.com";
+		jedis.sadd(JedisKeys.LOCAL_NODES, node);
+		jedis.hset("node:" + node + ":conf", "pubsub#title", "Channel 1 Title");
+		
+		jedis.sadd("node:" + node + ":itemset", "123456-1");
+		jedis.sadd("node:" + node + ":itemset", "123456-2");
+		jedis.sadd("node:" + node + ":itemset", "123456-3");
+		jedis.sadd("node:" + node + ":itemset", "123456-4");
+		jedis.sadd("node:" + node + ":itemset", "123456-5");
+		
+		JabberDiscoItems discoItemsEngine = new JabberDiscoItems(this.outQueue, this.errorQueue, this.jedis);
+		
+		IQ mockIQ = new IQ();
+		mockIQ.setType(IQ.Type.get);
+		mockIQ.setID("testLocalDiscoItemsofNode");
+		mockIQ.setTo("channels.koski.com");
+		mockIQ.setFrom("tuomas@koski.com/client");
+		
+		Element query = mockIQ.setChildElement("query", JabberDiscoItems.NAMESPACE_URI);
+		query.addAttribute("node", "/user/channel1@local.com");
+		
+		discoItemsEngine.ingestPacket(mockIQ);
+		
+		IQ result = (IQ)discoItemsEngine.outQueue.getQueue().poll();
+		
+		//System.out.println(result.toXML());
+		
+		/*
+		  <iq type="result" 
+		      id="testLocalDiscoItemsofNode" 
+		      from="channels.koski.com" 
+		      to="tuomas@koski.com/client">
+		     <query xmlns="http://jabber.org/protocol/disco#items" 
+		            node="/user/channel1@local.com">
+		        <item jid="channels.koski.com" name="123456-4"/>
+		        <item jid="channels.koski.com" name="123456-5"/>
+		        <item jid="channels.koski.com" name="123456-2"/>
+		        <item jid="channels.koski.com" name="123456-3"/>
+		        <item jid="channels.koski.com" name="123456-1"/>
+		     </query>
+		  </iq>
+
+		 */
+		
+		mockIQ = new IQ();
+		mockIQ.setType(IQ.Type.result);
+		mockIQ.setID("testLocalDiscoItemsSuccess");
+		mockIQ.setFrom("channels.koski.com");
+		mockIQ.setTo("tuomas@koski.com/client");
+		Element qry = mockIQ.setChildElement("query", JabberDiscoItems.NAMESPACE_URI);
+		
+		Set<String> possibleItems = new HashSet<String>();
+		Element i = qry.addElement("item")
+		   .addAttribute("jid", "channels.koski.com")
+		   .addAttribute("name", "123456-1");
+		possibleItems.add(i.asXML());
+		
+		i = qry.addElement("item")
+		   .addAttribute("jid", "channels.koski.com")
+		   .addAttribute("name", "123456-2");
+		possibleItems.add(i.asXML());
+		
+		i = qry.addElement("item")
+		   .addAttribute("jid", "channels.koski.com")
+		   .addAttribute("name", "123456-3");
+		possibleItems.add(i.asXML());
+		
+		i = qry.addElement("item")
+		   .addAttribute("jid", "channels.koski.com")
+		   .addAttribute("name", "123456-4");
+		possibleItems.add(i.asXML());
+		
+		i = qry.addElement("item")
+		   .addAttribute("jid", "channels.koski.com")
+		   .addAttribute("name", "123456-5");
+		possibleItems.add(i.asXML());
+		
+		Element q = result.getChildElement();
+		
+		assertEquals("query", q.getName());
+		
+		List<Element> elements = q.elements("item");
+		
+		for (Element element : elements) {
+			assertTrue(possibleItems.contains(element.asXML()));
+		}
+		
+		System.out.println(result.toXML());
+		
+	}
+	
 }

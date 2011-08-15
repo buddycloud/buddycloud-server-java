@@ -418,8 +418,6 @@ public class JabberPubsub extends AbstractNamespace {
 				bareJID = reqIQ.getFrom().toBareJID();
 			}
 			
-			System.out.println("hhhhhhhhhhhhh: '" + bareJID + "'.");
-			
 			//Element entry = item.element("entry");
 			Element entry = entryValidator.createBcCompatible(bareJID, reqIQ.getTo().toBareJID(), node);
 			
@@ -754,7 +752,7 @@ public class JabberPubsub extends AbstractNamespace {
 					this.items(x);
 					handled = true;
 				}
-				break;
+				//break;
 			}
 			
 			if (handled == false) {
@@ -788,6 +786,16 @@ public class JabberPubsub extends AbstractNamespace {
 			Element subscriptions = pubsub.addElement("subscriptions");
 			
 			String node = elm.attributeValue("node");
+			
+			if (node == null || node.equals("")) {
+				ErrorPacket ep = ErrorPacketBuilder.nodeIdRequired(reqIQ);
+				ep.setMsg("Tried to fetch node items without passing a node ID.");
+				errorQueue.put(ep);
+				return;
+			}
+			
+			// TODO, add here the listing of remote hosts too!
+			
 			Set<String> subs = jedis.smembers(reqIQ.getFrom().toBareJID() + ":subs");
 			if(node == null || subs.contains(node)) {
 
@@ -816,6 +824,16 @@ public class JabberPubsub extends AbstractNamespace {
 			Element affiliations = pubsub.addElement("affiliations");
 			
 			String node = elm.attributeValue("node");
+			
+			if (node == null || node.equals("")) {
+				ErrorPacket ep = ErrorPacketBuilder.nodeIdRequired(reqIQ);
+				ep.setMsg("Tried to fetch node items without passing a node ID.");
+				errorQueue.put(ep);
+				return;
+			}
+			
+			// TODO, add here the listing of remote hosts too!
+			
 			Set<String> subs = jedis.smembers(reqIQ.getFrom().toBareJID() + ":subs");
 			if(node == null || subs.contains(node)) {
 
@@ -845,8 +863,13 @@ public class JabberPubsub extends AbstractNamespace {
 				errorQueue.put(ep);
 				return;
 			}
+
+			// TODO! Add here listing of remote node items too!
 			
 			List<String> itemsList = jedis.lrange("node:" + node + ":itemlist", 0, -1);
+			
+			// Let's check if we have RSM
+			
 			
 			Element pubsub = new DOMElement("pubsub",
    											new org.dom4j.Namespace("", NAMESPACE_URI));

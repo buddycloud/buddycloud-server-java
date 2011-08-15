@@ -787,15 +787,6 @@ public class JabberPubsub extends AbstractNamespace {
 			
 			String node = elm.attributeValue("node");
 			
-			if (node == null || node.equals("")) {
-				ErrorPacket ep = ErrorPacketBuilder.nodeIdRequired(reqIQ);
-				ep.setMsg("Tried to fetch node items without passing a node ID.");
-				errorQueue.put(ep);
-				return;
-			}
-			
-			// TODO, add here the listing of remote hosts too!
-			
 			Set<String> subs = jedis.smembers(reqIQ.getFrom().toBareJID() + ":subs");
 			if(node == null || subs.contains(node)) {
 
@@ -824,15 +815,6 @@ public class JabberPubsub extends AbstractNamespace {
 			Element affiliations = pubsub.addElement("affiliations");
 			
 			String node = elm.attributeValue("node");
-			
-			if (node == null || node.equals("")) {
-				ErrorPacket ep = ErrorPacketBuilder.nodeIdRequired(reqIQ);
-				ep.setMsg("Tried to fetch node items without passing a node ID.");
-				errorQueue.put(ep);
-				return;
-			}
-			
-			// TODO, add here the listing of remote hosts too!
 			
 			Set<String> subs = jedis.smembers(reqIQ.getFrom().toBareJID() + ":subs");
 			if(node == null || subs.contains(node)) {

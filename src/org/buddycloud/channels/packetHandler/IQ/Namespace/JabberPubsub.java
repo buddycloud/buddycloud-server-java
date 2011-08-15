@@ -71,11 +71,12 @@ public class JabberPubsub extends AbstractNamespace {
 			String feature = "";
 			for (Element x : elements) {
 				feature = x.getName();
+				System.out.println("Starting feature " + feature);
 				if(feature.equals("create")) {
 					this.create(x);
 					handled = true;
 				} else if (feature.equals("publish")) {
-					this.publish(x);
+					this.publish(x, actor);
 					handled = true;
 				} else if(feature.equals("subscribe")) {
 					this.subscribe(x, actor);
@@ -84,7 +85,7 @@ public class JabberPubsub extends AbstractNamespace {
 					this.retract(x);
 					handled = true;
 				}
-				break;
+				//break;
 			}
 			
 			if (handled == false) {
@@ -138,6 +139,18 @@ public class JabberPubsub extends AbstractNamespace {
 				return;
 			}
 			
+			if(!node.startsWith("/user/")) {
+				ErrorPacket ep = ErrorPacketBuilder.badRequest(reqIQ);
+				
+				Element invalidJid = new DOMElement("invalid-nodename",
+						new org.dom4j.Namespace("", ErrorPacket.NS_PUBSUB_ERROR));
+				ep.addCondition(invalidJid);
+				
+				ep.setMsg("Nodename must start with /user/.");
+				errorQueue.put(ep);
+				return;
+			}
+			
 			if (jedis.sadd(JedisKeys.LOCAL_NODES, node) == 0) {
 				
 				// We could not add the node, it means it already exists.
@@ -184,6 +197,8 @@ public class JabberPubsub extends AbstractNamespace {
 			
 			jedis.sadd("node:" + node + ":subscribers", reqIQ.getFrom().toBareJID());
 			
+			
+			System.out.println("Stored.");
 			
 			// Success.
 			// BUT since pubsub create can have configure in it as well...
@@ -320,16 +335,17 @@ public class JabberPubsub extends AbstractNamespace {
 			
 		}
 		
-		private void publish(Element elm) {
+		private void publish(Element elm, String actor) {
 			
 			String node = elm.attributeValue("node");
+			
 			if(node == null || node.equals("")) {
 				ErrorPacket ep = ErrorPacketBuilder.nodeIdRequired(reqIQ);
 				ep.setMsg("Node attribute was missing when trying to publish an item.");
 				errorQueue.put(ep);
 				return;
 			}
-			
+
 			// 7.1.3.3 Node Does Not Exist
 			if(!jedis.sismember(JedisKeys.LOCAL_NODES, node)) {
 				
@@ -395,8 +411,17 @@ public class JabberPubsub extends AbstractNamespace {
 				return;
 			}
 			
+			String bareJID = null;
+			if(actor != null) {
+				bareJID = actor;
+			} else {
+				bareJID = reqIQ.getFrom().toBareJID();
+			}
+			
+			System.out.println("hhhhhhhhhhhhh: '" + bareJID + "'.");
+			
 			//Element entry = item.element("entry");
-			Element entry = entryValidator.createBcCompatible(reqIQ.getFrom().toBareJID(), reqIQ.getTo().toBareJID(), node);
+			Element entry = entryValidator.createBcCompatible(bareJID, reqIQ.getTo().toBareJID(), node);
 			
 			String id = entry.element("id").getText();
 			String[] idParts = id.split(",");

@@ -25,19 +25,19 @@ Creating a topic channel:
 =============================================================================
 <iq type="set" 
     id="testCreateWithoutConfSuccess" 
-    to="channels.localhost">
+    to="comptest.xmpp.lobstermonster.org">
    <pubsub xmlns="http://jabber.org/protocol/pubsub">
-      <create node="status_of_the_development@channels.localhost"/>
+      <create node="/user/businesstime@xmpp.lobstermonster.org"/>
       <configure>
          <x xmlns="jabber:x:data" type="submit">
             <field var="FORM_TYPE" type="hidden">
                <value>http://jabber.org/protocol/pubsub#node_config</value>
             </field>
             <field var="pubsub#title">
-               <value>The Awesome Title!</value>
+               <value>It's business time!</value>
             </field>
             <field var="pubsub#description">*
-               <value>The Awesome Description!</value>
+               <value>When I'm down to just to my socks, you know what time it is!</value>
             </field>
          </x>
       </configure>
@@ -199,3 +199,17 @@ Channel server SHOULD make the post also compatible with activity streams:
 </iq>
 
 
+<iq to="comptest.xmpp.lobstermonster.org" type="set" id="publish:20"> 
+   <pubsub xmlns="http://jabber.org/protocol/pubsub"> 
+      <publish node="/user/businesstime@xmpp.lobstermonster.org"> 
+         <item>
+         	<entry xmlns="http://www.w3.org/2005/Atom">
+				<content>Two minutes in heaven is better than one minute in heave.</content>
+				<author>
+				   <name>tuomas@xmpp.lobstermonster.org</name>
+				</author>
+			</entry>
+         </item> 
+      </publish> 
+   </pubsub> 
+</iq>

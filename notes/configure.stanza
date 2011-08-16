@@ -1,0 +1,15 @@
+<iq type='set'
+    to='comptest.xmpp.lobstermonster.org'
+    id='config2'>
+  <pubsub xmlns='http://jabber.org/protocol/pubsub#owner'>
+    <configure node='/user/businesstime@xmpp.lobstermonster.org'>
+      <x xmlns='jabber:x:data' type='submit'>
+        <field var='FORM_TYPE' type='hidden'>
+          <value>http://jabber.org/protocol/pubsub#node_config</value>
+        </field>
+        <field var='pubsub#title'><value>It's business time!</value></field>
+        <field var='pubsub#description'><value>When it's time for Business, it's business time. And then we wear business socks. This is the channel to follow the business happening. Specially in Paris.</value></field>
+      </x>
+    </configure>
+  </pubsub>
+</iq>

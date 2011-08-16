@@ -2,6 +2,7 @@ package test.org.buddycloud.channels.packetHandler.IQ.Namespace;
 
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -9,6 +10,7 @@ import junit.framework.TestCase;
 
 import org.buddycloud.channels.jedis.JedisKeys;
 import org.buddycloud.channels.packet.ErrorPacket;
+import org.buddycloud.channels.packetHandler.IQ.Namespace.JabberDiscoItems;
 import org.buddycloud.channels.packetHandler.IQ.Namespace.JabberPubsubOwner;
 import org.buddycloud.channels.pubsub.Subscription;
 import org.buddycloud.channels.pubsub.subscription.Type;
@@ -236,7 +238,7 @@ public class JabberPubsubOwnerTest extends TestCase {
 		Thread.sleep(50);
 		
 		IQ result = (IQ)pubsubEngine.outQueue.getQueue().poll();
-		System.out.println(result.toXML());
+		//System.out.println(result.toXML());
 		
 		assertEquals(IQ.Type.error, result.getType());
 		
@@ -267,4 +269,206 @@ public class JabberPubsubOwnerTest extends TestCase {
 		
 	}
 	
+	public void testSubscriptions() throws InterruptedException {
+		
+		String id = "testSubscriptions";
+		String node = "/user/my_little_paris@koski.com";
+		jedis.sadd(JedisKeys.LOCAL_NODES, node);
+		
+		jedis.sadd("node:" + node + ":subscribers", "tuomas@koski.com");
+		Subscription sub = new Subscription(Type.subscribed,
+				org.buddycloud.channels.pubsub.affiliation.Type.owner,
+				null);
+		jedis.hmset("node:" + node + ":subscriber:tuomas@koski.com", sub.getAsMap());
+		
+		jedis.sadd("node:" + node + ":subscribers", "pamela@playboy.com");
+		sub = new Subscription(Type.unconfigured,
+				org.buddycloud.channels.pubsub.affiliation.Type.outcast,
+				"bc.playboy.com");
+		jedis.hmset("node:" + node + ":subscriber:pamela@playboy.com", sub.getAsMap());
+		
+		jedis.sadd("node:" + node + ":subscribers", "cindy@playboy.com");
+		sub = new Subscription(Type.subscribed,
+				org.buddycloud.channels.pubsub.affiliation.Type.publisher,
+				"bc.playboy.com");
+		jedis.hmset("node:" + node + ":subscriber:cindy@playboy.com", sub.getAsMap());
+	
+		IQ mockIQ = new IQ();
+		mockIQ.setType(IQ.Type.get);
+		mockIQ.setID(id);
+		mockIQ.setTo("channels.koski.com");
+		mockIQ.setFrom("nelly@heriveau.fr/client");
+		
+		Element pubsub = mockIQ.setChildElement("pubsub", JabberPubsubOwner.NAMESPACE_URI);
+		pubsub.addElement("subscriptions")
+		      .addAttribute("node", node);
+		
+		JabberPubsubOwner pubsubEngine = new JabberPubsubOwner(this.outQueue, this.errorQueue, this.jedis);
+        
+        pubsubEngine.ingestPacket(mockIQ.createCopy());
+		
+		Thread.sleep(50);
+		
+		IQ result = (IQ)pubsubEngine.outQueue.getQueue().poll();
+		//System.out.println(result.toXML());
+		
+		/**		 
+		 <iq type="result" 
+		     id="testSubscriptions" 
+		     from="channels.koski.com" 
+		     to="nelly@heriveau.fr/client">
+		    <pubsub xmlns="http://jabber.org/protocol/pubsub#owner">
+		       <subscriptions node="/user/my_little_paris@koski.com">
+		          <subscription subscription="unconfigured" jid="pamela@playboy.com"/>
+		          <subscription subscription="subscribed" jid="tuomas@koski.com"/>
+		          <subscription subscription="subscribed" jid="cindy@playboy.com"/>
+		       </subscriptions>
+		    </pubsub>
+		 </iq>		 
+		 */
+		
+		mockIQ = new IQ();
+		mockIQ.setType(IQ.Type.result);
+		mockIQ.setID("testSubscriptions");
+		mockIQ.setFrom("channels.koski.com");
+		mockIQ.setTo("nelly@heriveau.fr/client");
+		pubsub = mockIQ.setChildElement("pubsub", JabberPubsubOwner.NAMESPACE_URI);
+		
+		Element subscriptions = pubsub.addElement("subscriptions");
+	    subscriptions.addAttribute("node", node);
+		
+		Set<String> possibleItems = new HashSet<String>();
+		Element s = subscriptions.addElement("subscription")
+		   .addAttribute("subscription", "unconfigured")
+		   .addAttribute("jid", "pamela@playboy.com");
+		possibleItems.add(s.asXML());
+		
+		s = subscriptions.addElement("subscription")
+		   .addAttribute("subscription", "subscribed")
+		   .addAttribute("jid", "cindy@playboy.com");
+		possibleItems.add(s.asXML());
+		
+		s = subscriptions.addElement("subscription")
+		   .addAttribute("subscription", "subscribed")
+		   .addAttribute("jid", "tuomas@koski.com");
+		possibleItems.add(s.asXML());
+		//System.out.println("h: " + s.asXML());
+		
+		Element p = result.getChildElement();
+		
+		assertEquals("pubsub", p.getName());
+		
+		Element ss = p.element("subscriptions");
+		List<Element> elements = ss.elements("subscription");
+		
+		for (Element element : elements) {
+			//System.out.println("h: " + element.asXML());
+			assertTrue(possibleItems.contains(element.asXML()));
+			//if(!possibleItems.contains(element.asXML())) {
+			//	System.out.println("f: " + element.asXML());
+			//}
+		}	
+	}
+	
+	public void testAffiliations() throws InterruptedException {
+		
+		String id = "testAffiliations";
+		String node = "/user/my_little_paris@koski.com";
+		jedis.sadd(JedisKeys.LOCAL_NODES, node);
+		
+		jedis.sadd("node:" + node + ":subscribers", "tuomas@koski.com");
+		Subscription sub = new Subscription(Type.subscribed,
+				org.buddycloud.channels.pubsub.affiliation.Type.owner,
+				null);
+		jedis.hmset("node:" + node + ":subscriber:tuomas@koski.com", sub.getAsMap());
+		
+		jedis.sadd("node:" + node + ":subscribers", "pamela@playboy.com");
+		sub = new Subscription(Type.unconfigured,
+				org.buddycloud.channels.pubsub.affiliation.Type.outcast,
+				"bc.playboy.com");
+		jedis.hmset("node:" + node + ":subscriber:pamela@playboy.com", sub.getAsMap());
+		
+		jedis.sadd("node:" + node + ":subscribers", "cindy@playboy.com");
+		sub = new Subscription(Type.subscribed,
+				org.buddycloud.channels.pubsub.affiliation.Type.publisher,
+				"bc.playboy.com");
+		jedis.hmset("node:" + node + ":subscriber:cindy@playboy.com", sub.getAsMap());
+	
+		IQ mockIQ = new IQ();
+		mockIQ.setType(IQ.Type.get);
+		mockIQ.setID(id);
+		mockIQ.setTo("channels.koski.com");
+		mockIQ.setFrom("nelly@heriveau.fr/client");
+		
+		Element pubsub = mockIQ.setChildElement("pubsub", JabberPubsubOwner.NAMESPACE_URI);
+		pubsub.addElement("affiliations")
+		      .addAttribute("node", node);
+		
+		JabberPubsubOwner pubsubEngine = new JabberPubsubOwner(this.outQueue, this.errorQueue, this.jedis);
+        
+        pubsubEngine.ingestPacket(mockIQ.createCopy());
+		
+		Thread.sleep(50);
+		
+		IQ result = (IQ)pubsubEngine.outQueue.getQueue().poll();
+		//System.out.println(result.toXML());
+		
+		/**		 
+		 <iq type="result" 
+		     id="testAffiliations" 
+		     from="channels.koski.com" 
+		     to="nelly@heriveau.fr/client">
+		    <pubsub xmlns="http://jabber.org/protocol/pubsub#owner">
+		       <affiliations node="/user/my_little_paris@koski.com">
+		          <affiliation affiliation="outcast" jid="pamela@playboy.com"/>
+		          <affiliation affiliation="owner" jid="tuomas@koski.com"/>
+		          <affiliation affiliation="publisher" jid="cindy@playboy.com"/>
+		       </affiliations>
+		    </pubsub>
+		 </iq>
+		 */
+		
+		mockIQ = new IQ();
+		mockIQ.setType(IQ.Type.result);
+		mockIQ.setID("testSubscriptions");
+		mockIQ.setFrom("channels.koski.com");
+		mockIQ.setTo("nelly@heriveau.fr/client");
+		pubsub = mockIQ.setChildElement("pubsub", JabberPubsubOwner.NAMESPACE_URI);
+		
+		Element subscriptions = pubsub.addElement("affiliations");
+	    subscriptions.addAttribute("node", node);
+		
+		Set<String> possibleItems = new HashSet<String>();
+		Element s = subscriptions.addElement("affiliation")
+		   .addAttribute("affiliation", "outcast")
+		   .addAttribute("jid", "pamela@playboy.com");
+		possibleItems.add(s.asXML());
+		
+		s = subscriptions.addElement("affiliation")
+		   .addAttribute("affiliation", "publisher")
+		   .addAttribute("jid", "cindy@playboy.com");
+		possibleItems.add(s.asXML());
+		
+		s = subscriptions.addElement("affiliation")
+		   .addAttribute("affiliation", "owner")
+		   .addAttribute("jid", "tuomas@koski.com");
+		possibleItems.add(s.asXML());
+		//System.out.println("l: " + s.asXML());
+		
+		Element p = result.getChildElement();
+		
+		assertEquals("pubsub", p.getName());
+		
+		Element ss = p.element("affiliations");
+		List<Element> elements = ss.elements("affiliation");
+		
+		for (Element element : elements) {
+			//System.out.println("h: " + element.asXML());
+			assertTrue(possibleItems.contains(element.asXML()));
+			//if(!possibleItems.contains(element.asXML())) {
+			//	System.out.println("f: " + element.asXML());
+			//}
+		}
+		
+	}
 }

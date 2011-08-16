@@ -27,6 +27,7 @@ public class JabberPubsubOwner extends AbstractNamespace {
 		
 		super(outQueue, errorQueue, jedis);
 		setProcessors.put(SetPubSub.ELEMENT_NAME, new SetPubSub());
+		getProcessors.put(GetPubSub.ELEMENT_NAME, new GetPubSub());
 	}
 	
 	private class SetPubSub implements IAction {
@@ -190,6 +191,127 @@ public class JabberPubsubOwner extends AbstractNamespace {
 				msg.setTo(subscriber);
 				outQueue.put(msg.createCopy());
 			}
+		}
+	}
+	
+	private class GetPubSub implements IAction {
+		
+		public static final String ELEMENT_NAME = "pubsub";
+		
+		@Override
+		public void process() {
+			
+			Element pubsub = reqIQ.getChildElement();
+			@SuppressWarnings("unchecked")
+			List<Element> elements = pubsub.elements();
+
+			boolean handled = false;
+			String feature = "";
+			for (Element x : elements) {
+				feature = x.getName();
+				if(feature.equals("subscriptions")) {
+					this.subscriptions(x);
+					handled = true;
+				} else if(feature.equals("affiliations")) {
+					this.affiliations(x);
+					handled = true;
+				} 
+				//break;
+			}
+			
+			if (handled == false) {
+				
+				// <iq type='error'
+				//	   from='pubsub.shakespeare.lit'
+				//	   to='hamlet@denmark.lit/elsinore'
+				//	   id='create1'>
+				//	   <error type='cancel'>
+				//	     <feature-not-implemented xmlns='urn:ietf:params:xml:ns:xmpp-stanzas'/>
+				//       <unsupported xmlns='http://jabber.org/protocol/pubsub#errors' feature='create-nodes'/>
+				//	   </error>
+				// </iq>
+
+				ErrorPacket ep = ErrorPacketBuilder.featureNotImplemented(reqIQ);
+				Element unsupported = new DOMElement("unsupported",
+						 							 new org.dom4j.Namespace("", ErrorPacket.NS_PUBSUB_ERROR));
+				unsupported.addAttribute("feature", feature);
+				ep.addCondition(unsupported);
+				
+				errorQueue.put(ep);
+				
+			}
+		}
+		
+		private void subscriptions(Element elm) {
+			
+			IQ result = IQ.createResultIQ(reqIQ);
+			
+			Element pubsub = result.setChildElement(ELEMENT_NAME, NAMESPACE_URI);
+			Element subscriptions = pubsub.addElement("subscriptions");
+			
+			String node = elm.attributeValue("node");
+			
+			if(node == null || node.equals("")) {
+				ErrorPacket ep = ErrorPacketBuilder.nodeIdRequired(reqIQ);
+				ep.setMsg("Node attribute was missing when trying to fetch subscriptions.");
+				errorQueue.put(ep);
+				return;
+			}
+			
+			if(!jedis.sismember(JedisKeys.LOCAL_NODES, node)) {
+				ErrorPacket ep = ErrorPacketBuilder.itemNotFound(reqIQ);
+				ep.setMsg("Tried to fetch subscriptions of a node that does not exists!");
+				errorQueue.put(ep);
+				return;
+			}
+			
+			subscriptions.addAttribute("node", node);
+			
+			Set<String> subscriberJIDs = jedis.smembers("node:" + node + ":subscribers");
+			for (String subscriberJID : subscriberJIDs) {
+				subscriptions.addElement("subscription")
+				 			 .addAttribute("subscription", jedis.hget("node:" + node + ":subscriber:" + subscriberJID, Subscription.KEY_SUBSCRIPTION))
+				 			 .addAttribute("jid", subscriberJID);
+			}
+			
+			outQueue.put(result);
+			
+		}
+		
+		private void affiliations(Element elm) {
+			
+			IQ result = IQ.createResultIQ(reqIQ);
+			
+			Element pubsub = result.setChildElement(ELEMENT_NAME, NAMESPACE_URI);
+			Element affiliations = pubsub.addElement("affiliations");
+			
+			String node = elm.attributeValue("node");
+			
+			if(node == null || node.equals("")) {
+				ErrorPacket ep = ErrorPacketBuilder.nodeIdRequired(reqIQ);
+				ep.setMsg("Node attribute was missing when trying to fetch affiliations.");
+				errorQueue.put(ep);
+				return;
+			}
+			
+			if(!jedis.sismember(JedisKeys.LOCAL_NODES, node)) {
+				ErrorPacket ep = ErrorPacketBuilder.itemNotFound(reqIQ);
+				ep.setMsg("Tried to fetch affiliations of a node that does not exists!");
+				errorQueue.put(ep);
+				return;
+			}
+			
+			affiliations.addAttribute("node", node);
+			
+			Set<String> subscriberJIDs = jedis.smembers("node:" + node + ":subscribers");
+			for (String subscriberJID : subscriberJIDs) {
+				affiliations.addElement("affiliation")
+				 			.addAttribute("affiliation", jedis.hget("node:" + node + ":subscriber:" + subscriberJID, Subscription.KEY_AFFILIATION))
+				 			.addAttribute("jid", subscriberJID);
+			}
+			
+			outQueue.put(result);
+			
 		}
 	}
 }

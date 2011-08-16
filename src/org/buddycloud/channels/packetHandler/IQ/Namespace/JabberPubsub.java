@@ -342,6 +342,21 @@ public class JabberPubsub extends AbstractNamespace {
 				return;
 			}
 
+			String bareJID = null;
+			if(actor != null) {
+				bareJID = actor;
+			} else {
+				bareJID = reqIQ.getFrom().toBareJID();
+			}
+			
+			// Let's check if the user is allowed to post to a node.
+			if(jedis.hget("node:" + node + ":subscriber:" + bareJID, Subscription.KEY_AFFILIATION) == null) {
+				ErrorPacket ep = ErrorPacketBuilder.forbidden(reqIQ);
+				ep.setMsg("User posting to a node was not subscribed to it!");
+				errorQueue.put(ep);
+				return;
+			}
+			
 			// 7.1.3.3 Node Does Not Exist
 			if(!jedis.sismember(JedisKeys.LOCAL_NODES, node)) {
 				
@@ -352,6 +367,10 @@ public class JabberPubsub extends AbstractNamespace {
 					errorQueue.put(ErrorPacketBuilder.itemNotFound(reqIQ));
 					return;
 				}
+				
+				// TODO Even if user is not subscribed to a node, it can come here. Fail, no?
+				
+				// also the external node can end up here? WTF! This is all mixed up!
 				
 				String channelServer = jedis.hget("node:" + node + ":subscriber:" + reqIQ.getFrom().toBareJID(), Subscription.KEY_EXTERNAL_CHANNEL_SERVER);
 				
@@ -407,12 +426,12 @@ public class JabberPubsub extends AbstractNamespace {
 				return;
 			}
 			
-			String bareJID = null;
-			if(actor != null) {
-				bareJID = actor;
-			} else {
-				bareJID = reqIQ.getFrom().toBareJID();
-			}
+//			String bareJID = null;
+//			if(actor != null) {
+//				bareJID = actor;
+//			} else {
+//				bareJID = reqIQ.getFrom().toBareJID();
+//			}
 			
 			//Element entry = item.element("entry");
 			Element entry = entryValidator.createBcCompatible(bareJID, reqIQ.getTo().toBareJID(), node);
@@ -847,7 +866,7 @@ public class JabberPubsub extends AbstractNamespace {
 			List<String> itemsList = jedis.lrange("node:" + node + ":itemlist", 0, -1);
 			
 			// Let's check if we have RSM
-			
+			// implement this too 6.5.7 Requesting the Most Recent Items
 			
 			Element pubsub = new DOMElement("pubsub",
    											new org.dom4j.Namespace("", NAMESPACE_URI));

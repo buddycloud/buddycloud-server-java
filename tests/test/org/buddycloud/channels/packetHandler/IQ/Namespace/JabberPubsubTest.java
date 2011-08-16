@@ -193,6 +193,96 @@ public class JabberPubsubTest extends TestCase {
 		
 	}
 	
+	
+	public void testPublishFailsForNonSubscribed() throws InterruptedException {
+		
+		String node = "/user/tuomas@koski.com/status";
+		
+		jedis.sadd(JedisKeys.LOCAL_NODES, node);
+		
+		jedis.sadd("node:" + node + ":subscribers", "pamela@playboy.com");
+		Subscription sub = new Subscription(Type.unconfigured,
+				org.buddycloud.channels.pubsub.affiliation.Type.publisher,
+				"bc.playboy.com");
+		jedis.hmset("node:" + node + ":subscriber:pamela@playboy.com", sub.getAsMap());
+		
+		jedis.sadd("node:" + node + ":subscribers", "cindy@playboy.com");
+		sub = new Subscription(Type.unconfigured,
+				org.buddycloud.channels.pubsub.affiliation.Type.publisher,
+				"bc.playboy.com");
+		jedis.hmset("node:" + node + ":subscriber:cindy@playboy.com", sub.getAsMap());
+		
+		
+		JabberPubsub pubsubEngine = new JabberPubsub(this.outQueue, this.errorQueue, this.jedis);
+		
+		String id = "testPublishFailsForNonSubscribed";
+		
+		IQ mockIQ = new IQ();
+		mockIQ.setType(IQ.Type.set);
+		mockIQ.setID(id);
+		mockIQ.setTo("channels.koski.com");
+		mockIQ.setFrom("tuomas@koski.com/client");
+		
+		Element pubsub = mockIQ.setChildElement("pubsub", JabberPubsub.NAMESPACE_URI);
+		Element publish = pubsub.addElement("publish");
+		publish.addAttribute("node", "/user/tuomas@koski.com/status");
+		Element item = publish.addElement("item"); 
+		
+		Element entry = new DOMElement("entry", new org.dom4j.Namespace("", "http://www.w3.org/2005/Atom"));
+		entry.add(new org.dom4j.Namespace("activity", "http://activitystrea.ms/spec/1.0/"));
+		
+		String DATE_FORMAT = "yyyy-MM-dd'T'H:m:s'Z'";
+		SimpleDateFormat sdf = new SimpleDateFormat(DATE_FORMAT);
+		sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
+
+		entry.addElement("id").setText("1");
+		entry.addElement("title").setText("Status post.");
+		
+		entry.addElement("content")
+		     //.addAttribute("type", "text")
+		     .setText("Hello Federation!");
+		
+		entry.addElement("published").setText(sdf.format(new Date()));
+		entry.addElement("updated").setText(sdf.format(new Date()));
+		
+		Element author = entry.addElement("author");
+		author.addElement("name").setText("tuomas@koski.com");
+		author.addElement("jid", "http://buddycloud.com/atom-elements-0").setText("tuomas@koski.com");
+		
+		Element geoloc = entry.addElement("geoloc", "http://jabber.org/protocol/geoloc");
+		geoloc.addElement("text").setText("Home Sweet Home!");
+		geoloc.addElement("locality").setText("Paris");
+		geoloc.addElement("country").setText("Ffance");
+		
+		entry.addElement("activity:verb")
+		     .setText("post");
+		entry.addElement("activity:object")
+		     .addElement("activity:object-type")
+		     .setText("note");
+		
+		item.add(entry);
+		
+		pubsubEngine.ingestPacket(mockIQ.createCopy());
+		
+		Thread.sleep(50);
+		
+		IQ result = (IQ)pubsubEngine.outQueue.getQueue().poll();
+		System.out.println("hhhhh" +result.toXML());
+		
+		Element error = new DOMElement("error");
+		error.addAttribute("type", "auth");
+		Element conflict = new DOMElement("forbidden",
+					 					  new org.dom4j.Namespace("", ErrorPacket.NS_XMPP_STANZAS));
+		error.add(conflict);
+		
+		assertEquals(result.getError().toXML(), error.asXML());
+		
+		assertEquals(IQ.Type.error, result.getType());
+		assertEquals(id, result.getID());
+			
+	}
+	
+	
 	public void testPublishStatusSuccessWithMiniEntry() {
 		
 		String node = "/user/tuomas@koski.com/status";
@@ -431,7 +521,7 @@ public class JabberPubsubTest extends TestCase {
 		
 		JabberPubsub pubsubEngine = new JabberPubsub(this.outQueue, this.errorQueue, this.jedis);
 		
-		System.out.println("Starting testPublishStatusSuccessWithMiniEntryFromActor.");
+		//System.out.println("Starting testPublishStatusSuccessWithMiniEntryFromActor.");
 		
 		String id = "testPublishStatusSuccessWithMiniEntryFromActor";
 		

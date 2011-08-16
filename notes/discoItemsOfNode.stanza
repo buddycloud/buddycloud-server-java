@@ -1,0 +1,6 @@
+<iq type='get'
+    to='comptest.xmpp.lobstermonster.org'
+    id='nodes1'>
+  <query xmlns='http://jabber.org/protocol/disco#items'
+         node='/user/businesstime@xmpp.lobstermonster.org'/>
+</iq>

@@ -1,0 +1,14 @@
+<iq to="comptest.xmpp.lobstermonster.org" type="set" id="publish:20"> 
+   <pubsub xmlns="http://jabber.org/protocol/pubsub"> 
+      <publish node="/user/businesstime@xmpp.lobstermonster.org"> 
+         <item>
+         	<entry xmlns="http://www.w3.org/2005/Atom">
+				<content>Back from CCCamp11 and business is booming again!</content>
+				<author>
+				   <name>tuomas@xmpp.lobstermonster.org</name>
+				</author>
+			</entry>
+         </item> 
+      </publish> 
+   </pubsub> 
+</iq>

@@ -92,4 +92,6 @@ public class ErrorPacketBuilder {
 													  new org.dom4j.Namespace("", ErrorPacket.NS_XMPP_STANZAS));
 		return new ErrorPacket(reqIQ, "auth", forbidden);
 	}
+	
+	
 }

@@ -23,6 +23,8 @@ import org.buddycloud.channels.statefull.State;
 import org.buddycloud.channels.statefull.StateMachine;
 import org.dom4j.DocumentException;
 import org.dom4j.Element;
+import org.dom4j.Namespace;
+import org.dom4j.QName;
 import org.dom4j.dom.DOMElement;
 import org.dom4j.io.SAXReader;
 import org.xmpp.packet.IQ;
@@ -750,6 +752,10 @@ public class JabberPubsub extends AbstractNamespace {
 		public void process() {
 			
 			Element pubsub = reqIQ.getChildElement();
+			
+			//Let's get the possible rsm element
+			Element rsm = pubsub.element(new QName("set", new Namespace("", "http://jabber.org/protocol/rsm")));
+			
 			@SuppressWarnings("unchecked")
 			List<Element> elements = pubsub.elements();
 
@@ -764,7 +770,7 @@ public class JabberPubsub extends AbstractNamespace {
 					this.affiliations(x);
 					handled = true;
 				} else if(feature.equals("items")) {
-					this.items(x);
+					this.items(x, rsm);
 					handled = true;
 				}
 				//break;
@@ -851,7 +857,7 @@ public class JabberPubsub extends AbstractNamespace {
 			
 		}
 		
-		private void items(Element elm) {
+		private void items(Element elm, Element rsm) {
 			
 			String node = elm.attributeValue("node");
 			if (node == null || node.equals("")) {
@@ -864,17 +870,75 @@ public class JabberPubsub extends AbstractNamespace {
 			// TODO! Add here listing of remote node items too!
 			
 			List<String> itemsList = jedis.lrange("node:" + node + ":itemlist", 0, -1);
+						
+			Element pubsub = new DOMElement("pubsub",
+   											new org.dom4j.Namespace("", NAMESPACE_URI));
+			
+			int maxItemsToReturn = 50;
+			String afterItemId = null;
 			
 			// Let's check if we have RSM
 			// implement this too 6.5.7 Requesting the Most Recent Items
 			
-			Element pubsub = new DOMElement("pubsub",
-   											new org.dom4j.Namespace("", NAMESPACE_URI));
+			String max_items = elm.attributeValue("max_items");
+			if(max_items != null) {
+				maxItemsToReturn = Integer.parseInt(max_items);
+			}
 			
+			//Requests
+		    //<set xmlns='http://jabber.org/protocol/rsm'>
+		    //  <max>10</max>
+		    //</set>
+			//
+			// <set xmlns='http://jabber.org/protocol/rsm'>
+		    //  <max>10</max>
+		    //  <after>peterpan@neverland.lit</after>
+		    //</set>
+			
+			if(rsm != null) {
+				Element max = rsm.element("max");
+				if(max != null) {
+					maxItemsToReturn = Integer.parseInt(max.getTextTrim());
+				}
+				Element after = rsm.element("after");
+				if(after != null) {
+					afterItemId = after.getTextTrim();
+				}
+			}
+
 			Element items = pubsub.addElement("items");
 			items.addAttribute("node", node);
 			
+			
+			int itemsAdded = 0;
+			
+			String firstItem = null;
+			int firstItemIndex = 0;
+			String lastItem = null;
+			
 			for (String itemID : itemsList) {
+				
+				// http://xmpp.org/extensions/xep-0059.html
+				// 2.7 Getting the Item Count
+				if(maxItemsToReturn == 0) {
+					break;
+				}
+				
+				if(afterItemId != null && !afterItemId.equals(itemID)) {
+					firstItemIndex++;
+					continue;
+				}
+				
+				if(afterItemId != null && afterItemId.equals(itemID)) {
+					afterItemId = null;
+					firstItemIndex++;
+					continue;
+				}
+				
+				
+				if(firstItem == null) {
+					firstItem = itemID;
+				}
 				
 				Element item = items.addElement("item");
 				item.addAttribute("id", itemID);
@@ -888,6 +952,44 @@ public class JabberPubsub extends AbstractNamespace {
 					System.out.println("Something went very wrong here.");
 				}
 				
+				lastItem = itemID;
+				
+				itemsAdded++;
+				if(itemsAdded >= maxItemsToReturn) {
+					break;
+				}
+			}
+			
+			//Replies
+			//(first page)
+			//<set xmlns='http://jabber.org/protocol/rsm'>
+		    //  <first index='0'>stpeter@jabber.org</first>
+		    //  <last>peterpan@neverland.lit</last>
+		    //  <count>800</count>
+		    //</set>
+			//
+			//(second page)
+			//<set xmlns='http://jabber.org/protocol/rsm'>
+		    //  <first index='10'>peter@pixyland.org</first>
+		    //  <last>peter@rabbit.lit</last>
+		    //  <count>800</count>
+		    //</set>
+			//
+			//(empty)
+			//<set xmlns='http://jabber.org/protocol/rsm'>
+		    //  <count>790</count>
+		    //</set>
+			
+			// Let's add the result set only if it was used or
+			// if we have more than max amount of replies
+			if(rsm != null || maxItemsToReturn < itemsList.size()) {
+				Element replySet = pubsub.addElement("set", "http://jabber.org/protocol/rsm");
+				
+				if(firstItem != null) {
+					replySet.addElement("first").addAttribute("index", Integer.toString(firstItemIndex)).setText(firstItem);
+					replySet.addElement("last").setText(lastItem);
+				}
+				replySet.addElement("count").setText(Integer.toString(itemsList.size()));
 			}
 			
 			IQ result = IQ.createResultIQ(reqIQ);

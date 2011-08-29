@@ -126,7 +126,7 @@ public class JabberPubsubOwnerTest extends TestCase {
 		
 		IQ result = (IQ)pubsubEngine.outQueue.getQueue().poll();
 		
-		System.out.println(result.toXML());
+		//System.out.println(result.toXML());
 		
 		assertEquals(IQ.Type.result, result.getType());
 		
@@ -151,7 +151,7 @@ public class JabberPubsubOwnerTest extends TestCase {
 		eventMsg = (Message)pubsubEngine.outQueue.getQueue().poll();
 		assertTrue(possibleReceivers.contains(eventMsg.getTo().toBareJID()));
 		
-		System.out.println(eventMsg.toXML());
+		//System.out.println(eventMsg.toXML());
 		
 		eventMsg = (Message)pubsubEngine.outQueue.getQueue().poll();
 		assertNull(eventMsg); // We test that playboy.com is send only once

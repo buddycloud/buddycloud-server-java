@@ -267,7 +267,7 @@ public class JabberPubsubTest extends TestCase {
 		Thread.sleep(50);
 		
 		IQ result = (IQ)pubsubEngine.outQueue.getQueue().poll();
-		System.out.println("hhhhh" +result.toXML());
+		//System.out.println("hhhhh" +result.toXML());
 		
 		Element error = new DOMElement("error");
 		error.addAttribute("type", "auth");
@@ -571,7 +571,7 @@ public class JabberPubsubTest extends TestCase {
 		
 		item.add(entry);
 		
-		System.out.println(mockIQ.toXML());
+		//System.out.println(mockIQ.toXML());
 		
 		pubsubEngine.ingestPacket(mockIQ.createCopy());
 		
@@ -1189,7 +1189,7 @@ public class JabberPubsubTest extends TestCase {
 		
 		IQ result = (IQ)pubsubEngine.outQueue.getQueue().poll();
 		
-		System.out.println(result.toXML());
+		//System.out.println(result.toXML());
 		
 		String type = jedis.type("node:" + node + ":conf");
 		assertEquals("hash", type);
@@ -1653,7 +1653,7 @@ public class JabberPubsubTest extends TestCase {
 		
 		IQ result = (IQ)pubsubEngine.outQueue.getQueue().poll();
 
-		System.out.println(result.toXML());
+		//System.out.println(result.toXML());
 		
 		assertEquals(IQ.Type.result, result.getType());
 		assertEquals(origID, result.getID());
@@ -1830,5 +1830,197 @@ public class JabberPubsubTest extends TestCase {
 //	    assertEquals(subsReq.getType(), IQ.Type.error);
 //	    assertEquals("tuomas@koski.com/client", subsReq.getTo().toString());
 //	}
+	
+	public void testItemsEmptySet() throws InterruptedException {
+		
+		JabberPubsub pubsubEngine = new JabberPubsub(this.outQueue, this.errorQueue, this.jedis);
+		String node = "beer_and_babes@bc.hoituu.com";
+		
+		jedis.sadd(JedisKeys.LOCAL_NODES, node);
+		
+		jedis.sadd("node:" + node + ":subscribers", "tuomas@koski.com");
+		Subscription sub = new Subscription(Type.unconfigured,
+				org.buddycloud.channels.pubsub.affiliation.Type.publisher,
+				null);
+		jedis.hmset("node:" + node + ":subscriber:tuomas@koski.com", sub.getAsMap());
+		
+		//String iid = "ae890ac52d0df67ed7cfdf51b644e901";
+		//jedis.sadd("node:" + node + ":itemset", iid);
+		//jedis.lpush("node:" + node + ":itemlist", iid);
+		//jedis.set("node:" + node + ":item:" + iid, "tuomas was here.");
+		
+		String id = "testItemsEmptySet";
+		
+		IQ mockIQ = new IQ();
+		mockIQ.setType(IQ.Type.get);
+		mockIQ.setID(id);
+		mockIQ.setTo("channels.koski.com");
+		mockIQ.setFrom("j@koski.com/client");
+		
+		// We add user as registered
+		jedis.sadd(JedisKeys.LOCAL_USERS, mockIQ.getFrom().toBareJID());
+		
+		Element pubsub = mockIQ.setChildElement("pubsub", JabberPubsub.NAMESPACE_URI);
+		Element items = pubsub.addElement("items");
+		items.addAttribute("node", node);
+		
+		//<set xmlns='http://jabber.org/protocol/rsm'>
+	    //  <max>10</max>
+	    //</set>
+		pubsub.addElement("set", "http://jabber.org/protocol/rsm")
+			  .addElement("max").setText("10");			
+		
+		//System.out.println("saturday night hack: " + mockIQ.toXML());
+		
+		pubsubEngine.ingestPacket(mockIQ.createCopy());
+		
+		Thread.sleep(50);
+		
+		IQ result = (IQ)pubsubEngine.outQueue.getQueue().poll();
+		
+		//System.out.println("saturday night hack 1: " + result.toXML());
+		
+		// We should have received something like this:
+		//
+		// <iq type="result" 
+		//     id="testItemsEmptySet" 
+		//     from="channels.koski.com" 
+		//     to="j@koski.com/client">
+		//    <pubsub xmlns="http://jabber.org/protocol/pubsub">
+		//       <items node="beer_and_babes@bc.hoituu.com"/>
+		//       <set xmlns="http://jabber.org/protocol/rsm">
+		//          <count>0</count>
+		//       </set>
+		//    </pubsub>
+		// </iq>
+		
+		assertEquals("<pubsub xmlns=\"http://jabber.org/protocol/pubsub\"><items node=\"beer_and_babes@bc.hoituu.com\"/><set xmlns=\"http://jabber.org/protocol/rsm\"><count>0</count></set></pubsub>", result.getChildElement().asXML());
+	}
+	
+	public void testItemsFirstPage() throws InterruptedException {
+		
+		JabberPubsub pubsubEngine = new JabberPubsub(this.outQueue, this.errorQueue, this.jedis);
+		String node = "beer_and_babes@bc.hoituu.com";
+		
+		jedis.sadd(JedisKeys.LOCAL_NODES, node);
+		
+		jedis.sadd("node:" + node + ":subscribers", "tuomas@koski.com");
+		Subscription sub = new Subscription(Type.unconfigured,
+				org.buddycloud.channels.pubsub.affiliation.Type.publisher,
+				null);
+		jedis.hmset("node:" + node + ":subscriber:tuomas@koski.com", sub.getAsMap());
+		
+		String iid = "ae890ac52d0df67ed7cfdf51b644e901-1";
+		jedis.sadd("node:" + node + ":itemset", iid);
+		jedis.lpush("node:" + node + ":itemlist", iid);
+		jedis.set("node:" + node + ":item:" + iid, "<entry>Something here 1</entry>");
+		
+		iid = "ae890ac52d0df67ed7cfdf51b644e901-2";
+		jedis.sadd("node:" + node + ":itemset", iid);
+		jedis.lpush("node:" + node + ":itemlist", iid);
+		jedis.set("node:" + node + ":item:" + iid, "<entry>Something here 2</entry>");
+		
+		iid = "ae890ac52d0df67ed7cfdf51b644e901-3";
+		jedis.sadd("node:" + node + ":itemset", iid);
+		jedis.lpush("node:" + node + ":itemlist", iid);
+		jedis.set("node:" + node + ":item:" + iid, "<entry>Something here 3</entry>");
+		
+		String id = "testItemsFirstPage";
+		
+		IQ mockIQ = new IQ();
+		mockIQ.setType(IQ.Type.get);
+		mockIQ.setID(id);
+		mockIQ.setTo("channels.koski.com");
+		mockIQ.setFrom("j@koski.com/client");
+		
+		// We add user as registered
+		jedis.sadd(JedisKeys.LOCAL_USERS, mockIQ.getFrom().toBareJID());
+		
+		Element pubsub = mockIQ.setChildElement("pubsub", JabberPubsub.NAMESPACE_URI);
+		Element items = pubsub.addElement("items");
+		items.addAttribute("node", node);
+		
+		//<set xmlns='http://jabber.org/protocol/rsm'>
+	    //  <max>10</max>
+	    //</set>
+		pubsub.addElement("set", "http://jabber.org/protocol/rsm")
+			  .addElement("max").setText("2");			
+		
+		//System.out.println("saturday night hack: " + mockIQ.toXML());
+		
+		pubsubEngine.ingestPacket(mockIQ.createCopy());
+		
+		Thread.sleep(50);
+		
+		IQ result = (IQ)pubsubEngine.outQueue.getQueue().poll();
+		
+		//System.out.println("saturday night hack 3: " + result.toXML());
+		
+		assertEquals("<pubsub xmlns=\"http://jabber.org/protocol/pubsub\"><items node=\"beer_and_babes@bc.hoituu.com\"><item id=\"ae890ac52d0df67ed7cfdf51b644e901-3\"><entry xmlns=\"\">Something here 3</entry></item><item id=\"ae890ac52d0df67ed7cfdf51b644e901-2\"><entry xmlns=\"\">Something here 2</entry></item></items><set xmlns=\"http://jabber.org/protocol/rsm\"><first index=\"0\">ae890ac52d0df67ed7cfdf51b644e901-3</first><last>ae890ac52d0df67ed7cfdf51b644e901-2</last><count>3</count></set></pubsub>", result.getChildElement().asXML());
+		
+	}
+	
+	public void testItemsSecondPage() throws InterruptedException {
+		
+		JabberPubsub pubsubEngine = new JabberPubsub(this.outQueue, this.errorQueue, this.jedis);
+		String node = "beer_and_babes@bc.hoituu.com";
+		
+		jedis.sadd(JedisKeys.LOCAL_NODES, node);
+		
+		jedis.sadd("node:" + node + ":subscribers", "tuomas@koski.com");
+		Subscription sub = new Subscription(Type.unconfigured,
+				org.buddycloud.channels.pubsub.affiliation.Type.publisher,
+				null);
+		jedis.hmset("node:" + node + ":subscriber:tuomas@koski.com", sub.getAsMap());
+		
+		String iid = "ae890ac52d0df67ed7cfdf51b644e901-1";
+		jedis.sadd("node:" + node + ":itemset", iid);
+		jedis.lpush("node:" + node + ":itemlist", iid);
+		jedis.set("node:" + node + ":item:" + iid, "<entry>Something here 1</entry>");
+		
+		iid = "ae890ac52d0df67ed7cfdf51b644e901-2";
+		jedis.sadd("node:" + node + ":itemset", iid);
+		jedis.lpush("node:" + node + ":itemlist", iid);
+		jedis.set("node:" + node + ":item:" + iid, "<entry>Something here 2</entry>");
+		
+		iid = "ae890ac52d0df67ed7cfdf51b644e901-3";
+		jedis.sadd("node:" + node + ":itemset", iid);
+		jedis.lpush("node:" + node + ":itemlist", iid);
+		jedis.set("node:" + node + ":item:" + iid, "<entry>Something here 3</entry>");
+		
+		String id = "testItemsFirstPage";
+		
+		IQ mockIQ = new IQ();
+		mockIQ.setType(IQ.Type.get);
+		mockIQ.setID(id);
+		mockIQ.setTo("channels.koski.com");
+		mockIQ.setFrom("j@koski.com/client");
+		
+		// We add user as registered
+		jedis.sadd(JedisKeys.LOCAL_USERS, mockIQ.getFrom().toBareJID());
+		
+		Element pubsub = mockIQ.setChildElement("pubsub", JabberPubsub.NAMESPACE_URI);
+		Element items = pubsub.addElement("items");
+		items.addAttribute("node", node);
+		
+		//<set xmlns='http://jabber.org/protocol/rsm'>
+	    //  <max>10</max>
+	    //</set>
+		Element s = pubsub.addElement("set", "http://jabber.org/protocol/rsm");
+	    s.addElement("max").setText("2");
+	    s.addElement("after").setText("ae890ac52d0df67ed7cfdf51b644e901-2");
+		
+		//System.out.println("saturday night hack: " + mockIQ.toXML());
+		
+		pubsubEngine.ingestPacket(mockIQ.createCopy());
+		
+		Thread.sleep(50);
+		
+		IQ result = (IQ)pubsubEngine.outQueue.getQueue().poll();
+		
+		//System.out.println("saturday night hack: " + result.toXML());
+		
+		assertEquals("<pubsub xmlns=\"http://jabber.org/protocol/pubsub\"><items node=\"beer_and_babes@bc.hoituu.com\"><item id=\"ae890ac52d0df67ed7cfdf51b644e901-1\"><entry xmlns=\"\">Something here 1</entry></item></items><set xmlns=\"http://jabber.org/protocol/rsm\"><first index=\"2\">ae890ac52d0df67ed7cfdf51b644e901-1</first><last>ae890ac52d0df67ed7cfdf51b644e901-1</last><count>3</count></set></pubsub>", result.getChildElement().asXML());
+	}
 	
 }

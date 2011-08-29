@@ -265,7 +265,7 @@ public class JabberDiscoItemsTest extends TestCase {
 			assertTrue(possibleItems.contains(element.asXML()));
 		}
 		
-		System.out.println(result.toXML());
+		//System.out.println(result.toXML());
 		
 	}
 	

@@ -71,7 +71,7 @@ public class MessageHandlerTest extends TestCase {
 //             .addElement("name")
 //		     .setText("Nelly");
 		
-		System.out.println(entry.asXML());
+		//System.out.println(entry.asXML());
 	}
 
 }

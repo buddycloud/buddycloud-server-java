@@ -3,7 +3,7 @@
       <publish node="/user/businesstime@xmpp.lobstermonster.org"> 
          <item>
          	<entry xmlns="http://www.w3.org/2005/Atom">
-				<content>Back from CCCamp11 and business is booming again!</content>
+				<content>Tomorrow is very promising business meeting! Mature business is most of the time good business.</content>
 				<author>
 				   <name>tuomas@xmpp.lobstermonster.org</name>
 				</author>

@@ -1,7 +1,0 @@
-<iq type='get'
-	to='comptest.xmpp.lobstermonster.org'
-    id='subs1'>
-  <pubsub xmlns='http://jabber.org/protocol/pubsub#owner'>
-    <subscriptions node='/user/businesstime@xmpp.lobstermonster.org'/>
-  </pubsub>
-</iq>

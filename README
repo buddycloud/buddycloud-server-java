@@ -1,8 +1,0 @@
-THE master branch IS VERY SOON GOING TO BE CLEANED UP.
-
-New version is soon going to be pushed which will have a much cleaner skeleton + documentation of the code and how functional tests can be done.
-
-The goal is that it'll be much easier for others to collaborate (and teach me Java). 
-
-Almost all the bc functionalities will be missing and the rest will have bugs SO DON'T EXPECT to run it yet as a main bc channel server.
-

@@ -1,9 +1,0 @@
-<iq type='set'
-    to="comptest.xmpp.lobstermonster.org"
-    id='retract1'>
-  <pubsub xmlns='http://jabber.org/protocol/pubsub'>
-    <retract node='/user/businesstime@xmpp.lobstermonster.org'>
-      <item id='d9fe2a44-cb8c-49c0-baa9-ff2af415e017'/>
-    </retract>
-  </pubsub>
-</iq>

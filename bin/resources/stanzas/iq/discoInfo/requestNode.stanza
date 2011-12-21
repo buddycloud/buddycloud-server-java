@@ -1,6 +1,0 @@
-<iq type="get"
-    from="romeo@montague.net/orchard"
-    to="channels.montague.net"
-    id="info1">
-  <query xmlns="http://jabber.org/protocol/disco#info" node="/user/romeo@montague.net/posts"/>
-</iq>

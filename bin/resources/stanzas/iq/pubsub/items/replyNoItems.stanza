@@ -1,8 +1,0 @@
-<iq type="result"
-    id="items1"
-    from="channels.shakespeare.lit"
-    to="francisco@denmark.lit/barracks">
-   <pubsub xmlns="http://jabber.org/protocol/pubsub">
-      <items node="/user/francisco@denmark.lit/posts"/>
-   </pubsub>
-</iq>

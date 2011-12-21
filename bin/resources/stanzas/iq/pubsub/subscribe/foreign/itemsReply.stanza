@@ -1,9 +1,0 @@
-<iq type="result"
-    id="items1"
-    to="channels.denmark.lit"
-    from="shakespeare.lit">
-   <query xmlns='http://jabber.org/protocol/disco#items'>
-      <item jid='people.shakespeare.lit' name='Directory of Characters'/>
-      <item jid='channels.shakespeare.lit' name='Le awesome buddycloud channel server'/>
-   </query>
-</iq>

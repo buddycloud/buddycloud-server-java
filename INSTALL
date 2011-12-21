@@ -1,0 +1,41 @@
+
+Open shell and let's create some filesystems:
+
+$ mkdir bc
+$ cd bc
+$ mkdir databases
+$ mkdir databases/mongo
+$ mkdir databases/redis
+
+
+Next let's install 64 bits MongoDB. (If you have MongoDB running already, you can skip this step.
+
+Download, extract and run mongo with:
+
+$ wget http://fastdl.mongodb.org/linux/mongodb-linux-x86_64-2.0.2.tgz
+$ tar xvf mongodb-linux-x86_64-2.0.2.tgz
+$ mongodb-linux-x86_64-2.0.2/bin/mongod --bind_ip 127.0.0.1 --dbpath databases/mongo/
+
+If you need to use 32 bit use link http://fastdl.mongodb.org/linux/mongodb-linux-i686-2.0.2.tgz instead. 
+ (NOTE LIMITS: http://www.mongodb.org/downloads#32-bit-limit):
+
+
+Open a new shell and move to the created 'bc' directory. 
+
+
+Next let's install Redis. If you have Redis already running, you can skip this step.
+
+Download, extract, compile and run Redis with:
+
+$ wget http://redis.googlecode.com/files/redis-2.4.4.tar.gz
+$ tar xzf redis-2.4.4.tar.gz
+$ cd redis-2.4.4
+$ make
+$ src/redis-server
+
+
+Open a new shell and move to the created 'bc' directory
+
+Next let's checkout, extract, compile and run bc channel server with:
+
+Continue todo here.

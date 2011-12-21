@@ -1,0 +1,10 @@
+<iq id="7794624" 
+    type="set" 
+    to="comptest.xmpp.lobstermonster.org" 
+    from="channels.buddycloud.org">
+   <pubsub xmlns="http://jabber.org/protocol/pubsub">
+      <subscribe jid="tuomas@buddycloud.org" node="/user/tuomas@xmpp.lobstermonster.org/posts"/>
+      <actor xmlns="http://buddycloud.org/v1" type="user">tuomas@buddycloud.org</actor>
+      <set xmlns="http://jabber.org/protocol/rsm"/>
+   </pubsub>
+</iq>

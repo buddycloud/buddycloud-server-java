@@ -1,0 +1,20 @@
+<iq type="result" id="info1" from="channels.denmark.lit" to="francisco@denmark.lit/orchard">
+   <query xmlns="http://jabber.org/protocol/disco#info" node="/user/pamela@anderson.net/posts">
+      <identity category="pubsub" type="leaf"/>
+      <feature var="http://jabber.org/protocol/pubsub"/>
+      <x xmlns="jabber:x:data" type="result">
+         <field var="FORM_TYPE" type="hidden">
+            <value>http://jabber.org/protocol/pubsub#meta-data</value>
+         </field>
+         <field var="pubsub#notify_config"><value>1</value></field>
+         <field var="pubsub#creation_date"><value>TIME</value></field>
+         <field var="pubsub#description"><value>This channel belongs to pamela@anderson.net. To nobody else!</value></field>
+         <field var="pubsub#type"><value>http://www.w3.org/2005/Atom</value></field>
+         <field var="pubsub#default_affiliation"><value>member</value></field>
+         <field var="pubsub#access_model"><value>open</value></field>
+         <field var="pubsub#owner"><value>pamela@anderson.net</value></field>
+         <field var="pubsub#title"><value>pamela@anderson.net's very own buddycloud channel!</value></field>
+         <field var="pubsub#publish_model"><value>subscribers</value></field>
+      </x>
+   </query>
+</iq>

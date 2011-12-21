@@ -1,0 +1,9 @@
+<iq type="set"
+    from="willbe@overriden"
+    to="channels.shakespeare.lit"
+    id="items1">
+   <pubsub xmlns="http://jabber.org/protocol/pubsub">
+      <subscribe node="/users/henry@shakespeare.lit/posts" jid="francisco@denmark.lit"/>
+      <actor xmlns="http://buddycloud.org/v1">francisco@denmark.lit</actor>
+   </pubsub>
+</iq>

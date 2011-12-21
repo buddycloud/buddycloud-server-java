@@ -1,0 +1,9 @@
+<iq type="result"
+    from="channels.shakespeare.lit"
+    to="channels.denmark.lit"
+    id="items1">
+   <query xmlns="http://jabber.org/protocol/disco#info">
+      <identity type="service" name="XEP-0060 service" category="pubsub"/>
+      <identity category="pubsub" type="channels"/>
+   </query>
+</iq>

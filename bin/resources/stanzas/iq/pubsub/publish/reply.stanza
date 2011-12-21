@@ -1,0 +1,7 @@
+<iq type="result" id="publish:20" from="channels.buddycloud.com" to="koski@buddycloud.com/ChannelCompatibleClient">
+   <pubsub xmlns="http://jabber.org/protocol/pubsub">
+      <publish node="/user/koski@buddycloud.com/posts">
+         <item id="ITEMID"/>
+      </publish>
+   </pubsub>
+</iq>

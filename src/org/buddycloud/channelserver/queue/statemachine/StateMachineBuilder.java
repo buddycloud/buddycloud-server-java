@@ -1,9 +1,8 @@
 package org.buddycloud.channelserver.queue.statemachine;
 
-import java.util.HashMap;
+import java.util.Map;
 
 import org.apache.log4j.Logger;
-import org.buddycloud.channelserver.channel.ValidateEntry;
 import org.buddycloud.channelserver.db.DataStore;
 import org.xmpp.packet.IQ;
 
@@ -11,7 +10,7 @@ public class StateMachineBuilder {
 
     protected static Logger LOGGER = Logger.getLogger(StateMachineBuilder.class);
     
-    public static IStatemachine buildFromState(IQ iq, HashMap<String, String> state, DataStore dataStore) {
+    public static IStatemachine buildFromState(IQ iq, Map<String, String> state, DataStore dataStore) {
         
         LOGGER.debug("Building a state for event type '" +  state.get(IStatemachine.KEY_EVENT_TYPE) +"'.");
         if(state.get(IStatemachine.KEY_EVENT_TYPE).equals(Subscribe.EVENT_TYPE)) {

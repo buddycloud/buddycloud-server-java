@@ -1,8 +1,7 @@
 package org.buddycloud.channelserver.queue.statemachine;
 
 import java.io.StringReader;
-import java.util.HashMap;
-import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import org.buddycloud.channelserver.db.DataStore;
@@ -10,10 +9,7 @@ import org.dom4j.DocumentException;
 import org.dom4j.Element;
 import org.dom4j.io.SAXReader;
 import org.xmpp.packet.IQ;
-import org.xmpp.packet.IQ.Type;
-import org.xmpp.packet.JID;
 import org.xmpp.packet.Packet;
-import org.xmpp.packet.PacketError;
 
 public class DiscoInfo extends AStatemachine {
 
@@ -110,7 +106,7 @@ public class DiscoInfo extends AStatemachine {
         return s;
     }
     
-    public static DiscoInfo buildFromState(IQ iq, HashMap<String, String> state, DataStore dataStore) {
+    public static DiscoInfo buildFromState(IQ iq, Map<String, String> state, DataStore dataStore) {
         DiscoInfo s = new DiscoInfo();
         
         s.info = state;

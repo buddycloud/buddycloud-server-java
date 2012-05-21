@@ -1,10 +1,12 @@
 package org.buddycloud.channelserver;
 
 import java.util.Properties;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 
 import org.apache.log4j.Logger;
-import org.buddycloud.channelserver.queue.InQueue;
-import org.buddycloud.channelserver.queue.OutQueue;
+import org.buddycloud.channelserver.queue.InQueueConsumer;
+import org.buddycloud.channelserver.queue.OutQueueConsumer;
 import org.xmpp.component.Component;
 import org.xmpp.component.ComponentException;
 import org.xmpp.component.ComponentManager;
@@ -13,13 +15,13 @@ import org.xmpp.packet.Packet;
 
 public class ChannelsEngine implements Component {
 
-	private static Logger LOGGER = Logger.getLogger(ChannelsEngine.class);
+	private static final Logger LOGGER = Logger.getLogger(ChannelsEngine.class);
 	
 	private JID jid = null;
 	private ComponentManager manager = null;
 	
-	private OutQueue outQueue = null;
-	private InQueue inQueue = null;
+	private BlockingQueue<Packet> outQueue = new LinkedBlockingQueue<Packet>();;
+	private BlockingQueue<Packet> inQueue = new LinkedBlockingQueue<Packet>();;
 	
 	private Properties conf;
 	
@@ -43,11 +45,11 @@ public class ChannelsEngine implements Component {
 		this.jid = jid;
 		this.manager = manager;
 		
-		this.outQueue = new OutQueue();
-		this.outQueue.setChannelsEngine(this);
-		this.outQueue.setChannelsEngine(this.manager);
+		OutQueueConsumer outQueueConsumer = new OutQueueConsumer(this, outQueue);
+		outQueueConsumer.start();
 		
-		this.inQueue = new InQueue(this.outQueue, this.conf);
+		InQueueConsumer inQueueConsumer = new InQueueConsumer(outQueue, conf, inQueue);
+		inQueueConsumer.start();
 		
 		LOGGER.info("XMPP Component started. We are '" + jid.toBareJID() + "' and ready to accept packages.");
 	}
@@ -60,9 +62,17 @@ public class ChannelsEngine implements Component {
 	    //
 	    // In the cluster verion ZeroMQ is used as a transport layer between the stanza 
 	    // receivers and the business logic servers.
-		this.inQueue.put(p.toXML());
+		try {
+            this.inQueue.put(p);
+        } catch (InterruptedException e) {
+            LOGGER.error(p);
+        }
 	}
 
+	public void sendPacket(Packet p) throws ComponentException {
+        manager.sendPacket(this, p);
+    }
+	
 	@Override
 	public void shutdown() {
 		// TODO Auto-generated method stub

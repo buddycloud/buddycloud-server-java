@@ -3,6 +3,7 @@ package org.buddycloud.channelserver.queue.statemachine;
 import java.io.StringReader;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import org.apache.log4j.Logger;
@@ -19,7 +20,7 @@ public abstract class AStatemachine implements IStatemachine {
 
     protected static Logger LOGGER = Logger.getLogger("AStatemachine");
     
-    protected HashMap<String, String> info = new HashMap<String, String>(); 
+    protected Map<String, String> info = new HashMap<String, String>(); 
     
     public final static String STATE_SENT_DISCO_ITEMS = "onDiscoItems";
     public final static String STATE_SENT_DISCO_INFO  = "onDiscoInfo";

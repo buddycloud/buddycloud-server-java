@@ -2,11 +2,12 @@ package org.buddycloud.channelserver.db;
 
 import java.net.UnknownHostException;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.Properties;
 
 import org.bson.types.ObjectId;
 import org.buddycloud.channelserver.channel.Conf;
-import org.buddycloud.channelserver.pubsub.affiliation.Type;
+import org.buddycloud.channelserver.pubsub.affiliation.Affiliations;
 import org.buddycloud.channelserver.pubsub.entry.NodeEntry;
 import org.buddycloud.channelserver.pubsub.subscription.NodeSubscription;
 
@@ -149,8 +150,8 @@ public class DataStore {
         
         this.subscribeUserToNode(owner, 
                                  nodename, 
-                                 Type.owner.toString(), 
-                                 org.buddycloud.channelserver.pubsub.subscription.Type.unconfigured.toString(),
+                                 Affiliations.owner.toString(), 
+                                 org.buddycloud.channelserver.pubsub.subscription.Subscriptions.unconfigured.toString(),
                                  null);
         
         // TODO, check this. I just added it now. We'll need to check the creation status one day ...
@@ -254,7 +255,7 @@ public class DataStore {
     // End of publishing related
     
     // TODO, this statemachine stuff could go to other place too
-    public String storeState(String oldID, String newID, HashMap<String, String> state) {
+    public String storeState(String oldID, String newID, Map<String, String> state) {
         this.jedis.del("state:" + oldID);
         
         if(state.isEmpty()) {
@@ -264,7 +265,7 @@ public class DataStore {
         return this.jedis.hmset("state:" + newID, state);
     }
     
-    public HashMap<String, String> getState(String id) {
+    public Map<String, String> getState(String id) {
         return (HashMap<String, String>) this.jedis.hgetAll("state:" + id);
     }
     

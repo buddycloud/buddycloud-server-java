@@ -5,7 +5,6 @@ import java.util.Map;
 import java.util.Set;
 
 import org.bson.BSONObject;
-import org.bson.types.ObjectId;
 
 import com.mongodb.DBObject;
 

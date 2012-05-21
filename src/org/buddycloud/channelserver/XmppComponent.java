@@ -7,16 +7,11 @@ import org.xmpp.component.ComponentException;
 
 public class XmppComponent {
 
-	private ExternalComponentManager manager;
-	
 	private String hostname;
 	private int socket;
 	
 	private String domainName;
 	private String password;
-	
-	private ChannelsEngine engine;
-	
 	private Properties conf;
 	
 	public XmppComponent(String hostname, int socket, String domainName, String password) {
@@ -31,15 +26,9 @@ public class XmppComponent {
 	}
 	
 	public void run() throws ComponentException {
-		
-		this.manager = new ExternalComponentManager(this.hostname, this.socket);
-
-		this.manager.setSecretKey(this.domainName, this.password);
-
-		this.engine = new ChannelsEngine(this.conf);
-		
-		this.manager.addComponent(this.domainName, this.engine);
-		
+		ExternalComponentManager manager = new ExternalComponentManager(
+		        this.hostname, this.socket);
+		manager.setSecretKey(this.domainName, this.password);
+		manager.addComponent(this.domainName, new ChannelsEngine(this.conf));
 	}
-	
 }

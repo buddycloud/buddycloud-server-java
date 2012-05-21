@@ -1,8 +1,7 @@
 package org.buddycloud.channelserver.queue.statemachine;
 
 import java.io.StringReader;
-import java.util.HashMap;
-import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import org.buddycloud.channelserver.db.DataStore;
@@ -10,10 +9,7 @@ import org.dom4j.DocumentException;
 import org.dom4j.Element;
 import org.dom4j.io.SAXReader;
 import org.xmpp.packet.IQ;
-import org.xmpp.packet.IQ.Type;
-import org.xmpp.packet.JID;
 import org.xmpp.packet.Packet;
-import org.xmpp.packet.PacketError;
 
 public class Subscribe extends AStatemachine  {
 
@@ -60,7 +56,7 @@ public class Subscribe extends AStatemachine  {
             
             String node = info.get(KEY_NODE);
             String jid = oldIQ.getFrom().toBareJID();
-            String subscription = org.buddycloud.channelserver.pubsub.subscription.Type.unconfigured.toString();
+            String subscription = org.buddycloud.channelserver.pubsub.subscription.Subscriptions.unconfigured.toString();
             
             Element possiblePubsub = iq.getChildElement();
             if(possiblePubsub != null) {
@@ -128,7 +124,7 @@ public class Subscribe extends AStatemachine  {
         return s;
     }
     
-    public static Subscribe buildFromState(IQ iq, HashMap<String, String> state, DataStore dataStore) {
+    public static Subscribe buildFromState(IQ iq, Map<String, String> state, DataStore dataStore) {
         Subscribe s = new Subscribe();
         
         s.info = state;

@@ -5,6 +5,7 @@ import java.util.concurrent.BlockingQueue;
 
 import org.apache.log4j.Logger;
 import org.buddycloud.channelserver.db.DataStore;
+import org.buddycloud.channelserver.db.jedis.JedisMongoDataStore;
 import org.buddycloud.channelserver.packetprocessor.iq.IQProcessor;
 import org.buddycloud.channelserver.packetprocessor.message.MessageProcessor;
 import org.xmpp.packet.IQ;
@@ -22,7 +23,7 @@ public class InQueueConsumer extends QueueConsumer {
     public InQueueConsumer(BlockingQueue<Packet> outQueue, 
             Properties conf, BlockingQueue<Packet> inQueue) {
         super(inQueue);
-        this.dataStore = new DataStore(conf);
+        this.dataStore = new JedisMongoDataStore(conf);
         this.iqHandler = new IQProcessor(outQueue, conf, dataStore);
         this.messageHandler = new MessageProcessor(outQueue, inQueue, conf, dataStore);
     }

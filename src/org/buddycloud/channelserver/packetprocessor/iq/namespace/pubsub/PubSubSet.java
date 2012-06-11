@@ -2,6 +2,7 @@ package org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub;
 
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.BlockingQueue;
@@ -10,6 +11,7 @@ import org.apache.log4j.Logger;
 import org.buddycloud.channelserver.channel.Conf;
 import org.buddycloud.channelserver.channel.ValidateEntry;
 import org.buddycloud.channelserver.db.DataStore;
+import org.buddycloud.channelserver.db.jedis.NodeSubscriptionImpl;
 import org.buddycloud.channelserver.packetprocessor.PacketProcessor;
 import org.buddycloud.channelserver.pubsub.subscription.NodeSubscription;
 import org.buddycloud.channelserver.queue.statemachine.Publish;
@@ -18,13 +20,11 @@ import org.buddycloud.channelserver.queue.statemachine.Unsubscribe;
 import org.dom4j.Element;
 import org.dom4j.dom.DOMElement;
 import org.xmpp.packet.IQ;
+import org.xmpp.packet.IQ.Type;
 import org.xmpp.packet.JID;
 import org.xmpp.packet.Message;
 import org.xmpp.packet.Packet;
 import org.xmpp.packet.PacketError;
-import org.xmpp.packet.IQ.Type;
-
-import com.mongodb.DBCursor;
 
 public class PubSubSet implements PacketProcessor<IQ> {
     
@@ -396,7 +396,7 @@ public class PubSubSet implements PacketProcessor<IQ> {
         
         // Subscribe to a node.
         
-        NodeSubscription nodeSubscription = dataStore.getUserSubscriptionOfNode(subscribingJID.toBareJID(), 
+        NodeSubscriptionImpl nodeSubscription = dataStore.getUserSubscriptionOfNode(subscribingJID.toBareJID(), 
                                                                                 node);
         String possibleExistingAffiliation  = nodeSubscription.getAffiliation();
         String possibleExistingSusbcription = nodeSubscription.getSubscription();
@@ -641,7 +641,7 @@ public class PubSubSet implements PacketProcessor<IQ> {
             return;
         }
         
-        NodeSubscription nodeSubscription = dataStore.getUserSubscriptionOfNode(publishersJID.toBareJID(), 
+        NodeSubscriptionImpl nodeSubscription = dataStore.getUserSubscriptionOfNode(publishersJID.toBareJID(), 
                                                                                 node);
         String possibleExistingAffiliation  = nodeSubscription.getAffiliation();
         String possibleExistingSusbcription = nodeSubscription.getSubscription();
@@ -762,9 +762,9 @@ public class PubSubSet implements PacketProcessor<IQ> {
         
         Set<String> externalChannelServerReceivers = new HashSet<String>();
         
-        DBCursor cur = dataStore.getNodeSubscribers(node);
+        Iterator<? extends NodeSubscription> cur = dataStore.getNodeSubscribers(node);
         while(cur.hasNext()) {
-            NodeSubscription ns = (NodeSubscription) cur.next();
+            NodeSubscription ns = cur.next();
             String toBareJID = ns.getBareJID();
             if(ns.getForeignChannelServer() != null) {
                 if( externalChannelServerReceivers.contains(ns.getForeignChannelServer()) ) {

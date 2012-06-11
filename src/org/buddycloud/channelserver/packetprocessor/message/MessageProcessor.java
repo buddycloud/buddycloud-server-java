@@ -2,6 +2,7 @@ package org.buddycloud.channelserver.packetprocessor.message;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Iterator;
 import java.util.Properties;
 import java.util.TimeZone;
 import java.util.UUID;
@@ -17,8 +18,6 @@ import org.dom4j.dom.DOMElement;
 import org.xmpp.packet.IQ;
 import org.xmpp.packet.Message;
 import org.xmpp.packet.Packet;
-
-import com.mongodb.DBCursor;
 
 public class MessageProcessor implements PacketProcessor<Message> {
 
@@ -186,9 +185,9 @@ public class MessageProcessor implements PacketProcessor<Message> {
         packet.setBody(":publish " + sentToNode + ":" + itemID + " " + whoSays + " wrote: " + body);
         packet.setFrom(packet.getTo());
         
-        DBCursor cur = dataStore.getNodeSubscribers(node);
+        Iterator<? extends NodeSubscription> cur = dataStore.getNodeSubscribers(node);
         while(cur.hasNext()) {
-            NodeSubscription ns = (NodeSubscription) cur.next();
+            NodeSubscription ns = cur.next();
             String toBareJID = ns.getBareJID();
             
             packet.setTo(toBareJID);

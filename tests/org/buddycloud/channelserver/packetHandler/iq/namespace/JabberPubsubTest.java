@@ -7,9 +7,9 @@ import java.util.concurrent.TimeUnit;
 import junit.framework.Assert;
 
 import org.buddycloud.channelserver.channel.Conf;
-import org.buddycloud.channelserver.db.DataStore;
+import org.buddycloud.channelserver.db.jedis.JedisMongoDataStore;
+import org.buddycloud.channelserver.db.jedis.NodeSubscriptionImpl;
 import org.buddycloud.channelserver.packetHandler.iq.IQHandlerTest;
-import org.buddycloud.channelserver.pubsub.subscription.NodeSubscription;
 import org.buddycloud.channelserver.queue.InQueueConsumer;
 import org.dom4j.DocumentException;
 import org.junit.Before;
@@ -34,7 +34,7 @@ public class JabberPubsubTest {
     
     public void testSubscribeToLocalNode() throws IOException, DocumentException, InterruptedException {
         
-        DataStore dataStore = new DataStore(IQHandlerTest.readConf());
+        JedisMongoDataStore dataStore = new JedisMongoDataStore(IQHandlerTest.readConf());
         dataStore.createUserNodes("pamela@denmark.lit");
         dataStore.addLocalUser("francisco@denmark.lit");
         
@@ -53,7 +53,7 @@ public class JabberPubsubTest {
         Assert.assertNotNull(replyIQ);
         Assert.assertEquals(expectedReply, replyIQ.toXML());
         
-        NodeSubscription ns = dataStore.getUserSubscriptionOfNode(
+        NodeSubscriptionImpl ns = dataStore.getUserSubscriptionOfNode(
                 "francisco@denmark.lit", Conf.getPostChannelNodename("pamela@denmark.lit"));
         
         Assert.assertEquals("member", ns.getAffiliation());
@@ -70,7 +70,7 @@ public class JabberPubsubTest {
     
     public void testSubscribeToForeignNode() throws IOException, DocumentException, InterruptedException {
         
-        DataStore dataStore = new DataStore(IQHandlerTest.readConf());
+        JedisMongoDataStore dataStore = new JedisMongoDataStore(IQHandlerTest.readConf());
         dataStore.addLocalUser("francisco@denmark.lit");
         
         String request = IQHandlerTest.readStanzaAsString(
@@ -155,7 +155,7 @@ public class JabberPubsubTest {
     
     public void testSubscribeToForeignNodeHighfellow() throws IOException, DocumentException, InterruptedException {
         
-        DataStore dataStore = new DataStore(IQHandlerTest.readConf());
+        JedisMongoDataStore dataStore = new JedisMongoDataStore(IQHandlerTest.readConf());
         dataStore.addLocalUser("tuomas@xmpp.lobstermonster.org");
         
         String request = IQHandlerTest.readStanzaAsString(
@@ -223,7 +223,7 @@ public class JabberPubsubTest {
     
     public void testSubscribeToForeignNodeFailsNotOnWhiteList() throws IOException, DocumentException, InterruptedException {
         
-        DataStore dataStore = new DataStore(IQHandlerTest.readConf());
+        JedisMongoDataStore dataStore = new JedisMongoDataStore(IQHandlerTest.readConf());
         dataStore.addLocalUser("tuomas@xmpp.lobstermonster.org");
         
         String request = IQHandlerTest.readStanzaAsString(
@@ -291,7 +291,7 @@ public class JabberPubsubTest {
     
     public void testSubscribeToForeignNodeFailOnItems() throws IOException, DocumentException, InterruptedException {
         
-        DataStore dataStore = new DataStore(IQHandlerTest.readConf());
+        JedisMongoDataStore dataStore = new JedisMongoDataStore(IQHandlerTest.readConf());
         dataStore.addLocalUser("francisco@denmark.lit");
         
         String request = IQHandlerTest.readStanzaAsString(
@@ -330,7 +330,7 @@ public class JabberPubsubTest {
     
     public void testGetSubscriptoinsOfExistingNode() throws IOException, DocumentException, InterruptedException {
         
-        DataStore dataStore = new DataStore(IQHandlerTest.readConf());
+        JedisMongoDataStore dataStore = new JedisMongoDataStore(IQHandlerTest.readConf());
         dataStore.createUserNodes("francisco@denmark.lit");
         dataStore.addLocalUser("francisco@denmark.lit");
         
@@ -348,7 +348,7 @@ public class JabberPubsubTest {
     
     public void testGetSubscriptions() throws IOException, DocumentException, InterruptedException {
         
-        DataStore dataStore = new DataStore(IQHandlerTest.readConf());
+        JedisMongoDataStore dataStore = new JedisMongoDataStore(IQHandlerTest.readConf());
         String bareJID = "francisco@denmark.lit";
         dataStore.createUserNodes(bareJID);
         dataStore.addLocalUser(bareJID);
@@ -371,7 +371,7 @@ public class JabberPubsubTest {
     
     public void testPublishToLocalNode() throws IOException, DocumentException, InterruptedException {
         
-        DataStore dataStore = new DataStore(IQHandlerTest.readConf());
+        JedisMongoDataStore dataStore = new JedisMongoDataStore(IQHandlerTest.readConf());
         dataStore.createUserNodes("koski@buddycloud.com");
         dataStore.addLocalUser("koski@buddycloud.com");
         
@@ -408,7 +408,7 @@ public class JabberPubsubTest {
     
     public void testGetItemsEmptyNode() throws IOException, DocumentException, InterruptedException {
         
-        DataStore dataStore = new DataStore(IQHandlerTest.readConf());
+        JedisMongoDataStore dataStore = new JedisMongoDataStore(IQHandlerTest.readConf());
         String bareJID = "francisco@denmark.lit";
         dataStore.createUserNodes(bareJID);
         dataStore.addLocalUser(bareJID);
@@ -427,7 +427,7 @@ public class JabberPubsubTest {
     
     public void testGetItems() throws IOException, DocumentException, InterruptedException {
         
-        DataStore dataStore = new DataStore(IQHandlerTest.readConf());
+        JedisMongoDataStore dataStore = new JedisMongoDataStore(IQHandlerTest.readConf());
         String bareJID = "francisco@denmark.lit";
         dataStore.createUserNodes(bareJID);
         dataStore.addLocalUser(bareJID);
@@ -496,7 +496,7 @@ public class JabberPubsubTest {
     
     public void testGetItemsMax1() throws IOException, DocumentException, InterruptedException {
         
-        DataStore dataStore = new DataStore(IQHandlerTest.readConf());
+        JedisMongoDataStore dataStore = new JedisMongoDataStore(IQHandlerTest.readConf());
         String bareJID = "francisco@denmark.lit";
         dataStore.createUserNodes(bareJID);
         dataStore.addLocalUser(bareJID);
@@ -569,7 +569,7 @@ public class JabberPubsubTest {
     
     public void testGetItemsMax1Rsm() throws IOException, DocumentException, InterruptedException {
         
-        DataStore dataStore = new DataStore(IQHandlerTest.readConf());
+        JedisMongoDataStore dataStore = new JedisMongoDataStore(IQHandlerTest.readConf());
         String bareJID = "francisco@denmark.lit";
         dataStore.createUserNodes(bareJID);
         dataStore.addLocalUser(bareJID);
@@ -651,7 +651,7 @@ public class JabberPubsubTest {
     
     public void testReceiveSubscriptionrequestFromForeignNode() throws IOException, DocumentException, InterruptedException {
         
-        DataStore dataStore = new DataStore(IQHandlerTest.readConf());
+        JedisMongoDataStore dataStore = new JedisMongoDataStore(IQHandlerTest.readConf());
         dataStore.addLocalUser("tuomas@xmpp.lobstermonster.org");
         dataStore.createUserNodes("tuomas@xmpp.lobstermonster.org");
         
@@ -667,7 +667,7 @@ public class JabberPubsubTest {
         Assert.assertNotNull(replyIQ);
         Assert.assertEquals(expectedReply, replyIQ.toXML());
         
-        NodeSubscription ns = dataStore.getUserSubscriptionOfNode(
+        NodeSubscriptionImpl ns = dataStore.getUserSubscriptionOfNode(
                 "tuomas@buddycloud.org", Conf.getPostChannelNodename("tuomas@xmpp.lobstermonster.org"));
         Assert.assertEquals("channels.buddycloud.org", ns.getForeignChannelServer());
         Assert.assertEquals("member", ns.getAffiliation());
@@ -678,7 +678,7 @@ public class JabberPubsubTest {
     
     public void testUnsubscribeToLocalNode() throws IOException, DocumentException, InterruptedException {
         
-        DataStore dataStore = new DataStore(IQHandlerTest.readConf());
+        JedisMongoDataStore dataStore = new JedisMongoDataStore(IQHandlerTest.readConf());
         dataStore.createUserNodes("pamela@denmark.lit");
         dataStore.addLocalUser("francisco@denmark.lit");
         dataStore.subscribeUserToNode("francisco@denmark.lit", 
@@ -699,7 +699,7 @@ public class JabberPubsubTest {
         Assert.assertNotNull(replyIQ);
         Assert.assertEquals(expectedReply, replyIQ.toXML());
 
-        NodeSubscription ns = dataStore.getUserSubscriptionOfNode(
+        NodeSubscriptionImpl ns = dataStore.getUserSubscriptionOfNode(
                 "francisco@denmark.lit", Conf.getPostChannelNodename("pamela@denmark.lit"));
         
         Assert.assertEquals(null, ns.getAffiliation());
@@ -709,7 +709,7 @@ public class JabberPubsubTest {
     
     public void testUnsubscribeToLocalNodeComesFromForeignChannelServer() throws IOException, DocumentException, InterruptedException {
         
-        DataStore dataStore = new DataStore(IQHandlerTest.readConf());
+        JedisMongoDataStore dataStore = new JedisMongoDataStore(IQHandlerTest.readConf());
         dataStore.createUserNodes("tuomas@xmpp.lobstermonster.org");
         dataStore.subscribeUserToNode("tuomas@buddycloud.org", 
                                       Conf.getPostChannelNodename("tuomas@xmpp.lobstermonster.org"), 
@@ -717,7 +717,7 @@ public class JabberPubsubTest {
                                       "unconfigured", 
                                       "channels.buddycloud.org");
         
-        NodeSubscription ns = dataStore.getUserSubscriptionOfNode(
+        NodeSubscriptionImpl ns = dataStore.getUserSubscriptionOfNode(
                 "tuomas@buddycloud.org", Conf.getPostChannelNodename("tuomas@xmpp.lobstermonster.org"));
 
         Assert.assertEquals("member", ns.getAffiliation());
@@ -746,7 +746,7 @@ public class JabberPubsubTest {
     
     public void testUnsubscribeFromForeignNode() throws IOException, DocumentException, InterruptedException {
         
-        DataStore dataStore = new DataStore(IQHandlerTest.readConf());
+        JedisMongoDataStore dataStore = new JedisMongoDataStore(IQHandlerTest.readConf());
         dataStore.addLocalUser("tuomas@xmpp.lobstermonster.org");
         dataStore.subscribeUserToNode("tuomas@xmpp.lobstermonster.org", 
                 Conf.getPostChannelNodename("tuomas@buddycloud.org"), 
@@ -754,7 +754,7 @@ public class JabberPubsubTest {
                 "unconfigured", 
                 null);
         
-        NodeSubscription ns = dataStore.getUserSubscriptionOfNode(
+        NodeSubscriptionImpl ns = dataStore.getUserSubscriptionOfNode(
                 "tuomas@xmpp.lobstermonster.org", Conf.getPostChannelNodename("tuomas@buddycloud.org"));
 
         Assert.assertEquals("member", ns.getAffiliation());

@@ -6,8 +6,8 @@ import java.util.concurrent.BlockingQueue;
 import org.buddycloud.channelserver.db.DataStore;
 import org.buddycloud.channelserver.packetprocessor.PacketProcessor;
 import org.xmpp.packet.IQ;
-import org.xmpp.packet.Packet;
 import org.xmpp.packet.IQ.Type;
+import org.xmpp.packet.Packet;
 import org.xmpp.packet.PacketError;
 
 public class RegisterSet implements PacketProcessor<IQ> {

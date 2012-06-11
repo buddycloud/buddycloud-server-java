@@ -9,7 +9,7 @@ import java.util.concurrent.TimeUnit;
 
 import junit.framework.Assert;
 
-import org.buddycloud.channelserver.db.DataStore;
+import org.buddycloud.channelserver.db.jedis.JedisMongoDataStore;
 import org.buddycloud.channelserver.packetHandler.iq.IQHandlerTest;
 import org.buddycloud.channelserver.queue.InQueueConsumer;
 import org.dom4j.DocumentException;
@@ -53,7 +53,7 @@ public class JabberDiscoInfoTest {
         IQ request = IQHandlerTest.readStanzaAsIq("/iq/discoInfo/requestNode.stanza");
         String expectedReply = IQHandlerTest.readStanzaAsString("/iq/discoInfo/replyNode.stanza");
         
-        DataStore dataStore = new DataStore(IQHandlerTest.readConf());
+        JedisMongoDataStore dataStore = new JedisMongoDataStore(IQHandlerTest.readConf());
         
         String DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ss'Z'";
         SimpleDateFormat sdf = new SimpleDateFormat(DATE_FORMAT);
@@ -74,7 +74,7 @@ public class JabberDiscoInfoTest {
     @Test
     public void testDiscoInfoGetNodeMetaFromForeignNode() throws IOException, DocumentException, InterruptedException {
         
-        DataStore dataStore = new DataStore(IQHandlerTest.readConf());
+        JedisMongoDataStore dataStore = new JedisMongoDataStore(IQHandlerTest.readConf());
         dataStore.addLocalUser("francisco@denmark.lit");
         
         IQ request = IQHandlerTest.readStanzaAsIq("/iq/discoInfo/foreign/request.stanza");

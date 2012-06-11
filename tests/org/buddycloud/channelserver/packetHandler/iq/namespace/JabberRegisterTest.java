@@ -8,9 +8,9 @@ import java.util.concurrent.TimeUnit;
 import junit.framework.Assert;
 
 import org.buddycloud.channelserver.channel.Conf;
-import org.buddycloud.channelserver.db.DataStore;
+import org.buddycloud.channelserver.db.jedis.JedisMongoDataStore;
+import org.buddycloud.channelserver.db.jedis.NodeSubscriptionImpl;
 import org.buddycloud.channelserver.packetHandler.iq.IQHandlerTest;
-import org.buddycloud.channelserver.pubsub.subscription.NodeSubscription;
 import org.buddycloud.channelserver.queue.InQueueConsumer;
 import org.dom4j.DocumentException;
 import org.junit.Before;
@@ -39,7 +39,7 @@ public class JabberRegisterTest {
     @Test
     public void testRegister() throws IOException, DocumentException, InterruptedException {
         
-        DataStore dataStore = new DataStore(IQHandlerTest.readConf());
+        JedisMongoDataStore dataStore = new JedisMongoDataStore(IQHandlerTest.readConf());
         
         IQ request = IQHandlerTest.readStanzaAsIq("/iq/register/request.stanza");
         String expectedReply = IQHandlerTest.readStanzaAsString("/iq/register/reply.stanza");
@@ -51,13 +51,13 @@ public class JabberRegisterTest {
         Assert.assertNotNull(replyIQ);
         Assert.assertEquals(expectedReply, replyIQ.toXML());
         
-        Assert.assertTrue(jedis.sismember(DataStore.LOCAL_USERS, "channeluser@example.com"));
+        Assert.assertTrue(jedis.sismember(JedisMongoDataStore.LOCAL_USERS, "channeluser@example.com"));
         
         // Let's test that user has the channels he should
         Assert.assertEquals(Conf.getDefaultPostChannelConf("channeluser@example.com"), 
-                     jedis.hgetAll(DataStore.getNodeConfRedisKey(Conf.getPostChannelNodename("channeluser@example.com"))));
+                     jedis.hgetAll(JedisMongoDataStore.getNodeConfRedisKey(Conf.getPostChannelNodename("channeluser@example.com"))));
         
-        NodeSubscription ns = dataStore.getUserSubscriptionOfNode("channeluser@example.com", 
+        NodeSubscriptionImpl ns = dataStore.getUserSubscriptionOfNode("channeluser@example.com", 
                                                                   Conf.getPostChannelNodename("channeluser@example.com"));
 
         Assert.assertEquals("owner", ns.getAffiliation());
@@ -93,7 +93,7 @@ public class JabberRegisterTest {
         Assert.assertNotNull(replyIQ);
         Assert.assertEquals(expectedReply, replyIQ.toXML());
         
-        Assert.assertTrue(jedis.sismember(DataStore.LOCAL_USERS, "channeluser@example.com"));
+        Assert.assertTrue(jedis.sismember(JedisMongoDataStore.LOCAL_USERS, "channeluser@example.com"));
         
         inQueue.put(request);
         

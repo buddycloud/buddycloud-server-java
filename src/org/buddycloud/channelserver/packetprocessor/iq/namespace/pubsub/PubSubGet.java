@@ -1,11 +1,14 @@
 package org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub;
 
 import java.io.StringReader;
+import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
 
 import org.apache.log4j.Logger;
 import org.buddycloud.channelserver.db.DataStore;
+import org.buddycloud.channelserver.db.jedis.NodeEntryImpl;
+import org.buddycloud.channelserver.db.jedis.NodeSubscriptionImpl;
 import org.buddycloud.channelserver.packetprocessor.PacketProcessor;
 import org.buddycloud.channelserver.pubsub.entry.NodeEntry;
 import org.buddycloud.channelserver.pubsub.subscription.NodeSubscription;
@@ -20,8 +23,6 @@ import org.xmpp.packet.IQ.Type;
 import org.xmpp.packet.JID;
 import org.xmpp.packet.Packet;
 import org.xmpp.packet.PacketError;
-
-import com.mongodb.DBCursor;
 
 public class PubSubGet implements PacketProcessor<IQ> {
 
@@ -115,9 +116,9 @@ public class PubSubGet implements PacketProcessor<IQ> {
         if(node == null) {
             // let's get all subscriptions.
             
-            DBCursor cur = dataStore.getUserSubscriptionsOfNodes(actorJID.toBareJID());
+            Iterator<? extends NodeSubscription> cur = dataStore.getUserSubscriptionsOfNodes(actorJID.toBareJID());
             while(cur.hasNext()) {
-                NodeSubscription ns = (NodeSubscription) cur.next();
+                NodeSubscription ns = cur.next();
                 subscriptions.addElement("subscription")
                              .addAttribute("node", ns.getNode())
                              .addAttribute("subscription", ns.getSubscription())
@@ -126,7 +127,7 @@ public class PubSubGet implements PacketProcessor<IQ> {
             
         } else {
             // Let's get only one subscription.
-            NodeSubscription ns = dataStore.getUserSubscriptionOfNode(actorJID.toBareJID(), node);
+            NodeSubscriptionImpl ns = dataStore.getUserSubscriptionOfNode(actorJID.toBareJID(), node);
             if(ns.getSubscription() != null) {
             
                 subscriptions.addAttribute("node", node);
@@ -156,9 +157,10 @@ public class PubSubGet implements PacketProcessor<IQ> {
         if(node == null) {
             // let's get all subscriptions.
             
-            DBCursor cur = dataStore.getUserSubscriptionsOfNodes(actorJID.toBareJID());
+            Iterator<? extends NodeSubscription> cur = dataStore.getUserSubscriptionsOfNodes(
+                    actorJID.toBareJID());
             while(cur.hasNext()) {
-                NodeSubscription ns = (NodeSubscription) cur.next();
+                NodeSubscription ns = cur.next();
                 affiliations.addElement("affiliation")
                             .addAttribute("node", ns.getNode())
                             .addAttribute("affiliation", ns.getAffiliation())
@@ -167,7 +169,7 @@ public class PubSubGet implements PacketProcessor<IQ> {
             
         } else {
             // Let's get only one subscription.
-            NodeSubscription ns = dataStore.getUserSubscriptionOfNode(actorJID.toBareJID(), node);
+            NodeSubscriptionImpl ns = dataStore.getUserSubscriptionOfNode(actorJID.toBareJID(), node);
             if(ns.getSubscription() != null) {
             
                 affiliations.addAttribute("node", node);
@@ -266,7 +268,7 @@ public class PubSubGet implements PacketProcessor<IQ> {
             return;
         }
         
-        NodeSubscription nodeSubscription = dataStore.getUserSubscriptionOfNode(fetchersJID.toBareJID(), 
+        NodeSubscriptionImpl nodeSubscription = dataStore.getUserSubscriptionOfNode(fetchersJID.toBareJID(), 
                                                                                 node);
         String possibleExistingAffiliation  = nodeSubscription.getAffiliation();
         String possibleExistingSusbcription = nodeSubscription.getSubscription();
@@ -313,9 +315,9 @@ public class PubSubGet implements PacketProcessor<IQ> {
         String firstItem = null;
         String lastItem = null;
         
-        DBCursor cur = dataStore.getNodeEntries(node, maxItemsToReturn, afterItemId);
+        Iterator<? extends NodeEntry> cur = dataStore.getNodeEntries(node, maxItemsToReturn, afterItemId);
         while(cur.hasNext()) {
-            NodeEntry ne = (NodeEntry) cur.next();
+            NodeEntryImpl ne = (NodeEntryImpl) cur.next();
             Element item = items.addElement("item");
             item.addAttribute("id", ne.getId());
             

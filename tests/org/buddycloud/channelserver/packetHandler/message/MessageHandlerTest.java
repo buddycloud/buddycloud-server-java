@@ -9,7 +9,7 @@ import java.util.concurrent.TimeUnit;
 import junit.framework.Assert;
 
 import org.apache.commons.io.IOUtils;
-import org.buddycloud.channelserver.db.DataStore;
+import org.buddycloud.channelserver.db.jedis.JedisMongoDataStore;
 import org.buddycloud.channelserver.packetHandler.iq.IQHandlerTest;
 import org.buddycloud.channelserver.queue.InQueueConsumer;
 import org.custommonkey.xmlunit.Diff;
@@ -60,7 +60,7 @@ public class MessageHandlerTest {
         Message request = readStanzaAsMessage("/message/publish/local/request.stanza");
         String expectedReply = IQHandlerTest.readStanzaAsString("/message/publish/local/reply.stanza");
   
-        DataStore dataStore = new DataStore(IQHandlerTest.readConf());
+        JedisMongoDataStore dataStore = new JedisMongoDataStore(IQHandlerTest.readConf());
         dataStore.addLocalUser("tuomas@xmpp.lobstermonster.org");
         dataStore.createUserNodes("tuomas@xmpp.lobstermonster.org");
         
@@ -80,7 +80,7 @@ public class MessageHandlerTest {
         Message request = readStanzaAsMessage("/message/publish/foreign/request.stanza");
         String expectedReply = IQHandlerTest.readStanzaAsString("/message/publish/foreign/itemsRequest.stanza");
   
-        DataStore dataStore = new DataStore(IQHandlerTest.readConf());
+        JedisMongoDataStore dataStore = new JedisMongoDataStore(IQHandlerTest.readConf());
         dataStore.addLocalUser("tuomas@xmpp.lobstermonster.org");
         dataStore.createUserNodes("tuomas@xmpp.lobstermonster.org");
         
@@ -98,7 +98,7 @@ public class MessageHandlerTest {
         Message request = readStanzaAsMessage("/message/publish/event/request.stanza");
         String expectedReply = IQHandlerTest.readStanzaAsString("/message/publish/event/reply.stanza");
   
-        DataStore dataStore = new DataStore(IQHandlerTest.readConf());
+        JedisMongoDataStore dataStore = new JedisMongoDataStore(IQHandlerTest.readConf());
         dataStore.addLocalUser("tuomas@xmpp.lobstermonster.org");
         dataStore.createUserNodes("tuomas@xmpp.lobstermonster.org");
         dataStore.subscribeUserToNode("tuomas@xmpp.lobstermonster.org", 

@@ -178,7 +178,7 @@ public class JedisMongoDataStore implements DataStore {
         DBObject query = new BasicDBObject();
         query.put("bareJID", bareJID);
         
-        return (Iterator<? extends NodeSubscription>) this.subscriptions.find(query);
+        return (Iterator<? extends NodeSubscription>) this.subscriptions.find(query).toArray();
     }
     
     public NodeSubscriptionImpl getUserSubscriptionOfNode(String bareJID, String node) {
@@ -200,7 +200,7 @@ public class JedisMongoDataStore implements DataStore {
         DBObject query = new BasicDBObject();
         query.put("node", node);
         
-        return (Iterator<? extends NodeSubscription>) this.subscriptions.find(query);
+        return (Iterator<? extends NodeSubscription>) this.subscriptions.find(query).toArray();
     }
     
     public HashMap<String, String> getNodeConf(String nodename) {
@@ -234,7 +234,7 @@ public class JedisMongoDataStore implements DataStore {
         DBObject sort = new BasicDBObject();
         sort.put("_id", -1);
         
-        return (Iterator<? extends NodeEntry>) this.entries.find(query).sort(sort).limit(limit);
+        return (Iterator<? extends NodeEntry>) this.entries.find(query).sort(sort).limit(limit).toArray();
     }
     
     public int getNodeEntriesCount(String node) {

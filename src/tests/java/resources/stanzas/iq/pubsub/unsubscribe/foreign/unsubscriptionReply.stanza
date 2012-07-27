@@ -1,0 +1,4 @@
+<iq id="items1"
+    type="result"
+    to="comptest.xmpp.lobstermonster.org"
+    from="channels.buddycloud.org"/>

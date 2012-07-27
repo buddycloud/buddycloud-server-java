@@ -1,0 +1,6 @@
+<iq type="get"
+    from="francisco@denmark.lit/orchard"
+    to="channels.denmark.lit"
+    id="info1">
+   <query xmlns="http://jabber.org/protocol/disco#info" node="/user/pamela@anderson.net/posts"/>
+</iq>

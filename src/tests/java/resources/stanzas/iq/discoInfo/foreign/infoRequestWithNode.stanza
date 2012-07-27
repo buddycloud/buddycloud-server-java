@@ -1,0 +1,6 @@
+<iq type="get"
+    from="willbe@overriden"
+    to="channels.anderson.net"
+    id="items1"><query xmlns="http://jabber.org/protocol/disco#info" node="/user/pamela@anderson.net/posts">
+   <actor xmlns="http://buddycloud.org/v1">francisco@denmark.lit</actor></query>
+</iq>

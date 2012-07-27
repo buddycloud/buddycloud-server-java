@@ -1,0 +1,6 @@
+<iq type="error" id="register-1" from="channelserver.example.com" to="channeluser@somewhereelse.com/ChannelCompatibleClient">
+   <query xmlns="jabber:iq:register"></query>
+   <error code="405" type="cancel">
+      <not-allowed xmlns="urn:ietf:params:xml:ns:xmpp-stanzas"/>
+   </error>
+</iq>

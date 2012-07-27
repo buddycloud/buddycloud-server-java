@@ -1,0 +1,5 @@
+<message to="francisco@denmark.lit/barracks" from="channels.denmark.lit" type="headline">
+   <event xmlns="http://jabber.org/protocol/pubsub#event">
+      <subscription node="/user/pamela@denmark.lit/posts" jid="francisco@denmark.lit" subscription="unconfigured"/>
+   </event>
+</message>

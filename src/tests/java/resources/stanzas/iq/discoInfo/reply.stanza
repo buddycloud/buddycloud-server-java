@@ -1,0 +1,8 @@
+<iq type="result" id="info1" from="channels.shakespeare.lit" to="romeo@montague.net/orchard">
+   <query xmlns="http://jabber.org/protocol/disco#info">
+      <identity category="pubsub" type="channels"/>
+      <identity category="pubsub" type="inbox"/>
+      <feature var="jabber:iq:register"/>
+      <feature var="http://jabber.org/protocol/disco#info"/>
+   </query>
+</iq>

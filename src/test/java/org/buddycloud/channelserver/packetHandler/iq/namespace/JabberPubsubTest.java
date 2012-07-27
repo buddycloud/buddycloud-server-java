@@ -18,7 +18,7 @@ import org.xmpp.packet.IQ;
 import org.xmpp.packet.Message;
 import org.xmpp.packet.Packet;
 
-public class JabberPubsubTest extends TestCase
+public class JabberPubsubTest
 {
     private LinkedBlockingQueue<Packet> outQueue;
     private LinkedBlockingQueue<Packet> inQueue;

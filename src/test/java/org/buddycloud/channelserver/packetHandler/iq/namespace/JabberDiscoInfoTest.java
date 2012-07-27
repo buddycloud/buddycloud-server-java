@@ -19,7 +19,7 @@ import org.junit.Test;
 import org.xmpp.packet.IQ;
 import org.xmpp.packet.Packet;
 
-public class JabberDiscoInfoTest extends TestCase
+public class JabberDiscoInfoTest
 {
     private LinkedBlockingQueue<Packet> outQueue;
     private LinkedBlockingQueue<Packet> inQueue;

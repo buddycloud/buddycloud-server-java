@@ -1,9 +1,0 @@
-<iq type="set"
-    id="items1"
-    to="channels.buddycloud.org"
-    from="willbe@overriden">
-   <pubsub xmlns="http://jabber.org/protocol/pubsub">
-      <unsubscribe node="/user/tuomas@buddycloud.org/posts" jid="tuomas@xmpp.lobstermonster.org"/>
-      <actor xmlns="http://buddycloud.org/v1">tuomas@xmpp.lobstermonster.org</actor>
-   </pubsub>
-</iq>

@@ -1,6 +1,0 @@
-<iq type="error" id="register-1" from="channelserver.example.com" to="channeluser@example.com/ChannelCompatibleClient">
-   <query xmlns="jabber:iq:register"></query>
-   <error code="409" type="cancel">
-      <conflict xmlns="urn:ietf:params:xml:ns:xmpp-stanzas"/>
-   </error>
-</iq>

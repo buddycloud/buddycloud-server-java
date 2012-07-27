@@ -1,6 +1,0 @@
-<iq type="error" id="673-0" from="channelserver" to="tuomas@xmpp.lobstermonster.org/tkoski-laptop">
-      <error type="cancel">
-         <not-allowed xmlns="urn:ietf:params:xml:ns:xmpp-stanzas"></not-allowed>
-         <closed-node xmlns="http://jabber.org/protocol/pubsub#errors"></closed-node>
-      </error>
-</iq>

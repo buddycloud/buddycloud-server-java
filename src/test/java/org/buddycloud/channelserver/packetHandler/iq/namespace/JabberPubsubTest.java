@@ -5,6 +5,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
 import junit.framework.Assert;
+import junit.framework.TestCase;
 
 import org.buddycloud.channelserver.channel.Conf;
 import org.buddycloud.channelserver.db.jedis.JedisMongoDataStore;
@@ -17,8 +18,8 @@ import org.xmpp.packet.IQ;
 import org.xmpp.packet.Message;
 import org.xmpp.packet.Packet;
 
-public class JabberPubsubTest {
-
+public class JabberPubsubTest extends TestCase
+{
     private LinkedBlockingQueue<Packet> outQueue;
     private LinkedBlockingQueue<Packet> inQueue;
 

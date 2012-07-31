@@ -33,6 +33,7 @@ public class JabberPubsubTest
         IQHandlerTest.getJedis(); // don't remove, it's here to clean the db
     }
     
+    @Test
     public void testSubscribeToLocalNode() throws IOException, DocumentException, InterruptedException {
         
         JedisMongoDataStore dataStore = new JedisMongoDataStore(IQHandlerTest.readConf());
@@ -69,6 +70,7 @@ public class JabberPubsubTest
         
     }
     
+    @Test
     public void testSubscribeToForeignNode() throws IOException, DocumentException, InterruptedException {
         
         JedisMongoDataStore dataStore = new JedisMongoDataStore(IQHandlerTest.readConf());
@@ -154,6 +156,7 @@ public class JabberPubsubTest
         
     }
     
+    @Test
     public void testSubscribeToForeignNodeHighfellow() throws IOException, DocumentException, InterruptedException {
         
         JedisMongoDataStore dataStore = new JedisMongoDataStore(IQHandlerTest.readConf());
@@ -222,6 +225,7 @@ public class JabberPubsubTest
         
     }
     
+    @Test
     public void testSubscribeToForeignNodeFailsNotOnWhiteList() throws IOException, DocumentException, InterruptedException {
         
         JedisMongoDataStore dataStore = new JedisMongoDataStore(IQHandlerTest.readConf());
@@ -290,6 +294,7 @@ public class JabberPubsubTest
         
     }
     
+    @Test
     public void testSubscribeToForeignNodeFailOnItems() throws IOException, DocumentException, InterruptedException {
         
         JedisMongoDataStore dataStore = new JedisMongoDataStore(IQHandlerTest.readConf());
@@ -329,6 +334,7 @@ public class JabberPubsubTest
         
     }
     
+    @Test
     public void testGetSubscriptoinsOfExistingNode() throws IOException, DocumentException, InterruptedException {
         
         JedisMongoDataStore dataStore = new JedisMongoDataStore(IQHandlerTest.readConf());
@@ -347,6 +353,7 @@ public class JabberPubsubTest
         Assert.assertEquals(expectedReply, replyIQ.toXML());
     }
     
+    @Test
     public void testGetSubscriptions() throws IOException, DocumentException, InterruptedException {
         
         JedisMongoDataStore dataStore = new JedisMongoDataStore(IQHandlerTest.readConf());
@@ -370,6 +377,7 @@ public class JabberPubsubTest
         Assert.assertEquals(expectedReply, replyIQ.toXML());
     }
     
+    @Test
     public void testPublishToLocalNode() throws IOException, DocumentException, InterruptedException {
         
         JedisMongoDataStore dataStore = new JedisMongoDataStore(IQHandlerTest.readConf());
@@ -407,6 +415,7 @@ public class JabberPubsubTest
         
     }
     
+    @Test
     public void testGetItemsEmptyNode() throws IOException, DocumentException, InterruptedException {
         
         JedisMongoDataStore dataStore = new JedisMongoDataStore(IQHandlerTest.readConf());
@@ -426,6 +435,7 @@ public class JabberPubsubTest
         Assert.assertEquals(expectedReply, replyIQ.toXML());
     }
     
+    @Test
     public void testGetItems() throws IOException, DocumentException, InterruptedException {
         
         JedisMongoDataStore dataStore = new JedisMongoDataStore(IQHandlerTest.readConf());
@@ -495,6 +505,7 @@ public class JabberPubsubTest
         Assert.assertEquals(expectedReply, replyIQ.toXML());
     }
     
+    @Test
     public void testGetItemsMax1() throws IOException, DocumentException, InterruptedException {
         
         JedisMongoDataStore dataStore = new JedisMongoDataStore(IQHandlerTest.readConf());
@@ -568,6 +579,7 @@ public class JabberPubsubTest
         Assert.assertEquals(expectedReply, replyIQ.toXML());
     }
     
+    @Test
     public void testGetItemsMax1Rsm() throws IOException, DocumentException, InterruptedException {
         
         JedisMongoDataStore dataStore = new JedisMongoDataStore(IQHandlerTest.readConf());
@@ -650,6 +662,7 @@ public class JabberPubsubTest
         Assert.assertEquals(expectedReplyRsm, replyIQ.toXML());
     }
     
+    @Test
     public void testReceiveSubscriptionrequestFromForeignNode() throws IOException, DocumentException, InterruptedException {
         
         JedisMongoDataStore dataStore = new JedisMongoDataStore(IQHandlerTest.readConf());
@@ -677,6 +690,7 @@ public class JabberPubsubTest
         Assert.assertEquals(Conf.getPostChannelNodename("tuomas@xmpp.lobstermonster.org"), ns.getNode());
     }
     
+    @Test
     public void testUnsubscribeToLocalNode() throws IOException, DocumentException, InterruptedException {
         
         JedisMongoDataStore dataStore = new JedisMongoDataStore(IQHandlerTest.readConf());
@@ -708,6 +722,7 @@ public class JabberPubsubTest
         
     }
     
+    @Test
     public void testUnsubscribeToLocalNodeComesFromForeignChannelServer() throws IOException, DocumentException, InterruptedException {
         
         JedisMongoDataStore dataStore = new JedisMongoDataStore(IQHandlerTest.readConf());
@@ -744,7 +759,7 @@ public class JabberPubsubTest
         
     }
     
-    
+    @Test
     public void testUnsubscribeFromForeignNode() throws IOException, DocumentException, InterruptedException {
         
         JedisMongoDataStore dataStore = new JedisMongoDataStore(IQHandlerTest.readConf());
@@ -828,5 +843,4 @@ public class JabberPubsubTest
         Assert.assertEquals(null, ns.getAffiliation());
         Assert.assertEquals(null, ns.getSubscription());
     }
-    
 }

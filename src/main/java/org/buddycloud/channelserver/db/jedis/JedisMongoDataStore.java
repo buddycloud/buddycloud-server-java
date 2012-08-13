@@ -6,11 +6,15 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Properties;
 
+
 import org.bson.types.ObjectId;
 import org.buddycloud.channelserver.channel.Conf;
 import org.buddycloud.channelserver.db.DataStore;
+import org.buddycloud.channelserver.db.jedis.NodeSubscriptionImpl;
 import org.buddycloud.channelserver.pubsub.affiliation.Affiliations;
 import org.buddycloud.channelserver.pubsub.entry.NodeEntry;
+import org.buddycloud.channelserver.pubsub.subscription.NodeSubscription;
+import org.buddycloud.channelserver.pubsub.subscription.Subscriptions;
 import org.buddycloud.channelserver.pubsub.subscription.NodeSubscription;
 
 import redis.clients.jedis.Jedis;
@@ -150,7 +154,7 @@ public class JedisMongoDataStore implements DataStore {
         this.subscribeUserToNode(owner, 
                                  nodename, 
                                  Affiliations.owner.toString(), 
-                                 org.buddycloud.channelserver.pubsub.subscription.Subscriptions.unconfigured.toString(),
+                                 Subscriptions.unconfigured.toString(),
                                  null);
         
         // TODO, check this. I just added it now. We'll need to check the creation status one day ...

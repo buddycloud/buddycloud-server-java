@@ -19,6 +19,7 @@ public class Conf {
     public static final String DEFUALT_AFFILIATION = "pubsub#default_affiliation";
     public static final String NUM_SUBSCRIBERS     = "pubsub#num_subscribers";
     public static final String NOTIFY_CONFIG       = "pubsub#notify_config";
+    public static final String CHANNEL_TYPE        = "buddycloud#channel_type";
     
     // Most of these are copied from here
     // https://github.com/buddycloud/buddycloud-server/blob/master/src/local/operations.coffee#L14
@@ -47,6 +48,7 @@ public class Conf {
         conf.put(DEFUALT_AFFILIATION, org.buddycloud.channelserver.pubsub.affiliation.Affiliations.member.toString());
         conf.put(NUM_SUBSCRIBERS, "1");
         conf.put(NOTIFY_CONFIG, "1");
+        conf.put(CHANNEL_TYPE, "personal");
         
         return conf;
     }

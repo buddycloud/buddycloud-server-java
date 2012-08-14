@@ -104,7 +104,7 @@ public class IQHandlerTest extends TestCase {
         return new IQ(entry);
     }
     
-    public void testFeatureNotImplementedSuccess() throws IOException, InterruptedException, DocumentException {
+    public void featureNotImplementedSuccess() throws IOException, InterruptedException, DocumentException {
         
         IQ request = readStanzaAsIq("/iq/featureNotImplemented/request.stanza");
         String expectedReply = readStanzaAsString("/iq/featureNotImplemented/reply.stanza");

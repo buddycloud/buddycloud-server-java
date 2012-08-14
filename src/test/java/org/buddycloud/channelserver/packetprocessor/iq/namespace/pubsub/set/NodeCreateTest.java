@@ -2,6 +2,8 @@ package org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.set;
 
 import static org.junit.Assert.fail;
 import org.dom4j.Element;
+import org.dom4j.tree.BaseElement;
+
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
@@ -13,9 +15,8 @@ import org.junit.Before;
 import org.junit.Test;
 import org.xmpp.packet.Packet;
 import org.xmpp.packet.IQ;
-import org.buddycloud.channelserver.packetHandler.iq.IQHandlerTest;
 
-public class NodeCreateTest extends IQHandlerTest
+public class NodeCreateTest
 {
 	private IQ         stanza;
 	private DataStore  dataStore;
@@ -28,23 +29,20 @@ public class NodeCreateTest extends IQHandlerTest
 		dataStore  = new Mock();
 		queue      = new LinkedBlockingQueue<Packet>();
 		nodeCreate = new NodeCreate(queue, dataStore);
-		stanza     = readStanzaAsIq("/iq/pubsub/channel/create/request.stanza");
 	}
 
 	@Test
 	public void testPassingCreateAsElementNameReturnsTrue()
 	{
-		// @todo This is ugly, there's surely a better way?
-		Element element = stanza.getChildElement();
-		IQ iq = new IQ(element);
+		Element element = new BaseElement("create");
 		
-		assertTrue(nodeCreate.accept(iq.getChildElement()));
+		assertTrue(nodeCreate.accept(element));
 	}
 	
 	@Test
 	public void testPassingNotCreateAsElementNameReturnsFalse()
 	{
-		Element element = stanza.getChildElement();
+		Element element = new BaseElement("not-create");
 		assertFalse(nodeCreate.accept(element));
 	}
 }

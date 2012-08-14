@@ -1,0 +1,6 @@
+<iq id="items1" type="error" to="comptest.xmpp.lobstermonster.org" from="buddycloud.highfellow.org">
+      <error type='cancel'>
+         <not-allowed xmlns='urn:ietf:params:xml:ns:xmpp-stanzas'/>
+         <closed-node xmlns='http://jabber.org/protocol/pubsub#errors'/>
+      </error>
+</iq>

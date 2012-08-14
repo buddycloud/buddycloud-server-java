@@ -1,0 +1,11 @@
+<iq id="items1"
+    type="result"
+    to="comptest.xmpp.lobstermonster.org"
+    from="buddycloud.org">
+   <query xmlns="http://jabber.org/protocol/disco#items">
+      <item jid="channels.buddycloud.org"/>
+      <item jid="anon.buddycloud.org"/>
+      <item jid="search.buddycloud.org"/>
+      <item jid="directory.buddycloud.org"/>
+   </query>
+</iq>

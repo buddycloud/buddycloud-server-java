@@ -1,0 +1,8 @@
+<iq type="error"
+    id="sub1"
+    from="channels.denmark.lit"
+    to="francisco@denmark.lit/barracks">
+   <error code="404" type="cancel">
+      <item-not-found xmlns="urn:ietf:params:xml:ns:xmpp-stanzas"/>
+   </error>
+</iq>

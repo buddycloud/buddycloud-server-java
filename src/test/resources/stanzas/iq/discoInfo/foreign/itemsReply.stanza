@@ -1,0 +1,9 @@
+<iq type="result"
+    id="items1"
+    to="channels.denmark.lit"
+    from="anderson.net">
+   <query xmlns='http://jabber.org/protocol/disco#items'>
+      <item jid='people.anderson.net' name='Directory of Characters'/>
+      <item jid='channels.anderson.net' name='Le awesome buddycloud channel server'/>
+   </query>
+</iq>

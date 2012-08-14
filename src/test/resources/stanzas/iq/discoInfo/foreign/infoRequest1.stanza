@@ -1,0 +1,6 @@
+<iq type="get"
+    id="items1"
+    from="willbe@overriden"
+    to="people.anderson.net">
+   <query xmlns="http://jabber.org/protocol/disco#info"/>
+</iq>

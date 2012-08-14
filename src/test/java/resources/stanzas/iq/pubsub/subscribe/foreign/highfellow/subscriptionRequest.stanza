@@ -1,6 +1,0 @@
-<iq type="set" id="items1" to="buddycloud.highfellow.org" from="willbe@overriden">
-   <pubsub xmlns="http://jabber.org/protocol/pubsub">
-      <subscribe node="/user/test@highfellow.org/posts" jid="tuomas@xmpp.lobstermonster.org"/>
-      <actor xmlns="http://buddycloud.org/v1">tuomas@xmpp.lobstermonster.org</actor>
-   </pubsub>
-</iq>

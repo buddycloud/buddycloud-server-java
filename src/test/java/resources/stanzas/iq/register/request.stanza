@@ -1,3 +1,0 @@
-<iq id="register-1" from="channeluser@example.com/ChannelCompatibleClient" to="channelserver.example.com" type="set">
-  <query xmlns="jabber:iq:register"/>
-</iq>

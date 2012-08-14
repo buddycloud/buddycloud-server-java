@@ -1,8 +1,0 @@
-<iq type="set" 
-    id="673-0" 
-    to="channelserver" 
-    from="tuomas@xmpp.lobstermonster.org/tkoski-laptop">
-   <pubsub xmlns="http://jabber.org/protocol/pubsub">
-      <subscribe node="/user/test@highfellow.org/posts" jid="tuomas@xmpp.lobstermonster.org"/>
-   </pubsub>
-</iq>

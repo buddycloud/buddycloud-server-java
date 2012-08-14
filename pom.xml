@@ -97,9 +97,6 @@
                         <skipTests>false</skipTests>
                         <testFailureIgnore>true</testFailureIgnore>
                         <forkMode>once</forkMode>
-                        <systemPropertyVariables>
-                            <log4j.configuration>file:${project.basedir}/src/test/java/resources/log4j.properties</log4j.configuration>
-                        </systemPropertyVariables>
                     </configuration>
                 </plugin>
                 <plugin>

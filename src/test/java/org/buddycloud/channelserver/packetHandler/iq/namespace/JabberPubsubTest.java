@@ -1,7 +1,7 @@
 package org.buddycloud.channelserver.packetHandler.iq.namespace;
 
 import java.io.IOException;
-import java.java.org.buddycloud.channelserver.packetHandler.iq.IQHandlerTest;
+import org.buddycloud.channelserver.packetHandler.iq.IQHandlerTest;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 

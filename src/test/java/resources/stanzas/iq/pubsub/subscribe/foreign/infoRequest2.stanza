@@ -1,6 +1,0 @@
-<iq type="get"
-    id="items1"
-    from="willbe@overriden"
-    to="channels.shakespeare.lit">
-   <query xmlns="http://jabber.org/protocol/disco#info"/>
-</iq>

@@ -1,8 +1,0 @@
-<iq type="result"
-    id="sub1"
-    from="channels.denmark.lit"
-    to="francisco@denmark.lit/barracks">
-   <pubsub xmlns="http://jabber.org/protocol/pubsub">
-      <subscription node="/users/henry@shakespeare.lit/posts" jid="francisco@denmark.lit" subscription="unconfigured"/>
-   </pubsub>
-</iq>

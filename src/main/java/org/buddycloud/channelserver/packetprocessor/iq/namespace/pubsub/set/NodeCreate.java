@@ -29,8 +29,8 @@ public class NodeCreate implements PubSubElementProcessor
     }
 
 	@Override
-	public boolean accept(Element elm) {
-		// TODO Auto-generated method stub
-		return false;
+	public boolean accept(Element elm)
+	{
+		return elm.getName().equals("create");
 	}
 }

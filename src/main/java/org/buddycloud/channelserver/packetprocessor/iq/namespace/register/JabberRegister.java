@@ -4,7 +4,7 @@ import java.util.Properties;
 import java.util.concurrent.BlockingQueue;
 
 
-import org.buddycloud.channelserver.PacketProcessor;
+import org.buddycloud.channelserver.packetprocessor.PacketProcessor;
 import org.buddycloud.channelserver.db.DataStore;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.AbstractNamespace;
 import org.xmpp.packet.IQ;

@@ -1,15 +1,15 @@
 package org.buddycloud.channelserver.pubsub.subscription;
 
+import org.xmpp.packet.JID;
+
 public interface NodeSubscription {
 
-    public String getAffiliation();
+    Subscriptions getSubscription();
     
-    public String getSubscription();
+    JID getUser();
     
-    public String getBareJID();
+    String getNodeID();
     
-    public String getNode();
-    
-    public String getForeignChannelServer();
+    String getForeignChannelServer();
     
 }

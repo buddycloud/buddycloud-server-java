@@ -12,18 +12,21 @@ import org.buddycloud.channelserver.db.jedis.NodeSubscriptionImpl;
 
 
 public interface DataStore {
+	
+	
+	
 
     public boolean isLocalNode(String nodename);
     
-    public Long addLocalUser(String bareJID);
+    public void addLocalUser(String bareJID);
     
     public boolean isLocalUser(String bareJID);
     
-    public String addNodeConf(String nodename, HashMap<String, String> conf);
+    public void addNodeConf(String nodename, HashMap<String, String> conf);
     
-    public String createUserNodes(String owner);
+    public void createUserNodes(String owner);
     
-    public String createNode(String owner, String nodename, 
+    public void createNode(String owner, String nodename, 
             HashMap<String, String> conf);
     
     public boolean subscribeUserToNode(String bareJID, String nodename, 

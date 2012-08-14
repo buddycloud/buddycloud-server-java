@@ -21,6 +21,7 @@ import org.xmpp.packet.JID;
 import org.xmpp.packet.Packet;
 import org.xmpp.packet.IQ;
 import org.xmpp.packet.PacketError;
+import org.xmpp.packet.PacketError.Condition;
 
 public class NodeCreateTest extends IQHandlerTest
 {
@@ -67,7 +68,6 @@ public class NodeCreateTest extends IQHandlerTest
 
 		assertNotNull(error);
 		assertEquals(PacketError.Type.modify, error.getType());
-		assertEquals(PacketError.Condition.bad_request, error.getCondition());
-
+		assertEquals("nodeid-required", error.getApplicationConditionName());
 	}
 }

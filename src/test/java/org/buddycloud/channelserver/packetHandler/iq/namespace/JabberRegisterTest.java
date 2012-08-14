@@ -18,7 +18,7 @@ import org.xmpp.packet.IQ;
 import org.xmpp.packet.Packet;
 
 import redis.clients.jedis.Jedis;
-import test.java.java.org.buddycloud.channelserver.packetHandler.iq.IQHandlerTest;
+import org.buddycloud.channelserver.packetHandler.iq.IQHandlerTest;
 
 public class JabberRegisterTest {
 

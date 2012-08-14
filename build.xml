@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+<project name="Buddycloud java server" default="server-start" basedir=".">
+	<property name="jar" location="target/buddycloud-server.jar"/>
+    <target name="server-stop">
+    	<exec executable="killall">
+    	    <arg value="buddycloud-server" />
+    	</exec>
+	</target>
+    <target name="server-start" depends="server-stop">
+        <exec executable="java">
+        	<arg value="jar ${jar}" />
+    	</exec>
+    </target>
+</project>

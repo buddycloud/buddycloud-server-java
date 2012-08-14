@@ -1,4 +1,4 @@
-package test.java.org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.set;
+package org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.set;
 
 import static org.junit.Assert.fail;
 

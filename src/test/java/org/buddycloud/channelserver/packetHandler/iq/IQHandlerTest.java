@@ -27,7 +27,7 @@ import com.mongodb.MongoException;
 
 public class IQHandlerTest extends TestCase {
 
-    public final static String STANZA_PATH = "src/test/java/resources/stanzas";
+    public final static String STANZA_PATH = "src/test/resources/stanzas";
     
     public static void dropMongodb() {
         Properties conf = readConf();
@@ -74,7 +74,7 @@ public class IQHandlerTest extends TestCase {
     public static Properties readConf() {
         Properties conf = new Properties();
         try {
-            conf.load(new FileInputStream("src/test/java/resources/configuration.properties"));
+            conf.load(new FileInputStream("src/test/resources/configuration.properties"));
         } catch (IOException e) {
             System.out.println(e.getMessage());
             System.exit(1);

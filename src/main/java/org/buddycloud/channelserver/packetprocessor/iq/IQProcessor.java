@@ -32,17 +32,21 @@ public class IQProcessor implements PacketProcessor<IQ> {
 		this.outQueue  = outQueue;
 		this.dataStore = dataStore;
 		
+		JabberPubsub ps = new JabberPubsub(outQueue, conf, dataStore);
+		
         processorsPerNamespace.put(JabberDiscoInfo.NAMESPACE_URI,
                 new JabberDiscoInfo(outQueue, conf, dataStore));
         processorsPerNamespace.put(JabberRegister.NAMESPACE_URI, 
                 new JabberRegister(outQueue, conf, dataStore));
-        processorsPerNamespace.put(JabberPubsub.NAMESPACE_URI, 
-                new JabberPubsub(outQueue, conf, dataStore));
+        processorsPerNamespace.put(JabberPubsub.NAMESPACE_URI, ps);
+        processorsPerNamespace.put(JabberPubsub.NS_PUBSUB_OWNER, ps);
 	}
 	
     @Override
     public void process(IQ packet) throws Exception {
         
+        LOGGER.debug("Finding IQ processor for namespace " + packet.getChildElement().getNamespaceURI());
+
         PacketProcessor<IQ> namespaceProcessor = processorsPerNamespace.get(
                 packet.getChildElement().getNamespaceURI());
         
@@ -54,6 +58,8 @@ public class IQProcessor implements PacketProcessor<IQ> {
             return;
 
         }
+        
+        LOGGER.debug("Couldn't find processor for namespace " + packet.getChildElement().getNamespaceURI());
 
         if (packet.getType() == IQ.Type.set || packet.getType() == IQ.Type.get) {
 

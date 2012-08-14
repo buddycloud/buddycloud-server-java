@@ -17,6 +17,7 @@ public class JabberPubsub extends AbstractNamespace {
 	public static final String NS_XMPP_STANZAS = "urn:ietf:params:xml:ns:xmpp-stanzas";
     public static final String NS_PUBSUB_ERROR = "http://jabber.org/protocol/pubsub#errors";
     public static final String NS_PUBSUB_EVENT = "http://jabber.org/protocol/pubsub#event";
+    public static final String NS_PUBSUB_OWNER = "http://jabber.org/protocol/pubsub#owner";
 
     private final PubSubGet getProcessor;
     private final PubSubSet setProcessor;

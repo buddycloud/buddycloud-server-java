@@ -29,7 +29,7 @@ public class SubscriptionsGet implements PubSubElementProcessor {
         
         IQ result = IQ.createResultIQ(reqIQ);
         
-        Element pubsub = result.setChildElement(PubSubGet.ELEMENT_NAME, JabberPubsub.NAMESPACE_URI);
+        Element pubsub = result.setChildElement(PubSubGet.ELEMENT_NAME, elm.getNamespaceURI());
         Element subscriptions = pubsub.addElement("subscriptions");
         
         String node = elm.attributeValue("node");
@@ -69,7 +69,7 @@ public class SubscriptionsGet implements PubSubElementProcessor {
 
     @Override
     public boolean accept(Element elm) {
-        return elm.getName().equals("subscribe");
+        return elm.getName().equals("subscriptions");
     }
 
 }

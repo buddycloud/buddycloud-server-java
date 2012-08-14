@@ -2,9 +2,9 @@ package org.buddycloud.channelserver.queue.statemachine;
 
 import java.util.Map;
 
+import org.buddycloud.channelserver.db.DataStore;
 
 import org.apache.log4j.Logger;
-import org.buddycloud.channelserver.db.DataStore;
 import org.xmpp.packet.IQ;
 
 public class StateMachineBuilder {

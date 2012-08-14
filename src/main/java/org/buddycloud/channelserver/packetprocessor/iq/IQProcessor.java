@@ -5,8 +5,6 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.BlockingQueue;
 
-
-import org.apache.log4j.Logger;
 import org.buddycloud.channelserver.PacketProcessor;
 import org.buddycloud.channelserver.db.DataStore;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.discoinfo.JabberDiscoInfo;
@@ -14,6 +12,8 @@ import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.JabberPu
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.register.JabberRegister;
 import org.buddycloud.channelserver.queue.statemachine.IStatemachine;
 import org.buddycloud.channelserver.queue.statemachine.StateMachineBuilder;
+
+import org.apache.log4j.Logger;
 import org.xmpp.packet.IQ;
 import org.xmpp.packet.IQ.Type;
 import org.xmpp.packet.Packet;

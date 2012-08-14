@@ -3,12 +3,12 @@ package org.buddycloud.channelserver.queue;
 import java.util.Properties;
 import java.util.concurrent.BlockingQueue;
 
-
-import org.apache.log4j.Logger;
 import org.buddycloud.channelserver.db.DataStore;
 import org.buddycloud.channelserver.db.jedis.JedisMongoDataStore;
 import org.buddycloud.channelserver.packetprocessor.iq.IQProcessor;
 import org.buddycloud.channelserver.packetprocessor.message.MessageProcessor;
+
+import org.apache.log4j.Logger;
 import org.xmpp.packet.IQ;
 import org.xmpp.packet.Message;
 import org.xmpp.packet.Packet;
@@ -17,7 +17,7 @@ public class InQueueConsumer extends QueueConsumer {
 
     private static final Logger LOGGER = Logger.getLogger(InQueueConsumer.class);
     
-    private DataStore dataStore;
+    private JedisMongoDataStore dataStore;
     private MessageProcessor messageHandler;
     private IQProcessor iqHandler;
 

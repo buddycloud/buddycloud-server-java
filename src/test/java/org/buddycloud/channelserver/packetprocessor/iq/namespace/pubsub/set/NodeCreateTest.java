@@ -65,7 +65,7 @@ public class NodeCreateTest extends IQHandlerTest
 		Element element = new BaseElement("create");
 		nodeCreate.process(element, jid, request, null);
 
-		Packet response = queue.poll(1, TimeUnit.MILLISECONDS);
+		Packet response = queue.poll(100, TimeUnit.MILLISECONDS);
 		try {
 		    PacketError error = response.getError();
 			assertNotNull(error);
@@ -89,7 +89,7 @@ public class NodeCreateTest extends IQHandlerTest
 		element.addAttribute("node", "/user/capulet@shakespeare.lit/posts");
 		nodeCreate.process(element, jid, request, null);
 		
-		Packet response = queue.poll(1, TimeUnit.MILLISECONDS);
+		Packet response = queue.poll(100, TimeUnit.MILLISECONDS);
 		try {
 		    PacketError error = response.getError();
 			assertNotNull(error);
@@ -110,20 +110,76 @@ public class NodeCreateTest extends IQHandlerTest
 	{
 		Element element = new BaseElement("create");
 		element.addAttribute("node", "/user/capulet@shakespeare.lit/posts");
+		System.out.println("UnauthenticatedUserTest");
 		JID jid = new JID("juliet@anon.shakespeare.lit");
 		nodeCreate.setServerDomain("shakespeare.lit");
+		
 		nodeCreate.process(element, jid, request,  null);
-		Packet response = queue.poll(1, TimeUnit.MILLISECONDS);
+		Packet response = queue.poll(100, TimeUnit.MILLISECONDS);
 		try {
 		    PacketError error = response.getError();
 			assertNotNull(error);
-			assertEquals(PacketError.Type.auth, error.getType());
 			assertEquals(PacketError.Condition.forbidden, error.getCondition());
+			assertEquals(PacketError.Type.auth, error.getType());
 			/**
 			 * Add this check back in once Tinder supports xmlns on standard conditions
 			 * assertEquals(JabberPubsub.NS_XMPP_STANZAS, error.getApplicationConditionNamespaceURI());
 			 */
 		} catch (NullPointerException e) {
+			fail("No error response");
+		}
+	}
+	
+	@Test
+	public void testInvalidlyFormattedNodeReturnsError()
+	{
+		Element element = new BaseElement("create");
+		element.addAttribute("node", "/user/capulet@shakespeare/posts/invalid");
+		
+		JID jid = new JID("juliet@shakespeare.lit");
+		nodeCreate.setServerDomain("shakespeare.lit");
+
+		try {
+			nodeCreate.process(element, jid, request,  null);
+			Packet response = queue.poll(100, TimeUnit.MILLISECONDS);
+			
+		    PacketError error = response.getError();
+			assertNotNull(error);
+			assertEquals(PacketError.Type.modify, error.getType());
+			assertEquals(PacketError.Condition.bad_request, error.getCondition());
+			/**
+			 * Add this check back in once Tinder supports xmlns on standard conditions
+			 * assertEquals(JabberPubsub.NS_XMPP_STANZAS, error.getApplicationConditionNamespaceURI());
+			 */
+		} catch (Exception e) {
+			fail("No error response");
+		}	
+	}
+	
+	@Test
+	public void testNewNodeMustBeOnADomainSupportedByCurrentServer()
+	{
+		Element element = new BaseElement("create");
+		element.addAttribute("node", "/user/capulet@shakespeare.lit/posts");
+		
+		JID jid = new JID("juliet@shakespeare.lit");
+		nodeCreate.setServerDomain("shakespeare.lit");
+		nodeCreate.setTopicsDomain("topics.shakespeare.lit");
+
+		try {
+			
+			nodeCreate.process(element, jid, request,  null);
+			Packet response = queue.poll(100, TimeUnit.MILLISECONDS);
+			
+		    PacketError error = response.getError();
+			assertNotNull(error);
+			assertEquals(PacketError.Type.modify, error.getType());
+			assertEquals(PacketError.Condition.not_acceptable, error.getCondition());
+			/**
+			 * Add this check back in once Tinder supports xmlns on standard conditions
+			 * assertEquals(JabberPubsub.NS_XMPP_STANZAS, error.getApplicationConditionNamespaceURI());
+			 */
+		} catch (Exception e) {
 			fail("No error response");
 		}
 	}

@@ -1,6 +1,8 @@
 package org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.set;
 
 import java.util.concurrent.BlockingQueue;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.apache.log4j.Logger;
 import org.buddycloud.channelserver.Configuration;
@@ -14,8 +16,8 @@ import org.xmpp.packet.IQ;
 import org.xmpp.packet.JID;
 import org.xmpp.packet.Packet;
 import org.xmpp.packet.PacketError;
-
-import org.xmpp.packet.IQ.Type;
+import org.xmpp.packet.PacketError.Condition;
+import org.xmpp.packet.PacketError.Type;
 
 public class NodeCreate implements PubSubElementProcessor
 {
@@ -27,8 +29,12 @@ public class NodeCreate implements PubSubElementProcessor
     private IQ                    response;
     private JID                   actor;
 	private String                serverDomain;
-        
-    public NodeCreate(BlockingQueue<Packet> outQueue, DataStore dataStore)
+	private String                topicsDomain;
+	
+	private static final Pattern nodeExtract = Pattern.compile("^/user/[^@]+@([^/]+)/[^/]+$");
+    private static final String NODE_REG_EX  = "^/user/[^@]+@[^/]+/[^/]+$";
+	
+	public NodeCreate(BlockingQueue<Packet> outQueue, DataStore dataStore)
     {
     	setDataStore(dataStore);
     	setOutQueue(outQueue);
@@ -54,7 +60,9 @@ public class NodeCreate implements PubSubElementProcessor
     	if ((false == validateNode(node)) 
     	    || (true == doesNodeExist(node))
     	    || (false == actorIsRegistered())
+    	    || (false == nodeHandledByThisServer(node))
     	) {
+            outQueue.put(response);
     		return;
     	}
         
@@ -65,12 +73,12 @@ public class NodeCreate implements PubSubElementProcessor
 		return elm.getName().equals("create");
 	}
 	
-	private boolean validateNode(String node) throws InterruptedException
+	private boolean validateNode(String node)
 	{
         if (node != null && !node.trim().equals("")) {
         	return true;
         }
-    	response.setType(Type.error);
+    	response.setType(IQ.Type.error);
     	Element nodeIdRequired = new DOMElement(
             "nodeid-required",
             new Namespace("", JabberPubsub.NS_PUBSUB_ERROR)
@@ -84,31 +92,55 @@ public class NodeCreate implements PubSubElementProcessor
         error.add(badRequest);
         error.add(nodeIdRequired);
         response.setChildElement(error);
-        outQueue.put(response);
         return false;
 	}
 	
-	private boolean doesNodeExist(String node) throws InterruptedException
+	private boolean doesNodeExist(String node)
 	{
 		if (false == dataStore.nodeExists(node)) {
 			return false;
 		}
-		response.setType(Type.error);
-		PacketError error = new PacketError(PacketError.Condition.conflict);
-		response.setError(error);
-		outQueue.put(response);
+		setErrorCondition(
+			PacketError.Type.cancel,
+		    PacketError.Condition.conflict
+		);
 		return true;
 	}
 	
-	private boolean actorIsRegistered() throws InterruptedException
+	private boolean actorIsRegistered()
 	{
+		System.out.println(actor.getDomain() + " " + getServerDomain());
+		System.out.println(String.valueOf(actor.getDomain().equals(getServerDomain())));
 		if (true == actor.getDomain().equals(getServerDomain())) {
 			return true;
 		}
-		response.setType(Type.error);
-		PacketError error = new PacketError(PacketError.Condition.forbidden);
-		response.setError(error);
-		outQueue.put(response);
+		System.out.println("Sending not authed error");
+		setErrorCondition(
+			PacketError.Type.auth,
+		    PacketError.Condition.forbidden
+		);
+		return false;
+	}
+
+	private boolean nodeHandledByThisServer(String node)
+	{
+		if (false == node.matches(NODE_REG_EX)) {
+			setErrorCondition(
+				PacketError.Type.modify,
+			    PacketError.Condition.bad_request
+			);
+			return false;
+		}
+		Matcher matcher = nodeExtract.matcher(node);
+		matcher.find();
+		String  nodeDomain = matcher.group();
+		if ((getServerDomain() != nodeDomain) && (getTopicsDomain() != nodeDomain)) {
+			setErrorCondition(
+			    PacketError.Type.modify,
+			    PacketError.Condition.not_acceptable
+			);
+			return false;
+		}
 		return true;
 	}
 
@@ -124,5 +156,26 @@ public class NodeCreate implements PubSubElementProcessor
 			    .getProperty("server.domain");
 		}
 		return serverDomain;
+	}
+
+	public void setTopicsDomain(String domain)
+	{
+	    topicsDomain = domain;		
+	}
+	
+	private String getTopicsDomain()
+	{
+		if (null == topicsDomain) {
+            serverDomain = Configuration.getInstance()
+			    .getProperty("server.domain.topics");
+		}
+		return topicsDomain;		
+	}
+	
+	private void setErrorCondition(Type type, Condition condition)
+	{
+		response.setType(IQ.Type.error);
+		PacketError error = new PacketError(condition, type);
+		response.setError(error);
 	}
 }

@@ -136,4 +136,11 @@ public class Mock implements DataStore
 		// TODO Auto-generated method stub
 		return null;
 	}
+
+	@Override
+	public boolean nodeExists(String createNodeId)
+	{
+		// TODO Auto-generated method stub
+		return false;
+	}
 }

@@ -8,7 +8,9 @@ import org.dom4j.tree.BaseElement;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
-
+ 
+import org.dom4j.Attribute;
+import org.mockito.Mockito;
 
 import org.buddycloud.channelserver.db.DataStore;
 import org.buddycloud.channelserver.db.mock.Mock;
@@ -63,11 +65,42 @@ public class NodeCreateTest extends IQHandlerTest
 		Element element = new BaseElement("create");
 		nodeCreate.process(element, jid, request, null);
 
-		    Packet response = queue.poll(1, TimeUnit.MILLISECONDS);
-		    PacketError error           = response.getError();
-
-		assertNotNull(error);
-		assertEquals(PacketError.Type.modify, error.getType());
-		assertEquals("nodeid-required", error.getApplicationConditionName());
+		Packet response = queue.poll(1, TimeUnit.MILLISECONDS);
+		try {
+		    PacketError error = response.getError();
+			assertNotNull(error);
+			assertEquals(PacketError.Type.modify, error.getType());
+			assertEquals("nodeid-required", error.getApplicationConditionName());
+		} catch (NullPointerException e) {
+			fail("No error response");
+		}
+	}
+	
+	@Test
+	public void testRequestingAlreadyExistingNodeReturnsErrorStanza()
+        throws Exception
+	{
+		DataStore dataStoreMock = Mockito.mock(Mock.class);
+		Mockito
+		    .when(dataStoreMock.nodeExists("/user/capulet@shakespeare.lit/posts"))
+		    .thenReturn(true);
+        nodeCreate.setDataStore(dataStoreMock);
+		Element element = new BaseElement("create");
+		element.addAttribute("node", "/user/capulet@shakespeare.lit/posts");
+		nodeCreate.process(element, jid, request, null);
+		
+		Packet response = queue.poll(1, TimeUnit.MILLISECONDS);
+		try {
+		    PacketError error = response.getError();
+			assertNotNull(error);
+			assertEquals(PacketError.Type.cancel, error.getType());
+			assertEquals(PacketError.Condition.conflict, error.getCondition());
+			/**
+			 * Add this check back in once Tinder supports xmlns on standard conditions
+			 * assertEquals(JabberPubsub.NS_XMPP_STANZAS, error.getApplicationConditionNamespaceURI());
+			 */
+		} catch (NullPointerException e) {
+			fail("No error response");
+		}
 	}
 }

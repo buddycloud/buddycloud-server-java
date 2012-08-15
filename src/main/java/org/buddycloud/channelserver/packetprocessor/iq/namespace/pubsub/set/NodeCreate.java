@@ -3,6 +3,7 @@ package org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.set;
 import java.util.concurrent.BlockingQueue;
 
 import org.apache.log4j.Logger;
+import org.buddycloud.channelserver.Configuration;
 import org.buddycloud.channelserver.db.DataStore;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.JabberPubsub;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.PubSubElementProcessor;
@@ -24,6 +25,8 @@ public class NodeCreate implements PubSubElementProcessor
     private DataStore             dataStore;
 	private Element               element;
     private IQ                    response;
+    private JID                   actor;
+	private String                serverDomain;
         
     public NodeCreate(BlockingQueue<Packet> outQueue, DataStore dataStore)
     {
@@ -46,9 +49,11 @@ public class NodeCreate implements PubSubElementProcessor
     {
     	element     = elm;
     	response    = IQ.createResultIQ(reqIQ);
+    	actor       = actorJID;
     	String node = element.attributeValue("node");
     	if ((false == validateNode(node)) 
     	    || (true == doesNodeExist(node))
+    	    || (false == actorIsRegistered())
     	) {
     		return;
     	}
@@ -93,5 +98,31 @@ public class NodeCreate implements PubSubElementProcessor
 		response.setError(error);
 		outQueue.put(response);
 		return true;
+	}
+	
+	private boolean actorIsRegistered() throws InterruptedException
+	{
+		if (true == actor.getDomain().equals(getServerDomain())) {
+			return true;
+		}
+		response.setType(Type.error);
+		PacketError error = new PacketError(PacketError.Condition.forbidden);
+		response.setError(error);
+		outQueue.put(response);
+		return true;
+	}
+
+	public void setServerDomain(String domain)
+	{
+		serverDomain = domain;
+	}
+
+	private String getServerDomain()
+	{
+		if (null == serverDomain) {
+            serverDomain = Configuration.getInstance()
+			    .getProperty("server.domain");
+		}
+		return serverDomain;
 	}
 }

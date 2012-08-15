@@ -103,4 +103,28 @@ public class NodeCreateTest extends IQHandlerTest
 			fail("No error response");
 		}
 	}
+	
+	@Test
+	public void testUnauthenticatedUserCanNotCreateNode()
+	    throws Exception
+	{
+		Element element = new BaseElement("create");
+		element.addAttribute("node", "/user/capulet@shakespeare.lit/posts");
+		JID jid = new JID("juliet@anon.shakespeare.lit");
+		nodeCreate.setServerDomain("shakespeare.lit");
+		nodeCreate.process(element, jid, request,  null);
+		Packet response = queue.poll(1, TimeUnit.MILLISECONDS);
+		try {
+		    PacketError error = response.getError();
+			assertNotNull(error);
+			assertEquals(PacketError.Type.auth, error.getType());
+			assertEquals(PacketError.Condition.forbidden, error.getCondition());
+			/**
+			 * Add this check back in once Tinder supports xmlns on standard conditions
+			 * assertEquals(JabberPubsub.NS_XMPP_STANZAS, error.getApplicationConditionNamespaceURI());
+			 */
+		} catch (NullPointerException e) {
+			fail("No error response");
+		}
+	}
 }

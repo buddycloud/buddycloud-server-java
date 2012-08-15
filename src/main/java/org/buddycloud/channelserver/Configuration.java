@@ -13,14 +13,18 @@ public class Configuration extends Properties
 	
 	private Properties conf;
 	
-    private Configuration() throws FileNotFoundException, IOException
+    private Configuration()
     {
-        conf = new Properties();
-        conf.load(new FileInputStream(CONFIGURATION_FILE));
+    	try {
+	        conf = new Properties();
+	        conf.load(new FileInputStream(CONFIGURATION_FILE));
+    	} catch (Exception e) {
+            System.out.println(e.getMessage());
+            System.exit(1);
+    	}
     }
     
     public static Configuration getInstance() 
-        throws FileNotFoundException, IOException
     {
     	if (null == instance) {
     		instance = new Configuration();

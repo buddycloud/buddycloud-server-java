@@ -280,4 +280,10 @@ public class JedisMongoDataStore implements DataStore {
         return "node:" + nodename + ":conf";
     }
 
+	@Override
+	public boolean nodeExists(String createNodeId) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
 }

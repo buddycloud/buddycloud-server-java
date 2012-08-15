@@ -49,5 +49,7 @@ public interface DataStore {
     public String storeState(String oldID, String newID, Map<String, String> state);
     
     public Map<String, String> getState(String id);
+
+	public boolean nodeExists(String createNodeId);
     
 }

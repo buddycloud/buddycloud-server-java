@@ -1,5 +1,6 @@
 package org.buddycloud.channelserver.packetHandler.iq.namespace;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -27,7 +28,7 @@ public class JabberRegisterTest {
     private Jedis jedis;
 
     @Before
-    public void init() {
+    public void init() throws FileNotFoundException, IOException {
         this.outQueue = new LinkedBlockingQueue<Packet>();
         this.inQueue = new LinkedBlockingQueue<Packet>();
         InQueueConsumer consumer = new InQueueConsumer(outQueue, IQHandlerTest.readConf(), inQueue);

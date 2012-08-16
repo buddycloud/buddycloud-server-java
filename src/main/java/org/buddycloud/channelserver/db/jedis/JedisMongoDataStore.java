@@ -16,7 +16,7 @@ import org.buddycloud.channelserver.pubsub.entry.NodeEntry;
 import org.buddycloud.channelserver.pubsub.subscription.NodeSubscription;
 import org.buddycloud.channelserver.pubsub.subscription.Subscriptions;
 import org.buddycloud.channelserver.pubsub.subscription.NodeSubscription;
-
+import org.buddycloud.channelserver.db.DataStoreException;
 import redis.clients.jedis.Jedis;
 
 import com.mongodb.BasicDBObject;
@@ -95,7 +95,7 @@ public class JedisMongoDataStore implements DataStore {
         return this.jedis.sismember(LOCAL_USERS, bareJID);
     }
     
-    public String addNodeConf(String nodename, HashMap<String, String> conf) {
+    public String addNodeConf(String nodename, Map<String, String> conf) {
         return jedis.hmset(getNodeConfRedisKey(nodename), conf);
     }
     
@@ -119,35 +119,39 @@ public class JedisMongoDataStore implements DataStore {
            - /geo/current
            - /geo/next
          */
-        
-        this.createNode(owner,
-                        Conf.getPostChannelNodename(owner),
-                        Conf.getDefaultPostChannelConf(owner));
-        
-        this.createNode(owner,
-                        Conf.getStatusChannelNodename(owner),
-                        Conf.getDefaultStatusChannelConf(owner));
-
-        this.createNode(owner,
-                        Conf.getSubscriptionsChannelNodename(owner),
-                        Conf.getDefaultSubscriptionsChannelConf(owner));
-        
-        this.createNode(owner,
-                        Conf.getGeoPreviousChannelNodename(owner),
-                        Conf.getDefaultGeoPreviousChannelConf(owner));
-        
-        this.createNode(owner,
-                        Conf.getGeoCurrentChannelNodename(owner),
-                        Conf.getDefaultGeoCurrentChannelConf(owner));
-        
-        this.createNode(owner,
-                        Conf.getGeoNextChannelNodename(owner),
-                        Conf.getDefaultGeoNextChannelConf(owner));
-        
-        return "OK";
+        try {
+	        this.createNode(owner,
+	                        Conf.getPostChannelNodename(owner),
+	                        Conf.getDefaultPostChannelConf(owner));
+	        
+	        this.createNode(owner,
+	                        Conf.getStatusChannelNodename(owner),
+	                        Conf.getDefaultStatusChannelConf(owner));
+	
+	        this.createNode(owner,
+	                        Conf.getSubscriptionsChannelNodename(owner),
+	                        Conf.getDefaultSubscriptionsChannelConf(owner));
+	        
+	        this.createNode(owner,
+	                        Conf.getGeoPreviousChannelNodename(owner),
+	                        Conf.getDefaultGeoPreviousChannelConf(owner));
+	        
+	        this.createNode(owner,
+	                        Conf.getGeoCurrentChannelNodename(owner),
+	                        Conf.getDefaultGeoCurrentChannelConf(owner));
+	        
+	        this.createNode(owner,
+	                        Conf.getGeoNextChannelNodename(owner),
+	                        Conf.getDefaultGeoNextChannelConf(owner));
+	        return "OK";
+        } catch (DataStoreException e) {
+        	return "FAIL";
+        }
     }
     
-    public String createNode(String owner, String nodename, HashMap<String, String> conf) {
+    public void createNode(String owner, String nodename, Map<String, String> conf) 
+        throws DataStoreException
+    {
         
         this.addNodeConf(nodename, conf);
         
@@ -157,8 +161,7 @@ public class JedisMongoDataStore implements DataStore {
                                  Subscriptions.unconfigured.toString(),
                                  null);
         
-        // TODO, check this. I just added it now. We'll need to check the creation status one day ...
-        return "OK";
+
     }
     
     public boolean subscribeUserToNode(String bareJID, String nodename, String aff, String subs, String foreignChannelServer) {
@@ -279,5 +282,11 @@ public class JedisMongoDataStore implements DataStore {
     public static String getNodeConfRedisKey(String nodename) {
         return "node:" + nodename + ":conf";
     }
+
+	@Override
+	public boolean nodeExists(String createNodeId) {
+		// TODO Auto-generated method stub
+		return false;
+	}
 
 }

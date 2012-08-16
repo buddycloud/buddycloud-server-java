@@ -1,6 +1,7 @@
 package org.buddycloud.channelserver.packetHandler.iq;
 
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.StringReader;
 import java.net.UnknownHostException;
@@ -11,6 +12,7 @@ import java.util.concurrent.TimeUnit;
 import junit.framework.TestCase;
 
 import org.apache.commons.io.IOUtils;
+import org.buddycloud.channelserver.Configuration;
 import org.buddycloud.channelserver.queue.InQueueConsumer;
 import org.dom4j.DocumentException;
 import org.dom4j.Element;
@@ -27,9 +29,12 @@ import com.mongodb.MongoException;
 
 public class IQHandlerTest extends TestCase {
 
-    public final static String STANZA_PATH = "src/test/resources/stanzas";
+	private final static String CONFIGURATION_PROPERTIES = "src/test/resources/configuration.properties";
+    public final static String STANZA_PATH               = "src/test/resources/stanzas";
+
     
-    public static void dropMongodb() {
+    public static void dropMongodb() throws FileNotFoundException, IOException
+    {
         Properties conf = readConf();
         
         Mongo mongo = null;
@@ -58,8 +63,11 @@ public class IQHandlerTest extends TestCase {
     /**
      * Side-effect: resets Jedis
      * @return
+     * @throws IOException 
+     * @throws FileNotFoundException 
      */
-    public static Jedis getJedis() {
+    public static Jedis getJedis() throws FileNotFoundException, IOException
+    {
         Properties conf = readConf();
         Jedis jedis = new Jedis(conf.getProperty("redis.host"), 
                 Integer.valueOf(conf.getProperty("redis.port")));
@@ -71,10 +79,12 @@ public class IQHandlerTest extends TestCase {
         return jedis;
     }
     
-    public static Properties readConf() {
-        Properties conf = new Properties();
+    public static Properties readConf() 
+        throws FileNotFoundException, IOException
+    {
+        Configuration conf = Configuration.getInstance();
         try {
-            conf.load(new FileInputStream("src/test/resources/configuration.properties"));
+            conf.load(new FileInputStream(CONFIGURATION_PROPERTIES));
         } catch (IOException e) {
             System.out.println(e.getMessage());
             System.exit(1);
@@ -82,19 +92,24 @@ public class IQHandlerTest extends TestCase {
         return conf;
     }
     
-    public static String readStanzaAsString(String stanzaPath) throws IOException, DocumentException {
+    public static String readStanzaAsString(String stanzaPath) 
+        throws IOException, DocumentException
+    {
         String stanzaStr = IOUtils.toString(
                 new FileInputStream(STANZA_PATH + stanzaPath));
         return stanzaStr.replaceAll("   ", "").replaceAll("\n", "");
     }
     
-    public static IQ readStanzaAsIq(String stanzaPath) throws IOException, DocumentException {
+    public static IQ readStanzaAsIq(String stanzaPath)
+        throws IOException, DocumentException
+    {
         String stanzaStr = IOUtils.toString(
                 new FileInputStream(STANZA_PATH + stanzaPath));
         return toIq(stanzaStr);
     }
 
-    public static IQ toIq(String stanzaStr) throws DocumentException {
+    public static IQ toIq(String stanzaStr) throws DocumentException
+    {
         SAXReader xmlReader = new SAXReader();
         xmlReader.setMergeAdjacentText(true);
         xmlReader.setStringInternEnabled(true);
@@ -104,8 +119,9 @@ public class IQHandlerTest extends TestCase {
         return new IQ(entry);
     }
     
-    public void testFeatureNotImplementedSuccess() throws IOException, InterruptedException, DocumentException {
-        
+    public void featureNotImplementedSuccess()
+        throws IOException, InterruptedException, DocumentException
+    {    
         IQ request = readStanzaAsIq("/iq/featureNotImplemented/request.stanza");
         String expectedReply = readStanzaAsString("/iq/featureNotImplemented/reply.stanza");
         

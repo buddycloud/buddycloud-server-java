@@ -6,28 +6,18 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
-import org.buddycloud.channelserver.channel.node.configuration.Helper;
 import org.buddycloud.channelserver.channel.node.configuration.HelperMock;
-import org.buddycloud.channelserver.channel.node.configuration.field.AccessModel;
-import org.buddycloud.channelserver.channel.node.configuration.field.Affiliation;
-import org.buddycloud.channelserver.channel.node.configuration.field.ChannelDescription;
+import org.buddycloud.channelserver.channel.node.configuration.NodeConfigurationException;
 import org.buddycloud.channelserver.channel.node.configuration.field.ChannelTitle;
-import org.buddycloud.channelserver.channel.node.configuration.field.ChannelType;
-import org.buddycloud.channelserver.channel.node.configuration.field.CreationDate;
 import org.buddycloud.channelserver.db.DataStore;
 import org.buddycloud.channelserver.db.DataStoreException;
 import org.buddycloud.channelserver.db.mock.Mock;
 import org.buddycloud.channelserver.packetHandler.iq.IQHandlerTest;
-import org.buddycloud.channelserver.packetprocessor.iq.namespace.discoinfo.JabberDiscoInfo;
-import org.dom4j.Attribute;
 import org.dom4j.Element;
-import org.dom4j.dom.DOMDocument;
-import org.dom4j.dom.DOMElement;
 import org.dom4j.tree.BaseElement;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
-import org.xmpp.forms.DataForm;
 import org.xmpp.packet.IQ;
 import org.xmpp.packet.JID;
 import org.xmpp.packet.Packet;
@@ -39,6 +29,7 @@ public class NodeCreateTest extends IQHandlerTest
 	private Mock       dataStore;
 	private NodeCreate nodeCreate;
 	private JID        jid;
+	private Element    element;
 	private BlockingQueue<Packet> queue = new LinkedBlockingQueue<Packet>();
 
 	@Before
@@ -47,9 +38,13 @@ public class NodeCreateTest extends IQHandlerTest
 		dataStore  = new Mock();
 		queue      = new LinkedBlockingQueue<Packet>();
 		nodeCreate = new NodeCreate(queue, dataStore);
-		jid        = new JID("juliet@capulet.lit");
+		jid        = new JID("juliet@shakespeare.lit");
 		request    = readStanzaAsIq("/iq/pubsub/channel/create/request.stanza");
 		
+		nodeCreate.setServerDomain("shakespeare.lit");
+		
+		element = new BaseElement("create");
+		element.addAttribute("node", "/user/capulet@shakespeare.lit/posts");
 	}
 
 	@Test
@@ -89,8 +84,7 @@ public class NodeCreateTest extends IQHandlerTest
 		    .when(dataStoreMock.nodeExists("/user/capulet@shakespeare.lit/posts"))
 		    .thenReturn(true);
         nodeCreate.setDataStore(dataStoreMock);
-		Element element = new BaseElement("create");
-		element.addAttribute("node", "/user/capulet@shakespeare.lit/posts");
+
 		nodeCreate.process(element, jid, request, null);
 		
 		Packet response = queue.poll(100, TimeUnit.MILLISECONDS);
@@ -109,12 +103,8 @@ public class NodeCreateTest extends IQHandlerTest
 	public void testUnauthenticatedUserCanNotCreateNode()
 	    throws Exception
 	{
-		Element element = new BaseElement("create");
-		element.addAttribute("node", "/user/capulet@shakespeare.lit/posts");
-
 		JID jid = new JID("juliet@anon.shakespeare.lit");
-		nodeCreate.setServerDomain("shakespeare.lit");
-		
+
 		nodeCreate.process(element, jid, request,  null);
 		Packet response = queue.poll(100, TimeUnit.MILLISECONDS);
 
@@ -131,12 +121,8 @@ public class NodeCreateTest extends IQHandlerTest
 	@Test
 	public void testInvalidlyFormattedNodeReturnsError() throws Exception
 	{
-		Element element = new BaseElement("create");
 		element.addAttribute("node", "/user/capulet@shakespeare/posts/invalid");
 		
-		JID jid = new JID("juliet@shakespeare.lit");
-		nodeCreate.setServerDomain("shakespeare.lit");
-
 		nodeCreate.process(element, jid, request,  null);
 		Packet response = queue.poll(100, TimeUnit.MILLISECONDS);
 		
@@ -153,11 +139,8 @@ public class NodeCreateTest extends IQHandlerTest
 	@Test
 	public void testNewNodeMustBeOnADomainSupportedByCurrentServer() throws Exception
 	{
-		Element element = new BaseElement("create");
 		element.addAttribute("node", "/user/capulet@shakespearelit/posts");
-		
-		JID jid = new JID("juliet@shakespeare.lit");
-		nodeCreate.setServerDomain("shakespeare.lit");
+
 		nodeCreate.setTopicsDomain("topics.shakespeare.lit");
 
 		nodeCreate.process(element, jid, request,  null);
@@ -187,12 +170,6 @@ public class NodeCreateTest extends IQHandlerTest
 		    );
 		nodeCreate.setDataStore(dataStoreMock);
 
-		Element element = new BaseElement("create");
-		element.addAttribute("node", "/user/capulet@shakespeare.lit/posts");
-		
-		JID jid = new JID("juliet@shakespeare.lit");
-		nodeCreate.setServerDomain("shakespeare.lit");
-
 		nodeCreate.process(element, jid, request,  null);
 		Packet response = queue.poll(100, TimeUnit.MILLISECONDS);
 		
@@ -209,17 +186,11 @@ public class NodeCreateTest extends IQHandlerTest
 	@Test
 	public void testValidCreateNodeRequestReturnsConfirmationStanza() throws Exception
 	{
-		Element element = new BaseElement("create");
-		element.addAttribute("node", "/user/capulet@shakespeare.lit/posts");
-
 		HelperMock helperMock = Mockito.mock(HelperMock.class);
 		Mockito
 		    .when(helperMock.parse(request))
 		    .thenReturn(null);
         nodeCreate.setConfigurationHelper(helperMock);
-
-		JID jid = new JID("juliet@shakespeare.lit");
-		nodeCreate.setServerDomain("shakespeare.lit");
 
 		nodeCreate.process(element, jid, request,  null);
 		Packet response   = queue.poll(100, TimeUnit.MILLISECONDS);
@@ -242,13 +213,7 @@ public class NodeCreateTest extends IQHandlerTest
 	    throws Exception
 	{	
 		String channelTitle = "test-channel-name";
-		
-		Element element = new DOMElement("create");
-		element.addAttribute("node", "/user/capulet@shakespeare.lit/posts");
-	
-		JID jid = new JID("juliet@shakespeare.lit");
-		nodeCreate.setServerDomain("shakespeare.lit");
-		
+
 		HashMap<String, String> configurationProperties = new HashMap<String, String>();
 		configurationProperties.put(ChannelTitle.FIELD_NAME, channelTitle);
 
@@ -271,5 +236,32 @@ public class NodeCreateTest extends IQHandlerTest
 		}
 		Map<String, String> nodeConfiguration = dataStore.getConfiguration();
 		assertEquals(channelTitle, nodeConfiguration.get(ChannelTitle.FIELD_NAME));		
+	}
+	
+	@Test 
+	public void testFailingNodeConfigurationReturnsErrorStanza() throws Exception
+	{
+		String channelTitle = "test-channel-name";
+
+		HashMap<String, String> configurationProperties = new HashMap<String, String>();
+		configurationProperties.put(ChannelTitle.FIELD_NAME, channelTitle);
+
+		HelperMock helperMock = Mockito.mock(HelperMock.class);
+		Mockito
+		    .when(helperMock.parse(request))
+		    .thenThrow(new NodeConfigurationException());
+        nodeCreate.setConfigurationHelper(helperMock);
+
+		nodeCreate.process(element, jid, request,  null);
+		
+		Packet response   = queue.poll(100, TimeUnit.MILLISECONDS);
+		PacketError error = response.getError();
+		assertNotNull(error);
+		assertEquals(PacketError.Type.modify, error.getType());
+		assertEquals(PacketError.Condition.bad_request, error.getCondition());
+		/**
+		 * Add this check back in once Tinder supports xmlns on standard conditions
+		 * assertEquals(JabberPubsub.NS_XMPP_STANZAS, error.getApplicationConditionNamespaceURI());
+		 */
 	}
 }

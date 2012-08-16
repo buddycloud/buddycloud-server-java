@@ -6,13 +6,16 @@ import org.dom4j.dom.DOMElement;
 import org.dom4j.tree.BaseElement;
 
 import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
  
 import org.dom4j.Attribute;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 
+import org.buddycloud.channelserver.channel.node.configuration.field.ChannelTitle;
 import org.buddycloud.channelserver.db.DataStore;
 import org.buddycloud.channelserver.db.DataStoreException;
 import org.buddycloud.channelserver.db.mock.Mock;
@@ -30,7 +33,7 @@ import org.xmpp.packet.PacketError.Condition;
 public class NodeCreateTest extends IQHandlerTest
 {
 	private IQ         stanza;
-	private DataStore  dataStore;
+	private Mock       dataStore;
 	private NodeCreate nodeCreate;
 	private JID        jid;
 	private IQ         request;
@@ -172,16 +175,18 @@ public class NodeCreateTest extends IQHandlerTest
 	public void testDataStoreFailureReturnsInternalServerErrorResponse() 
 		throws Exception
 	{
-		String node = "/user/capulet@shakespeare.lit/posts";
 		DataStore dataStoreMock = Mockito.mock(Mock.class);
 		Mockito.doThrow(new DataStoreException())
 		    .when(dataStoreMock)
-		    .createNode(Mockito.anyString(), Mockito.anyString(), Mockito.anyMapOf(String.class, String.class));
-	        
+		    .createNode(
+		        Mockito.anyString(), 
+		        Mockito.anyString(), 
+		        Mockito.anyMapOf(String.class, String.class)
+		    );
 		nodeCreate.setDataStore(dataStoreMock);
 
 		Element element = new BaseElement("create");
-		element.addAttribute("node", node);
+		element.addAttribute("node", "/user/capulet@shakespeare.lit/posts");
 		
 		JID jid = new JID("juliet@shakespeare.lit");
 		nodeCreate.setServerDomain("shakespeare.lit");
@@ -218,7 +223,39 @@ public class NodeCreateTest extends IQHandlerTest
 		} catch (NullPointerException e) {
 			assertNull(error);
 		}
-		assertEquals(IQ.Type.result.toString(), response.getElement().attribute("type").getValue());
-		System.out.println(response.toString());
+		assertEquals(
+		    IQ.Type.result.toString(),
+		    response.getElement().attribute("type").getValue()
+		);
+	}
+	
+	@Test
+	public void testCreateNodeWithDefaultConfigForPersonalChannelResultsInExpectedConfig() 
+	    throws Exception
+	{		
+		Element element = new BaseElement("create");
+		element.addAttribute("node", "/user/capulet@shakespeare.lit/posts");
+		
+		JID jid = new JID("juliet@shakespeare.lit");
+		nodeCreate.setServerDomain("shakespeare.lit");
+
+		nodeCreate.process(element, jid, request,  null);
+		Packet response   = queue.poll(100, TimeUnit.MILLISECONDS);
+		String error = null;
+		try {
+			error = response.getError().toString();
+			System.out.println(error.toString());
+			fail("Unexpected error response");
+		} catch (NullPointerException e) {
+			assertNull(error);
+		}
+		Map<String, String> nodeConfiguration = dataStore.getConfiguration();
+		assertEquals(ChannelTitle.DEFAULT_VALUE, nodeConfiguration.get(ChannelTitle.FIELD_NAME));
+		assertEquals(ChannelDescription.DEFAULT_VALUE, nodeConfiguration.get(ChannelDescription.FIELD_NAME));
+		assertEquals(AccessModel.DEFAULT_VALUE, nodeConfiguration.get(AccessModel.FIELD_NAME));
+		assertEquals(Affiliation.DEFAULT_VALUE, nodeConfiguration.get(Affiliation.FIELD_NAME));
+		assertEquals(ChannelType.DEFAULT_VALUE, nodeConfiguration.get(ChannelType.FIELD_NAME));
+		assertEquals(CreationDate.DEFAULT_VALUE, nodeConfiguration.get(CreationDate.FIELD_NAME));
+		
 	}
 }

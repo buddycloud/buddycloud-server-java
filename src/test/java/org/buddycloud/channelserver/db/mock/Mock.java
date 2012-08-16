@@ -5,6 +5,7 @@ import java.util.Iterator;
 import java.util.Map;
 
 import org.buddycloud.channelserver.db.DataStore;
+import org.buddycloud.channelserver.db.DataStoreException;
 import org.buddycloud.channelserver.db.jedis.NodeSubscriptionImpl;
 import org.buddycloud.channelserver.pubsub.entry.NodeEntry;
 import org.buddycloud.channelserver.pubsub.subscription.NodeSubscription;
@@ -49,7 +50,7 @@ public class Mock implements DataStore
 
 	@Override
 	public String createNode(String owner, String nodename,
-			HashMap<String, String> conf)
+			HashMap<String, String> conf) throws DataStoreException
 	{
 		// TODO Auto-generated method stub
 		return null;

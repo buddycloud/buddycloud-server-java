@@ -7,6 +7,7 @@ import java.util.regex.Pattern;
 import org.apache.log4j.Logger;
 import org.buddycloud.channelserver.Configuration;
 import org.buddycloud.channelserver.db.DataStore;
+import org.buddycloud.channelserver.db.DataStoreException;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.JabberPubsub;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.PubSubElementProcessor;
 import org.dom4j.Element;
@@ -30,6 +31,7 @@ public class NodeCreate implements PubSubElementProcessor
     private JID                   actor;
 	private String                serverDomain;
 	private String                topicsDomain;
+	private String                node;
 	
 	private static final Pattern nodeExtract = Pattern.compile("^/user/[^@]+@([^/]+)/[^/]+$");
     private static final String NODE_REG_EX  = "^/user/[^@]+@[^/]+/[^/]+$";
@@ -56,24 +58,42 @@ public class NodeCreate implements PubSubElementProcessor
     	element     = elm;
     	response    = IQ.createResultIQ(reqIQ);
     	actor       = actorJID;
-    	String node = element.attributeValue("node");
-    	if ((false == validateNode(node)) 
-    	    || (true == doesNodeExist(node))
+        node        = element.attributeValue("node");
+    	if ((false == validateNode()) 
+    	    || (true == doesNodeExist())
     	    || (false == actorIsRegistered())
-    	    || (false == nodeHandledByThisServer(node))
+    	    || (false == nodeHandledByThisServer())
     	) {
             outQueue.put(response);
     		return;
     	}
+    	createNode();
         
     }
+
+	private void createNode() throws InterruptedException
+	{
+		try {
+			
+		    dataStore.createNode(actor.toString(), node, null);
+		} catch (DataStoreException e) {
+			System.out.println("Exception was thrown");
+			setErrorCondition(
+			    PacketError.Type.wait,
+			    PacketError.Condition.internal_server_error
+			);
+			outQueue.put(response);
+			return;
+		}
+		
+	}
 
 	public boolean accept(Element elm)
 	{
 		return elm.getName().equals("create");
 	}
 	
-	private boolean validateNode(String node)
+	private boolean validateNode()
 	{
         if (node != null && !node.trim().equals("")) {
         	return true;
@@ -95,7 +115,7 @@ public class NodeCreate implements PubSubElementProcessor
         return false;
 	}
 	
-	private boolean doesNodeExist(String node)
+	private boolean doesNodeExist()
 	{
 		if (false == dataStore.nodeExists(node)) {
 			return false;
@@ -109,12 +129,9 @@ public class NodeCreate implements PubSubElementProcessor
 	
 	private boolean actorIsRegistered()
 	{
-		System.out.println(actor.getDomain() + " " + getServerDomain());
-		System.out.println(String.valueOf(actor.getDomain().equals(getServerDomain())));
 		if (true == actor.getDomain().equals(getServerDomain())) {
 			return true;
 		}
-		System.out.println("Sending not authed error");
 		setErrorCondition(
 			PacketError.Type.auth,
 		    PacketError.Condition.forbidden
@@ -122,7 +139,7 @@ public class NodeCreate implements PubSubElementProcessor
 		return false;
 	}
 
-	private boolean nodeHandledByThisServer(String node)
+	private boolean nodeHandledByThisServer()
 	{
 		if (false == node.matches(NODE_REG_EX)) {
 			setErrorCondition(
@@ -133,8 +150,11 @@ public class NodeCreate implements PubSubElementProcessor
 		}
 		Matcher matcher = nodeExtract.matcher(node);
 		matcher.find();
-		String  nodeDomain = matcher.group();
-		if ((getServerDomain() != nodeDomain) && (getTopicsDomain() != nodeDomain)) {
+		String  nodeDomain = matcher.group(1);
+
+		if ((false == getServerDomain().equals(nodeDomain)) 
+		    && (false == getTopicsDomain().equals(nodeDomain))
+		) {
 			setErrorCondition(
 			    PacketError.Type.modify,
 			    PacketError.Condition.not_acceptable

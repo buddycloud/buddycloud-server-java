@@ -6,7 +6,7 @@ import java.util.Map;
 
 import org.buddycloud.channelserver.pubsub.entry.NodeEntry;
 import org.buddycloud.channelserver.pubsub.subscription.NodeSubscription;
-
+import org.buddycloud.channelserver.db.DataStoreException;
 import org.buddycloud.channelserver.db.jedis.NodeSubscriptionImpl;
 
 
@@ -24,7 +24,7 @@ public interface DataStore {
     public String createUserNodes(String owner);
     
     public String createNode(String owner, String nodename, 
-            HashMap<String, String> conf);
+            HashMap<String, String> conf) throws DataStoreException;
     
     public boolean subscribeUserToNode(String bareJID, String nodename, 
             String aff, String subs, String foreignChannelServer);

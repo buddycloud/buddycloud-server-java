@@ -1,6 +1,7 @@
 package org.buddycloud.channelserver.packetHandler.message;
 
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.StringReader;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -29,7 +30,7 @@ public class MessageHandlerTest {
     private LinkedBlockingQueue<Packet> inQueue;
 
     @Before
-    public void init() {
+    public void init() throws FileNotFoundException, IOException {
         this.outQueue = new LinkedBlockingQueue<Packet>();
         this.inQueue = new LinkedBlockingQueue<Packet>();
         InQueueConsumer consumer = new InQueueConsumer(outQueue, IQHandlerTest.readConf(), inQueue);

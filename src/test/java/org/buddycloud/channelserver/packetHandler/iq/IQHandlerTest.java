@@ -30,7 +30,7 @@ import com.mongodb.MongoException;
 public class IQHandlerTest extends TestCase {
 
 	private final static String CONFIGURATION_PROPERTIES = "src/test/resources/configuration.properties";
-    private final static String STANZA_PATH              = "src/test/resources/stanzas";
+    public final static String STANZA_PATH               = "src/test/resources/stanzas";
 
     
     public static void dropMongodb() throws FileNotFoundException, IOException

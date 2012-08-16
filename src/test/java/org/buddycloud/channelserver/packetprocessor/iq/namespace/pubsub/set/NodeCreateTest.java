@@ -209,8 +209,16 @@ public class NodeCreateTest extends IQHandlerTest
 		nodeCreate.setServerDomain("shakespeare.lit");
 
 		nodeCreate.process(element, jid, request,  null);
-		Packet response = queue.poll(100, TimeUnit.MILLISECONDS);
-		assertNull(response.getError());
-		assertEquals(IQ.Type.result, ((IQ) response).getType());
+		Packet response   = queue.poll(100, TimeUnit.MILLISECONDS);
+		String error = null;
+		try {
+			error = response.getError().toString();
+			System.out.println(error.toString());
+			fail("Unexpected error response");
+		} catch (NullPointerException e) {
+			assertNull(error);
+		}
+		assertEquals(IQ.Type.result.toString(), response.getElement().attribute("type").getValue());
+		System.out.println(response.toString());
 	}
 }

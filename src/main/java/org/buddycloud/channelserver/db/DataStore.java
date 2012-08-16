@@ -23,7 +23,7 @@ public interface DataStore {
     
     public String createUserNodes(String owner);
     
-    public String createNode(String owner, String nodename, 
+    public void createNode(String owner, String nodename, 
             HashMap<String, String> conf) throws DataStoreException;
     
     public boolean subscribeUserToNode(String bareJID, String nodename, 

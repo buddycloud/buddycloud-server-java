@@ -149,7 +149,7 @@ public class JedisMongoDataStore implements DataStore {
         }
     }
     
-    public String createNode(String owner, String nodename, HashMap<String, String> conf) 
+    public void createNode(String owner, String nodename, HashMap<String, String> conf) 
         throws DataStoreException
     {
         
@@ -161,8 +161,7 @@ public class JedisMongoDataStore implements DataStore {
                                  Subscriptions.unconfigured.toString(),
                                  null);
         
-        // TODO, check this. I just added it now. We'll need to check the creation status one day ...
-        return "OK";
+
     }
     
     public boolean subscribeUserToNode(String bareJID, String nodename, String aff, String subs, String foreignChannelServer) {

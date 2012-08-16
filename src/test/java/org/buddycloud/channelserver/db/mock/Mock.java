@@ -49,11 +49,10 @@ public class Mock implements DataStore
 	}
 
 	@Override
-	public String createNode(String owner, String nodename,
+	public void createNode(String owner, String nodename,
 			HashMap<String, String> conf) throws DataStoreException
 	{
-		// TODO Auto-generated method stub
-		return null;
+
 	}
 
 	@Override

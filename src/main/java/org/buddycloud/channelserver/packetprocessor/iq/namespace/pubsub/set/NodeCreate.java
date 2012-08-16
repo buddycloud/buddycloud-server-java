@@ -7,6 +7,7 @@ import java.util.regex.Pattern;
 import org.apache.log4j.Logger;
 import org.buddycloud.channelserver.Configuration;
 import org.buddycloud.channelserver.channel.node.configuration.Helper;
+import org.buddycloud.channelserver.channel.node.configuration.NodeConfigurationException;
 import org.buddycloud.channelserver.db.DataStore;
 import org.buddycloud.channelserver.db.DataStoreException;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.JabberPubsub;
@@ -90,6 +91,11 @@ public class NodeCreate implements PubSubElementProcessor
 			);
 			outQueue.put(response);
 			return;
+		} catch (NodeConfigurationException e) {
+			setErrorCondition(
+			    PacketError.Type.modify,
+			    PacketError.Condition.bad_request
+		    );
 		}
 		response.setType(IQ.Type.result);
 		outQueue.put(response);

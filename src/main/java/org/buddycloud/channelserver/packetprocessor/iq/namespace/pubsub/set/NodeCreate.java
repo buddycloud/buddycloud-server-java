@@ -76,10 +76,8 @@ public class NodeCreate implements PubSubElementProcessor
 	private void createNode() throws InterruptedException
 	{
 		try {
-			
 		    dataStore.createNode(actor.toString(), node, getNodeConfiguration());
 		} catch (DataStoreException e) {
-			System.out.println("Exception was thrown");
 			setErrorCondition(
 			    PacketError.Type.wait,
 			    PacketError.Condition.internal_server_error
@@ -87,7 +85,8 @@ public class NodeCreate implements PubSubElementProcessor
 			outQueue.put(response);
 			return;
 		}
-		
+		response.setType(IQ.Type.result);
+		outQueue.put(response);
 	}
 
 	private Map<String, String> getNodeConfiguration()

@@ -1,13 +1,12 @@
 package org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.set;
 
-import java.util.HashMap;
-import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.log4j.Logger;
 import org.buddycloud.channelserver.Configuration;
+import org.buddycloud.channelserver.channel.node.configuration.Helper;
 import org.buddycloud.channelserver.db.DataStore;
 import org.buddycloud.channelserver.db.DataStoreException;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.JabberPubsub;
@@ -30,10 +29,12 @@ public class NodeCreate implements PubSubElementProcessor
     private DataStore             dataStore;
 	private Element               element;
     private IQ                    response;
+    private IQ                    request;
     private JID                   actor;
 	private String                serverDomain;
 	private String                topicsDomain;
 	private String                node;
+	private Helper                configurationHelper;
 	
 	private static final Pattern nodeExtract = Pattern.compile("^/user/[^@]+@([^/]+)/[^/]+$");
     private static final String NODE_REG_EX  = "^/user/[^@]+@[^/]+/[^/]+$";
@@ -59,6 +60,7 @@ public class NodeCreate implements PubSubElementProcessor
     {
     	element     = elm;
     	response    = IQ.createResultIQ(reqIQ);
+    	request     = reqIQ;
     	actor       = actorJID;
         node        = element.attributeValue("node");
     	if ((false == validateNode()) 
@@ -76,7 +78,11 @@ public class NodeCreate implements PubSubElementProcessor
 	private void createNode() throws InterruptedException
 	{
 		try {
-		    dataStore.createNode(actor.toString(), node, getNodeConfiguration());
+		    dataStore.createNode(
+		        actor.toString(),
+		        node,
+		        getNodeConfigurationHelper().parse(request)
+		    );
 		} catch (DataStoreException e) {
 			setErrorCondition(
 			    PacketError.Type.wait,
@@ -89,10 +95,12 @@ public class NodeCreate implements PubSubElementProcessor
 		outQueue.put(response);
 	}
 
-	private Map<String, String> getNodeConfiguration()
+	private Helper getNodeConfigurationHelper()
 	{
-		HashMap<String, String> configuration = new HashMap<String, String>();
-		return configuration;
+		if (null == configurationHelper) {
+			configurationHelper = new Helper();
+		}
+		return configurationHelper;
 	}
 
 	public boolean accept(Element elm)
@@ -204,5 +212,10 @@ public class NodeCreate implements PubSubElementProcessor
 		response.setType(IQ.Type.error);
 		PacketError error = new PacketError(condition, type);
 		response.setError(error);
+	}
+
+	public void setConfigurationHelper(Helper helper)
+	{
+		configurationHelper = helper;
 	}
 }

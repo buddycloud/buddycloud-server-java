@@ -19,12 +19,12 @@ public interface DataStore {
     
     public boolean isLocalUser(String bareJID);
     
-    public String addNodeConf(String nodename, HashMap<String, String> conf);
+    public String addNodeConf(String nodename, Map<String, String> conf);
     
     public String createUserNodes(String owner);
     
     public void createNode(String owner, String nodename, 
-            HashMap<String, String> conf) throws DataStoreException;
+            Map<String, String> conf) throws DataStoreException;
     
     public boolean subscribeUserToNode(String bareJID, String nodename, 
             String aff, String subs, String foreignChannelServer);

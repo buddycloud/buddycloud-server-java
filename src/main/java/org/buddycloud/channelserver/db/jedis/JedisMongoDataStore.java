@@ -95,7 +95,7 @@ public class JedisMongoDataStore implements DataStore {
         return this.jedis.sismember(LOCAL_USERS, bareJID);
     }
     
-    public String addNodeConf(String nodename, HashMap<String, String> conf) {
+    public String addNodeConf(String nodename, Map<String, String> conf) {
         return jedis.hmset(getNodeConfRedisKey(nodename), conf);
     }
     
@@ -149,7 +149,7 @@ public class JedisMongoDataStore implements DataStore {
         }
     }
     
-    public void createNode(String owner, String nodename, HashMap<String, String> conf) 
+    public void createNode(String owner, String nodename, Map<String, String> conf) 
         throws DataStoreException
     {
         

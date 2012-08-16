@@ -35,7 +35,7 @@ public class Mock implements DataStore
 	}
 
 	@Override
-	public String addNodeConf(String nodename, HashMap<String, String> conf)
+	public String addNodeConf(String nodename, Map<String, String> conf)
 	{
 		// TODO Auto-generated method stub
 		return null;
@@ -50,7 +50,7 @@ public class Mock implements DataStore
 
 	@Override
 	public void createNode(String owner, String nodename,
-			HashMap<String, String> conf) throws DataStoreException
+		 Map<String, String> conf) throws DataStoreException
 	{
 
 	}

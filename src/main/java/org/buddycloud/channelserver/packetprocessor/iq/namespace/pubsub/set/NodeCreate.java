@@ -1,5 +1,7 @@
 package org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.set;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -75,7 +77,7 @@ public class NodeCreate implements PubSubElementProcessor
 	{
 		try {
 			
-		    dataStore.createNode(actor.toString(), node, null);
+		    dataStore.createNode(actor.toString(), node, getNodeConfiguration());
 		} catch (DataStoreException e) {
 			System.out.println("Exception was thrown");
 			setErrorCondition(
@@ -86,6 +88,12 @@ public class NodeCreate implements PubSubElementProcessor
 			return;
 		}
 		
+	}
+
+	private Map<String, String> getNodeConfiguration()
+	{
+		HashMap<String, String> configuration = new HashMap<String, String>();
+		return configuration;
 	}
 
 	public boolean accept(Element elm)

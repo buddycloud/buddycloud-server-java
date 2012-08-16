@@ -13,6 +13,7 @@ import org.dom4j.Attribute;
 import org.mockito.Mockito;
 
 import org.buddycloud.channelserver.db.DataStore;
+import org.buddycloud.channelserver.db.DataStoreException;
 import org.buddycloud.channelserver.db.mock.Mock;
 import org.buddycloud.channelserver.packetHandler.iq.IQHandlerTest;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.JabberPubsub;
@@ -110,7 +111,7 @@ public class NodeCreateTest extends IQHandlerTest
 	{
 		Element element = new BaseElement("create");
 		element.addAttribute("node", "/user/capulet@shakespeare.lit/posts");
-		System.out.println("UnauthenticatedUserTest");
+
 		JID jid = new JID("juliet@anon.shakespeare.lit");
 		nodeCreate.setServerDomain("shakespeare.lit");
 		
@@ -160,7 +161,7 @@ public class NodeCreateTest extends IQHandlerTest
 	public void testNewNodeMustBeOnADomainSupportedByCurrentServer()
 	{
 		Element element = new BaseElement("create");
-		element.addAttribute("node", "/user/capulet@shakespeare.lit/posts");
+		element.addAttribute("node", "/user/capulet@shakespearelit/posts");
 		
 		JID jid = new JID("juliet@shakespeare.lit");
 		nodeCreate.setServerDomain("shakespeare.lit");
@@ -181,6 +182,60 @@ public class NodeCreateTest extends IQHandlerTest
 			 */
 		} catch (Exception e) {
 			fail("No error response");
+		}
+	}
+	
+	@Test
+	public void testDataStoreFailureReturnsInternalServerErrorResponse() 
+		throws DataStoreException
+	{
+		System.out.println("I want to create a node for " + jid.toString());
+		DataStore dataStoreMock = Mockito.mock(Mock.class);
+		Mockito
+	        .when(dataStoreMock.createNode(jid.toString(), "/user/capulet@shakespeare.lit/posts", null))
+	        .thenThrow(new DataStoreException());
+		nodeCreate.setDataStore(dataStoreMock);
+
+		Element element = new BaseElement("create");
+		element.addAttribute("node", "/user/capulet@shakespeare.lit/posts");
+		
+		JID jid = new JID("juliet@shakespeare.lit");
+		nodeCreate.setServerDomain("shakespeare.lit");
+
+		try {
+			
+			nodeCreate.process(element, jid, request,  null);
+			Packet response = queue.poll(100, TimeUnit.MILLISECONDS);
+			
+		    PacketError error = response.getError();
+			assertNotNull(error);
+			assertEquals(PacketError.Condition.internal_server_error, error.getCondition());
+			assertEquals(PacketError.Type.wait, error.getType());
+			/**
+			 * Add this check back in once Tinder supports xmlns on standard conditions
+			 * assertEquals(JabberPubsub.NS_XMPP_STANZAS, error.getApplicationConditionNamespaceURI());
+			 */
+		} catch (Exception e) {
+			fail("No error response");
+		}
+	}
+
+	@Test
+	public void testValidCreateNodeRequestReturnsConfirmationStanza()
+	{
+		Element element = new BaseElement("create");
+		element.addAttribute("node", "/user/capulet@shakespeare.lit/posts");
+		
+		JID jid = new JID("juliet@shakespeare.lit");
+		nodeCreate.setServerDomain("shakespeare.lit");
+
+		try {
+			nodeCreate.process(element, jid, request,  null);
+			Packet response = queue.poll(100, TimeUnit.MILLISECONDS);
+			assertNull(response.getError());
+			assertEquals(IQ.Type.result, ((IQ) response).getType());
+		} catch (Exception e) {
+			fail("Error in response");
 		}
 	}
 }

@@ -1,7 +1,7 @@
 package org.buddycloud.channelserver.db.jedis;
 
 import java.net.UnknownHostException;
-import java.util.HashMap;
+import java.util.Map;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Properties;
@@ -210,8 +210,8 @@ public class JedisMongoDataStore implements DataStore {
         return (Iterator<? extends NodeSubscription>) this.subscriptions.find(query).toArray();
     }
     
-    public HashMap<String, String> getNodeConf(String nodename) {
-        return (HashMap<String, String>) this.jedis.hgetAll(getNodeConfRedisKey(nodename));
+    public Map<String, String> getNodeConf(String nodename) {
+        return (Map<String, String>) this.jedis.hgetAll(getNodeConfRedisKey(nodename));
     }
     
     
@@ -275,7 +275,7 @@ public class JedisMongoDataStore implements DataStore {
     }
     
     public Map<String, String> getState(String id) {
-        return (HashMap<String, String>) this.jedis.hgetAll("state:" + id);
+        return (Map<String, String>) this.jedis.hgetAll("state:" + id);
     }
     
     // TODO, move these to somewhere else i think...

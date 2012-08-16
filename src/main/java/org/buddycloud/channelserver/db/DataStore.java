@@ -37,7 +37,7 @@ public interface DataStore {
 
     public Iterator<? extends NodeSubscription> getNodeSubscribers(String node);
     
-    public HashMap<String, String> getNodeConf(String nodename);
+    public Map<String, String> getNodeConf(String nodename);
     
     public Iterator<? extends NodeEntry> getNodeEntries(String node, 
             int limit, String afterItemId);

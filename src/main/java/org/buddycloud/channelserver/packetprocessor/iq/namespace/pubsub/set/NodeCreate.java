@@ -12,6 +12,7 @@ import org.buddycloud.channelserver.db.DataStore;
 import org.buddycloud.channelserver.db.DataStoreException;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.JabberPubsub;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.PubSubElementProcessor;
+import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.PubSubElementProcessorAbstract;
 import org.dom4j.Element;
 import org.dom4j.Namespace;
 import org.dom4j.dom.DOMElement;
@@ -22,20 +23,9 @@ import org.xmpp.packet.PacketError;
 import org.xmpp.packet.PacketError.Condition;
 import org.xmpp.packet.PacketError.Type;
 
-public class NodeCreate implements PubSubElementProcessor
+public class NodeCreate extends PubSubElementProcessorAbstract
 {
     private static final Logger LOGGER = Logger.getLogger(NodeCreate.class);
-    
-    private BlockingQueue<Packet> outQueue;
-    private DataStore             dataStore;
-	private Element               element;
-    private IQ                    response;
-    private IQ                    request;
-    private JID                   actor;
-	private String                serverDomain;
-	private String                topicsDomain;
-	private String                node;
-	private Helper                configurationHelper;
 	
 	private static final Pattern nodeExtract = Pattern.compile("^/user/[^@]+@([^/]+)/[^/]+$");
     private static final String NODE_REG_EX  = "^/user/[^@]+@[^/]+/[^/]+$";
@@ -45,16 +35,6 @@ public class NodeCreate implements PubSubElementProcessor
     	setDataStore(dataStore);
     	setOutQueue(outQueue);
     }
-
-	public void setOutQueue(BlockingQueue<Packet> outQueue)
-	{
-		this.outQueue = outQueue;
-	}
-
-	public void setDataStore(DataStore dataStore)
-	{
-		this.dataStore = dataStore;
-	}
 
 	public void process(Element elm, JID actorJID, IQ reqIQ, Element rsm) 
 	    throws Exception
@@ -101,13 +81,6 @@ public class NodeCreate implements PubSubElementProcessor
 		outQueue.put(response);
 	}
 
-	private Helper getNodeConfigurationHelper()
-	{
-		if (null == configurationHelper) {
-			configurationHelper = new Helper();
-		}
-		return configurationHelper;
-	}
 
 	public boolean accept(Element elm)
 	{
@@ -184,44 +157,11 @@ public class NodeCreate implements PubSubElementProcessor
 		}
 		return true;
 	}
-
-	public void setServerDomain(String domain)
-	{
-		serverDomain = domain;
-	}
-
-	private String getServerDomain()
-	{
-		if (null == serverDomain) {
-            serverDomain = Configuration.getInstance()
-			    .getProperty("server.domain");
-		}
-		return serverDomain;
-	}
-
-	public void setTopicsDomain(String domain)
-	{
-	    topicsDomain = domain;		
-	}
-	
-	private String getTopicsDomain()
-	{
-		if (null == topicsDomain) {
-            serverDomain = Configuration.getInstance()
-			    .getProperty("server.domain.topics");
-		}
-		return topicsDomain;		
-	}
 	
 	private void setErrorCondition(Type type, Condition condition)
 	{
 		response.setType(IQ.Type.error);
 		PacketError error = new PacketError(condition, type);
 		response.setError(error);
-	}
-
-	public void setConfigurationHelper(Helper helper)
-	{
-		configurationHelper = helper;
 	}
 }

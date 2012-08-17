@@ -25,8 +25,6 @@ import org.xmpp.packet.PacketError.Type;
 
 public class NodeCreate extends PubSubElementProcessorAbstract
 {
-    private static final Logger LOGGER = Logger.getLogger(NodeCreate.class);
-	
 	private static final Pattern nodeExtract = Pattern.compile("^/user/[^@]+@([^/]+)/[^/]+$");
     private static final String NODE_REG_EX  = "^/user/[^@]+@[^/]+/[^/]+$";
 	

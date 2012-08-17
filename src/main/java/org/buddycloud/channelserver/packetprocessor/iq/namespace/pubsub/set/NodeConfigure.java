@@ -12,9 +12,7 @@ import org.xmpp.packet.JID;
 import org.xmpp.packet.Packet;
 
 public class NodeConfigure extends PubSubElementProcessorAbstract
-{
-    private static final Logger LOGGER = Logger.getLogger(NodeConfigure.class);
-	
+{	
 	public NodeConfigure(BlockingQueue<Packet> outQueue, DataStore dataStore)
     {
     	setDataStore(dataStore);

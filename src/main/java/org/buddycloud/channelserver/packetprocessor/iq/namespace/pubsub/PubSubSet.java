@@ -7,6 +7,7 @@ import java.util.concurrent.BlockingQueue;
 
 import org.buddycloud.channelserver.packetprocessor.PacketProcessor;
 import org.buddycloud.channelserver.db.DataStore;
+import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.set.NodeConfigure;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.set.NodeCreate;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.set.PublishSet;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.set.SubscribeSet;
@@ -37,6 +38,7 @@ public class PubSubSet implements PacketProcessor<IQ> {
         elementProcessors.add(new SubscribeSet(outQueue, dataStore));
         elementProcessors.add(new UnsubscribeSet(outQueue, dataStore));
         elementProcessors.add(new NodeCreate(outQueue, dataStore));
+        elementProcessors.add(new NodeConfigure(outQueue, dataStore));
     }
     
     @Override

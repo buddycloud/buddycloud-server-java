@@ -32,11 +32,25 @@ public class NodeConfigure extends PubSubElementProcessorAbstract
     	actor       = actorJID;
         node        = element.attributeValue("node");
 
-        if (false == nodeProvided()) {
+        if ((false == nodeProvided())
+            || (false == nodeExists())
+        ) {
         	outQueue.put(response);
         	return;
         }
     }
+
+	private boolean nodeExists()
+	{
+		if (true == dataStore.nodeExists(node)) {
+			return true;
+		}
+		setErrorCondition(
+			PacketError.Type.cancel,
+			PacketError.Condition.item_not_found
+		);
+		return false;
+	}
 
 	private boolean nodeProvided()
 	{

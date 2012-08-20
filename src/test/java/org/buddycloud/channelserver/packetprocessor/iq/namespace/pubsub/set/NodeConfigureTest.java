@@ -55,7 +55,7 @@ public class NodeConfigureTest extends IQHandlerTest
 	}
 	
 	@Test
-	public void testPassingNotConfigureeAsElementNameReturnsFalse()
+	public void testPassingNotConfigureAsElementNameReturnsFalse()
 	{
 		Element element = new BaseElement("not-configure");
 		assertFalse(nodeConfigure.accept(element));
@@ -74,4 +74,6 @@ public class NodeConfigureTest extends IQHandlerTest
 		assertEquals(PacketError.Type.modify, error.getType());
 		assertEquals("nodeid-required", error.getApplicationConditionName());
 	}
+	
+	
 }

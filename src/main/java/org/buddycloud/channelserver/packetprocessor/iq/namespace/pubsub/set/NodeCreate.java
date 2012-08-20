@@ -155,11 +155,4 @@ public class NodeCreate extends PubSubElementProcessorAbstract
 		}
 		return true;
 	}
-	
-	private void setErrorCondition(Type type, Condition condition)
-	{
-		response.setType(IQ.Type.error);
-		PacketError error = new PacketError(condition, type);
-		response.setError(error);
-	}
 }

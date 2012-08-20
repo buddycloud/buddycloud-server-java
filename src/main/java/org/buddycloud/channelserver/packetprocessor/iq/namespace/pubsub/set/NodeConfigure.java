@@ -1,8 +1,10 @@
 package org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.set;
 
+import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.concurrent.BlockingQueue;
 
+import org.buddycloud.channelserver.channel.node.configuration.NodeConfigurationException;
 import org.buddycloud.channelserver.db.DataStore;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.JabberPubsub;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.PubSubElementProcessorAbstract;
@@ -14,6 +16,7 @@ import org.xmpp.packet.IQ;
 import org.xmpp.packet.JID;
 import org.xmpp.packet.Packet;
 import org.xmpp.packet.PacketError;
+import org.xmpp.packet.PacketExtension;
 
 public class NodeConfigure extends PubSubElementProcessorAbstract
 {	
@@ -41,13 +44,49 @@ public class NodeConfigure extends PubSubElementProcessorAbstract
         	outQueue.put(response);
         	return;
         }
+        setNodeConfiguration();
     }
+
+	private void setNodeConfiguration() throws Exception
+	{
+		try {
+			getNodeConfigurationHelper().parse(request);
+			if (true == getNodeConfigurationHelper().isValid()) {
+				HashMap<String, String> configuration = getNodeConfigurationHelper().getValues();
+				updateNodeConfiguration(configuration);
+	            notifySubscribers();	
+	            return;
+			}
+		} catch (NodeConfigurationException e) {
+			setErrorCondition(PacketError.Type.modify, PacketError.Condition.bad_request);
+			outQueue.put(response);
+		} catch (Exception e) {
+			setErrorCondition(PacketError.Type.cancel, PacketError.Condition.internal_server_error);
+		}
+		setErrorCondition(PacketError.Type.modify, PacketError.Condition.bad_request);
+		outQueue.put(response);
+	}
+
+	private void updateNodeConfiguration(HashMap<String, String> configuration) throws InterruptedException
+	{
+		try {
+			dataStore.addNodeConf(node, configuration);
+		} catch (Exception e) {
+			setErrorCondition(PacketError.Type.cancel, PacketError.Condition.internal_server_error);
+			outQueue.put(response);
+		}
+	}
+
+	private void notifySubscribers() {
+		// TODO Auto-generated method stub
+		
+	}
 
 	private boolean userCanModify()
 	{
 		HashMap<String, String> nodeConfiguration = dataStore.getNodeConf(node);
 		String owner = nodeConfiguration.get(Affiliation.OWNER.toString());
-		if (owner.equals(actor)) {
+		if (true == owner.equals(actor.toString())) {
 			return true;
 		}
 		setErrorCondition(PacketError.Type.auth, PacketError.Condition.forbidden);

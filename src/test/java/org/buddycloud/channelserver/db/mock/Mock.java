@@ -1,5 +1,6 @@
 package org.buddycloud.channelserver.db.mock;
 
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
@@ -15,9 +16,9 @@ public class Mock implements DataStore
 	/**
 	 * Used for testing only 
 	 */
-	private Map<String, String> configuration = null;
+	private HashMap<String, String> configuration = null;
 	
-	public Map<String, String> getConfiguration()
+	public HashMap<String, String> getConfiguration()
 	{
 		return configuration;
 	}
@@ -53,7 +54,7 @@ public class Mock implements DataStore
 	public void createNode(String owner, String nodename,
 		 Map<String, String> conf) throws DataStoreException
 	{
-		configuration = conf;
+		configuration = (HashMap<String, String>) conf;
 	}
 
 	public boolean subscribeUserToNode(String bareJID, String nodename,
@@ -84,7 +85,7 @@ public class Mock implements DataStore
 		return null;
 	}
 
-	public Map<String, String> getNodeConf(String nodename)
+	public HashMap<String, String> getNodeConf(String nodename)
 	{
 		return configuration;
 	}

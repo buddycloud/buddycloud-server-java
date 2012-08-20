@@ -1,5 +1,6 @@
 package org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.set;
 
+import java.util.HashMap;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
@@ -7,6 +8,7 @@ import java.util.concurrent.TimeUnit;
 import org.buddycloud.channelserver.db.DataStore;
 import org.buddycloud.channelserver.db.mock.Mock;
 import org.buddycloud.channelserver.packetHandler.iq.IQHandlerTest;
+import org.buddycloud.channelserver.pubsub.affiliation.Affiliation;
 import org.dom4j.Element;
 import org.dom4j.tree.BaseElement;
 import org.junit.Before;
@@ -80,12 +82,41 @@ public class NodeConfigureTest extends IQHandlerTest
 		    .when(dataStoreMock.nodeExists("/user/not-here@shakespeare.lit/status"))
 		    .thenReturn(false);
         nodeConfigure.setDataStore(dataStoreMock);
-        System.out.println(element.asXML());
+
         nodeConfigure.process(element, jid, request, null);
+        
 	    Packet response = queue.poll(100, TimeUnit.MILLISECONDS);
 	    PacketError error = response.getError();
 	    assertNotNull(error);
 	    assertEquals(PacketError.Type.cancel, error.getType());
 	    assertEquals(PacketError.Condition.item_not_found, error.getCondition());
+	}
+	
+	@Test
+	public void testUserMustBeNodeOwnerToModifyConfiguration() throws Exception
+	{
+		Element element = new BaseElement("configure");
+		element.addAttribute("node", "/user/juliet@shakespeare.lit/posts");
+		
+		HashMap<String, String> nodeConfiguration = new HashMap<String, String>();
+		nodeConfiguration.put(Affiliation.OWNER, "romeo@shakespeare.lit");
+		
+		DataStore dataStoreMock = Mockito.mock(Mock.class);
+		
+		Mockito
+		    .when(dataStoreMock.nodeExists("/user/juliet@shakespeare.lit/posts"))
+		    .thenReturn(true);
+		Mockito
+            .when(dataStoreMock.getNodeConf("/user/juliet@shakespeare.lit/posts"))
+		    .thenReturn(nodeConfiguration);
+	
+		nodeConfigure.setDataStore(dataStoreMock);
+	    nodeConfigure.process(element, jid, request, null);
+	    
+	    Packet response = queue.poll(100, TimeUnit.MILLISECONDS);
+	    PacketError error = response.getError();
+	    assertNotNull(error);
+	    assertEquals(PacketError.Type.auth, error.getType());
+	    assertEquals(PacketError.Condition.forbidden, error.getCondition());
 	}
 }

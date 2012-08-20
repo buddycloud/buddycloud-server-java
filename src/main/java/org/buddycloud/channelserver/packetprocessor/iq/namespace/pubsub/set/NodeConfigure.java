@@ -1,10 +1,12 @@
 package org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.set;
 
+import java.util.HashMap;
 import java.util.concurrent.BlockingQueue;
 
 import org.buddycloud.channelserver.db.DataStore;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.JabberPubsub;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.PubSubElementProcessorAbstract;
+import org.buddycloud.channelserver.pubsub.affiliation.Affiliation;
 import org.dom4j.Element;
 import org.dom4j.Namespace;
 import org.dom4j.dom.DOMElement;
@@ -34,11 +36,23 @@ public class NodeConfigure extends PubSubElementProcessorAbstract
 
         if ((false == nodeProvided())
             || (false == nodeExists())
+            || (false == userCanModify())
         ) {
         	outQueue.put(response);
         	return;
         }
     }
+
+	private boolean userCanModify()
+	{
+		HashMap<String, String> nodeConfiguration = dataStore.getNodeConf(node);
+		String owner = nodeConfiguration.get(Affiliation.OWNER.toString());
+		if (owner.equals(actor)) {
+			return true;
+		}
+		setErrorCondition(PacketError.Type.auth, PacketError.Condition.forbidden);
+		return false;
+	}
 
 	private boolean nodeExists()
 	{

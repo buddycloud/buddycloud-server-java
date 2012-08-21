@@ -1,20 +1,18 @@
 package org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.set;
 
-import java.sql.Array;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
 import org.buddycloud.channelserver.channel.node.configuration.Helper;
-import org.buddycloud.channelserver.channel.node.configuration.NodeConfigurationException;
 import org.buddycloud.channelserver.channel.node.configuration.HelperMock;
-import org.buddycloud.channelserver.channel.node.configuration.field.ChannelTitle;
+import org.buddycloud.channelserver.channel.node.configuration.NodeConfigurationException;
 import org.buddycloud.channelserver.db.DataStore;
 import org.buddycloud.channelserver.db.DataStoreException;
-import org.buddycloud.channelserver.db.jedis.NodeSubscriptionImpl;
 import org.buddycloud.channelserver.db.mock.Mock;
 import org.buddycloud.channelserver.packetHandler.iq.IQHandlerTest;
 import org.buddycloud.channelserver.pubsub.affiliation.Affiliation;
@@ -265,8 +263,8 @@ public class NodeConfigureTest extends IQHandlerTest
 		nodeConfigure.setConfigurationHelper(helperMock);
 		nodeConfigure.process(element, jid, request,  null);
 		
-		Packet response = queue.poll(100, TimeUnit.MILLISECONDS);
-	    //assertEquals(IQ.Type.result, response.getElement().get);
+		IQ response = (IQ) queue.poll(100, TimeUnit.MILLISECONDS);
+	    assertEquals(IQ.Type.result.toString(), response.getType().toString());
 	}
 	
 	@Test
@@ -286,12 +284,15 @@ public class NodeConfigureTest extends IQHandlerTest
             .when(dataStoreMock.getNodeConf("/user/juliet@shakespeare.lit/posts"))
 		    .thenReturn(nodeProperties);
 
-		ArrayList<? extends NodeSubscription> subscribers = new ArrayList<NodeSubscription>();
-		//subscribers.addAll(new NodeSubscriptionMock());
-		Mockito
-		    .when(dataStoreMock.getNodeSubscribers(Mockito.anyString()))
-		    .thenReturn((Iterator<? extends NodeSubscription>) subscribers.iterator());
+		List<NodeSubscriptionMock> subscribers = new ArrayList<NodeSubscriptionMock>();
+		subscribers.add(new NodeSubscriptionMock("romeo@shakespeare.lit"));
+		subscribers.add(new NodeSubscriptionMock("hamlet@shakespeare.lit"));
+		subscribers.add(new NodeSubscriptionMock("bottom@shakespeare.lit"));
 
+		Mockito
+		    .doReturn((Iterator<? extends NodeSubscription>) subscribers.iterator())
+            .when(dataStoreMock).getNodeSubscribers(Mockito.anyString());
+		
 		HelperMock helperMock = Mockito.mock(HelperMock.class);
 		Mockito
 		    .when(helperMock.isValid())
@@ -302,10 +303,12 @@ public class NodeConfigureTest extends IQHandlerTest
 		nodeConfigure.process(element, jid, request,  null);
 		
 		Packet response = queue.poll(100, TimeUnit.MILLISECONDS);
-	    PacketError error = response.getError();
 	    assertEquals(3, queue.size());
 	    Packet notification = queue.poll(100, TimeUnit.MILLISECONDS);
-	    //assertEquals(notification.);
-	    
+	    assertEquals("romeo@shakespeare.lit", notification.getTo().toString());
+	    notification = queue.poll(100, TimeUnit.MILLISECONDS);
+	    assertEquals("hamlet@shakespeare.lit", notification.getTo().toString());
+	    notification = queue.poll(100, TimeUnit.MILLISECONDS);
+	    assertEquals("bottom@shakespeare.lit", notification.getTo().toString());
 	}
 }

@@ -1,5 +1,7 @@
 package org.buddycloud.channelserver.db.mock;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -9,6 +11,7 @@ import org.buddycloud.channelserver.db.DataStoreException;
 import org.buddycloud.channelserver.db.jedis.NodeSubscriptionImpl;
 import org.buddycloud.channelserver.pubsub.entry.NodeEntry;
 import org.buddycloud.channelserver.pubsub.subscription.NodeSubscription;
+import org.buddycloud.channelserver.pubsub.subscription.NodeSubscriptionMock;
 
 
 public class Mock implements DataStore
@@ -86,7 +89,10 @@ public class Mock implements DataStore
 	public Iterator<? extends NodeSubscription> getNodeSubscribers(String node) 
 		throws DataStoreException
 	{
-		return null;
+		ArrayList<NodeSubscriptionMock> subscribers = new ArrayList<NodeSubscriptionMock>();
+		subscribers.add(new NodeSubscriptionMock());
+		System.out.println(subscribers.iterator());
+		return subscribers.iterator();
 	}
 
 	public HashMap<String, String> getNodeConf(String nodename) 

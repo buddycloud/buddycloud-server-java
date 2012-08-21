@@ -20,6 +20,7 @@ import org.dom4j.Namespace;
 import org.dom4j.dom.DOMElement;
 import org.xmpp.packet.IQ;
 import org.xmpp.packet.JID;
+import org.xmpp.packet.Message;
 import org.xmpp.packet.Packet;
 import org.xmpp.packet.PacketError;
 import org.xmpp.packet.PacketExtension;
@@ -96,6 +97,7 @@ public class NodeConfigure extends PubSubElementProcessorAbstract
 	{
 	    Iterator<? extends NodeSubscription> subscribers = dataStore.getNodeSubscribers(node);
 	    Document document = getDocumentHelper();
+	    
         Element message   = document.addElement("message");
         Element event     = message.addElement("event");
         Element configuration = event.addElement("configuration");
@@ -103,12 +105,13 @@ public class NodeConfigure extends PubSubElementProcessorAbstract
         event.addAttribute("xmlns", Event.NAMESPACE);
         message.addAttribute("id", request.getID());
         message.addAttribute("from", request.getTo().toString());
+        Message rootElement = new Message(message);
         
 		while (true == subscribers.hasNext()) {
 			String subscriber = subscribers.next().getBareJID();
-			Document notification = (Document) document.clone();
-			document.getRootElement().addAttribute("to", subscriber);
-			outQueue.put((Packet) notification);
+			message.addAttribute("to", subscriber);
+            Message notification = rootElement.createCopy();
+			outQueue.put(notification);
 		}
 	}
 

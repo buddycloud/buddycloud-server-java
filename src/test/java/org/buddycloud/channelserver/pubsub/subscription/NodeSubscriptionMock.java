@@ -5,6 +5,13 @@ import java.util.Iterator;
 public class NodeSubscriptionMock 
     implements NodeSubscription
 {
+	private String subscriber;
+	
+	public NodeSubscriptionMock(String jid)
+	{
+		subscriber = jid;
+	}
+
 	@Override
 	public String getAffiliation()
 	{
@@ -22,7 +29,7 @@ public class NodeSubscriptionMock
 	@Override
 	public String getBareJID()
 	{
-		return "romeo@shakespeare.lit";
+		return subscriber;
 	}
 	
 	@Override

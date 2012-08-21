@@ -193,8 +193,8 @@ public class NodeCreateTest extends IQHandlerTest
         nodeCreate.setConfigurationHelper(helperMock);
 
 		nodeCreate.process(element, jid, request,  null);
-		Packet response   = queue.poll(100, TimeUnit.MILLISECONDS);
-		String error = null;
+		Packet response = queue.poll(100, TimeUnit.MILLISECONDS);
+		String error    = null;
 		try {
 			error = response.getError().toString();
 			System.out.println(error.toString());

@@ -1,5 +1,8 @@
 package org.buddycloud.channelserver.db.mock;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
@@ -8,6 +11,7 @@ import org.buddycloud.channelserver.db.DataStoreException;
 import org.buddycloud.channelserver.db.jedis.NodeSubscriptionImpl;
 import org.buddycloud.channelserver.pubsub.entry.NodeEntry;
 import org.buddycloud.channelserver.pubsub.subscription.NodeSubscription;
+import org.buddycloud.channelserver.pubsub.subscription.NodeSubscriptionMock;
 
 
 public class Mock implements DataStore
@@ -15,9 +19,9 @@ public class Mock implements DataStore
 	/**
 	 * Used for testing only 
 	 */
-	private Map<String, String> configuration = null;
+	private HashMap<String, String> configuration = null;
 	
-	public Map<String, String> getConfiguration()
+	public HashMap<String, String> getConfiguration() throws DataStoreException
 	{
 		return configuration;
 	}
@@ -25,27 +29,28 @@ public class Mock implements DataStore
 	/**
 	 * Implemented methods
 	 */
-	public boolean isLocalNode(String nodename)
+	public boolean isLocalNode(String nodename) throws DataStoreException
 	{
 		return false;
 	}
 
-	public Long addLocalUser(String bareJID)
+	public Long addLocalUser(String bareJID) throws DataStoreException
 	{
 		return null;
 	}
 
-	public boolean isLocalUser(String bareJID)
+	public boolean isLocalUser(String bareJID) throws DataStoreException
 	{
 		return false;
 	}
 
-	public String addNodeConf(String nodename, Map<String, String> conf)
+	public String addNodeConf(String nodename, Map<String, String> conf) 
+		throws DataStoreException
 	{
 		return null;
 	}
 
-	public String createUserNodes(String owner)
+	public String createUserNodes(String owner) throws DataStoreException
 	{
 		return null;
 	}
@@ -53,70 +58,78 @@ public class Mock implements DataStore
 	public void createNode(String owner, String nodename,
 		 Map<String, String> conf) throws DataStoreException
 	{
-		configuration = conf;
+		configuration = (HashMap<String, String>) conf;
 	}
 
 	public boolean subscribeUserToNode(String bareJID, String nodename,
-			String aff, String subs, String foreignChannelServer)
+			String aff, String subs, String foreignChannelServer) 
+	    throws DataStoreException
 	{
 		return false;
 	}
 
-	public boolean unsubscribeUserFromNode(String bareJID, String node)
+	public boolean unsubscribeUserFromNode(String bareJID, String node) 
+		throws DataStoreException
 	{
 		return false;
 	}
 
 	public Iterator<? extends NodeSubscription> getUserSubscriptionsOfNodes(
-			String bareJID)
+			String bareJID) throws DataStoreException
 	{
 		return null;
 	}
 
 	public NodeSubscriptionImpl getUserSubscriptionOfNode(String bareJID,
-			String node)
+			String node) throws DataStoreException
 	{
 		return null;
 	}
 
-	public Iterator<? extends NodeSubscription> getNodeSubscribers(String node)
+	public Iterator<? extends NodeSubscription> getNodeSubscribers(String node) 
+		throws DataStoreException
 	{
-		return null;
+		ArrayList<NodeSubscriptionMock> subscribers = new ArrayList<NodeSubscriptionMock>();
+		subscribers.add(new NodeSubscriptionMock());
+		System.out.println(subscribers.iterator());
+		return subscribers.iterator();
 	}
 
-	public Map<String, String> getNodeConf(String nodename)
+	public HashMap<String, String> getNodeConf(String nodename) 
+		throws DataStoreException
 	{
 		return configuration;
 	}
 
 	public Iterator<? extends NodeEntry> getNodeEntries(String node, int limit,
-			String afterItemId)
+			String afterItemId) throws DataStoreException
     {
 		return null;
 	}
 
-	public int getNodeEntriesCount(String node)
+	public int getNodeEntriesCount(String node) throws DataStoreException
 	{
 		return 0;
 	}
 
-	public boolean storeEntry(String nodename, String id, String entry)
+	public boolean storeEntry(String nodename, String id, String entry) 
+		throws DataStoreException
 	{
 		return false;
 	}
 
 	public String storeState(String oldID, String newID,
-			Map<String, String> state)
+			Map<String, String> state) throws DataStoreException
     {
 		return null;
 	}
 
-	public Map<String, String> getState(String id)
+	public Map<String, String> getState(String id) throws DataStoreException
 	{
 		return null;
 	}
 
-	public boolean nodeExists(String createNodeId)
+	public boolean nodeExists(String createNodeId) throws DataStoreException
 	{
 		return false;
 	}

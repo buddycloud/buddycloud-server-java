@@ -25,8 +25,6 @@ import org.xmpp.packet.PacketError.Type;
 
 public class NodeCreate extends PubSubElementProcessorAbstract
 {
-    private static final Logger LOGGER = Logger.getLogger(NodeCreate.class);
-	
 	private static final Pattern nodeExtract = Pattern.compile("^/user/[^@]+@([^/]+)/[^/]+$");
     private static final String NODE_REG_EX  = "^/user/[^@]+@[^/]+/[^/]+$";
 	
@@ -156,12 +154,5 @@ public class NodeCreate extends PubSubElementProcessorAbstract
 			return false;
 		}
 		return true;
-	}
-	
-	private void setErrorCondition(Type type, Condition condition)
-	{
-		response.setType(IQ.Type.error);
-		PacketError error = new PacketError(condition, type);
-		response.setError(error);
 	}
 }

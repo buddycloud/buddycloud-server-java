@@ -12,10 +12,15 @@ public abstract class Field
     	this.value = value;
     }
     
+    public String getName()
+    {
+    	return FIELD_NAME;
+    }
+    
     public String getValue()
     {
     	return this.value;
     }
 
-    public abstract boolean valid();
+    public abstract boolean isValid();
 }

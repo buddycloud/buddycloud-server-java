@@ -16,7 +16,7 @@ public class ChannelType extends Field
 	    }
 	}
 
-	public boolean valid()
+	public boolean isValid()
 	{
 		return (getValue().equals(ChannelType.models.PERSONAL)
 			|| getValue().equals(ChannelType.models.TOPIC)

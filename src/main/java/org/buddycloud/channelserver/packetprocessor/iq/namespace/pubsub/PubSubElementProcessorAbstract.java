@@ -9,6 +9,9 @@ import org.dom4j.Element;
 import org.xmpp.packet.IQ;
 import org.xmpp.packet.JID;
 import org.xmpp.packet.Packet;
+import org.xmpp.packet.PacketError;
+import org.xmpp.packet.PacketError.Condition;
+import org.xmpp.packet.PacketError.Type;
 
 public abstract class PubSubElementProcessorAbstract
     implements PubSubElementProcessor
@@ -74,5 +77,12 @@ public abstract class PubSubElementProcessorAbstract
 			configurationHelper = new Helper();
 		}
 		return configurationHelper;
+	}
+	
+	protected void setErrorCondition(Type type, Condition condition)
+	{
+		response.setType(IQ.Type.error);
+		PacketError error = new PacketError(condition, type);
+		response.setError(error);
 	}
 }

@@ -18,7 +18,7 @@ public class Mock implements DataStore
 	 */
 	private HashMap<String, String> configuration = null;
 	
-	public HashMap<String, String> getConfiguration()
+	public HashMap<String, String> getConfiguration() throws DataStoreException
 	{
 		return configuration;
 	}
@@ -26,27 +26,28 @@ public class Mock implements DataStore
 	/**
 	 * Implemented methods
 	 */
-	public boolean isLocalNode(String nodename)
+	public boolean isLocalNode(String nodename) throws DataStoreException
 	{
 		return false;
 	}
 
-	public Long addLocalUser(String bareJID)
+	public Long addLocalUser(String bareJID) throws DataStoreException
 	{
 		return null;
 	}
 
-	public boolean isLocalUser(String bareJID)
+	public boolean isLocalUser(String bareJID) throws DataStoreException
 	{
 		return false;
 	}
 
-	public String addNodeConf(String nodename, Map<String, String> conf)
+	public String addNodeConf(String nodename, Map<String, String> conf) 
+		throws DataStoreException
 	{
 		return null;
 	}
 
-	public String createUserNodes(String owner)
+	public String createUserNodes(String owner) throws DataStoreException
 	{
 		return null;
 	}
@@ -58,66 +59,71 @@ public class Mock implements DataStore
 	}
 
 	public boolean subscribeUserToNode(String bareJID, String nodename,
-			String aff, String subs, String foreignChannelServer)
+			String aff, String subs, String foreignChannelServer) 
+	    throws DataStoreException
 	{
 		return false;
 	}
 
-	public boolean unsubscribeUserFromNode(String bareJID, String node)
+	public boolean unsubscribeUserFromNode(String bareJID, String node) 
+		throws DataStoreException
 	{
 		return false;
 	}
 
 	public Iterator<? extends NodeSubscription> getUserSubscriptionsOfNodes(
-			String bareJID)
+			String bareJID) throws DataStoreException
 	{
 		return null;
 	}
 
 	public NodeSubscriptionImpl getUserSubscriptionOfNode(String bareJID,
-			String node)
+			String node) throws DataStoreException
 	{
 		return null;
 	}
 
-	public Iterator<? extends NodeSubscription> getNodeSubscribers(String node)
+	public Iterator<? extends NodeSubscription> getNodeSubscribers(String node) 
+		throws DataStoreException
 	{
 		return null;
 	}
 
-	public HashMap<String, String> getNodeConf(String nodename)
+	public HashMap<String, String> getNodeConf(String nodename) 
+		throws DataStoreException
 	{
 		return configuration;
 	}
 
 	public Iterator<? extends NodeEntry> getNodeEntries(String node, int limit,
-			String afterItemId)
+			String afterItemId) throws DataStoreException
     {
 		return null;
 	}
 
-	public int getNodeEntriesCount(String node)
+	public int getNodeEntriesCount(String node) throws DataStoreException
 	{
 		return 0;
 	}
 
-	public boolean storeEntry(String nodename, String id, String entry)
+	public boolean storeEntry(String nodename, String id, String entry) 
+		throws DataStoreException
 	{
 		return false;
 	}
 
 	public String storeState(String oldID, String newID,
-			Map<String, String> state)
+			Map<String, String> state) throws DataStoreException
     {
 		return null;
 	}
 
-	public Map<String, String> getState(String id)
+	public Map<String, String> getState(String id) throws DataStoreException
 	{
 		return null;
 	}
 
-	public boolean nodeExists(String createNodeId)
+	public boolean nodeExists(String createNodeId) throws DataStoreException
 	{
 		return false;
 	}

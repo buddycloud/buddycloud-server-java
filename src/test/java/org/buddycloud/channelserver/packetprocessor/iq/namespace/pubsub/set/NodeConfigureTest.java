@@ -1,6 +1,9 @@
 package org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.set;
 
+import java.sql.Array;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
@@ -10,9 +13,13 @@ import org.buddycloud.channelserver.channel.node.configuration.NodeConfiguration
 import org.buddycloud.channelserver.channel.node.configuration.HelperMock;
 import org.buddycloud.channelserver.channel.node.configuration.field.ChannelTitle;
 import org.buddycloud.channelserver.db.DataStore;
+import org.buddycloud.channelserver.db.DataStoreException;
+import org.buddycloud.channelserver.db.jedis.NodeSubscriptionImpl;
 import org.buddycloud.channelserver.db.mock.Mock;
 import org.buddycloud.channelserver.packetHandler.iq.IQHandlerTest;
 import org.buddycloud.channelserver.pubsub.affiliation.Affiliation;
+import org.buddycloud.channelserver.pubsub.subscription.NodeSubscription;
+import org.buddycloud.channelserver.pubsub.subscription.NodeSubscriptionMock;
 import org.dom4j.Element;
 import org.dom4j.tree.BaseElement;
 import org.junit.Before;
@@ -191,5 +198,114 @@ public class NodeConfigureTest extends IQHandlerTest
 	    assertNotNull(error);
 	    assertEquals(PacketError.Type.modify, error.getType());
 	    assertEquals(PacketError.Condition.bad_request, error.getCondition());
+	}
+	
+	@Test
+	public void testDatabaseErrorOnUpdateConfigurationReturnsError() throws Exception
+	{
+		Element element = new BaseElement("configure");
+		element.addAttribute("node", "/user/juliet@shakespeare.lit/posts");
+		
+		HashMap<String, String> nodeProperties = new HashMap<String, String>();
+		nodeProperties.put(Affiliation.OWNER, "juliet@shakespeare.lit");
+		DataStore dataStoreMock = Mockito.mock(Mock.class);
+		
+		Mockito
+		    .when(dataStoreMock.nodeExists("/user/juliet@shakespeare.lit/posts"))
+		    .thenReturn(true);
+		Mockito
+            .when(dataStoreMock.getNodeConf("/user/juliet@shakespeare.lit/posts"))
+		    .thenReturn(nodeProperties);
+		Mockito
+		    .when(dataStoreMock.addNodeConf(Mockito.anyString(), Mockito.any(HashMap.class)))
+		    .thenThrow(new DataStoreException());
+
+		HelperMock helperMock = Mockito.mock(HelperMock.class);
+		Mockito
+		    .when(helperMock.isValid())
+		    .thenReturn(true);
+
+		nodeConfigure.setDataStore(dataStoreMock);
+		nodeConfigure.setConfigurationHelper(helperMock);
+		nodeConfigure.process(element, jid, request,  null);
+		
+		Packet response = queue.poll(100, TimeUnit.MILLISECONDS);
+	    PacketError error = response.getError();
+	    assertNotNull(error);
+	    assertEquals(PacketError.Type.cancel, error.getType());
+	    assertEquals(PacketError.Condition.internal_server_error, error.getCondition());		
+	}
+	
+	@Test
+	public void testSuccessfulSettingOfConfigurationReturnsConfirmationStanza() throws Exception
+	{
+		Element element = new BaseElement("configure");
+		element.addAttribute("node", "/user/juliet@shakespeare.lit/posts");
+		
+		HashMap<String, String> nodeProperties = new HashMap<String, String>();
+		nodeProperties.put(Affiliation.OWNER, "juliet@shakespeare.lit");
+		DataStore dataStoreMock = Mockito.mock(Mock.class);
+		
+		Mockito
+		    .when(dataStoreMock.nodeExists("/user/juliet@shakespeare.lit/posts"))
+		    .thenReturn(true);
+		Mockito
+            .when(dataStoreMock.getNodeConf("/user/juliet@shakespeare.lit/posts"))
+		    .thenReturn(nodeProperties);
+		Mockito
+		    .when(dataStoreMock.addNodeConf(Mockito.anyString(), Mockito.any(HashMap.class)))
+		    .thenThrow(new DataStoreException());
+
+		HelperMock helperMock = Mockito.mock(HelperMock.class);
+		Mockito
+		    .when(helperMock.isValid())
+		    .thenReturn(true);
+
+		nodeConfigure.setDataStore(dataStoreMock);
+		nodeConfigure.setConfigurationHelper(helperMock);
+		nodeConfigure.process(element, jid, request,  null);
+		
+		Packet response = queue.poll(100, TimeUnit.MILLISECONDS);
+	    //assertEquals(IQ.Type.result, response.getElement().get);
+	}
+	
+	@Test
+	public void testSettingConfigurationUpdatesSubscribers() throws Exception
+	{
+		Element element = new BaseElement("configure");
+		element.addAttribute("node", "/user/juliet@shakespeare.lit/posts");
+		
+		HashMap<String, String> nodeProperties = new HashMap<String, String>();
+		nodeProperties.put(Affiliation.OWNER, "juliet@shakespeare.lit");
+		DataStore dataStoreMock = Mockito.mock(Mock.class);
+		
+		Mockito
+		    .when(dataStoreMock.nodeExists("/user/juliet@shakespeare.lit/posts"))
+		    .thenReturn(true);
+		Mockito
+            .when(dataStoreMock.getNodeConf("/user/juliet@shakespeare.lit/posts"))
+		    .thenReturn(nodeProperties);
+
+		ArrayList<? extends NodeSubscription> subscribers = new ArrayList<NodeSubscription>();
+		//subscribers.addAll(new NodeSubscriptionMock());
+		Mockito
+		    .when(dataStoreMock.getNodeSubscribers(Mockito.anyString()))
+		    .thenReturn((Iterator<? extends NodeSubscription>) subscribers.iterator());
+
+		HelperMock helperMock = Mockito.mock(HelperMock.class);
+		Mockito
+		    .when(helperMock.isValid())
+		    .thenReturn(true);
+
+		nodeConfigure.setDataStore(dataStoreMock);
+		nodeConfigure.setConfigurationHelper(helperMock);
+		nodeConfigure.process(element, jid, request,  null);
+		
+		Packet response = queue.poll(100, TimeUnit.MILLISECONDS);
+	    PacketError error = response.getError();
+	    assertEquals(3, queue.size());
+	    Packet notification = queue.poll(100, TimeUnit.MILLISECONDS);
+	    //assertEquals(notification.);
+	    
 	}
 }

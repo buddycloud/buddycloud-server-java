@@ -2,13 +2,19 @@ package org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.set;
 
 import java.sql.SQLException;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.concurrent.BlockingQueue;
 
 import org.buddycloud.channelserver.channel.node.configuration.NodeConfigurationException;
 import org.buddycloud.channelserver.db.DataStore;
+import org.buddycloud.channelserver.db.DataStoreException;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.JabberPubsub;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.PubSubElementProcessorAbstract;
 import org.buddycloud.channelserver.pubsub.affiliation.Affiliation;
+import org.buddycloud.channelserver.pubsub.event.Event;
+import org.buddycloud.channelserver.pubsub.subscription.NodeSubscription;
+import org.dom4j.Document;
+import org.dom4j.DocumentHelper;
 import org.dom4j.Element;
 import org.dom4j.Namespace;
 import org.dom4j.dom.DOMElement;
@@ -20,7 +26,8 @@ import org.xmpp.packet.PacketExtension;
 
 public class NodeConfigure extends PubSubElementProcessorAbstract
 {	
-	private String node;
+	protected String   node;
+	protected Document documentHelper;
 	
 	public NodeConfigure(BlockingQueue<Packet> outQueue, DataStore dataStore)
     {
@@ -36,11 +43,19 @@ public class NodeConfigure extends PubSubElementProcessorAbstract
     	request     = reqIQ;
     	actor       = actorJID;
         node        = element.attributeValue("node");
-
-        if ((false == nodeProvided())
-            || (false == nodeExists())
-            || (false == userCanModify())
-        ) {
+        try {
+	        if ((false == nodeProvided())
+	            || (false == nodeExists())
+	            || (false == userCanModify())
+	        ) {
+	        	outQueue.put(response);
+	        	return;
+	        }
+        } catch (DataStoreException e) {
+        	setErrorCondition(
+        		PacketError.Type.cancel,
+        		PacketError.Condition.internal_server_error
+        	);
         	outQueue.put(response);
         	return;
         }
@@ -60,29 +75,44 @@ public class NodeConfigure extends PubSubElementProcessorAbstract
 		} catch (NodeConfigurationException e) {
 			setErrorCondition(PacketError.Type.modify, PacketError.Condition.bad_request);
 			outQueue.put(response);
-		} catch (Exception e) {
+			return;
+		} catch (DataStoreException e) {
 			setErrorCondition(PacketError.Type.cancel, PacketError.Condition.internal_server_error);
+			outQueue.put(response);
+			return;
 		}
 		setErrorCondition(PacketError.Type.modify, PacketError.Condition.bad_request);
 		outQueue.put(response);
 	}
 
-	private void updateNodeConfiguration(HashMap<String, String> configuration) throws InterruptedException
+	private void updateNodeConfiguration(HashMap<String, String> configuration) 
+		throws Exception
 	{
-		try {
-			dataStore.addNodeConf(node, configuration);
-		} catch (Exception e) {
-			setErrorCondition(PacketError.Type.cancel, PacketError.Condition.internal_server_error);
-			outQueue.put(response);
+		dataStore.addNodeConf(node, configuration);
+		outQueue.put(response);
+	}
+
+	private void notifySubscribers() throws DataStoreException, InterruptedException
+	{
+	    Iterator<? extends NodeSubscription> subscribers = dataStore.getNodeSubscribers(node);
+	    Document document = getDocumentHelper();
+        Element message   = document.addElement("message");
+        Element event     = message.addElement("event");
+        Element configuration = event.addElement("configuration");
+        configuration.addAttribute("node", node);
+        event.addAttribute("xmlns", Event.NAMESPACE);
+        message.addAttribute("id", request.getID());
+        message.addAttribute("from", request.getTo().toString());
+        
+		while (true == subscribers.hasNext()) {
+			String subscriber = subscribers.next().getBareJID();
+			Document notification = (Document) document.clone();
+			document.getRootElement().addAttribute("to", subscriber);
+			outQueue.put((Packet) notification);
 		}
 	}
 
-	private void notifySubscribers() {
-		// TODO Auto-generated method stub
-		
-	}
-
-	private boolean userCanModify()
+	private boolean userCanModify() throws DataStoreException
 	{
 		HashMap<String, String> nodeConfiguration = dataStore.getNodeConf(node);
 		String owner = nodeConfiguration.get(Affiliation.OWNER.toString());
@@ -93,7 +123,7 @@ public class NodeConfigure extends PubSubElementProcessorAbstract
 		return false;
 	}
 
-	private boolean nodeExists()
+	private boolean nodeExists() throws DataStoreException
 	{
 		if (true == dataStore.nodeExists(node)) {
 			return true;
@@ -130,5 +160,18 @@ public class NodeConfigure extends PubSubElementProcessorAbstract
 	public boolean accept(Element elm)
 	{
 		return elm.getName().equals("configure");
+	}
+	
+	public void setDocumentHelper(Document helper)
+	{
+		documentHelper = helper;
+	}
+	
+	protected Document getDocumentHelper()
+	{
+		if (null == documentHelper) {
+			documentHelper = DocumentHelper.createDocument();
+		}
+		return documentHelper;
 	}
 }

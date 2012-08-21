@@ -89,10 +89,7 @@ public class Mock implements DataStore
 	public Iterator<? extends NodeSubscription> getNodeSubscribers(String node) 
 		throws DataStoreException
 	{
-		ArrayList<NodeSubscriptionMock> subscribers = new ArrayList<NodeSubscriptionMock>();
-		subscribers.add(new NodeSubscriptionMock());
-		System.out.println(subscribers.iterator());
-		return subscribers.iterator();
+		return null;
 	}
 
 	public HashMap<String, String> getNodeConf(String nodename) 

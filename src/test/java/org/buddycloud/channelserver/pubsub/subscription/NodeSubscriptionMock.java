@@ -1,7 +1,5 @@
 package org.buddycloud.channelserver.pubsub.subscription;
 
-import java.util.Iterator;
-
 public class NodeSubscriptionMock 
     implements NodeSubscription
 {

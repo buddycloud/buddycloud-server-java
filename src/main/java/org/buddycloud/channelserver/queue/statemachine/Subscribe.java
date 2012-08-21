@@ -5,6 +5,7 @@ import java.util.Map;
 import java.util.UUID;
 
 import org.buddycloud.channelserver.db.DataStore;
+import org.buddycloud.channelserver.db.DataStoreException;
 
 import org.dom4j.DocumentException;
 import org.dom4j.Element;
@@ -23,7 +24,7 @@ public class Subscribe extends AStatemachine  {
     }
     
     // Todo, refactor this.
-    public Packet nextStep() {
+    public Packet nextStep() throws DataStoreException {
         
         IQ nextIQ = this.discoverChannelServer();
         

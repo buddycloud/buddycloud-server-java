@@ -6,6 +6,7 @@ import java.util.UUID;
 
 
 import org.buddycloud.channelserver.db.DataStore;
+import org.buddycloud.channelserver.db.DataStoreException;
 import org.dom4j.DocumentException;
 import org.dom4j.Element;
 import org.dom4j.io.SAXReader;
@@ -26,7 +27,7 @@ public class DiscoInfo extends AStatemachine {
         info.put(KEY_EVENT_TYPE, EVENT_TYPE); 
     }
     
-    public Packet nextStep() {
+    public Packet nextStep() throws DataStoreException {
         
         IQ nextIQ = this.discoverChannelServer();
         

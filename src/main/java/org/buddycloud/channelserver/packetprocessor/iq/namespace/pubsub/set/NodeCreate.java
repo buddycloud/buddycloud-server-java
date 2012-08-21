@@ -107,7 +107,7 @@ public class NodeCreate extends PubSubElementProcessorAbstract
         return false;
 	}
 	
-	private boolean doesNodeExist()
+	private boolean doesNodeExist() throws DataStoreException
 	{
 		if (false == dataStore.nodeExists(node)) {
 			return false;

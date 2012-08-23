@@ -6,13 +6,14 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
+import org.buddycloud.channelserver.channel.node.configuration.Helper;
 import org.buddycloud.channelserver.channel.node.configuration.HelperMock;
 import org.buddycloud.channelserver.channel.node.configuration.NodeConfigurationException;
 import org.buddycloud.channelserver.channel.node.configuration.field.ChannelTitle;
 import org.buddycloud.channelserver.db.DataStore;
 import org.buddycloud.channelserver.db.DataStoreException;
 import org.buddycloud.channelserver.db.mock.Mock;
-import org.buddycloud.channelserver.packetHandler.iq.IQHandlerTest;
+import org.buddycloud.channelserver.packetHandler.iq.IQTestHandler;
 import org.dom4j.Element;
 import org.dom4j.tree.BaseElement;
 import org.junit.Before;
@@ -23,7 +24,7 @@ import org.xmpp.packet.JID;
 import org.xmpp.packet.Packet;
 import org.xmpp.packet.PacketError;
 
-public class NodeCreateTest extends IQHandlerTest
+public class NodeCreateTest extends IQTestHandler
 {
 	private IQ         request;
 	private Mock       dataStore;
@@ -169,7 +170,10 @@ public class NodeCreateTest extends IQHandlerTest
 		        Mockito.anyMapOf(String.class, String.class)
 		    );
 		nodeCreate.setDataStore(dataStoreMock);
-
+        Helper helperMock = Mockito.mock(Helper.class);
+        Mockito.doReturn(true).when(helperMock).isValid();
+        nodeCreate.setConfigurationHelper(helperMock);
+        
 		nodeCreate.process(element, jid, request,  null);
 		Packet response = queue.poll(100, TimeUnit.MILLISECONDS);
 		
@@ -187,9 +191,7 @@ public class NodeCreateTest extends IQHandlerTest
 	public void testValidCreateNodeRequestReturnsConfirmationStanza() throws Exception
 	{
 		HelperMock helperMock = Mockito.mock(HelperMock.class);
-		Mockito
-		    .when(helperMock.parse(request))
-		    .thenReturn(null);
+		Mockito.doReturn(true).when(helperMock).isValid();
         nodeCreate.setConfigurationHelper(helperMock);
 
 		nodeCreate.process(element, jid, request,  null);
@@ -197,7 +199,6 @@ public class NodeCreateTest extends IQHandlerTest
 		String error    = null;
 		try {
 			error = response.getError().toString();
-			System.out.println(error.toString());
 			fail("Unexpected error response");
 		} catch (NullPointerException e) {
 			assertNull(error);
@@ -219,8 +220,10 @@ public class NodeCreateTest extends IQHandlerTest
 
 		HelperMock helperMock = Mockito.mock(HelperMock.class);
 		Mockito
-		    .when(helperMock.parse(request))
+		    .when(helperMock.getValues())
 		    .thenReturn(configurationProperties);
+		Mockito.doReturn(true).when(helperMock).isValid();
+		
         nodeCreate.setConfigurationHelper(helperMock);
 
 		nodeCreate.process(element, jid, request,  null);
@@ -229,7 +232,6 @@ public class NodeCreateTest extends IQHandlerTest
 		String error    = null;
 		try {
 			error = response.getError().toString();
-			System.out.println(error.toString());
 			fail("Unexpected error response");
 		} catch (NullPointerException e) {
 			assertNull(error);
@@ -248,8 +250,9 @@ public class NodeCreateTest extends IQHandlerTest
 
 		HelperMock helperMock = Mockito.mock(HelperMock.class);
 		Mockito
-		    .when(helperMock.parse(request))
-		    .thenThrow(new NodeConfigurationException());
+		    .doThrow(new NodeConfigurationException())
+		    .when(helperMock)
+		    .parse(request);
         nodeCreate.setConfigurationHelper(helperMock);
 
 		nodeCreate.process(element, jid, request,  null);

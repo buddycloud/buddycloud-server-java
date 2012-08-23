@@ -1,15 +1,15 @@
 package org.buddycloud.channelserver.channel.node.configuration.field;
 
-public class ChannelDescription extends Field
+public class Generic extends Field
 {
-	public static final String FIELD_NAME    = "pubsub#description";
+	public static String FIELD_NAME          = "";
 	public static final String DEFAULT_VALUE = "";
-
-	public ChannelDescription()
-	{
-		name = FIELD_NAME;
-	}
 	
+    public void setName(String name)
+    {
+    	this.name = name;
+    }
+    
 	public boolean isValid()
 	{
 		return true;

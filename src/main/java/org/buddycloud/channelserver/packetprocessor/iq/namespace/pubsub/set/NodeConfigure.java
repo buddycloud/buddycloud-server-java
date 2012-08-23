@@ -1,6 +1,5 @@
 package org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.set;
 
-import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.concurrent.BlockingQueue;
@@ -23,7 +22,6 @@ import org.xmpp.packet.JID;
 import org.xmpp.packet.Message;
 import org.xmpp.packet.Packet;
 import org.xmpp.packet.PacketError;
-import org.xmpp.packet.PacketExtension;
 
 public class NodeConfigure extends PubSubElementProcessorAbstract
 {	
@@ -96,10 +94,9 @@ public class NodeConfigure extends PubSubElementProcessorAbstract
 	private void notifySubscribers() throws DataStoreException, InterruptedException
 	{
 	    Iterator<? extends NodeSubscription> subscribers = dataStore.getNodeSubscribers(node);
-	    Document document = getDocumentHelper();
-	    
-        Element message   = document.addElement("message");
-        Element event     = message.addElement("event");
+	    Document document     = getDocumentHelper();
+        Element message       = document.addElement("message");
+        Element event         = message.addElement("event");
         Element configuration = event.addElement("configuration");
         configuration.addAttribute("node", node);
         event.addAttribute("xmlns", Event.NAMESPACE);

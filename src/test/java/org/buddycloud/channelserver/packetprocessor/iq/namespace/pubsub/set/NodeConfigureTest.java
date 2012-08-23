@@ -14,7 +14,7 @@ import org.buddycloud.channelserver.channel.node.configuration.NodeConfiguration
 import org.buddycloud.channelserver.db.DataStore;
 import org.buddycloud.channelserver.db.DataStoreException;
 import org.buddycloud.channelserver.db.mock.Mock;
-import org.buddycloud.channelserver.packetHandler.iq.IQHandlerTest;
+import org.buddycloud.channelserver.packetHandler.iq.IQTestHandler;
 import org.buddycloud.channelserver.pubsub.affiliation.Affiliation;
 import org.buddycloud.channelserver.pubsub.subscription.NodeSubscription;
 import org.buddycloud.channelserver.pubsub.subscription.NodeSubscriptionMock;
@@ -28,7 +28,7 @@ import org.xmpp.packet.JID;
 import org.xmpp.packet.Packet;
 import org.xmpp.packet.PacketError;
 
-public class NodeConfigureTest extends IQHandlerTest
+public class NodeConfigureTest extends IQTestHandler
 {
 	private IQ            request;
 	private Mock          dataStore;
@@ -147,8 +147,9 @@ public class NodeConfigureTest extends IQHandlerTest
         
 		Helper helperMock = Mockito.mock(Helper.class);
 		Mockito
-		    .when(helperMock.parse(request))
-		    .thenThrow(new NodeConfigurationException());
+		    .doThrow(new NodeConfigurationException())
+		    .when(helperMock)
+		    .parse(request);
 		
 		nodeConfigure.setConfigurationHelper(helperMock);
 		nodeConfigure.setDataStore(dataStoreMock);
@@ -250,9 +251,11 @@ public class NodeConfigureTest extends IQHandlerTest
 		Mockito
             .when(dataStoreMock.getNodeConf("/user/juliet@shakespeare.lit/posts"))
 		    .thenReturn(nodeProperties);
+		
+		List<NodeSubscriptionMock> subscribers = new ArrayList<NodeSubscriptionMock>();
 		Mockito
-		    .when(dataStoreMock.addNodeConf(Mockito.anyString(), Mockito.any(HashMap.class)))
-		    .thenThrow(new DataStoreException());
+		    .doReturn((Iterator<? extends NodeSubscription>) subscribers.iterator())
+            .when(dataStoreMock).getNodeSubscribers(Mockito.anyString());
 
 		HelperMock helperMock = Mockito.mock(HelperMock.class);
 		Mockito
@@ -264,7 +267,7 @@ public class NodeConfigureTest extends IQHandlerTest
 		nodeConfigure.process(element, jid, request,  null);
 		
 		IQ response = (IQ) queue.poll(100, TimeUnit.MILLISECONDS);
-	    assertEquals(IQ.Type.result.toString(), response.getType().toString());
+		assertEquals(IQ.Type.result.toString(), response.getType().toString());
 	}
 	
 	@Test

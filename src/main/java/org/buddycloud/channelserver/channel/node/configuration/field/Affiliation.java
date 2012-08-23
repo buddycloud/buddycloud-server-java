@@ -16,6 +16,11 @@ public class Affiliation extends Field
 	    }
 	}
 
+	public Affiliation()
+	{
+		name = FIELD_NAME;
+	}
+	
 	public boolean isValid()
 	{
 		return (getValue().equals(Affiliation.models.FOLLOWER_AND_POST)

@@ -19,7 +19,7 @@ import org.xmpp.packet.IQ;
 import org.xmpp.packet.Packet;
 
 import redis.clients.jedis.Jedis;
-import org.buddycloud.channelserver.packetHandler.iq.IQHandlerTest;
+import org.buddycloud.channelserver.packetHandler.iq.IQTestHandler;
 
 public class JabberRegisterTest {
 
@@ -31,19 +31,19 @@ public class JabberRegisterTest {
     public void init() throws FileNotFoundException, IOException {
         this.outQueue = new LinkedBlockingQueue<Packet>();
         this.inQueue = new LinkedBlockingQueue<Packet>();
-        InQueueConsumer consumer = new InQueueConsumer(outQueue, IQHandlerTest.readConf(), inQueue);
+        InQueueConsumer consumer = new InQueueConsumer(outQueue, IQTestHandler.readConf(), inQueue);
         consumer.start();
         
-        jedis = IQHandlerTest.getJedis(); // don't remove, it's here to clean the db
+        jedis = IQTestHandler.getJedis(); // don't remove, it's here to clean the db
     }
     
     @Test
     public void testRegister() throws IOException, DocumentException, InterruptedException {
         
-        JedisMongoDataStore dataStore = new JedisMongoDataStore(IQHandlerTest.readConf());
+        JedisMongoDataStore dataStore = new JedisMongoDataStore(IQTestHandler.readConf());
         
-        IQ request = IQHandlerTest.readStanzaAsIq("/iq/register/request.stanza");
-        String expectedReply = IQHandlerTest.readStanzaAsString("/iq/register/reply.stanza");
+        IQ request = IQTestHandler.readStanzaAsIq("/iq/register/request.stanza");
+        String expectedReply = IQTestHandler.readStanzaAsString("/iq/register/reply.stanza");
         
         inQueue.put(request);
         
@@ -68,9 +68,9 @@ public class JabberRegisterTest {
     
     public void testRegisterFailsWhenComingFromWrongDomain() throws IOException, DocumentException, InterruptedException {
         
-        IQ request = IQHandlerTest.readStanzaAsIq(
+        IQ request = IQTestHandler.readStanzaAsIq(
                 "/iq/register/fail/request-different-domain.stanza");
-        String expectedReply = IQHandlerTest.readStanzaAsString(
+        String expectedReply = IQTestHandler.readStanzaAsString(
                 "/iq/register/fail/reply-different-domain.stanza");
         
         inQueue.put(request);
@@ -84,8 +84,8 @@ public class JabberRegisterTest {
     @Test
     public void testCannotRegisterMoreThanOnce() throws IOException, DocumentException, InterruptedException {
         
-        IQ request = IQHandlerTest.readStanzaAsIq("/iq/register/request.stanza");
-        String expectedReply = IQHandlerTest.readStanzaAsString("/iq/register/reply.stanza");
+        IQ request = IQTestHandler.readStanzaAsIq("/iq/register/request.stanza");
+        String expectedReply = IQTestHandler.readStanzaAsString("/iq/register/reply.stanza");
         
         inQueue.put(request);
         
@@ -101,7 +101,7 @@ public class JabberRegisterTest {
         replyIQ = (IQ)outQueue.poll(1000, TimeUnit.MILLISECONDS);
         
         Assert.assertNotNull(replyIQ);
-        expectedReply = IQHandlerTest.readStanzaAsString("/iq/register/fail/reply-conflict.stanza");
+        expectedReply = IQTestHandler.readStanzaAsString("/iq/register/fail/reply-conflict.stanza");
         Assert.assertEquals(expectedReply, replyIQ.toXML());
         
     }

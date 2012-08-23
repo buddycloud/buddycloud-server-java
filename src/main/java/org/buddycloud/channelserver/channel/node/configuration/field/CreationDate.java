@@ -13,6 +13,7 @@ public class CreationDate extends Field
 	public CreationDate()
 	{
 		setValue(ISO8601FORMAT.format(new Date()));
+		name = FIELD_NAME;
 	}
 
 	public boolean isValid()

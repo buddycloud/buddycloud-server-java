@@ -27,8 +27,8 @@ import com.mongodb.DBCollection;
 import com.mongodb.Mongo;
 import com.mongodb.MongoException;
 
-public class IQHandlerTest extends TestCase {
-
+public class IQTestHandler extends TestCase
+{
 	private final static String CONFIGURATION_PROPERTIES = "src/test/resources/configuration.properties";
     public final static String STANZA_PATH               = "src/test/resources/stanzas";
 
@@ -127,7 +127,7 @@ public class IQHandlerTest extends TestCase {
         
         LinkedBlockingQueue<Packet> outQueue = new LinkedBlockingQueue<Packet>();
         LinkedBlockingQueue<Packet> inQueue = new LinkedBlockingQueue<Packet>();
-        InQueueConsumer consumer = new InQueueConsumer(outQueue, IQHandlerTest.readConf(), inQueue);
+        InQueueConsumer consumer = new InQueueConsumer(outQueue, IQTestHandler.readConf(), inQueue);
         consumer.start();
         
         inQueue.put(request);

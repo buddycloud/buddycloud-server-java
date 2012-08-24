@@ -213,27 +213,7 @@ public class JedisMongoDataStore implements DataStore {
         DBObject query = new BasicDBObject();
         query.put("node", node);
         
-        final Iterator<DBObject> it = this.entries.find(query).iterator();
-        
-        Iterator<NodeSubscription> neIt = new Iterator<NodeSubscription>() {
-            @Override
-            public boolean hasNext() {
-                return it.hasNext();
-            }
-
-            @Override
-            public NodeSubscription next() {
-                return (NodeSubscription) it.next();
-            }
-
-            @Override
-            public void remove() {
-                it.remove();
-            }
-            
-        };
-        
-        return neIt;
+        return new CastingIterator<DBObject, NodeSubscription>(this.entries.find(query).iterator());
     }
     
     public HashMap<String, String> getNodeConf(String nodename) {
@@ -267,27 +247,7 @@ public class JedisMongoDataStore implements DataStore {
         DBObject sort = new BasicDBObject();
         sort.put("_id", -1);
         
-        final Iterator<DBObject> it = this.entries.find(query).sort(sort).limit(limit).iterator();
-        
-        Iterator<NodeEntry> neIt = new Iterator<NodeEntry>() {
-            @Override
-            public boolean hasNext() {
-                return it.hasNext();
-            }
-
-            @Override
-            public NodeEntry next() {
-                return (NodeEntry) it.next();
-            }
-
-            @Override
-            public void remove() {
-                it.remove();
-            }
-            
-        };
-        
-        return neIt;
+        return new CastingIterator<DBObject, NodeEntry>(this.entries.find(query).sort(sort).limit(limit).iterator());
     }
     
     public int getNodeEntriesCount(String node) {

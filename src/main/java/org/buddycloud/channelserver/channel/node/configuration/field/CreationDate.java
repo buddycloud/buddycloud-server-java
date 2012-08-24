@@ -13,9 +13,10 @@ public class CreationDate extends Field
 	public CreationDate()
 	{
 		setValue(ISO8601FORMAT.format(new Date()));
+		name = FIELD_NAME;
 	}
 
-	public boolean valid()
+	public boolean isValid()
 	{
 		// @todo improve this validation later
 		return getValue().matches("/^[0-9]{4}-[0-9}{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$/");

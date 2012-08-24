@@ -16,7 +16,12 @@ public class AccessModel extends Field
 	    }
 	}
 
-	public boolean valid()
+	public AccessModel()
+	{
+		name = FIELD_NAME;
+	}
+	
+	public boolean isValid()
 	{
 		return (getValue().equals(AccessModel.models.OPEN)
 			|| getValue().equals(AccessModel.models.WHITELIST)

@@ -2,7 +2,7 @@ package org.buddycloud.channelserver.packetHandler.iq.namespace;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import org.buddycloud.channelserver.packetHandler.iq.IQHandlerTest;
+import org.buddycloud.channelserver.packetHandler.iq.IQTestHandler;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
@@ -28,29 +28,29 @@ public class JabberPubsubTest
     public void init() throws FileNotFoundException, IOException {
         this.outQueue = new LinkedBlockingQueue<Packet>();
         this.inQueue = new LinkedBlockingQueue<Packet>();
-        InQueueConsumer consumer = new InQueueConsumer(outQueue, IQHandlerTest.readConf(), inQueue);
+        InQueueConsumer consumer = new InQueueConsumer(outQueue, IQTestHandler.readConf(), inQueue);
         consumer.start();
         
-        IQHandlerTest.getJedis(); // don't remove, it's here to clean the db
+        IQTestHandler.getJedis(); // don't remove, it's here to clean the db
     }
     
     @Test
     public void testSubscribeToLocalNode() throws IOException, DocumentException, InterruptedException {
         
-        JedisMongoDataStore dataStore = new JedisMongoDataStore(IQHandlerTest.readConf());
+        JedisMongoDataStore dataStore = new JedisMongoDataStore(IQTestHandler.readConf());
         dataStore.createUserNodes("pamela@denmark.lit");
         dataStore.addLocalUser("francisco@denmark.lit");
         
-        String request = IQHandlerTest.readStanzaAsString("/iq/pubsub/subscribe/request.stanza");
-        String expectedReply = IQHandlerTest.readStanzaAsString("/iq/pubsub/subscribe/reply.stanza");
+        String request = IQTestHandler.readStanzaAsString("/iq/pubsub/subscribe/request.stanza");
+        String expectedReply = IQTestHandler.readStanzaAsString("/iq/pubsub/subscribe/reply.stanza");
         
-        String expectedSubscriptionNotification = IQHandlerTest.readStanzaAsString(
+        String expectedSubscriptionNotification = IQTestHandler.readStanzaAsString(
                 "/iq/pubsub/subscribe/subscriptionNotificationMessage.stanza");
-        String expectedAffiliationNotification = IQHandlerTest.readStanzaAsString(
+        String expectedAffiliationNotification = IQTestHandler.readStanzaAsString(
                 "/iq/pubsub/subscribe/affiliationNotificationMessage.stanza");
         
         // subscription request.
-        inQueue.put(IQHandlerTest.toIq(request));
+        inQueue.put(IQTestHandler.toIq(request));
         IQ replyIQ = (IQ)outQueue.poll(1000, TimeUnit.MILLISECONDS);
         
         Assert.assertNotNull(replyIQ);
@@ -74,36 +74,36 @@ public class JabberPubsubTest
     @Test
     public void testSubscribeToForeignNode() throws IOException, DocumentException, InterruptedException {
         
-        JedisMongoDataStore dataStore = new JedisMongoDataStore(IQHandlerTest.readConf());
+        JedisMongoDataStore dataStore = new JedisMongoDataStore(IQTestHandler.readConf());
         dataStore.addLocalUser("francisco@denmark.lit");
         
-        String request = IQHandlerTest.readStanzaAsString(
+        String request = IQTestHandler.readStanzaAsString(
                 "/iq/pubsub/subscribe/foreign/request.stanza");
         
-        String itemsRequest = IQHandlerTest.readStanzaAsString(
+        String itemsRequest = IQTestHandler.readStanzaAsString(
                 "/iq/pubsub/subscribe/foreign/itemsRequest.stanza");
-        String itemsReply = IQHandlerTest.readStanzaAsString(
+        String itemsReply = IQTestHandler.readStanzaAsString(
                 "/iq/pubsub/subscribe/foreign/itemsReply.stanza");
         
-        String infoRequestOne  = IQHandlerTest.readStanzaAsString(
+        String infoRequestOne  = IQTestHandler.readStanzaAsString(
                 "/iq/pubsub/subscribe/foreign/infoRequest1.stanza");
-        String infoReplyOne  = IQHandlerTest.readStanzaAsString(
+        String infoReplyOne  = IQTestHandler.readStanzaAsString(
                 "/iq/pubsub/subscribe/foreign/infoReply1.stanza");
-        String infoRequestTwo  = IQHandlerTest.readStanzaAsString(
+        String infoRequestTwo  = IQTestHandler.readStanzaAsString(
                 "/iq/pubsub/subscribe/foreign/infoRequest2.stanza");
-        String infoReplyTwo  = IQHandlerTest.readStanzaAsString(
+        String infoReplyTwo  = IQTestHandler.readStanzaAsString(
                 "/iq/pubsub/subscribe/foreign/infoReply2.stanza");
         
-        String subscriptionRequest = IQHandlerTest.readStanzaAsString(
+        String subscriptionRequest = IQTestHandler.readStanzaAsString(
                 "/iq/pubsub/subscribe/foreign/subscriptionRequest.stanza");
-        String subscriptionReply = IQHandlerTest.readStanzaAsString(
+        String subscriptionReply = IQTestHandler.readStanzaAsString(
                 "/iq/pubsub/subscribe/foreign/subscriptionReply.stanza");
         
-        String expectedReply = IQHandlerTest.readStanzaAsString(
+        String expectedReply = IQTestHandler.readStanzaAsString(
                 "/iq/pubsub/subscribe/foreign/reply.stanza");
         
         // subscription request.
-        inQueue.put(IQHandlerTest.toIq(request));
+        inQueue.put(IQTestHandler.toIq(request));
         IQ replyIQ = (IQ)outQueue.poll(1000, TimeUnit.MILLISECONDS);
         
         // fisrt step is to send disco#items
@@ -113,7 +113,7 @@ public class JabberPubsubTest
         
         // disco#items reply from foreign server
         itemsReply = itemsReply.replaceAll("items1", replyIQ.getID());
-        inQueue.put(IQHandlerTest.toIq(itemsReply));
+        inQueue.put(IQTestHandler.toIq(itemsReply));
         
         // For each item we send disco#info
         replyIQ = (IQ)outQueue.poll(1000, TimeUnit.MILLISECONDS);
@@ -124,7 +124,7 @@ public class JabberPubsubTest
         
         // first item was not ok, we send another
         infoReplyOne = infoReplyOne.replaceAll("items1", replyIQ.getID());
-        inQueue.put(IQHandlerTest.toIq(infoReplyOne));
+        inQueue.put(IQTestHandler.toIq(infoReplyOne));
         
         replyIQ = (IQ)outQueue.poll(1000, TimeUnit.MILLISECONDS);
         
@@ -135,7 +135,7 @@ public class JabberPubsubTest
         // Now we should have subscription request going out
         // becase the second info should find a buddycloud channel component.
         infoReplyTwo = infoReplyTwo.replaceAll("items1", replyIQ.getID());
-        inQueue.put(IQHandlerTest.toIq(infoReplyTwo));
+        inQueue.put(IQTestHandler.toIq(infoReplyTwo));
         
         replyIQ = (IQ)outQueue.poll(1000, TimeUnit.MILLISECONDS);
         
@@ -146,7 +146,7 @@ public class JabberPubsubTest
         // Now we have successful subscription reply coming from the foreign channel server,
         // and we will forward it to the user.
         subscriptionReply = subscriptionReply.replaceAll("items1", replyIQ.getID());
-        inQueue.put(IQHandlerTest.toIq(subscriptionReply));
+        inQueue.put(IQTestHandler.toIq(subscriptionReply));
         
         replyIQ = (IQ)outQueue.poll(1000, TimeUnit.MILLISECONDS);
         
@@ -160,32 +160,32 @@ public class JabberPubsubTest
     @Test
     public void testSubscribeToForeignNodeHighfellow() throws IOException, DocumentException, InterruptedException {
         
-        JedisMongoDataStore dataStore = new JedisMongoDataStore(IQHandlerTest.readConf());
+        JedisMongoDataStore dataStore = new JedisMongoDataStore(IQTestHandler.readConf());
         dataStore.addLocalUser("tuomas@xmpp.lobstermonster.org");
         
-        String request = IQHandlerTest.readStanzaAsString(
+        String request = IQTestHandler.readStanzaAsString(
                 "/iq/pubsub/subscribe/foreign/highfellow/request.stanza");
         
-        String itemsRequest = IQHandlerTest.readStanzaAsString(
+        String itemsRequest = IQTestHandler.readStanzaAsString(
                 "/iq/pubsub/subscribe/foreign/highfellow/itemsRequest.stanza");
-        String itemsReply = IQHandlerTest.readStanzaAsString(
+        String itemsReply = IQTestHandler.readStanzaAsString(
                 "/iq/pubsub/subscribe/foreign/highfellow/itemsReply.stanza");
         
-        String infoRequestOne = IQHandlerTest.readStanzaAsString(
+        String infoRequestOne = IQTestHandler.readStanzaAsString(
                 "/iq/pubsub/subscribe/foreign/highfellow/infoRequest1.stanza");
-        String infoReplyOne = IQHandlerTest.readStanzaAsString(
+        String infoReplyOne = IQTestHandler.readStanzaAsString(
                 "/iq/pubsub/subscribe/foreign/highfellow/infoReply1.stanza");
         
-        String subscriptionRequest = IQHandlerTest.readStanzaAsString(
+        String subscriptionRequest = IQTestHandler.readStanzaAsString(
                 "/iq/pubsub/subscribe/foreign/highfellow/subscriptionRequest.stanza");
-        String subscriptionReply = IQHandlerTest.readStanzaAsString(
+        String subscriptionReply = IQTestHandler.readStanzaAsString(
                 "/iq/pubsub/subscribe/foreign/highfellow/subscriptionReply.stanza");
         
-        String expectedReply = IQHandlerTest.readStanzaAsString(
+        String expectedReply = IQTestHandler.readStanzaAsString(
                 "/iq/pubsub/subscribe/foreign/highfellow/reply.stanza");
         
         // subscription request.
-        inQueue.put(IQHandlerTest.toIq(request));
+        inQueue.put(IQTestHandler.toIq(request));
         IQ replyIQ = (IQ)outQueue.poll(1000, TimeUnit.MILLISECONDS);
         
         // fisrt step is to send disco#items
@@ -195,7 +195,7 @@ public class JabberPubsubTest
         
         // disco#items reply from foreign server
         itemsReply = itemsReply.replaceAll("items1", replyIQ.getID());
-        inQueue.put(IQHandlerTest.toIq(itemsReply));
+        inQueue.put(IQTestHandler.toIq(itemsReply));
         
         // For each item we send disco#info
         replyIQ = (IQ)outQueue.poll(1000, TimeUnit.MILLISECONDS);
@@ -205,7 +205,7 @@ public class JabberPubsubTest
         Assert.assertEquals(infoRequestOne, replyIQ.toXML());
         
         infoReplyOne = infoReplyOne.replaceAll("items1", replyIQ.getID());
-        inQueue.put(IQHandlerTest.toIq(infoReplyOne));
+        inQueue.put(IQTestHandler.toIq(infoReplyOne));
         
         replyIQ = (IQ)outQueue.poll(1000, TimeUnit.MILLISECONDS);
         
@@ -216,7 +216,7 @@ public class JabberPubsubTest
         // Now we have successful subscription reply coming from the foreign channel server,
         // and we will forward it to the user.
         subscriptionReply = subscriptionReply.replaceAll("items1", replyIQ.getID());
-        inQueue.put(IQHandlerTest.toIq(subscriptionReply));
+        inQueue.put(IQTestHandler.toIq(subscriptionReply));
         
         replyIQ = (IQ)outQueue.poll(1000, TimeUnit.MILLISECONDS);
         
@@ -229,32 +229,32 @@ public class JabberPubsubTest
     @Test
     public void testSubscribeToForeignNodeFailsNotOnWhiteList() throws IOException, DocumentException, InterruptedException {
         
-        JedisMongoDataStore dataStore = new JedisMongoDataStore(IQHandlerTest.readConf());
+        JedisMongoDataStore dataStore = new JedisMongoDataStore(IQTestHandler.readConf());
         dataStore.addLocalUser("tuomas@xmpp.lobstermonster.org");
         
-        String request = IQHandlerTest.readStanzaAsString(
+        String request = IQTestHandler.readStanzaAsString(
                 "/iq/pubsub/subscribe/foreign/fail/notonwhitelist/request.stanza");
         
-        String itemsRequest = IQHandlerTest.readStanzaAsString(
+        String itemsRequest = IQTestHandler.readStanzaAsString(
                 "/iq/pubsub/subscribe/foreign/fail/notonwhitelist/itemsRequest.stanza");
-        String itemsReply = IQHandlerTest.readStanzaAsString(
+        String itemsReply = IQTestHandler.readStanzaAsString(
                 "/iq/pubsub/subscribe/foreign/fail/notonwhitelist/itemsReply.stanza");
         
-        String infoRequestOne = IQHandlerTest.readStanzaAsString(
+        String infoRequestOne = IQTestHandler.readStanzaAsString(
                 "/iq/pubsub/subscribe/foreign/fail/notonwhitelist/infoRequest1.stanza");
-        String infoReplyOne = IQHandlerTest.readStanzaAsString(
+        String infoReplyOne = IQTestHandler.readStanzaAsString(
                 "/iq/pubsub/subscribe/foreign/fail/notonwhitelist/infoReply1.stanza");
         
-        String subscriptionRequest = IQHandlerTest.readStanzaAsString(
+        String subscriptionRequest = IQTestHandler.readStanzaAsString(
                 "/iq/pubsub/subscribe/foreign/fail/notonwhitelist/subscriptionRequest.stanza");
-        String subscriptionReply = IQHandlerTest.readStanzaAsString(
+        String subscriptionReply = IQTestHandler.readStanzaAsString(
                 "/iq/pubsub/subscribe/foreign/fail/notonwhitelist/subscriptionReply.stanza");
         
-        String expectedReply = IQHandlerTest.readStanzaAsString(
+        String expectedReply = IQTestHandler.readStanzaAsString(
                 "/iq/pubsub/subscribe/foreign/fail/notonwhitelist/reply.stanza");
         
         // subscription request.
-        inQueue.put(IQHandlerTest.toIq(request));
+        inQueue.put(IQTestHandler.toIq(request));
         IQ replyIQ = (IQ)outQueue.poll(1000, TimeUnit.MILLISECONDS);
         
         // fisrt step is to send disco#items
@@ -264,7 +264,7 @@ public class JabberPubsubTest
         
         // disco#items reply from foreign server
         itemsReply = itemsReply.replaceAll("items1", replyIQ.getID());
-        inQueue.put(IQHandlerTest.toIq(itemsReply));
+        inQueue.put(IQTestHandler.toIq(itemsReply));
         
         // For each item we send disco#info
         replyIQ = (IQ)outQueue.poll(1000, TimeUnit.MILLISECONDS);
@@ -274,7 +274,7 @@ public class JabberPubsubTest
         Assert.assertEquals(infoRequestOne, replyIQ.toXML());
         
         infoReplyOne = infoReplyOne.replaceAll("items1", replyIQ.getID());
-        inQueue.put(IQHandlerTest.toIq(infoReplyOne));
+        inQueue.put(IQTestHandler.toIq(infoReplyOne));
         
         replyIQ = (IQ)outQueue.poll(1000, TimeUnit.MILLISECONDS);
         
@@ -285,7 +285,7 @@ public class JabberPubsubTest
         // Now we have successful subscription error reply coming from the foreign channel server,
         // and we will forward it to the user.
         subscriptionReply = subscriptionReply.replaceAll("items1", replyIQ.getID());
-        inQueue.put(IQHandlerTest.toIq(subscriptionReply));
+        inQueue.put(IQTestHandler.toIq(subscriptionReply));
         
         replyIQ = (IQ)outQueue.poll(1000, TimeUnit.MILLISECONDS);
         
@@ -298,22 +298,22 @@ public class JabberPubsubTest
     @Test
     public void testSubscribeToForeignNodeFailOnItems() throws IOException, DocumentException, InterruptedException {
         
-        JedisMongoDataStore dataStore = new JedisMongoDataStore(IQHandlerTest.readConf());
+        JedisMongoDataStore dataStore = new JedisMongoDataStore(IQTestHandler.readConf());
         dataStore.addLocalUser("francisco@denmark.lit");
         
-        String request = IQHandlerTest.readStanzaAsString(
+        String request = IQTestHandler.readStanzaAsString(
                 "/iq/pubsub/subscribe/foreign/fail/items/request.stanza");
         
-        String itemsRequest = IQHandlerTest.readStanzaAsString(
+        String itemsRequest = IQTestHandler.readStanzaAsString(
                 "/iq/pubsub/subscribe/foreign/fail/items/itemsRequest.stanza");
-        String itemsReply = IQHandlerTest.readStanzaAsString(
+        String itemsReply = IQTestHandler.readStanzaAsString(
                 "/iq/pubsub/subscribe/foreign/fail/items/itemsReply.stanza");
         
-        String expectedReply = IQHandlerTest.readStanzaAsString(
+        String expectedReply = IQTestHandler.readStanzaAsString(
                 "/iq/pubsub/subscribe/foreign/fail/items/reply.stanza");
         
         // subscription request.
-        inQueue.put(IQHandlerTest.toIq(request));
+        inQueue.put(IQTestHandler.toIq(request));
         IQ replyIQ = (IQ)outQueue.poll(1000, TimeUnit.MILLISECONDS);
         
         // fisrt step is to send disco#items
@@ -323,7 +323,7 @@ public class JabberPubsubTest
         
         // disco#items reply from foreign server
         itemsReply = itemsReply.replaceAll("items1", replyIQ.getID());
-        inQueue.put(IQHandlerTest.toIq(itemsReply));
+        inQueue.put(IQTestHandler.toIq(itemsReply));
         
         // Disco items fail, so we just send error back to the
         // end user.
@@ -338,16 +338,16 @@ public class JabberPubsubTest
     @Test
     public void testGetSubscriptoinsOfExistingNode() throws IOException, DocumentException, InterruptedException {
         
-        JedisMongoDataStore dataStore = new JedisMongoDataStore(IQHandlerTest.readConf());
+        JedisMongoDataStore dataStore = new JedisMongoDataStore(IQTestHandler.readConf());
         dataStore.createUserNodes("francisco@denmark.lit");
         dataStore.addLocalUser("francisco@denmark.lit");
         
-        String request = IQHandlerTest.readStanzaAsString(
+        String request = IQTestHandler.readStanzaAsString(
                 "/iq/pubsub/subscriptions/requestExistingNode.stanza");
-        String expectedReply = IQHandlerTest.readStanzaAsString(
+        String expectedReply = IQTestHandler.readStanzaAsString(
                 "/iq/pubsub/subscriptions/replyExistingNode.stanza");
         
-        inQueue.put(IQHandlerTest.toIq(request));
+        inQueue.put(IQTestHandler.toIq(request));
         IQ replyIQ = (IQ)outQueue.poll(1000, TimeUnit.MILLISECONDS);
         
         Assert.assertNotNull(replyIQ);
@@ -357,7 +357,7 @@ public class JabberPubsubTest
     @Test
     public void testGetSubscriptions() throws IOException, DocumentException, InterruptedException {
         
-        JedisMongoDataStore dataStore = new JedisMongoDataStore(IQHandlerTest.readConf());
+        JedisMongoDataStore dataStore = new JedisMongoDataStore(IQTestHandler.readConf());
         String bareJID = "francisco@denmark.lit";
         dataStore.createUserNodes(bareJID);
         dataStore.addLocalUser(bareJID);
@@ -366,12 +366,12 @@ public class JabberPubsubTest
         dataStore.subscribeUserToNode(bareJID, Conf.getPostChannelNodename(
                 "pamela@denmark.lit"), "member", "unconfigured", null);
         
-        String request = IQHandlerTest.readStanzaAsString(
+        String request = IQTestHandler.readStanzaAsString(
                 "/iq/pubsub/subscriptions/request.stanza");
-        String expectedReply = IQHandlerTest.readStanzaAsString(
+        String expectedReply = IQTestHandler.readStanzaAsString(
                 "/iq/pubsub/subscriptions/reply.stanza");
         
-        inQueue.put(IQHandlerTest.toIq(request));
+        inQueue.put(IQTestHandler.toIq(request));
         IQ replyIQ = (IQ)outQueue.poll(1000, TimeUnit.MILLISECONDS);
         
         Assert.assertNotNull(replyIQ);
@@ -381,19 +381,19 @@ public class JabberPubsubTest
     @Test
     public void testPublishToLocalNode() throws IOException, DocumentException, InterruptedException {
         
-        JedisMongoDataStore dataStore = new JedisMongoDataStore(IQHandlerTest.readConf());
+        JedisMongoDataStore dataStore = new JedisMongoDataStore(IQTestHandler.readConf());
         dataStore.createUserNodes("koski@buddycloud.com");
         dataStore.addLocalUser("koski@buddycloud.com");
         
-        String request = IQHandlerTest.readStanzaAsString(
+        String request = IQTestHandler.readStanzaAsString(
                 "/iq/pubsub/publish/request.stanza");
-        String expectedReply = IQHandlerTest.readStanzaAsString(
+        String expectedReply = IQTestHandler.readStanzaAsString(
                 "/iq/pubsub/publish/reply.stanza");
-        String msgNotification = IQHandlerTest.readStanzaAsString(
+        String msgNotification = IQTestHandler.readStanzaAsString(
                 "/iq/pubsub/publish/msgNotification.stanza");
         
         // IQ result for the publish
-        inQueue.put(IQHandlerTest.toIq(request));
+        inQueue.put(IQTestHandler.toIq(request));
         IQ replyIQ = (IQ)outQueue.poll(1000, TimeUnit.MILLISECONDS);
         
         Assert.assertNotNull(replyIQ);
@@ -419,17 +419,17 @@ public class JabberPubsubTest
     @Test
     public void testGetItemsEmptyNode() throws IOException, DocumentException, InterruptedException {
         
-        JedisMongoDataStore dataStore = new JedisMongoDataStore(IQHandlerTest.readConf());
+        JedisMongoDataStore dataStore = new JedisMongoDataStore(IQTestHandler.readConf());
         String bareJID = "francisco@denmark.lit";
         dataStore.createUserNodes(bareJID);
         dataStore.addLocalUser(bareJID);
         
-        String request = IQHandlerTest.readStanzaAsString(
+        String request = IQTestHandler.readStanzaAsString(
                 "/iq/pubsub/items/request.stanza");
-        String expectedReply = IQHandlerTest.readStanzaAsString(
+        String expectedReply = IQTestHandler.readStanzaAsString(
                 "/iq/pubsub/items/replyNoItems.stanza");
         
-        inQueue.put(IQHandlerTest.toIq(request));
+        inQueue.put(IQTestHandler.toIq(request));
         IQ replyIQ = (IQ)outQueue.poll(1000, TimeUnit.MILLISECONDS);
         
         Assert.assertNotNull(replyIQ);
@@ -439,7 +439,7 @@ public class JabberPubsubTest
     @Test
     public void testGetItems() throws IOException, DocumentException, InterruptedException {
         
-        JedisMongoDataStore dataStore = new JedisMongoDataStore(IQHandlerTest.readConf());
+        JedisMongoDataStore dataStore = new JedisMongoDataStore(IQTestHandler.readConf());
         String bareJID = "francisco@denmark.lit";
         dataStore.createUserNodes(bareJID);
         dataStore.addLocalUser(bareJID);
@@ -496,10 +496,10 @@ public class JabberPubsubTest
                              		"</activity:object>" +
                              		"</entry>");
 
-        String request = IQHandlerTest.readStanzaAsString("/iq/pubsub/items/request.stanza");
-        String expectedReply = IQHandlerTest.readStanzaAsString("/iq/pubsub/items/reply.stanza");
+        String request = IQTestHandler.readStanzaAsString("/iq/pubsub/items/request.stanza");
+        String expectedReply = IQTestHandler.readStanzaAsString("/iq/pubsub/items/reply.stanza");
         
-        inQueue.put(IQHandlerTest.toIq(request));
+        inQueue.put(IQTestHandler.toIq(request));
         IQ replyIQ = (IQ)outQueue.poll(1000, TimeUnit.MILLISECONDS);
         
         Assert.assertNotNull(replyIQ);
@@ -509,7 +509,7 @@ public class JabberPubsubTest
     @Test
     public void testGetItemsMax1() throws IOException, DocumentException, InterruptedException {
         
-        JedisMongoDataStore dataStore = new JedisMongoDataStore(IQHandlerTest.readConf());
+        JedisMongoDataStore dataStore = new JedisMongoDataStore(IQTestHandler.readConf());
         String bareJID = "francisco@denmark.lit";
         dataStore.createUserNodes(bareJID);
         dataStore.addLocalUser(bareJID);
@@ -568,10 +568,10 @@ public class JabberPubsubTest
                              		"</activity:object>" +
                              		"</entry>");
 
-        String request = IQHandlerTest.readStanzaAsString("/iq/pubsub/items/requestMax1.stanza");
-        String expectedReply = IQHandlerTest.readStanzaAsString("/iq/pubsub/items/replyMax1.stanza");
+        String request = IQTestHandler.readStanzaAsString("/iq/pubsub/items/requestMax1.stanza");
+        String expectedReply = IQTestHandler.readStanzaAsString("/iq/pubsub/items/replyMax1.stanza");
         
-        inQueue.put(IQHandlerTest.toIq(request));
+        inQueue.put(IQTestHandler.toIq(request));
         IQ replyIQ = (IQ)outQueue.poll(1000, TimeUnit.MILLISECONDS);
         
         Assert.assertNotNull(replyIQ);
@@ -583,7 +583,7 @@ public class JabberPubsubTest
     @Test
     public void testGetItemsMax1Rsm() throws IOException, DocumentException, InterruptedException {
         
-        JedisMongoDataStore dataStore = new JedisMongoDataStore(IQHandlerTest.readConf());
+        JedisMongoDataStore dataStore = new JedisMongoDataStore(IQTestHandler.readConf());
         String bareJID = "francisco@denmark.lit";
         dataStore.createUserNodes(bareJID);
         dataStore.addLocalUser(bareJID);
@@ -642,12 +642,12 @@ public class JabberPubsubTest
                              		"</activity:object>" +
                              		"</entry>");
 
-        String request = IQHandlerTest.readStanzaAsString("/iq/pubsub/items/requestMax1Rsm.stanza");
-        String expectedReply = IQHandlerTest.readStanzaAsString("/iq/pubsub/items/replyMax1.stanza");
-        String requestNext = IQHandlerTest.readStanzaAsString("/iq/pubsub/items/requestNextMax1Rsm.stanza");
-        String expectedReplyRsm = IQHandlerTest.readStanzaAsString("/iq/pubsub/items/replyNextMax1Rsm.stanza");
+        String request = IQTestHandler.readStanzaAsString("/iq/pubsub/items/requestMax1Rsm.stanza");
+        String expectedReply = IQTestHandler.readStanzaAsString("/iq/pubsub/items/replyMax1.stanza");
+        String requestNext = IQTestHandler.readStanzaAsString("/iq/pubsub/items/requestNextMax1Rsm.stanza");
+        String expectedReplyRsm = IQTestHandler.readStanzaAsString("/iq/pubsub/items/replyNextMax1Rsm.stanza");
         
-        inQueue.put(IQHandlerTest.toIq(request));
+        inQueue.put(IQTestHandler.toIq(request));
         IQ replyIQ = (IQ)outQueue.poll(1000, TimeUnit.MILLISECONDS);
         
         Assert.assertNotNull(replyIQ);
@@ -656,7 +656,7 @@ public class JabberPubsubTest
         Assert.assertEquals(expectedReply, replyIQ.toXML());
         
         requestNext = requestNext.replaceAll("ITEMID", id);
-        inQueue.put(IQHandlerTest.toIq(requestNext));
+        inQueue.put(IQTestHandler.toIq(requestNext));
         replyIQ = (IQ)outQueue.poll(1000, TimeUnit.MILLISECONDS);
         id = replyIQ.getChildElement().element("set").element("first").getText();
         expectedReplyRsm = expectedReplyRsm.replaceAll("ITEMID", id);
@@ -666,17 +666,17 @@ public class JabberPubsubTest
     @Test
     public void testReceiveSubscriptionrequestFromForeignNode() throws IOException, DocumentException, InterruptedException {
         
-        JedisMongoDataStore dataStore = new JedisMongoDataStore(IQHandlerTest.readConf());
+        JedisMongoDataStore dataStore = new JedisMongoDataStore(IQTestHandler.readConf());
         dataStore.addLocalUser("tuomas@xmpp.lobstermonster.org");
         dataStore.createUserNodes("tuomas@xmpp.lobstermonster.org");
         
-        String request = IQHandlerTest.readStanzaAsString(
+        String request = IQTestHandler.readStanzaAsString(
                 "/iq/pubsub/subscribe/fromforeign/request.stanza");
-        String expectedReply = IQHandlerTest.readStanzaAsString(
+        String expectedReply = IQTestHandler.readStanzaAsString(
                 "/iq/pubsub/subscribe/fromforeign/reply.stanza");
         
         // subscription request.
-        inQueue.put(IQHandlerTest.toIq(request));
+        inQueue.put(IQTestHandler.toIq(request));
         IQ replyIQ = (IQ)outQueue.poll(1000, TimeUnit.MILLISECONDS);
         
         Assert.assertNotNull(replyIQ);
@@ -694,7 +694,7 @@ public class JabberPubsubTest
     @Test
     public void testUnsubscribeToLocalNode() throws IOException, DocumentException, InterruptedException {
         
-        JedisMongoDataStore dataStore = new JedisMongoDataStore(IQHandlerTest.readConf());
+        JedisMongoDataStore dataStore = new JedisMongoDataStore(IQTestHandler.readConf());
         dataStore.createUserNodes("pamela@denmark.lit");
         dataStore.addLocalUser("francisco@denmark.lit");
         dataStore.subscribeUserToNode("francisco@denmark.lit", 
@@ -703,13 +703,13 @@ public class JabberPubsubTest
                                       "unconfigured", 
                                       null);
         
-        String request = IQHandlerTest.readStanzaAsString(
+        String request = IQTestHandler.readStanzaAsString(
                 "/iq/pubsub/unsubscribe/request.stanza");
-        String expectedReply = IQHandlerTest.readStanzaAsString(
+        String expectedReply = IQTestHandler.readStanzaAsString(
                 "/iq/pubsub/unsubscribe/reply.stanza");
         
         // subscription request.
-        inQueue.put(IQHandlerTest.toIq(request));
+        inQueue.put(IQTestHandler.toIq(request));
         IQ replyIQ = (IQ)outQueue.poll(1000, TimeUnit.MILLISECONDS);
         
         Assert.assertNotNull(replyIQ);
@@ -726,7 +726,7 @@ public class JabberPubsubTest
     @Test
     public void testUnsubscribeToLocalNodeComesFromForeignChannelServer() throws IOException, DocumentException, InterruptedException {
         
-        JedisMongoDataStore dataStore = new JedisMongoDataStore(IQHandlerTest.readConf());
+        JedisMongoDataStore dataStore = new JedisMongoDataStore(IQTestHandler.readConf());
         dataStore.createUserNodes("tuomas@xmpp.lobstermonster.org");
         dataStore.subscribeUserToNode("tuomas@buddycloud.org", 
                                       Conf.getPostChannelNodename("tuomas@xmpp.lobstermonster.org"), 
@@ -740,13 +740,13 @@ public class JabberPubsubTest
         Assert.assertEquals("member", ns.getAffiliation());
         Assert.assertEquals("unconfigured", ns.getSubscription());
         
-        String request = IQHandlerTest.readStanzaAsString(
+        String request = IQTestHandler.readStanzaAsString(
                 "/iq/pubsub/unsubscribe/fromforeign/request.stanza");
-        String expectedReply = IQHandlerTest.readStanzaAsString(
+        String expectedReply = IQTestHandler.readStanzaAsString(
                 "/iq/pubsub/unsubscribe/fromforeign/reply.stanza");
         
         // subscription request.
-        inQueue.put(IQHandlerTest.toIq(request));
+        inQueue.put(IQTestHandler.toIq(request));
         IQ replyIQ = (IQ)outQueue.poll(1000, TimeUnit.MILLISECONDS);
         
         Assert.assertNotNull(replyIQ);
@@ -763,7 +763,7 @@ public class JabberPubsubTest
     @Test
     public void testUnsubscribeFromForeignNode() throws IOException, DocumentException, InterruptedException {
         
-        JedisMongoDataStore dataStore = new JedisMongoDataStore(IQHandlerTest.readConf());
+        JedisMongoDataStore dataStore = new JedisMongoDataStore(IQTestHandler.readConf());
         dataStore.addLocalUser("tuomas@xmpp.lobstermonster.org");
         dataStore.subscribeUserToNode("tuomas@xmpp.lobstermonster.org", 
                 Conf.getPostChannelNodename("tuomas@buddycloud.org"), 
@@ -777,29 +777,29 @@ public class JabberPubsubTest
         Assert.assertEquals("member", ns.getAffiliation());
         Assert.assertEquals("unconfigured", ns.getSubscription());
         
-        String request = IQHandlerTest.readStanzaAsString(
+        String request = IQTestHandler.readStanzaAsString(
                 "/iq/pubsub/unsubscribe/foreign/request.stanza");
         
-        String itemsRequest = IQHandlerTest.readStanzaAsString(
+        String itemsRequest = IQTestHandler.readStanzaAsString(
                 "/iq/pubsub/unsubscribe/foreign/itemsRequest.stanza");
-        String itemsReply = IQHandlerTest.readStanzaAsString(
+        String itemsReply = IQTestHandler.readStanzaAsString(
                 "/iq/pubsub/unsubscribe/foreign/itemsReply.stanza");
         
-        String infoRequestOne = IQHandlerTest.readStanzaAsString(
+        String infoRequestOne = IQTestHandler.readStanzaAsString(
                 "/iq/pubsub/unsubscribe/foreign/infoRequest1.stanza");
-        String infoReplyOne   = IQHandlerTest.readStanzaAsString(
+        String infoReplyOne   = IQTestHandler.readStanzaAsString(
                 "/iq/pubsub/unsubscribe/foreign/infoReply1.stanza");
         
-        String subscriptionRequest = IQHandlerTest.readStanzaAsString(
+        String subscriptionRequest = IQTestHandler.readStanzaAsString(
                 "/iq/pubsub/unsubscribe/foreign/unsubscriptionRequest.stanza");
-        String subscriptionReply   = IQHandlerTest.readStanzaAsString(
+        String subscriptionReply   = IQTestHandler.readStanzaAsString(
                 "/iq/pubsub/unsubscribe/foreign/unsubscriptionReply.stanza");
         
-        String expectedReply = IQHandlerTest.readStanzaAsString(
+        String expectedReply = IQTestHandler.readStanzaAsString(
                 "/iq/pubsub/unsubscribe/foreign/reply.stanza");
         
         // subscription request.
-        inQueue.put(IQHandlerTest.toIq(request));
+        inQueue.put(IQTestHandler.toIq(request));
         IQ replyIQ = (IQ)outQueue.poll(1000, TimeUnit.MILLISECONDS);
         
         // fisrt step is to send disco#items
@@ -809,7 +809,7 @@ public class JabberPubsubTest
         
         // disco#items reply from foreign server
         itemsReply = itemsReply.replaceAll("items1", replyIQ.getID());
-        inQueue.put(IQHandlerTest.toIq(itemsReply));
+        inQueue.put(IQTestHandler.toIq(itemsReply));
         
         // For each item we send disco#info
         replyIQ = (IQ)outQueue.poll(1000, TimeUnit.MILLISECONDS);
@@ -819,7 +819,7 @@ public class JabberPubsubTest
         Assert.assertEquals(infoRequestOne, replyIQ.toXML());
         
         infoReplyOne = infoReplyOne.replaceAll("items1", replyIQ.getID());
-        inQueue.put(IQHandlerTest.toIq(infoReplyOne));
+        inQueue.put(IQTestHandler.toIq(infoReplyOne));
         
         replyIQ = (IQ)outQueue.poll(1000, TimeUnit.MILLISECONDS);
         
@@ -830,7 +830,7 @@ public class JabberPubsubTest
         // Now we have successful subscription reply coming from the foreign channel server,
         // and we will forward it to the user.
         subscriptionReply = subscriptionReply.replaceAll("items1", replyIQ.getID());
-        inQueue.put(IQHandlerTest.toIq(subscriptionReply));
+        inQueue.put(IQTestHandler.toIq(subscriptionReply));
         
         replyIQ = (IQ)outQueue.poll(1000, TimeUnit.MILLISECONDS);
         

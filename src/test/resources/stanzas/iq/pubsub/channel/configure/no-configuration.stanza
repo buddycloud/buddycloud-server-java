@@ -1,0 +1,7 @@
+<iq from='juliet@shakespeare.lit/thebalcony' to='channels.shakespeare.lit' type='set' 
+    id='configure-node1' xmlns='jabber:client'>
+    <pubsub xmlns='http://jabber.org/protocol/pubsub'>
+        <configure node='/user/capulet@shakespeare.lit/posts'/>
+        <configure></configure>
+    </pubsub>
+</iq>

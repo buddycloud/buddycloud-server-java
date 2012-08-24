@@ -14,6 +14,7 @@ import org.buddycloud.channelserver.db.DataStore;
 import org.buddycloud.channelserver.db.jedis.NodeSubscriptionImpl;
 import org.buddycloud.channelserver.pubsub.affiliation.Affiliations;
 import org.buddycloud.channelserver.pubsub.entry.NodeEntry;
+import org.buddycloud.channelserver.db.jedis.NodeEntryImpl;
 import org.buddycloud.channelserver.pubsub.subscription.NodeSubscription;
 import org.buddycloud.channelserver.pubsub.subscription.Subscriptions;
 import org.buddycloud.channelserver.pubsub.subscription.NodeSubscription;
@@ -166,7 +167,11 @@ public class JedisMongoDataStore implements DataStore {
     }
     
     public boolean subscribeUserToNode(String bareJID, String nodename, String aff, String subs, String foreignChannelServer) {
-        this.subscriptions.save(new NodeSubscriptionImpl(bareJID, nodename, aff, subs, foreignChannelServer), WriteConcern.SAFE);
+    	try {
+            this.subscriptions.save(new NodeSubscriptionImpl(bareJID, nodename, aff, subs, foreignChannelServer), WriteConcern.SAFE);
+    	} catch (MongoException e) {
+    		e.printStackTrace();
+    	}
         return true;
     }
     
@@ -208,7 +213,27 @@ public class JedisMongoDataStore implements DataStore {
         DBObject query = new BasicDBObject();
         query.put("node", node);
         
-        return (Iterator<? extends NodeSubscription>) this.subscriptions.find(query).toArray();
+        final Iterator<DBObject> it = this.entries.find(query).iterator();
+        
+        Iterator<NodeSubscription> neIt = new Iterator<NodeSubscription>() {
+            @Override
+            public boolean hasNext() {
+                return it.hasNext();
+            }
+
+            @Override
+            public NodeSubscription next() {
+                return (NodeSubscription) it.next();
+            }
+
+            @Override
+            public void remove() {
+                it.remove();
+            }
+            
+        };
+        
+        return neIt;
     }
     
     public HashMap<String, String> getNodeConf(String nodename) {
@@ -242,7 +267,27 @@ public class JedisMongoDataStore implements DataStore {
         DBObject sort = new BasicDBObject();
         sort.put("_id", -1);
         
-        return (Iterator<? extends NodeEntry>) this.entries.find(query).sort(sort).limit(limit).toArray();
+        final Iterator<DBObject> it = this.entries.find(query).sort(sort).limit(limit).iterator();
+        
+        Iterator<NodeEntry> neIt = new Iterator<NodeEntry>() {
+            @Override
+            public boolean hasNext() {
+                return it.hasNext();
+            }
+
+            @Override
+            public NodeEntry next() {
+                return (NodeEntry) it.next();
+            }
+
+            @Override
+            public void remove() {
+                it.remove();
+            }
+            
+        };
+        
+        return neIt;
     }
     
     public int getNodeEntriesCount(String node) {
@@ -285,9 +330,8 @@ public class JedisMongoDataStore implements DataStore {
     }
 
 	@Override
-	public boolean nodeExists(String createNodeId) {
-		// TODO Auto-generated method stub
-		return false;
+	public boolean nodeExists(String createNodeId)
+	{
+		return isLocalNode(createNodeId);
 	}
-
 }

@@ -221,9 +221,9 @@ public class JedisMongoDataStore implements DataStore {
         query.put("node", node);
         LOGGER.trace(
             "Node subscribers list for node " + node + ", there are " 
-            + this.entries.find(query).size() + " results"
+            + this.subscriptions.find(query).size() + " results"
         );
-        return new CastingIterator<DBObject, NodeSubscription>(this.entries.find(query).iterator());
+        return new CastingIterator<DBObject, NodeSubscription>(this.subscriptions.find(query).iterator());
     }
     
     public HashMap<String, String> getNodeConf(String nodename) {

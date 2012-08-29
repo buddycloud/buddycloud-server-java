@@ -165,7 +165,7 @@ public class JedisMongoDataStore implements DataStore {
         this.subscribeUserToNode(owner, 
                                  nodename, 
                                  Affiliations.owner.toString(), 
-                                 Subscriptions.unconfigured.toString(),
+                                 Subscriptions.subscribed.toString(),
                                  null);
         
 

@@ -5,7 +5,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-
+import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.JabberPubsub;
 import org.buddycloud.channelserver.channel.node.configuration.field.ConfigurationFieldException;
 import org.buddycloud.channelserver.channel.node.configuration.field.Factory;
 import org.buddycloud.channelserver.channel.node.configuration.field.Field;
@@ -14,6 +14,9 @@ import org.dom4j.DocumentException;
 import org.dom4j.Element;
 import org.dom4j.Node;
 import org.xmpp.packet.IQ;
+import org.xmpp.forms.DataForm;
+import org.xmpp.forms.FormField;
+import org.xmpp.packet.PacketExtension;
 
 public class Helper
 {
@@ -24,33 +27,43 @@ public class Helper
 	protected Factory      fieldFactory;
 
 	public static final    String FORM_TYPE               = "http://jabber.org/protocol/pubsub#node_config";
-	protected static final String NO_CONFIGURE_ELEMENT    = "No 'configure' element";
-	protected static final String NO_CONFIGURATION_VALUES = "No configration values provided";
+
+	protected static final String NO_CONFIGURATION_VALUES = "No configuration values provided";
+	protected static final String ELEMENT_NOT_FOUND       = "Required XMPP element not found";
 	
     public void parse(IQ request) throws NodeConfigurationException
     {
-    	Element xml = convertIqToDomElementTree(request);
-    	Node configureElement = xml.selectSingleNode("//iq/pubsub/configure");
-        if (null == configureElement) {
-       	    throw new NodeConfigurationException(NO_CONFIGURE_ELEMENT);
-        }
-        List<? extends Node> configurationValues = xml.selectNodes("//iq/pubsub/configure/x/field");
         try {
-            parseConfiguration(configurationValues);
+            parseConfiguration(getConfigurationValues(request));
+        } catch (NullPointerException e) {
+        	throw new NodeConfigurationException(ELEMENT_NOT_FOUND);
         } catch (ConfigurationFieldException e) {
         	throw new NodeConfigurationException();
         }
     }
 
-	private void parseConfiguration(List configurationValues)
+    private List<FormField> getConfigurationValues(IQ request)
+    {
+        Element element = request
+        	.getElement()
+        	.element("pubsub")
+            .element("configure")
+            .element("x");
+        DataForm dataForm      = new DataForm(element);
+        List<FormField> fields = dataForm.getFields();
+        return fields;
+    }
+
+	private void parseConfiguration(List<FormField> configurationValues)
 	{
-		elements = new HashMap<String, Field<?>>();
+        elements = new HashMap<String, Field<?>>();
 		if (0 == configurationValues.size()) {
 			return;
 		}
 		Field<?> field;
-		for (Iterator<? extends Node> node = configurationValues.iterator(); node.hasNext();) {
-			field = getFieldFactory().create(node.next());
+		for (FormField configurationValue : configurationValues) {
+			field = getFieldFactory()
+			    .create(configurationValue.getVariable(), configurationValue.getFirstValue());
 			elements.put(
 				field.getName(),
 				field
@@ -69,28 +82,6 @@ public class Helper
 	public void setFieldFactory(Factory factory)
 	{
 		fieldFactory = factory;
-	}
-
-	private Element convertIqToDomElementTree(IQ request)
-	{
-		try {
-			return getXmlParser().parse(request);
-		} catch (DocumentException e) {
-			throw new NodeConfigurationException();
-		}
-	}
-
-	private XmlReader getXmlParser()
-	{
-		if (null == xmlReader) {
-			xmlReader = new XmlReader();
-		}
-		return xmlReader;		
-	}
-	
-	public void setXmlParser(XmlReader reader)
-	{
-		xmlReader = reader;
 	}
 
 	public boolean isValid() 

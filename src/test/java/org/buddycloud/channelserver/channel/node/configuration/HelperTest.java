@@ -17,6 +17,7 @@ import org.junit.rules.ExpectedException;
 import org.mockito.Mockito;
 import org.xmpp.packet.IQ;
 import org.buddycloud.channelserver.channel.node.configuration.field.Factory;
+import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.JabberPubsub;
 
 public class HelperTest extends IQTestHandler
 {
@@ -51,6 +52,7 @@ public class HelperTest extends IQTestHandler
     {
     	Element iq        = new DOMElement("iq");
     	Element pubsub    = iq.addElement("pubsub");
+    	pubsub.addAttribute("xmlns", JabberPubsub.NS_PUBSUB_OWNER);
     	Element configure = pubsub.addElement("configure");
     	configure.addElement("x");
     	IQ request        = new IQ(iq);
@@ -64,11 +66,12 @@ public class HelperTest extends IQTestHandler
     {
     	Factory factoryMock = Mockito.mock(Factory.class);
     	Mockito.doThrow(new ConfigurationFieldException())
-	        .when(factoryMock).create((Node) Mockito.any());
+	        .when(factoryMock).create(Mockito.anyString(), Mockito.anyString());
     	parser.setFieldFactory(factoryMock);
     	
     	Element iq          = new DOMElement("iq");
     	Element pubsub      = iq.addElement("pubsub");
+    	pubsub.addAttribute("xmlns", JabberPubsub.NS_PUBSUB_OWNER);
     	Element configure   = pubsub.addElement("configure");
     	Element x           = configure.addElement("x");
     	Element field       = x.addElement("field");
@@ -93,12 +96,13 @@ public class HelperTest extends IQTestHandler
     	fieldMock2.setValue("My field value");
     	Factory factoryMock = Mockito.mock(Factory.class);
 		Mockito
-	        .when(factoryMock.create((Node) Mockito.anyObject()))
+	        .when(factoryMock.create(Mockito.anyString(), Mockito.anyString()))
 	    	.thenReturn(fieldMock, fieldMock2);
     	parser.setFieldFactory(factoryMock);
 
     	Element iq          = new DOMElement("iq");
     	Element pubsub      = iq.addElement("pubsub");
+    	pubsub.addAttribute("xmlns", JabberPubsub.NS_PUBSUB_OWNER);
     	Element configure   = pubsub.addElement("configure");
     	Element x           = configure.addElement("x");
     	Element field       = x.addElement("field");
@@ -134,12 +138,13 @@ public class HelperTest extends IQTestHandler
     	    .isValid();
     	Factory factoryMock = Mockito.mock(Factory.class);
 		Mockito
-	        .when(factoryMock.create((Node) Mockito.anyObject()))
+	        .when(factoryMock.create(Mockito.anyString(), Mockito.anyString()))
 	    	.thenReturn(fieldMock);
     	parser.setFieldFactory(factoryMock);
 
     	Element iq          = new DOMElement("iq");
     	Element pubsub      = iq.addElement("pubsub");
+    	pubsub.addAttribute("xmlns", JabberPubsub.NS_PUBSUB_OWNER);
     	Element configure   = pubsub.addElement("configure");
     	Element x           = configure.addElement("x");
     	Element field       = x.addElement("field");
@@ -164,12 +169,13 @@ public class HelperTest extends IQTestHandler
     	    .isValid();
     	Factory factoryMock = Mockito.mock(Factory.class);
 		Mockito
-	        .when(factoryMock.create((Node) Mockito.anyObject()))
+	        .when(factoryMock.create(Mockito.anyString(), Mockito.anyString()))
 	    	.thenReturn(fieldMock);
     	parser.setFieldFactory(factoryMock);
 
     	Element iq          = new DOMElement("iq");
     	Element pubsub      = iq.addElement("pubsub");
+    	pubsub.addAttribute("xmlns", JabberPubsub.NS_PUBSUB_OWNER);
     	Element configure   = pubsub.addElement("configure");
     	Element x           = configure.addElement("x");
     	Element field       = x.addElement("field");

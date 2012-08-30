@@ -2,6 +2,7 @@ package org.buddycloud.channelserver.pubsub.model;
 
 import java.util.Map;
 
+import org.buddycloud.channelserver.node.NodeRef;
 import org.xmpp.packet.JID;
 
 /**
@@ -10,9 +11,9 @@ import org.xmpp.packet.JID;
 public interface Node {
 	
 	/**
-	 * Returns the node id.
+	 * Returns the node reference.
 	 */
-	String getNodeId();
+	NodeRef getNodeRef();
 	
 	/**
 	 * Return the JID of the owner of the node.

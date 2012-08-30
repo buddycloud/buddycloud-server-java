@@ -2,6 +2,7 @@ package org.buddycloud.channelserver.db.jedis;
 
 import java.net.UnknownHostException;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Properties;
@@ -13,10 +14,11 @@ import org.buddycloud.channelserver.db.DataStore;
 import org.buddycloud.channelserver.db.jedis.NodeSubscriptionImpl;
 import org.buddycloud.channelserver.pubsub.affiliation.Affiliations;
 import org.buddycloud.channelserver.pubsub.entry.NodeEntry;
+import org.buddycloud.channelserver.db.jedis.NodeEntryImpl;
 import org.buddycloud.channelserver.pubsub.subscription.NodeSubscription;
 import org.buddycloud.channelserver.pubsub.subscription.Subscriptions;
 import org.buddycloud.channelserver.pubsub.subscription.NodeSubscription;
-
+import org.buddycloud.channelserver.db.DataStoreException;
 import redis.clients.jedis.Jedis;
 
 import com.mongodb.BasicDBObject;
@@ -95,7 +97,7 @@ public class JedisMongoDataStore implements DataStore {
         return this.jedis.sismember(LOCAL_USERS, bareJID);
     }
     
-    public String addNodeConf(String nodename, HashMap<String, String> conf) {
+    public String addNodeConf(String nodename, Map<String, String> conf) {
         return jedis.hmset(getNodeConfRedisKey(nodename), conf);
     }
     
@@ -119,35 +121,39 @@ public class JedisMongoDataStore implements DataStore {
            - /geo/current
            - /geo/next
          */
-        
-        this.createNode(owner,
-                        Conf.getPostChannelNodename(owner),
-                        Conf.getDefaultPostChannelConf(owner));
-        
-        this.createNode(owner,
-                        Conf.getStatusChannelNodename(owner),
-                        Conf.getDefaultStatusChannelConf(owner));
-
-        this.createNode(owner,
-                        Conf.getSubscriptionsChannelNodename(owner),
-                        Conf.getDefaultSubscriptionsChannelConf(owner));
-        
-        this.createNode(owner,
-                        Conf.getGeoPreviousChannelNodename(owner),
-                        Conf.getDefaultGeoPreviousChannelConf(owner));
-        
-        this.createNode(owner,
-                        Conf.getGeoCurrentChannelNodename(owner),
-                        Conf.getDefaultGeoCurrentChannelConf(owner));
-        
-        this.createNode(owner,
-                        Conf.getGeoNextChannelNodename(owner),
-                        Conf.getDefaultGeoNextChannelConf(owner));
-        
-        return "OK";
+        try {
+	        this.createNode(owner,
+	                        Conf.getPostChannelNodename(owner),
+	                        Conf.getDefaultPostChannelConf(owner));
+	        
+	        this.createNode(owner,
+	                        Conf.getStatusChannelNodename(owner),
+	                        Conf.getDefaultStatusChannelConf(owner));
+	
+	        this.createNode(owner,
+	                        Conf.getSubscriptionsChannelNodename(owner),
+	                        Conf.getDefaultSubscriptionsChannelConf(owner));
+	        
+	        this.createNode(owner,
+	                        Conf.getGeoPreviousChannelNodename(owner),
+	                        Conf.getDefaultGeoPreviousChannelConf(owner));
+	        
+	        this.createNode(owner,
+	                        Conf.getGeoCurrentChannelNodename(owner),
+	                        Conf.getDefaultGeoCurrentChannelConf(owner));
+	        
+	        this.createNode(owner,
+	                        Conf.getGeoNextChannelNodename(owner),
+	                        Conf.getDefaultGeoNextChannelConf(owner));
+	        return "OK";
+        } catch (DataStoreException e) {
+        	return "FAIL";
+        }
     }
     
-    public String createNode(String owner, String nodename, HashMap<String, String> conf) {
+    public void createNode(String owner, String nodename, Map<String, String> conf) 
+        throws DataStoreException
+    {
         
         this.addNodeConf(nodename, conf);
         
@@ -157,12 +163,15 @@ public class JedisMongoDataStore implements DataStore {
                                  Subscriptions.unconfigured.toString(),
                                  null);
         
-        // TODO, check this. I just added it now. We'll need to check the creation status one day ...
-        return "OK";
+
     }
     
     public boolean subscribeUserToNode(String bareJID, String nodename, String aff, String subs, String foreignChannelServer) {
-        this.subscriptions.save(new NodeSubscriptionImpl(bareJID, nodename, aff, subs, foreignChannelServer), WriteConcern.SAFE);
+    	try {
+            this.subscriptions.save(new NodeSubscriptionImpl(bareJID, nodename, aff, subs, foreignChannelServer), WriteConcern.SAFE);
+    	} catch (MongoException e) {
+    		e.printStackTrace();
+    	}
         return true;
     }
     
@@ -204,7 +213,7 @@ public class JedisMongoDataStore implements DataStore {
         DBObject query = new BasicDBObject();
         query.put("node", node);
         
-        return (Iterator<? extends NodeSubscription>) this.subscriptions.find(query).toArray();
+        return new CastingIterator<DBObject, NodeSubscription>(this.entries.find(query).iterator());
     }
     
     public HashMap<String, String> getNodeConf(String nodename) {
@@ -238,7 +247,7 @@ public class JedisMongoDataStore implements DataStore {
         DBObject sort = new BasicDBObject();
         sort.put("_id", -1);
         
-        return (Iterator<? extends NodeEntry>) this.entries.find(query).sort(sort).limit(limit).toArray();
+        return new CastingIterator<DBObject, NodeEntry>(this.entries.find(query).sort(sort).limit(limit).iterator());
     }
     
     public int getNodeEntriesCount(String node) {
@@ -272,7 +281,7 @@ public class JedisMongoDataStore implements DataStore {
     }
     
     public Map<String, String> getState(String id) {
-        return (HashMap<String, String>) this.jedis.hgetAll("state:" + id);
+        return (Map<String, String>) this.jedis.hgetAll("state:" + id);
     }
     
     // TODO, move these to somewhere else i think...
@@ -280,4 +289,9 @@ public class JedisMongoDataStore implements DataStore {
         return "node:" + nodename + ":conf";
     }
 
+	@Override
+	public boolean nodeExists(String createNodeId)
+	{
+		return isLocalNode(createNodeId);
+	}
 }

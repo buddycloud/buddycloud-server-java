@@ -6,6 +6,7 @@ import java.util.concurrent.BlockingQueue;
 
 import org.buddycloud.channelserver.packetprocessor.PacketProcessor;
 import org.buddycloud.channelserver.db.DataStore;
+import org.buddycloud.channelserver.db.DataStoreException;
 import org.buddycloud.channelserver.queue.statemachine.IStatemachine;
 import org.buddycloud.channelserver.queue.statemachine.StateMachineBuilder;
 
@@ -83,7 +84,7 @@ public abstract class AbstractNamespace implements PacketProcessor<IQ> {
         outQueue.put(reply);
     }
 
-    private void handleStateReply(IQ reqIQ) throws InterruptedException {
+    private void handleStateReply(IQ reqIQ) throws InterruptedException, DataStoreException {
         // This might be a reply to a state we are on.
         Map<String, String> state = dataStore.getState(reqIQ.getID());
         if (state != null && !state.isEmpty()) {

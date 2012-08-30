@@ -1,6 +1,7 @@
 package org.buddycloud.channelserver.packetHandler.message;
 
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.StringReader;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -21,7 +22,7 @@ import org.xmpp.packet.IQ;
 import org.xmpp.packet.Message;
 import org.xmpp.packet.Packet;
 
-import org.buddycloud.channelserver.packetHandler.iq.IQHandlerTest;
+import org.buddycloud.channelserver.packetHandler.iq.IQTestHandler;
 
 public class MessageHandlerTest {
 
@@ -29,19 +30,19 @@ public class MessageHandlerTest {
     private LinkedBlockingQueue<Packet> inQueue;
 
     @Before
-    public void init() {
+    public void init() throws FileNotFoundException, IOException {
         this.outQueue = new LinkedBlockingQueue<Packet>();
         this.inQueue = new LinkedBlockingQueue<Packet>();
-        InQueueConsumer consumer = new InQueueConsumer(outQueue, IQHandlerTest.readConf(), inQueue);
+        InQueueConsumer consumer = new InQueueConsumer(outQueue, IQTestHandler.readConf(), inQueue);
         consumer.start();
         
-        IQHandlerTest.getJedis(); // don't remove, it's here to clean the db
+        IQTestHandler.getJedis(); // don't remove, it's here to clean the db
     }
     
     public static Message readStanzaAsMessage(String stanzaPath) throws IOException, DocumentException {
         
         String stanzaStr = IOUtils.toString(
-                new FileInputStream(IQHandlerTest.STANZA_PATH + stanzaPath));
+                new FileInputStream(IQTestHandler.STANZA_PATH + stanzaPath));
         
         SAXReader xmlReader = new SAXReader();
         xmlReader.setMergeAdjacentText(true);
@@ -59,9 +60,9 @@ public class MessageHandlerTest {
     public void testPublishToLocalNodeSuccess() throws Exception {
         
         Message request = readStanzaAsMessage("/message/publish/local/request.stanza");
-        String expectedReply = IQHandlerTest.readStanzaAsString("/message/publish/local/reply.stanza");
+        String expectedReply = IQTestHandler.readStanzaAsString("/message/publish/local/reply.stanza");
   
-        JedisMongoDataStore dataStore = new JedisMongoDataStore(IQHandlerTest.readConf());
+        JedisMongoDataStore dataStore = new JedisMongoDataStore(IQTestHandler.readConf());
         dataStore.addLocalUser("tuomas@xmpp.lobstermonster.org");
         dataStore.createUserNodes("tuomas@xmpp.lobstermonster.org");
         
@@ -79,9 +80,9 @@ public class MessageHandlerTest {
     public void testPublishToForeignNodeNodeStartsDiscovery() throws IOException, DocumentException, InterruptedException {
         
         Message request = readStanzaAsMessage("/message/publish/foreign/request.stanza");
-        String expectedReply = IQHandlerTest.readStanzaAsString("/message/publish/foreign/itemsRequest.stanza");
+        String expectedReply = IQTestHandler.readStanzaAsString("/message/publish/foreign/itemsRequest.stanza");
   
-        JedisMongoDataStore dataStore = new JedisMongoDataStore(IQHandlerTest.readConf());
+        JedisMongoDataStore dataStore = new JedisMongoDataStore(IQTestHandler.readConf());
         dataStore.addLocalUser("tuomas@xmpp.lobstermonster.org");
         dataStore.createUserNodes("tuomas@xmpp.lobstermonster.org");
         
@@ -97,9 +98,9 @@ public class MessageHandlerTest {
     public void testOnPubsubEventPublish() throws Exception {
         
         Message request = readStanzaAsMessage("/message/publish/event/request.stanza");
-        String expectedReply = IQHandlerTest.readStanzaAsString("/message/publish/event/reply.stanza");
+        String expectedReply = IQTestHandler.readStanzaAsString("/message/publish/event/reply.stanza");
   
-        JedisMongoDataStore dataStore = new JedisMongoDataStore(IQHandlerTest.readConf());
+        JedisMongoDataStore dataStore = new JedisMongoDataStore(IQTestHandler.readConf());
         dataStore.addLocalUser("tuomas@xmpp.lobstermonster.org");
         dataStore.createUserNodes("tuomas@xmpp.lobstermonster.org");
         dataStore.subscribeUserToNode("tuomas@xmpp.lobstermonster.org", 

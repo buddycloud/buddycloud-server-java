@@ -16,8 +16,9 @@ public class ValidateEntry {
 	private static Logger LOGGER = Logger.getLogger(ValidateEntry.class);
 	
 	private Element entry;
-	
+   
 	private String errorMsg = "";
+	private String inReplyTo;
 	
 	Map<String, String>params = new HashMap<String, String>();
 	
@@ -34,9 +35,9 @@ public class ValidateEntry {
 	/**
 	 * This is a big hackety-hack.
 	 */
-	public boolean isValid() {
-		
-		if(this.entry == null) {
+	public boolean isValid()
+	{
+		if (this.entry == null) {
 			this.errorMsg = "Dude, the entry is missing.";
 			return false;
 		}
@@ -88,6 +89,14 @@ public class ValidateEntry {
 		
 		this.geoloc = this.entry.element("geoloc");
 		
+		Element reply = this.entry.element("in-reply-to");
+		if (null != reply) {
+			inReplyTo = reply.attributeValue("ref").toString();
+			if (true == inReplyTo.matches(",+")) {
+				String[] tokens = inReplyTo.split(",");
+				inReplyTo       = tokens[2];
+			}
+		}
 		return true;
 	}
 	
@@ -115,7 +124,8 @@ public class ValidateEntry {
              </activity:object>
           </entry>
 		 */
-		String id = UUID.randomUUID().toString();
+		String id       = UUID.randomUUID().toString();
+		String postType = "note";
 		
 		entry.addElement("id")
 		     .setText("tag:" + channelServerJID + "," + node + "," + id);
@@ -149,8 +159,14 @@ public class ValidateEntry {
 		author.addElement("activity:object-type")
 	          .setText("person");
 
-		if(this.geoloc != null) {
+		if (this.geoloc != null) {
 			entry.add(this.geoloc.createCopy());
+		}
+		if (this.inReplyTo != null) {
+			Element reply = entry.addElement("in-reply-to");
+			reply.addNamespace("",  "http://purl.org/syndication/thread/1.0");
+			reply.addAttribute("ref", inReplyTo);
+			postType = "comment";
 		}
 		
 		this.geoloc = this.entry.element("geoloc");
@@ -160,7 +176,7 @@ public class ValidateEntry {
 		
 		Element activity_object = entry.addElement("activity:object");
 		activity_object.addElement("activity:object-type")
-		               .setText("note");
+		               .setText(postType);
 		
 		return entry;
 	}

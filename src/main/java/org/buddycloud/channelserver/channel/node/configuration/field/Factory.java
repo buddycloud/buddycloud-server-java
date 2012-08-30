@@ -4,11 +4,8 @@ import org.dom4j.Node;
 
 public class Factory
 {	
-	public Field create(Node node)
+	public Field create(String type, String value)
     {
-    	String value = node.valueOf("//field/value");
-    	String type  = node.valueOf("//field/@var");
-
     	if ((null == type) || (null == value)) {
     		throw new ConfigurationFieldException();
     	}

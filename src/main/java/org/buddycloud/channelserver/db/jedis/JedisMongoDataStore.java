@@ -6,6 +6,9 @@ import java.util.Map;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Properties;
+import org.apache.log4j.Level;
+import org.apache.log4j.Logger;
+import org.apache.log4j.PropertyConfigurator;
 
 
 import org.bson.types.ObjectId;
@@ -47,6 +50,8 @@ public class JedisMongoDataStore implements DataStore {
     private DBCollection entries;
     
     public static final String LOCAL_USERS  = "local_users";
+    
+    private static final Logger LOGGER = Logger.getLogger(JedisMongoDataStore.class);
     
     public JedisMongoDataStore(Properties conf) {
         
@@ -160,7 +165,7 @@ public class JedisMongoDataStore implements DataStore {
         this.subscribeUserToNode(owner, 
                                  nodename, 
                                  Affiliations.owner.toString(), 
-                                 Subscriptions.unconfigured.toString(),
+                                 Subscriptions.subscribed.toString(),
                                  null);
         
 
@@ -200,6 +205,8 @@ public class JedisMongoDataStore implements DataStore {
         query.put("node", node);
         query.put("bareJID", bareJID);
         
+        LOGGER.trace("Getting subscription of node " + node + " for " + bareJID);
+        LOGGER.trace(query);
         NodeSubscriptionImpl sub = (NodeSubscriptionImpl) this.subscriptions.findOne(query);
         if(sub == null) {
             return new NodeSubscriptionImpl();
@@ -212,15 +219,17 @@ public class JedisMongoDataStore implements DataStore {
         
         DBObject query = new BasicDBObject();
         query.put("node", node);
-        
-        return new CastingIterator<DBObject, NodeSubscription>(this.entries.find(query).iterator());
+        LOGGER.trace(
+            "Node subscribers list for node " + node + ", there are " 
+            + this.subscriptions.find(query).size() + " results"
+        );
+        return new CastingIterator<DBObject, NodeSubscription>(this.subscriptions.find(query).iterator());
     }
     
     public HashMap<String, String> getNodeConf(String nodename) {
         return (HashMap<String, String>) this.jedis.hgetAll(getNodeConfRedisKey(nodename));
     }
-    
-    
+
     /*
      
         Sort by _id to sort by insertion time

@@ -38,7 +38,7 @@ public class SubscriptionsGet implements PubSubElementProcessor {
             actorJID = reqIQ.getFrom();
         }
         
-        if(node == null) {
+        if (node == null) {
             // let's get all subscriptions.
             
             Iterator<? extends NodeSubscription> cur = dataStore.getUserSubscriptionsOfNodes(actorJID.toBareJID());
@@ -53,7 +53,8 @@ public class SubscriptionsGet implements PubSubElementProcessor {
         } else {
             // Let's get only one subscription.
             NodeSubscriptionImpl ns = dataStore.getUserSubscriptionOfNode(actorJID.toBareJID(), node);
-            if(ns.getSubscription() != null) {
+            
+            if (ns.getSubscription() != null) {
             
                 subscriptions.addAttribute("node", node);
                 subscriptions.addElement("subscription")

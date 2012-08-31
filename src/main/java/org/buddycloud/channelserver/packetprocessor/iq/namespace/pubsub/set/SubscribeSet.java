@@ -19,6 +19,8 @@ import org.xmpp.packet.JID;
 import org.xmpp.packet.Message;
 import org.xmpp.packet.Packet;
 import org.xmpp.packet.PacketError;
+import org.buddycloud.channelserver.pubsub.subscription.Subscriptions;
+import org.buddycloud.channelserver.pubsub.affiliation.Affiliations;
 
 public class SubscribeSet implements PubSubElementProcessor {
 
@@ -31,10 +33,11 @@ public class SubscribeSet implements PubSubElementProcessor {
     }
     
     @Override
-    public void process(Element elm, JID actorJID, IQ reqIQ, Element rsm) throws Exception {
+    public void process(Element elm, JID actorJID, IQ reqIQ, Element rsm) throws Exception
+    {
         String node = elm.attributeValue("node");
         
-        if(node == null || node.equals("")) {
+        if ((node == null) || (true == node.equals(""))) {
 
             /*
                 7.2.3.3 NodeID Required
@@ -53,11 +56,15 @@ public class SubscribeSet implements PubSubElementProcessor {
             IQ reply = IQ.createResultIQ(reqIQ);
             reply.setType(Type.error);
             
-            Element badRequest = new DOMElement("bad-request",
-                                                new org.dom4j.Namespace("", JabberPubsub.NS_XMPP_STANZAS));
+            Element badRequest = new DOMElement(
+                "bad-request",
+                new org.dom4j.Namespace("", JabberPubsub.NS_XMPP_STANZAS)
+            );
 
-            Element nodeIdRequired = new DOMElement("nodeid-required",
-                                                    new org.dom4j.Namespace("", JabberPubsub.NS_PUBSUB_ERROR));
+            Element nodeIdRequired = new DOMElement(
+            	"nodeid-required",
+                new org.dom4j.Namespace("", JabberPubsub.NS_PUBSUB_ERROR)
+            );
             
             Element error = new DOMElement("error");
             error.addAttribute("type", "modify");
@@ -77,11 +84,10 @@ public class SubscribeSet implements PubSubElementProcessor {
         if(actorJID != null) {
             subscribingJID = actorJID;
         } else {
-            
             isLocalSubscriber = dataStore.isLocalUser(subscribingJID.toBareJID());
             
             // Check that user is registered.
-            if(!isLocalSubscriber) {
+            if (!isLocalSubscriber) {
                 
                 // If the packet did not have actor, and the sender is not a local user
                 // subscription is not allowed.
@@ -99,8 +105,10 @@ public class SubscribeSet implements PubSubElementProcessor {
                 
                 IQ reply = IQ.createResultIQ(reqIQ);
                 reply.setType(Type.error);
-                PacketError pe = new PacketError(org.xmpp.packet.PacketError.Condition.registration_required, 
-                                                 org.xmpp.packet.PacketError.Type.auth);
+                PacketError pe = new PacketError(
+                    org.xmpp.packet.PacketError.Condition.registration_required, 
+                    org.xmpp.packet.PacketError.Type.auth
+                );
                 reply.setError(pe);
                 outQueue.put(reply);
                 return;
@@ -109,8 +117,11 @@ public class SubscribeSet implements PubSubElementProcessor {
         }
         
         //   6.1.3.1 JIDs Do Not Match
-        String jid = elm.attributeValue("jid");
-        if( !subscribingJID.toBareJID().equals(jid) ) {
+        
+        // Covers where we have juliet@shakespeare.lit/the-balcony
+        String[] jidParts = elm.attributeValue("jid").split("/");
+        String   jid      = jidParts[0];
+        if (!subscribingJID.toBareJID().equals(jid)) {
             
             /*
              // 6.1.3.1 JIDs Do Not Match
@@ -129,25 +140,24 @@ public class SubscribeSet implements PubSubElementProcessor {
             IQ reply = IQ.createResultIQ(reqIQ);
             reply.setType(Type.error);
             
-            Element badRequest = new DOMElement("bad-request",
-                                                new org.dom4j.Namespace("", JabberPubsub.NS_XMPP_STANZAS));
-
-            Element nodeIdRequired = new DOMElement("invalid-jid",
-                                                    new org.dom4j.Namespace("", JabberPubsub.NS_PUBSUB_ERROR));
-            
+            Element badRequest = new DOMElement(
+            	"bad-request",
+                new org.dom4j.Namespace("", JabberPubsub.NS_XMPP_STANZAS)
+            );
+            Element nodeIdRequired = new DOMElement(
+            	"invalid-jid",
+                new org.dom4j.Namespace("", JabberPubsub.NS_PUBSUB_ERROR)
+            );
             Element error = new DOMElement("error");
             error.addAttribute("type", "wait");
             error.add(badRequest);
-            error.add(nodeIdRequired);
-            
+            error.add(nodeIdRequired); 
             reply.setChildElement(error);
-            
             outQueue.put(reply);
             return;
         }
-        
-        
-        if(!isLocalNode) {
+
+        if (!isLocalNode) {
             
             if(isLocalSubscriber) {
                 // Start process to subscribe to external node.
@@ -173,8 +183,10 @@ public class SubscribeSet implements PubSubElementProcessor {
             
             IQ reply = IQ.createResultIQ(reqIQ);
             reply.setType(Type.error);
-            PacketError pe = new PacketError(org.xmpp.packet.PacketError.Condition.item_not_found, 
-                                             org.xmpp.packet.PacketError.Type.cancel);
+            PacketError pe = new PacketError(
+                PacketError.Condition.item_not_found, 
+                PacketError.Type.cancel
+            );
             reply.setError(pe);
             outQueue.put(reply);
             return;
@@ -185,11 +197,12 @@ public class SubscribeSet implements PubSubElementProcessor {
         
         // Subscribe to a node.
         
-        NodeSubscriptionImpl nodeSubscription = dataStore.getUserSubscriptionOfNode(subscribingJID.toBareJID(), 
-                                                                                node);
+        NodeSubscriptionImpl nodeSubscription = dataStore
+            .getUserSubscriptionOfNode(subscribingJID.toBareJID(), node);
+
         String possibleExistingAffiliation  = nodeSubscription.getAffiliation();
         String possibleExistingSusbcription = nodeSubscription.getSubscription();
-        if(org.buddycloud.channelserver.pubsub.affiliation.Affiliations.outcast.toString().equals(possibleExistingAffiliation)) {
+        if (Affiliations.outcast.toString().equals(possibleExistingAffiliation)) {
              /*   
                   6.1.3.8 Blocked
                   <iq type='error'
@@ -204,15 +217,17 @@ public class SubscribeSet implements PubSubElementProcessor {
               */
             IQ reply = IQ.createResultIQ(reqIQ);
             reply.setType(Type.error);
-            PacketError pe = new PacketError(org.xmpp.packet.PacketError.Condition.forbidden, 
-                                             org.xmpp.packet.PacketError.Type.auth);
+            PacketError pe = new PacketError(
+                org.xmpp.packet.PacketError.Condition.forbidden, 
+                org.xmpp.packet.PacketError.Type.auth
+            );
             reply.setError(pe);
             outQueue.put(reply);
             return;
             
         }
         
-        if(possibleExistingSusbcription != null) {
+        if (possibleExistingSusbcription != null) {
         
             /*
                  6.1.3.9 Too Many Subscriptions
@@ -230,37 +245,42 @@ public class SubscribeSet implements PubSubElementProcessor {
             IQ reply = IQ.createResultIQ(reqIQ);
             reply.setType(Type.error);
             
-            Element badRequest = new DOMElement("policy-violation",
-                                                new org.dom4j.Namespace("", JabberPubsub.NS_XMPP_STANZAS));
-
-            Element nodeIdRequired = new DOMElement("too-many-subscriptions",
-                                                    new org.dom4j.Namespace("", JabberPubsub.NS_PUBSUB_ERROR));
-            
+            Element badRequest = new DOMElement(
+                "policy-violation",
+                new org.dom4j.Namespace("", JabberPubsub.NS_XMPP_STANZAS)
+            );
+            Element nodeIdRequired = new DOMElement(
+                "too-many-subscriptions",
+                new org.dom4j.Namespace("", JabberPubsub.NS_PUBSUB_ERROR)
+            );
             Element error = new DOMElement("error");
             error.addAttribute("type", "wait");
             error.add(badRequest);
             error.add(nodeIdRequired);
-            
             reply.setChildElement(error);
-            
             outQueue.put(reply);
             return;
-            
         }
         
         // Finally subscribe to the node :-)
         HashMap<String, String> nodeConf = dataStore.getNodeConf(node);
-        String defaultAffiliation = nodeConf.get(Conf.DEFUALT_AFFILIATION);
-        String defaultSubscription = org.buddycloud.channelserver.pubsub.subscription.Subscriptions.unconfigured.toString();
+        String defaultAffiliation        = nodeConf.get(Conf.DEFUALT_AFFILIATION);
+        // @todo This should be fixed later...
+        String defaultSubscription       = Subscriptions.subscribed.toString();
 
-        dataStore.subscribeUserToNode(subscribingJID.toBareJID(), 
-                                      node, 
-                                      defaultAffiliation, 
-                                      defaultSubscription,
-                                      isLocalSubscriber ? null : reqIQ.getFrom().getDomain());
+        dataStore.subscribeUserToNode(
+            subscribingJID.toBareJID(), 
+            node, 
+            defaultAffiliation, 
+            defaultSubscription,
+            isLocalSubscriber ? null : reqIQ.getFrom().getDomain()
+        );
         
         IQ reply = IQ.createResultIQ(reqIQ);
-        Element pubsub = reply.setChildElement(PubSubSet.ELEMENT_NAME, JabberPubsub.NAMESPACE_URI);
+        Element pubsub = reply.setChildElement(
+            PubSubSet.ELEMENT_NAME,
+            JabberPubsub.NAMESPACE_URI
+        );
         pubsub.addElement("subscription")
               .addAttribute("node", node)
               .addAttribute("jid", subscribingJID.toBareJID())
@@ -296,28 +316,30 @@ public class SubscribeSet implements PubSubElementProcessor {
         msg.setTo(reply.getTo());
         msg.setFrom(reply.getFrom());
         msg.setType(Message.Type.headline);
-        Element subscription = msg.addChildElement("event", JabberPubsub.NS_PUBSUB_EVENT)
-                                  .addElement("subscription");
+        Element subscription = msg
+            .addChildElement("event", JabberPubsub.NS_PUBSUB_EVENT)
+            .addElement("subscription");
         subscription.addAttribute("node", node)
-                    .addAttribute("jid", subscribingJID.toBareJID())
-                    .addAttribute("subscription", defaultSubscription);
+            .addAttribute("jid", subscribingJID.toBareJID())
+            .addAttribute("subscription", defaultSubscription);
         outQueue.put(msg);
         
         msg = new Message();
         msg.setTo(reply.getTo());
         msg.setFrom(reply.getFrom());
         msg.setType(Message.Type.headline);
-        Element affiliation = msg.addChildElement("event", JabberPubsub.NS_PUBSUB_EVENT)
-                                 .addElement("affiliation");
+        Element affiliation = msg
+        	.addChildElement("event", JabberPubsub.NS_PUBSUB_EVENT)
+            .addElement("affiliation");
         affiliation.addAttribute("node", node)
-                   .addAttribute("jid", subscribingJID.toBareJID())
-                   .addAttribute("affiliation", defaultAffiliation);
+            .addAttribute("jid", subscribingJID.toBareJID())
+            .addAttribute("affiliation", defaultAffiliation);
         outQueue.put(msg);
     }
 
     @Override
-    public boolean accept(Element elm) {
+    public boolean accept(Element elm)
+    {
         return elm.getName().equals("subscribe");
     }
-
 }

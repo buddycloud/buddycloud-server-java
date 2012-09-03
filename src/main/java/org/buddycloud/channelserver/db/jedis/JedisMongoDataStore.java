@@ -199,8 +199,8 @@ public class JedisMongoDataStore implements DataStore {
         return (Iterator<? extends NodeSubscription>) this.subscriptions.find(query).toArray();
     }
     
-    public NodeSubscriptionImpl getUserSubscriptionOfNode(String bareJID, String node) {
-        
+    public NodeSubscriptionImpl getUserSubscriptionOfNode(String bareJID, String node)
+    {        
         DBObject query = new BasicDBObject();
         query.put("node", node);
         query.put("bareJID", bareJID);
@@ -215,8 +215,8 @@ public class JedisMongoDataStore implements DataStore {
     }
 
     @SuppressWarnings("unchecked")
-    public Iterator<? extends NodeSubscription> getNodeSubscribers(String node) {
-        
+    public Iterator<? extends NodeSubscription> getNodeSubscribers(String node)
+    {
         DBObject query = new BasicDBObject();
         query.put("node", node);
         LOGGER.trace(
@@ -226,7 +226,8 @@ public class JedisMongoDataStore implements DataStore {
         return new CastingIterator<DBObject, NodeSubscription>(this.subscriptions.find(query).iterator());
     }
     
-    public HashMap<String, String> getNodeConf(String nodename) {
+    public HashMap<String, String> getNodeConf(String nodename)
+    {
         return (HashMap<String, String>) this.jedis.hgetAll(getNodeConfRedisKey(nodename));
     }
 
@@ -244,8 +245,8 @@ public class JedisMongoDataStore implements DataStore {
     // Entry fetching related
     
     @SuppressWarnings("unchecked")
-    public Iterator<? extends NodeEntry> getNodeEntries(String node, int limit, String afterItemId) {
-        
+    public Iterator<? extends NodeEntry> getNodeEntries(String node, int limit, String afterItemId)
+    {
         DBObject query = new BasicDBObject();
         query.put("node", node);
         
@@ -259,11 +260,10 @@ public class JedisMongoDataStore implements DataStore {
         return new CastingIterator<DBObject, NodeEntry>(this.entries.find(query).sort(sort).limit(limit).iterator());
     }
     
-    public int getNodeEntriesCount(String node) {
-        
+    public int getNodeEntriesCount(String node)
+    {        
         DBObject query = new BasicDBObject();
         query.put("node", node);
-        
         return this.entries.find(query).count();
     }
     
@@ -271,7 +271,8 @@ public class JedisMongoDataStore implements DataStore {
     
     // Publishing related
     
-    public boolean storeEntry(String nodename, String id, String entry) {
+    public boolean storeEntry(String nodename, String id, String entry)
+    {
         this.entries.save(new NodeEntryImpl(nodename, id, entry), WriteConcern.SAFE);
         return true;
     }
@@ -279,7 +280,8 @@ public class JedisMongoDataStore implements DataStore {
     // End of publishing related
     
     // TODO, this statemachine stuff could go to other place too
-    public String storeState(String oldID, String newID, Map<String, String> state) {
+    public String storeState(String oldID, String newID, Map<String, String> state)
+    {
         this.jedis.del("state:" + oldID);
         
         if(state.isEmpty()) {
@@ -289,12 +291,14 @@ public class JedisMongoDataStore implements DataStore {
         return this.jedis.hmset("state:" + newID, state);
     }
     
-    public Map<String, String> getState(String id) {
+    public Map<String, String> getState(String id)
+    {
         return (Map<String, String>) this.jedis.hgetAll("state:" + id);
     }
     
     // TODO, move these to somewhere else i think...
-    public static String getNodeConfRedisKey(String nodename) {
+    public static String getNodeConfRedisKey(String nodename)
+    {
         return "node:" + nodename + ":conf";
     }
 

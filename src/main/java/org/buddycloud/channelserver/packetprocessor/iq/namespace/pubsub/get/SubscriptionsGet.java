@@ -13,11 +13,14 @@ import org.dom4j.Element;
 import org.xmpp.packet.IQ;
 import org.xmpp.packet.JID;
 import org.xmpp.packet.Packet;
+import org.apache.log4j.Logger;
 
 public class SubscriptionsGet implements PubSubElementProcessor {
 
     private final BlockingQueue<Packet> outQueue;
     private final DataStore dataStore;
+    
+    private static final Logger LOGGER = Logger.getLogger(SubscriptionsGet.class);
     
     public SubscriptionsGet(BlockingQueue<Packet> outQueue, DataStore dataStore) {
         this.outQueue = outQueue;
@@ -63,14 +66,11 @@ public class SubscriptionsGet implements PubSubElementProcessor {
                              .addAttribute("jid", ns.getBareJID());
             }
         }
-        
         outQueue.put(result);
-        
     }
 
     @Override
     public boolean accept(Element elm) {
         return elm.getName().equals("subscriptions");
     }
-
 }

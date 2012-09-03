@@ -32,7 +32,7 @@ public class AffiliationsGet implements PubSubElementProcessor {
     public void process(Element elm, JID actorJID, IQ reqIQ, Element rsm) throws Exception
    {
         IQ result            = IQ.createResultIQ(reqIQ);
-        Element pubsub       = result.setChildElement(PubSubGet.ELEMENT_NAME, JabberPubsub.NAMESPACE_URI);
+        Element pubsub       = result.setChildElement(PubSubGet.ELEMENT_NAME, JabberPubsub.NS_PUBSUB_OWNER);
         Element affiliations = pubsub.addElement("affiliations");
         
         String node = elm.attributeValue("node");
@@ -42,7 +42,6 @@ public class AffiliationsGet implements PubSubElementProcessor {
         }
         
         if (node == null) {
-        	LOGGER.trace("Getting affiliations for " + actorJID);
             // let's get all subscriptions.
             Iterator<? extends NodeSubscription> cur = dataStore
             	.getUserSubscriptionsOfNodes(actorJID.toBareJID());
@@ -57,7 +56,6 @@ public class AffiliationsGet implements PubSubElementProcessor {
             }
         } else {
             // Let's get only one subscription.
-        	LOGGER.trace("Getting affiliations for node " + node);
         	Iterator<? extends NodeSubscription> cur = dataStore.getNodeSubscribers(node);
             affiliations.addAttribute("node", node);
             Element affiliation;

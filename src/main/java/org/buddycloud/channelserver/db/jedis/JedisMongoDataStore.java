@@ -159,21 +159,25 @@ public class JedisMongoDataStore implements DataStore {
     public void createNode(String owner, String nodename, Map<String, String> conf) 
         throws DataStoreException
     {
-        
         this.addNodeConf(nodename, conf);
         
-        this.subscribeUserToNode(owner, 
-                                 nodename, 
-                                 Affiliations.owner.toString(), 
-                                 Subscriptions.subscribed.toString(),
-                                 null);
-        
-
+        this.subscribeUserToNode(
+            owner, 
+	        nodename, 
+	        Affiliations.owner.toString(), 
+	        Subscriptions.subscribed.toString(),
+	        null
+	    );
     }
     
-    public boolean subscribeUserToNode(String bareJID, String nodename, String aff, String subs, String foreignChannelServer) {
+    public boolean subscribeUserToNode(String bareJID, String nodename, 
+        String aff, String subs, String foreignChannelServer
+    ) {
     	try {
-            this.subscriptions.save(new NodeSubscriptionImpl(bareJID, nodename, aff, subs, foreignChannelServer), WriteConcern.SAFE);
+            this.subscriptions.save(
+                new NodeSubscriptionImpl(bareJID, nodename, aff, subs, foreignChannelServer),
+                WriteConcern.SAFE
+            );
     	} catch (MongoException e) {
     		e.printStackTrace();
     	}

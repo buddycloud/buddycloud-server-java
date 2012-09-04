@@ -245,6 +245,7 @@ public class ItemsGet implements PubSubElementProcessor
     	        .findUserSubscriptionOfNodes(fetchersJid.toBareJID(), subscriber);
     	Element item;
 		while (subscriptions.hasNext()) {
+			// TODO Query in a loop, remove this as and when possible
 			NodeSubscriptionImpl subscription = (NodeSubscriptionImpl) subscriptions.next();
 			item = query.addElement("item");
 			item.addNamespace("ns1", JabberPubsub.NAMESPACE_URI);

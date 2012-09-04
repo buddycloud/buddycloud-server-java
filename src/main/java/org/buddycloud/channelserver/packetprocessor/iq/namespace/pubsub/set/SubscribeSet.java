@@ -28,7 +28,7 @@ public class SubscribeSet implements PubSubElementProcessor {
     private final DataStore dataStore;
     
     public SubscribeSet(BlockingQueue<Packet> outQueue, DataStore dataStore) {
-        this.outQueue = outQueue;
+        this.outQueue  = outQueue;
         this.dataStore = dataStore;
     }
     

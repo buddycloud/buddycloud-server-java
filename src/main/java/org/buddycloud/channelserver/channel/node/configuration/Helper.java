@@ -9,11 +9,16 @@ import java.util.Map.Entry;
 import org.buddycloud.channelserver.channel.node.configuration.field.ConfigurationFieldException;
 import org.buddycloud.channelserver.channel.node.configuration.field.Factory;
 import org.buddycloud.channelserver.channel.node.configuration.field.Field;
+import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.JabberPubsub;
 import org.buddycloud.channelserver.utils.xmlReader.XmlReader;
 import org.dom4j.DocumentException;
 import org.dom4j.Element;
+import org.dom4j.Namespace;
 import org.dom4j.Node;
+import org.dom4j.QName;
+import org.xmpp.forms.DataForm;
 import org.xmpp.packet.IQ;
+import org.xmpp.packet.PacketExtension;
 
 public class Helper
 {
@@ -29,6 +34,21 @@ public class Helper
 	
     public void parse(IQ request) throws NodeConfigurationException
     {
+    	PacketExtension packetEx = request.getExtension("pubsub", JabberPubsub.NS_PUBSUB_OWNER);
+    	
+    	
+    	DataForm form = new DataForm(request.getElement().element(QName.get("pubsub", JabberPubsub.NS_PUBSUB_OWNER))
+    			.element("configure")
+    			.element(QName.get(DataForm.ELEMENT_NAME, DataForm.NAMESPACE)));
+    	
+    	System.out.println(form.toString());
+/*    	
+    	
+    	
+    	
+    	
+    	
+    	
     	Element xml = convertIqToDomElementTree(request);
     	Node configureElement = xml.selectSingleNode("//iq/pubsub/configure");
         if (null == configureElement) {
@@ -40,6 +60,7 @@ public class Helper
         } catch (ConfigurationFieldException e) {
         	throw new NodeConfigurationException();
         }
+*/
     }
 
 	private void parseConfiguration(List configurationValues)

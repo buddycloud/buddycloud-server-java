@@ -7,6 +7,7 @@ import org.buddycloud.channelserver.channel.node.configuration.field.Configurati
 import org.buddycloud.channelserver.channel.node.configuration.field.Field;
 import org.buddycloud.channelserver.channel.node.configuration.field.Mock;
 import org.buddycloud.channelserver.packetHandler.iq.IQTestHandler;
+import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.JabberPubsub;
 import org.dom4j.Element;
 import org.dom4j.Node;
 import org.dom4j.dom.DOMElement;
@@ -34,7 +35,7 @@ public class HelperTest extends IQTestHandler
     public void testPassingPacketWhichDoesntContainConfigureElementThrowsException() 
 	{
 		Element iq     = new DOMElement("iq");
-		iq.addElement("pubsub");
+		iq.addElement("pubsub", JabberPubsub.NS_PUBSUB_OWNER);
 		IQ request = new IQ(iq);
 
 		try {

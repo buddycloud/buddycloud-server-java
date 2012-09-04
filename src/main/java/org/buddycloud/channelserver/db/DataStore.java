@@ -51,5 +51,6 @@ public interface DataStore {
     public Map<String, String> getState(String id) throws DataStoreException;
 
 	public boolean nodeExists(String createNodeId) throws DataStoreException;
-    
+	
+	public Iterator<? extends NodeSubscription> findUserSubscriptionOfNodes(String listener, String nodeMatch);
 }

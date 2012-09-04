@@ -42,6 +42,11 @@ public class NodeConfigure extends PubSubElementProcessorAbstract
     	request     = reqIQ;
     	actor       = actorJID;
         node        = element.attributeValue("node");
+        
+    	if (null == actor) {
+        	actor = request.getFrom();
+    	}
+    	
         try {
 	        if ((false == nodeProvided())
 	            || (false == nodeExists())

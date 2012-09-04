@@ -23,7 +23,7 @@ import org.buddycloud.channelserver.pubsub.subscription.Subscriptions;
 import org.buddycloud.channelserver.pubsub.subscription.NodeSubscription;
 import org.buddycloud.channelserver.db.DataStoreException;
 import redis.clients.jedis.Jedis;
-
+import java.util.regex.Pattern;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DB;
 import com.mongodb.DBCollection;
@@ -31,6 +31,7 @@ import com.mongodb.DBObject;
 import com.mongodb.Mongo;
 import com.mongodb.MongoException;
 import com.mongodb.WriteConcern;
+
 
 /**
  * This class is basically the access object to any data storage.
@@ -199,8 +200,7 @@ public class JedisMongoDataStore implements DataStore {
         
         DBObject query = new BasicDBObject();
         query.put("bareJID", bareJID);
-        
-        return (Iterator<? extends NodeSubscription>) this.subscriptions.find(query).toArray();
+        return new CastingIterator<DBObject, NodeSubscription>(this.subscriptions.find(query).iterator());
     }
     
     public NodeSubscriptionImpl getUserSubscriptionOfNode(String bareJID, String node)
@@ -310,5 +310,19 @@ public class JedisMongoDataStore implements DataStore {
 	public boolean nodeExists(String createNodeId)
 	{
 		return isLocalNode(createNodeId);
+	}
+	
+	/**
+	 * Find subscribed nodes for a particular listener
+	 */
+	public Iterator<? extends NodeSubscription> findUserSubscriptionOfNodes(
+	    String listener, String nodeMatch)
+	{
+		Pattern pattern = Pattern.compile("^/user/" + nodeMatch + "/.*$");
+        DBObject query  = new BasicDBObject();
+        query.put("bareJID", listener);
+        query.put("node", pattern);
+
+        return new CastingIterator<DBObject, NodeSubscription>(this.subscriptions.find(query).iterator());
 	}
 }

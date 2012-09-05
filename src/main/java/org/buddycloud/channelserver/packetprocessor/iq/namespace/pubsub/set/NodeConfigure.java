@@ -37,16 +37,15 @@ public class NodeConfigure extends PubSubElementProcessorAbstract
 	public void process(Element elm, JID actorJID, IQ reqIQ, Element rsm) 
 	    throws Exception
     {
-    	element     = elm;
-    	response    = IQ.createResultIQ(reqIQ);
-    	request     = reqIQ;
-    	actor       = actorJID;
-        node        = element.attributeValue("node");
-        
+    	element  = elm;
+    	response = IQ.createResultIQ(reqIQ);
+    	request  = reqIQ;
+    	actor    = actorJID;
+        node     = element.attributeValue("node");
+
     	if (null == actor) {
         	actor = request.getFrom();
     	}
-    	
         try {
 	        if ((false == nodeProvided())
 	            || (false == nodeExists())
@@ -77,10 +76,12 @@ public class NodeConfigure extends PubSubElementProcessorAbstract
 	            return;
 			}
 		} catch (NodeConfigurationException e) {
+			LOGGER.error("Node configuration exception", e);
 			setErrorCondition(PacketError.Type.modify, PacketError.Condition.bad_request);
 			outQueue.put(response);
 			return;
 		} catch (DataStoreException e) {
+			LOGGER.error("Data Store Exception", e);
 			setErrorCondition(PacketError.Type.cancel, PacketError.Condition.internal_server_error);
 			outQueue.put(response);
 			return;
@@ -121,7 +122,8 @@ public class NodeConfigure extends PubSubElementProcessorAbstract
 	{
 		HashMap<String, String> nodeConfiguration = dataStore.getNodeConf(node);
 		String owner = nodeConfiguration.get(Affiliation.OWNER.toString());
-		if (true == owner.equals(actor.toString())) {
+
+		if (true == owner.equals(actor.toBareJID())) {
 			return true;
 		}
 		setErrorCondition(PacketError.Type.auth, PacketError.Condition.forbidden);
@@ -167,16 +169,8 @@ public class NodeConfigure extends PubSubElementProcessorAbstract
 		return elm.getName().equals("configure");
 	}
 	
-	public void setDocumentHelper(Document helper)
-	{
-		documentHelper = helper;
-	}
-	
 	protected Document getDocumentHelper()
 	{
-		if (null == documentHelper) {
-			documentHelper = DocumentHelper.createDocument();
-		}
-		return documentHelper;
+		return DocumentHelper.createDocument();
 	}
 }

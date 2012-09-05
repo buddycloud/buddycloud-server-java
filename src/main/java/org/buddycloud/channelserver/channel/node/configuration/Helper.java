@@ -17,27 +17,31 @@ import org.xmpp.packet.IQ;
 import org.xmpp.forms.DataForm;
 import org.xmpp.forms.FormField;
 import org.xmpp.packet.PacketExtension;
+import org.apache.log4j.Logger;
 
 public class Helper
 {
 	protected HashMap<String, Field<?>> elements;
 	
 	HashMap<String, Field<?>> config;
-	protected XmlReader    xmlReader;
-	protected Factory      fieldFactory;
+	private XmlReader         xmlReader;
+	private Factory           fieldFactory;
 
-	public static final    String FORM_TYPE               = "http://jabber.org/protocol/pubsub#node_config";
+	public  static final String FORM_TYPE               = "http://jabber.org/protocol/pubsub#node_config";
+	private static final String NO_CONFIGURATION_VALUES = "No configuration values provided";
+	private static final String ELEMENT_NOT_FOUND       = "Required XMPP element not found";
 
-	protected static final String NO_CONFIGURATION_VALUES = "No configuration values provided";
-	protected static final String ELEMENT_NOT_FOUND       = "Required XMPP element not found";
+	private static final Logger LOGGER                  = Logger.getLogger(Helper.class);
 	
     public void parse(IQ request) throws NodeConfigurationException
     {
         try {
             parseConfiguration(getConfigurationValues(request));
         } catch (NullPointerException e) {
+        	LOGGER.debug(e.getStackTrace());
         	throw new NodeConfigurationException(ELEMENT_NOT_FOUND);
         } catch (ConfigurationFieldException e) {
+        	LOGGER.debug(e.getStackTrace());
         	throw new NodeConfigurationException();
         }
     }
@@ -88,6 +92,10 @@ public class Helper
 	{
 		for (Entry<String, Field<?>> element : elements.entrySet()) {
 			if (false == element.getValue().isValid()) {
+				LOGGER.debug(
+				    "Configuration field " + element.getValue().getName() 
+				    + " is not valid with value " + element.getValue().getValue()
+				);
 				return false;
 			}
 		}
@@ -100,6 +108,7 @@ public class Helper
 		for (Entry<String, Field<?>> element : elements.entrySet()) {
 			String value = element.getValue().getValue();
 			String key   = element.getValue().getName();
+			LOGGER.trace("For '" + key + "' we are storing value '" + value + "'");
 			data.put(key, value);
 		}
 		return data;

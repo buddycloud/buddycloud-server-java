@@ -3,7 +3,8 @@ package org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.set;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.concurrent.BlockingQueue;
-
+import org.apache.log4j.Logger;
+import org.buddycloud.channelserver.db.jedis.JedisMongoDataStore;
 import org.buddycloud.channelserver.channel.node.configuration.NodeConfigurationException;
 import org.buddycloud.channelserver.db.DataStore;
 import org.buddycloud.channelserver.db.DataStoreException;
@@ -25,8 +26,9 @@ import org.xmpp.packet.PacketError;
 
 public class NodeConfigure extends PubSubElementProcessorAbstract
 {	
-	protected String   node;
-	protected Document documentHelper;
+	protected String node;
+	
+	private static final Logger LOGGER = Logger.getLogger(NodeConfigure.class);
 	
 	public NodeConfigure(BlockingQueue<Packet> outQueue, DataStore dataStore)
     {

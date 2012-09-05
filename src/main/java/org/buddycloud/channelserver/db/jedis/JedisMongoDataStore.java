@@ -26,6 +26,7 @@ import redis.clients.jedis.Jedis;
 import java.util.regex.Pattern;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DB;
+import com.mongodb.DBCursor;
 import com.mongodb.DBCollection;
 import com.mongodb.DBObject;
 import com.mongodb.Mongo;
@@ -49,21 +50,24 @@ public class JedisMongoDataStore implements DataStore {
     
     private DBCollection subscriptions;
     private DBCollection entries;
+    private DBCollection nodes;
     
-    public static final String LOCAL_USERS  = "local_users";
+    public  static final String LOCAL_USERS = "local_users";
+    private static final Logger LOGGER      = Logger.getLogger(JedisMongoDataStore.class);
     
-    private static final Logger LOGGER = Logger.getLogger(JedisMongoDataStore.class);
-    
-    public JedisMongoDataStore(Properties conf) {
-        
-        this.jedis = new Jedis(conf.getProperty("redis.host"), 
-                               Integer.parseInt(conf.getProperty("redis.port")));
+    public JedisMongoDataStore(Properties conf)
+    {
+        this.jedis = new Jedis(
+        	conf.getProperty("redis.host"), 
+            Integer.parseInt(conf.getProperty("redis.port"))
+        );
         this.jedis.configSet("timeout", "0");
         
         try {
-            
-            this.mongo = new Mongo(conf.getProperty("mongo.host"), 
-                                   Integer.parseInt(conf.getProperty("mongo.port")));
+            this.mongo = new Mongo(
+            	conf.getProperty("mongo.host"), 
+                Integer.parseInt(conf.getProperty("mongo.port"))
+            );
             this.mdb = this.mongo.getDB(conf.getProperty("mongo.db"));
             
             this.subscriptions = this.mdb.getCollection("subscriptions");
@@ -73,6 +77,11 @@ public class JedisMongoDataStore implements DataStore {
             indexes.put("bareJID", 1);
             this.subscriptions.ensureIndex(indexes, "unique_subscription", true);
             
+            nodes = mdb.getCollection("nodes");
+            indexes = new BasicDBObject();
+            indexes.put("name", 1);
+            nodes.ensureIndex(indexes, "unique_node", true);
+
             this.entries = this.mdb.getCollection("entries");
             this.entries.setObjectClass(NodeEntryImpl.class);
             indexes = new BasicDBObject();
@@ -91,32 +100,36 @@ public class JedisMongoDataStore implements DataStore {
         }
     }
     
-    public boolean isLocalNode(String nodename) {
-        return jedis.exists(getNodeConfRedisKey(nodename));
+    public boolean isLocalNode(String nodename)
+    {
+        //return jedis.exists(getNodeConfRedisKey(nodename));
+    	DBObject query = new BasicDBObject();
+        query.put("name", getNodeConfRedisKey(nodename));
+        return (nodes.find(query).count() > 0);
     }
     
-    public Long addLocalUser(String bareJID) {
+    public Long addLocalUser(String bareJID)
+    {
         return this.jedis.sadd(LOCAL_USERS, bareJID);
     }
     
-    public boolean isLocalUser(String bareJID) {
+    public boolean isLocalUser(String bareJID)
+    {
         return this.jedis.sismember(LOCAL_USERS, bareJID);
     }
     
-    public String addNodeConf(String nodename, Map<String, String> conf) {
-        return jedis.hmset(getNodeConfRedisKey(nodename), conf);
+    public String addNodeConf(String nodename, Map<String, String> conf) 
+    {
+        //return jedis.hmset(getNodeConfRedisKey(nodename), conf);
+        BasicDBObject doc = new BasicDBObject();
+        doc.put("name", getNodeConfRedisKey(nodename));
+        for (Map.Entry<String, String> entry : conf.entrySet()) {
+        	doc.put(entry.getKey(), entry.getValue());
+        }
+        nodes.insert(doc);
+        return "OK";
     }
-    
-    //User createUserNodes isntead
-//    @Deprecated 
-//    public String createUserPostsNode(String owner) {
-//        
-//        return this.createNode(owner,
-//                               Conf.getPostChannelNodename(owner),
-//                               Conf.getDefaultPostChannelConf(owner));
-//        
-//    }
-    
+
     public String createUserNodes(String owner) {
         
         /*
@@ -128,29 +141,48 @@ public class JedisMongoDataStore implements DataStore {
            - /geo/next
          */
         try {
-	        this.createNode(owner,
-	                        Conf.getPostChannelNodename(owner),
-	                        Conf.getDefaultPostChannelConf(owner));
-	        
-	        this.createNode(owner,
-	                        Conf.getStatusChannelNodename(owner),
-	                        Conf.getDefaultStatusChannelConf(owner));
-	
-	        this.createNode(owner,
-	                        Conf.getSubscriptionsChannelNodename(owner),
-	                        Conf.getDefaultSubscriptionsChannelConf(owner));
-	        
-	        this.createNode(owner,
-	                        Conf.getGeoPreviousChannelNodename(owner),
-	                        Conf.getDefaultGeoPreviousChannelConf(owner));
-	        
-	        this.createNode(owner,
-	                        Conf.getGeoCurrentChannelNodename(owner),
-	                        Conf.getDefaultGeoCurrentChannelConf(owner));
-	        
-	        this.createNode(owner,
-	                        Conf.getGeoNextChannelNodename(owner),
-	                        Conf.getDefaultGeoNextChannelConf(owner));
+        	if (false == nodeExists(Conf.getPostChannelNodename(owner))) {
+		        this.createNode(
+		            owner,
+		            Conf.getPostChannelNodename(owner),
+		            Conf.getDefaultPostChannelConf(owner)
+		        );
+        	}
+	        if (false == nodeExists(Conf.getStatusChannelNodename(owner))) {
+		        this.createNode(
+		            owner,
+		            Conf.getStatusChannelNodename(owner),
+		            Conf.getDefaultStatusChannelConf(owner)
+		        );
+	        }
+	        if (false == nodeExists(Conf.getSubscriptionsChannelNodename(owner))) {
+		        this.createNode(
+		        	owner,
+		            Conf.getSubscriptionsChannelNodename(owner),
+		            Conf.getDefaultSubscriptionsChannelConf(owner)
+		        );
+	        }
+	        if (false == nodeExists(Conf.getGeoPreviousChannelNodename(owner))) {
+		        this.createNode(
+		        	owner,
+		            Conf.getGeoPreviousChannelNodename(owner),
+		            Conf.getDefaultGeoPreviousChannelConf(owner)
+		        );
+	        }
+	        if (false == nodeExists(Conf.getGeoCurrentChannelNodename(owner))) {
+		        this.createNode(
+		        	owner,
+		            Conf.getGeoCurrentChannelNodename(owner),
+		            Conf.getDefaultGeoCurrentChannelConf(owner)
+		        );
+	        }
+	        if (false == nodeExists(Conf.getGeoNextChannelNodename(owner))) {
+		        this.createNode(
+		        	owner,
+		            Conf.getGeoNextChannelNodename(owner),
+		            Conf.getDefaultGeoNextChannelConf(owner)
+		        );
+	        }
 	        return "OK";
         } catch (DataStoreException e) {
         	return "FAIL";
@@ -210,7 +242,6 @@ public class JedisMongoDataStore implements DataStore {
         query.put("bareJID", bareJID);
         
         LOGGER.trace("Getting subscription of node " + node + " for " + bareJID);
-        LOGGER.trace(query);
         NodeSubscriptionImpl sub = (NodeSubscriptionImpl) this.subscriptions.findOne(query);
         if(sub == null) {
             return new NodeSubscriptionImpl();
@@ -232,7 +263,18 @@ public class JedisMongoDataStore implements DataStore {
     
     public HashMap<String, String> getNodeConf(String nodename)
     {
-        return (HashMap<String, String>) this.jedis.hgetAll(getNodeConfRedisKey(nodename));
+        //return (HashMap<String, String>) this.hgetAll(getNodeConfRedisKey(nodename));
+    	DBObject query = new BasicDBObject();
+    	query.put("name", getNodeConfRedisKey(nodename));
+    	DBObject record = nodes.findOne(query);
+    	HashMap<String, String> conf = new HashMap<String, String>();
+    	HashMap<String, Object> recordMap = (HashMap<String, Object>) record;
+    	for (Map.Entry<String, Object> entry : recordMap.entrySet()) {
+    		if (entry.getValue() instanceof String) {
+    			conf.put(entry.getKey(), entry.getValue().toString());
+    		}
+    	}
+    	return conf;
     }
 
     /*

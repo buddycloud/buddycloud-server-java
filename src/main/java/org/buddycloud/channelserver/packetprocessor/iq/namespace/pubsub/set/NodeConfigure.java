@@ -3,7 +3,8 @@ package org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.set;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.concurrent.BlockingQueue;
-
+import org.apache.log4j.Logger;
+import org.buddycloud.channelserver.db.jedis.JedisMongoDataStore;
 import org.buddycloud.channelserver.channel.node.configuration.NodeConfigurationException;
 import org.buddycloud.channelserver.db.DataStore;
 import org.buddycloud.channelserver.db.DataStoreException;
@@ -25,8 +26,9 @@ import org.xmpp.packet.PacketError;
 
 public class NodeConfigure extends PubSubElementProcessorAbstract
 {	
-	protected String   node;
-	protected Document documentHelper;
+	protected String node;
+	
+	private static final Logger LOGGER = Logger.getLogger(NodeConfigure.class);
 	
 	public NodeConfigure(BlockingQueue<Packet> outQueue, DataStore dataStore)
     {
@@ -37,16 +39,15 @@ public class NodeConfigure extends PubSubElementProcessorAbstract
 	public void process(Element elm, JID actorJID, IQ reqIQ, Element rsm) 
 	    throws Exception
     {
-    	element     = elm;
-    	response    = IQ.createResultIQ(reqIQ);
-    	request     = reqIQ;
-    	actor       = actorJID;
-        node        = element.attributeValue("node");
-        
+    	element  = elm;
+    	response = IQ.createResultIQ(reqIQ);
+    	request  = reqIQ;
+    	actor    = actorJID;
+        node     = element.attributeValue("node");
+
     	if (null == actor) {
         	actor = request.getFrom();
     	}
-    	
         try {
 	        if ((false == nodeProvided())
 	            || (false == nodeExists())
@@ -77,10 +78,12 @@ public class NodeConfigure extends PubSubElementProcessorAbstract
 	            return;
 			}
 		} catch (NodeConfigurationException e) {
+			LOGGER.error("Node configuration exception", e);
 			setErrorCondition(PacketError.Type.modify, PacketError.Condition.bad_request);
 			outQueue.put(response);
 			return;
 		} catch (DataStoreException e) {
+			LOGGER.error("Data Store Exception", e);
 			setErrorCondition(PacketError.Type.cancel, PacketError.Condition.internal_server_error);
 			outQueue.put(response);
 			return;
@@ -121,7 +124,8 @@ public class NodeConfigure extends PubSubElementProcessorAbstract
 	{
 		HashMap<String, String> nodeConfiguration = dataStore.getNodeConf(node);
 		String owner = nodeConfiguration.get(Affiliation.OWNER.toString());
-		if (true == owner.equals(actor.toString())) {
+
+		if (true == owner.equals(actor.toBareJID())) {
 			return true;
 		}
 		setErrorCondition(PacketError.Type.auth, PacketError.Condition.forbidden);
@@ -167,16 +171,8 @@ public class NodeConfigure extends PubSubElementProcessorAbstract
 		return elm.getName().equals("configure");
 	}
 	
-	public void setDocumentHelper(Document helper)
-	{
-		documentHelper = helper;
-	}
-	
 	protected Document getDocumentHelper()
 	{
-		if (null == documentHelper) {
-			documentHelper = DocumentHelper.createDocument();
-		}
-		return documentHelper;
+		return DocumentHelper.createDocument();
 	}
 }

@@ -1,6 +1,7 @@
 package org.buddycloud.channelserver.channel.node.configuration.field;
 
 import org.dom4j.Node;
+import org.xmpp.packet.IQ;
 
 public class Factory
 {	
@@ -9,7 +10,9 @@ public class Factory
     	if ((null == type) || (null == value)) {
     		throw new ConfigurationFieldException();
     	}
-    	if (type.equals(ChannelTitle.FIELD_NAME)) {
+    	if (type.equals("pubsub#owner")) {
+    		throw new ConfigurationFieldException();
+    	} else if (type.equals(ChannelTitle.FIELD_NAME)) {
     	    ChannelTitle field = new ChannelTitle();
     	    field.setValue(value);
     	    return field;

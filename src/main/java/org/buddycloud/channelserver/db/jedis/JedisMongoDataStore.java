@@ -105,7 +105,7 @@ public class JedisMongoDataStore implements DataStore {
         //return jedis.exists(getNodeConfRedisKey(nodename));
     	DBObject query = new BasicDBObject();
         query.put("name", getNodeConfRedisKey(nodename));
-        return (nodes.find(query).count() > 0);
+        return (nodes.findOne(query) != null);
     }
     
     public Long addLocalUser(String bareJID)
@@ -120,18 +120,25 @@ public class JedisMongoDataStore implements DataStore {
     
     public String addNodeConf(String nodename, Map<String, String> conf) 
     {
-        //return jedis.hmset(getNodeConfRedisKey(nodename), conf);
-        BasicDBObject doc = new BasicDBObject();
+        BasicDBObject doc  = new BasicDBObject();
+        BasicDBObject find = new BasicDBObject();
+
         doc.put("name", getNodeConfRedisKey(nodename));
         for (Map.Entry<String, String> entry : conf.entrySet()) {
         	doc.put(entry.getKey(), entry.getValue());
         }
+        find.put("name", getNodeConfRedisKey(nodename));
+        DBObject existingRecord = nodes.findOne(find);
+        if (existingRecord != null) {
+        	doc.put("pubsub#owner", existingRecord.get("pubsub#owner"));
+        }
+        nodes.remove(find);
         nodes.insert(doc);
         return "OK";
     }
 
-    public String createUserNodes(String owner) {
-        
+    public String createUserNodes(String owner)
+    {
         /*
            - /posts
            - /status

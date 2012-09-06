@@ -39,7 +39,7 @@ public class SubscribeSet implements PubSubElementProcessor {
 	}
 
 	@Override
-	public void process(Element elm, JID actorJID, IQ request, Element rsm)
+	public void process(Element elm, JID actorJID, IQ reqIQ, Element rsm)
 			throws Exception {
 		node    = elm.attributeValue("node");
 		request = reqIQ;

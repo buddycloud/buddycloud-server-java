@@ -6,3 +6,5 @@ target
 target
 bin
 logs
+log4j.properties
+confiugration.properties

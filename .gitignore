@@ -4,3 +4,5 @@
 target
 .classpath
 target
+bin
+logs

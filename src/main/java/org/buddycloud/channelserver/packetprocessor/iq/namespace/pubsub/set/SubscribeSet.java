@@ -1,15 +1,18 @@
 package org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.set;
 
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.concurrent.BlockingQueue;
 
 import org.buddycloud.channelserver.channel.Conf;
 import org.buddycloud.channelserver.db.DataStore;
+import org.buddycloud.channelserver.db.DataStoreException;
 import org.buddycloud.channelserver.db.jedis.NodeSubscriptionImpl;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.JabberPubsub;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.PubSubElementProcessor;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.PubSubSet;
 import org.buddycloud.channelserver.queue.statemachine.Subscribe;
+import org.dom4j.Document;
 import org.dom4j.Element;
 import org.dom4j.dom.DOMElement;
 import org.xmpp.packet.IQ;
@@ -18,14 +21,17 @@ import org.xmpp.packet.JID;
 import org.xmpp.packet.Message;
 import org.xmpp.packet.Packet;
 import org.xmpp.packet.PacketError;
+import org.buddycloud.channelserver.pubsub.subscription.NodeSubscription;
 import org.buddycloud.channelserver.pubsub.subscription.Subscriptions;
 import org.buddycloud.channelserver.pubsub.affiliation.Affiliations;
+import org.buddycloud.channelserver.pubsub.event.Event;
 
 public class SubscribeSet implements PubSubElementProcessor {
 	private final BlockingQueue<Packet> outQueue;
 	private final DataStore dataStore;
 
-	private IQ request;
+	private IQ     request;
+	private String node;
 
 	public SubscribeSet(BlockingQueue<Packet> outQueue, DataStore dataStore) {
 		this.outQueue = outQueue;
@@ -35,15 +41,15 @@ public class SubscribeSet implements PubSubElementProcessor {
 	@Override
 	public void process(Element elm, JID actorJID, IQ request, Element rsm)
 			throws Exception {
-		String node = elm.attributeValue("node");
+		node    = elm.attributeValue("node");
 		request = reqIQ;
 		if ((node == null) || (true == node.equals(""))) {
 			missingNodeName();
 			return;
 		}
 
-		JID subscribingJid = request.getFrom();
-		boolean isLocalNode = dataStore.isLocalNode(node);
+		JID subscribingJid        = request.getFrom();
+		boolean isLocalNode       = dataStore.isLocalNode(node);
 		boolean isLocalSubscriber = false;
 
 		if (actorJID != null) {
@@ -62,7 +68,7 @@ public class SubscribeSet implements PubSubElementProcessor {
 
 		// Covers where we have juliet@shakespeare.lit/the-balcony
 		String[] jidParts = elm.attributeValue("jid").split("/");
-		String jid = jidParts[0];
+		String jid        = jidParts[0];
 		if (!subscribingJid.toBareJID().equals(jid)) {
 
 			/*
@@ -213,6 +219,29 @@ public class SubscribeSet implements PubSubElementProcessor {
 				.addAttribute("jid", subscribingJid.toBareJID())
 				.addAttribute("affiliation", defaultAffiliation);
 		outQueue.put(msg);
+		notifySubscribers();
+	}
+
+	private void notifySubscribers() throws DataStoreException, InterruptedException
+	{
+	    Iterator<? extends NodeSubscription> subscribers = dataStore.getNodeSubscribers(node);
+	    Document document     = getDocumentHelper();
+        Element message       = document.addElement("message");
+        Element event         = message.addElement("event");
+        Element configuration = event.addElement("subscription");
+        configuration.addAttribute("node", node);
+        event.addAttribute("xmlns", Event.NAMESPACE);
+        message.addAttribute("id", request.getID());
+        message.addAttribute("from", request.getTo().toString());
+        message.addAttribute("subscriptions", "subscribed");
+        Message rootElement = new Message(message);
+        
+		while (true == subscribers.hasNext()) {
+			String subscriber = subscribers.next().getBareJID();
+			message.addAttribute("to", subscriber);
+            Message notification = rootElement.createCopy();
+			outQueue.put(notification);
+		}
 	}
 
 	private void tooManySubscriptions() throws InterruptedException {

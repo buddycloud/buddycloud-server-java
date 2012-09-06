@@ -10,6 +10,7 @@ import org.buddycloud.channelserver.db.DataStoreException;
 import org.buddycloud.channelserver.db.jedis.NodeSubscriptionImpl;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.JabberPubsub;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.PubSubElementProcessor;
+import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.PubSubElementProcessorAbstract;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.PubSubSet;
 import org.buddycloud.channelserver.queue.statemachine.Subscribe;
 import org.dom4j.Document;
@@ -26,12 +27,13 @@ import org.buddycloud.channelserver.pubsub.subscription.Subscriptions;
 import org.buddycloud.channelserver.pubsub.affiliation.Affiliations;
 import org.buddycloud.channelserver.pubsub.event.Event;
 
-public class SubscribeSet implements PubSubElementProcessor {
+public class SubscribeSet extends PubSubElementProcessorAbstract {
 	private final BlockingQueue<Packet> outQueue;
 	private final DataStore dataStore;
 
 	private IQ     request;
 	private String node;
+	private JID    subscribingJid;
 
 	public SubscribeSet(BlockingQueue<Packet> outQueue, DataStore dataStore) {
 		this.outQueue = outQueue;
@@ -48,7 +50,7 @@ public class SubscribeSet implements PubSubElementProcessor {
 			return;
 		}
 
-		JID subscribingJid        = request.getFrom();
+		subscribingJid            = request.getFrom();
 		boolean isLocalNode       = dataStore.isLocalNode(node);
 		boolean isLocalSubscriber = false;
 
@@ -228,11 +230,11 @@ public class SubscribeSet implements PubSubElementProcessor {
 	    Document document     = getDocumentHelper();
         Element message       = document.addElement("message");
         Element event         = message.addElement("event");
-        Element configuration = event.addElement("subscription");
-        configuration.addAttribute("node", node);
-        event.addAttribute("xmlns", Event.NAMESPACE);
+        Element subscription  = event.addElement("subscription");
+        subscription.addAttribute("node", node);
+        event.addNamespace("", Event.NAMESPACE);
         message.addAttribute("id", request.getID());
-        message.addAttribute("from", request.getTo().toString());
+        message.addAttribute("from", subscribingJid.toBareJID());
         message.addAttribute("subscriptions", "subscribed");
         Message rootElement = new Message(message);
         
@@ -288,7 +290,7 @@ public class SubscribeSet implements PubSubElementProcessor {
 		outQueue.put(reply);
 	}
 
-	private void missingNodeName(IQ request) throws InterruptedException {
+	private void missingNodeName() throws InterruptedException {
 		/*
 		 * 7.2.3.3 NodeID Required
 		 * 

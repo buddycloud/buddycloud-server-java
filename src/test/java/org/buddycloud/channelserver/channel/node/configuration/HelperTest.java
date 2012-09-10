@@ -68,7 +68,7 @@ public class HelperTest extends IQTestHandler
     	Mockito.doThrow(new ConfigurationFieldException())
 	        .when(factoryMock).create(Mockito.anyString(), Mockito.anyString());
     	parser.setFieldFactory(factoryMock);
-    	
+
     	Element iq          = new DOMElement("iq");
     	Element pubsub      = iq.addElement("pubsub");
     	pubsub.addAttribute("xmlns", JabberPubsub.NS_PUBSUB_OWNER);
@@ -77,10 +77,11 @@ public class HelperTest extends IQTestHandler
     	Element field       = x.addElement("field");
     	field.addAttribute("var", ChannelTitle.FIELD_NAME);
     	IQ request          = new IQ(iq);
-    	
+
     	try {
     	    parser.parse(request); 
     	} catch (Exception e) {
+    		e.printStackTrace();
     		assertSame(NodeConfigurationException.class, e.getClass());
     		return;
     	}

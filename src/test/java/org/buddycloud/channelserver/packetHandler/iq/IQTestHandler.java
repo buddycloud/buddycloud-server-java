@@ -12,7 +12,11 @@ import java.util.concurrent.TimeUnit;
 import junit.framework.TestCase;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.log4j.Level;
+import org.apache.log4j.Logger;
+import org.apache.log4j.PropertyConfigurator;
 import org.buddycloud.channelserver.Configuration;
+import org.buddycloud.channelserver.Main;
 import org.buddycloud.channelserver.queue.InQueueConsumer;
 import org.dom4j.DocumentException;
 import org.dom4j.Element;
@@ -30,12 +34,17 @@ import com.mongodb.MongoException;
 public class IQTestHandler extends TestCase
 {
 	private final static String CONFIGURATION_PROPERTIES = "src/test/resources/configuration.properties";
-    public final static String STANZA_PATH               = "src/test/resources/stanzas";
+    public final static String  STANZA_PATH              = "src/test/resources/stanzas";
+    public final static String  LOGGER_PROPERTIES        = "src/test/resources/log4j.properties";
+    
 
     
     public static void dropMongodb() throws FileNotFoundException, IOException
     {
         Properties conf = readConf();
+        
+        PropertyConfigurator.configure(LOGGER_PROPERTIES);
+        Logger.getRootLogger().setLevel(Level.TRACE);
         
         Mongo mongo = null;
         try {

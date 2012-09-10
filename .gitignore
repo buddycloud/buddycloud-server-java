@@ -7,4 +7,4 @@ target
 bin
 logs
 log4j.properties
-configration.properties
+configuration.properties

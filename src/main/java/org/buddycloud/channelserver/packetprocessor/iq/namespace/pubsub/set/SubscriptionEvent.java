@@ -1,5 +1,6 @@
 package org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.set;
 
+import java.util.Iterator;
 import java.util.concurrent.BlockingQueue;
 
 import org.apache.log4j.Logger;
@@ -9,20 +10,24 @@ import org.buddycloud.channelserver.db.jedis.NodeSubscriptionImpl;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.JabberPubsub;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.PubSubElementProcessorAbstract;
 import org.buddycloud.channelserver.pubsub.affiliation.Affiliations;
+import org.buddycloud.channelserver.pubsub.event.Event;
+import org.buddycloud.channelserver.pubsub.subscription.NodeSubscription;
 import org.buddycloud.channelserver.pubsub.subscription.Subscriptions;
+import org.dom4j.Document;
 import org.dom4j.Element;
 import org.dom4j.Namespace;
 import org.dom4j.dom.DOMElement;
 import org.xmpp.packet.IQ;
 import org.xmpp.packet.JID;
+import org.xmpp.packet.Message;
 import org.xmpp.packet.Packet;
 import org.xmpp.packet.PacketError;
 
 public class SubscriptionEvent extends PubSubElementProcessorAbstract {
 
-	Element              requestedSubscription;
+	Element requestedSubscription;
 	NodeSubscriptionImpl currentSubscription;
-	
+
 	private static final Logger LOGGER = Logger
 			.getLogger(SubscriptionEvent.class);
 
@@ -59,7 +64,7 @@ public class SubscriptionEvent extends PubSubElementProcessorAbstract {
 				return;
 			}
 			saveUpdatedSubscription();
-			//sendNotifications();
+			sendNotifications();
 		} catch (DataStoreException e) {
 			LOGGER.debug(e);
 			setErrorCondition(PacketError.Type.wait,
@@ -69,15 +74,42 @@ public class SubscriptionEvent extends PubSubElementProcessorAbstract {
 		}
 	}
 
+	private void sendNotifications() throws Exception {
+		Iterator<? extends NodeSubscription> subscribers = dataStore
+				.getNodeSubscribers(node);
+		if (null == subscribers) {
+			return;
+		}
+		Document document = getDocumentHelper();
+		Element message = document.addElement("message");
+		Element event = message.addElement("event");
+		Element subscription = event.addElement("subscription");
+		event.addNamespace("", JabberPubsub.NS_PUBSUB_EVENT);
+		message.addAttribute("id", request.getID());
+		message.addAttribute("from", request.getTo().toString());
+		subscription.addAttribute("node", node);
+		subscription.addAttribute("jid",
+				requestedSubscription.attributeValue("jid"));
+		subscription.addAttribute("subscription", requestedSubscription.attributeValue("subscription"));
+		Message rootElement = new Message(message);
+
+		while (true == subscribers.hasNext()) {
+			String subscriber = subscribers.next().getBareJID();
+			message.addAttribute("to", subscriber);
+			Message notification = rootElement.createCopy();
+			outQueue.put(notification);
+		}
+
+	}
+
 	private void saveUpdatedSubscription() throws DataStoreException {
-	    dataStore.unsubscribeUserFromNode(requestedSubscription.attributeValue("jid"), node);
-	    dataStore.subscribeUserToNode(
-	        requestedSubscription.attributeValue("jid"),
-	        node,
-	        currentSubscription.getAffiliation(),
-	        Subscriptions.createFromString(requestedSubscription.attributeValue("subscription")).toString(),
-	        currentSubscription.getForeignChannelServer()
-	    );
+		dataStore.unsubscribeUserFromNode(
+				requestedSubscription.attributeValue("jid"), node);
+		dataStore.subscribeUserToNode(
+				requestedSubscription.attributeValue("jid"), node,
+				currentSubscription.getAffiliation(),
+				requestedSubscription.attributeValue("subscription"),
+				currentSubscription.getForeignChannelServer());
 	}
 
 	private boolean nodeProvided() {
@@ -115,6 +147,11 @@ public class SubscriptionEvent extends PubSubElementProcessorAbstract {
 					PacketError.Condition.bad_request);
 			return false;
 		}
+		requestedSubscription.addAttribute(
+				"subscription",
+				Subscriptions.createFromString(
+						requestedSubscription.attributeValue("subscription"))
+						.toString());
 		return true;
 	}
 
@@ -124,7 +161,7 @@ public class SubscriptionEvent extends PubSubElementProcessorAbstract {
 		if (null == currentSubscription) {
 			setErrorCondition(PacketError.Type.cancel,
 					PacketError.Condition.item_not_found);
-		    return false;
+			return false;
 		}
 		return true;
 	}

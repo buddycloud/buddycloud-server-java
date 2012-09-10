@@ -1,6 +1,9 @@
 package org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.set;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -16,7 +19,11 @@ import org.buddycloud.channelserver.db.DataStoreException;
 import org.buddycloud.channelserver.db.jedis.NodeSubscriptionImpl;
 import org.buddycloud.channelserver.db.mock.Mock;
 import org.buddycloud.channelserver.packetHandler.iq.IQTestHandler;
+import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.JabberPubsub;
 import org.buddycloud.channelserver.pubsub.affiliation.Affiliations;
+import org.buddycloud.channelserver.pubsub.subscription.NodeSubscription;
+import org.buddycloud.channelserver.pubsub.subscription.NodeSubscriptionMock;
+import org.buddycloud.channelserver.pubsub.subscription.Subscriptions;
 import org.dom4j.Element;
 import org.dom4j.tree.BaseElement;
 import org.junit.Before;
@@ -32,18 +39,18 @@ public class SubscriptionEventTest extends IQTestHandler {
 	private SubscriptionEvent event;
 	private Element element;
 	private BlockingQueue<Packet> queue = new LinkedBlockingQueue<Packet>();
-	
+
 	private String subscriber = "francisco@denmark.lit";
-	private String node       = "/user/pamela@denmark.lit/posts";
-	private JID jid           = new JID("juliet@shakespeare.lit");
-	private Mock dataStore    = new Mock();
+	private String node = "/user/pamela@denmark.lit/posts";
+	private JID jid = new JID("juliet@shakespeare.lit");
+	private Mock dataStore = new Mock();
 
 	@Before
 	public void setUp() throws Exception {
-		
-		queue     = new LinkedBlockingQueue<Packet>();
-		event     = new SubscriptionEvent(queue, dataStore);
-		request   = readStanzaAsIq("/iq/pubsub/subscribe/authorizationPendingGrantReply.stanza");
+
+		queue = new LinkedBlockingQueue<Packet>();
+		event = new SubscriptionEvent(queue, dataStore);
+		request = readStanzaAsIq("/iq/pubsub/subscribe/authorizationPendingGrantReply.stanza");
 
 		event.setServerDomain("shakespeare.lit");
 
@@ -205,15 +212,16 @@ public class SubscriptionEventTest extends IQTestHandler {
 			throws Exception {
 		NodeSubscriptionImpl subscriptionMockActor = Mockito
 				.mock(NodeSubscriptionImpl.class);
-		Mockito.when(subscriptionMockActor.getAffiliation()).thenReturn(
-				"owner");
+		Mockito.when(subscriptionMockActor.getAffiliation())
+				.thenReturn("owner");
 
 		DataStore dataStoreMock = Mockito.mock(Mock.class);
 		Mockito.when(dataStoreMock.nodeExists(node)).thenReturn(true);
 		Mockito.when(
 				dataStoreMock.getUserSubscriptionOfNode(jid.toBareJID(), node))
 				.thenReturn(subscriptionMockActor);
-		Mockito.when(dataStoreMock.getUserSubscriptionOfNode(subscriber,  node)).thenReturn(null);
+		Mockito.when(dataStoreMock.getUserSubscriptionOfNode(subscriber, node))
+				.thenReturn(null);
 		event.setDataStore(dataStoreMock);
 
 		event.process(element, jid, request, null);
@@ -236,14 +244,14 @@ public class SubscriptionEventTest extends IQTestHandler {
 
 		NodeSubscriptionImpl subscriptionMockActor = Mockito
 				.mock(NodeSubscriptionImpl.class);
-		Mockito.when(subscriptionMockActor.getAffiliation()).thenReturn(
-				"owner");
+		Mockito.when(subscriptionMockActor.getAffiliation())
+				.thenReturn("owner");
 
 		NodeSubscriptionImpl subscriptionMockSubscriber = Mockito
 				.mock(NodeSubscriptionImpl.class);
 		Mockito.when(subscriptionMockSubscriber.getAffiliation()).thenReturn(
 				"member");
-		
+
 		DataStore dataStoreMock = Mockito.mock(Mock.class);
 		Mockito.when(dataStoreMock.nodeExists(node)).thenReturn(true);
 		Mockito.when(
@@ -252,16 +260,123 @@ public class SubscriptionEventTest extends IQTestHandler {
 
 		Mockito.when(dataStoreMock.getUserSubscriptionOfNode(subscriber, node))
 				.thenReturn(subscriptionMockSubscriber);
-        
+
 		Mockito.when(dataStoreMock.unsubscribeUserFromNode(subscriber, node))
 				.thenReturn(true);
-		
+
 		event.setDataStore(dataStoreMock);
 
 		event.process(element, jid, request, null);
 
 		Mockito.verify(dataStoreMock).subscribeUserToNode(subscriber, node,
-				"member", Affiliations.none.toString(), null);
-		
+				"member", Subscriptions.none.toString(), null);
+	}
+
+	@Test
+	public void testPassingValidSubscriptionTypeUpdatesSubscription()
+			throws Exception {
+
+		IQ request = toIq(readStanzaAsString(
+				"/iq/pubsub/subscribe/authorizationPendingGrantReply.stanza")
+				.replaceFirst("subscription='subscribed'",
+						"subscription='subscribed'"));
+
+		NodeSubscriptionImpl subscriptionMockActor = Mockito
+				.mock(NodeSubscriptionImpl.class);
+		Mockito.when(subscriptionMockActor.getAffiliation())
+				.thenReturn("owner");
+
+		NodeSubscriptionImpl subscriptionMockSubscriber = Mockito
+				.mock(NodeSubscriptionImpl.class);
+		Mockito.when(subscriptionMockSubscriber.getAffiliation()).thenReturn(
+				"member");
+
+		DataStore dataStoreMock = Mockito.mock(Mock.class);
+		Mockito.when(dataStoreMock.nodeExists(node)).thenReturn(true);
+		Mockito.when(
+				dataStoreMock.getUserSubscriptionOfNode(jid.toBareJID(), node))
+				.thenReturn(subscriptionMockActor);
+
+		Mockito.when(dataStoreMock.getUserSubscriptionOfNode(subscriber, node))
+				.thenReturn(subscriptionMockSubscriber);
+
+		Mockito.when(dataStoreMock.unsubscribeUserFromNode(subscriber, node))
+				.thenReturn(true);
+
+		event.setDataStore(dataStoreMock);
+
+		event.process(element, jid, request, null);
+
+		Mockito.verify(dataStoreMock).subscribeUserToNode(subscriber, node,
+				"member", Subscriptions.subscribed.toString(), null);
+	}
+
+	@Test
+	public void testPassingValidSubscriptionSendsOutExpectedNotifications()
+			throws Exception {
+
+		IQ request = toIq(readStanzaAsString(
+				"/iq/pubsub/subscribe/authorizationPendingGrantReply.stanza")
+				.replaceFirst("subscription='subscribed'",
+						"subscription='subscribed'"));
+
+		NodeSubscriptionImpl subscriptionMockActor = Mockito
+				.mock(NodeSubscriptionImpl.class);
+		Mockito.when(subscriptionMockActor.getAffiliation())
+				.thenReturn("owner");
+
+		NodeSubscriptionImpl subscriptionMockSubscriber = Mockito
+				.mock(NodeSubscriptionImpl.class);
+		Mockito.when(subscriptionMockSubscriber.getAffiliation()).thenReturn(
+				"member");
+
+		DataStore dataStoreMock = Mockito.mock(Mock.class);
+		Mockito.when(dataStoreMock.nodeExists(node)).thenReturn(true);
+		Mockito.when(
+				dataStoreMock.getUserSubscriptionOfNode(jid.toBareJID(), node))
+				.thenReturn(subscriptionMockActor);
+
+		Mockito.when(dataStoreMock.getUserSubscriptionOfNode(subscriber, node))
+				.thenReturn(subscriptionMockSubscriber);
+
+		Mockito.when(dataStoreMock.unsubscribeUserFromNode(subscriber, node))
+				.thenReturn(true);
+
+		event.setDataStore(dataStoreMock);
+
+		List<NodeSubscriptionMock> subscribers = new ArrayList<NodeSubscriptionMock>();
+		subscribers.add(new NodeSubscriptionMock("romeo@shakespeare.lit"));
+		subscribers.add(new NodeSubscriptionMock("hamlet@shakespeare.lit"));
+
+		Mockito.doReturn(
+				(Iterator<? extends NodeSubscription>) subscribers.iterator())
+				.when(dataStoreMock).getNodeSubscribers(Mockito.anyString());
+
+		event.setDataStore(dataStoreMock);
+		event.process(element, jid, request, null);
+		/**
+		 * <message xmlns='jabber:client' type='headline'
+		 * to='lloyd+dev2@buddycloud.org/a559a494-90ec-404a-a227-1aec0c8b48b3'
+		 * from='channels.buddycloud.org'> <event
+		 * xmlns='http://jabber.org/protocol/pubsub#event'> <subscription
+		 * jid='lloyd@buddycloud.org'
+		 * node='/user/lloyd+dev2@buddycloud.org/status'
+		 * subscription='subscribed'/> </event> </message>
+		 */
+		assertEquals(2, queue.size());
+		Packet notification = queue.poll(100, TimeUnit.MILLISECONDS);
+		assertEquals("romeo@shakespeare.lit", notification.getTo().toString());
+		notification = queue.poll(100, TimeUnit.MILLISECONDS);
+		assertEquals("hamlet@shakespeare.lit", notification.getTo().toString());
+
+		assertEquals(
+				node,
+				notification.getElement().element("event")
+						.element("subscription").attributeValue("node"));
+		assertTrue(notification.toXML().contains(JabberPubsub.NS_PUBSUB_EVENT));
+		assertEquals("subscribed", notification.getElement().element("event")
+				.element("subscription").attributeValue("subscription"));
+		assertEquals(subscriber, notification.getElement().element("event")
+				.element("subscription").attributeValue("jid"));
 	}
 }

@@ -12,6 +12,7 @@ import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.set.Node
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.set.NodeCreate;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.set.PublishSet;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.set.SubscribeSet;
+import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.set.SubscriptionEvent;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.set.UnsubscribeSet;
 import org.dom4j.Element;
 import org.xmpp.packet.IQ;
@@ -42,6 +43,7 @@ public class PubSubSet implements PacketProcessor<IQ> {
         elementProcessors.add(new UnsubscribeSet(outQueue, dataStore));
         elementProcessors.add(new NodeCreate(outQueue, dataStore));
         elementProcessors.add(new NodeConfigure(outQueue, dataStore));
+        elementProcessors.add(new SubscriptionEvent(outQueue, dataStore));
     }
     
     @Override

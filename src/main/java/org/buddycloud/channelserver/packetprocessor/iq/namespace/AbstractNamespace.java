@@ -44,7 +44,7 @@ public abstract class AbstractNamespace implements PacketProcessor<IQ> {
 	public void process(IQ reqIQ) throws Exception {
 
 		PacketProcessor<IQ> processor = null;
-        LOGGER.trace("Request type is " + reqIQ.getType());
+
 		switch (reqIQ.getType()) {
 		case get:
 			processor = get();

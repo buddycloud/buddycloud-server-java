@@ -67,7 +67,7 @@ public class Helper
 		Field<?> field;
 		for (FormField configurationValue : configurationValues) {
 			field = getFieldFactory()
-			    .create(configurationValue.getVariable(), configurationValue.getValues().get(0));
+			    .create(configurationValue.getVariable(), configurationValue.getFirstValue());
 			elements.put(
 				field.getName(),
 				field

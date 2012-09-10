@@ -226,7 +226,6 @@ public class JedisMongoDataStore implements DataStore
         return true;
     }
 
-    @SuppressWarnings("unchecked")
     public Iterator<? extends NodeSubscription> getUserSubscriptionsOfNodes(String bareJID) {
         
         DBObject query = new BasicDBObject();
@@ -248,7 +247,6 @@ public class JedisMongoDataStore implements DataStore
         return sub;
     }
 
-    @SuppressWarnings("unchecked")
     public Iterator<? extends NodeSubscription> getNodeSubscribers(String node)
     {
         DBObject query = new BasicDBObject();
@@ -289,7 +287,6 @@ public class JedisMongoDataStore implements DataStore
     
     // Entry fetching related
     
-    @SuppressWarnings("unchecked")
     public Iterator<? extends NodeEntry> getNodeEntries(String node, int limit, String afterItemId)
     {
         DBObject query = new BasicDBObject();

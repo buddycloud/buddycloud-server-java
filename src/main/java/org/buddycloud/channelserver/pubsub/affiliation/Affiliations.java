@@ -3,6 +3,7 @@ package org.buddycloud.channelserver.pubsub.affiliation;
 public enum Affiliations {
 	
 		owner,
+		moderator,
 		publisher,
 		publish_only {
 		    public String toString() {
@@ -19,6 +20,8 @@ public enum Affiliations {
 				return owner;
 			} else if ("publisher".equals(asString)) {
 				return publisher;
+			} else if ("moderator".equals(asString)) {
+				return moderator;
 			} else if ("publish-only".equals(asString)) {
 				return publish_only;
 			} else if ("member".equals(asString)) {

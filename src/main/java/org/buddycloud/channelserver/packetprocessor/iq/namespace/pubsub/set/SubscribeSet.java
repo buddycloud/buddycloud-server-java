@@ -4,7 +4,9 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.concurrent.BlockingQueue;
 
+import org.apache.log4j.Logger;
 import org.buddycloud.channelserver.channel.Conf;
+import org.buddycloud.channelserver.channel.node.configuration.field.AccessModel;
 import org.buddycloud.channelserver.db.DataStore;
 import org.buddycloud.channelserver.db.DataStoreException;
 import org.buddycloud.channelserver.db.jedis.NodeSubscriptionImpl;
@@ -16,6 +18,8 @@ import org.buddycloud.channelserver.queue.statemachine.Subscribe;
 import org.dom4j.Document;
 import org.dom4j.Element;
 import org.dom4j.dom.DOMElement;
+import org.xmpp.forms.DataForm;
+import org.xmpp.forms.FormField;
 import org.xmpp.packet.IQ;
 import org.xmpp.packet.IQ.Type;
 import org.xmpp.packet.JID;
@@ -24,6 +28,7 @@ import org.xmpp.packet.Packet;
 import org.xmpp.packet.PacketError;
 import org.buddycloud.channelserver.pubsub.subscription.NodeSubscription;
 import org.buddycloud.channelserver.pubsub.subscription.Subscriptions;
+import org.buddycloud.channelserver.pubsub.accessmodel.AccessModels;
 import org.buddycloud.channelserver.pubsub.affiliation.Affiliations;
 import org.buddycloud.channelserver.pubsub.event.Event;
 
@@ -31,9 +36,9 @@ public class SubscribeSet extends PubSubElementProcessorAbstract {
 	private final BlockingQueue<Packet> outQueue;
 	private final DataStore dataStore;
 
-	private IQ     request;
+	private IQ request;
 	private String node;
-	private JID    subscribingJid;
+	private JID subscribingJid;
 
 	public SubscribeSet(BlockingQueue<Packet> outQueue, DataStore dataStore) {
 		this.outQueue = outQueue;
@@ -43,15 +48,15 @@ public class SubscribeSet extends PubSubElementProcessorAbstract {
 	@Override
 	public void process(Element elm, JID actorJID, IQ reqIQ, Element rsm)
 			throws Exception {
-		node    = elm.attributeValue("node");
+		node = elm.attributeValue("node");
 		request = reqIQ;
 		if ((node == null) || (true == node.equals(""))) {
 			missingNodeName();
 			return;
 		}
 
-		subscribingJid            = request.getFrom();
-		boolean isLocalNode       = dataStore.isLocalNode(node);
+		subscribingJid = request.getFrom();
+		boolean isLocalNode = dataStore.isLocalNode(node);
 		boolean isLocalSubscriber = false;
 
 		if (actorJID != null) {
@@ -70,7 +75,7 @@ public class SubscribeSet extends PubSubElementProcessorAbstract {
 
 		// Covers where we have juliet@shakespeare.lit/the-balcony
 		String[] jidParts = elm.attributeValue("jid").split("/");
-		String jid        = jidParts[0];
+		String jid = jidParts[0];
 		if (!subscribingJid.toBareJID().equals(jid)) {
 
 			/*
@@ -164,8 +169,11 @@ public class SubscribeSet extends PubSubElementProcessorAbstract {
 		// Finally subscribe to the node :-)
 		HashMap<String, String> nodeConf = dataStore.getNodeConf(node);
 		String defaultAffiliation = nodeConf.get(Conf.DEFUALT_AFFILIATION);
-		// @todo This should be fixed later...
 		String defaultSubscription = Subscriptions.subscribed.toString();
+		if (true == nodeConf.get(Conf.ACCESS_MODEL).equals(
+				AccessModels.authorize.toString())) {
+			defaultSubscription = Subscriptions.pending.toString();
+		}
 
 		dataStore.subscribeUserToNode(subscribingJid.toBareJID(), node,
 				defaultAffiliation, defaultSubscription,
@@ -183,67 +191,83 @@ public class SubscribeSet extends PubSubElementProcessorAbstract {
 
 		outQueue.put(reply);
 
-		/*
-		 * TODO, send affiliation change message here too. 8.9.4 Notifying
-		 * Entities <message from='pubsub.shakespeare.lit'
-		 * to='polonius@denmark.lit'> <pubsub
-		 * xmlns='http://jabber.org/protocol/pubsub'> <affiliations
-		 * node='princely_musings'> <affilation jid='polonius@denmark.lit'
-		 * affiliation='none'/> </affiliations> </pubsub> </message>
-		 * 
-		 * <message type="headline" to="comptest.xmpp.lobstermonster.org"
-		 * from="channels.buddycloud.org"> <event
-		 * xmlns="http://jabber.org/protocol/pubsub#event"> <subscription
-		 * jid="tuomas@xmpp.lobstermonster.org" subscription="subscribed"
-		 * node="/user/tuomas@buddycloud.org/posts"/> </event> </message>
-		 * 
-		 * // check that foreign receivers are handled correctly.
-		 */
-
-		Message msg = new Message();
-		msg.setTo(reply.getTo());
-		msg.setFrom(reply.getFrom());
-		msg.setType(Message.Type.headline);
-		Element subscription = msg.addChildElement("event",
-				JabberPubsub.NS_PUBSUB_EVENT).addElement("subscription");
-		subscription.addAttribute("node", node)
-				.addAttribute("jid", subscribingJid.toBareJID())
-				.addAttribute("subscription", defaultSubscription);
-		outQueue.put(msg);
-
-		msg = new Message();
-		msg.setTo(reply.getTo());
-		msg.setFrom(reply.getFrom());
-		msg.setType(Message.Type.headline);
-		Element affiliation = msg.addChildElement("event",
-				JabberPubsub.NS_PUBSUB_EVENT).addElement("affiliation");
-		affiliation.addAttribute("node", node)
-				.addAttribute("jid", subscribingJid.toBareJID())
-				.addAttribute("affiliation", defaultAffiliation);
-		outQueue.put(msg);
-		notifySubscribers();
+		notifySubscribers(defaultSubscription, defaultAffiliation);
 	}
 
-	private void notifySubscribers() throws DataStoreException, InterruptedException
-	{
-	    Iterator<? extends NodeSubscription> subscribers = dataStore.getNodeSubscribers(node);
-	    Document document     = getDocumentHelper();
-        Element message       = document.addElement("message");
-        Element event         = message.addElement("event");
-        Element subscription  = event.addElement("subscription");
-        subscription.addAttribute("node", node);
-        event.addNamespace("", Event.NAMESPACE);
-        message.addAttribute("id", request.getID());
-        message.addAttribute("from", subscribingJid.toBareJID());
-        message.addAttribute("subscriptions", "subscribed");
-        Message rootElement = new Message(message);
-        
-		while (true == subscribers.hasNext()) {
-			String subscriber = subscribers.next().getBareJID();
-			message.addAttribute("to", subscriber);
-            Message notification = rootElement.createCopy();
-			outQueue.put(notification);
+	private void notifySubscribers(String subscriptionStatus,
+			String affiliationType) throws DataStoreException,
+			InterruptedException {
+		Iterator<? extends NodeSubscription> subscribers = dataStore
+				.getNodeSubscribers(node);
+		Document document = getDocumentHelper();
+		Element message = document.addElement("message");
+		Element event = message.addElement("event");
+		Element subscription = event.addElement("subscription");
+		event.addNamespace("", Event.NAMESPACE);
+		message.addAttribute("id", request.getID());
+		message.addAttribute("from", request.getTo().toString());
+		message.addAttribute("type", "headline");
+		message.addNamespace("", "jabber:client");
+		subscription.addAttribute("subscription", subscriptionStatus);
+		subscription.addAttribute("jid", subscribingJid.toBareJID());
+		subscription.addAttribute("node", node);
+		Message confirm;
+		if (true == Subscriptions.subscribed.equals(subscriptionStatus)) {
+			Element affiliation = event.addElement("affiliation");
+			affiliation.addAttribute("node", node);
+			affiliation.addAttribute("jid", subscribingJid.toBareJID());
+			affiliation.addAttribute("affiliation", affiliationType);
 		}
+		Message rootElement = new Message(message);
+		while (true == subscribers.hasNext()) {
+			NodeSubscription subscriber = subscribers.next();
+			String subscriberJid = subscriber.getBareJID();
+			message.addAttribute("to", subscriberJid);
+			Message notification = rootElement.createCopy();
+			outQueue.put(notification);
+			Logger.getLogger(SubscribeSet.class).trace("**** subscriber " + subscriber.getBareJID() + " has affiliation " + subscriber.getAffiliation());
+			if ((true == subscriber.getAffiliation().equals(Affiliations.owner))
+					|| (true == subscriber.getAffiliation().equals(
+							Affiliations.moderator))) {
+				Logger.getLogger(SubscribeSet.class).trace("***** Sending pending subscription notification");
+				outQueue.put(getPendingSubscriptionNotification(subscriber
+						.getBareJID()));
+			}
+		}
+	}
+
+	private Message getPendingSubscriptionNotification(String subscriber) {
+		Document document = getDocumentHelper();
+		Element message = document.addElement("message");
+		message.addAttribute("id", request.getID());
+		message.addAttribute("from", request.getTo().toString());
+		message.addAttribute("type", "headline");
+		message.addNamespace("", "jabber:client");
+		DataForm dataForm = new DataForm(DataForm.Type.form);
+		dataForm.addInstruction("Allow " + subscriber
+				+ " to subscribe to node " + node + "?");
+		dataForm.setTitle("Confirm channel subscription");
+		FormField formType = dataForm.addField();
+		formType.addValue(JabberPubsub.NS_AUTHORIZATION);
+		formType.setType(FormField.Type.hidden);
+		formType.setVariable("FORM_TYPE");
+		FormField subscribingNode = dataForm.addField();
+		subscribingNode.setType(FormField.Type.text_single);
+		subscribingNode.setVariable(JabberPubsub.VAR_NODE);
+		subscribingNode.setLabel("Node");
+		subscribingNode.addValue(node);
+		FormField jid = dataForm.addField();
+		jid.setType(FormField.Type.jid_single);
+		jid.addValue(subscriber);
+		jid.setLabel("Subscriber Address");
+		jid.setVariable(JabberPubsub.VAR_SUBSCRIBER_JID);
+		FormField allow = dataForm.addField();
+		allow.setLabel("Allow?");
+		allow.setVariable(JabberPubsub.VAR_ALLOW);
+		allow.addValue("false");
+		allow.setType(FormField.Type.boolean_type);
+		message.add(dataForm.getElement());
+		return new Message(message);
 	}
 
 	private void tooManySubscriptions() throws InterruptedException {

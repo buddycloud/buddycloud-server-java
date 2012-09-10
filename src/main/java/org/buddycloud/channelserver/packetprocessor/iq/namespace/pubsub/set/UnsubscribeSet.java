@@ -185,5 +185,4 @@ public class UnsubscribeSet extends PubSubElementProcessorAbstract {
 	public boolean accept(Element elm) {
 		return elm.getName().equals("unsubscribe");
 	}
-
 }

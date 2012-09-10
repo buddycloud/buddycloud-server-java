@@ -18,6 +18,9 @@ import org.xmpp.packet.Packet;
 import org.xmpp.packet.PacketError;
 
 public class SubscriptionEvent extends PubSubElementProcessorAbstract {
+
+	Element requestedSubscription;
+
 	private static final Logger LOGGER = Logger
 			.getLogger(SubscriptionEvent.class);
 
@@ -82,12 +85,11 @@ public class SubscriptionEvent extends PubSubElementProcessorAbstract {
 
 	private boolean validRequestStanza() {
 		try {
-			Element subscription = request.getElement()
-					.element("pubsub")
-					.element("subscriptions")
-					.element("subscription");
-			if ((null == subscription) || (null == subscription.attribute("jid"))
-					|| (null == subscription.attribute("subscription"))) {
+			requestedSubscription = request.getElement().element("pubsub")
+					.element("subscriptions").element("subscription");
+			if ((null == requestedSubscription)
+					|| (null == requestedSubscription.attribute("jid"))
+					|| (null == requestedSubscription.attribute("subscription"))) {
 				setErrorCondition(PacketError.Type.modify,
 						PacketError.Condition.bad_request);
 				return false;
@@ -101,9 +103,15 @@ public class SubscriptionEvent extends PubSubElementProcessorAbstract {
 		return true;
 	}
 
-	private boolean subscriberHasCurrentAffiliation() {
-		// TODO Auto-generated method stub
-		return false;
+	private boolean subscriberHasCurrentAffiliation() throws DataStoreException {
+		NodeSubscriptionImpl subscription = dataStore
+				.getUserSubscriptionOfNode(
+						requestedSubscription.attributeValue("jid"), node);
+		if (null == subscription) {
+			setErrorCondition(PacketError.Type.cancel,
+					PacketError.Condition.item_not_found);
+		}
+		return true;
 	}
 
 	private boolean actorHasPermissionToAuthorize() throws DataStoreException {

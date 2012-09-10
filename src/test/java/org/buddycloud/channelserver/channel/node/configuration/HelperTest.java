@@ -81,7 +81,6 @@ public class HelperTest extends IQTestHandler
     	try {
     	    parser.parse(request); 
     	} catch (Exception e) {
-    		e.printStackTrace();
     		assertSame(NodeConfigurationException.class, e.getClass());
     		return;
     	}

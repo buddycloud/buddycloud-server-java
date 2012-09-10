@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.concurrent.BlockingQueue;
 
 
+import org.apache.log4j.Logger;
 import org.buddycloud.channelserver.packetprocessor.PacketProcessor;
 import org.buddycloud.channelserver.db.DataStore;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.set.NodeConfigure;
@@ -23,6 +24,8 @@ public class PubSubSet implements PacketProcessor<IQ> {
     
     public static final String ELEMENT_NAME = "pubsub";
 
+    private static final Logger LOGGER = Logger.getLogger(PubSubSet.class);
+    
     private final BlockingQueue<Packet> outQueue;
     private final DataStore dataStore;
     private final List<PubSubElementProcessor> elementProcessors = new LinkedList<PubSubElementProcessor>();

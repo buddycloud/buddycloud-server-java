@@ -54,7 +54,10 @@ public class SubscriptionEvent extends PubSubElementProcessorAbstract {
 		request = reqIQ;
 		actor = actorJID;
 		node = element.attributeValue("node");
-
+  
+		if (actor == null) {
+			actor = request.getFrom();
+		}
 		try {
 			if ((false == nodeProvided()) || (false == validRequestStanza())
 					|| (false == checkNodeExists())

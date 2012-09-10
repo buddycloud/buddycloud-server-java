@@ -51,7 +51,6 @@ public class SubscriptionEventTest extends IQTestHandler {
 		queue = new LinkedBlockingQueue<Packet>();
 		event = new SubscriptionEvent(queue, dataStore);
 		request = readStanzaAsIq("/iq/pubsub/subscribe/authorizationPendingGrantReply.stanza");
-
 		event.setServerDomain("shakespeare.lit");
 
 		element = new BaseElement("subscriptions");
@@ -106,7 +105,7 @@ public class SubscriptionEventTest extends IQTestHandler {
 	public void testNotProvidingJidAttributeReturnsErrorStanza()
 			throws Exception {
 		IQ request = toIq(readStanzaAsString(
-				"/iq/pubsub/subscribe/authorizationPendingGrantreply.stanza")
+				"/iq/pubsub/subscribe/authorizationPendingGrantReply.stanza")
 				.replaceFirst("jid='francisco@denmark.lit'", ""));
 		event.process(element, jid, request, null);
 		Packet response = queue.poll(100, TimeUnit.MILLISECONDS);

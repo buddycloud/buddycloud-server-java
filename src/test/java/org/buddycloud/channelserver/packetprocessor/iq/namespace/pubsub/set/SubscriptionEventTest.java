@@ -354,15 +354,7 @@ public class SubscriptionEventTest extends IQTestHandler {
 
 		event.setDataStore(dataStoreMock);
 		event.process(element, jid, request, null);
-		/**
-		 * <message xmlns='jabber:client' type='headline'
-		 * to='lloyd+dev2@buddycloud.org/a559a494-90ec-404a-a227-1aec0c8b48b3'
-		 * from='channels.buddycloud.org'> <event
-		 * xmlns='http://jabber.org/protocol/pubsub#event'> <subscription
-		 * jid='lloyd@buddycloud.org'
-		 * node='/user/lloyd+dev2@buddycloud.org/status'
-		 * subscription='subscribed'/> </event> </message>
-		 */
+
 		assertEquals(2, queue.size());
 		Packet notification = queue.poll(100, TimeUnit.MILLISECONDS);
 		assertEquals("romeo@shakespeare.lit", notification.getTo().toString());

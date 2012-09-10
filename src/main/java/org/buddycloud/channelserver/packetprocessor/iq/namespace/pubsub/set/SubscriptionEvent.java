@@ -9,6 +9,7 @@ import org.buddycloud.channelserver.db.jedis.NodeSubscriptionImpl;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.JabberPubsub;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.PubSubElementProcessorAbstract;
 import org.buddycloud.channelserver.pubsub.affiliation.Affiliations;
+import org.buddycloud.channelserver.pubsub.subscription.Subscriptions;
 import org.dom4j.Element;
 import org.dom4j.Namespace;
 import org.dom4j.dom.DOMElement;
@@ -19,8 +20,9 @@ import org.xmpp.packet.PacketError;
 
 public class SubscriptionEvent extends PubSubElementProcessorAbstract {
 
-	Element requestedSubscription;
-
+	Element              requestedSubscription;
+	NodeSubscriptionImpl currentSubscription;
+	
 	private static final Logger LOGGER = Logger
 			.getLogger(SubscriptionEvent.class);
 
@@ -56,6 +58,8 @@ public class SubscriptionEvent extends PubSubElementProcessorAbstract {
 				outQueue.put(response);
 				return;
 			}
+			saveUpdatedSubscription();
+			//sendNotifications();
 		} catch (DataStoreException e) {
 			LOGGER.debug(e);
 			setErrorCondition(PacketError.Type.wait,
@@ -63,6 +67,17 @@ public class SubscriptionEvent extends PubSubElementProcessorAbstract {
 			outQueue.put(response);
 			return;
 		}
+	}
+
+	private void saveUpdatedSubscription() throws DataStoreException {
+	    dataStore.unsubscribeUserFromNode(requestedSubscription.attributeValue("jid"), node);
+	    dataStore.subscribeUserToNode(
+	        requestedSubscription.attributeValue("jid"),
+	        node,
+	        currentSubscription.getAffiliation(),
+	        Subscriptions.createFromString(requestedSubscription.attributeValue("subscription")).toString(),
+	        currentSubscription.getForeignChannelServer()
+	    );
 	}
 
 	private boolean nodeProvided() {
@@ -104,12 +119,12 @@ public class SubscriptionEvent extends PubSubElementProcessorAbstract {
 	}
 
 	private boolean subscriberHasCurrentAffiliation() throws DataStoreException {
-		NodeSubscriptionImpl subscription = dataStore
-				.getUserSubscriptionOfNode(
-						requestedSubscription.attributeValue("jid"), node);
-		if (null == subscription) {
+		currentSubscription = dataStore.getUserSubscriptionOfNode(
+				requestedSubscription.attributeValue("jid"), node);
+		if (null == currentSubscription) {
 			setErrorCondition(PacketError.Type.cancel,
 					PacketError.Condition.item_not_found);
+		    return false;
 		}
 		return true;
 	}
@@ -123,9 +138,9 @@ public class SubscriptionEvent extends PubSubElementProcessorAbstract {
 			return false;
 		}
 		if ((false == subscription.getAffiliation().equals(
-				Affiliations.moderator))
+				Affiliations.moderator.toString()))
 				&& (false == subscription.getAffiliation().equals(
-						Affiliations.owner))) {
+						Affiliations.owner.toString()))) {
 			setErrorCondition(PacketError.Type.auth,
 					PacketError.Condition.not_authorized);
 			return false;

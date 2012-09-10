@@ -69,6 +69,8 @@ public class NodeCreate extends PubSubElementProcessorAbstract
 			    PacketError.Type.modify,
 			    PacketError.Condition.bad_request
 		    );
+			outQueue.put(response);
+			return;
 		}
 		response.setType(IQ.Type.result);
 		outQueue.put(response);

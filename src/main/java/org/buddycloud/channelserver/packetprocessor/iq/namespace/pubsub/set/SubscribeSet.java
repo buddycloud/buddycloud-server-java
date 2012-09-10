@@ -225,11 +225,11 @@ public class SubscribeSet extends PubSubElementProcessorAbstract {
 			message.addAttribute("to", subscriberJid);
 			Message notification = rootElement.createCopy();
 			outQueue.put(notification);
-			Logger.getLogger(SubscribeSet.class).trace("**** subscriber " + subscriber.getBareJID() + " has affiliation " + subscriber.getAffiliation());
-			if ((true == subscriber.getAffiliation().equals(Affiliations.owner))
-					|| (true == subscriber.getAffiliation().equals(
-							Affiliations.moderator))) {
-				Logger.getLogger(SubscribeSet.class).trace("***** Sending pending subscription notification");
+
+			if ((subscriber.getAffiliation() != null)
+					&& ((true == subscriber.getAffiliation().equals(
+							Affiliations.owner)) || (true == subscriber
+							.getAffiliation().equals(Affiliations.moderator)))) {
 				outQueue.put(getPendingSubscriptionNotification(subscriber
 						.getBareJID()));
 			}

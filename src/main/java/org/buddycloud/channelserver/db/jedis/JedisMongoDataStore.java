@@ -292,7 +292,7 @@ public class JedisMongoDataStore implements DataStore
         DBObject query = new BasicDBObject();
         query.put("node", node);
         
-        if(afterItemId != null) {
+        if (afterItemId != null) {
             query.put("_id", new BasicDBObject("$lt", new ObjectId(afterItemId)));
         }
         

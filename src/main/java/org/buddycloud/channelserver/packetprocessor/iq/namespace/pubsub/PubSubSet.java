@@ -5,12 +5,14 @@ import java.util.List;
 import java.util.concurrent.BlockingQueue;
 
 
+import org.apache.log4j.Logger;
 import org.buddycloud.channelserver.packetprocessor.PacketProcessor;
 import org.buddycloud.channelserver.db.DataStore;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.set.NodeConfigure;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.set.NodeCreate;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.set.PublishSet;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.set.SubscribeSet;
+import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.set.SubscriptionEvent;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.set.UnsubscribeSet;
 import org.dom4j.Element;
 import org.xmpp.packet.IQ;
@@ -23,6 +25,8 @@ public class PubSubSet implements PacketProcessor<IQ> {
     
     public static final String ELEMENT_NAME = "pubsub";
 
+    private static final Logger LOGGER = Logger.getLogger(PubSubSet.class);
+    
     private final BlockingQueue<Packet> outQueue;
     private final DataStore dataStore;
     private final List<PubSubElementProcessor> elementProcessors = new LinkedList<PubSubElementProcessor>();
@@ -39,6 +43,7 @@ public class PubSubSet implements PacketProcessor<IQ> {
         elementProcessors.add(new UnsubscribeSet(outQueue, dataStore));
         elementProcessors.add(new NodeCreate(outQueue, dataStore));
         elementProcessors.add(new NodeConfigure(outQueue, dataStore));
+        elementProcessors.add(new SubscriptionEvent(outQueue, dataStore));
     }
     
     @Override

@@ -2,37 +2,30 @@ package org.buddycloud.channelserver.db.jedis;
 
 import java.net.UnknownHostException;
 import java.util.HashMap;
-import java.util.Map;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Properties;
-import org.apache.log4j.Level;
+import java.util.regex.Pattern;
+
 import org.apache.log4j.Logger;
-import org.apache.log4j.PropertyConfigurator;
-
-
 import org.bson.types.ObjectId;
 import org.buddycloud.channelserver.channel.Conf;
 import org.buddycloud.channelserver.db.DataStore;
-import org.buddycloud.channelserver.db.jedis.NodeSubscriptionImpl;
+import org.buddycloud.channelserver.db.DataStoreException;
 import org.buddycloud.channelserver.pubsub.affiliation.Affiliations;
 import org.buddycloud.channelserver.pubsub.entry.NodeEntry;
-import org.buddycloud.channelserver.db.jedis.NodeEntryImpl;
 import org.buddycloud.channelserver.pubsub.subscription.NodeSubscription;
 import org.buddycloud.channelserver.pubsub.subscription.Subscriptions;
-import org.buddycloud.channelserver.pubsub.subscription.NodeSubscription;
-import org.buddycloud.channelserver.db.DataStoreException;
+
 import redis.clients.jedis.Jedis;
-import java.util.regex.Pattern;
+
 import com.mongodb.BasicDBObject;
 import com.mongodb.DB;
-import com.mongodb.DBCursor;
 import com.mongodb.DBCollection;
 import com.mongodb.DBObject;
 import com.mongodb.Mongo;
 import com.mongodb.MongoException;
 import com.mongodb.WriteConcern;
-
 
 /**
  * This class is basically the access object to any data storage.
@@ -42,8 +35,8 @@ import com.mongodb.WriteConcern;
  *  It should be build in a way that we could use any database as a backend.
  */
 
-public class JedisMongoDataStore implements DataStore {
-
+public class JedisMongoDataStore implements DataStore
+{
     private Jedis jedis;
     private Mongo mongo;
     private DB mdb;
@@ -102,7 +95,6 @@ public class JedisMongoDataStore implements DataStore {
     
     public boolean isLocalNode(String nodename)
     {
-        //return jedis.exists(getNodeConfRedisKey(nodename));
     	DBObject query = new BasicDBObject();
         query.put("name", getNodeConfRedisKey(nodename));
         return (nodes.findOne(query) != null);
@@ -234,7 +226,6 @@ public class JedisMongoDataStore implements DataStore {
         return true;
     }
 
-    @SuppressWarnings("unchecked")
     public Iterator<? extends NodeSubscription> getUserSubscriptionsOfNodes(String bareJID) {
         
         DBObject query = new BasicDBObject();
@@ -256,7 +247,6 @@ public class JedisMongoDataStore implements DataStore {
         return sub;
     }
 
-    @SuppressWarnings("unchecked")
     public Iterator<? extends NodeSubscription> getNodeSubscribers(String node)
     {
         DBObject query = new BasicDBObject();
@@ -297,7 +287,6 @@ public class JedisMongoDataStore implements DataStore {
     
     // Entry fetching related
     
-    @SuppressWarnings("unchecked")
     public Iterator<? extends NodeEntry> getNodeEntries(String node, int limit, String afterItemId)
     {
         DBObject query = new BasicDBObject();

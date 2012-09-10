@@ -4,7 +4,6 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.concurrent.BlockingQueue;
 import org.apache.log4j.Logger;
-import org.buddycloud.channelserver.db.jedis.JedisMongoDataStore;
 import org.buddycloud.channelserver.channel.node.configuration.NodeConfigurationException;
 import org.buddycloud.channelserver.db.DataStore;
 import org.buddycloud.channelserver.db.DataStoreException;
@@ -14,7 +13,6 @@ import org.buddycloud.channelserver.pubsub.affiliation.Affiliation;
 import org.buddycloud.channelserver.pubsub.event.Event;
 import org.buddycloud.channelserver.pubsub.subscription.NodeSubscription;
 import org.dom4j.Document;
-import org.dom4j.DocumentHelper;
 import org.dom4j.Element;
 import org.dom4j.Namespace;
 import org.dom4j.dom.DOMElement;
@@ -107,7 +105,7 @@ public class NodeConfigure extends PubSubElementProcessorAbstract
         Element event         = message.addElement("event");
         Element configuration = event.addElement("configuration");
         configuration.addAttribute("node", node);
-        event.addAttribute("xmlns", Event.NAMESPACE);
+        event.addNamespace("", Event.NAMESPACE);
         message.addAttribute("id", request.getID());
         message.addAttribute("from", request.getTo().toString());
         Message rootElement = new Message(message);
@@ -169,10 +167,5 @@ public class NodeConfigure extends PubSubElementProcessorAbstract
 	public boolean accept(Element elm)
 	{
 		return elm.getName().equals("configure");
-	}
-	
-	protected Document getDocumentHelper()
-	{
-		return DocumentHelper.createDocument();
 	}
 }

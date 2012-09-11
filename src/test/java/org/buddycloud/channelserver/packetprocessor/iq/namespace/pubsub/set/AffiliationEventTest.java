@@ -20,6 +20,7 @@ import org.buddycloud.channelserver.db.jedis.NodeSubscriptionImpl;
 import org.buddycloud.channelserver.db.mock.Mock;
 import org.buddycloud.channelserver.packetHandler.iq.IQTestHandler;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.JabberPubsub;
+import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.set.AffiliationEvent;
 import org.buddycloud.channelserver.pubsub.affiliation.Affiliations;
 import org.buddycloud.channelserver.pubsub.subscription.NodeSubscription;
 import org.buddycloud.channelserver.pubsub.subscription.NodeSubscriptionMock;
@@ -34,9 +35,10 @@ import org.xmpp.packet.JID;
 import org.xmpp.packet.Packet;
 import org.xmpp.packet.PacketError;
 
-public class SubscriptionEventTest extends IQTestHandler {
+public class AffiliationEventTest extends IQTestHandler {
+
 	private IQ request;
-	private SubscriptionEvent event;
+	private AffiliationEvent event;
 	private Element element;
 	private BlockingQueue<Packet> queue = new LinkedBlockingQueue<Packet>();
 
@@ -49,30 +51,30 @@ public class SubscriptionEventTest extends IQTestHandler {
 	public void setUp() throws Exception {
 
 		queue = new LinkedBlockingQueue<Packet>();
-		event = new SubscriptionEvent(queue, dataStore);
-		request = readStanzaAsIq("/iq/pubsub/subscribe/authorizationPendingGrantReply.stanza");
+		event = new AffiliationEvent(queue, dataStore);
+		request = readStanzaAsIq("/iq/pubsub/affiliation/affiliationChange.stanza");
 		event.setServerDomain("shakespeare.lit");
 
-		element = new BaseElement("subscriptions");
+		element = new BaseElement("affiliations");
 		element.addAttribute("node", node);
 	}
 
 	@Test
-	public void testPassingSubscriptionsAsElementNameReturnsTrue() {
-		Element element = new BaseElement("subscriptions");
+	public void testPassingAffiliationsAsElementNameReturnsTrue() {
+		Element element = new BaseElement("affiliations");
 		assertTrue(event.accept(element));
 	}
 
 	@Test
 	public void testPassingNotCreateAsElementNameReturnsFalse() {
-		Element element = new BaseElement("not-subscriptions");
+		Element element = new BaseElement("not-affiliations");
 		assertFalse(event.accept(element));
 	}
 
 	@Test
 	public void testNotProvidingNodeAttributeReturnsErrorStanza()
 			throws Exception {
-		BaseElement element = new BaseElement("subscriptions");
+		BaseElement element = new BaseElement("affiliations");
 		event.process(element, jid, request, null);
 		Packet response = queue.poll(100, TimeUnit.MILLISECONDS);
 
@@ -83,13 +85,13 @@ public class SubscriptionEventTest extends IQTestHandler {
 	}
 
 	@Test
-	public void testNotProvidingSubscriptionChildNodeReturnsErrorStanza()
+	public void testNotProvidingAffiliationChildNodeReturnsErrorStanza()
 			throws Exception {
 
 		IQ request = toIq(readStanzaAsString(
-				"/iq/pubsub/subscribe/authorizationPendingGrantReply.stanza")
+				"/iq/pubsub/affiliation/affiliationChange.stanza")
 				.replaceFirst(
-						"<subscription jid='francisco@denmark.lit' subscription='subscribed'/>",
+						"<affiliation jid='francisco@denmark.lit' affiliation='member'/>",
 						""));
 
 		event.process(element, jid, request, null);
@@ -105,7 +107,7 @@ public class SubscriptionEventTest extends IQTestHandler {
 	public void testNotProvidingJidAttributeReturnsErrorStanza()
 			throws Exception {
 		IQ request = toIq(readStanzaAsString(
-				"/iq/pubsub/subscribe/authorizationPendingGrantReply.stanza")
+				"/iq/pubsub/affiliation/affiliationChange.stanza")
 				.replaceFirst("jid='francisco@denmark.lit'", ""));
 		event.process(element, jid, request, null);
 		Packet response = queue.poll(100, TimeUnit.MILLISECONDS);
@@ -117,11 +119,11 @@ public class SubscriptionEventTest extends IQTestHandler {
 	}
 
 	@Test
-	public void testNotProvidingSubscriptionAttributeReturnsErrorStanza()
+	public void testNotProvidingAffiliationAttributeReturnsErrorStanza()
 			throws Exception {
 		IQ request = toIq(readStanzaAsString(
-				"/iq/pubsub/subscribe/authorizationPendingGrantReply.stanza")
-				.replaceFirst("subscription='subscribed'", ""));
+				"/iq/pubsub/affiliation/affiliationChange.stanza")
+				.replaceFirst("affiliation='member'", ""));
 		event.process(element, jid, request, null);
 		Packet response = queue.poll(100, TimeUnit.MILLISECONDS);
 
@@ -183,12 +185,11 @@ public class SubscriptionEventTest extends IQTestHandler {
 	}
 
 	@Test
-	public void testUserWhoIsntOwnerOrModeratorCantUpdateSubscription()
+	public void testUserWhoIsntOwnerOrModeratorCantUpdateAffiliation()
 			throws Exception {
 		NodeSubscriptionImpl subscriptionMock = Mockito
 				.mock(NodeSubscriptionImpl.class);
-		Mockito.when(subscriptionMock.getAffiliation())
-				.thenReturn("member");
+		Mockito.when(subscriptionMock.getAffiliation()).thenReturn("member");
 
 		DataStore dataStoreMock = Mockito.mock(Mock.class);
 		Mockito.when(dataStoreMock.nodeExists(node)).thenReturn(true);
@@ -207,8 +208,7 @@ public class SubscriptionEventTest extends IQTestHandler {
 	}
 
 	@Test
-	public void testSubscribingUserMustHaveExistingSubscriptionToUpdate()
-			throws Exception {
+	public void testUserMustHaveExistingAffiliationToUpdate() throws Exception {
 		NodeSubscriptionImpl subscriptionMockActor = Mockito
 				.mock(NodeSubscriptionImpl.class);
 		Mockito.when(subscriptionMockActor.getAffiliation())
@@ -233,13 +233,46 @@ public class SubscriptionEventTest extends IQTestHandler {
 	}
 
 	@Test
-	public void testPassingInvalidSubscriptionTypeSetsSubscriptionToNone()
+	public void testItIsNotPossibleToChangeTheAffiliationOfNodeOwner()
+			throws Exception {
+		NodeSubscriptionImpl subscriptionMockActor = Mockito
+				.mock(NodeSubscriptionImpl.class);
+		Mockito.when(subscriptionMockActor.getAffiliation())
+				.thenReturn("owner");
+
+		NodeSubscriptionImpl subscriptionMockSubscriber = Mockito
+				.mock(NodeSubscriptionImpl.class);
+		Mockito.when(subscriptionMockSubscriber.getAffiliation()).thenReturn(
+				Affiliations.owner.toString());
+		Mockito.when(subscriptionMockSubscriber.getSubscription()).thenReturn(
+				Subscriptions.subscribed.toString());
+
+		DataStore dataStoreMock = Mockito.mock(Mock.class);
+		Mockito.when(dataStoreMock.nodeExists(node)).thenReturn(true);
+		Mockito.when(
+				dataStoreMock.getUserSubscriptionOfNode(jid.toBareJID(), node))
+				.thenReturn(subscriptionMockActor);
+		Mockito.when(dataStoreMock.getUserSubscriptionOfNode(subscriber, node))
+				.thenReturn(subscriptionMockSubscriber);
+		event.setDataStore(dataStoreMock);
+
+		event.process(element, jid, request, null);
+		Packet response = queue.poll(100, TimeUnit.MILLISECONDS);
+
+		PacketError error = response.getError();
+		assertNotNull(error);
+		assertEquals(PacketError.Type.modify, error.getType());
+		assertEquals(PacketError.Condition.not_acceptable, error.getCondition());
+	}
+
+	@Test
+	public void testPassingInvalidAffiliationTypeSetsAffiliationToNone()
 			throws Exception {
 
 		IQ request = toIq(readStanzaAsString(
-				"/iq/pubsub/subscribe/authorizationPendingGrantReply.stanza")
-				.replaceFirst("subscription='subscribed'",
-						"subscription='i-can-haz-all-the-items'"));
+				"/iq/pubsub/affiliation/affiliationChange.stanza")
+				.replaceFirst("affiliation='member'",
+						"affiliation='i-can-haz-all-the-items'"));
 
 		NodeSubscriptionImpl subscriptionMockActor = Mockito
 				.mock(NodeSubscriptionImpl.class);
@@ -250,6 +283,8 @@ public class SubscriptionEventTest extends IQTestHandler {
 				.mock(NodeSubscriptionImpl.class);
 		Mockito.when(subscriptionMockSubscriber.getAffiliation()).thenReturn(
 				"member");
+		Mockito.when(subscriptionMockSubscriber.getSubscription()).thenReturn(
+				"subscribed");
 
 		DataStore dataStoreMock = Mockito.mock(Mock.class);
 		Mockito.when(dataStoreMock.nodeExists(node)).thenReturn(true);
@@ -268,17 +303,17 @@ public class SubscriptionEventTest extends IQTestHandler {
 		event.process(element, jid, request, null);
 
 		Mockito.verify(dataStoreMock).subscribeUserToNode(subscriber, node,
-				"member", Subscriptions.none.toString(), null);
+				Affiliations.none.toString(),
+				Subscriptions.subscribed.toString(), null);
 	}
 
 	@Test
-	public void testPassingValidSubscriptionTypeUpdatesSubscription()
+	public void testPassingValidAffiliationTypeUpdatesAffiliation()
 			throws Exception {
 
 		IQ request = toIq(readStanzaAsString(
-				"/iq/pubsub/subscribe/authorizationPendingGrantReply.stanza")
-				.replaceFirst("subscription='subscribed'",
-						"subscription='subscribed'"));
+				"/iq/pubsub/affiliation/affiliationChange.stanza")
+				.replaceFirst("affiliation='member'", "affiliation='moderator'"));
 
 		NodeSubscriptionImpl subscriptionMockActor = Mockito
 				.mock(NodeSubscriptionImpl.class);
@@ -289,6 +324,8 @@ public class SubscriptionEventTest extends IQTestHandler {
 				.mock(NodeSubscriptionImpl.class);
 		Mockito.when(subscriptionMockSubscriber.getAffiliation()).thenReturn(
 				"member");
+		Mockito.when(subscriptionMockSubscriber.getSubscription()).thenReturn(
+				"subscribed");
 
 		DataStore dataStoreMock = Mockito.mock(Mock.class);
 		Mockito.when(dataStoreMock.nodeExists(node)).thenReturn(true);
@@ -307,17 +344,17 @@ public class SubscriptionEventTest extends IQTestHandler {
 		event.process(element, jid, request, null);
 
 		Mockito.verify(dataStoreMock).subscribeUserToNode(subscriber, node,
-				"member", Subscriptions.subscribed.toString(), null);
+				Affiliations.moderator.toString(),
+				Subscriptions.subscribed.toString(), null);
 	}
 
 	@Test
-	public void testPassingValidSubscriptionSendsOutExpectedNotifications()
+	public void testPassingValidAffiliationSendsOutExpectedNotifications()
 			throws Exception {
 
 		IQ request = toIq(readStanzaAsString(
-				"/iq/pubsub/subscribe/authorizationPendingGrantReply.stanza")
-				.replaceFirst("subscription='subscribed'",
-						"subscription='subscribed'"));
+				"/iq/pubsub/affiliation/affiliationChange.stanza")
+				.replaceFirst("affiliation='member'", "affiliation='moderator'"));
 
 		NodeSubscriptionImpl subscriptionMockActor = Mockito
 				.mock(NodeSubscriptionImpl.class);
@@ -328,6 +365,8 @@ public class SubscriptionEventTest extends IQTestHandler {
 				.mock(NodeSubscriptionImpl.class);
 		Mockito.when(subscriptionMockSubscriber.getAffiliation()).thenReturn(
 				"member");
+		Mockito.when(subscriptionMockSubscriber.getSubscription()).thenReturn(
+				"subscribed");
 
 		DataStore dataStoreMock = Mockito.mock(Mock.class);
 		Mockito.when(dataStoreMock.nodeExists(node)).thenReturn(true);
@@ -363,11 +402,12 @@ public class SubscriptionEventTest extends IQTestHandler {
 		assertEquals(
 				node,
 				notification.getElement().element("event")
-						.element("subscription").attributeValue("node"));
+						.element("affiliation").attributeValue("node"));
 		assertTrue(notification.toXML().contains(JabberPubsub.NS_PUBSUB_EVENT));
-		assertEquals("subscribed", notification.getElement().element("event")
-				.element("subscription").attributeValue("subscription"));
+		assertEquals(Affiliations.moderator.toString(), notification
+				.getElement().element("event").element("affiliation")
+				.attributeValue("affiliation"));
 		assertEquals(subscriber, notification.getElement().element("event")
-				.element("subscription").attributeValue("jid"));
+				.element("affiliation").attributeValue("jid"));
 	}
 }

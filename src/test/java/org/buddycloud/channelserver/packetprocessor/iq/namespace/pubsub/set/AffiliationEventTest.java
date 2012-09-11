@@ -66,7 +66,7 @@ public class AffiliationEventTest extends IQTestHandler {
 	}
 
 	@Test
-	public void testPassingNotCreateAsElementNameReturnsFalse() {
+	public void testPassingNotAffiliationsAsElementNameReturnsFalse() {
 		Element element = new BaseElement("not-affiliations");
 		assertFalse(event.accept(element));
 	}

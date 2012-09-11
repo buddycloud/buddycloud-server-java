@@ -64,7 +64,7 @@ public class SubscriptionEventTest extends IQTestHandler {
 	}
 
 	@Test
-	public void testPassingNotCreateAsElementNameReturnsFalse() {
+	public void testPassingNotSubscriptionsAsElementNameReturnsFalse() {
 		Element element = new BaseElement("not-subscriptions");
 		assertFalse(event.accept(element));
 	}

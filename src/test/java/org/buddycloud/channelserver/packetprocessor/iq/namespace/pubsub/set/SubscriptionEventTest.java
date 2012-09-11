@@ -65,7 +65,7 @@ public class SubscriptionEventTest extends IQTestHandler {
 
 	@Test
 	public void testPassingNotCreateAsElementNameReturnsFalse() {
-		Element element = new BaseElement("not-create");
+		Element element = new BaseElement("not-subscriptions");
 		assertFalse(event.accept(element));
 	}
 
@@ -188,7 +188,7 @@ public class SubscriptionEventTest extends IQTestHandler {
 		NodeSubscriptionImpl subscriptionMock = Mockito
 				.mock(NodeSubscriptionImpl.class);
 		Mockito.when(subscriptionMock.getAffiliation())
-				.thenReturn("subscribed");
+				.thenReturn("member");
 
 		DataStore dataStoreMock = Mockito.mock(Mock.class);
 		Mockito.when(dataStoreMock.nodeExists(node)).thenReturn(true);

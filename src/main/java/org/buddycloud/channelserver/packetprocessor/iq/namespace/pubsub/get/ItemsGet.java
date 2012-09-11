@@ -33,6 +33,7 @@ public class ItemsGet implements PubSubElementProcessor
     private final BlockingQueue<Packet> outQueue;
     private final DataStore dataStore;
     
+    
     private String    node;
     private String    firstItem;
     private String    lastItem;
@@ -40,6 +41,7 @@ public class ItemsGet implements PubSubElementProcessor
     private Element   entry;
 	private IQ        requestIq;
 	private JID       fetchersJid;
+	private IQ        reply;
     
     public ItemsGet(BlockingQueue<Packet> outQueue, DataStore dataStore)
     {
@@ -52,6 +54,7 @@ public class ItemsGet implements PubSubElementProcessor
     {    
         node      = elm.attributeValue("node");
         requestIq = reqIQ;
+        reply     = IQ.createResultIQ(reqIQ);
         
         if ((node == null) || (true == node.equals(""))) {
             missingJidRequest();
@@ -59,48 +62,18 @@ public class ItemsGet implements PubSubElementProcessor
         }
         
         fetchersJid               = requestIq.getFrom();
-        boolean isLocalNode       = dataStore.isLocalNode(node);
-        boolean isLocalSubscriber = false;
+        //boolean isLocalNode       = dataStore.isLocalNode(node);
+        //boolean isLocalSubscriber = false;
 		
         if (actorJID != null) {
             fetchersJid = actorJID;
         } else {
-            isLocalSubscriber = dataStore.isLocalUser(fetchersJid.toBareJID());
+            //isLocalSubscriber = dataStore.isLocalUser(fetchersJid.toBareJID());
         }
-        if (!isLocalNode) {
-            if (isLocalSubscriber) {
-                
-                //TODO, WORK HERE!
-                
-                // Start process to fetch items from nodes.
-                //Subscribe sub = Subscribe.buildSubscribeStatemachine(node, requestIq, dataStore);
-                //outQueue.put(sub.nextStep());
-                //return;
-            }
-            
-            // Foreign client is trying to fetch items of a node that does not exists.
-            /*
-                6.1.3.12 Node Does Not Exist
-            
-                <iq type='error'
-                        from='pubsub.shakespeare.lit'
-                        to='francisco@denmark.lit/barracks'
-                        id='sub1'>
-                      <error type='cancel'>
-                        <item-not-found xmlns='urn:ietf:params:xml:ns:xmpp-stanzas'/>
-                      </error>
-                </iq>
-             */
-            IQ reply = IQ.createResultIQ(requestIq);
-            reply.setType(Type.error);
-            PacketError pe = new PacketError(
-                org.xmpp.packet.PacketError.Condition.item_not_found, 
-                org.xmpp.packet.PacketError.Type.cancel
-            );
-            reply.setError(pe);
-            outQueue.put(reply);
-            return;
-        }
+        /*if (!isLocalNode) {
+            handleForeignNode(isLocalSubscriber);
+			return;
+        }*/
         
         NodeSubscriptionImpl nodeSubscription = dataStore.getUserSubscriptionOfNode(
             fetchersJid.toBareJID(), 
@@ -181,6 +154,42 @@ public class ItemsGet implements PubSubElementProcessor
         outQueue.put(result);     
     }
 
+	private void handleForeignNode(boolean isLocalSubscriber)
+			throws InterruptedException {
+		if (isLocalSubscriber) {
+		    
+		    //TODO, WORK HERE!
+		    
+		    // Start process to fetch items from nodes.
+		    //Subscribe sub = Subscribe.buildSubscribeStatemachine(node, requestIq, dataStore);
+		    //outQueue.put(sub.nextStep());
+		    //return;
+		}
+		
+		// Foreign client is trying to fetch items of a node that does not exists.
+		/*
+		    6.1.3.12 Node Does Not Exist
+		
+		    <iq type='error'
+		            from='pubsub.shakespeare.lit'
+		            to='francisco@denmark.lit/barracks'
+		            id='sub1'>
+		          <error type='cancel'>
+		            <item-not-found xmlns='urn:ietf:params:xml:ns:xmpp-stanzas'/>
+		          </error>
+		    </iq>
+		 */
+		IQ reply = IQ.createResultIQ(requestIq);
+		reply.setType(Type.error);
+		PacketError pe = new PacketError(
+		    org.xmpp.packet.PacketError.Condition.item_not_found, 
+		    org.xmpp.packet.PacketError.Type.cancel
+		);
+		reply.setError(pe);
+		outQueue.put(reply);
+		return;
+	}
+
     private int getNodeItems(Element items, int maxItemsToReturn, String afterItemId)
     {
     	try {
@@ -259,20 +268,6 @@ public class ItemsGet implements PubSubElementProcessor
 
 	private void missingJidRequest() throws InterruptedException
     {
-        /*
-            7.2.3.3 NodeID Required
-            
-            <iq type='error'
-                from='pubsub.shakespeare.lit'
-                to='hamlet@denmark.lit/elsinore'
-                id='retract1'>
-              <error type='modify'>
-                <bad-request xmlns='urn:ietf:params:xml:ns:xmpp-stanzas'/>
-                <nodeid-required xmlns='http://jabber.org/protocol/pubsub#errors'/>
-              </error>
-            </iq>
-        */
-        IQ reply = IQ.createResultIQ(requestIq);
         reply.setType(Type.error);
         
         Element badRequest = new DOMElement(

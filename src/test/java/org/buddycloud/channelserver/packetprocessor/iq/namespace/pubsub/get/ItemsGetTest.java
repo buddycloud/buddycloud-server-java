@@ -2,6 +2,7 @@ package org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.get;
 
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.TimeUnit;
 
 import org.buddycloud.channelserver.db.mock.Mock;
 import org.buddycloud.channelserver.packetHandler.iq.IQTestHandler;
@@ -13,6 +14,7 @@ import org.junit.Test;
 import org.xmpp.packet.IQ;
 import org.xmpp.packet.JID;
 import org.xmpp.packet.Packet;
+import org.xmpp.packet.PacketError;
 
 public class ItemsGetTest extends IQTestHandler {
 
@@ -31,11 +33,11 @@ public class ItemsGetTest extends IQTestHandler {
 		queue    = new LinkedBlockingQueue<Packet>();
 		itemsGet = new ItemsGet(queue, dataStore);
 		request  = readStanzaAsIq("/iq/pubsub/affiliation/affiliationChange.stanza");
+		element  = new BaseElement("items");
 	}
 	
 	@Test
 	public void testPassingAffiliationsAsElementNameReturnsTrue() {
-		Element element = new BaseElement("items");
 		assertTrue(itemsGet.accept(element));
 	}
 
@@ -43,5 +45,17 @@ public class ItemsGetTest extends IQTestHandler {
 	public void testPassingNotCreateAsElementNameReturnsFalse() {
 		Element element = new BaseElement("not-items");
 		assertFalse(itemsGet.accept(element));
+	}
+	
+	@Test
+	public void testMissingNodeAttributeReturnsErrorStanza() throws Exception
+	{
+		itemsGet.process(element, jid, request, null);
+		Packet response = queue.poll(100, TimeUnit.MILLISECONDS);
+
+		PacketError error = response.getError();
+		assertNotNull(error);
+		assertEquals(PacketError.Type.modify, error.getType());
+		assertEquals("nodeid-required", error.getApplicationConditionName());
 	}
 }

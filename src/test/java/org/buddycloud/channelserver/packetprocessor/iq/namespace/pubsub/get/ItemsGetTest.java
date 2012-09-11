@@ -4,13 +4,16 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
+import org.buddycloud.channelserver.db.DataStore;
+import org.buddycloud.channelserver.db.DataStoreException;
 import org.buddycloud.channelserver.db.mock.Mock;
 import org.buddycloud.channelserver.packetHandler.iq.IQTestHandler;
-import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.set.AffiliationEvent;
 import org.dom4j.Element;
 import org.dom4j.tree.BaseElement;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
+import org.mockito.Mockito;
 import org.xmpp.packet.IQ;
 import org.xmpp.packet.JID;
 import org.xmpp.packet.Packet;
@@ -57,5 +60,66 @@ public class ItemsGetTest extends IQTestHandler {
 		assertNotNull(error);
 		assertEquals(PacketError.Type.modify, error.getType());
 		assertEquals("nodeid-required", error.getApplicationConditionName());
+	}
+	
+	@Test
+	public void testNodeWhichDoesntExistReturnsNotFoundStanza() throws Exception
+	{
+		DataStore dataStoreMock = Mockito.mock(Mock.class);
+		Mockito.when(dataStoreMock.nodeExists(node)).thenReturn(false);
+		
+		itemsGet.process(element, jid, request, null);
+		Packet response = queue.poll(100, TimeUnit.MILLISECONDS);
+
+		PacketError error = response.getError();
+		assertNotNull(error);
+		assertEquals(PacketError.Type.modify, error.getType());
+		assertEquals("nodeid-required", error.getApplicationConditionName());
+	}
+	
+	@Test
+	public void testDataStoreExceptionReturnsInternalServerErrorStanza() throws Exception
+	{
+		element.addAttribute("node", node);
+		DataStore dataStoreMock = Mockito.mock(Mock.class);
+		Mockito.when(dataStoreMock.nodeExists(node)).thenThrow(
+				DataStoreException.class);
+		itemsGet.setDataStore(dataStoreMock);
+		
+		itemsGet.process(element, jid, request, null);
+		Packet response = queue.poll(100, TimeUnit.MILLISECONDS);
+
+		PacketError error = response.getError();
+		assertNotNull(error);
+		assertEquals(PacketError.Type.wait, error.getType());
+		assertEquals(PacketError.Condition.internal_server_error, error.getCondition());
+	}
+	
+	@Test
+	@Ignore("not ready yet")
+	public void testUnsubscribedUserToPrivateChannelCanNotViewItems() throws Exception
+	{
+
+	}
+	
+	@Test
+	@Ignore("not ready yet")
+	public void testBannedUsersCanNotRetrieveItems() throws Exception
+	{
+		
+	}
+	
+	@Test
+	@Ignore("not ready yet")
+	public void testRequestingSubscriptionsNodeReturnsSubscriptionsItems() throws Exception
+	{
+		
+	}
+	
+	@Test
+	@Ignore("not ready yet")
+	public void test()
+	{
+		
 	}
 }

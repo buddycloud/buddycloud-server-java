@@ -178,8 +178,8 @@ public class SubscriptionEventTest extends IQTestHandler {
 
 		PacketError error = response.getError();
 		assertNotNull(error);
-		assertEquals(PacketError.Type.auth, error.getType());
-		assertEquals(PacketError.Condition.not_authorized, error.getCondition());
+		assertEquals(PacketError.Type.modify, error.getType());
+		assertEquals(PacketError.Condition.unexpected_request, error.getCondition());
 	}
 
 	@Test

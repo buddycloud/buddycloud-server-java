@@ -6,8 +6,13 @@ import java.util.concurrent.TimeUnit;
 
 import org.buddycloud.channelserver.db.DataStore;
 import org.buddycloud.channelserver.db.DataStoreException;
+import org.buddycloud.channelserver.db.jedis.NodeSubscriptionImpl;
 import org.buddycloud.channelserver.db.mock.Mock;
 import org.buddycloud.channelserver.packetHandler.iq.IQTestHandler;
+import org.buddycloud.channelserver.pubsub.affiliation.Affiliations;
+import org.buddycloud.channelserver.pubsub.subscription.NodeSubscription;
+import org.buddycloud.channelserver.pubsub.subscription.NodeSubscriptionMock;
+import org.buddycloud.channelserver.pubsub.subscription.Subscriptions;
 import org.dom4j.Element;
 import org.dom4j.tree.BaseElement;
 import org.junit.Before;
@@ -33,12 +38,12 @@ public class ItemsGetTest extends IQTestHandler {
 	@Before
 	public void setUp() throws Exception {
 
-		queue    = new LinkedBlockingQueue<Packet>();
+		queue = new LinkedBlockingQueue<Packet>();
 		itemsGet = new ItemsGet(queue, dataStore);
-		request  = readStanzaAsIq("/iq/pubsub/affiliation/affiliationChange.stanza");
-		element  = new BaseElement("items");
+		request = readStanzaAsIq("/iq/pubsub/affiliation/affiliationChange.stanza");
+		element = new BaseElement("items");
 	}
-	
+
 	@Test
 	public void testPassingAffiliationsAsElementNameReturnsTrue() {
 		assertTrue(itemsGet.accept(element));
@@ -49,10 +54,9 @@ public class ItemsGetTest extends IQTestHandler {
 		Element element = new BaseElement("not-items");
 		assertFalse(itemsGet.accept(element));
 	}
-	
+
 	@Test
-	public void testMissingNodeAttributeReturnsErrorStanza() throws Exception
-	{
+	public void testMissingNodeAttributeReturnsErrorStanza() throws Exception {
 		itemsGet.process(element, jid, request, null);
 		Packet response = queue.poll(100, TimeUnit.MILLISECONDS);
 
@@ -61,65 +65,100 @@ public class ItemsGetTest extends IQTestHandler {
 		assertEquals(PacketError.Type.modify, error.getType());
 		assertEquals("nodeid-required", error.getApplicationConditionName());
 	}
-	
+
 	@Test
-	public void testNodeWhichDoesntExistReturnsNotFoundStanza() throws Exception
-	{
+	public void testNodeWhichDoesntExistReturnsNotFoundStanza()
+			throws Exception {
 		DataStore dataStoreMock = Mockito.mock(Mock.class);
 		Mockito.when(dataStoreMock.nodeExists(node)).thenReturn(false);
-		
+		element.addAttribute("node", node);
+		itemsGet.setDataStore(dataStoreMock);
+
 		itemsGet.process(element, jid, request, null);
 		Packet response = queue.poll(100, TimeUnit.MILLISECONDS);
 
 		PacketError error = response.getError();
 		assertNotNull(error);
-		assertEquals(PacketError.Type.modify, error.getType());
-		assertEquals("nodeid-required", error.getApplicationConditionName());
+		assertEquals(PacketError.Type.cancel, error.getType());
+		assertEquals(PacketError.Condition.item_not_found, error.getCondition());
 	}
-	
+
 	@Test
-	public void testDataStoreExceptionReturnsInternalServerErrorStanza() throws Exception
-	{
+	public void testDataStoreExceptionReturnsInternalServerErrorStanza()
+			throws Exception {
 		element.addAttribute("node", node);
 		DataStore dataStoreMock = Mockito.mock(Mock.class);
 		Mockito.when(dataStoreMock.nodeExists(node)).thenThrow(
 				DataStoreException.class);
 		itemsGet.setDataStore(dataStoreMock);
-		
+
 		itemsGet.process(element, jid, request, null);
 		Packet response = queue.poll(100, TimeUnit.MILLISECONDS);
 
 		PacketError error = response.getError();
 		assertNotNull(error);
 		assertEquals(PacketError.Type.wait, error.getType());
-		assertEquals(PacketError.Condition.internal_server_error, error.getCondition());
+		assertEquals(PacketError.Condition.internal_server_error,
+				error.getCondition());
 	}
-	
+
 	@Test
 	@Ignore("not ready yet")
-	public void testUnsubscribedUserToPrivateChannelCanNotViewItems() throws Exception
-	{
+	public void testUnsubscribedUserToPrivateChannelCanNotViewItems()
+			throws Exception {
+
+	}
+
+	@Test
+	@Ignore
+	public void testPendingSubscriptionUserToPrivateChannelCanNotViewItems()
+			throws Exception {
+
+	}
+
+	@Test
+	public void testBannedUsersCanNotRetrieveItems() throws Exception {
+		
+		DataStore dataStoreMock = Mockito.mock(Mock.class);
+		Mockito.when(dataStoreMock.nodeExists(node)).thenReturn(true);
+		
+		NodeSubscriptionImpl subscriptionMock = new NodeSubscriptionImpl(
+				jid.toBareJID(), node, Affiliations.outcast.toString(),
+				Subscriptions.subscribed.toString(), null);
+
+		Mockito.when(
+				dataStoreMock.getUserSubscriptionOfNode(jid.toBareJID(), node))
+				.thenReturn(subscriptionMock);
+		
+		element.addAttribute("node", node);
+		itemsGet.setDataStore(dataStoreMock);
+
+		itemsGet.process(element, jid, request, null);
+		Packet response = queue.poll(100, TimeUnit.MILLISECONDS);
+
+		PacketError error = response.getError();
+		assertNotNull(error);
+		assertEquals(PacketError.Type.auth, error.getType());
+		assertEquals(PacketError.Condition.forbidden, error.getCondition());
+	}
+
+	@Test
+	@Ignore("not ready yet")
+	public void testRequestingSubscriptionsNodeReturnsSubscriptionsItems()
+			throws Exception {
+
+	}
+
+	@Test
+	@Ignore("not ready yet")
+	public void test() {
 
 	}
 	
 	@Test
 	@Ignore("not ready yet")
-	public void testBannedUsersCanNotRetrieveItems() throws Exception
+	public void testNodeWithNoItemsReturnsNoItems()
 	{
-		
-	}
-	
-	@Test
-	@Ignore("not ready yet")
-	public void testRequestingSubscriptionsNodeReturnsSubscriptionsItems() throws Exception
-	{
-		
-	}
-	
-	@Test
-	@Ignore("not ready yet")
-	public void test()
-	{
-		
+		// Necessary? -- yes check it doesn't fall over i.e. NullPointerException
 	}
 }

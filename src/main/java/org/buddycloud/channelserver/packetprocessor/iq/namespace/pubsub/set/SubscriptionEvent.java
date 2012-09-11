@@ -162,8 +162,8 @@ public class SubscriptionEvent extends PubSubElementProcessorAbstract {
 		currentSubscription = dataStore.getUserSubscriptionOfNode(
 				requestedSubscription.attributeValue("jid"), node);
 		if (null == currentSubscription) {
-			setErrorCondition(PacketError.Type.cancel,
-					PacketError.Condition.item_not_found);
+			setErrorCondition(PacketError.Type.modify,
+					PacketError.Condition.unexpected_request);
 			return false;
 		}
 		return true;

@@ -11,16 +11,18 @@ import org.buddycloud.channelserver.db.jedis.NodeSubscriptionImpl;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.JabberPubsub;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.PubSubElementProcessor;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.PubSubGet;
+import org.buddycloud.channelserver.pubsub.affiliation.Affiliations;
 import org.buddycloud.channelserver.pubsub.entry.NodeEntry;
 import org.dom4j.DocumentException;
 import org.dom4j.Element;
 import org.dom4j.dom.DOMElement;
 import org.dom4j.io.SAXReader;
 import org.xmpp.packet.IQ;
-import org.xmpp.packet.IQ.Type;
 import org.xmpp.packet.JID;
 import org.xmpp.packet.Packet;
 import org.xmpp.packet.PacketError;
+import org.xmpp.packet.PacketError.Condition;
+import org.xmpp.packet.PacketError.Type;
 import org.buddycloud.channelserver.db.jedis.NodeSubscriptionImpl;
 import org.buddycloud.channelserver.db.DataStoreException;
 
@@ -30,7 +32,7 @@ public class ItemsGet implements PubSubElementProcessor {
 	private static final int MAX_ITEMS_TO_RETURN = 50;
 
 	private final BlockingQueue<Packet> outQueue;
-	
+
 	private DataStore dataStore;
 	private String node;
 	private String firstItem;
@@ -47,12 +49,11 @@ public class ItemsGet implements PubSubElementProcessor {
 		this.outQueue = outQueue;
 		setDataStore(dataStore);
 	}
-	
-	public void setDataStore(DataStore ds)
-	{
+
+	public void setDataStore(DataStore ds) {
 		dataStore = ds;
 	}
-	
+
 	@Override
 	public void process(Element elm, JID actorJID, IQ reqIQ, Element rsm)
 			throws Exception {
@@ -69,10 +70,11 @@ public class ItemsGet implements PubSubElementProcessor {
 		}
 
 		fetchersJid = requestIq.getFrom();
-		
+
 		try {
 			if (false == nodeExists()) {
 				outQueue.put(reply);
+				return;
 			}
 			// boolean isLocalNode = dataStore.isLocalNode(node);
 			// boolean isLocalSubscriber = false;
@@ -84,7 +86,8 @@ public class ItemsGet implements PubSubElementProcessor {
 				// dataStore.isLocalUser(fetchersJid.toBareJID());
 			}
 			/*
-			 * if (!isLocalNode) { handleForeignNode(isLocalSubscriber); return; }
+			 * if (!isLocalNode) { handleForeignNode(isLocalSubscriber); return;
+			 * }
 			 */
 			if (false == userCanViewNode()) {
 				outQueue.add(reply);
@@ -92,11 +95,8 @@ public class ItemsGet implements PubSubElementProcessor {
 			}
 			getItems();
 		} catch (DataStoreException e) {
-			reply.setType(IQ.Type.error);
-			PacketError error = new PacketError(
-					PacketError.Condition.internal_server_error,
-					PacketError.Type.wait);
-			reply.setError(error);
+			setErrorCondition(PacketError.Type.wait,
+					PacketError.Condition.internal_server_error);
 		}
 		outQueue.put(reply);
 	}
@@ -105,12 +105,15 @@ public class ItemsGet implements PubSubElementProcessor {
 		if (true == dataStore.nodeExists(node)) {
 			return true;
 		}
-		reply.setType(IQ.Type.error);
-		PacketError error = new PacketError(
-				PacketError.Condition.internal_server_error,
-				PacketError.Type.wait);
-		reply.setError(error);
+		setErrorCondition(PacketError.Type.cancel,
+				PacketError.Condition.item_not_found);
 		return false;
+	}
+
+	private void setErrorCondition(Type type, Condition condition) {
+		reply.setType(IQ.Type.error);
+		PacketError error = new PacketError(condition, type);
+		reply.setError(error);
 	}
 
 	private void getItems() throws DataStoreException {
@@ -160,7 +163,8 @@ public class ItemsGet implements PubSubElementProcessor {
 					afterItemId);
 		}
 
-		if ((resultSetManagement != null) || (totalEntriesCount > maxItemsToReturn)) {
+		if ((resultSetManagement != null)
+				|| (totalEntriesCount > maxItemsToReturn)) {
 			/*
 			 * TODO, add result set here as defined in 6.5.4 Returning Some
 			 * Items <set xmlns='http://jabber.org/protocol/rsm'> <first
@@ -175,8 +179,8 @@ public class ItemsGet implements PubSubElementProcessor {
 				rsm.addElement("first").setText(firstItem);
 				rsm.addElement("last").setText(lastItem);
 			}
-			rsm.addElement("count").setText(
-					Integer.toString(totalEntriesCount));
+			rsm.addElement("count")
+					.setText(Integer.toString(totalEntriesCount));
 		}
 
 		reply.setChildElement(pubsub);
@@ -186,6 +190,12 @@ public class ItemsGet implements PubSubElementProcessor {
 		NodeSubscriptionImpl nodeSubscription = dataStore
 				.getUserSubscriptionOfNode(fetchersJid.toBareJID(), node);
 		String possibleExistingAffiliation = nodeSubscription.getAffiliation();
+
+		if (true == possibleExistingAffiliation.equals(Affiliations.outcast.toString())) {
+			setErrorCondition(PacketError.Type.auth, PacketError.Condition.forbidden);
+			return false;
+		}
+		
 		String possibleExistingSusbcription = nodeSubscription
 				.getSubscription();
 		if (true) {
@@ -218,7 +228,7 @@ public class ItemsGet implements PubSubElementProcessor {
 		 * </error> </iq>
 		 */
 		IQ reply = IQ.createResultIQ(requestIq);
-		reply.setType(Type.error);
+		reply.setType(IQ.Type.error);
 		PacketError pe = new PacketError(
 				org.xmpp.packet.PacketError.Condition.item_not_found,
 				org.xmpp.packet.PacketError.Type.cancel);
@@ -301,8 +311,7 @@ public class ItemsGet implements PubSubElementProcessor {
 	}
 
 	private void missingJidRequest() {
-		reply.setType(Type.error);
-
+		reply.setType(IQ.Type.error);
 		Element badRequest = new DOMElement("bad-request",
 				new org.dom4j.Namespace("", JabberPubsub.NS_XMPP_STANZAS));
 		Element nodeIdRequired = new DOMElement("nodeid-required",

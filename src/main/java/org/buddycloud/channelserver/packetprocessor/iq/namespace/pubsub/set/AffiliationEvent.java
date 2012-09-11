@@ -174,8 +174,8 @@ public class AffiliationEvent extends PubSubElementProcessorAbstract {
 		currentAffiliation = dataStore.getUserSubscriptionOfNode(
 				requestedAffiliation.attributeValue("jid"), node);
 		if (null == currentAffiliation) {
-			setErrorCondition(PacketError.Type.cancel,
-					PacketError.Condition.item_not_found);
+			setErrorCondition(PacketError.Type.modify,
+					PacketError.Condition.unexpected_request);
 			return false;
 		}
 		return true;

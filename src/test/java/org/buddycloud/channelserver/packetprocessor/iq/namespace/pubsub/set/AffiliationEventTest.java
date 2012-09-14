@@ -180,8 +180,8 @@ public class AffiliationEventTest extends IQTestHandler {
 
 		PacketError error = response.getError();
 		assertNotNull(error);
-		assertEquals(PacketError.Type.modify, error.getType());
-		assertEquals(PacketError.Condition.unexpected_request, error.getCondition());
+		assertEquals(PacketError.Type.auth, error.getType());
+		assertEquals(PacketError.Condition.not_authorized, error.getCondition());
 	}
 
 	@Test
@@ -228,8 +228,8 @@ public class AffiliationEventTest extends IQTestHandler {
 
 		PacketError error = response.getError();
 		assertNotNull(error);
-		assertEquals(PacketError.Type.cancel, error.getType());
-		assertEquals(PacketError.Condition.item_not_found, error.getCondition());
+		assertEquals(PacketError.Type.modify, error.getType());
+		assertEquals(PacketError.Condition.unexpected_request, error.getCondition());
 	}
 
 	@Test

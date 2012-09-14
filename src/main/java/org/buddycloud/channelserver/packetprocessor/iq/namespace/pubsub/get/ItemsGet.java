@@ -1,18 +1,24 @@
 package org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.get;
 
 import java.io.StringReader;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.concurrent.BlockingQueue;
 import org.buddycloud.channelserver.pubsub.subscription.NodeSubscription;
+import org.buddycloud.channelserver.pubsub.subscription.Subscriptions;
 import org.apache.log4j.Logger;
+import org.buddycloud.channelserver.channel.node.configuration.field.AccessModel;
 import org.buddycloud.channelserver.db.DataStore;
 import org.buddycloud.channelserver.db.jedis.NodeEntryImpl;
 import org.buddycloud.channelserver.db.jedis.NodeSubscriptionImpl;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.JabberPubsub;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.PubSubElementProcessor;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.PubSubGet;
+import org.buddycloud.channelserver.pubsub.accessmodel.AccessModels;
 import org.buddycloud.channelserver.pubsub.affiliation.Affiliations;
 import org.buddycloud.channelserver.pubsub.entry.NodeEntry;
+import org.buddycloud.channelserver.utils.node.NodeAclRefuseReason;
+import org.buddycloud.channelserver.utils.node.NodeViewAcl;
 import org.dom4j.DocumentException;
 import org.dom4j.Element;
 import org.dom4j.dom.DOMElement;
@@ -45,6 +51,9 @@ public class ItemsGet implements PubSubElementProcessor {
 	private Element resultSetManagement;
 	private Element element;
 
+	private NodeViewAcl nodeViewAcl;
+	private HashMap<String, String> nodeDetails;
+
 	public ItemsGet(BlockingQueue<Packet> outQueue, DataStore dataStore) {
 		this.outQueue = outQueue;
 		setDataStore(dataStore);
@@ -52,6 +61,17 @@ public class ItemsGet implements PubSubElementProcessor {
 
 	public void setDataStore(DataStore ds) {
 		dataStore = ds;
+	}
+
+	public void setNodeViewAcl(NodeViewAcl acl) {
+		nodeViewAcl = acl;
+	}
+
+	private NodeViewAcl getNodeViewAcl() {
+		if (null == nodeViewAcl) {
+			nodeViewAcl = new NodeViewAcl();
+		}
+		return nodeViewAcl;
 	}
 
 	@Override
@@ -102,7 +122,9 @@ public class ItemsGet implements PubSubElementProcessor {
 	}
 
 	private boolean nodeExists() throws DataStoreException {
+
 		if (true == dataStore.nodeExists(node)) {
+			nodeDetails = dataStore.getNodeConf(node);
 			return true;
 		}
 		setErrorCondition(PacketError.Type.cancel,
@@ -116,7 +138,7 @@ public class ItemsGet implements PubSubElementProcessor {
 		reply.setError(error);
 	}
 
-	private void getItems() throws DataStoreException {
+	private void getItems() throws Exception {
 		Element pubsub = new DOMElement(PubSubGet.ELEMENT_NAME,
 				new org.dom4j.Namespace("", JabberPubsub.NAMESPACE_URI));
 
@@ -189,19 +211,30 @@ public class ItemsGet implements PubSubElementProcessor {
 	private boolean userCanViewNode() throws DataStoreException {
 		NodeSubscriptionImpl nodeSubscription = dataStore
 				.getUserSubscriptionOfNode(fetchersJid.toBareJID(), node);
-		String possibleExistingAffiliation = nodeSubscription.getAffiliation();
+		String possibleExistingAffiliation = Affiliations.none.toString();
+		String possibleExistingSubscription = Subscriptions.none.toString();
 
-		if (true == possibleExistingAffiliation.equals(Affiliations.outcast.toString())) {
-			setErrorCondition(PacketError.Type.auth, PacketError.Condition.forbidden);
-			return false;
+		if (null != nodeSubscription) {
+			possibleExistingAffiliation = nodeSubscription.getAffiliation();
+			possibleExistingSubscription = nodeSubscription.getSubscription();
 		}
-		
-		String possibleExistingSusbcription = nodeSubscription
-				.getSubscription();
-		if (true) {
+
+		if (true == getNodeViewAcl().canViewNode(node,
+				possibleExistingAffiliation, possibleExistingSubscription,
+				getNodeAccessModel())) {
 			return true;
 		}
+		NodeAclRefuseReason reason = getNodeViewAcl().getReason();
+		createExtendedErrorReply(reason.getType(), reason.getCondition(),
+				reason.getAdditionalErrorElement());
 		return false;
+	}
+
+	private String getNodeAccessModel() {
+		if (false == nodeDetails.containsKey(AccessModel.FIELD_NAME)) {
+			return AccessModels.authorize.toString();
+		}
+		return nodeDetails.get(AccessModel.FIELD_NAME);
 	}
 
 	private void handleForeignNode(boolean isLocalSubscriber)
@@ -238,27 +271,30 @@ public class ItemsGet implements PubSubElementProcessor {
 	}
 
 	private int getNodeItems(Element items, int maxItemsToReturn,
-			String afterItemId) throws DataStoreException {
+			String afterItemId) throws Exception {
 		Iterator<? extends NodeEntry> cur = dataStore.getNodeEntries(node,
 				maxItemsToReturn, afterItemId);
 
+		if (null == cur) {
+			return 0;
+		}
 		while (cur.hasNext()) {
-			NodeEntryImpl ne = (NodeEntryImpl) cur.next();
-			Element item = items.addElement("item");
-			item.addAttribute("id", ne.getId());
-
+			NodeEntryImpl nodeEntry = (NodeEntryImpl) cur.next();
 			if (firstItem == null) {
-				firstItem = ne.getMongoId();
+				firstItem = nodeEntry.getMongoId();
 			}
 			try {
-				entry = xmlReader.read(new StringReader(ne.getEntry()))
+				entry = xmlReader.read(new StringReader(nodeEntry.getEntry()))
 						.getRootElement();
+				Element item = items.addElement("item");
+				item.addAttribute("id", nodeEntry.getId());
 				item.add(entry);
-				lastItem = ne.getMongoId();
+				lastItem = nodeEntry.getMongoId();
 			} catch (DocumentException e) {
-				LOGGER.error("Something is wrong when reading the items from a node '"
-						+ node + "'!");
+				LOGGER.error("Error parsing a node entry, ignoring (id: "
+						+ nodeEntry.getId() + ")");
 			}
+
 		}
 		return dataStore.getNodeEntriesCount(node);
 	}
@@ -268,13 +304,15 @@ public class ItemsGet implements PubSubElementProcessor {
 		Iterator<? extends NodeSubscription> subscribers = dataStore
 				.getNodeSubscribers(node);
 		int entries = 0;
+		if (null == subscribers) {
+			return entries;
+		}
 		Element jidItem;
 		Element query;
 
 		while (subscribers.hasNext()) {
 			NodeSubscriptionImpl subscriber = (NodeSubscriptionImpl) subscribers
 					.next();
-
 			jidItem = items.addElement("item");
 			jidItem.addAttribute("id", subscriber.getBareJID());
 			query = jidItem.addElement("query");
@@ -295,6 +333,10 @@ public class ItemsGet implements PubSubElementProcessor {
 				.findUserSubscriptionOfNodes(fetchersJid.toBareJID(),
 						subscriber);
 		Element item;
+		
+		if (null == subscriptions) {
+			return;
+		}
 		while (subscriptions.hasNext()) {
 			// TODO Query in a loop, remove this as and when possible
 			NodeSubscriptionImpl subscription = (NodeSubscriptionImpl) subscriptions
@@ -311,15 +353,21 @@ public class ItemsGet implements PubSubElementProcessor {
 	}
 
 	private void missingJidRequest() {
+		createExtendedErrorReply(PacketError.Type.modify,
+				PacketError.Condition.bad_request, "nodeid-required");
+	}
+
+	private void createExtendedErrorReply(Type type, Condition condition,
+			String additionalElement) {
 		reply.setType(IQ.Type.error);
-		Element badRequest = new DOMElement("bad-request",
+		Element standardError = new DOMElement(condition.toString(),
 				new org.dom4j.Namespace("", JabberPubsub.NS_XMPP_STANZAS));
-		Element nodeIdRequired = new DOMElement("nodeid-required",
+		Element extraError = new DOMElement(additionalElement,
 				new org.dom4j.Namespace("", JabberPubsub.NS_PUBSUB_ERROR));
 		Element error = new DOMElement("error");
-		error.addAttribute("type", "modify");
-		error.add(badRequest);
-		error.add(nodeIdRequired);
+		error.addAttribute("type", type.toString());
+		error.add(standardError);
+		error.add(extraError);
 		reply.setChildElement(error);
 	}
 

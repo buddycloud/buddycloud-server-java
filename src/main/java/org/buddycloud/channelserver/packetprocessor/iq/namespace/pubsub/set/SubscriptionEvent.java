@@ -54,7 +54,7 @@ public class SubscriptionEvent extends PubSubElementProcessorAbstract {
 		request = reqIQ;
 		actor = actorJID;
 		node = element.attributeValue("node");
-  
+
 		if (actor == null) {
 			actor = request.getFrom();
 		}
@@ -93,7 +93,8 @@ public class SubscriptionEvent extends PubSubElementProcessorAbstract {
 		subscription.addAttribute("node", node);
 		subscription.addAttribute("jid",
 				requestedSubscription.attributeValue("jid"));
-		subscription.addAttribute("subscription", requestedSubscription.attributeValue("subscription"));
+		subscription.addAttribute("subscription",
+				requestedSubscription.attributeValue("subscription"));
 		Message rootElement = new Message(message);
 
 		while (true == subscribers.hasNext()) {

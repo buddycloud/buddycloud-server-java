@@ -42,7 +42,11 @@ public class MessageProcessor implements PacketProcessor<Message> {
         
         if(dataStore.isLocalUser(packet.getFrom().toBareJID())) {
             
-            String[] privateBodyparts = packet.getBody().split(" ", 2);
+        	String body = packet.getBody();
+        	if (null == body) {
+        		body = "";
+        	}
+            String[] privateBodyparts = body.split(" ", 2);
             if (privateBodyparts[0].equals(":subscribe")) {
                 
                 LOGGER.debug("Got subscribe command. Rest of the body '" + privateBodyparts[1] + "'.");

@@ -213,12 +213,14 @@ public class ItemsGet implements PubSubElementProcessor {
 				.getUserSubscriptionOfNode(fetchersJid.toBareJID(), node);
 		String possibleExistingAffiliation = Affiliations.none.toString();
 		String possibleExistingSubscription = Subscriptions.none.toString();
-
-		if (null != nodeSubscription) {
-			possibleExistingAffiliation = nodeSubscription.getAffiliation();
-			possibleExistingSubscription = nodeSubscription.getSubscription();
-		}
-
+        if (null != nodeSubscription) {
+			if (null != nodeSubscription.getAffiliation()) {
+				possibleExistingAffiliation = nodeSubscription.getAffiliation();
+			}
+			if (null != nodeSubscription.getSubscription()) {
+				possibleExistingSubscription = nodeSubscription.getSubscription();
+			}
+        }
 		if (true == getNodeViewAcl().canViewNode(node,
 				possibleExistingAffiliation, possibleExistingSubscription,
 				getNodeAccessModel())) {
@@ -292,7 +294,7 @@ public class ItemsGet implements PubSubElementProcessor {
 				lastItem = nodeEntry.getMongoId();
 			} catch (DocumentException e) {
 				LOGGER.error("Error parsing a node entry, ignoring (id: "
-						+ nodeEntry.getId() + ")");
+						+ nodeEntry.getMongoId() + ")");
 			}
 
 		}

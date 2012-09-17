@@ -8,21 +8,22 @@ public class NodeAclRefuseReason {
 	private Type type;
 	private Condition condition;
 	private String additionalErrorElement;
-	
-	public NodeAclRefuseReason(Type type, Condition condition, String additionalErrorElement) {
-	    this.type = type;
-	    this.condition = condition;
-	    this.additionalErrorElement = additionalErrorElement;
+
+	public NodeAclRefuseReason(Type type, Condition condition,
+			String additionalErrorElement) {
+		this.type = type;
+		this.condition = condition;
+		this.additionalErrorElement = additionalErrorElement;
 	}
-	
+
 	public Type getType() {
 		return type;
 	}
-	
+
 	public Condition getCondition() {
 		return condition;
 	}
-	
+
 	public String getAdditionalErrorElement() {
 		return additionalErrorElement;
 	}

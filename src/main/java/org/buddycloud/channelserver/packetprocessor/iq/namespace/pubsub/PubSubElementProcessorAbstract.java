@@ -61,7 +61,7 @@ public abstract class PubSubElementProcessorAbstract
 	protected String getTopicsDomain()
 	{
 		if (null == topicsDomain) {
-            serverDomain = Configuration.getInstance()
+            topicsDomain = Configuration.getInstance()
 			    .getProperty("server.domain.topics");
 		}
 		return topicsDomain;		

@@ -5,6 +5,7 @@ import java.util.concurrent.BlockingQueue;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.log4j.Logger;
 import org.buddycloud.channelserver.channel.node.configuration.NodeConfigurationException;
 import org.buddycloud.channelserver.db.DataStore;
 import org.buddycloud.channelserver.db.DataStoreException;
@@ -23,6 +24,8 @@ public class NodeCreate extends PubSubElementProcessorAbstract
 	private static final Pattern nodeExtract = Pattern.compile("^/user/[^@]+@([^/]+)/[^/]+$");
     private static final String NODE_REG_EX  = "^/user/[^@]+@[^/]+/[^/]+$";
 	private static final String INVALID_NODE_CONFIGURATION = "Invalid node configuration";
+	
+	private static final Logger LOGGER = Logger.getLogger(NodeCreate.class);
 	
 	public NodeCreate(BlockingQueue<Packet> outQueue, DataStore dataStore)
     {

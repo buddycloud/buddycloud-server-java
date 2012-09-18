@@ -149,12 +149,9 @@ public class NodeCreate extends PubSubElementProcessorAbstract
 			);
 			return false;
 		}
-		Matcher matcher = nodeExtract.matcher(node);
-		matcher.find();
-		String  nodeDomain = matcher.group(1);
 
-		if ((false == getServerDomain().equals(nodeDomain)) 
-		    && (false == getTopicsDomain().equals(nodeDomain))
+		if ((false == node.contains("@" + getServerDomain())) 
+		    && (false == node.contains("@" + getTopicsDomain()))
 		) {
 			setErrorCondition(
 			    PacketError.Type.modify,

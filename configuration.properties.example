@@ -4,6 +4,7 @@ xmpp.subdomain=comptest
 xmpp.secretkey=2255998899442277
 
 server.domain=xmpp.lobstermonster.org
+server.domain.topics=topics.lobstermonster.org
 
 redis.host=localhost
 redis.port=6379

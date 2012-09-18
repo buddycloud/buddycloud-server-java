@@ -38,6 +38,10 @@ public class NodeCreate extends PubSubElementProcessorAbstract
     	request     = reqIQ;
     	actor       = actorJID;
         node        = element.attributeValue("node");
+        
+        if (null == actorJID) {
+        	actor = request.getFrom();
+        }
     	if ((false == validateNode()) 
     	    || (true == doesNodeExist())
     	    || (false == actorIsRegistered())

@@ -54,7 +54,7 @@ public class IQProcessor implements PacketProcessor<IQ> {
         if (packet.getChildElement() != null
                 && packet.getChildElement().getNamespaceURI() != null
                 && namespaceProcessor != null) {
-
+        	LOGGER.trace("Using namespace processor: " + namespaceProcessor.getClass().getName());
             namespaceProcessor.process(packet);
             return;
 

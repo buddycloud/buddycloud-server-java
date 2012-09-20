@@ -130,4 +130,10 @@ public class Mock implements DataStore
 	{
 		return false;
 	}
+	
+	public Iterator<? extends NodeSubscription> findUserSubscriptionOfNodes(
+        String listener, String nodeMatch)
+    {
+		return null;
+    }
 }

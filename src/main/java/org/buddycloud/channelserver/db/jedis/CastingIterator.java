@@ -2,7 +2,7 @@ package org.buddycloud.channelserver.db.jedis;
 
 import java.util.Iterator;
 
-class CastingIterator<F, T> implements Iterator<T>
+public class CastingIterator<F, T> implements Iterator<T>
 {
 	Iterator<F> fromIt;
      

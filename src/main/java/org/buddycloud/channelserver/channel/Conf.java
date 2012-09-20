@@ -4,6 +4,9 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.TimeZone;
+import org.buddycloud.channelserver.pubsub.affiliation.Affiliations;
+import org.buddycloud.channelserver.pubsub.publishmodel.PublishModels;
+import org.buddycloud.channelserver.pubsub.accessmodel.AccessModels;
 
 //TODO! Refactor this!
 // Lot's of duplicate code plus other mayhem (like the SimpleDateFormat.
@@ -13,7 +16,7 @@ public class Conf {
     public static final String TITLE               = "pubsub#title";
     public static final String DESCRIPTION         = "pubsub#description";
     public static final String PUBLISH_MODEL       = "pubsub#publish_model";
-    public static final String ACCSES_MODEL        = "pubsub#access_model";
+    public static final String ACCESS_MODEL        = "pubsub#access_model";
     public static final String CREATION_DATE       = "pubsub#creation_date";
     public static final String OWNER               = "pubsub#owner";
     public static final String DEFUALT_AFFILIATION = "pubsub#default_affiliation";
@@ -41,11 +44,11 @@ public class Conf {
         conf.put(TYPE, "http://www.w3.org/2005/Atom");
         conf.put(TITLE, bareJID + "'s very own buddycloud channel!");
         conf.put(DESCRIPTION, "This channel belongs to " + bareJID + ". To nobody else!");
-        conf.put(PUBLISH_MODEL, org.buddycloud.channelserver.pubsub.publishmodel.PublishModels.subscribers.toString());
-        conf.put(ACCSES_MODEL, org.buddycloud.channelserver.pubsub.accessmodel.AccessModels.open.toString());
+        conf.put(PUBLISH_MODEL, PublishModels.subscribers.toString());
+        conf.put(ACCESS_MODEL, AccessModels.open.toString());
         conf.put(CREATION_DATE, sdf.format(new Date()));
         conf.put(OWNER, bareJID);
-        conf.put(DEFUALT_AFFILIATION, org.buddycloud.channelserver.pubsub.affiliation.Affiliations.member.toString());
+        conf.put(DEFUALT_AFFILIATION, Affiliations.member.toString());
         conf.put(NUM_SUBSCRIBERS, "1");
         conf.put(NOTIFY_CONFIG, "1");
         conf.put(CHANNEL_TYPE, "personal");
@@ -71,7 +74,7 @@ public class Conf {
         conf.put(TITLE, bareJID + "'s very own buddycloud status!");
         conf.put(DESCRIPTION, "This is " + bareJID + "'s mood a.k.a status -channel. Depends how geek you are.");
         conf.put(PUBLISH_MODEL, org.buddycloud.channelserver.pubsub.publishmodel.PublishModels.publishers.toString());
-        conf.put(ACCSES_MODEL, org.buddycloud.channelserver.pubsub.accessmodel.AccessModels.open.toString());
+        conf.put(ACCESS_MODEL, org.buddycloud.channelserver.pubsub.accessmodel.AccessModels.open.toString());
         conf.put(CREATION_DATE, sdf.format(new Date()));
         conf.put(OWNER, bareJID);
         conf.put(DEFUALT_AFFILIATION, org.buddycloud.channelserver.pubsub.affiliation.Affiliations.member.toString());
@@ -99,7 +102,7 @@ public class Conf {
         conf.put(TITLE, bareJID + "'s previous location.");
         conf.put(DESCRIPTION, "Where " + bareJID + " has been before.");
         conf.put(PUBLISH_MODEL, org.buddycloud.channelserver.pubsub.publishmodel.PublishModels.publishers.toString());
-        conf.put(ACCSES_MODEL, org.buddycloud.channelserver.pubsub.accessmodel.AccessModels.open.toString());
+        conf.put(ACCESS_MODEL, org.buddycloud.channelserver.pubsub.accessmodel.AccessModels.open.toString());
         conf.put(CREATION_DATE, sdf.format(new Date()));
         conf.put(OWNER, bareJID);
         conf.put(DEFUALT_AFFILIATION, org.buddycloud.channelserver.pubsub.affiliation.Affiliations.member.toString());
@@ -127,7 +130,7 @@ public class Conf {
         conf.put(TITLE, bareJID + "'s current location.");
         conf.put(DESCRIPTION, "Where " + bareJID + " is now.");
         conf.put(PUBLISH_MODEL, org.buddycloud.channelserver.pubsub.publishmodel.PublishModels.publishers.toString());
-        conf.put(ACCSES_MODEL, org.buddycloud.channelserver.pubsub.accessmodel.AccessModels.open.toString());
+        conf.put(ACCESS_MODEL, org.buddycloud.channelserver.pubsub.accessmodel.AccessModels.open.toString());
         conf.put(CREATION_DATE, sdf.format(new Date()));
         conf.put(OWNER, bareJID);
         conf.put(DEFUALT_AFFILIATION, org.buddycloud.channelserver.pubsub.affiliation.Affiliations.member.toString());
@@ -155,7 +158,7 @@ public class Conf {
         conf.put(TITLE, bareJID + "'s next location.");
         conf.put(DESCRIPTION, "Where " + bareJID + " is going to go.");
         conf.put(PUBLISH_MODEL, org.buddycloud.channelserver.pubsub.publishmodel.PublishModels.publishers.toString());
-        conf.put(ACCSES_MODEL, org.buddycloud.channelserver.pubsub.accessmodel.AccessModels.open.toString());
+        conf.put(ACCESS_MODEL, org.buddycloud.channelserver.pubsub.accessmodel.AccessModels.open.toString());
         conf.put(CREATION_DATE, sdf.format(new Date()));
         conf.put(OWNER, bareJID);
         conf.put(DEFUALT_AFFILIATION, org.buddycloud.channelserver.pubsub.affiliation.Affiliations.member.toString());
@@ -183,7 +186,7 @@ public class Conf {
         conf.put(TITLE, bareJID + "'s susbcriptions.");
         conf.put(DESCRIPTION, bareJID + "'s subscriptions. ");
         conf.put(PUBLISH_MODEL, org.buddycloud.channelserver.pubsub.publishmodel.PublishModels.publishers.toString());
-        conf.put(ACCSES_MODEL, org.buddycloud.channelserver.pubsub.accessmodel.AccessModels.open.toString());
+        conf.put(ACCESS_MODEL, org.buddycloud.channelserver.pubsub.accessmodel.AccessModels.open.toString());
         conf.put(CREATION_DATE, sdf.format(new Date()));
         conf.put(OWNER, bareJID);
         conf.put(DEFUALT_AFFILIATION, org.buddycloud.channelserver.pubsub.affiliation.Affiliations.member.toString());

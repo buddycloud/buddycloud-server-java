@@ -1,18 +1,18 @@
 package org.buddycloud.channelserver.channel.node.configuration.field;
 
 import org.dom4j.Node;
+import org.xmpp.packet.IQ;
 
 public class Factory
 {	
-	public Field create(Node node)
+	public Field create(String type, String value)
     {
-    	String value = node.valueOf("//field/value");
-    	String type  = node.valueOf("//field/@var");
-
     	if ((null == type) || (null == value)) {
     		throw new ConfigurationFieldException();
     	}
-    	if (type.equals(ChannelTitle.FIELD_NAME)) {
+    	if (type.equals("pubsub#owner")) {
+    		throw new ConfigurationFieldException();
+    	} else if (type.equals(ChannelTitle.FIELD_NAME)) {
     	    ChannelTitle field = new ChannelTitle();
     	    field.setValue(value);
     	    return field;

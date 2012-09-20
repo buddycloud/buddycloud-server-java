@@ -4,4 +4,7 @@
 target
 .classpath
 target
-/bin
+bin
+logs
+log4j.properties
+configuration.properties

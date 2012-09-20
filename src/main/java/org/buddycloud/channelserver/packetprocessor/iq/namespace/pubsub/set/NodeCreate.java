@@ -5,6 +5,7 @@ import java.util.concurrent.BlockingQueue;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.log4j.Logger;
 import org.buddycloud.channelserver.channel.node.configuration.NodeConfigurationException;
 import org.buddycloud.channelserver.db.DataStore;
 import org.buddycloud.channelserver.db.DataStoreException;
@@ -24,6 +25,8 @@ public class NodeCreate extends PubSubElementProcessorAbstract
     private static final String NODE_REG_EX  = "^/user/[^@]+@[^/]+/[^/]+$";
 	private static final String INVALID_NODE_CONFIGURATION = "Invalid node configuration";
 	
+	private static final Logger LOGGER = Logger.getLogger(NodeCreate.class);
+	
 	public NodeCreate(BlockingQueue<Packet> outQueue, DataStore dataStore)
     {
     	setDataStore(dataStore);
@@ -38,6 +41,10 @@ public class NodeCreate extends PubSubElementProcessorAbstract
     	request     = reqIQ;
     	actor       = actorJID;
         node        = element.attributeValue("node");
+
+        if (null == actorJID) {
+        	actor = request.getFrom();
+        }
     	if ((false == validateNode()) 
     	    || (true == doesNodeExist())
     	    || (false == actorIsRegistered())
@@ -69,6 +76,8 @@ public class NodeCreate extends PubSubElementProcessorAbstract
 			    PacketError.Type.modify,
 			    PacketError.Condition.bad_request
 		    );
+			outQueue.put(response);
+			return;
 		}
 		response.setType(IQ.Type.result);
 		outQueue.put(response);
@@ -99,7 +108,7 @@ public class NodeCreate extends PubSubElementProcessorAbstract
             new Namespace("", JabberPubsub.NS_PUBSUB_ERROR)
         );
     	Element badRequest = new DOMElement(
-    	    PacketError.Condition.bad_request.toString(),
+    	    PacketError.Condition.bad_request.toXMPP(),
             new Namespace("", JabberPubsub.NS_XMPP_STANZAS)
     	);
         Element error = new DOMElement("error");
@@ -143,12 +152,9 @@ public class NodeCreate extends PubSubElementProcessorAbstract
 			);
 			return false;
 		}
-		Matcher matcher = nodeExtract.matcher(node);
-		matcher.find();
-		String  nodeDomain = matcher.group(1);
 
-		if ((false == getServerDomain().equals(nodeDomain)) 
-		    && (false == getTopicsDomain().equals(nodeDomain))
+		if ((false == node.contains("@" + getServerDomain())) 
+		    && (false == node.contains("@" + getTopicsDomain()))
 		) {
 			setErrorCondition(
 			    PacketError.Type.modify,

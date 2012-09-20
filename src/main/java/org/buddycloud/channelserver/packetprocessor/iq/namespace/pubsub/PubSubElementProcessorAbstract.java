@@ -1,10 +1,11 @@
 package org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub;
 
 import java.util.concurrent.BlockingQueue;
-
 import org.buddycloud.channelserver.Configuration;
 import org.buddycloud.channelserver.channel.node.configuration.Helper;
 import org.buddycloud.channelserver.db.DataStore;
+import org.dom4j.Document;
+import org.dom4j.DocumentHelper;
 import org.dom4j.Element;
 import org.xmpp.packet.IQ;
 import org.xmpp.packet.JID;
@@ -60,7 +61,7 @@ public abstract class PubSubElementProcessorAbstract
 	protected String getTopicsDomain()
 	{
 		if (null == topicsDomain) {
-            serverDomain = Configuration.getInstance()
+            topicsDomain = Configuration.getInstance()
 			    .getProperty("server.domain.topics");
 		}
 		return topicsDomain;		
@@ -84,5 +85,10 @@ public abstract class PubSubElementProcessorAbstract
 		response.setType(IQ.Type.error);
 		PacketError error = new PacketError(condition, type);
 		response.setError(error);
+	}
+	
+	protected Document getDocumentHelper()
+	{
+		return DocumentHelper.createDocument();
 	}
 }

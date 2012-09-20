@@ -6,7 +6,7 @@ public class AccessModel extends Field
 	public static final String DEFAULT_VALUE = AccessModel.models.OPEN.toString();
 	
 	public enum models { 
-		OPEN("open"), WHITELIST("whitelist");
+		OPEN("open"), WHITELIST("whitelist"), AUTHORIZE("authorize");
 		String model = null;
 		private models(String model) {
 			this.model = model;
@@ -23,8 +23,9 @@ public class AccessModel extends Field
 	
 	public boolean isValid()
 	{
-		return (getValue().equals(AccessModel.models.OPEN)
-			|| getValue().equals(AccessModel.models.WHITELIST)
+		return (getValue().equals(AccessModel.models.OPEN.toString())
+			|| getValue().equals(AccessModel.models.WHITELIST.toString())
+			|| getValue().equals(AccessModel.models.AUTHORIZE.toString())
 		);
 	}
 }

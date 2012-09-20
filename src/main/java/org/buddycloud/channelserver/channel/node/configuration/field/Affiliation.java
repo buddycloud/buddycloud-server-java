@@ -23,8 +23,8 @@ public class Affiliation extends Field
 	
 	public boolean isValid()
 	{
-		return (getValue().equals(Affiliation.models.FOLLOWER_AND_POST)
-			|| getValue().equals(Affiliation.models.MEMBER)
+		return (getValue().equals(Affiliation.models.FOLLOWER_AND_POST.toString())
+			|| getValue().equals(Affiliation.models.MEMBER.toString())
 		);
 	}
 }

@@ -13,11 +13,14 @@ import org.dom4j.Element;
 import org.xmpp.packet.IQ;
 import org.xmpp.packet.JID;
 import org.xmpp.packet.Packet;
+import org.apache.log4j.Logger;
 
 public class SubscriptionsGet implements PubSubElementProcessor {
 
     private final BlockingQueue<Packet> outQueue;
     private final DataStore dataStore;
+    
+    private static final Logger LOGGER = Logger.getLogger(SubscriptionsGet.class);
     
     public SubscriptionsGet(BlockingQueue<Packet> outQueue, DataStore dataStore) {
         this.outQueue = outQueue;
@@ -25,22 +28,20 @@ public class SubscriptionsGet implements PubSubElementProcessor {
     }
 
     @Override
-    public void process(Element elm, JID actorJID, IQ reqIQ, Element rsm) throws Exception {
-        
-        IQ result = IQ.createResultIQ(reqIQ);
-        
-        Element pubsub = result.setChildElement(PubSubGet.ELEMENT_NAME, elm.getNamespaceURI());
+    public void process(Element elm, JID actorJID, IQ reqIQ, Element rsm) throws Exception
+    {
+        IQ result             = IQ.createResultIQ(reqIQ);
+        Element pubsub        = result.setChildElement(PubSubGet.ELEMENT_NAME, elm.getNamespaceURI());
         Element subscriptions = pubsub.addElement("subscriptions");
         
         String node = elm.attributeValue("node");
 
-        if(actorJID == null) {
+        if (actorJID == null) {
             actorJID = reqIQ.getFrom();
         }
         
         if (node == null) {
             // let's get all subscriptions.
-            
             Iterator<? extends NodeSubscription> cur = dataStore.getUserSubscriptionsOfNodes(actorJID.toBareJID());
             while(cur.hasNext()) {
                 NodeSubscription ns = cur.next();
@@ -51,26 +52,23 @@ public class SubscriptionsGet implements PubSubElementProcessor {
             }
             
         } else {
-            // Let's get only one subscription.
-            NodeSubscriptionImpl ns = dataStore.getUserSubscriptionOfNode(actorJID.toBareJID(), node);
+        	Iterator<? extends NodeSubscription> cur = dataStore.getNodeSubscribers(node);
+        	subscriptions.addAttribute("node", node);
+            Element subscription;
             
-            if (ns.getSubscription() != null) {
-            
-                subscriptions.addAttribute("node", node);
-                subscriptions.addElement("subscription")
-                             .addAttribute("node", ns.getNode())
-                             .addAttribute("subscription", ns.getSubscription())
-                             .addAttribute("jid", ns.getBareJID());
+            while (cur.hasNext()) {
+                NodeSubscription ns = cur.next();
+                subscription = subscriptions.addElement("subscription");
+        		subscription.addAttribute("node", ns.getNode());
+                subscription.addAttribute("subscription", ns.getSubscription());
+                subscription.addAttribute("jid", ns.getBareJID());
             }
         }
-        
         outQueue.put(result);
-        
     }
 
     @Override
     public boolean accept(Element elm) {
         return elm.getName().equals("subscriptions");
     }
-
 }

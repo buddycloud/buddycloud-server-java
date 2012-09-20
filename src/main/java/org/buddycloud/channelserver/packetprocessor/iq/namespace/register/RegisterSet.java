@@ -11,63 +11,75 @@ import org.xmpp.packet.IQ.Type;
 import org.xmpp.packet.Packet;
 import org.xmpp.packet.PacketError;
 
-public class RegisterSet implements PacketProcessor<IQ> {
-
+public class RegisterSet implements PacketProcessor<IQ>
+{
     public static final String ELEMENT_NAME = "query";
     
-    private final Properties conf;
+    private final Properties            conf;
     private final BlockingQueue<Packet> outQueue;
-    private final DataStore dataStore;
+    private final DataStore             dataStore;
+    private       IQ                    request;
     
     public RegisterSet(Properties conf, BlockingQueue<Packet> outQueue,
-            DataStore dataStore) {
-        this.conf = conf;
-        this.outQueue = outQueue;
+        DataStore dataStore)
+    {
+        this.conf      = conf;
+        this.outQueue  = outQueue;
         this.dataStore = dataStore;
     }
 
     @Override
-    public void process(IQ reqIQ) throws Exception {
-        
-        String domain  = reqIQ.getFrom().getDomain();
-        if(!domain.equals(conf.getProperty("server.domain"))) {
-            
-            // Request is coming from different domain than the
-            // component is using. We will not allow this because
-            // "buddycloud federation" cannot work for that.
-            
-            IQ reply = IQ.createResultIQ(reqIQ);
-            reply.setType(Type.error);
-            reply.setChildElement(reqIQ.getChildElement().createCopy());
-            PacketError pe = new PacketError(org.xmpp.packet.PacketError.Condition.not_allowed, 
-                                             org.xmpp.packet.PacketError.Type.cancel);
-            reply.setError(pe);
-            
-            outQueue.put(reply);
+    public void process(IQ reqIQ) throws Exception
+    {   
+    	request = reqIQ;
+    	
+        String domain = request.getFrom().getDomain();
+        if (!domain.equals(conf.getProperty("server.domain"))) {
+            notThisDomain();
             return;
         }
         
-        String bareJID = reqIQ.getFrom().toBareJID();
-        if(dataStore.addLocalUser(bareJID) == 0) {
-            
-            // User is already registered.
-            
-            IQ reply = IQ.createResultIQ(reqIQ);
-            reply.setType(Type.error);
-            reply.setChildElement(reqIQ.getChildElement().createCopy());
-            PacketError pe = new PacketError(org.xmpp.packet.PacketError.Condition.conflict, 
-                                             org.xmpp.packet.PacketError.Type.cancel);
-            reply.setError(pe);
-            
+        String bareJid = request.getFrom().toBareJID();
+        if (true == dataStore.isLocalUser(bareJid)) {
+            //userAlreadyRegistered();
+        	IQ reply = IQ.createResultIQ(request);
             outQueue.put(reply);
             return;
         }
-        
-        //dataStore.createUserPostsNode(reqIQ.getFrom().toBareJID());
+        dataStore.addLocalUser(bareJid);
         dataStore.createUserNodes(reqIQ.getFrom().toBareJID());
-        
         IQ result = IQ.createResultIQ(reqIQ);
         outQueue.put(result);
     }
-    
+
+	private void userAlreadyRegistered() throws InterruptedException
+	{
+		// User is already registered.
+        IQ reply = IQ.createResultIQ(request);
+        reply.setType(Type.error);
+        reply.setChildElement(request.getChildElement().createCopy());
+        PacketError pe = new PacketError(
+            org.xmpp.packet.PacketError.Condition.conflict, 
+            org.xmpp.packet.PacketError.Type.cancel
+        );
+        reply.setError(pe);
+        outQueue.put(reply);
+	}
+
+	private void notThisDomain() throws InterruptedException
+	{
+        // Request is coming from different domain than the
+        // component is using. We will not allow this because
+        // "buddycloud federation" cannot work for that.
+        
+        IQ reply = IQ.createResultIQ(request);
+        reply.setType(Type.error);
+        reply.setChildElement(request.getChildElement().createCopy());
+        PacketError pe = new PacketError(
+            org.xmpp.packet.PacketError.Condition.not_allowed, 
+            org.xmpp.packet.PacketError.Type.cancel
+        );
+        reply.setError(pe);
+        outQueue.put(reply);
+	}
 }

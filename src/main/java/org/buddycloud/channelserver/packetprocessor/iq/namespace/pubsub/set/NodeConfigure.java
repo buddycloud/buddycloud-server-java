@@ -3,7 +3,7 @@ package org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.set;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.concurrent.BlockingQueue;
-
+import org.apache.log4j.Logger;
 import org.buddycloud.channelserver.channel.node.configuration.NodeConfigurationException;
 import org.buddycloud.channelserver.db.DataStore;
 import org.buddycloud.channelserver.db.DataStoreException;
@@ -13,7 +13,6 @@ import org.buddycloud.channelserver.pubsub.affiliation.Affiliation;
 import org.buddycloud.channelserver.pubsub.event.Event;
 import org.buddycloud.channelserver.pubsub.model.NodeSubscription;
 import org.dom4j.Document;
-import org.dom4j.DocumentHelper;
 import org.dom4j.Element;
 import org.dom4j.Namespace;
 import org.dom4j.dom.DOMElement;
@@ -25,8 +24,9 @@ import org.xmpp.packet.PacketError;
 
 public class NodeConfigure extends PubSubElementProcessorAbstract
 {	
-	protected String   node;
-	protected Document documentHelper;
+	protected String node;
+	
+	private static final Logger LOGGER = Logger.getLogger(NodeConfigure.class);
 	
 	public NodeConfigure(BlockingQueue<Packet> outQueue, DataStore dataStore)
     {
@@ -37,11 +37,15 @@ public class NodeConfigure extends PubSubElementProcessorAbstract
 	public void process(Element elm, JID actorJID, IQ reqIQ, Element rsm) 
 	    throws Exception
     {
-    	element     = elm;
-    	response    = IQ.createResultIQ(reqIQ);
-    	request     = reqIQ;
-    	actor       = actorJID;
-        node        = element.attributeValue("node");
+    	element  = elm;
+    	response = IQ.createResultIQ(reqIQ);
+    	request  = reqIQ;
+    	actor    = actorJID;
+        node     = element.attributeValue("node");
+
+    	if (null == actor) {
+        	actor = request.getFrom();
+    	}
         try {
 	        if ((false == nodeProvided())
 	            || (false == nodeExists())
@@ -72,10 +76,12 @@ public class NodeConfigure extends PubSubElementProcessorAbstract
 	            return;
 			}
 		} catch (NodeConfigurationException e) {
+			LOGGER.error("Node configuration exception", e);
 			setErrorCondition(PacketError.Type.modify, PacketError.Condition.bad_request);
 			outQueue.put(response);
 			return;
 		} catch (DataStoreException e) {
+			LOGGER.error("Data Store Exception", e);
 			setErrorCondition(PacketError.Type.cancel, PacketError.Condition.internal_server_error);
 			outQueue.put(response);
 			return;
@@ -99,7 +105,7 @@ public class NodeConfigure extends PubSubElementProcessorAbstract
         Element event         = message.addElement("event");
         Element configuration = event.addElement("configuration");
         configuration.addAttribute("node", node);
-        event.addAttribute("xmlns", Event.NAMESPACE);
+        event.addNamespace("", Event.NAMESPACE);
         message.addAttribute("id", request.getID());
         message.addAttribute("from", request.getTo().toString());
         Message rootElement = new Message(message);
@@ -116,7 +122,8 @@ public class NodeConfigure extends PubSubElementProcessorAbstract
 	{
 		HashMap<String, String> nodeConfiguration = dataStore.getNodeConf(node);
 		String owner = nodeConfiguration.get(Affiliation.OWNER.toString());
-		if (true == owner.equals(actor.toString())) {
+
+		if (true == owner.equals(actor.toBareJID())) {
 			return true;
 		}
 		setErrorCondition(PacketError.Type.auth, PacketError.Condition.forbidden);
@@ -146,7 +153,7 @@ public class NodeConfigure extends PubSubElementProcessorAbstract
             new Namespace("", JabberPubsub.NS_PUBSUB_ERROR)
         );
     	Element badRequest = new DOMElement(
-    	    PacketError.Condition.bad_request.toString(),
+    	    PacketError.Condition.bad_request.toXMPP(),
             new Namespace("", JabberPubsub.NS_XMPP_STANZAS)
     	);
         Element error = new DOMElement("error");
@@ -160,18 +167,5 @@ public class NodeConfigure extends PubSubElementProcessorAbstract
 	public boolean accept(Element elm)
 	{
 		return elm.getName().equals("configure");
-	}
-	
-	public void setDocumentHelper(Document helper)
-	{
-		documentHelper = helper;
-	}
-	
-	protected Document getDocumentHelper()
-	{
-		if (null == documentHelper) {
-			documentHelper = DocumentHelper.createDocument();
-		}
-		return documentHelper;
 	}
 }

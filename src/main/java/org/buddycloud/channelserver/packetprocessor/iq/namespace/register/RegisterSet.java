@@ -41,7 +41,9 @@ public class RegisterSet implements PacketProcessor<IQ>
         
         String bareJid = request.getFrom().toBareJID();
         if (true == dataStore.isLocalUser(bareJid)) {
-            userAlreadyRegistered();
+            //userAlreadyRegistered();
+        	IQ reply = IQ.createResultIQ(request);
+            outQueue.put(reply);
             return;
         }
         dataStore.addLocalUser(bareJid);

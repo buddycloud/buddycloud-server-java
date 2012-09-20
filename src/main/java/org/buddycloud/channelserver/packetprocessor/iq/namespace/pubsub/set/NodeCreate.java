@@ -41,7 +41,7 @@ public class NodeCreate extends PubSubElementProcessorAbstract
     	request     = reqIQ;
     	actor       = actorJID;
         node        = element.attributeValue("node");
-        
+
         if (null == actorJID) {
         	actor = request.getFrom();
         }
@@ -108,7 +108,7 @@ public class NodeCreate extends PubSubElementProcessorAbstract
             new Namespace("", JabberPubsub.NS_PUBSUB_ERROR)
         );
     	Element badRequest = new DOMElement(
-    	    PacketError.Condition.bad_request.toString(),
+    	    PacketError.Condition.bad_request.toXMPP(),
             new Namespace("", JabberPubsub.NS_XMPP_STANZAS)
     	);
         Element error = new DOMElement("error");

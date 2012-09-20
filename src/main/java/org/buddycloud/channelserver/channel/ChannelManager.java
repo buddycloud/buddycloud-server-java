@@ -5,7 +5,7 @@ import java.util.Map;
 
 import org.buddycloud.channelserver.channel.subscription.ChannelSubscription;
 import org.buddycloud.channelserver.pubsub.affiliation.Affiliations;
-import org.buddycloud.channelserver.pubsub.subscription.NodeSubscription;
+import org.buddycloud.channelserver.pubsub.model.NodeSubscription;
 import org.buddycloud.channelserver.pubsub.subscription.Subscriptions;
 import org.dom4j.Element;
 import org.xmpp.packet.JID;

@@ -16,7 +16,7 @@ import org.buddycloud.channelserver.db.DataStoreException;
 import org.buddycloud.channelserver.db.mock.Mock;
 import org.buddycloud.channelserver.packetHandler.iq.IQTestHandler;
 import org.buddycloud.channelserver.pubsub.affiliation.Affiliation;
-import org.buddycloud.channelserver.pubsub.subscription.NodeSubscription;
+import org.buddycloud.channelserver.pubsub.model.NodeSubscription;
 import org.buddycloud.channelserver.pubsub.subscription.NodeSubscriptionMock;
 import org.dom4j.Element;
 import org.dom4j.tree.BaseElement;

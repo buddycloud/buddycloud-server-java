@@ -1,5 +1,7 @@
 package org.buddycloud.channelserver.pubsub.subscription;
 
+import org.buddycloud.channelserver.pubsub.model.NodeSubscription;
+
 public class NodeSubscriptionMock 
     implements NodeSubscription
 {

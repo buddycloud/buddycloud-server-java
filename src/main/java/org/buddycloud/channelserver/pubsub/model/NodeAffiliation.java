@@ -1,6 +1,7 @@
-package org.buddycloud.channelserver.pubsub.affiliation;
+package org.buddycloud.channelserver.pubsub.model;
 
 import org.buddycloud.channelserver.node.NodeRef;
+import org.buddycloud.channelserver.pubsub.affiliation.Affiliations;
 import org.xmpp.packet.JID;
 
 /**
@@ -17,7 +18,7 @@ public interface NodeAffiliation {
 	 * Gets the node to which the user is affiliated
 	 * @return
 	 */
-	NodeRef getNodeRef();
+	String getNodeId();
 	
 	/**
 	 * The type of affiliation

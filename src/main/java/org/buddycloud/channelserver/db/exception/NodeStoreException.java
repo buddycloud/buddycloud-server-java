@@ -1,4 +1,4 @@
-package org.buddycloud.channelserver.db;
+package org.buddycloud.channelserver.db.exception;
 
 public class NodeStoreException extends Exception {
 	private static final long serialVersionUID = 1L;

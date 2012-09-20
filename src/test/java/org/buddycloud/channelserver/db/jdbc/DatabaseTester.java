@@ -20,7 +20,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import org.apache.log4j.Logger;
+
 public class DatabaseTester {
+	private static Logger log = Logger.getLogger(DatabaseTester.class);
+	
 	public class Assertions {
 		private DatabaseTester tester;
 		
@@ -28,25 +32,40 @@ public class DatabaseTester {
 			this.tester = tester;
 		}
 		
+		/**
+		 * Asserts that the table contains exactly one row with field=>value pairs
+		 * matching the given map.
+		 * @param tableName the table to interrogate.
+		 * @param values a map of field=>value of the expected values
+		 * @throws SQLException
+		 */
 		public void assertTableContains(final String tableName, final Map<String,Object> values) throws SQLException {
 			assertTableContains(tableName, values, 1);
 		}
 		
+		/**
+		 * Asserts that the table contains the specified number of rows with field=>value pairs
+		 * matching the given map.
+		 * @param tableName the table to interrogate.
+		 * @param values a map of field=>value of the expected values
+		 * @param expectedRows the number of rows we expect to match exactly
+		 * @throws SQLException
+		 */
 		public void assertTableContains(final String tableName, final Map<String,Object> values, final int expectedRows) throws SQLException {
 			Connection conn = tester.getConnection();
 			
 			// We will rebuild the values as a list so we can have guaranteed ordering
 			List<Object> valueList = new ArrayList<Object>();
 			
-			StringBuilder sql = new StringBuilder("SELECT COUNT(*) FROM ");
+			StringBuilder sql = new StringBuilder("SELECT COUNT(*) FROM \"");
 			sql.append(tableName);
-			sql.append(" WHERE TRUE");
+			sql.append("\" WHERE TRUE");
 			
 			for(Entry<String,Object> field : values.entrySet()) {
 				valueList.add(field.getValue());
-				sql.append(" AND ");
+				sql.append(" AND \"");
 				sql.append(field.getKey());
-				sql.append(" = ?");
+				sql.append("\" = ?");
 			}
 			
 			sql.append(";");
@@ -69,6 +88,7 @@ public class DatabaseTester {
 	
 	public DatabaseTester() throws SQLException, IOException, ClassNotFoundException {
 		Class.forName("org.hsqldb.jdbcDriver");
+		Class.forName("net.sf.log4jdbc.DriverSpy");
 		createSchema(getConnection());
 	}
 	
@@ -86,7 +106,7 @@ public class DatabaseTester {
 
 	public Connection getConnection() throws SQLException {
 		if(conn == null) {
-			conn = DriverManager.getConnection("jdbc:hsqldb:mem:test", "sa", "");
+			conn = DriverManager.getConnection("jdbc:log4jdbc:hsqldb:mem:test", "sa", "");
 		}
 		return conn;
 	}

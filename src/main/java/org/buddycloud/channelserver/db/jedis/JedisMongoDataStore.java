@@ -18,9 +18,8 @@ import org.buddycloud.channelserver.db.jedis.NodeSubscriptionImpl;
 import org.buddycloud.channelserver.pubsub.affiliation.Affiliations;
 import org.buddycloud.channelserver.pubsub.entry.NodeEntry;
 import org.buddycloud.channelserver.db.jedis.NodeEntryImpl;
-import org.buddycloud.channelserver.pubsub.subscription.NodeSubscription;
+import org.buddycloud.channelserver.pubsub.model.NodeSubscription;
 import org.buddycloud.channelserver.pubsub.subscription.Subscriptions;
-import org.buddycloud.channelserver.pubsub.subscription.NodeSubscription;
 import org.buddycloud.channelserver.db.DataStoreException;
 import redis.clients.jedis.Jedis;
 
@@ -244,7 +243,7 @@ public class JedisMongoDataStore implements DataStore {
     // Entry fetching related
     
     @SuppressWarnings("unchecked")
-    public Iterator<? extends NodeEntry> getNodeEntries(String node, int limit, String afterItemId) {
+    public Iterator<NodeEntry> getNodeEntries(String node, int limit, String afterItemId) {
         
         DBObject query = new BasicDBObject();
         query.put("node", node);

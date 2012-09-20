@@ -96,35 +96,30 @@ public class PubSubSet implements PacketProcessor<IQ> {
             for (PubSubElementProcessor elementProcessor : elementProcessors) {
                 if (elementProcessor.accept(x)) {
                     elementProcessor.process(x, actorJID, reqIQ, null);
-                    handled = true;
+                    return;
                 }
             }
-            //break;
         }
-        
-        if (handled == false) {
-            
-            // <iq type='error'
-            //     from='pubsub.shakespeare.lit'
-            //     to='hamlet@denmark.lit/elsinore'
-            //     id='create1'>
-            //     <error type='cancel'>
-            //       <feature-not-implemented xmlns='urn:ietf:params:xml:ns:xmpp-stanzas'/>
-            //       <unsupported xmlns='http://jabber.org/protocol/pubsub#errors' feature='create-nodes'/>
-            //     </error>
-            // </iq>
+        // <iq type='error'
+        //     from='pubsub.shakespeare.lit'
+        //     to='hamlet@denmark.lit/elsinore'
+        //     id='create1'>
+        //     <error type='cancel'>
+        //       <feature-not-implemented xmlns='urn:ietf:params:xml:ns:xmpp-stanzas'/>
+        //       <unsupported xmlns='http://jabber.org/protocol/pubsub#errors' feature='create-nodes'/>
+        //     </error>
+        // </iq>
 
-            // TODO, fix this. Now we just reply unexpected_request.
-            //       We should answer something like above.
-            
-            IQ reply = IQ.createResultIQ(reqIQ);
-            reply.setChildElement(reqIQ.getChildElement().createCopy());
-            reply.setType(Type.error);
-            PacketError pe = new PacketError(org.xmpp.packet.PacketError.Condition.unexpected_request, 
-                                             org.xmpp.packet.PacketError.Type.wait);
-            reply.setError(pe);
-            outQueue.put(reply);
-        }
+        // TODO, fix this. Now we just reply unexpected_request.
+        //       We should answer something like above.
+        
+        IQ reply = IQ.createResultIQ(reqIQ);
+        reply.setChildElement(reqIQ.getChildElement().createCopy());
+        reply.setType(Type.error);
+        PacketError pe = new PacketError(org.xmpp.packet.PacketError.Condition.unexpected_request, 
+                                         org.xmpp.packet.PacketError.Type.wait);
+        reply.setError(pe);
+        outQueue.put(reply);
     }
     
 }

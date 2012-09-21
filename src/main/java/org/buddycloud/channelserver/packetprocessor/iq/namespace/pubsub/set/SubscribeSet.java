@@ -94,7 +94,7 @@ public class SubscribeSet extends PubSubElementProcessorAbstract {
 			Element nodeIdRequired = new DOMElement("invalid-jid",
 					new org.dom4j.Namespace("", JabberPubsub.NS_PUBSUB_ERROR));
 			Element error = new DOMElement("error");
-			error.addAttribute("type", "wait");
+			error.addAttribute("type", PacketError.Type.modify.toXMPP());
 			error.add(badRequest);
 			error.add(nodeIdRequired);
 			reply.setChildElement(error);
@@ -103,13 +103,13 @@ public class SubscribeSet extends PubSubElementProcessorAbstract {
 		}
 
 		if (!isLocalNode) {
-			if (isLocalSubscriber) {
+			/*if (isLocalSubscriber) {
 				// Start process to subscribe to external node.
 				Subscribe sub = Subscribe.buildSubscribeStatemachine(node,
 						request, dataStore);
 				outQueue.put(sub.nextStep());
 				return;
-			}
+			}*/
 
 			// Foreign client is trying to subscribe on a node that does not
 			// exists.
@@ -174,6 +174,9 @@ public class SubscribeSet extends PubSubElementProcessorAbstract {
 				AccessModels.authorize.toString())) {
 			defaultSubscription = Subscriptions.pending.toString();
 		}
+		if (null == defaultAffiliation) {
+			defaultAffiliation = Affiliations.member.toString();
+		}
 
 		dataStore.subscribeUserToNode(subscribingJid.toBareJID(), node,
 				defaultAffiliation, defaultSubscription,
@@ -211,7 +214,6 @@ public class SubscribeSet extends PubSubElementProcessorAbstract {
 		subscription.addAttribute("subscription", subscriptionStatus);
 		subscription.addAttribute("jid", subscribingJid.toBareJID());
 		subscription.addAttribute("node", node);
-		Message confirm;
 		if (true == Subscriptions.subscribed.equals(subscriptionStatus)) {
 			Element affiliation = event.addElement("affiliation");
 			affiliation.addAttribute("node", node);
@@ -222,16 +224,18 @@ public class SubscribeSet extends PubSubElementProcessorAbstract {
 		while (true == subscribers.hasNext()) {
 			NodeSubscription subscriber = subscribers.next();
 			String subscriberJid = subscriber.getBareJID();
-			message.addAttribute("to", subscriberJid);
-			Message notification = rootElement.createCopy();
-			outQueue.put(notification);
-
-			if ((subscriber.getAffiliation() != null)
-					&& ((true == subscriber.getAffiliation().equals(
-							Affiliations.owner)) || (true == subscriber
-							.getAffiliation().equals(Affiliations.moderator)))) {
-				outQueue.put(getPendingSubscriptionNotification(subscriber
-						.getBareJID()));
+			if (false == subscriberJid.contains(subscribingJid.toBareJID())) {
+				message.addAttribute("to", subscriberJid);
+				Message notification = rootElement.createCopy();
+				outQueue.put(notification);
+	
+				if ((subscriber.getAffiliation() != null)
+						&& ((true == subscriber.getAffiliation().equals(
+								Affiliations.owner)) || (true == subscriber
+								.getAffiliation().equals(Affiliations.moderator)))) {
+					outQueue.put(getPendingSubscriptionNotification(subscriber
+							.getBareJID()));
+				}
 			}
 		}
 	}

@@ -66,13 +66,13 @@ public class UnsubscribeSet extends PubSubElementProcessorAbstract {
 
 		if (!isLocalNode) {
 
-			if (isLocalSubscriber) {
+			/*if (isLocalSubscriber) {
 				// Start process to unsubscribe from external node.
 				Unsubscribe unsub = Unsubscribe.buildUnsubscribeStatemachine(
 						node, request, dataStore);
 				outQueue.put(unsub.nextStep());
 				return;
-			}
+			}*/
 
 			// Foreign client is trying to subscribe on a node that does not
 			// exists.
@@ -124,9 +124,11 @@ public class UnsubscribeSet extends PubSubElementProcessorAbstract {
         
 		while (true == subscribers.hasNext()) {
 			String subscriber = subscribers.next().getBareJID();
-			message.addAttribute("to", subscriber);
-            Message notification = rootElement.createCopy();
-			outQueue.put(notification);
+			if (false == subscriber.contains(unsubscribingJid.toBareJID())) {
+				message.addAttribute("to", subscriber);
+	            Message notification = rootElement.createCopy();
+				outQueue.put(notification);
+			}
 		}
 	}
 	

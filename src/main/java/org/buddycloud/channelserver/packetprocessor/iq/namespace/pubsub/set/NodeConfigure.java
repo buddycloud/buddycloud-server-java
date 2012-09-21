@@ -22,150 +22,144 @@ import org.xmpp.packet.Message;
 import org.xmpp.packet.Packet;
 import org.xmpp.packet.PacketError;
 
-public class NodeConfigure extends PubSubElementProcessorAbstract
-{	
+public class NodeConfigure extends PubSubElementProcessorAbstract {
 	protected String node;
-	
+
 	private static final Logger LOGGER = Logger.getLogger(NodeConfigure.class);
-	
-	public NodeConfigure(BlockingQueue<Packet> outQueue, DataStore dataStore)
-    {
-    	setDataStore(dataStore);
-    	setOutQueue(outQueue);
-    }
 
-	public void process(Element elm, JID actorJID, IQ reqIQ, Element rsm) 
-	    throws Exception
-    {
-    	element  = elm;
-    	response = IQ.createResultIQ(reqIQ);
-    	request  = reqIQ;
-    	actor    = actorJID;
-        node     = element.attributeValue("node");
+	public NodeConfigure(BlockingQueue<Packet> outQueue, DataStore dataStore) {
+		setDataStore(dataStore);
+		setOutQueue(outQueue);
+	}
 
-    	if (null == actor) {
-        	actor = request.getFrom();
-    	}
-        try {
-	        if ((false == nodeProvided())
-	            || (false == nodeExists())
-	            || (false == userCanModify())
-	        ) {
-	        	outQueue.put(response);
-	        	return;
-	        }
-        } catch (DataStoreException e) {
-        	setErrorCondition(
-        		PacketError.Type.cancel,
-        		PacketError.Condition.internal_server_error
-        	);
-        	outQueue.put(response);
-        	return;
-        }
-        setNodeConfiguration();
-    }
+	public void process(Element elm, JID actorJID, IQ reqIQ, Element rsm)
+			throws Exception {
+		element = elm;
+		response = IQ.createResultIQ(reqIQ);
+		request = reqIQ;
+		actor = actorJID;
+		node = element.attributeValue("node");
 
-	private void setNodeConfiguration() throws Exception
-	{
+		if (null == actor) {
+			actor = request.getFrom();
+		}
+		try {
+			if ((false == nodeProvided()) || (false == nodeExists())
+					|| (false == userCanModify())) {
+				outQueue.put(response);
+				return;
+			}
+		} catch (DataStoreException e) {
+			setErrorCondition(PacketError.Type.cancel,
+					PacketError.Condition.internal_server_error);
+			outQueue.put(response);
+			return;
+		}
+		setNodeConfiguration();
+	}
+
+	private void setNodeConfiguration() throws Exception {
 		try {
 			getNodeConfigurationHelper().parse(request);
 			if (true == getNodeConfigurationHelper().isValid()) {
-				HashMap<String, String> configuration = getNodeConfigurationHelper().getValues();
+				HashMap<String, String> configuration = getNodeConfigurationHelper()
+						.getValues();
 				updateNodeConfiguration(configuration);
-	            notifySubscribers();	
-	            return;
+				notifySubscribers();
+				return;
 			}
 		} catch (NodeConfigurationException e) {
 			LOGGER.error("Node configuration exception", e);
-			setErrorCondition(PacketError.Type.modify, PacketError.Condition.bad_request);
+			setErrorCondition(PacketError.Type.modify,
+					PacketError.Condition.bad_request);
 			outQueue.put(response);
 			return;
 		} catch (DataStoreException e) {
 			LOGGER.error("Data Store Exception", e);
-			setErrorCondition(PacketError.Type.cancel, PacketError.Condition.internal_server_error);
+			setErrorCondition(PacketError.Type.cancel,
+					PacketError.Condition.internal_server_error);
 			outQueue.put(response);
 			return;
 		}
-		setErrorCondition(PacketError.Type.modify, PacketError.Condition.bad_request);
+		setErrorCondition(PacketError.Type.modify,
+				PacketError.Condition.bad_request);
 		outQueue.put(response);
 	}
 
-	private void updateNodeConfiguration(HashMap<String, String> configuration) 
-		throws Exception
-	{
+	private void updateNodeConfiguration(HashMap<String, String> configuration)
+			throws Exception {
 		dataStore.addNodeConf(node, configuration);
 		outQueue.put(response);
 	}
 
-	private void notifySubscribers() throws DataStoreException, InterruptedException
-	{
-	    Iterator<? extends NodeSubscription> subscribers = dataStore.getNodeSubscribers(node);
-	    Document document     = getDocumentHelper();
-        Element message       = document.addElement("message");
-        Element event         = message.addElement("event");
-        Element configuration = event.addElement("configuration");
-        configuration.addAttribute("node", node);
-        event.addNamespace("", Event.NAMESPACE);
-        message.addAttribute("id", request.getID());
-        message.addAttribute("from", request.getTo().toString());
-        Message rootElement = new Message(message);
-        
+	private void notifySubscribers() throws DataStoreException,
+			InterruptedException {
+		Iterator<? extends NodeSubscription> subscribers = dataStore
+				.getNodeSubscribers(node);
+		Document document = getDocumentHelper();
+		Element message = document.addElement("message");
+		Element event = message.addElement("event");
+		Element configuration = event.addElement("configuration");
+		configuration.addAttribute("node", node);
+		event.addNamespace("", Event.NAMESPACE);
+		message.addAttribute("id", request.getID());
+		message.addAttribute("from", request.getTo().toString());
+		Message rootElement = new Message(message);
+
 		while (true == subscribers.hasNext()) {
 			String subscriber = subscribers.next().getBareJID();
-			message.addAttribute("to", subscriber);
-            Message notification = rootElement.createCopy();
-			outQueue.put(notification);
+			if (false == subscriber.contains(actor.toBareJID())) {
+				message.addAttribute("to", subscriber);
+				Message notification = rootElement.createCopy();
+				outQueue.put(notification);
+			}
 		}
 	}
 
-	private boolean userCanModify() throws DataStoreException
-	{
+	private boolean userCanModify() throws DataStoreException {
 		HashMap<String, String> nodeConfiguration = dataStore.getNodeConf(node);
+		if (null == nodeConfiguration) {
+			setErrorCondition(PacketError.Type.cancel,
+					PacketError.Condition.not_allowed);
+		}
 		String owner = nodeConfiguration.get(Affiliation.OWNER.toString());
 
 		if (true == owner.equals(actor.toBareJID())) {
 			return true;
 		}
-		setErrorCondition(PacketError.Type.auth, PacketError.Condition.forbidden);
+		setErrorCondition(PacketError.Type.auth,
+				PacketError.Condition.forbidden);
 		return false;
 	}
 
-	private boolean nodeExists() throws DataStoreException
-	{
+	private boolean nodeExists() throws DataStoreException {
 		if (true == dataStore.nodeExists(node)) {
 			return true;
 		}
-		setErrorCondition(
-			PacketError.Type.cancel,
-			PacketError.Condition.item_not_found
-		);
+		setErrorCondition(PacketError.Type.cancel,
+				PacketError.Condition.item_not_found);
 		return false;
 	}
 
-	private boolean nodeProvided()
-	{
+	private boolean nodeProvided() {
 		if ((null != node) && !node.equals("")) {
-		    return true;	
+			return true;
 		}
-    	response.setType(IQ.Type.error);
-    	Element nodeIdRequired = new DOMElement(
-            "nodeid-required",
-            new Namespace("", JabberPubsub.NS_PUBSUB_ERROR)
-        );
-    	Element badRequest = new DOMElement(
-    	    PacketError.Condition.bad_request.toXMPP(),
-            new Namespace("", JabberPubsub.NS_XMPP_STANZAS)
-    	);
-        Element error = new DOMElement("error");
-        error.addAttribute("type", "modify");
-        error.add(badRequest);
-        error.add(nodeIdRequired);
-        response.setChildElement(error);
+		response.setType(IQ.Type.error);
+		Element nodeIdRequired = new DOMElement("nodeid-required",
+				new Namespace("", JabberPubsub.NS_PUBSUB_ERROR));
+		Element badRequest = new DOMElement(
+				PacketError.Condition.bad_request.toXMPP(), new Namespace("",
+						JabberPubsub.NS_XMPP_STANZAS));
+		Element error = new DOMElement("error");
+		error.addAttribute("type", "modify");
+		error.add(badRequest);
+		error.add(nodeIdRequired);
+		response.setChildElement(error);
 		return false;
 	}
 
-	public boolean accept(Element elm)
-	{
+	public boolean accept(Element elm) {
 		return elm.getName().equals("configure");
 	}
 }

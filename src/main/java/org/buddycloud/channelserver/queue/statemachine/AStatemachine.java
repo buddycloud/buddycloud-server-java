@@ -43,7 +43,9 @@ public abstract class AStatemachine implements IStatemachine {
                 
             // 0 1    2   3
             //  /user/JID/something
-            
+            if (splittedNode.length < 3) {
+            	return null;
+            }
             JID nodeJID = new JID(splittedNode[2]);
             
             /*

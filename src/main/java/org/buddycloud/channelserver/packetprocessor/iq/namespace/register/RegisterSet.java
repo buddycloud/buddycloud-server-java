@@ -5,7 +5,7 @@ import java.util.concurrent.BlockingQueue;
 
 
 import org.buddycloud.channelserver.packetprocessor.PacketProcessor;
-import org.buddycloud.channelserver.db.DataStore;
+import org.buddycloud.channelserver.channel.ChannelManager;
 import org.xmpp.packet.IQ;
 import org.xmpp.packet.IQ.Type;
 import org.xmpp.packet.Packet;
@@ -17,15 +17,15 @@ public class RegisterSet implements PacketProcessor<IQ>
     
     private final Properties            conf;
     private final BlockingQueue<Packet> outQueue;
-    private final DataStore             dataStore;
+    private final ChannelManager             channelManager;
     private       IQ                    request;
     
     public RegisterSet(Properties conf, BlockingQueue<Packet> outQueue,
-        DataStore dataStore)
+        ChannelManager channelManager)
     {
         this.conf      = conf;
         this.outQueue  = outQueue;
-        this.dataStore = dataStore;
+        this.channelManager = channelManager;
     }
 
     @Override
@@ -39,15 +39,13 @@ public class RegisterSet implements PacketProcessor<IQ>
             return;
         }
         
-        String bareJid = request.getFrom().toBareJID();
-        if (true == dataStore.isLocalUser(bareJid)) {
+        if (true == channelManager.isLocalJID(request.getFrom())) {
             //userAlreadyRegistered();
         	IQ reply = IQ.createResultIQ(request);
             outQueue.put(reply);
             return;
         }
-        dataStore.addLocalUser(bareJid);
-        dataStore.createUserNodes(reqIQ.getFrom().toBareJID());
+        channelManager.createPersonalChannel(reqIQ.getFrom());
         IQ result = IQ.createResultIQ(reqIQ);
         outQueue.put(result);
     }

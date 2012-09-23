@@ -2,13 +2,12 @@ package org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.set;
 
 import java.util.HashMap;
 import java.util.concurrent.BlockingQueue;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.log4j.Logger;
+import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.channel.node.configuration.NodeConfigurationException;
-import org.buddycloud.channelserver.db.DataStore;
-import org.buddycloud.channelserver.db.DataStoreException;
+import org.buddycloud.channelserver.db.exception.NodeStoreException;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.JabberPubsub;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.PubSubElementProcessorAbstract;
 import org.dom4j.Element;
@@ -27,9 +26,9 @@ public class NodeCreate extends PubSubElementProcessorAbstract
 	
 	private static final Logger LOGGER = Logger.getLogger(NodeCreate.class);
 	
-	public NodeCreate(BlockingQueue<Packet> outQueue, DataStore dataStore)
+	public NodeCreate(BlockingQueue<Packet> outQueue, ChannelManager channelManager)
     {
-    	setDataStore(dataStore);
+    	setChannelManager(channelManager);
     	setOutQueue(outQueue);
     }
 
@@ -59,12 +58,12 @@ public class NodeCreate extends PubSubElementProcessorAbstract
 	private void createNode() throws InterruptedException
 	{
 		try {
-		    dataStore.createNode(
-		        actor.toString(),
+		    channelManager.createNode(
+		        actor,
 		        node,
 		        getNodeConfiguration()
 		    );
-		} catch (DataStoreException e) {
+		} catch (NodeStoreException e) {
 			setErrorCondition(
 			    PacketError.Type.wait,
 			    PacketError.Condition.internal_server_error
@@ -119,9 +118,9 @@ public class NodeCreate extends PubSubElementProcessorAbstract
         return false;
 	}
 	
-	private boolean doesNodeExist() throws DataStoreException
+	private boolean doesNodeExist() throws NodeStoreException
 	{
-		if (false == dataStore.nodeExists(node)) {
+		if (false == channelManager.nodeExists(node)) {
 			return false;
 		}
 		setErrorCondition(

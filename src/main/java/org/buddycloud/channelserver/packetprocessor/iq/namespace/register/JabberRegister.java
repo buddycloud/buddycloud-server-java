@@ -5,7 +5,7 @@ import java.util.concurrent.BlockingQueue;
 
 
 import org.buddycloud.channelserver.packetprocessor.PacketProcessor;
-import org.buddycloud.channelserver.db.DataStore;
+import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.AbstractNamespace;
 import org.xmpp.packet.IQ;
 import org.xmpp.packet.Packet;
@@ -16,9 +16,9 @@ public final class JabberRegister extends AbstractNamespace {
 	
 	private final PacketProcessor<IQ> setProcessor;
 	
-	public JabberRegister(BlockingQueue<Packet> outQueue, Properties conf, DataStore dataStore) {
-		super(outQueue, conf, dataStore);
-		this.setProcessor = new RegisterSet(conf, outQueue, dataStore);
+	public JabberRegister(BlockingQueue<Packet> outQueue, Properties conf, ChannelManager channelManager) {
+		super(outQueue, conf, channelManager);
+		this.setProcessor = new RegisterSet(conf, outQueue, channelManager);
 	}
 
     @Override

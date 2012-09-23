@@ -1,6 +1,7 @@
 package org.buddycloud.channelserver.db.exception;
 
 public class ItemNotFoundException extends NodeStoreException {
+	private static final long serialVersionUID = 1L;
 
 	public ItemNotFoundException(String message, Throwable t) {
 		super(message, t);

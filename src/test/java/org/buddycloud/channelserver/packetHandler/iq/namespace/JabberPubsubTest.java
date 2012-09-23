@@ -2,44 +2,38 @@ package org.buddycloud.channelserver.packetHandler.iq.namespace;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
+
+import org.buddycloud.channelserver.packetHandler.iq.HandlerTestCase;
 import org.buddycloud.channelserver.packetHandler.iq.IQTestHandler;
+import org.buddycloud.channelserver.pubsub.model.NodeAffiliation;
+import org.buddycloud.channelserver.pubsub.model.NodeSubscription;
+import org.buddycloud.channelserver.pubsub.model.impl.NodeItemImpl;
+import org.buddycloud.channelserver.pubsub.model.impl.NodeSubscriptionImpl;
+import org.buddycloud.channelserver.pubsub.subscription.Subscriptions;
+
+import java.util.Date;
+import java.util.GregorianCalendar;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
 import junit.framework.Assert;
 
 import org.buddycloud.channelserver.channel.Conf;
-import org.buddycloud.channelserver.db.jedis.JedisMongoDataStore;
-import org.buddycloud.channelserver.db.jedis.NodeSubscriptionImpl;
 import org.buddycloud.channelserver.queue.InQueueConsumer;
 import org.dom4j.DocumentException;
 import org.junit.Before;
 import org.junit.Test;
 import org.xmpp.packet.IQ;
+import org.xmpp.packet.JID;
 import org.xmpp.packet.Message;
 import org.xmpp.packet.Packet;
 
-public class JabberPubsubTest
+public class JabberPubsubTest extends HandlerTestCase
 {
-    private LinkedBlockingQueue<Packet> outQueue;
-    private LinkedBlockingQueue<Packet> inQueue;
-
-    @Before
-    public void init() throws FileNotFoundException, IOException {
-        this.outQueue = new LinkedBlockingQueue<Packet>();
-        this.inQueue = new LinkedBlockingQueue<Packet>();
-        InQueueConsumer consumer = new InQueueConsumer(outQueue, IQTestHandler.readConf(), inQueue);
-        consumer.start();
-        
-        IQTestHandler.getJedis(); // don't remove, it's here to clean the db
-    }
-    
     @Test
-    public void testSubscribeToLocalNode() throws IOException, DocumentException, InterruptedException {
+    public void testSubscribeToLocalNode() throws Exception {
         
-        JedisMongoDataStore dataStore = new JedisMongoDataStore(IQTestHandler.readConf());
-        dataStore.createUserNodes("pamela@denmark.lit");
-        dataStore.addLocalUser("francisco@denmark.lit");
+        channelManager.createPersonalChannel(new JID("pamela@denmark.lit"));
         
         String request = IQTestHandler.readStanzaAsString("/iq/pubsub/subscribe/request.stanza");
         String expectedReply = IQTestHandler.readStanzaAsString("/iq/pubsub/subscribe/reply.stanza");
@@ -56,11 +50,12 @@ public class JabberPubsubTest
         Assert.assertNotNull(replyIQ);
         Assert.assertEquals(expectedReply, replyIQ.toXML());
         
-        NodeSubscriptionImpl ns = dataStore.getUserSubscriptionOfNode(
-                "francisco@denmark.lit", Conf.getPostChannelNodename("pamela@denmark.lit"));
+        NodeSubscription ns = channelManager.getUserSubscription(
+        		Conf.getPostChannelNodename(new JID("pamela@denmark.lit")), new JID("francisco@denmark.lit"));
         
-        Assert.assertEquals("member", ns.getAffiliation());
-        Assert.assertEquals("unconfigured", ns.getSubscription());
+        Assert.assertEquals(Subscriptions.unconfigured, ns.getSubscription());
+
+        NodeAffiliation na = channelManager.getUserAffiliation(Conf.getPostChannelNodename(new JID("pamela@denmark.lit")), new JID("francisco@denmark.lit"));
         
         // We should have subscription first
         Message replyMsg = (Message)outQueue.poll(1000, TimeUnit.MILLISECONDS);
@@ -72,10 +67,9 @@ public class JabberPubsubTest
     }
     
     @Test
-    public void testSubscribeToForeignNode() throws IOException, DocumentException, InterruptedException {
+    public void testSubscribeToForeignNode() throws Exception {
         
-        JedisMongoDataStore dataStore = new JedisMongoDataStore(IQTestHandler.readConf());
-        dataStore.addLocalUser("francisco@denmark.lit");
+        channelManager.createPersonalChannel(new JID("francisco@denmark.lit"));
         
         String request = IQTestHandler.readStanzaAsString(
                 "/iq/pubsub/subscribe/foreign/request.stanza");
@@ -159,10 +153,6 @@ public class JabberPubsubTest
     
     @Test
     public void testSubscribeToForeignNodeHighfellow() throws IOException, DocumentException, InterruptedException {
-        
-        JedisMongoDataStore dataStore = new JedisMongoDataStore(IQTestHandler.readConf());
-        dataStore.addLocalUser("tuomas@xmpp.lobstermonster.org");
-        
         String request = IQTestHandler.readStanzaAsString(
                 "/iq/pubsub/subscribe/foreign/highfellow/request.stanza");
         
@@ -228,10 +218,6 @@ public class JabberPubsubTest
     
     @Test
     public void testSubscribeToForeignNodeFailsNotOnWhiteList() throws IOException, DocumentException, InterruptedException {
-        
-        JedisMongoDataStore dataStore = new JedisMongoDataStore(IQTestHandler.readConf());
-        dataStore.addLocalUser("tuomas@xmpp.lobstermonster.org");
-        
         String request = IQTestHandler.readStanzaAsString(
                 "/iq/pubsub/subscribe/foreign/fail/notonwhitelist/request.stanza");
         
@@ -297,10 +283,6 @@ public class JabberPubsubTest
     
     @Test
     public void testSubscribeToForeignNodeFailOnItems() throws IOException, DocumentException, InterruptedException {
-        
-        JedisMongoDataStore dataStore = new JedisMongoDataStore(IQTestHandler.readConf());
-        dataStore.addLocalUser("francisco@denmark.lit");
-        
         String request = IQTestHandler.readStanzaAsString(
                 "/iq/pubsub/subscribe/foreign/fail/items/request.stanza");
         
@@ -336,11 +318,8 @@ public class JabberPubsubTest
     }
     
     @Test
-    public void testGetSubscriptoinsOfExistingNode() throws IOException, DocumentException, InterruptedException {
-        
-        JedisMongoDataStore dataStore = new JedisMongoDataStore(IQTestHandler.readConf());
-        dataStore.createUserNodes("francisco@denmark.lit");
-        dataStore.addLocalUser("francisco@denmark.lit");
+    public void testGetSubscriptoinsOfExistingNode() throws Exception {
+        channelManager.createPersonalChannel(new JID("francisco@denmark.lit"));
         
         String request = IQTestHandler.readStanzaAsString(
                 "/iq/pubsub/subscriptions/requestExistingNode.stanza");
@@ -355,16 +334,14 @@ public class JabberPubsubTest
     }
     
     @Test
-    public void testGetSubscriptions() throws IOException, DocumentException, InterruptedException {
+    public void testGetSubscriptions() throws Exception {
+        JID bareJID = new JID("francisco@denmark.lit");
+        channelManager.createPersonalChannel(bareJID);
         
-        JedisMongoDataStore dataStore = new JedisMongoDataStore(IQTestHandler.readConf());
-        String bareJID = "francisco@denmark.lit";
-        dataStore.createUserNodes(bareJID);
-        dataStore.addLocalUser(bareJID);
+        channelManager.createPersonalChannel(new JID("pamela@denmark.lit"));
         
-        dataStore.createUserNodes("pamela@denmark.lit");
-        dataStore.subscribeUserToNode(bareJID, Conf.getPostChannelNodename(
-                "pamela@denmark.lit"), "member", "unconfigured", null);
+        NodeSubscriptionImpl ns = new NodeSubscriptionImpl(Conf.getPostChannelNodename(
+                new JID("pamela@denmark.lit")), bareJID, Subscriptions.unconfigured);
         
         String request = IQTestHandler.readStanzaAsString(
                 "/iq/pubsub/subscriptions/request.stanza");
@@ -379,11 +356,8 @@ public class JabberPubsubTest
     }
     
     @Test
-    public void testPublishToLocalNode() throws IOException, DocumentException, InterruptedException {
-        
-        JedisMongoDataStore dataStore = new JedisMongoDataStore(IQTestHandler.readConf());
-        dataStore.createUserNodes("koski@buddycloud.com");
-        dataStore.addLocalUser("koski@buddycloud.com");
+    public void testPublishToLocalNode() throws Exception {
+        channelManager.createPersonalChannel(new JID("koski@buddycloud.com"));
         
         String request = IQTestHandler.readStanzaAsString(
                 "/iq/pubsub/publish/request.stanza");
@@ -417,12 +391,9 @@ public class JabberPubsubTest
     }
     
     @Test
-    public void testGetItemsEmptyNode() throws IOException, DocumentException, InterruptedException {
-        
-        JedisMongoDataStore dataStore = new JedisMongoDataStore(IQTestHandler.readConf());
-        String bareJID = "francisco@denmark.lit";
-        dataStore.createUserNodes(bareJID);
-        dataStore.addLocalUser(bareJID);
+    public void testGetItemsEmptyNode() throws Exception {
+        JID bareJID = new JID("francisco@denmark.lit");
+        channelManager.createPersonalChannel(bareJID);
         
         String request = IQTestHandler.readStanzaAsString(
                 "/iq/pubsub/items/request.stanza");
@@ -437,15 +408,13 @@ public class JabberPubsubTest
     }
     
     @Test
-    public void testGetItems() throws IOException, DocumentException, InterruptedException {
+    public void testGetItems() throws Exception {
         
-        JedisMongoDataStore dataStore = new JedisMongoDataStore(IQTestHandler.readConf());
-        String bareJID = "francisco@denmark.lit";
-        dataStore.createUserNodes(bareJID);
-        dataStore.addLocalUser(bareJID);
+        JID bareJID = new JID("francisco@denmark.lit");
+        channelManager.createPersonalChannel(bareJID);
         
-        dataStore.storeEntry(Conf.getPostChannelNodename(bareJID), 
-                             "1", "<entry xmlns=\"http://www.w3.org/2005/Atom\" " +
+        channelManager.addNodeItem(new NodeItemImpl(Conf.getPostChannelNodename(bareJID), 
+                             "1", new GregorianCalendar(2011,11,27,19,05,57).getTime(), "<entry xmlns=\"http://www.w3.org/2005/Atom\" " +
                              		"xmlns:activity=\"http://activitystrea.ms/spec/1.0/\">" +
                              		"<id>tag:channels.buddycloud.com,/user/koski@buddycloud.com/posts,1</id>" +
                              		"<title>Post</title><content>Test</content>" +
@@ -459,10 +428,10 @@ public class JabberPubsubTest
                              		"<country>France</country></geoloc><activity:verb>post</activity:verb>" +
                              		"<activity:object><activity:object-type>note</activity:object-type>" +
                              		"</activity:object>" +
-                             		"</entry>");
+                             		"</entry>"));
         Thread.sleep(1000);
-        dataStore.storeEntry(Conf.getPostChannelNodename(bareJID), 
-                             "2", "<entry xmlns=\"http://www.w3.org/2005/Atom\" " +
+        channelManager.addNodeItem(new NodeItemImpl(Conf.getPostChannelNodename(bareJID), 
+                             "2", new GregorianCalendar(2011,11,27,19,05,58).getTime(), "<entry xmlns=\"http://www.w3.org/2005/Atom\" " +
                              		"xmlns:activity=\"http://activitystrea.ms/spec/1.0/\">" +
                              		"<id>tag:channels.buddycloud.com,/user/koski@buddycloud.com/posts,2</id>" +
                              		"<title>Post</title><content>Test</content>" +
@@ -476,10 +445,10 @@ public class JabberPubsubTest
                              		"<country>France</country></geoloc><activity:verb>post</activity:verb>" +
                              		"<activity:object><activity:object-type>note</activity:object-type>" +
                              		"</activity:object>" +
-                             		"</entry>");
+                             		"</entry>"));
         Thread.sleep(1000);
-        dataStore.storeEntry(Conf.getPostChannelNodename(bareJID), 
-                             "3", "<entry xmlns=\"http://www.w3.org/2005/Atom\" " +
+        channelManager.addNodeItem(new NodeItemImpl(Conf.getPostChannelNodename(bareJID), 
+                             "3", new GregorianCalendar(2011,11,27,19,05,58).getTime(), "<entry xmlns=\"http://www.w3.org/2005/Atom\" " +
                              		"xmlns:activity=\"http://activitystrea.ms/spec/1.0/\">" +
                              		"<id>tag:channels.buddycloud.com,/user/koski@buddycloud.com/posts,3</id>" +
                              		"<title>Post</title><content>Test</content>" +
@@ -494,7 +463,7 @@ public class JabberPubsubTest
                              		"<activity:verb>post</activity:verb><activity:object>" +
                              		"<activity:object-type>note</activity:object-type>" +
                              		"</activity:object>" +
-                             		"</entry>");
+                             		"</entry>"));
 
         String request = IQTestHandler.readStanzaAsString("/iq/pubsub/items/request.stanza");
         String expectedReply = IQTestHandler.readStanzaAsString("/iq/pubsub/items/reply.stanza");
@@ -507,15 +476,13 @@ public class JabberPubsubTest
     }
     
     @Test
-    public void testGetItemsMax1() throws IOException, DocumentException, InterruptedException {
+    public void testGetItemsMax1() throws Exception {
         
-        JedisMongoDataStore dataStore = new JedisMongoDataStore(IQTestHandler.readConf());
-        String bareJID = "francisco@denmark.lit";
-        dataStore.createUserNodes(bareJID);
-        dataStore.addLocalUser(bareJID);
+        JID bareJID = new JID("francisco@denmark.lit");
+        channelManager.createPersonalChannel(bareJID);
         
-        dataStore.storeEntry(Conf.getPostChannelNodename(bareJID), 
-                             "1", "<entry xmlns=\"http://www.w3.org/2005/Atom\" " +
+        channelManager.addNodeItem(new NodeItemImpl(Conf.getPostChannelNodename(bareJID), 
+                             "1", new GregorianCalendar(2011,11,27,19,05,57).getTime(), "<entry xmlns=\"http://www.w3.org/2005/Atom\" " +
                              		"xmlns:activity=\"http://activitystrea.ms/spec/1.0/\">" +
                              		"<id>tag:channels.buddycloud.com,/user/koski@buddycloud.com/posts,1</id>" +
                              		"<title>Post</title><content>Test</content>" +
@@ -526,14 +493,13 @@ public class JabberPubsubTest
                              		"<activity:object-type>person</activity:object-type></author>" +
                              		"<geoloc xmlns=\"http://jabber.org/protocol/geoloc\">" +
                              		"<text>Paris, France</text><locality>Paris</locality>" +
-                             		"<country>France</country></geoloc>" +
-                             		"<activity:verb>post</activity:verb>" +
+                             		"<country>France</country></geoloc><activity:verb>post</activity:verb>" +
                              		"<activity:object><activity:object-type>note</activity:object-type>" +
                              		"</activity:object>" +
-                             		"</entry>");
+                             		"</entry>"));
         Thread.sleep(1000);
-        dataStore.storeEntry(Conf.getPostChannelNodename(bareJID), 
-                             "2", "<entry xmlns=\"http://www.w3.org/2005/Atom\" " +
+        channelManager.addNodeItem(new NodeItemImpl(Conf.getPostChannelNodename(bareJID), 
+                             "2", new GregorianCalendar(2011,11,27,19,05,58).getTime(), "<entry xmlns=\"http://www.w3.org/2005/Atom\" " +
                              		"xmlns:activity=\"http://activitystrea.ms/spec/1.0/\">" +
                              		"<id>tag:channels.buddycloud.com,/user/koski@buddycloud.com/posts,2</id>" +
                              		"<title>Post</title><content>Test</content>" +
@@ -544,14 +510,13 @@ public class JabberPubsubTest
                              		"<activity:object-type>person</activity:object-type></author>" +
                              		"<geoloc xmlns=\"http://jabber.org/protocol/geoloc\">" +
                              		"<text>Paris, France</text><locality>Paris</locality>" +
-                             		"<country>France</country></geoloc>" +
-                             		"<activity:verb>post</activity:verb>" +
+                             		"<country>France</country></geoloc><activity:verb>post</activity:verb>" +
                              		"<activity:object><activity:object-type>note</activity:object-type>" +
                              		"</activity:object>" +
-                             		"</entry>");
+                             		"</entry>"));
         Thread.sleep(1000);
-        dataStore.storeEntry(Conf.getPostChannelNodename(bareJID), 
-                             "3", "<entry xmlns=\"http://www.w3.org/2005/Atom\" " +
+        channelManager.addNodeItem(new NodeItemImpl(Conf.getPostChannelNodename(bareJID), 
+                             "3", new GregorianCalendar(2011,11,27,19,05,58).getTime(), "<entry xmlns=\"http://www.w3.org/2005/Atom\" " +
                              		"xmlns:activity=\"http://activitystrea.ms/spec/1.0/\">" +
                              		"<id>tag:channels.buddycloud.com,/user/koski@buddycloud.com/posts,3</id>" +
                              		"<title>Post</title><content>Test</content>" +
@@ -563,10 +528,10 @@ public class JabberPubsubTest
                              		"<geoloc xmlns=\"http://jabber.org/protocol/geoloc\">" +
                              		"<text>Paris, France</text><locality>Paris</locality>" +
                              		"<country>France</country></geoloc>" +
-                             		"<activity:verb>post</activity:verb>" +
-                             		"<activity:object><activity:object-type>note</activity:object-type>" +
+                             		"<activity:verb>post</activity:verb><activity:object>" +
+                             		"<activity:object-type>note</activity:object-type>" +
                              		"</activity:object>" +
-                             		"</entry>");
+                             		"</entry>"));
 
         String request = IQTestHandler.readStanzaAsString("/iq/pubsub/items/requestMax1.stanza");
         String expectedReply = IQTestHandler.readStanzaAsString("/iq/pubsub/items/replyMax1.stanza");
@@ -581,15 +546,13 @@ public class JabberPubsubTest
     }
     
     @Test
-    public void testGetItemsMax1Rsm() throws IOException, DocumentException, InterruptedException {
+    public void testGetItemsMax1Rsm() throws Exception {
         
-        JedisMongoDataStore dataStore = new JedisMongoDataStore(IQTestHandler.readConf());
-        String bareJID = "francisco@denmark.lit";
-        dataStore.createUserNodes(bareJID);
-        dataStore.addLocalUser(bareJID);
+        JID bareJID = new JID("francisco@denmark.lit");
+        channelManager.createPersonalChannel(bareJID);
         
-        dataStore.storeEntry(Conf.getPostChannelNodename(bareJID), 
-                             "1", "<entry xmlns=\"http://www.w3.org/2005/Atom\" " +
+        channelManager.addNodeItem(new NodeItemImpl(Conf.getPostChannelNodename(bareJID), 
+                             "1", new GregorianCalendar(2011,11,27,19,05,57).getTime(), "<entry xmlns=\"http://www.w3.org/2005/Atom\" " +
                              		"xmlns:activity=\"http://activitystrea.ms/spec/1.0/\">" +
                              		"<id>tag:channels.buddycloud.com,/user/koski@buddycloud.com/posts,1</id>" +
                              		"<title>Post</title><content>Test</content>" +
@@ -600,14 +563,13 @@ public class JabberPubsubTest
                              		"<activity:object-type>person</activity:object-type></author>" +
                              		"<geoloc xmlns=\"http://jabber.org/protocol/geoloc\">" +
                              		"<text>Paris, France</text><locality>Paris</locality>" +
-                             		"<country>France</country></geoloc>" +
-                             		"<activity:verb>post</activity:verb><activity:object>" +
-                             		"<activity:object-type>note</activity:object-type>" +
+                             		"<country>France</country></geoloc><activity:verb>post</activity:verb>" +
+                             		"<activity:object><activity:object-type>note</activity:object-type>" +
                              		"</activity:object>" +
-                             		"</entry>");
+                             		"</entry>"));
         Thread.sleep(1000);
-        dataStore.storeEntry(Conf.getPostChannelNodename(bareJID), 
-                             "2", "<entry xmlns=\"http://www.w3.org/2005/Atom\" " +
+        channelManager.addNodeItem(new NodeItemImpl(Conf.getPostChannelNodename(bareJID), 
+                             "2", new GregorianCalendar(2011,11,27,19,05,58).getTime(), "<entry xmlns=\"http://www.w3.org/2005/Atom\" " +
                              		"xmlns:activity=\"http://activitystrea.ms/spec/1.0/\">" +
                              		"<id>tag:channels.buddycloud.com,/user/koski@buddycloud.com/posts,2</id>" +
                              		"<title>Post</title><content>Test</content>" +
@@ -618,14 +580,13 @@ public class JabberPubsubTest
                              		"<activity:object-type>person</activity:object-type></author>" +
                              		"<geoloc xmlns=\"http://jabber.org/protocol/geoloc\">" +
                              		"<text>Paris, France</text><locality>Paris</locality>" +
-                             		"<country>France</country></geoloc>" +
-                             		"<activity:verb>post</activity:verb>" +
+                             		"<country>France</country></geoloc><activity:verb>post</activity:verb>" +
                              		"<activity:object><activity:object-type>note</activity:object-type>" +
                              		"</activity:object>" +
-                             		"</entry>");
+                             		"</entry>"));
         Thread.sleep(1000);
-        dataStore.storeEntry(Conf.getPostChannelNodename(bareJID), 
-                             "3", "<entry xmlns=\"http://www.w3.org/2005/Atom\" " +
+        channelManager.addNodeItem(new NodeItemImpl(Conf.getPostChannelNodename(bareJID), 
+                             "3", new GregorianCalendar(2011,11,27,19,05,58).getTime(), "<entry xmlns=\"http://www.w3.org/2005/Atom\" " +
                              		"xmlns:activity=\"http://activitystrea.ms/spec/1.0/\">" +
                              		"<id>tag:channels.buddycloud.com,/user/koski@buddycloud.com/posts,3</id>" +
                              		"<title>Post</title><content>Test</content>" +
@@ -637,10 +598,10 @@ public class JabberPubsubTest
                              		"<geoloc xmlns=\"http://jabber.org/protocol/geoloc\">" +
                              		"<text>Paris, France</text><locality>Paris</locality>" +
                              		"<country>France</country></geoloc>" +
-                             		"<activity:verb>post</activity:verb>" +
-                             		"<activity:object><activity:object-type>note</activity:object-type>" +
+                             		"<activity:verb>post</activity:verb><activity:object>" +
+                             		"<activity:object-type>note</activity:object-type>" +
                              		"</activity:object>" +
-                             		"</entry>");
+                             		"</entry>"));
 
         String request = IQTestHandler.readStanzaAsString("/iq/pubsub/items/requestMax1Rsm.stanza");
         String expectedReply = IQTestHandler.readStanzaAsString("/iq/pubsub/items/replyMax1.stanza");
@@ -666,9 +627,9 @@ public class JabberPubsubTest
     @Test
     public void testReceiveSubscriptionrequestFromForeignNode() throws IOException, DocumentException, InterruptedException {
         
-        JedisMongoDataStore dataStore = new JedisMongoDataStore(IQTestHandler.readConf());
-        dataStore.addLocalUser("tuomas@xmpp.lobstermonster.org");
-        dataStore.createUserNodes("tuomas@xmpp.lobstermonster.org");
+        JedisMongoDataStore channelManager = new JedisMongoDataStore(IQTestHandler.readConf());
+        channelManager.addLocalUser("tuomas@xmpp.lobstermonster.org");
+        channelManager.createUserNodes("tuomas@xmpp.lobstermonster.org");
         
         String request = IQTestHandler.readStanzaAsString(
                 "/iq/pubsub/subscribe/fromforeign/request.stanza");
@@ -682,7 +643,7 @@ public class JabberPubsubTest
         Assert.assertNotNull(replyIQ);
         Assert.assertEquals(expectedReply, replyIQ.toXML());
         
-        NodeSubscriptionImpl ns = dataStore.getUserSubscriptionOfNode(
+        NodeSubscriptionImpl ns = channelManager.getUserSubscriptionOfNode(
                 "tuomas@buddycloud.org", Conf.getPostChannelNodename("tuomas@xmpp.lobstermonster.org"));
         Assert.assertEquals("channels.buddycloud.org", ns.getForeignChannelServer());
         Assert.assertEquals("member", ns.getAffiliation());
@@ -694,10 +655,10 @@ public class JabberPubsubTest
     @Test
     public void testUnsubscribeToLocalNode() throws IOException, DocumentException, InterruptedException {
         
-        JedisMongoDataStore dataStore = new JedisMongoDataStore(IQTestHandler.readConf());
-        dataStore.createUserNodes("pamela@denmark.lit");
-        dataStore.addLocalUser("francisco@denmark.lit");
-        dataStore.subscribeUserToNode("francisco@denmark.lit", 
+        JedisMongoDataStore channelManager = new JedisMongoDataStore(IQTestHandler.readConf());
+        channelManager.createUserNodes("pamela@denmark.lit");
+        channelManager.addLocalUser("francisco@denmark.lit");
+        channelManager.subscribeUserToNode("francisco@denmark.lit", 
                                       Conf.getPostChannelNodename("pamela@denmark.lit"), 
                                       "member", 
                                       "unconfigured", 
@@ -715,7 +676,7 @@ public class JabberPubsubTest
         Assert.assertNotNull(replyIQ);
         Assert.assertEquals(expectedReply, replyIQ.toXML());
 
-        NodeSubscriptionImpl ns = dataStore.getUserSubscriptionOfNode(
+        NodeSubscriptionImpl ns = channelManager.getUserSubscriptionOfNode(
                 "francisco@denmark.lit", Conf.getPostChannelNodename("pamela@denmark.lit"));
         
         Assert.assertEquals(null, ns.getAffiliation());
@@ -726,15 +687,15 @@ public class JabberPubsubTest
     @Test
     public void testUnsubscribeToLocalNodeComesFromForeignChannelServer() throws IOException, DocumentException, InterruptedException {
         
-        JedisMongoDataStore dataStore = new JedisMongoDataStore(IQTestHandler.readConf());
-        dataStore.createUserNodes("tuomas@xmpp.lobstermonster.org");
-        dataStore.subscribeUserToNode("tuomas@buddycloud.org", 
+        JedisMongoDataStore channelManager = new JedisMongoDataStore(IQTestHandler.readConf());
+        channelManager.createUserNodes("tuomas@xmpp.lobstermonster.org");
+        channelManager.subscribeUserToNode("tuomas@buddycloud.org", 
                                       Conf.getPostChannelNodename("tuomas@xmpp.lobstermonster.org"), 
                                       "member", 
                                       "unconfigured", 
                                       "channels.buddycloud.org");
         
-        NodeSubscriptionImpl ns = dataStore.getUserSubscriptionOfNode(
+        NodeSubscriptionImpl ns = channelManager.getUserSubscriptionOfNode(
                 "tuomas@buddycloud.org", Conf.getPostChannelNodename("tuomas@xmpp.lobstermonster.org"));
 
         Assert.assertEquals("member", ns.getAffiliation());
@@ -752,7 +713,7 @@ public class JabberPubsubTest
         Assert.assertNotNull(replyIQ);
         Assert.assertEquals(expectedReply, replyIQ.toXML());
 
-        ns = dataStore.getUserSubscriptionOfNode(
+        ns = channelManager.getUserSubscriptionOfNode(
                 "tuomas@buddycloud.org", Conf.getPostChannelNodename("tuomas@xmpp.lobstermonster.org"));
         
         Assert.assertEquals(null, ns.getAffiliation());
@@ -763,15 +724,15 @@ public class JabberPubsubTest
     @Test
     public void testUnsubscribeFromForeignNode() throws IOException, DocumentException, InterruptedException {
         
-        JedisMongoDataStore dataStore = new JedisMongoDataStore(IQTestHandler.readConf());
-        dataStore.addLocalUser("tuomas@xmpp.lobstermonster.org");
-        dataStore.subscribeUserToNode("tuomas@xmpp.lobstermonster.org", 
+        JedisMongoDataStore channelManager = new JedisMongoDataStore(IQTestHandler.readConf());
+        channelManager.addLocalUser("tuomas@xmpp.lobstermonster.org");
+        channelManager.subscribeUserToNode("tuomas@xmpp.lobstermonster.org", 
                 Conf.getPostChannelNodename("tuomas@buddycloud.org"), 
                 "member", 
                 "unconfigured", 
                 null);
         
-        NodeSubscriptionImpl ns = dataStore.getUserSubscriptionOfNode(
+        NodeSubscriptionImpl ns = channelManager.getUserSubscriptionOfNode(
                 "tuomas@xmpp.lobstermonster.org", Conf.getPostChannelNodename("tuomas@buddycloud.org"));
 
         Assert.assertEquals("member", ns.getAffiliation());
@@ -838,7 +799,7 @@ public class JabberPubsubTest
         expectedReply = expectedReply.replaceAll("items1", replyIQ.getID());
         Assert.assertEquals(expectedReply, replyIQ.toXML());
         
-        ns = dataStore.getUserSubscriptionOfNode("tuomas@xmpp.lobstermonster.org", 
+        ns = channelManager.getUserSubscriptionOfNode("tuomas@xmpp.lobstermonster.org", 
                 Conf.getPostChannelNodename("tuomas@buddycloud.org"));
 
         Assert.assertEquals(null, ns.getAffiliation());

@@ -17,7 +17,11 @@ public class NodeSubscriptionImpl implements NodeSubscription {
 	
 	public NodeSubscriptionImpl(final String nodeId, final JID user, final JID listener, final Subscriptions subscription) {
 		this.nodeId = nodeId;
-		this.user = user;
+		if(user.getResource() == null) {
+			this.user = user;
+		} else {
+			this.user = new JID(user.toBareJID());
+		}
 		this.listener = listener;
 		this.subscription = subscription;
 	}
@@ -83,5 +87,11 @@ public class NodeSubscriptionImpl implements NodeSubscription {
 		} else if (!user.equals(other.user))
 			return false;
 		return true;
+	}
+
+	@Override
+	public String toString() {
+		return "NodeSubscriptionImpl [subscription=" + subscription + ", user="
+				+ user + ", listener=" + listener + ", nodeId=" + nodeId + "]";
 	}
 }

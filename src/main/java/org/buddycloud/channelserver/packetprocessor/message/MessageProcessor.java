@@ -1,6 +1,7 @@
 package org.buddycloud.channelserver.packetprocessor.message;
 
 import java.text.SimpleDateFormat;
+import java.util.Collection;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.Properties;
@@ -10,7 +11,7 @@ import java.util.concurrent.BlockingQueue;
 
 
 import org.apache.log4j.Logger;
-import org.buddycloud.channelserver.db.DataStore;
+import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.packetprocessor.PacketProcessor;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.JabberPubsub;
 import org.buddycloud.channelserver.pubsub.model.NodeSubscription;
@@ -26,12 +27,12 @@ public class MessageProcessor implements PacketProcessor<Message> {
     
     private final BlockingQueue<Packet> inQueue;
     private final BlockingQueue<Packet> outQueue;
-    private DataStore dataStore;
+    private ChannelManager channelManager;
     
 	public MessageProcessor(BlockingQueue<Packet> outQueue, 
-	        BlockingQueue<Packet> inQueue, Properties conf, DataStore dataStore) {
+	        BlockingQueue<Packet> inQueue, Properties conf, ChannelManager channelManager) {
 		this.outQueue  = outQueue;
-		this.dataStore = dataStore;
+		this.channelManager = channelManager;
 		this.inQueue   = inQueue;
 	}
 	
@@ -40,7 +41,7 @@ public class MessageProcessor implements PacketProcessor<Message> {
         
         LOGGER.debug("Message handler got body '" + packet.getBody() + "'.");
         
-        if(dataStore.isLocalUser(packet.getFrom().toBareJID())) {
+        if(channelManager.isLocalJID(packet.getFrom())) {
             
         	String body = packet.getBody();
         	if (null == body) {
@@ -190,12 +191,10 @@ public class MessageProcessor implements PacketProcessor<Message> {
         packet.setBody(":publish " + sentToNode + ":" + itemID + " " + whoSays + " wrote: " + body);
         packet.setFrom(packet.getTo());
         
-        Iterator<? extends NodeSubscription> cur = dataStore.getNodeSubscribers(node);
-        while(cur.hasNext()) {
-            NodeSubscription ns = cur.next();
-            String toBareJID = ns.getBareJID();
-            
-            packet.setTo(toBareJID);
+        Collection<NodeSubscription> cur = channelManager.getNodeSubscriptions(node);
+
+        for(NodeSubscription ns : cur) {
+            packet.setTo(ns.getListener());
             outQueue.put(packet.createCopy());
         }
     }

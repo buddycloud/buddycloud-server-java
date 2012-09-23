@@ -1,31 +1,30 @@
 package org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.get;
 
-import java.util.Iterator;
+import java.util.Collection;
 import java.util.concurrent.BlockingQueue;
 
-import org.buddycloud.channelserver.db.DataStore;
-import org.buddycloud.channelserver.db.jedis.NodeSubscriptionImpl;
+import org.apache.log4j.Logger;
+import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.JabberPubsub;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.PubSubElementProcessor;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.PubSubGet;
-import org.buddycloud.channelserver.pubsub.model.NodeSubscription;
+import org.buddycloud.channelserver.pubsub.model.NodeAffiliation;
 import org.dom4j.Element;
 import org.xmpp.packet.IQ;
 import org.xmpp.packet.JID;
 import org.xmpp.packet.Packet;
-import org.apache.log4j.Logger;
 
 public class AffiliationsGet implements PubSubElementProcessor {
 
     private final BlockingQueue<Packet> outQueue;
-    private final DataStore dataStore;
+    private final ChannelManager channelManager;
     
     private static final Logger LOGGER = Logger.getLogger(AffiliationsGet.class);
     
-    public AffiliationsGet(BlockingQueue<Packet> outQueue, DataStore dataStore)
+    public AffiliationsGet(BlockingQueue<Packet> outQueue, ChannelManager channelManager)
     {
         this.outQueue = outQueue;
-        this.dataStore = dataStore;
+        this.channelManager = channelManager;
     }
     
     @Override
@@ -42,32 +41,23 @@ public class AffiliationsGet implements PubSubElementProcessor {
         }
         
         if (node == null) {
-            // let's get all subscriptions.
-            Iterator<? extends NodeSubscription> cur = dataStore
-            	.getUserSubscriptionsOfNodes(actorJID.toBareJID());
-
-            while (cur.hasNext()) {
-                NodeSubscription ns = cur.next();
-                LOGGER.trace("Adding affiliation for " + ns.getBareJID() + " affiliation " + ns.getAffiliation());
+        	Collection<NodeAffiliation> affs = channelManager.getUserAffiliations(actorJID);
+        	
+        	for(NodeAffiliation aff : affs) {
+                LOGGER.trace("Adding affiliation for " + aff.getUser() + " affiliation " + aff.getAffiliation());
                 affiliations.addElement("affiliation")
-                            .addAttribute("node", ns.getNode())
-                            .addAttribute("affiliation", ns.getAffiliation())
-                            .addAttribute("jid", ns.getBareJID());
-            }
+                            .addAttribute("node", aff.getNodeId())
+                            .addAttribute("affiliation", aff.getAffiliation().toString())
+                            .addAttribute("jid", aff.getUser().toString());
+        	}
         } else {
-            // Let's get only one subscription.
-        	Iterator<? extends NodeSubscription> cur = dataStore.getNodeSubscribers(node);
-            affiliations.addAttribute("node", node);
-            Element affiliation;
-            while (cur.hasNext()) {
-                NodeSubscription ns = cur.next();
-            	LOGGER.trace("Adding affiliation for " + ns.getBareJID() + " affiliation " + ns.getAffiliation());
-                
-                affiliation = affiliations.addElement("affiliation");
-                affiliation.addAttribute("node", ns.getNode())
-                    .addAttribute("affiliation", ns.getAffiliation())
-                    .addAttribute("jid", ns.getBareJID());
-            }
+        	NodeAffiliation aff = channelManager.getUserAffiliation(node, actorJID);
+        	
+            LOGGER.trace("Adding affiliation for " + aff.getUser() + " affiliation " + aff.getAffiliation());
+            affiliations.addElement("affiliation")
+                        .addAttribute("node", aff.getNodeId())
+                        .addAttribute("affiliation", aff.getAffiliation().toString())
+                        .addAttribute("jid", aff.getUser().toString());
         }
         outQueue.put(result);
     }

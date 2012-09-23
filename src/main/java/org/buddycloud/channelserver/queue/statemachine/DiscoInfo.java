@@ -5,8 +5,8 @@ import java.util.Map;
 import java.util.UUID;
 
 
-import org.buddycloud.channelserver.db.DataStore;
-import org.buddycloud.channelserver.db.DataStoreException;
+import org.buddycloud.channelserver.channel.ChannelManager;
+import org.buddycloud.channelserver.db.exception.NodeStoreException;
 import org.dom4j.DocumentException;
 import org.dom4j.Element;
 import org.dom4j.io.SAXReader;
@@ -27,12 +27,13 @@ public class DiscoInfo extends AStatemachine {
         info.put(KEY_EVENT_TYPE, EVENT_TYPE); 
     }
     
-    public Packet nextStep() throws DataStoreException {
+    public Packet nextStep() throws NodeStoreException {
         
         IQ nextIQ = this.discoverChannelServer();
         
         if(nextIQ != null) {
-            dataStore.storeState(iq.getID(), nextIQ.getID(), info);
+        	// TODO
+//            channelManager.storeState(iq.getID(), nextIQ.getID(), info);
             return nextIQ;
         }
         
@@ -89,12 +90,13 @@ public class DiscoInfo extends AStatemachine {
             info.put(KEY_STATE, STATE_SENT_DISCO_INFO_WITH_NODE);
             
         }
-            
-        dataStore.storeState(iq.getID(), nextIQ.getID(), info);
+        
+        // TODO
+//        channelManager.storeState(iq.getID(), nextIQ.getID(), info);
         return nextIQ;
     }
     
-    public static DiscoInfo buildDiscoInfoStatemachine(String node, IQ originalRequest, DataStore dataStore) {
+    public static DiscoInfo buildDiscoInfoStatemachine(String node, IQ originalRequest, ChannelManager channelManager) {
         DiscoInfo s = new DiscoInfo();
         
         s.info.put(KEY_STATE, STATE_INIT);
@@ -103,17 +105,17 @@ public class DiscoInfo extends AStatemachine {
         
         s.iq = originalRequest;
         
-        s.dataStore = dataStore;
+        s.channelManager = channelManager;
         
         return s;
     }
     
-    public static DiscoInfo buildFromState(IQ iq, Map<String, String> state, DataStore dataStore) {
+    public static DiscoInfo buildFromState(IQ iq, Map<String, String> state, ChannelManager channelManager) {
         DiscoInfo s = new DiscoInfo();
         
         s.info = state;
         s.iq = iq;
-        s.dataStore = dataStore;
+        s.channelManager = channelManager;
         
         return s;
     }

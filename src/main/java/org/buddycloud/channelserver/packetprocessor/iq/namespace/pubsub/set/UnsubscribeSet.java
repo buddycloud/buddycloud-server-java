@@ -1,15 +1,18 @@
 package org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.set;
 
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.concurrent.BlockingQueue;
 
-import org.buddycloud.channelserver.db.DataStore;
-import org.buddycloud.channelserver.db.DataStoreException;
+import org.buddycloud.channelserver.channel.ChannelManager;
+import org.buddycloud.channelserver.db.exception.NodeStoreException;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.JabberPubsub;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.PubSubElementProcessor;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.PubSubElementProcessorAbstract;
 import org.buddycloud.channelserver.pubsub.event.Event;
-import org.buddycloud.channelserver.pubsub.subscription.NodeSubscription;
+import org.buddycloud.channelserver.pubsub.model.NodeSubscription;
+import org.buddycloud.channelserver.pubsub.model.impl.NodeSubscriptionImpl;
+import org.buddycloud.channelserver.pubsub.subscription.Subscriptions;
 import org.buddycloud.channelserver.queue.statemachine.Unsubscribe;
 import org.dom4j.Document;
 import org.dom4j.Element;
@@ -24,15 +27,15 @@ import org.xmpp.packet.PacketError;
 public class UnsubscribeSet extends PubSubElementProcessorAbstract {
 
 	private final BlockingQueue<Packet> outQueue;
-	private final DataStore dataStore;
+	private final ChannelManager channelManager;
 
 	private String node;
 	private IQ     request;
 	private JID    unsubscribingJid;
 
-	public UnsubscribeSet(BlockingQueue<Packet> outQueue, DataStore dataStore) {
+	public UnsubscribeSet(BlockingQueue<Packet> outQueue, ChannelManager channelManager) {
 		this.outQueue = outQueue;
-		this.dataStore = dataStore;
+		this.channelManager = channelManager;
 	}
 
 	@Override
@@ -48,14 +51,13 @@ public class UnsubscribeSet extends PubSubElementProcessorAbstract {
 		}
 
 	    unsubscribingJid          = request.getFrom();
-		boolean isLocalNode       = dataStore.isLocalNode(node);
+		boolean isLocalNode       = channelManager.isLocalNode(node);
 		boolean isLocalSubscriber = false;
 
 		if (actorJID != null) {
 			unsubscribingJid = actorJID;
 		} else {
-			isLocalSubscriber = dataStore.isLocalUser(unsubscribingJid
-					.toBareJID());
+			isLocalSubscriber = channelManager.isLocalJID(unsubscribingJid);
 			// Check that user is registered.
 			if (!isLocalSubscriber) {
 				failAuthRequired();
@@ -69,7 +71,7 @@ public class UnsubscribeSet extends PubSubElementProcessorAbstract {
 			if (isLocalSubscriber) {
 				// Start process to unsubscribe from external node.
 				Unsubscribe unsub = Unsubscribe.buildUnsubscribeStatemachine(
-						node, request, dataStore);
+						node, request, channelManager);
 				outQueue.put(unsub.nextStep());
 				return;
 			}
@@ -95,16 +97,35 @@ public class UnsubscribeSet extends PubSubElementProcessorAbstract {
 			return;
 		}
 
-		dataStore.unsubscribeUserFromNode(unsubscribingJid.toBareJID(), node);
+		NodeSubscription existingSubscription = channelManager.getUserSubscription(node, unsubscribingJid);
+		
+		String fromJID = request.getFrom().toBareJID();
+
+		// Check that the requesting user is allowed to unsubscribe according to XEP-0060 section 6.2.3.3
+		if(!fromJID.equals(existingSubscription.getUser().toBareJID()) || fromJID.equals(existingSubscription.getListener().toBareJID())) {
+			IQ reply = IQ.createResultIQ(request);
+			reply.setType(Type.error);
+			PacketError pe = new PacketError(
+					org.xmpp.packet.PacketError.Condition.forbidden,
+					org.xmpp.packet.PacketError.Type.auth);
+			reply.setError(pe);
+			outQueue.put(reply);
+			return;
+		}
+		
+		NodeSubscription newSubscription = new NodeSubscriptionImpl(existingSubscription.getNodeId(), existingSubscription.getUser(), existingSubscription.getListener(), Subscriptions.none);
+		
+		channelManager.addUserSubscription(newSubscription);
 
 		IQ reply = IQ.createResultIQ(request);
 		outQueue.put(reply);
 		notifySubscribers();
 	}
 
-	private void notifySubscribers() throws DataStoreException, InterruptedException
+	private void notifySubscribers() throws NodeStoreException, InterruptedException
 	{
-	    Iterator<? extends NodeSubscription> subscribers = dataStore.getNodeSubscribers(node);
+		Collection<NodeSubscription> subscribers = channelManager.getNodeSubscriptions(node);
+
 	    Document document     = getDocumentHelper();
         Element message       = document.addElement("message");
         Element event         = message.addElement("event");
@@ -122,10 +143,9 @@ public class UnsubscribeSet extends PubSubElementProcessorAbstract {
 
         Message rootElement = new Message(message);
         
-		while (true == subscribers.hasNext()) {
-			String subscriber = subscribers.next().getBareJID();
-			message.addAttribute("to", subscriber);
+        for(NodeSubscription subscriber : subscribers) {
             Message notification = rootElement.createCopy();
+            notification.setTo(subscriber.getListener());
 			outQueue.put(notification);
 		}
 	}

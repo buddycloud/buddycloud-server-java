@@ -1,19 +1,26 @@
 package org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.set;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Collection;
+import java.util.Date;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 
-
+import org.apache.commons.lang.time.DateFormatUtils;
 import org.apache.log4j.Logger;
+import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.channel.ValidateEntry;
-import org.buddycloud.channelserver.db.DataStore;
-import org.buddycloud.channelserver.db.jedis.NodeSubscriptionImpl;
+import org.buddycloud.channelserver.db.exception.NodeStoreException;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.JabberPubsub;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.PubSubElementProcessor;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.PubSubSet;
+import org.buddycloud.channelserver.pubsub.affiliation.Affiliations;
+import org.buddycloud.channelserver.pubsub.model.NodeAffiliation;
 import org.buddycloud.channelserver.pubsub.model.NodeSubscription;
+import org.buddycloud.channelserver.pubsub.model.impl.NodeItemImpl;
+import org.buddycloud.channelserver.pubsub.subscription.Subscriptions;
 import org.buddycloud.channelserver.queue.statemachine.Publish;
 import org.dom4j.Element;
 import org.dom4j.dom.DOMElement;
@@ -28,16 +35,18 @@ public class PublishSet implements PubSubElementProcessor {
 
     private static final Logger LOGGER = Logger.getLogger(PublishSet.class);
     
-    private final BlockingQueue<Packet> outQueue;
-    private final DataStore dataStore;
+    private static final SimpleDateFormat ISO_DATE_FORMAT = new SimpleDateFormat(DateFormatUtils.ISO_DATETIME_TIME_ZONE_FORMAT.getPattern());
     
-    public PublishSet(BlockingQueue<Packet> outQueue, DataStore dataStore) {
+    private final BlockingQueue<Packet> outQueue;
+    private final ChannelManager channelManager;
+    
+    public PublishSet(BlockingQueue<Packet> outQueue, ChannelManager channelManager) {
         this.outQueue = outQueue;
-        this.dataStore = dataStore;
+        this.channelManager = channelManager;
     }
     
     @Override
-    public void process(Element elm, JID actorJID, IQ reqIQ, Element rsm) throws Exception {
+    public void process(Element elm, JID actorJID, IQ reqIQ, Element rsm) throws InterruptedException, NodeStoreException {
         String node = elm.attributeValue("node");
         
         if(node == null || node.equals("")) {
@@ -77,14 +86,14 @@ public class PublishSet implements PubSubElementProcessor {
         }
         
         JID publishersJID         = reqIQ.getFrom();
-        boolean isLocalNode       = dataStore.isLocalNode(node);
+        boolean isLocalNode       = channelManager.isLocalNode(node);
         boolean isLocalSubscriber = false;
         
         if(actorJID != null) {
             publishersJID = actorJID;
         } else {
             
-            isLocalSubscriber = dataStore.isLocalUser(publishersJID.toBareJID());
+            isLocalSubscriber = channelManager.isLocalJID(publishersJID);
             
             // Check that user is registered.
             if(!isLocalSubscriber) {
@@ -114,16 +123,15 @@ public class PublishSet implements PubSubElementProcessor {
         }
         
         if(!isLocalNode) {
-            
+            // TODO Federation!
             if(isLocalSubscriber) {
                 
                 //TODO, WORK HERE!
-                
-                Publish pub = Publish.buildSubscribeStatemachine(node, reqIQ, dataStore);
+                Publish pub = Publish.buildSubscribeStatemachine(node, reqIQ, channelManager);
                 outQueue.put(pub.nextStep());
                 return;
                 // Start process to publish to external node.
-                //Subscribe sub = Subscribe.buildSubscribeStatemachine(node, reqIQ, dataStore);
+                //Subscribe sub = Subscribe.buildSubscribeStatemachine(node, reqIQ, channelManager);
                 //outQueue.put(sub.nextStep());
                 //return;
             }
@@ -151,11 +159,12 @@ public class PublishSet implements PubSubElementProcessor {
             return;
         }
         
-        NodeSubscriptionImpl nodeSubscription = dataStore.getUserSubscriptionOfNode(publishersJID.toBareJID(), 
-                                                                                node);
-        String possibleExistingAffiliation  = nodeSubscription.getAffiliation();
-        String possibleExistingSusbcription = nodeSubscription.getSubscription();
-        
+        NodeSubscription nodeSubscription = channelManager.getUserSubscription(node, publishersJID);
+        Subscriptions possibleExistingSusbcription = nodeSubscription.getSubscription();
+
+        NodeAffiliation nodeaffiliation = channelManager.getUserAffiliation(node, publishersJID);
+        Affiliations possibleExistingAffiliation  = nodeaffiliation.getAffiliation();
+
         // TODO, check here that the publisher is allowed to publish!
         
         Element item = elm.element("item");
@@ -238,8 +247,31 @@ public class PublishSet implements PubSubElementProcessor {
         String[] idParts = id.split(",");
         id = idParts[2];
         
+        Date updated;
+        
+        String updatedText = entry.elementText("updated");
+        
+        if(updatedText == null || updatedText.isEmpty()) {
+        	updatedText = entry.elementText("published");
+        }
+        
+        if(updatedText == null || updatedText.isEmpty()) {
+        	updated = new Date();	// Default to now
+        } else {
+        	try {
+        		updated = new SimpleDateFormat(DateFormatUtils.ISO_DATETIME_TIME_ZONE_FORMAT.getPattern()).parse(updatedText);
+        	} catch(ParseException e) {
+        		updated = new Date();
+        		
+        		LOGGER.error("Invalid date encountered in atom entry: " + updatedText);
+        		// Otherwise we will just let it pass
+        	}
+        }
+        
+        NodeItemImpl nodeItem = new NodeItemImpl(node, id, updated, entry.asXML());
+        
         //Let's store the new item.
-        dataStore.storeEntry(node, id, entry.asXML());
+        channelManager.addNodeItem(nodeItem);
         
         /* 
          * Success, let's reply as defined in 
@@ -272,10 +304,12 @@ public class PublishSet implements PubSubElementProcessor {
         
         Set<String> externalChannelServerReceivers = new HashSet<String>();
         
-        Iterator<? extends NodeSubscription> cur = dataStore.getNodeSubscribers(node);
-        while(cur.hasNext()) {
-            NodeSubscription ns = cur.next();
-            String toBareJID = ns.getBareJID();
+        Collection<NodeSubscription> cur = channelManager.getNodeSubscriptions(node);
+        for(NodeSubscription ns : cur) {
+            JID to = ns.getUser();
+            
+            // TODO Federation!
+            /*
             if(ns.getForeignChannelServer() != null) {
                 if( externalChannelServerReceivers.contains(ns.getForeignChannelServer()) ) {
                     continue;
@@ -283,7 +317,9 @@ public class PublishSet implements PubSubElementProcessor {
                 externalChannelServerReceivers.add(ns.getForeignChannelServer());
                 toBareJID = ns.getForeignChannelServer();
             }
-            msg.setTo(toBareJID);
+            */
+            
+            msg.setTo(to);
             outQueue.put(msg.createCopy());
         }
         

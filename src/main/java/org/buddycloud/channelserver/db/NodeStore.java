@@ -43,7 +43,19 @@ public interface NodeStore {
 	 *            the configuration option value
 	 * @throws NodeStoreException
 	 */
-	void setNodeConf(String nodeId, String key, String value)
+	void setNodeConfValue(String nodeId, String key, String value)
+			throws NodeStoreException;
+
+	/**
+	 * Replaces the existing node configuration.
+	 * 
+	 * @param nodeId
+	 *            the node id
+	 * @param conf
+	 *            the configuration to replace the current configuration with.
+	 * @throws NodeStoreException
+	 */
+	void setNodeConf(String nodeId, Map<String, String> conf)
 			throws NodeStoreException;
 
 	/**
@@ -58,6 +70,16 @@ public interface NodeStore {
 	 */
 	String getNodeConfValue(String nodeId, String key)
 			throws NodeStoreException;
+
+	/**
+	 * Retrieves a map of all all the configuration properties for the node.
+	 * 
+	 * @param nodeId
+	 *            the node id.
+	 * @return the node configuration.
+	 * @throws NodeStoreException
+	 */
+	Map<String, String> getNodeConf(String nodeId) throws NodeStoreException;
 
 	/**
 	 * Determine whether a node exists within the data store.
@@ -107,7 +129,7 @@ public interface NodeStore {
 			throws NodeStoreException;
 
 	/**
-	 * Gets a user's affiliation with a node
+	 * Gets a user's affiliation with a node.
 	 * 
 	 * @param nodeId
 	 *            the node reference.
@@ -115,17 +137,59 @@ public interface NodeStore {
 	 *            the user's JID
 	 * @return
 	 */
-	NodeAffiliation getUserAfilliation(String nodeId, JID user)
+	NodeAffiliation getUserAffiliation(String nodeId, JID user)
 			throws NodeStoreException;
 
 	/**
-	 * Gets the set of nodes to which the user is subscribed
+	 * Gets all the given user's affiliations.
+	 * 
+	 * @param user
+	 *            the user's JID
+	 * @return
+	 */
+	Collection<NodeAffiliation> getUserAffiliations(JID user)
+			throws NodeStoreException;
+
+	/**
+	 * Gets all the affiliations with the node.
+	 * 
+	 * @param nodeId
+	 *            the node id
+	 * @return
+	 */
+	Collection<NodeAffiliation> getNodeAffiliations(String nodeId)
+			throws NodeStoreException;
+
+	/**
+	 * Gets the set of nodes to which the user is subscribed.
 	 * 
 	 * @param user
 	 *            the user's JID
 	 * @return
 	 */
 	Collection<NodeSubscription> getUserSubscriptions(JID user)
+			throws NodeStoreException;
+
+	/**
+	 * Gets the set of subscriptions to the node.
+	 * 
+	 * @param nodeId
+	 *            the node reference.
+	 * @return
+	 */
+	Collection<NodeSubscription> getNodeSubscriptions(String nodeId)
+			throws NodeStoreException;
+
+	/**
+	 * Gets the user's subscription to a certain node.
+	 * 
+	 * @param nodeId
+	 *            the node reference.
+	 * @param user
+	 *            the user's JID
+	 * @return
+	 */
+	NodeSubscription getUserSubscription(String nodeId, JID user)
 			throws NodeStoreException;
 
 	/**
@@ -141,9 +205,9 @@ public interface NodeStore {
 	 * @return an {@link Iterator} of the node entries.
 	 * @throws NodeStoreException
 	 */
-	
-	CloseableIterator<NodeItem> getNodeItems(String nodeId, String afterItemId, int count)
-			throws NodeStoreException;
+
+	CloseableIterator<NodeItem> getNodeItems(String nodeId, String afterItemId,
+			int count) throws NodeStoreException;
 
 	/**
 	 * Retrieves an iterator of all items within a node.
@@ -153,32 +217,49 @@ public interface NodeStore {
 	 * @return an {@link Iterator} of the node entries.
 	 * @throws NodeStoreException
 	 */
-	CloseableIterator<NodeItem> getNodeItems(String nodeId) throws NodeStoreException;
+	CloseableIterator<NodeItem> getNodeItems(String nodeId)
+			throws NodeStoreException;
+
+	/**
+	 * Retrieves the number of items within a node.
+	 * 
+	 * @param nodeId
+	 *            the node id from which to retrieve the item count.
+	 * @return the entries count.
+	 * @throws NodeStoreException
+	 */
+	int countNodeItems(String nodeId) throws NodeStoreException;
 
 	/**
 	 * Retrieves a single node item by the node item id.
-	 * @param nodeId the node id.
-	 * @param nodeItemId the node item id.
+	 * 
+	 * @param nodeId
+	 *            the node id.
+	 * @param nodeItemId
+	 *            the node item id.
 	 * @return the node item, or <code>null</code> if not found.
 	 * @throws NodeStoreException
 	 */
-	NodeItem getNodeItem(String nodeId, String nodeItemId) throws NodeStoreException;
-	
+	NodeItem getNodeItem(String nodeId, String nodeItemId)
+			throws NodeStoreException;
+
 	/**
 	 * Stores a new item against the node.
 	 * 
 	 * @param item
 	 *            the node item.
-	 * @throws NodeStoreException if an item with the same id already exists against the node.
+	 * @throws NodeStoreException
+	 *             if an item with the same id already exists against the node.
 	 */
 	void addNodeItem(NodeItem item) throws NodeStoreException;
-	
+
 	/**
 	 * Updates an existing item against the node.
 	 * 
 	 * @param item
 	 *            the node item.
-	 * @throws NodeStoreException if an item with the same id did not already exist.
+	 * @throws NodeStoreException
+	 *             if an item with the same id did not already exist.
 	 */
 	void updateNodeItem(NodeItem item) throws NodeStoreException;
 
@@ -189,20 +270,29 @@ public interface NodeStore {
 	 *            the node id.
 	 * @param nodeItemId
 	 *            the id of the item to delete.
-	 * @throws NodeStoreException if the item was not found
+	 * @throws NodeStoreException
+	 *             if the item was not found
 	 */
-	void deleteNodeItemById(String nodeId, String nodeItemId) throws NodeStoreException;
+	void deleteNodeItemById(String nodeId, String nodeItemId)
+			throws NodeStoreException;
 
+	/**
+	 * Closes this node store instance and releases any resources.
+	 */
+	void close() throws NodeStoreException;
+	
 	/**
 	 * Begins an atomic transaction. The transaction will include any operations
 	 * carried out on this object until either {@link #commitTransaction()} or
 	 * {@link #rollbackTransaction()} is called. Can be called multiple times to
-	 * invoke a sort of stack of transactions. The transaction will then only
-	 * be committed if {@link #commitTransaction()} has been called the same number
-	 * of times that {@link #beginTransaction()} was called. If {@link #closeTransaction()}
+	 * invoke a sort of stack of transactions. The transaction will then only be
+	 * committed if {@link #commitTransaction()} has been called the same number
+	 * of times that {@link #beginTransaction()} was called. If
+	 * {@link #closeTransaction()}
 	 * 
-	 * @return the transaction object which can be used to commit or rollback the transaction.
-	 * @throws NodeStoreException 
+	 * @return the transaction object which can be used to commit or rollback
+	 *         the transaction.
+	 * @throws NodeStoreException
 	 * @throws IllegalStateException
 	 *             if a failed (i.e. rolled back) transaction is in progress
 	 */
@@ -211,23 +301,23 @@ public interface NodeStore {
 	/**
 	 * A {@link NodeStore} transaction.
 	 */
-	interface Transaction {
+	public interface Transaction {
 
 		/**
 		 * Commits and closes the transaction.
-		 * @throws NodeStoreException 
+		 * 
+		 * @throws NodeStoreException
 		 * 
 		 * @throws IllegalStateException
 		 *             if the transaction has already been closed.
 		 */
 		void commit() throws NodeStoreException;
-		
 
 		/**
 		 * Closes and rolls back the transaction.
 		 * <p>
-		 * Silently fails if the transaction has already been committed so that it can safely
-		 * be used in a finally block. e.g:
+		 * Silently fails if the transaction has already been committed so that
+		 * it can safely be used in a finally block. e.g:
 		 * <p>
 		 * <blockquote>
 		 * 

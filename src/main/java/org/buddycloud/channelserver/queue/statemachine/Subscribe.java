@@ -4,13 +4,16 @@ import java.io.StringReader;
 import java.util.Map;
 import java.util.UUID;
 
-import org.buddycloud.channelserver.db.DataStore;
-import org.buddycloud.channelserver.db.DataStoreException;
-
+import org.buddycloud.channelserver.channel.ChannelManager;
+import org.buddycloud.channelserver.db.exception.NodeStoreException;
+import org.buddycloud.channelserver.pubsub.model.NodeSubscription;
+import org.buddycloud.channelserver.pubsub.model.impl.NodeSubscriptionImpl;
+import org.buddycloud.channelserver.pubsub.subscription.Subscriptions;
 import org.dom4j.DocumentException;
 import org.dom4j.Element;
 import org.dom4j.io.SAXReader;
 import org.xmpp.packet.IQ;
+import org.xmpp.packet.JID;
 import org.xmpp.packet.Packet;
 
 public class Subscribe extends AStatemachine  {
@@ -24,12 +27,13 @@ public class Subscribe extends AStatemachine  {
     }
     
     // Todo, refactor this.
-    public Packet nextStep() throws DataStoreException {
+    public Packet nextStep() throws NodeStoreException {
         
         IQ nextIQ = this.discoverChannelServer();
         
         if(nextIQ != null) {
-            dataStore.storeState(iq.getID(), nextIQ.getID(), info);
+        	// TODO
+//            channelManager.storeState(iq.getID(), nextIQ.getID(), info);
             return nextIQ;
         }
         
@@ -57,15 +61,15 @@ public class Subscribe extends AStatemachine  {
             IQ oldIQ = new IQ(entry);
             
             String node = info.get(KEY_NODE);
-            String jid = oldIQ.getFrom().toBareJID();
-            String subscription = org.buddycloud.channelserver.pubsub.subscription.Subscriptions.unconfigured.toString();
+            JID jid = oldIQ.getFrom();
+            Subscriptions subscription = org.buddycloud.channelserver.pubsub.subscription.Subscriptions.unconfigured;
             
             Element possiblePubsub = iq.getChildElement();
             if(possiblePubsub != null) {
                 Element possibleSubscription = possiblePubsub.element("subscription");
                 node = possibleSubscription.attributeValue("node");
-                jid = possibleSubscription.attributeValue("jid");
-                subscription = possibleSubscription.attributeValue("subscription");
+                jid = new JID(possibleSubscription.attributeValue("jid"));
+                subscription = Subscriptions.valueOf(possibleSubscription.attributeValue("subscription"));
             }
             
             nextIQ = IQ.createResultIQ(oldIQ);
@@ -74,15 +78,12 @@ public class Subscribe extends AStatemachine  {
             nextIQ.setChildElement("pubsub", "http://jabber.org/protocol/pubsub")
                   .addElement("subscription")
                   .addAttribute("node", node)
-                  .addAttribute("jid", jid)
-                  .addAttribute("subscription", subscription);
+                  .addAttribute("jid", jid.toBareJID())
+                  .addAttribute("subscription", subscription.toString());
             
-            dataStore.subscribeUserToNode(jid, 
-                                          node, 
-                                          null, 
-                                          subscription, 
-                                          iq.getFrom().getDomain()); // If there is no node in the JID, 
-                                                                     // this library set it's as null.
+            NodeSubscription newSubscription = new NodeSubscriptionImpl(node, jid, iq.getFrom(), subscription);
+            
+            channelManager.addUserSubscription(newSubscription);
         
         } else {
                     
@@ -108,11 +109,12 @@ public class Subscribe extends AStatemachine  {
             info.put(KEY_STATE, STATE_SENT_SUBSCRIBE);
         }
         
-        dataStore.storeState(iq.getID(), nextIQ.getID(), info);
+        // TODO
+//        channelManager.storeState(iq.getID(), nextIQ.getID(), info);
         return nextIQ;
     }
     
-    public static Subscribe buildSubscribeStatemachine(String node, IQ originalRequest, DataStore dataStore) {
+    public static Subscribe buildSubscribeStatemachine(String node, IQ originalRequest, ChannelManager channelManager) {
         Subscribe s = new Subscribe();
         
         s.info.put(KEY_STATE, STATE_INIT);
@@ -121,17 +123,17 @@ public class Subscribe extends AStatemachine  {
         
         s.iq = originalRequest;
         
-        s.dataStore = dataStore;
+        s.channelManager = channelManager;
         
         return s;
     }
     
-    public static Subscribe buildFromState(IQ iq, Map<String, String> state, DataStore dataStore) {
+    public static Subscribe buildFromState(IQ iq, Map<String, String> state, ChannelManager channelManager) {
         Subscribe s = new Subscribe();
         
         s.info = state;
         s.iq = iq;
-        s.dataStore = dataStore;
+        s.channelManager = channelManager;
         
         return s;
     }

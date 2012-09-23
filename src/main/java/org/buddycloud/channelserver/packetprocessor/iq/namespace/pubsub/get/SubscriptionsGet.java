@@ -1,11 +1,10 @@
 package org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.get;
 
-import java.util.Iterator;
+import java.util.Collection;
 import java.util.concurrent.BlockingQueue;
 
-import org.buddycloud.channelserver.db.DataStore;
-import org.buddycloud.channelserver.db.jedis.NodeSubscriptionImpl;
-import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.JabberPubsub;
+import org.apache.log4j.Logger;
+import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.PubSubElementProcessor;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.PubSubGet;
 import org.buddycloud.channelserver.pubsub.model.NodeSubscription;
@@ -13,18 +12,17 @@ import org.dom4j.Element;
 import org.xmpp.packet.IQ;
 import org.xmpp.packet.JID;
 import org.xmpp.packet.Packet;
-import org.apache.log4j.Logger;
 
 public class SubscriptionsGet implements PubSubElementProcessor {
 
     private final BlockingQueue<Packet> outQueue;
-    private final DataStore dataStore;
+    private final ChannelManager channelManager;
     
     private static final Logger LOGGER = Logger.getLogger(SubscriptionsGet.class);
     
-    public SubscriptionsGet(BlockingQueue<Packet> outQueue, DataStore dataStore) {
+    public SubscriptionsGet(BlockingQueue<Packet> outQueue, ChannelManager channelManager) {
         this.outQueue = outQueue;
-        this.dataStore = dataStore;
+        this.channelManager = channelManager;
     }
 
     @Override
@@ -42,26 +40,25 @@ public class SubscriptionsGet implements PubSubElementProcessor {
         
         if (node == null) {
             // let's get all subscriptions.
-            Iterator<? extends NodeSubscription> cur = dataStore.getUserSubscriptionsOfNodes(actorJID.toBareJID());
-            while(cur.hasNext()) {
-                NodeSubscription ns = cur.next();
+            Collection<NodeSubscription> cur = channelManager.getUserSubscriptions(actorJID);
+            
+            for(NodeSubscription ns : cur) {
                 subscriptions.addElement("subscription")
-                             .addAttribute("node", ns.getNode())
-                             .addAttribute("subscription", ns.getSubscription())
-                             .addAttribute("jid", ns.getBareJID());
+                             .addAttribute("node", ns.getNodeId())
+                             .addAttribute("subscription", ns.getSubscription().toString())
+                             .addAttribute("jid", ns.getUser().toBareJID());
             }
             
         } else {
-        	Iterator<? extends NodeSubscription> cur = dataStore.getNodeSubscribers(node);
+        	Collection<NodeSubscription> cur = channelManager.getNodeSubscriptions(node);
         	subscriptions.addAttribute("node", node);
-            Element subscription;
+
             
-            while (cur.hasNext()) {
-                NodeSubscription ns = cur.next();
-                subscription = subscriptions.addElement("subscription");
-        		subscription.addAttribute("node", ns.getNode());
-                subscription.addAttribute("subscription", ns.getSubscription());
-                subscription.addAttribute("jid", ns.getBareJID());
+            for(NodeSubscription ns : cur) {
+                subscriptions.addElement("subscription")
+                             .addAttribute("node", ns.getNodeId())
+                             .addAttribute("subscription", ns.getSubscription().toString())
+                             .addAttribute("jid", ns.getUser().toBareJID());
             }
         }
         outQueue.put(result);

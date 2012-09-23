@@ -8,7 +8,7 @@ import java.util.UUID;
 
 
 import org.apache.log4j.Logger;
-import org.buddycloud.channelserver.db.DataStore;
+import org.buddycloud.channelserver.channel.ChannelManager;
 import org.dom4j.DocumentException;
 import org.dom4j.Element;
 import org.dom4j.io.SAXReader;
@@ -30,7 +30,7 @@ public abstract class AStatemachine implements IStatemachine {
     
     protected IQ iq;
     
-    protected DataStore dataStore;
+    protected ChannelManager channelManager;
     
     // Refactor this one day.
     protected IQ discoverChannelServer() {

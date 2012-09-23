@@ -1,17 +1,18 @@
 package org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.set;
 
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.concurrent.BlockingQueue;
 
 import org.apache.log4j.Logger;
-import org.buddycloud.channelserver.db.DataStore;
-import org.buddycloud.channelserver.db.DataStoreException;
-import org.buddycloud.channelserver.db.jedis.NodeSubscriptionImpl;
+import org.buddycloud.channelserver.channel.ChannelManager;
+import org.buddycloud.channelserver.db.exception.NodeStoreException;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.JabberPubsub;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.PubSubElementProcessorAbstract;
 import org.buddycloud.channelserver.pubsub.affiliation.Affiliations;
-import org.buddycloud.channelserver.pubsub.event.Event;
-import org.buddycloud.channelserver.pubsub.subscription.NodeSubscription;
+import org.buddycloud.channelserver.pubsub.model.NodeAffiliation;
+import org.buddycloud.channelserver.pubsub.model.NodeSubscription;
+import org.buddycloud.channelserver.pubsub.model.impl.NodeSubscriptionImpl;
 import org.buddycloud.channelserver.pubsub.subscription.Subscriptions;
 import org.dom4j.Document;
 import org.dom4j.Element;
@@ -26,7 +27,8 @@ import org.xmpp.packet.PacketError;
 public class SubscriptionEvent extends PubSubElementProcessorAbstract {
 
 	Element requestedSubscription;
-	NodeSubscriptionImpl currentSubscription;
+	NodeSubscription currentSubscription;
+	NodeAffiliation currentAffiliation;
 
 	private static final Logger LOGGER = Logger
 			.getLogger(SubscriptionEvent.class);
@@ -36,11 +38,11 @@ public class SubscriptionEvent extends PubSubElementProcessorAbstract {
 	 * 
 	 * @param outQueue
 	 *            Outgoing message queue
-	 * @param dataStore
+	 * @param channelManager
 	 *            Data Access Object (DAO)
 	 */
-	public SubscriptionEvent(BlockingQueue<Packet> outQueue, DataStore dataStore) {
-		setDataStore(dataStore);
+	public SubscriptionEvent(BlockingQueue<Packet> outQueue, ChannelManager channelManager) {
+		setChannelManager(channelManager);
 		setOutQueue(outQueue);
 	}
 
@@ -68,7 +70,7 @@ public class SubscriptionEvent extends PubSubElementProcessorAbstract {
 			}
 			saveUpdatedSubscription();
 			sendNotifications();
-		} catch (DataStoreException e) {
+		} catch (NodeStoreException e) {
 			LOGGER.debug(e);
 			setErrorCondition(PacketError.Type.wait,
 					PacketError.Condition.internal_server_error);
@@ -78,11 +80,8 @@ public class SubscriptionEvent extends PubSubElementProcessorAbstract {
 	}
 
 	private void sendNotifications() throws Exception {
-		Iterator<? extends NodeSubscription> subscribers = dataStore
-				.getNodeSubscribers(node);
-		if (null == subscribers) {
-			return;
-		}
+		Collection<NodeSubscription> subscribers = channelManager.getNodeSubscriptions(node);
+
 		Document document = getDocumentHelper();
 		Element message = document.addElement("message");
 		Element event = message.addElement("event");
@@ -97,23 +96,20 @@ public class SubscriptionEvent extends PubSubElementProcessorAbstract {
 				requestedSubscription.attributeValue("subscription"));
 		Message rootElement = new Message(message);
 
-		while (true == subscribers.hasNext()) {
-			String subscriber = subscribers.next().getBareJID();
-			message.addAttribute("to", subscriber);
+		for(NodeSubscription subscriber : subscribers) {
 			Message notification = rootElement.createCopy();
+			notification.setTo(subscriber.getListener());
 			outQueue.put(notification);
 		}
 
 	}
 
-	private void saveUpdatedSubscription() throws DataStoreException {
-		dataStore.unsubscribeUserFromNode(
-				requestedSubscription.attributeValue("jid"), node);
-		dataStore.subscribeUserToNode(
-				requestedSubscription.attributeValue("jid"), node,
-				currentSubscription.getAffiliation(),
-				requestedSubscription.attributeValue("subscription"),
-				currentSubscription.getForeignChannelServer());
+	private void saveUpdatedSubscription() throws NodeStoreException {
+		NodeSubscription newSubscription = new NodeSubscriptionImpl(node,
+				new JID(requestedSubscription.attributeValue("jid")), request.getFrom(),
+				Subscriptions.valueOf(requestedSubscription.attributeValue("subscription")));
+
+		channelManager.addUserSubscription(newSubscription);
 	}
 
 	private boolean nodeProvided() {
@@ -159,9 +155,9 @@ public class SubscriptionEvent extends PubSubElementProcessorAbstract {
 		return true;
 	}
 
-	private boolean subscriberHasCurrentAffiliation() throws DataStoreException {
-		currentSubscription = dataStore.getUserSubscriptionOfNode(
-				requestedSubscription.attributeValue("jid"), node);
+	private boolean subscriberHasCurrentAffiliation() throws NodeStoreException {
+		currentAffiliation = channelManager.getUserAffiliation(node, new JID(requestedSubscription.attributeValue("jid")));
+
 		if (null == currentSubscription) {
 			setErrorCondition(PacketError.Type.modify,
 					PacketError.Condition.unexpected_request);
@@ -170,27 +166,22 @@ public class SubscriptionEvent extends PubSubElementProcessorAbstract {
 		return true;
 	}
 
-	private boolean actorHasPermissionToAuthorize() throws DataStoreException {
-		NodeSubscriptionImpl subscription = dataStore
-				.getUserSubscriptionOfNode(actor.toBareJID(), node);
-		if (null == subscription) {
-			setErrorCondition(PacketError.Type.auth,
-					PacketError.Condition.not_authorized);
-			return false;
+	private boolean actorHasPermissionToAuthorize() throws NodeStoreException {
+		NodeAffiliation affiliation = channelManager.getUserAffiliation(node, actor);
+
+		assert affiliation != null : "getUserAffiliation should not return null";
+
+		if (affiliation.getAffiliation().canAuthorize()) {
+			return true;
 		}
-		if ((false == subscription.getAffiliation().equals(
-				Affiliations.moderator.toString()))
-				&& (false == subscription.getAffiliation().equals(
-						Affiliations.owner.toString()))) {
-			setErrorCondition(PacketError.Type.auth,
-					PacketError.Condition.not_authorized);
-			return false;
-		}
-		return true;
+
+		setErrorCondition(PacketError.Type.auth,
+				PacketError.Condition.not_authorized);
+		return false;
 	}
 
-	private boolean checkNodeExists() throws DataStoreException {
-		if (false == dataStore.nodeExists(node)) {
+	private boolean checkNodeExists() throws NodeStoreException {
+		if (false == channelManager.nodeExists(node)) {
 			setErrorCondition(PacketError.Type.cancel,
 					PacketError.Condition.item_not_found);
 			return false;

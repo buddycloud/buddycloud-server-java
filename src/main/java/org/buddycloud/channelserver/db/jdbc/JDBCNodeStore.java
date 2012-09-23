@@ -1,7 +1,6 @@
 package org.buddycloud.channelserver.db.jdbc;
 
 import java.sql.Connection;
-import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -11,10 +10,10 @@ import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Deque;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Stack;
 
 import org.apache.log4j.Logger;
 import org.buddycloud.channelserver.db.ClosableIteratorImpl;
@@ -35,6 +34,7 @@ import org.xmpp.packet.JID;
 public class JDBCNodeStore implements NodeStore {
 	private Logger logger = Logger.getLogger(JDBCNodeStore.class);
 	private final Connection conn;
+	private final NodeStoreSQLDialect dialect;
 	private final Deque<JDBCTransaction> transactionStack;
 	private boolean transactionHasBeenRolledBack = false;
 
@@ -45,27 +45,32 @@ public class JDBCNodeStore implements NodeStore {
 	 * @param conn
 	 *            the connection to the backing database.
 	 */
-	public JDBCNodeStore(final Connection conn) {
+	public JDBCNodeStore(final Connection conn,
+			final NodeStoreSQLDialect dialect) {
 		this.conn = conn;
+		this.dialect = dialect;
 		transactionStack = new ArrayDeque<JDBCTransaction>();
 	}
 
 	@Override
 	public void createNode(JID owner, String nodeId,
 			Map<String, String> nodeConf) throws NodeStoreException {
+		if (owner == null)
+			throw new NullPointerException("owner must not be null");
+		if (nodeId == null)
+			throw new NullPointerException("nodeId must not be null");
+
 		PreparedStatement addStatement = null;
 		try {
 			// Store node
-			addStatement = conn.prepareStatement(SQL.ADD_NODE);
+			addStatement = conn.prepareStatement(dialect.insertNode());
 			addStatement.setString(1, nodeId);
 			addStatement.executeUpdate();
 			addStatement.close();
 
 			// Store the config (if there is any)
 			if (nodeConf != null) {
-				for (Entry<String, String> entry : nodeConf.entrySet()) {
-					setNodeConf(nodeId, entry.getKey(), entry.getValue());
-				}
+				setNodeConf(nodeId, nodeConf);
 			}
 
 			setUserAffiliation(nodeId, owner, Affiliations.owner);
@@ -77,13 +82,18 @@ public class JDBCNodeStore implements NodeStore {
 	}
 
 	@Override
-	public void setNodeConf(String nodeId, String key, String value)
+	public void setNodeConfValue(String nodeId, String key, String value)
 			throws NodeStoreException {
+		if (nodeId == null)
+			throw new NullPointerException("nodeId must not be null");
+		if (key == null)
+			throw new NullPointerException("key must not be null");
+
 		PreparedStatement updateStatement = null;
 		PreparedStatement addStatement = null;
 
 		try {
-			updateStatement = conn.prepareStatement(SQL.UPDATE_CONF);
+			updateStatement = conn.prepareStatement(dialect.updateNodeConf());
 			updateStatement.setString(1, value);
 			updateStatement.setString(2, nodeId);
 			updateStatement.setString(3, key);
@@ -91,7 +101,7 @@ public class JDBCNodeStore implements NodeStore {
 			updateStatement.close();
 
 			if (rows == 0) { // If the update didn't update any rows
-				addStatement = conn.prepareStatement(SQL.ADD_CONF);
+				addStatement = conn.prepareStatement(dialect.insertConf());
 				addStatement.setString(1, nodeId);
 				addStatement.setString(2, key);
 				addStatement.setString(3, value);
@@ -107,10 +117,36 @@ public class JDBCNodeStore implements NodeStore {
 	}
 
 	@Override
+	public void setNodeConf(String nodeId, Map<String, String> conf)
+			throws NodeStoreException {
+		Transaction t = null;
+		PreparedStatement stmt = null;
+
+		try {
+			t = beginTransaction();
+
+			stmt = conn.prepareStatement(dialect.deleteConfFromNode());
+			stmt.setString(1, nodeId);
+			stmt.executeUpdate();
+			stmt.close();
+
+			for (final Entry<String, String> entry : conf.entrySet()) {
+				setNodeConfValue(nodeId, entry.getKey(), entry.getValue());
+			}
+			t.commit();
+		} catch (SQLException e) {
+			throw new NodeStoreException(e);
+		} finally {
+			close(stmt);
+			close(t);
+		}
+	}
+
+	@Override
 	public boolean nodeExists(String nodeId) throws NodeStoreException {
 		PreparedStatement existsStatement = null;
 		try {
-			existsStatement = conn.prepareStatement(SQL.NODE_EXISTS);
+			existsStatement = conn.prepareStatement(dialect.nodeExists());
 			existsStatement.setString(1, nodeId);
 			ResultSet rs = existsStatement.executeQuery();
 
@@ -134,37 +170,44 @@ public class JDBCNodeStore implements NodeStore {
 		PreparedStatement deleteStatement = null;
 		PreparedStatement updateStatement = null;
 		PreparedStatement addStatement = null;
+		Transaction t = null;
 
 		try {
+			t = beginTransaction();
 			if (affiliation.equals(Affiliations.none)) {
-				deleteStatement = conn.prepareStatement(SQL.DELETE_AFFILIATION);
+				deleteStatement = conn.prepareStatement(dialect
+						.deleteAffiliation());
 				deleteStatement.setString(1, nodeId);
 				deleteStatement.setString(2, affiliation.toString());
 				deleteStatement.executeUpdate();
 				deleteStatement.close();
 			} else {
-				updateStatement = conn.prepareStatement(SQL.UPDATE_AFFILIATION);
+				updateStatement = conn.prepareStatement(dialect
+						.updateAffiliation());
 				updateStatement.setString(1, affiliation.toString());
 				updateStatement.setString(2, nodeId);
-				updateStatement.setString(3, user.toString());
+				updateStatement.setString(3, user.toBareJID());
 				int rows = updateStatement.executeUpdate();
 				updateStatement.close();
 
 				if (rows == 0) { // If the update didn't update any rows
-					addStatement = conn.prepareStatement(SQL.ADD_AFFILIATION);
+					addStatement = conn.prepareStatement(dialect
+							.insertAffiliation());
 					addStatement.setString(1, nodeId);
-					addStatement.setString(2, user.toString());
+					addStatement.setString(2, user.toBareJID());
 					addStatement.setString(3, affiliation.toString());
 					addStatement.executeUpdate();
 					addStatement.close();
 				}
 			}
+			t.commit();
 		} catch (SQLException e) {
 			throw new NodeStoreException(e);
 		} finally {
 			close(deleteStatement);
 			close(updateStatement);
 			close(addStatement);
+			close(t);
 		}
 	}
 
@@ -174,7 +217,7 @@ public class JDBCNodeStore implements NodeStore {
 		PreparedStatement stmt = null;
 
 		try {
-			stmt = conn.prepareStatement(SQL.GET_SINGLE_NODE_CONF_VALUE);
+			stmt = conn.prepareStatement(dialect.selectSingleNodeConfValue());
 
 			stmt.setString(1, nodeId);
 			stmt.setString(2, key);
@@ -196,39 +239,67 @@ public class JDBCNodeStore implements NodeStore {
 	}
 
 	@Override
+	public Map<String, String> getNodeConf(String nodeId)
+			throws NodeStoreException {
+		PreparedStatement stmt = null;
+
+		try {
+			stmt = conn.prepareStatement(dialect.selectNodeConf());
+
+			stmt.setString(1, nodeId);
+
+			ResultSet rs = stmt.executeQuery();
+
+			HashMap<String, String> result = new HashMap<String, String>();
+
+			while (rs.next()) {
+				result.put(rs.getString(1), rs.getString(2));
+			}
+
+			return result;
+		} catch (SQLException e) {
+			throw new NodeStoreException(e);
+		} finally {
+			close(stmt); // Will implicitly close the resultset if required
+		}
+	}
+
+	@Override
 	public void addUserSubscription(final NodeSubscription subscription)
 			throws NodeStoreException {
 		PreparedStatement deleteStatement = null;
 		PreparedStatement updateStatement = null;
 		PreparedStatement addStatement = null;
+		Transaction t = null;
 
 		try {
 			if (subscription.getSubscription().equals(Subscriptions.none)) {
-				deleteStatement = conn
-						.prepareStatement(SQL.DELETE_SUBSCRIPTION);
+				deleteStatement = conn.prepareStatement(dialect
+						.deleteSubscription());
 				deleteStatement.setString(1, subscription.getNodeId());
-				deleteStatement.setString(2, subscription.getUser().toString());
-				deleteStatement.setString(3, subscription.getListener()
-						.toString());
+				deleteStatement.setString(2, subscription.getUser().toBareJID());
 				deleteStatement.executeUpdate();
 				deleteStatement.close();
 			} else {
-				updateStatement = conn
-						.prepareStatement(SQL.UPDATE_SUBSCRIPTION);
+				t = beginTransaction();
+				updateStatement = conn.prepareStatement(dialect
+						.updateSubscription());
 				updateStatement.setString(1, subscription.getSubscription()
 						.toString());
-				updateStatement.setString(2, subscription.getNodeId());
-				updateStatement.setString(3, subscription.getUser().toString());
-				updateStatement.setString(4, subscription.getListener()
+				updateStatement.setString(2, subscription.getListener()
 						.toString());
+				updateStatement.setString(3, subscription.getNodeId());
+				updateStatement.setString(4, subscription.getUser().toBareJID());
+
 				int rows = updateStatement.executeUpdate();
 				updateStatement.close();
 
 				if (rows == 0) { // If the update didn't update any rows
-					addStatement = conn.prepareStatement(SQL.ADD_SUBSCRIPTION);
+					addStatement = conn.prepareStatement(dialect
+							.insertSubscription());
 					addStatement.setString(1, subscription.getNodeId());
 					addStatement
-							.setString(2, subscription.getUser().toString());
+							.setString(2, subscription.getUser().toBareJID());
 					addStatement.setString(3, subscription.getListener()
 							.toString());
 					addStatement.setString(4, subscription.getSubscription()
@@ -236,6 +307,7 @@ public class JDBCNodeStore implements NodeStore {
 					addStatement.executeUpdate();
 					addStatement.close();
 				}
+				t.commit();
 			}
 		} catch (SQLException e) {
 			throw new NodeStoreException(e);
@@ -243,20 +315,22 @@ public class JDBCNodeStore implements NodeStore {
 			close(deleteStatement);
 			close(updateStatement);
 			close(addStatement);
+			close(t);
 		}
 	}
 
 	@Override
-	public NodeAffiliation getUserAfilliation(String nodeId, JID user)
+	public NodeAffiliation getUserAffiliation(String nodeId, JID user)
 			throws NodeStoreException {
 		PreparedStatement selectStatement = null;
 
 		try {
 			NodeAffiliationImpl affiliation;
 
-			selectStatement = conn.prepareStatement(SQL.SELECT_AFFILIATION);
+			selectStatement = conn
+					.prepareStatement(dialect.selectAffiliation());
 			selectStatement.setString(1, nodeId);
-			selectStatement.setString(2, user.toString());
+			selectStatement.setString(2, user.toBareJID());
 
 			ResultSet rs = selectStatement.executeQuery();
 
@@ -278,13 +352,103 @@ public class JDBCNodeStore implements NodeStore {
 	}
 
 	@Override
+	public Collection<NodeAffiliation> getUserAffiliations(JID user)
+			throws NodeStoreException {
+		PreparedStatement stmt = null;
+
+		try {
+			stmt = conn.prepareStatement(dialect.selectAffiliationsForUser());
+			stmt.setString(1, user.toBareJID());
+
+			ResultSet rs = stmt.executeQuery();
+
+			ArrayList<NodeAffiliation> result = new ArrayList<NodeAffiliation>();
+
+			while (rs.next()) {
+				NodeAffiliationImpl nodeSub = new NodeAffiliationImpl(
+						rs.getString(1), user, Affiliations.valueOf(rs
+								.getString(3)));
+				result.add(nodeSub);
+			}
+
+			return result;
+		} catch (SQLException e) {
+			throw new NodeStoreException(e);
+		} finally {
+			close(stmt); // Will implicitly close the resultset if required
+		}
+	}
+
+	@Override
+	public Collection<NodeAffiliation> getNodeAffiliations(String nodeId)
+			throws NodeStoreException {
+		PreparedStatement stmt = null;
+
+		try {
+			stmt = conn.prepareStatement(dialect.selectAffiliationsForNode());
+			stmt.setString(1, nodeId);
+
+			ResultSet rs = stmt.executeQuery();
+
+			ArrayList<NodeAffiliation> result = new ArrayList<NodeAffiliation>();
+
+			while (rs.next()) {
+				NodeAffiliationImpl nodeSub = new NodeAffiliationImpl(
+						rs.getString(1), new JID(rs.getString(2)),
+						Affiliations.valueOf(rs.getString(3)));
+				result.add(nodeSub);
+			}
+
+			return result;
+		} catch (SQLException e) {
+			throw new NodeStoreException(e);
+		} finally {
+			close(stmt); // Will implicitly close the resultset if required
+		}
+	}
+
+	@Override
+	public NodeSubscription getUserSubscription(String nodeId, JID user)
+			throws NodeStoreException {
+		PreparedStatement selectStatement = null;
+
+		try {
+			NodeSubscriptionImpl subscription;
+
+			selectStatement = conn.prepareStatement(dialect
+					.selectSubscription());
+			selectStatement.setString(1, nodeId);
+			selectStatement.setString(2, user.toBareJID());
+			selectStatement.setString(3, user.toString());
+
+			ResultSet rs = selectStatement.executeQuery();
+
+			if (rs.next()) {
+				subscription = new NodeSubscriptionImpl(nodeId, new JID(
+						rs.getString(2)), new JID(rs.getString(3)),
+						Subscriptions.valueOf(rs.getString(4)));
+			} else {
+				subscription = new NodeSubscriptionImpl(nodeId, user, user,
+						Subscriptions.none);
+			}
+
+			return subscription;
+		} catch (SQLException e) {
+			throw new NodeStoreException(e);
+		} finally {
+			close(selectStatement); // Will implicitly close the resultset if
+									// required
+		}
+	}
+
+	@Override
 	public Collection<NodeSubscription> getUserSubscriptions(final JID user)
 			throws NodeStoreException {
 		PreparedStatement stmt = null;
 
 		try {
-			stmt = conn.prepareStatement(SQL.SELECT_SUBSCRIPTIONS_FOR_USER);
-			stmt.setString(1, user.toString());
+			stmt = conn.prepareStatement(dialect.selectSubscriptionsForUser());
+			stmt.setString(1, user.toBareJID());
 			stmt.setString(2, user.toString());
 
 			ResultSet rs = stmt.executeQuery();
@@ -293,7 +457,37 @@ public class JDBCNodeStore implements NodeStore {
 
 			while (rs.next()) {
 				NodeSubscriptionImpl nodeSub = new NodeSubscriptionImpl(
-						rs.getString(1), new JID(rs.getString(2)), new JID(rs.getString(3)), Subscriptions.valueOf(rs
+						rs.getString(1), new JID(rs.getString(2)), new JID(
+								rs.getString(3)), Subscriptions.valueOf(rs
+								.getString(4)));
+				result.add(nodeSub);
+			}
+
+			return result;
+		} catch (SQLException e) {
+			throw new NodeStoreException(e);
+		} finally {
+			close(stmt); // Will implicitly close the resultset if required
+		}
+	}
+
+	@Override
+	public Collection<NodeSubscription> getNodeSubscriptions(String nodeId)
+			throws NodeStoreException {
+		PreparedStatement stmt = null;
+
+		try {
+			stmt = conn.prepareStatement(dialect.selectSubscriptionsForNode());
+			stmt.setString(1, nodeId);
+
+			ResultSet rs = stmt.executeQuery();
+
+			ArrayList<NodeSubscription> result = new ArrayList<NodeSubscription>();
+
+			while (rs.next()) {
+				NodeSubscriptionImpl nodeSub = new NodeSubscriptionImpl(
+						rs.getString(1), new JID(rs.getString(2)), new JID(
+								rs.getString(3)), Subscriptions.valueOf(rs
 								.getString(4)));
 				result.add(nodeSub);
 			}
@@ -328,7 +522,7 @@ public class JDBCNodeStore implements NodeStore {
 
 		try {
 			if (afterItem == null) {
-				stmt = conn.prepareStatement(SQL.SELECT_ITEMS_FOR_NODE
+				stmt = conn.prepareStatement(dialect.selectItemsForNode()
 						+ countSQL);
 				stmt.setString(1, nodeId);
 
@@ -348,9 +542,8 @@ public class JDBCNodeStore implements NodeStore {
 							}
 						});
 			} else {
-				stmt = conn
-						.prepareStatement(SQL.SELECT_ITEMS_FOR_NODE_AFTER_DATE
-								+ countSQL);
+				stmt = conn.prepareStatement(dialect
+						.selectItemsForNodeAfterDate() + countSQL);
 				stmt.setString(1, nodeId);
 				stmt.setDate(2, new java.sql.Date(afterItem.getUpdated()
 						.getTime()));
@@ -383,12 +576,36 @@ public class JDBCNodeStore implements NodeStore {
 	}
 
 	@Override
+	public int countNodeItems(String nodeId) throws NodeStoreException {
+		PreparedStatement selectStatement = null;
+
+		try {
+			selectStatement = conn
+					.prepareStatement(dialect.countItemsForNode());
+			selectStatement.setString(1, nodeId);
+
+			ResultSet rs = selectStatement.executeQuery();
+
+			if (rs.next()) {
+				return rs.getInt(1);
+			} else {
+				return 0; // This really shouldn't happen!
+			}
+		} catch (SQLException e) {
+			throw new NodeStoreException(e);
+		} finally {
+			close(selectStatement); // Will implicitly close the resultset if
+									// required
+		}
+	}
+
+	@Override
 	public NodeItem getNodeItem(String nodeId, String nodeItemId)
 			throws NodeStoreException {
 		PreparedStatement stmt = null;
 
 		try {
-			stmt = conn.prepareStatement(SQL.SELECT_SINGLE_ITEM);
+			stmt = conn.prepareStatement(dialect.selectSingleItem());
 
 			stmt.setString(1, nodeId);
 			stmt.setString(2, nodeItemId);
@@ -411,15 +628,15 @@ public class JDBCNodeStore implements NodeStore {
 	@Override
 	public void addNodeItem(NodeItem item) throws NodeStoreException {
 		PreparedStatement stmt = null;
-		
+
 		try {
-			stmt = conn.prepareStatement(SQL.ADD_ITEM);
-			
+			stmt = conn.prepareStatement(dialect.insertItem());
+
 			stmt.setString(1, item.getNodeId());
 			stmt.setString(2, item.getId());
 			stmt.setTimestamp(3, new Timestamp(item.getUpdated().getTime()));
 			stmt.setString(4, item.getPayload());
-			
+
 			stmt.executeUpdate();
 		} catch (SQLException e) {
 			throw new NodeStoreException(e);
@@ -431,19 +648,20 @@ public class JDBCNodeStore implements NodeStore {
 	@Override
 	public void updateNodeItem(NodeItem item) throws NodeStoreException {
 		PreparedStatement stmt = null;
-		
+
 		try {
-			stmt = conn.prepareStatement(SQL.UPDATE_ITEM);
-			
+			stmt = conn.prepareStatement(dialect.updateItem());
+
 			stmt.setTimestamp(1, new Timestamp(item.getUpdated().getTime()));
 			stmt.setString(2, item.getPayload());
 			stmt.setString(3, item.getNodeId());
 			stmt.setString(4, item.getId());
-			
+
 			int rows = stmt.executeUpdate();
-			
-			if(rows != 1) {
-				throw new ItemNotFoundException("No records affected when updating an item");
+
+			if (rows != 1) {
+				throw new ItemNotFoundException(
+						"No records affected when updating an item");
 			}
 		} catch (SQLException e) {
 			throw new NodeStoreException(e);
@@ -453,19 +671,21 @@ public class JDBCNodeStore implements NodeStore {
 	}
 
 	@Override
-	public void deleteNodeItemById(String nodeId, String nodeItemId) throws NodeStoreException {
+	public void deleteNodeItemById(String nodeId, String nodeItemId)
+			throws NodeStoreException {
 		PreparedStatement stmt = null;
-		
+
 		try {
-			stmt = conn.prepareStatement(SQL.DELETE_ITEM);
-			
+			stmt = conn.prepareStatement(dialect.deleteItem());
+
 			stmt.setString(1, nodeId);
 			stmt.setString(2, nodeItemId);
-			
+
 			int rows = stmt.executeUpdate();
-			
-			if(rows != 1) {
-				throw new ItemNotFoundException("No records affected when deleting an item");
+
+			if (rows != 1) {
+				throw new ItemNotFoundException(
+						"No records affected when deleting an item");
 			}
 		} catch (SQLException e) {
 			throw new NodeStoreException(e);
@@ -476,10 +696,11 @@ public class JDBCNodeStore implements NodeStore {
 
 	@Override
 	public Transaction beginTransaction() throws NodeStoreException {
-		if(transactionHasBeenRolledBack) {
-			throw new IllegalStateException("The transaction has already been rolled back");
+		if (transactionHasBeenRolledBack) {
+			throw new IllegalStateException(
+					"The transaction has already been rolled back");
 		}
-		
+
 		JDBCTransaction transaction;
 		try {
 			transaction = new JDBCTransaction(this);
@@ -500,39 +721,48 @@ public class JDBCNodeStore implements NodeStore {
 			}
 		}
 	}
-	
+
+	private void close(final Transaction trans) throws NodeStoreException {
+		if (trans != null) {
+			trans.close();
+		}
+	}
+
 	public class JDBCTransaction implements Transaction {
 		private JDBCNodeStore store;
 		private boolean closed;
-		
+
 		private JDBCTransaction(final JDBCNodeStore store) throws SQLException {
 			this.store = store;
 			closed = false;
-			
-			if(store.transactionStack.isEmpty()) {
+
+			if (store.transactionStack.isEmpty()) {
 				store.conn.setAutoCommit(false);
 			}
-			
+
 			store.transactionStack.push(this);
 		}
-		
+
 		@Override
 		public void commit() throws NodeStoreException {
-			if(closed) {
-				throw new IllegalStateException("Commit called on transaction that is already closed");
+			if (closed) {
+				throw new IllegalStateException(
+						"Commit called on transaction that is already closed");
 			}
-			if(!isLatestTransaction()) {
-				throw new IllegalStateException("Commit called on transaction other than the innermost transaction");
+			if (!isLatestTransaction()) {
+				throw new IllegalStateException(
+						"Commit called on transaction other than the innermost transaction");
 			}
-			if(store.transactionHasBeenRolledBack) {
-				throw new IllegalStateException("Commit called after inner transaction has already been rolled back");
+			if (store.transactionHasBeenRolledBack) {
+				throw new IllegalStateException(
+						"Commit called after inner transaction has already been rolled back");
 			}
-			
+
 			store.transactionStack.pop();
 			closed = true;
-			
+
 			try {
-				if(store.transactionStack.isEmpty()) {
+				if (store.transactionStack.isEmpty()) {
 					store.conn.commit();
 					store.conn.setAutoCommit(true);
 					store.transactionHasBeenRolledBack = false;
@@ -544,20 +774,21 @@ public class JDBCNodeStore implements NodeStore {
 
 		@Override
 		public void close() throws NodeStoreException {
-			if(closed) {
-				return;	// Do nothing nicely and silently
+			if (closed) {
+				return; // Do nothing nicely and silently
 			}
-			
-			if(!isLatestTransaction()) {
-				throw new IllegalStateException("Close called on transaction other than the innermost transaction");
+
+			if (!isLatestTransaction()) {
+				throw new IllegalStateException(
+						"Close called on transaction other than the innermost transaction");
 			}
-			
+
 			store.transactionStack.pop();
 			closed = true;
 			store.transactionHasBeenRolledBack = true;
-					
+
 			try {
-				if(store.transactionStack.isEmpty()) {
+				if (store.transactionStack.isEmpty()) {
 					store.conn.rollback();
 					store.conn.setAutoCommit(true);
 					store.transactionHasBeenRolledBack = false;
@@ -566,66 +797,72 @@ public class JDBCNodeStore implements NodeStore {
 				throw new NodeStoreException(e);
 			}
 		}
-		
+
 		private boolean isLatestTransaction() {
-			return(store.transactionStack.peek() == this);
+			return (store.transactionStack.peek() == this);
 		}
 	}
-	
-	private class SQL {
-		private static final String ADD_NODE = "INSERT INTO \"nodes\" ( \"node\" ) VALUES ( ? )";
 
-		private static final String ADD_CONF = "INSERT INTO \"node_config\" ( \"node\", \"key\", \"value\", \"updated\" )"
-				+ " VALUES ( ?, ?, ?, now() )";
+	@Override
+	public void close() throws NodeStoreException {
+		try {
+			conn.close();
+		} catch (SQLException e) {
+			throw new NodeStoreException(e);
+		}
+	}
 
-		private static final String UPDATE_CONF = "UPDATE \"node_config\" SET \"value\" = ?, \"updated\" = now()"
-				+ " WHERE \"node\" = ? AND \"key\" = ?";
+	public interface NodeStoreSQLDialect {
+		String insertNode();
 
-		private static final String GET_SINGLE_NODE_CONF_VALUE = "SELECT \"value\" FROM \"node_config\""
-				+ " WHERE \"node\" = ? AND \"key\" = ?";
+		String insertConf();
 
-		private static final String SELECT_AFFILIATION = "SELECT \"affiliation\" FROM \"affiliations\""
-				+ " WHERE \"node\" = ? AND \"user\" = ?";
+		String deleteConfFromNode();
 
-		private static final String ADD_AFFILIATION = "INSERT INTO \"affiliations\" ( \"node\", \"user\", \"affiliation\", \"updated\" )"
-				+ " VALUES ( ?, ?, ?, now() )";
+		String updateNodeConf();
 
-		private static final String UPDATE_AFFILIATION = "UPDATE \"affiliations\""
-				+ " SET \"affiliation\" = ?, \"updated\" = now()"
-				+ " WHERE \"node\" = ? AND \"user\" = ?";
+		String selectSingleNodeConfValue();
 
-		private static final String DELETE_AFFILIATION = "DELETE FROM \"affiliations\" WHERE \"node\" = ? AND \"user\" = ?;";
+		String selectNodeConf();
 
-		private static final String SELECT_SUBSCRIPTIONS_FOR_USER = "SELECT \"node\", \"user\", \"listener\", \"subscription\""
-				+ " FROM \"subscriptions\" WHERE \"user\" = ? OR \"listener\" = ?";
+		String selectAffiliation();
 
-		private static final String ADD_SUBSCRIPTION = "INSERT INTO \"subscriptions\" ( \"node\", \"user\", \"listener\", \"subscription\", \"updated\" )"
-				+ " VALUES ( ?, ?, ?, ?, now() )";
+		String selectAffiliationsForUser();
 
-		private static final String UPDATE_SUBSCRIPTION = "UPDATE \"subscriptions\""
-				+ " SET \"subscription\" = ?, \"updated\" = now()"
-				+ " WHERE \"node\" = ? AND \"user\" = ? AND \"listener\" = ?";
+		String selectAffiliationsForNode();
 
-		private static final String DELETE_SUBSCRIPTION = "DELETE FROM \"subscriptions\" WHERE \"node\" = ? AND \"user\" = ? AND \"listener\" = ?";
+		String insertAffiliation();
 
-		private static final String NODE_EXISTS = "SELECT \"node\" FROM \"nodes\" WHERE \"node\" = ?";
+		String updateAffiliation();
 
-		private static final String SELECT_SINGLE_ITEM = "SELECT \"node\", \"id\", \"updated\", \"xml\""
-				+ " FROM \"items\" WHERE \"node\" = ? AND \"id\" = ?";
+		String deleteAffiliation();
 
-		private static final String SELECT_ITEMS_FOR_NODE = "SELECT \"node\", \"id\", \"updated\", \"xml\""
-				+ " FROM \"items\" WHERE \"node\" = ? ORDER BY \"updated\" DESC, \"id\" ASC";
+		String selectSubscription();
 
-		private static final String SELECT_ITEMS_FOR_NODE_AFTER_DATE = "SELECT \"node\", \"id\", \"updated\", \"xml\""
-				+ " FROM \"items\" WHERE \"node\" = ? AND ( \"updated\" > ? OR ( \"updated\" = ? AND \"id\" > ? ) )"
-				+ " ORDER BY \"updated\" ASC, \"id\" DESC";
+		String selectSubscriptionsForUser();
 
-		private static final String ADD_ITEM = "INSERT INTO \"items\" ( \"node\", \"id\", \"updated\", \"xml\" )"
-				+ " VALUES ( ?, ?, ?, ? )";
+		String selectSubscriptionsForNode();
 
-		private static final String UPDATE_ITEM = "UPDATE \"items\" SET \"updated\" = ?, \"xml\" = ?"
-				+ " WHERE \"node\" = ? AND \"id\" = ?";
+		String insertSubscription();
 
-		private static final String DELETE_ITEM = "DELETE FROM \"items\" WHERE \"node\" = ? AND \"id\" = ?;";
+		String updateSubscription();
+
+		String deleteSubscription();
+
+		String nodeExists();
+
+		String selectSingleItem();
+
+		String selectItemsForNode();
+
+		String selectItemsForNodeAfterDate();
+
+		String countItemsForNode();
+
+		String insertItem();
+
+		String updateItem();
+
+		String deleteItem();
 	}
 }

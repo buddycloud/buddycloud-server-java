@@ -3,7 +3,7 @@ package org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub;
 import java.util.concurrent.BlockingQueue;
 import org.buddycloud.channelserver.Configuration;
 import org.buddycloud.channelserver.channel.node.configuration.Helper;
-import org.buddycloud.channelserver.db.DataStore;
+import org.buddycloud.channelserver.channel.ChannelManager;
 import org.dom4j.Document;
 import org.dom4j.DocumentHelper;
 import org.dom4j.Element;
@@ -19,7 +19,7 @@ public abstract class PubSubElementProcessorAbstract
 {
     
     protected BlockingQueue<Packet> outQueue;
-    protected DataStore             dataStore;
+    protected ChannelManager             channelManager;
     protected Element               element;
     protected IQ                    response;
     protected IQ                    request;
@@ -34,9 +34,9 @@ public abstract class PubSubElementProcessorAbstract
 		this.outQueue = outQueue;
 	}
 
-	public void setDataStore(DataStore dataStore)
+	public void setChannelManager(ChannelManager channelManager)
 	{
-		this.dataStore = dataStore;
+		this.channelManager = channelManager;
 	}
 	
 	public void setServerDomain(String domain)

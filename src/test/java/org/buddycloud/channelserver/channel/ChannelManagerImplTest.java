@@ -7,17 +7,24 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
 
+import org.buddycloud.channelserver.Configuration;
 import org.buddycloud.channelserver.db.NodeStore;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 import org.xmpp.packet.JID;
 
 public class ChannelManagerImplTest {
 
+	private static final String TEST_DOMAIN = "domain.com";
+	
 	@Mock
 	NodeStore nodeStore;
+	
+	@Mock
+	Configuration configuration;
 	
 	/**
 	 * Class under test
@@ -26,7 +33,11 @@ public class ChannelManagerImplTest {
 	
 	@Before
 	public void setUp() throws Exception {
-		channelManager = new ChannelManagerImpl(nodeStore);
+		MockitoAnnotations.initMocks(this);
+		channelManager = new ChannelManagerImpl(nodeStore, configuration);
+		
+		// This is used loads
+		when(configuration.getProperty(Configuration.CONFIGURATION_SERVER_DOMAIN)).thenReturn(TEST_DOMAIN);
 	}
 
 	@After
@@ -35,31 +46,57 @@ public class ChannelManagerImplTest {
 	}
 
 	@Test
-	public void testCreateChannel() {
-		Map<String,String> configuration = Collections.emptyMap();
-		channelManager.createChannel(new JID("testchannel@localserver"), configuration);
+	public void testCreatePersonalChannel() throws Exception {
+		JID channelJID = new JID("testchannel@domain.com");
 		
-		verify(nodeStore).createNode(owner, nodeRef, nodeConf)
+		channelManager.createPersonalChannel(channelJID);
+
+		verify(nodeStore).createNode(channelJID, Conf.getPostChannelNodename(channelJID), Conf.getDefaultPostChannelConf(channelJID));
+		verify(nodeStore).createNode(channelJID, Conf.getStatusChannelNodename(channelJID), Conf.getDefaultStatusChannelConf(channelJID));
+		verify(nodeStore).createNode(channelJID, Conf.getGeoPreviousChannelNodename(channelJID), Conf.getDefaultGeoPreviousChannelConf(channelJID));
+		verify(nodeStore).createNode(channelJID, Conf.getGeoCurrentChannelNodename(channelJID), Conf.getDefaultGeoCurrentChannelConf(channelJID));
+		verify(nodeStore).createNode(channelJID, Conf.getGeoNextChannelNodename(channelJID), Conf.getDefaultGeoNextChannelConf(channelJID));
+	}
+
+	@Test(expected=IllegalArgumentException.class)
+	public void testCreatePersonalChannelFailsForRemoteUser() throws Exception {
+		JID channelJID = new JID("testchannel@otherdomain.com");
+		
+		channelManager.createPersonalChannel(channelJID);
 	}
 
 	@Test
-	public void testUpdateChannelConfiguration() {
-		fail("Not yet implemented");
-	}
+	public void testCreatePersonalChannelSomeNodesExist() throws Exception {
+		JID channelJID = new JID("testchannel@localserver");
+		
+		when(nodeStore.nodeExists(Conf.getPostChannelNodename(channelJID))).thenReturn(true);
+		
+		channelManager.createPersonalChannel(new JID("testchannel@localserver"));
 
+		verify(nodeStore, never()).createNode(channelJID, Conf.getPostChannelNodename(channelJID), Conf.getDefaultPostChannelConf(channelJID));
+		verify(nodeStore).createNode(channelJID, Conf.getStatusChannelNodename(channelJID), Conf.getDefaultStatusChannelConf(channelJID));
+		verify(nodeStore).createNode(channelJID, Conf.getGeoPreviousChannelNodename(channelJID), Conf.getDefaultGeoPreviousChannelConf(channelJID));
+		verify(nodeStore).createNode(channelJID, Conf.getGeoCurrentChannelNodename(channelJID), Conf.getDefaultGeoCurrentChannelConf(channelJID));
+		verify(nodeStore).createNode(channelJID, Conf.getGeoNextChannelNodename(channelJID), Conf.getDefaultGeoNextChannelConf(channelJID));
+	}
+	
 	@Test
-	public void testChannelExists() {
-		fail("Not yet implemented");
+	public void testIsLocalNodeSuccess() throws Exception {
+		assertTrue(channelManager.isLocalNode("/user/test@domain.com/posts"));
 	}
-
+	
 	@Test
-	public void testSetChannelSubscription() {
-		fail("Not yet implemented");
+	public void testIsLocalNodeFailure() throws Exception {
+		assertFalse(channelManager.isLocalNode("/user/test@otherdomain.com/posts"));		
 	}
-
+	
+	@Test(expected=IllegalArgumentException.class)
+	public void testIsLocalNodeWithInvalidNodeThrowsException() throws Exception {
+		channelManager.isLocalNode("somerandomnodeid");		
+	}
+	
 	@Test
-	public void testSetChannelAffiliation() {
-		fail("Not yet implemented");
+	public void testIsLocalJID() throws Exception {
+		
 	}
-
 }

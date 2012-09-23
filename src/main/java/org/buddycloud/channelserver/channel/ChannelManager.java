@@ -4,77 +4,31 @@ import java.util.Collection;
 import java.util.Map;
 
 import org.buddycloud.channelserver.channel.subscription.ChannelSubscription;
+import org.buddycloud.channelserver.db.NodeStore;
+import org.buddycloud.channelserver.db.exception.NodeStoreException;
 import org.buddycloud.channelserver.pubsub.affiliation.Affiliations;
-import org.buddycloud.channelserver.pubsub.model.NodeSubscription;
-import org.buddycloud.channelserver.pubsub.subscription.Subscriptions;
-import org.dom4j.Element;
 import org.xmpp.packet.JID;
 
-public interface ChannelManager {
+public interface ChannelManager extends NodeStore {
 	
 	/**
 	 * Creates a channel.
 	 * @param channelJID the JID of the channel.
-	 * @param configuration the initial configuration of the channel. Missing metadata keys will be set to a default value.
+	 * @throws NodeStoreException 
 	 */
-	void createPersonalChannel(JID ownerJID, Map<String,String> configuration);
-
-	/**
-	 * Creates a channel.
-	 * @param channelJID the JID of the channel.
-	 * @param ownerJID the JID of the channel's creator/owner.
-	 * @param configuration the initial configuration of the channel. Missing metadata keys will be set to a default value.
-	 */
-	void createTopicChannel(JID channelJID, JID ownerJID, Map<String,String> configuration);
-
-	/**
-	 * Edits an existing channel's configuration.
-	 * @param channelJID the JID of the channel.
-	 * @param configuration the initial configuration of the channel. Missing metadata keys will be left unchanged.
-	 */
-	void updateChannelConfiguration(JID channelJID, Map<String,String> configuration);
+	void createPersonalChannel(JID ownerJID) throws NodeStoreException;
 	
 	/**
-	 * Determines whether an entry for a channel with the given JID exists in the store.
-	 * @param channelJID the JID of the channel.
-	 * @return <code>true</code> if the channel exists, <code>false</code> otherwise.
+	 * Determines whether the node id given refers to a local node.
+	 * @param nodeId the node id
+	 * @return <code>true</code> if the node appears to be local, <code>false</code> otherwise.
 	 */
-	boolean channelExists(JID channelJID);
+	boolean isLocalNode(String nodeId);
 	
 	/**
-	 * Adds (or updates if already subscribed) a user's subscription with a channel.
-	 * @param subscription the subscription to save
+	 * Determines whether the jid refers to a local user.
+	 * @param jid the user's jid
+	 * @return <code>true</code> if the jid appears to be local, <code>false</code> otherwise.
 	 */
-	void saveChannelSubscription(ChannelSubscription subscription);
-	
-	/**
-	 * Returns the user's subscription type to the channel
-	 * @param user the user's JID.
-	 * @param channel the channel's JID.
-	 * @return
-	 */
-	ChannelSubscription getUserChannelSubscription(JID user, JID channel);
-	
-	/**
-	 * Returns all the channel subscriptions which the user has.
-	 * @param user the user's JID.
-	 * @return the collection of subscrptions.
-	 */
-	Collection<ChannelSubscription> getUserSubscriptions(JID user);
-	
-	/**
-	 * Adds (or updates if already subscribed) a user's affiliation with a channel.
-	 * @param user
-	 * @param channelJID
-	 * @param affiliation
-	 */
-	void setChannelAffiliation(JID user, JID channelJID, Affiliations affiliation);
-
-	/**
-	 * Posts an entry 
-	 * @param user
-	 * @param channelJID
-	 * @param entry
-	 */
-	void postEntryToChannel(JID user, JID channelJID, String entry);
+	boolean isLocalJID(JID jid);
 }

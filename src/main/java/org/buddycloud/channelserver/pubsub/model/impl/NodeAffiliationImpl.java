@@ -20,7 +20,11 @@ public class NodeAffiliationImpl implements NodeAffiliation {
 	 */
 	public NodeAffiliationImpl(final String nodeId, final JID user, final Affiliations affiliation) {
 		this.nodeId = nodeId;
-		this.user = user;
+		if(user.getResource() == null) {
+			this.user = user;
+		} else {
+			this.user = new JID(user.toBareJID());
+		}
 		this.affiliation = affiliation;
 	}
 	

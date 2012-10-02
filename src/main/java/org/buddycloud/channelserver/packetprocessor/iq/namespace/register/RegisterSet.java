@@ -4,8 +4,9 @@ import java.util.Properties;
 import java.util.concurrent.BlockingQueue;
 
 
+import org.apache.log4j.Logger;
 import org.buddycloud.channelserver.packetprocessor.PacketProcessor;
-import org.buddycloud.channelserver.db.DataStore;
+import org.buddycloud.channelserver.channel.ChannelManager;
 import org.xmpp.packet.IQ;
 import org.xmpp.packet.IQ.Type;
 import org.xmpp.packet.Packet;
@@ -14,18 +15,19 @@ import org.xmpp.packet.PacketError;
 public class RegisterSet implements PacketProcessor<IQ>
 {
     public static final String ELEMENT_NAME = "query";
+    private static final Logger LOGGER = Logger.getLogger(RegisterSet.class);
     
     private final Properties            conf;
     private final BlockingQueue<Packet> outQueue;
-    private final DataStore             dataStore;
+    private final ChannelManager             channelManager;
     private       IQ                    request;
     
     public RegisterSet(Properties conf, BlockingQueue<Packet> outQueue,
-        DataStore dataStore)
+        ChannelManager channelManager)
     {
         this.conf      = conf;
         this.outQueue  = outQueue;
-        this.dataStore = dataStore;
+        this.channelManager = channelManager;
     }
 
     @Override
@@ -38,16 +40,16 @@ public class RegisterSet implements PacketProcessor<IQ>
             notThisDomain();
             return;
         }
-        
-        String bareJid = request.getFrom().toBareJID();
-        if (true == dataStore.isLocalUser(bareJid)) {
+        LOGGER.trace("Processing register request from " + request.getFrom());
+        if (true == channelManager.isLocalJID(request.getFrom())) {
             //userAlreadyRegistered();
+        	LOGGER.trace("User " + request.getFrom() + " is already registered");
         	IQ reply = IQ.createResultIQ(request);
             outQueue.put(reply);
             return;
         }
-        dataStore.addLocalUser(bareJid);
-        dataStore.createUserNodes(reqIQ.getFrom().toBareJID());
+        LOGGER.trace("Registering new user " + request.getFrom());
+        channelManager.createPersonalChannel(reqIQ.getFrom());
         IQ result = IQ.createResultIQ(reqIQ);
         outQueue.put(result);
     }

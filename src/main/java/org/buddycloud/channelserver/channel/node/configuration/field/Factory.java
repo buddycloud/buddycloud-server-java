@@ -1,8 +1,5 @@
 package org.buddycloud.channelserver.channel.node.configuration.field;
 
-import org.dom4j.Node;
-import org.xmpp.packet.IQ;
-
 public class Factory
 {	
 	public Field create(String type, String value)

@@ -1,5 +1,5 @@
 package org.buddycloud.channelserver.pubsub.entry;
-
+@Deprecated
 public interface NodeEntry {
     
     public String getId();

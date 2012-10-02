@@ -4,9 +4,12 @@ import java.util.Properties;
 
 import org.jivesoftware.whack.ExternalComponentManager;
 import org.xmpp.component.ComponentException;
+import org.logicalcobwebs.proxool.ProxoolException;
+import org.logicalcobwebs.proxool.configuration.PropertyConfigurator;
 
 public class XmppComponent {
 
+	private static final String JDBC_CONFIGURATION_FILE = "db.properties";
 	private String hostname;
 	private int socket;
 	
@@ -19,6 +22,14 @@ public class XmppComponent {
 		this.socket = socket;
 		this.domainName = domainName;
 		this.password = password;
+ 
+		try {
+			PropertyConfigurator.configure(JDBC_CONFIGURATION_FILE);
+		} catch (ProxoolException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
 	}
 	
 	public void setConf(Properties conf) {

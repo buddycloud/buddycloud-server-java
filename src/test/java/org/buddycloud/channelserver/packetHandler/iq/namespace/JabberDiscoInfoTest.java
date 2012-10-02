@@ -1,40 +1,31 @@
 package org.buddycloud.channelserver.packetHandler.iq.namespace;
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.TimeZone;
-import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
 import junit.framework.Assert;
-import junit.framework.TestCase;
 
-import org.buddycloud.channelserver.db.jedis.JedisMongoDataStore;
+import org.buddycloud.channelserver.channel.ChannelManager;
+import org.buddycloud.channelserver.channel.ChannelManagerImpl;
+import org.buddycloud.channelserver.packetHandler.iq.HandlerTestCase;
 import org.buddycloud.channelserver.packetHandler.iq.IQTestHandler;
-import org.buddycloud.channelserver.queue.InQueueConsumer;
 import org.dom4j.DocumentException;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
+import org.mockito.Mockito;
 import org.xmpp.packet.IQ;
-import org.xmpp.packet.Packet;
+import org.xmpp.packet.JID;
 
-public class JabberDiscoInfoTest
+public class JabberDiscoInfoTest extends HandlerTestCase
 {
-    private LinkedBlockingQueue<Packet> outQueue;
-    private LinkedBlockingQueue<Packet> inQueue;
-
-    @Before
-    public void init() throws FileNotFoundException, IOException {
-        this.outQueue = new LinkedBlockingQueue<Packet>();
-        this.inQueue = new LinkedBlockingQueue<Packet>();
-        InQueueConsumer consumer = new InQueueConsumer(outQueue, IQTestHandler.readConf(), inQueue);
-        consumer.start();
-        
-        IQTestHandler.getJedis(); // don't remove, it's here to clean the db
-    }
-    
+	@Before
+	public void setup() {
+		channelManager = Mockito.mock(ChannelManager.class);
+	}
     @Test
     public void testDiscoInfo() throws IOException, DocumentException, InterruptedException {
         
@@ -43,30 +34,28 @@ public class JabberDiscoInfoTest
         
         inQueue.put(request);
         
-        IQ replyIQ = (IQ)outQueue.poll(1000, TimeUnit.MILLISECONDS);
+        IQ replyIQ = (IQ) outQueue.poll(1000, TimeUnit.MILLISECONDS);
         
         Assert.assertNotNull(replyIQ);
         Assert.assertEquals(expectedReply, replyIQ.toXML());
     }
 
     @Test
-    public void testDiscoInfoGetNodeMetaData() throws IOException, DocumentException, InterruptedException {
+    @Ignore("This is an integration test")
+    public void testDiscoInfoGetNodeMetaData() throws Exception {
         
         IQ request = IQTestHandler.readStanzaAsIq("/iq/discoInfo/requestNode.stanza");
         String expectedReply = IQTestHandler.readStanzaAsString("/iq/discoInfo/replyNode.stanza");
-        
-        JedisMongoDataStore dataStore = new JedisMongoDataStore(IQTestHandler.readConf());
         
         String DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ss'Z'";
         SimpleDateFormat sdf = new SimpleDateFormat(DATE_FORMAT);
         sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
         
-        dataStore.createUserNodes("romeo@montague.net");
-        dataStore.addLocalUser("romeo@montague.net");
+        channelManager.createPersonalChannel(new JID("romeo@montague.net"));
         
         inQueue.put(request);
         
-        IQ replyIQ = (IQ)outQueue.poll(1000, TimeUnit.MILLISECONDS);
+        IQ replyIQ = (IQ) outQueue.poll(1000, TimeUnit.MILLISECONDS);
         
         Assert.assertNotNull(replyIQ);
         expectedReply = expectedReply.replaceAll("TIME", sdf.format(new Date()));
@@ -74,10 +63,8 @@ public class JabberDiscoInfoTest
     }
     
     @Test
+    @Ignore("This is an integration test")
     public void testDiscoInfoGetNodeMetaFromForeignNode() throws IOException, DocumentException, InterruptedException {
-        
-        JedisMongoDataStore dataStore = new JedisMongoDataStore(IQTestHandler.readConf());
-        dataStore.addLocalUser("francisco@denmark.lit");
         
         IQ request = IQTestHandler.readStanzaAsIq("/iq/discoInfo/foreign/request.stanza");
         
@@ -145,7 +132,5 @@ public class JabberDiscoInfoTest
         Assert.assertNotNull(replyIQ);
         expectedReply = expectedReply.replaceAll("items1", replyIQ.getID());
         Assert.assertEquals(expectedReply, replyIQ.toXML());
-        
-    }
-    
+    }  
 }

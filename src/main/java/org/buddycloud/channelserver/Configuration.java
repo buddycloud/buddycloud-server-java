@@ -7,7 +7,13 @@ import java.util.Properties;
 
 public class Configuration extends Properties
 {
-    private static final String CONFIGURATION_FILE = "configuration.properties";
+	private static final long serialVersionUID = 1L;
+
+	public static final String CONFIGURATION_SERVER_DOMAIN = "server.domain";
+	public static final String CONFIGURATION_SERVER_CHANNELS_DOMAIN = "server.domain.channels";
+	public static final String CONFIGURATION_SERVER_TOPICS_DOMAIN = "server.domain.topics";
+	
+	private static final String CONFIGURATION_FILE = "configuration.properties";
 	private static Configuration instance          = null;
 	
 	private Properties conf;

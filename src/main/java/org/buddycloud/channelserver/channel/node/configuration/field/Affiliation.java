@@ -1,7 +1,7 @@
 package org.buddycloud.channelserver.channel.node.configuration.field;
 
 public class Affiliation extends Field {
-	public static final String FIELD_NAME = "pubsub#default_affiliation";
+	public static final String FIELD_NAME = "buddycloud#default_affiliation";
 	public static final String DEFAULT_VALUE = Affiliation.models.MEMBER
 			.toString();
 

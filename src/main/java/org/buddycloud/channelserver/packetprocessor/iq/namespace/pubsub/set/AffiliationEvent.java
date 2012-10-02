@@ -1,18 +1,16 @@
 package org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.set;
 
-import java.util.Iterator;
+import java.util.Collection;
 import java.util.concurrent.BlockingQueue;
 
 import org.apache.log4j.Logger;
-import org.buddycloud.channelserver.db.DataStore;
-import org.buddycloud.channelserver.db.DataStoreException;
-import org.buddycloud.channelserver.db.jedis.NodeSubscriptionImpl;
+import org.buddycloud.channelserver.channel.ChannelManager;
+import org.buddycloud.channelserver.db.exception.NodeStoreException;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.JabberPubsub;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.PubSubElementProcessorAbstract;
 import org.buddycloud.channelserver.pubsub.affiliation.Affiliations;
-import org.buddycloud.channelserver.pubsub.event.Event;
-import org.buddycloud.channelserver.pubsub.subscription.NodeSubscription;
-import org.buddycloud.channelserver.pubsub.subscription.Subscriptions;
+import org.buddycloud.channelserver.pubsub.model.NodeAffiliation;
+import org.buddycloud.channelserver.pubsub.model.NodeSubscription;
 import org.dom4j.Document;
 import org.dom4j.Element;
 import org.dom4j.Namespace;
@@ -26,7 +24,7 @@ import org.xmpp.packet.PacketError;
 public class AffiliationEvent extends PubSubElementProcessorAbstract {
 
 	Element requestedAffiliation;
-	NodeSubscriptionImpl currentAffiliation;
+	NodeAffiliation currentAffiliation;
 
 	private static final Logger LOGGER = Logger
 			.getLogger(AffiliationEvent.class);
@@ -36,11 +34,12 @@ public class AffiliationEvent extends PubSubElementProcessorAbstract {
 	 * 
 	 * @param outQueue
 	 *            Outgoing message queue
-	 * @param dataStore
+	 * @param channelManager
 	 *            Data Access Object (DAO)
 	 */
-	public AffiliationEvent(BlockingQueue<Packet> outQueue, DataStore dataStore) {
-		setDataStore(dataStore);
+	public AffiliationEvent(BlockingQueue<Packet> outQueue,
+			ChannelManager channelManager) {
+		setChannelManager(channelManager);
 		setOutQueue(outQueue);
 	}
 
@@ -67,9 +66,9 @@ public class AffiliationEvent extends PubSubElementProcessorAbstract {
 				outQueue.put(response);
 				return;
 			}
-			saveUpdatedSubscription();
+			saveUpdatedAffiliation();
 			sendNotifications();
-		} catch (DataStoreException e) {
+		} catch (NodeStoreException e) {
 			LOGGER.debug(e);
 			setErrorCondition(PacketError.Type.wait,
 					PacketError.Condition.internal_server_error);
@@ -80,7 +79,7 @@ public class AffiliationEvent extends PubSubElementProcessorAbstract {
 
 	private boolean attemptToChangeAffiliationOfNodeOwner() {
 		if (false == currentAffiliation.getAffiliation().equals(
-				Affiliations.owner.toString())) {
+				Affiliations.owner)) {
 			return true;
 		}
 		setErrorCondition(PacketError.Type.modify,
@@ -89,8 +88,8 @@ public class AffiliationEvent extends PubSubElementProcessorAbstract {
 	}
 
 	private void sendNotifications() throws Exception {
-		Iterator<? extends NodeSubscription> subscribers = dataStore
-				.getNodeSubscribers(node);
+		Collection<NodeSubscription> subscribers = channelManager
+				.getNodeSubscriptions(node);
 		if (null == subscribers) {
 			return;
 		}
@@ -108,23 +107,18 @@ public class AffiliationEvent extends PubSubElementProcessorAbstract {
 				requestedAffiliation.attributeValue("affiliation"));
 		Message rootElement = new Message(message);
 
-		while (true == subscribers.hasNext()) {
-			String subscriber = subscribers.next().getBareJID();
-			message.addAttribute("to", subscriber);
+		for (NodeSubscription subscriber : subscribers) {
 			Message notification = rootElement.createCopy();
+			notification.setTo(subscriber.getListener());
 			outQueue.put(notification);
 		}
-
 	}
 
-	private void saveUpdatedSubscription() throws DataStoreException {
-		dataStore.unsubscribeUserFromNode(
-				requestedAffiliation.attributeValue("jid"), node);
-		dataStore.subscribeUserToNode(
-				requestedAffiliation.attributeValue("jid"), node,
-				requestedAffiliation.attributeValue("affiliation"),
-				currentAffiliation.getSubscription(),
-				currentAffiliation.getForeignChannelServer());
+	private void saveUpdatedAffiliation() throws NodeStoreException {
+		JID jid = new JID(requestedAffiliation.attributeValue("jid"));
+		Affiliations affiliation = Affiliations.valueOf(requestedAffiliation
+				.attributeValue("affiliation"));
+		channelManager.setUserAffiliation(node, jid, affiliation);
 	}
 
 	private boolean nodeProvided() {
@@ -170,10 +164,13 @@ public class AffiliationEvent extends PubSubElementProcessorAbstract {
 		return true;
 	}
 
-	private boolean subscriberHasCurrentAffiliation() throws DataStoreException {
-		currentAffiliation = dataStore.getUserSubscriptionOfNode(
-				requestedAffiliation.attributeValue("jid"), node);
-		if (null == currentAffiliation) {
+	private boolean subscriberHasCurrentAffiliation() throws NodeStoreException {
+		currentAffiliation = channelManager.getUserAffiliation(node, new JID(
+				requestedAffiliation.attributeValue("jid")));
+
+		if ((null == currentAffiliation)
+				|| (currentAffiliation.getAffiliation()
+						.equals(Affiliations.none))) {
 			setErrorCondition(PacketError.Type.modify,
 					PacketError.Condition.unexpected_request);
 			return false;
@@ -181,27 +178,31 @@ public class AffiliationEvent extends PubSubElementProcessorAbstract {
 		return true;
 	}
 
-	private boolean actorHasPermissionToAuthorize() throws DataStoreException {
-		NodeSubscriptionImpl subscription = dataStore
-				.getUserSubscriptionOfNode(actor.toBareJID(), node);
-		if (null == subscription) {
+	private boolean actorHasPermissionToAuthorize() throws NodeStoreException {
+
+		NodeAffiliation affiliation = channelManager.getUserAffiliation(node,
+				actor);
+
+		if (null == affiliation) {
 			setErrorCondition(PacketError.Type.auth,
 					PacketError.Condition.not_authorized);
 			return false;
 		}
-		if ((false == subscription.getAffiliation().equals(
+
+		if ((false == affiliation.getAffiliation().toString().equals(
 				Affiliations.moderator.toString()))
-				&& (false == subscription.getAffiliation().equals(
+				&& (false == affiliation.getAffiliation().toString().equals(
 						Affiliations.owner.toString()))) {
 			setErrorCondition(PacketError.Type.auth,
 					PacketError.Condition.not_authorized);
 			return false;
 		}
-		return true;
+		return affiliation.getAffiliation().in(Affiliations.moderator,
+				Affiliations.owner);
 	}
 
-	private boolean checkNodeExists() throws DataStoreException {
-		if (false == dataStore.nodeExists(node)) {
+	private boolean checkNodeExists() throws NodeStoreException {
+		if (false == channelManager.nodeExists(node)) {
 			setErrorCondition(PacketError.Type.cancel,
 					PacketError.Condition.item_not_found);
 			return false;

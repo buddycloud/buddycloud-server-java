@@ -8,7 +8,7 @@ import org.xmpp.component.ComponentException;
 public class Main
 {
     private static Logger LOGGER = Logger.getLogger(Main.class);
-    
+	
     public static void main(String[] args) {
         
         PropertyConfigurator.configure("log4j.properties");
@@ -30,6 +30,7 @@ public class Main
                 conf.getProperty("xmpp.subdomain"), 
                 conf.getProperty("xmpp.secretkey")
             );
+            
             xmppComponent.setConf(conf);
             xmppComponent.run();
         } catch (ComponentException e1) {

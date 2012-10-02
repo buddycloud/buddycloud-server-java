@@ -6,12 +6,12 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
+import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.channel.node.configuration.Helper;
 import org.buddycloud.channelserver.channel.node.configuration.HelperMock;
 import org.buddycloud.channelserver.channel.node.configuration.NodeConfigurationException;
 import org.buddycloud.channelserver.channel.node.configuration.field.ChannelTitle;
-import org.buddycloud.channelserver.db.DataStore;
-import org.buddycloud.channelserver.db.DataStoreException;
+import org.buddycloud.channelserver.db.exception.NodeStoreException;
 import org.buddycloud.channelserver.db.mock.Mock;
 import org.buddycloud.channelserver.packetHandler.iq.IQTestHandler;
 import org.dom4j.Element;
@@ -27,25 +27,26 @@ import org.xmpp.packet.PacketError;
 public class NodeCreateTest extends IQTestHandler
 {
 	private IQ         request;
-	private Mock       dataStore;
+	private Mock       channelManager;
 	private NodeCreate nodeCreate;
 	private JID        jid;
 	private Element    element;
 	private BlockingQueue<Packet> queue = new LinkedBlockingQueue<Packet>();
-
+    private String     node = "/user/capulet@shakespeare.lit/posts";
+    
 	@Before
 	public void setUp() throws Exception
 	{
-		dataStore  = new Mock();
+		channelManager  = new Mock();
 		queue      = new LinkedBlockingQueue<Packet>();
-		nodeCreate = new NodeCreate(queue, dataStore);
+		nodeCreate = new NodeCreate(queue, channelManager);
 		jid        = new JID("juliet@shakespeare.lit");
 		request    = readStanzaAsIq("/iq/pubsub/channel/create/request.stanza");
 		
 		nodeCreate.setServerDomain("shakespeare.lit");
 		
 		element = new BaseElement("create");
-		element.addAttribute("node", "/user/capulet@shakespeare.lit/posts");
+		element.addAttribute("node", node);
 	}
 
 	@Test
@@ -80,11 +81,11 @@ public class NodeCreateTest extends IQTestHandler
 	public void testRequestingAlreadyExistingNodeReturnsErrorStanza()
         throws Exception
 	{
-		DataStore dataStoreMock = Mockito.mock(Mock.class);
+		ChannelManager channelManagerMock = Mockito.mock(Mock.class);
 		Mockito
-		    .when(dataStoreMock.nodeExists("/user/capulet@shakespeare.lit/posts"))
+		    .when(channelManagerMock.nodeExists("/user/capulet@shakespeare.lit/posts"))
 		    .thenReturn(true);
-        nodeCreate.setDataStore(dataStoreMock);
+        nodeCreate.setChannelManager(channelManagerMock);
 
 		nodeCreate.process(element, jid, request, null);
 		
@@ -158,18 +159,18 @@ public class NodeCreateTest extends IQTestHandler
 	}
 	
 	@Test
-	public void testDataStoreFailureReturnsInternalServerErrorResponse() 
+	public void testchannelManagerFailureReturnsInternalServerErrorResponse() 
 		throws Exception
 	{
-		DataStore dataStoreMock = Mockito.mock(Mock.class);
-		Mockito.doThrow(new DataStoreException())
-		    .when(dataStoreMock)
+		ChannelManager channelManagerMock = Mockito.mock(Mock.class);
+		Mockito.doThrow(new NodeStoreException())
+		    .when(channelManagerMock)
 		    .createNode(
-		        Mockito.anyString(), 
+		        Mockito.any(JID.class), 
 		        Mockito.anyString(), 
 		        Mockito.anyMapOf(String.class, String.class)
 		    );
-		nodeCreate.setDataStore(dataStoreMock);
+		nodeCreate.setChannelManager(channelManagerMock);
         Helper helperMock = Mockito.mock(Helper.class);
         Mockito.doReturn(true).when(helperMock).isValid();
         nodeCreate.setConfigurationHelper(helperMock);
@@ -224,6 +225,8 @@ public class NodeCreateTest extends IQTestHandler
 		    .thenReturn(configurationProperties);
 		Mockito.doReturn(true).when(helperMock).isValid();
 		
+		ChannelManager channelManagerMock = new Mock();
+		nodeCreate.setChannelManager(channelManagerMock);		
         nodeCreate.setConfigurationHelper(helperMock);
 
 		nodeCreate.process(element, jid, request,  null);
@@ -236,7 +239,7 @@ public class NodeCreateTest extends IQTestHandler
 		} catch (NullPointerException e) {
 			assertNull(error);
 		}
-		Map<String, String> nodeConfiguration = dataStore.getConfiguration();
+		Map<String, String> nodeConfiguration = channelManagerMock.getNodeConf(node);
 		assertEquals(channelTitle, nodeConfiguration.get(ChannelTitle.FIELD_NAME));		
 	}
 	

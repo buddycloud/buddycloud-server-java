@@ -5,8 +5,7 @@ import java.util.Properties;
 import java.util.concurrent.BlockingQueue;
 
 import org.apache.log4j.Logger;
-import org.buddycloud.channelserver.db.DataStore;
-import org.buddycloud.channelserver.db.DataStoreException;
+import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.packetprocessor.PacketProcessor;
 import org.buddycloud.channelserver.queue.statemachine.IStatemachine;
 import org.buddycloud.channelserver.queue.statemachine.StateMachineBuilder;
@@ -22,14 +21,14 @@ public abstract class AbstractNamespace implements PacketProcessor<IQ> {
 
 	private BlockingQueue<Packet> outQueue;
 	private Properties conf;
-	private DataStore dataStore;
+	private ChannelManager channelManager;
 
 	public AbstractNamespace(BlockingQueue<Packet> outQueue, Properties conf,
-			DataStore dataStore) {
+			ChannelManager channelManager) {
 		LOGGER.trace("In " + this.getClass().getName());
 		this.outQueue = outQueue;
 		this.conf = conf;
-		this.dataStore = dataStore;
+		this.channelManager = channelManager;
 	}
 
 	protected abstract PacketProcessor<IQ> get();
@@ -69,7 +68,7 @@ public abstract class AbstractNamespace implements PacketProcessor<IQ> {
 
 		if (reqIQ.getType() == IQ.Type.error
 				|| reqIQ.getType() == IQ.Type.result) {
-			handleStateReply(reqIQ);
+//			handleStateReply(reqIQ);
 		} else {
 			handleUnexpectedRequest(reqIQ);
 		}
@@ -86,22 +85,24 @@ public abstract class AbstractNamespace implements PacketProcessor<IQ> {
 		outQueue.put(reply);
 	}
 
-	private void handleStateReply(IQ reqIQ) throws InterruptedException,
-			DataStoreException {
+	private void handleStateReply(IQ reqIQ) throws InterruptedException {
+		// TODO
+/*
 		// This might be a reply to a state we are on.
-		Map<String, String> state = dataStore.getState(reqIQ.getID());
+		Map<String, String> state = channelManager.getState(reqIQ.getID());
 		if (state != null && !state.isEmpty()) {
 			IStatemachine sm = StateMachineBuilder.buildFromState(reqIQ, state,
-					dataStore);
+					channelManager);
 			outQueue.put(sm.nextStep());
 		} else {
 			LOGGER.error("This result was not handled in any way: '"
 					+ reqIQ.toXML() + "'.");
 		}
+*/
 	}
 
-	protected DataStore getDataStore() {
-		return dataStore;
+	protected ChannelManager getChannelManager() {
+		return channelManager;
 	}
 
 	protected BlockingQueue<Packet> getOutQueue() {

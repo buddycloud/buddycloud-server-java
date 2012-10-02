@@ -6,7 +6,7 @@ import java.util.concurrent.BlockingQueue;
 
 import org.apache.log4j.Logger;
 import org.buddycloud.channelserver.packetprocessor.PacketProcessor;
-import org.buddycloud.channelserver.db.DataStore;
+import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.queue.statemachine.DiscoInfo;
 import org.dom4j.Element;
 import org.xmpp.forms.DataForm;
@@ -21,11 +21,11 @@ public class DiscoInfoGet implements PacketProcessor<IQ> {
 	public static final String ELEMENT_NAME = "query";
 	private static final Logger LOGGER = Logger.getLogger(DiscoInfoGet.class);
 	private final BlockingQueue<Packet> outQueue;
-	private final DataStore dataStore;
+	private final ChannelManager channelManager;
 
-	public DiscoInfoGet(BlockingQueue<Packet> outQueue, DataStore dataStore) {
+	public DiscoInfoGet(BlockingQueue<Packet> outQueue, ChannelManager channelManager) {
 		this.outQueue = outQueue;
-		this.dataStore = dataStore;
+		this.channelManager = channelManager;
 	}
 
 	@Override
@@ -54,12 +54,12 @@ public class DiscoInfoGet implements PacketProcessor<IQ> {
 			return;
 		}
 
-		Map<String, String> conf = dataStore.getNodeConf(node);
+		Map<String, String> conf = channelManager.getNodeConf(node);
 		if (conf.isEmpty()) {
-
+/*
 			// Add the possibility to do disco info on foreign node.
 			// Only available for local users.
-			if (dataStore.isLocalUser(reqIQ.getFrom().toBareJID())) {
+			if (channelManager.isLocalUser(reqIQ.getFrom().toBareJID())) {
 
 				// If we are here, it means we have a node that was not on this
 				// channel server
@@ -67,12 +67,12 @@ public class DiscoInfoGet implements PacketProcessor<IQ> {
 				// node.
 
 				DiscoInfo di = DiscoInfo.buildDiscoInfoStatemachine(node,
-						reqIQ, dataStore);
+						reqIQ, channelManager);
 				outQueue.put(di.nextStep());
 				return;
 
 			}
-
+*/
 			/*
 			 * Not found. Let's return something like this: <iq type='error'
 			 * from='plays.shakespeare.lit' to='romeo@montague.net/orchard'

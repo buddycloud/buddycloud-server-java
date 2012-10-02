@@ -6,7 +6,8 @@ import java.util.concurrent.BlockingQueue;
 
 
 import org.buddycloud.channelserver.packetprocessor.PacketProcessor;
-import org.buddycloud.channelserver.db.DataStore;
+import org.buddycloud.channelserver.channel.ChannelManager;
+import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.get.AffiliationsGet;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.get.ItemsGet;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.get.SubscriptionsGet;
@@ -24,19 +25,19 @@ public class PubSubGet implements PacketProcessor<IQ> {
     public static final String ELEMENT_NAME = "pubsub";
     
     private final BlockingQueue<Packet> outQueue;
-    private final DataStore dataStore;
+    private final ChannelManager channelManager;
     private final List<PubSubElementProcessor> elementProcessors = new LinkedList<PubSubElementProcessor>();
     
-    public PubSubGet(BlockingQueue<Packet> outQueue, DataStore dataStore) {
+    public PubSubGet(BlockingQueue<Packet> outQueue, ChannelManager channelManager) {
         this.outQueue = outQueue;
-        this.dataStore = dataStore;
+        this.channelManager = channelManager;
         initElementProcessors();
     }
     
     private void initElementProcessors() {
-        elementProcessors.add(new SubscriptionsGet(outQueue, dataStore));
-        elementProcessors.add(new AffiliationsGet(outQueue, dataStore));
-        elementProcessors.add(new ItemsGet(outQueue, dataStore));
+        elementProcessors.add(new SubscriptionsGet(outQueue, channelManager));
+        elementProcessors.add(new AffiliationsGet(outQueue, channelManager));
+        elementProcessors.add(new ItemsGet(outQueue, channelManager));
     }
 
     @Override

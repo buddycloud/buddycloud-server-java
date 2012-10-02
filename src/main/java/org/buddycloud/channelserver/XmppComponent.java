@@ -9,7 +9,8 @@ import org.logicalcobwebs.proxool.configuration.PropertyConfigurator;
 
 public class XmppComponent {
 
-	private static final String JDBC_CONFIGURATION_FILE = "db.properties";
+	private static final String DATABASE_CONFIGURATION_FILE = "db.properties";
+	
 	private String hostname;
 	private int socket;
 	
@@ -17,14 +18,15 @@ public class XmppComponent {
 	private String password;
 	private Properties conf;
 	
-	public XmppComponent(String hostname, int socket, String domainName, String password) {
-		this.hostname = hostname;
-		this.socket = socket;
-		this.domainName = domainName;
-		this.password = password;
- 
+	public XmppComponent(Properties conf) {
+	    setConf(conf);
+		hostname = conf.getProperty("xmpp.host");
+		socket = Integer.valueOf(conf.getProperty("xmpp.port"));
+		domainName = conf.getProperty("xmpp.subdomain");
+		password = conf.getProperty("xmpp.secretkey");
+
 		try {
-			PropertyConfigurator.configure(JDBC_CONFIGURATION_FILE);
+			PropertyConfigurator.configure(DATABASE_CONFIGURATION_FILE);
 		} catch (ProxoolException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

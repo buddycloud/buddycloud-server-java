@@ -164,7 +164,7 @@ public class SubscribeSet extends PubSubElementProcessorAbstract {
 			Subscriptions possibleExistingSubscription = nodeSubscription
 					.getSubscription();
 
-			if (Affiliations.outcast.equals(possibleExistingAffiliation)) {
+			if (Affiliations.outcast.toString().equals(possibleExistingAffiliation.toString())) {
 				/*
 				 * 6.1.3.8 Blocked <iq type='error'
 				 * from='pubsub.shakespeare.lit'
@@ -281,6 +281,7 @@ public class SubscribeSet extends PubSubElementProcessorAbstract {
 		for (NodeSubscription subscriber : subscribers) {
 			Message notification = rootElement.createCopy();
 			notification.setTo(subscriber.getListener());
+			notification.setID(notification.getID() + "-1");
 			outQueue.put(notification);
 
 			if (moderatorOwners.contains(subscriber.getUser())) {
@@ -293,7 +294,7 @@ public class SubscribeSet extends PubSubElementProcessorAbstract {
 	private Message getPendingSubscriptionNotification(String subscriber) {
 		Document document = getDocumentHelper();
 		Element message = document.addElement("message");
-		message.addAttribute("id", request.getID());
+		message.addAttribute("id", request.getID() + "-1");
 		message.addAttribute("from", request.getTo().toString());
 		message.addAttribute("type", "headline");
 		message.addNamespace("", "jabber:client");

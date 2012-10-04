@@ -45,7 +45,7 @@ public class SubscriptionsGet implements PubSubElementProcessor {
 			// let's get all subscriptions.
 			Collection<NodeSubscription> cur = channelManager
 					.getUserSubscriptions(actorJID);
-
+			
 			for (NodeSubscription ns : cur) {
 				subscriptions
 						.addElement("subscription")
@@ -61,6 +61,7 @@ public class SubscriptionsGet implements PubSubElementProcessor {
 			subscriptions.addAttribute("node", node);
 
 			for (NodeSubscription ns : cur) {
+
 				subscriptions
 						.addElement("subscription")
 						.addAttribute("node", ns.getNodeId())

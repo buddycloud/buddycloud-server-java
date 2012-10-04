@@ -91,7 +91,7 @@ public class ItemsGet implements PubSubElementProcessor {
 		resultSetManagement = rsm;
 
 		if ((node == null) || (true == node.equals(""))) {
-			missingJidRequest();
+			missingNodeIdRequest();
 			outQueue.put(reply);
 			return;
 		}
@@ -318,7 +318,7 @@ public class ItemsGet implements PubSubElementProcessor {
 		Element query;
 
 		for (NodeSubscription subscriber : subscribers) {
-
+    
 			jidItem = items.addElement("item");
 			jidItem.addAttribute("id", subscriber.getUser().toString());
 			query = jidItem.addElement("query");
@@ -346,9 +346,9 @@ public class ItemsGet implements PubSubElementProcessor {
 		}
         // TODO: This whole section of code is very inefficient
 		for (NodeSubscription subscription : subscriptions) {
-			if (false == subscription.getNodeId().contains(fetchersJid.toBareJID())) {
-				continue;
-			}			
+			////if (false == subscription.getNodeId().contains(fetchersJid.toBareJID())) {
+			//	continue;
+			//}			
 			NodeAffiliation affiliation = channelManager.getUserAffiliation(
 					subscription.getNodeId(), subscription.getUser());
 			item = query.addElement("item");
@@ -363,7 +363,7 @@ public class ItemsGet implements PubSubElementProcessor {
 		}
 	}
 
-	private void missingJidRequest() {
+	private void missingNodeIdRequest() {
 		createExtendedErrorReply(PacketError.Type.modify,
 				PacketError.Condition.bad_request, "nodeid-required");
 	}

@@ -33,7 +33,7 @@ public class UnsubscribeSet extends PubSubElementProcessorAbstract {
 	private final ChannelManager channelManager;
 
 	private static final Logger logger = Logger.getLogger(UnsubscribeSet.class);
-	
+
 	private String node;
 	private IQ request;
 	private JID unsubscribingJid;
@@ -137,8 +137,10 @@ public class UnsubscribeSet extends PubSubElementProcessorAbstract {
 				existingSubscription.getListener(), Subscriptions.none);
 
 		channelManager.addUserSubscription(newSubscription);
-		if (false == Affiliations.outcast.equals(existingAffiliation.getAffiliation())) {
-		    channelManager.setUserAffiliation(node, unsubscribingJid, Affiliations.none);
+		if (false == Affiliations.outcast.toString().equals(
+				existingAffiliation.getAffiliation().toString())) {
+			channelManager.setUserAffiliation(node, unsubscribingJid,
+					Affiliations.none);
 		}
 
 		IQ reply = IQ.createResultIQ(request);
@@ -158,10 +160,12 @@ public class UnsubscribeSet extends PubSubElementProcessorAbstract {
 		Element affiliation = event.addElement("affiliation");
 		subscription.addAttribute("node", node);
 		subscription.addAttribute("jid", unsubscribingJid.toBareJID());
-		subscription.addAttribute("subscription", Subscriptions.none.toString());
+		subscription
+				.addAttribute("subscription", Subscriptions.none.toString());
 		event.addNamespace("", Event.NAMESPACE);
 		message.addAttribute("id", request.getID());
 		message.addAttribute("from", unsubscribingJid.toBareJID());
+		// "None" because we don't glorify the bad
 		affiliation.addAttribute("affiliation", Affiliations.none.toString());
 		affiliation.addAttribute("jid", unsubscribingJid.toBareJID());
 		affiliation.addAttribute("node", node);

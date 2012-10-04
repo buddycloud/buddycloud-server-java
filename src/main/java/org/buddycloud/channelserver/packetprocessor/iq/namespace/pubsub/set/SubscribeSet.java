@@ -164,7 +164,8 @@ public class SubscribeSet extends PubSubElementProcessorAbstract {
 			Subscriptions possibleExistingSubscription = nodeSubscription
 					.getSubscription();
 
-			if (Affiliations.outcast.toString().equals(possibleExistingAffiliation.toString())) {
+			if (Affiliations.outcast.toString().equals(
+					possibleExistingAffiliation.toString())) {
 				/*
 				 * 6.1.3.8 Blocked <iq type='error'
 				 * from='pubsub.shakespeare.lit'
@@ -182,8 +183,8 @@ public class SubscribeSet extends PubSubElementProcessorAbstract {
 				return;
 			}
 
-			if (false == possibleExistingSubscription.toString()
-							.equals(Subscriptions.none.toString())) {
+			if (false == possibleExistingSubscription.toString().equals(
+					Subscriptions.none.toString())) {
 				logger.debug("User already has a '"
 						+ possibleExistingSubscription.toString()
 						+ "' subscription");
@@ -203,7 +204,7 @@ public class SubscribeSet extends PubSubElementProcessorAbstract {
 			}
 			Subscriptions defaultSubscription = Subscriptions.subscribed;
 			if (true == nodeConf.get(Conf.ACCESS_MODEL).equals(
-				AccessModels.authorize.toString())) {
+					AccessModels.authorize.toString())) {
 				defaultSubscription = Subscriptions.pending;
 			}
 
@@ -270,7 +271,7 @@ public class SubscribeSet extends PubSubElementProcessorAbstract {
 		subscription.addAttribute("jid", subscribingJid.toBareJID());
 		subscription.addAttribute("node", node);
 
-		if (true == Subscriptions.subscribed.equals(subscriptionStatus)) {
+		if (true == subscriptionStatus.in(Subscriptions.subscribed, Subscriptions.pending)) {
 			Element affiliation = event.addElement("affiliation");
 			affiliation.addAttribute("node", node);
 			affiliation.addAttribute("jid", subscribingJid.toBareJID());
@@ -284,7 +285,8 @@ public class SubscribeSet extends PubSubElementProcessorAbstract {
 			notification.setID(notification.getID() + "-1");
 			outQueue.put(notification);
 
-			if (moderatorOwners.contains(subscriber.getUser())) {
+			if (moderatorOwners.contains(subscriber.getUser())
+					&& subscriptionStatus.equals(Subscriptions.pending)) {
 				outQueue.put(getPendingSubscriptionNotification(subscriber
 						.getUser().toBareJID()));
 			}

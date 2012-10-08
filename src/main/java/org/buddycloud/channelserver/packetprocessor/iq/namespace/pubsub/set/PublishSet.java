@@ -340,9 +340,11 @@ public class PublishSet implements PubSubElementProcessor {
 			 * externalChannelServerReceivers.add(ns.getForeignChannelServer());
 			 * toBareJID = ns.getForeignChannelServer(); }
 			 */
-			LOGGER.debug("Sending post notification to " + to.toBareJID());
-			msg.setTo(to);
-			outQueue.put(msg.createCopy());
+			if (ns.getSubscription().equals(Subscriptions.subscribed)) {
+			    LOGGER.debug("Sending post notification to " + to.toBareJID());
+			    msg.setTo(to);
+			    outQueue.put(msg.createCopy());
+			}
 		}
 
 	}

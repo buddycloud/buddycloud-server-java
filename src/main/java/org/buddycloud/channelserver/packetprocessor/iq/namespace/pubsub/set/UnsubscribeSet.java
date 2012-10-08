@@ -165,6 +165,7 @@ public class UnsubscribeSet extends PubSubElementProcessorAbstract {
 		event.addNamespace("", Event.NAMESPACE);
 		message.addAttribute("id", request.getID());
 		message.addAttribute("from", unsubscribingJid.toBareJID());
+		message.addAttribute("type", "headline");
 		// "None" because we don't glorify the bad
 		affiliation.addAttribute("affiliation", Affiliations.none.toString());
 		affiliation.addAttribute("jid", unsubscribingJid.toBareJID());

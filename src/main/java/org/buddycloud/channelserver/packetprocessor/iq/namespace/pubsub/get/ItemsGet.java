@@ -323,7 +323,7 @@ public class ItemsGet implements PubSubElementProcessor {
 			jidItem.addAttribute("id", subscriber.getUser().toString());
 			query = jidItem.addElement("query");
 			query.addNamespace("", JabberPubsub.NS_DISCO_ITEMS);
-
+			
 			if (firstItem == null) {
 				firstItem = subscriber.getUser().toString();
 			}
@@ -337,13 +337,14 @@ public class ItemsGet implements PubSubElementProcessor {
 	private void addSubscriptionItems(Element query, JID subscriber)
 			throws NodeStoreException {
 
-		Element item;
 		Collection<NodeSubscription> subscriptions = channelManager
 				.getUserSubscriptions(subscriber);
 		
-		if (null == subscriptions) {
+		if ((null == subscriptions) || (0 == subscriptions.size())) {
 			return;
 		}
+		Element item;
+		
         // TODO: This whole section of code is very inefficient
 		for (NodeSubscription subscription : subscriptions) {
 			////if (false == subscription.getNodeId().contains(fetchersJid.toBareJID())) {

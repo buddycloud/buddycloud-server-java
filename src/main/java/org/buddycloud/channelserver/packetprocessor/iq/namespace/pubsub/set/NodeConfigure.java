@@ -110,6 +110,7 @@ public class NodeConfigure extends PubSubElementProcessorAbstract {
 		event.addNamespace("", Event.NAMESPACE);
 		message.addAttribute("id", request.getID());
 		message.addAttribute("from", request.getTo().toString());
+		message.addAttribute("type", "headline");
 		Message rootElement = new Message(message);
 
 		for (NodeSubscription subscriber : subscribers) {

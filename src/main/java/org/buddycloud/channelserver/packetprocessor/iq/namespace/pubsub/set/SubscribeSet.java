@@ -1,3 +1,4 @@
+
 package org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.set;
 
 import java.util.Collection;
@@ -280,25 +281,27 @@ public class SubscribeSet extends PubSubElementProcessorAbstract {
 		Message rootElement = new Message(message);
 
 		for (NodeSubscription subscriber : subscribers) {
-			Message notification = rootElement.createCopy();
-			notification.setTo(subscriber.getListener());
-			notification.setID(notification.getID() + "-1");
-			outQueue.put(notification);
-
 			if (moderatorOwners.contains(subscriber.getUser())
 					&& subscriptionStatus.equals(Subscriptions.pending)) {
 				outQueue.put(getPendingSubscriptionNotification(subscriber
-						.getUser().toBareJID()));
+						.getUser().toBareJID(), subscribingJid.toBareJID()));
+			} else {
+				Message notification = rootElement.createCopy();
+				notification.setTo(subscriber.getListener());
+				notification.setID(notification.getID() + "-1");
+				outQueue.put(notification);
 			}
 		}
 	}
 
-	private Message getPendingSubscriptionNotification(String subscriber) {
+	private Message getPendingSubscriptionNotification(String receiver, String subscriber) {
+
 		Document document = getDocumentHelper();
 		Element message = document.addElement("message");
 		message.addAttribute("id", request.getID() + "-1");
 		message.addAttribute("from", request.getTo().toString());
 		message.addAttribute("type", "headline");
+		message.addAttribute("to",  receiver);
 		message.addNamespace("", "jabber:client");
 		DataForm dataForm = new DataForm(DataForm.Type.form);
 		dataForm.addInstruction("Allow " + subscriber

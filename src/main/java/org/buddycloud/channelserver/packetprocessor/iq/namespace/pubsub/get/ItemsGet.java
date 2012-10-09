@@ -29,6 +29,8 @@ import org.buddycloud.channelserver.utils.node.NodeAclRefuseReason;
 import org.buddycloud.channelserver.utils.node.NodeViewAcl;
 import org.dom4j.DocumentException;
 import org.dom4j.Element;
+import org.dom4j.Namespace;
+import org.dom4j.QName;
 import org.dom4j.dom.DOMElement;
 import org.dom4j.io.SAXReader;
 import org.xmpp.packet.IQ;
@@ -344,7 +346,8 @@ public class ItemsGet implements PubSubElementProcessor {
 			return;
 		}
 		Element item;
-		
+		Namespace ns1 = new Namespace("ns1", JabberPubsub.NAMESPACE_URI);
+		Namespace ns2 = new Namespace("ns2", JabberPubsub.NAMESPACE_URI);
         // TODO: This whole section of code is very inefficient
 		for (NodeSubscription subscription : subscriptions) {
 			////if (false == subscription.getNodeId().contains(fetchersJid.toBareJID())) {
@@ -353,13 +356,15 @@ public class ItemsGet implements PubSubElementProcessor {
 			NodeAffiliation affiliation = channelManager.getUserAffiliation(
 					subscription.getNodeId(), subscription.getUser());
 			item = query.addElement("item");
-			item.addNamespace("ns1", JabberPubsub.NAMESPACE_URI);
-			item.addNamespace("ns2", JabberPubsub.NAMESPACE_URI);
+			item.add(ns1);
+			item.add(ns2);
 			item.addAttribute("jid", subscriber.toBareJID());
 			item.addAttribute("node", subscription.getNodeId());
-			item.addAttribute("ns1:affiliation", affiliation.getAffiliation()
+			QName affiliationAttribute = new QName("affiliation", ns1);
+			QName subscriptionAttribute = new QName("subscription", ns2);
+			item.addAttribute(affiliationAttribute, affiliation.getAffiliation()
 					.toString());
-			item.addAttribute("ns2:subscription", subscription.getSubscription()
+			item.addAttribute(subscriptionAttribute, subscription.getSubscription()
 					.toString());
 		}
 	}

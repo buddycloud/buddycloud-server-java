@@ -14,6 +14,7 @@ import org.buddycloud.channelserver.db.CloseableIterator;
 import org.buddycloud.channelserver.db.exception.NodeStoreException;
 import org.buddycloud.channelserver.db.mock.Mock;
 import org.buddycloud.channelserver.packetHandler.iq.IQTestHandler;
+import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.JabberPubsub;
 import org.buddycloud.channelserver.pubsub.accessmodel.AccessModels;
 import org.buddycloud.channelserver.pubsub.affiliation.Affiliations;
 import org.buddycloud.channelserver.pubsub.model.NodeAffiliation;
@@ -24,6 +25,8 @@ import org.buddycloud.channelserver.pubsub.subscription.Subscriptions;
 import org.buddycloud.channelserver.utils.node.NodeAclRefuseReason;
 import org.buddycloud.channelserver.utils.node.NodeViewAcl;
 import org.dom4j.Element;
+import org.dom4j.Namespace;
+import org.dom4j.QName;
 import org.dom4j.tree.BaseElement;
 import org.junit.Before;
 import org.junit.Test;
@@ -531,13 +534,23 @@ public class ItemsGetTest extends IQTestHandler {
 						.attributeValue("node"));
 		assertEquals(
 				Affiliations.member.toString(),
-				element.element("pubsub").element("items").element("item")
-						.element("query").element("item")
-						.attributeValue("ns1:affiliation"));
+				element.element("pubsub")
+						.element("items")
+						.element("item")
+						.element("query")
+						.element("item")
+						.attributeValue(
+								new QName("affiliation", new Namespace("ns1",
+										JabberPubsub.NAMESPACE_URI))));
 		assertEquals(
 				Subscriptions.subscribed.toString(),
-				element.element("pubsub").element("items").element("item")
-						.element("query").element("item")
-						.attributeValue("ns2:subscription"));
+				element.element("pubsub")
+						.element("items")
+						.element("item")
+						.element("query")
+						.element("item")
+						.attributeValue(
+								new QName("subscription", new Namespace("ns2",
+										JabberPubsub.NAMESPACE_URI))));
 	}
 }

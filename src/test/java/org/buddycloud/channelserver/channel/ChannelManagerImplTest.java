@@ -67,11 +67,11 @@ public class ChannelManagerImplTest {
 
 	@Test
 	public void testCreatePersonalChannelSomeNodesExist() throws Exception {
-		JID channelJID = new JID("testchannel@localserver");
+		JID channelJID = new JID("testchannel@domain.com");
 		
 		when(nodeStore.nodeExists(Conf.getPostChannelNodename(channelJID))).thenReturn(true);
 		
-		channelManager.createPersonalChannel(new JID("testchannel@localserver"));
+		channelManager.createPersonalChannel(new JID("testchannel@domain.com"));
 
 		verify(nodeStore, never()).createNode(channelJID, Conf.getPostChannelNodename(channelJID), Conf.getDefaultPostChannelConf(channelJID));
 		verify(nodeStore).createNode(channelJID, Conf.getStatusChannelNodename(channelJID), Conf.getDefaultStatusChannelConf(channelJID));

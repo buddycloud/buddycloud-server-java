@@ -26,6 +26,9 @@ public class ChannelManagerImpl implements ChannelManager {
 
 	private static final Logger LOGGER = Logger
 			.getLogger(ChannelManagerImpl.class);
+	
+	private static final String INVALID_NODE = "Illegal node format";
+	private static final String REMOTE_NODE = "Illegal remote node";
 
 	/**
 	 * Create an instance backed by a {@link NodeStore}.
@@ -168,6 +171,9 @@ public class ChannelManagerImpl implements ChannelManager {
 
 	@Override
 	public void createPersonalChannel(JID owner) throws NodeStoreException {
+		if (false == isLocalJID(owner)) {
+			throw new IllegalArgumentException(REMOTE_NODE);
+		}
 		if (!nodeExists(Conf.getPostChannelNodename(owner))) {
 			this.createNode(owner, Conf.getPostChannelNodename(owner),
 					Conf.getDefaultPostChannelConf(owner));
@@ -196,8 +202,11 @@ public class ChannelManagerImpl implements ChannelManager {
 
 	@Override
 	public boolean isLocalNode(String nodeId) {
-		// TODO Auto-generated method stub
-		return true;
+		if (false == nodeId.matches("/user/.+@.+/.+")) {
+			throw new IllegalArgumentException(INVALID_NODE);
+		}
+		return nodeId.contains("@" + configuration.getProperty(
+				Configuration.CONFIGURATION_SERVER_DOMAIN));
 	}
 
 	@Override

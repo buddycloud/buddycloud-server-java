@@ -6,7 +6,7 @@ public class Affiliation extends Field {
 			.toString();
 
 	public enum models {
-		FOLLOWER_AND_POST("publisher"), MEMBER("follower"), OWNER("owner"), MODERATOR(
+		FOLLOWER_AND_POST("publisher"), MEMBER("member"), OWNER("owner"), MODERATOR(
 				"moderator");
 		String model = null;
 

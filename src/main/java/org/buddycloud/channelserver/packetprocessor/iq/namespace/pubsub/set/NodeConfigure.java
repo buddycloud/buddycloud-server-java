@@ -2,6 +2,7 @@ package org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.set;
 
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 
 import org.apache.log4j.Logger;
@@ -18,6 +19,8 @@ import org.dom4j.Document;
 import org.dom4j.Element;
 import org.dom4j.Namespace;
 import org.dom4j.dom.DOMElement;
+import org.xmpp.forms.DataForm;
+import org.xmpp.forms.FormField;
 import org.xmpp.packet.IQ;
 import org.xmpp.packet.JID;
 import org.xmpp.packet.Message;
@@ -71,7 +74,7 @@ public class NodeConfigure extends PubSubElementProcessorAbstract {
 						.put(Owner.FIELD_NAME, channelManager.getNodeConfValue(
 								node, Owner.FIELD_NAME));
 				updateNodeConfiguration(configuration);
-				notifySubscribers();
+				notifySubscribers(configuration);
 				return;
 			}
 		} catch (NodeConfigurationException e) {
@@ -98,20 +101,31 @@ public class NodeConfigure extends PubSubElementProcessorAbstract {
 		outQueue.put(response);
 	}
 
-	private void notifySubscribers() throws NodeStoreException,
+	private void notifySubscribers(HashMap<String, String> configuration) throws NodeStoreException,
 			InterruptedException {
 		Collection<NodeSubscription> subscribers = channelManager
 				.getNodeSubscriptions(node);
 		Document document = getDocumentHelper();
 		Element message = document.addElement("message");
 		Element event = message.addElement("event");
-		Element configuration = event.addElement("configuration");
-		configuration.addAttribute("node", node);
+		Element configurationElement = event.addElement("configuration");
+		configurationElement.addAttribute("node", node);
 		event.addNamespace("", Event.NAMESPACE);
 		message.addAttribute("id", request.getID());
 		message.addAttribute("from", request.getTo().toString());
 		message.addAttribute("type", "headline");
 		Message rootElement = new Message(message);
+		
+		Element dataForm = configurationElement.addElement("x");
+		DataForm df = new DataForm(dataForm);
+		FormField field;
+		for (Map.Entry<String, String> entry : configuration.entrySet()) {
+		    String key = entry.getKey();
+		    Object value = entry.getValue();
+		    field = df.addField(key, null, null);
+		    field.addValue(value);
+		    // ...
+		}	
 
 		for (NodeSubscription subscriber : subscribers) {
 			Message notification = rootElement.createCopy();

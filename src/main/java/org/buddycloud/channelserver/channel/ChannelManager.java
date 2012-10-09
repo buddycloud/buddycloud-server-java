@@ -22,8 +22,9 @@ public interface ChannelManager extends NodeStore {
 	 * Determines whether the node id given refers to a local node.
 	 * @param nodeId the node id
 	 * @return <code>true</code> if the node appears to be local, <code>false</code> otherwise.
+	 * @throws NodeStoreException 
 	 */
-	boolean isLocalNode(String nodeId);
+	boolean isLocalNode(String nodeId) throws NodeStoreException;
 	
 	/**
 	 * Determines whether the jid refers to a local user.

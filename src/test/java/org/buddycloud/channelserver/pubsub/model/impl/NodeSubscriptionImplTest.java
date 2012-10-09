@@ -7,7 +7,6 @@ import org.junit.Ignore;
 
 public class NodeSubscriptionImplTest {
 	@Test
-	@Ignore("I don't understand what this test achieves?")
 	public void testEquals() {
 		EqualsVerifier.forClass(NodeSubscriptionImpl.class).verify();
 	}

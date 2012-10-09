@@ -10,6 +10,10 @@ import junit.framework.Assert;
 
 import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.channel.ChannelManagerImpl;
+import org.buddycloud.channelserver.db.NodeStore;
+import org.buddycloud.channelserver.db.jdbc.DatabaseTester;
+import org.buddycloud.channelserver.db.jdbc.JDBCNodeStore;
+import org.buddycloud.channelserver.db.jdbc.dialect.Sql92NodeStoreDialect;
 import org.buddycloud.channelserver.packetHandler.iq.HandlerTestCase;
 import org.buddycloud.channelserver.packetHandler.iq.IQTestHandler;
 import org.dom4j.DocumentException;

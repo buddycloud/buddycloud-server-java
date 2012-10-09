@@ -5,6 +5,7 @@ import java.util.Map;
 import java.util.Properties;
 
 import org.apache.log4j.Logger;
+import org.buddycloud.channelserver.Configuration;
 import org.buddycloud.channelserver.db.CloseableIterator;
 import org.buddycloud.channelserver.db.NodeStore;
 import org.buddycloud.channelserver.db.exception.NodeStoreException;
@@ -22,8 +23,9 @@ public class ChannelManagerImpl implements ChannelManager {
 
 	private final NodeStore nodeStore;
 	private final Properties configuration;
-	
-	private static final Logger LOGGER = Logger.getLogger(ChannelManagerImpl.class);
+
+	private static final Logger LOGGER = Logger
+			.getLogger(ChannelManagerImpl.class);
 
 	/**
 	 * Create an instance backed by a {@link NodeStore}.
@@ -199,10 +201,10 @@ public class ChannelManagerImpl implements ChannelManager {
 	}
 
 	@Override
-	public boolean isLocalJID(JID jid) throws NodeStoreException {
-		// TODO Auto-generated method stub
-		LOGGER.debug("Checking to see if '/user/" + jid.toBareJID() + "/posts' exists");
-		return nodeExists("/user/" + jid.toBareJID() + "/posts");
+	public boolean isLocalJID(JID jid) {
+		return configuration.getProperty(
+				Configuration.CONFIGURATION_SERVER_DOMAIN).equals(
+				jid.getDomain());
 	}
 
 	@Override

@@ -27,7 +27,7 @@ public class ChannelManagerImpl implements ChannelManager {
 
 	private static final Logger LOGGER = Logger
 			.getLogger(ChannelManagerImpl.class);
-	
+
 	private static final String INVALID_NODE = "Illegal node format";
 	private static final String REMOTE_NODE = "Illegal remote node";
 
@@ -206,8 +206,13 @@ public class ChannelManagerImpl implements ChannelManager {
 		if (false == nodeId.matches("/user/.+@.+/.+")) {
 			throw new IllegalArgumentException(INVALID_NODE);
 		}
-		return nodeId.contains("@" + configuration.getProperty(
-				Configuration.CONFIGURATION_SERVER_DOMAIN));
+		return ((true == nodeId
+				.contains("@"
+						+ configuration
+								.getProperty(Configuration.CONFIGURATION_SERVER_DOMAIN))) || (true == nodeId
+				.contains("@"
+						+ configuration
+								.getProperty(Configuration.CONFIGURATION_SERVER_TOPICS_DOMAIN))));
 	}
 
 	@Override

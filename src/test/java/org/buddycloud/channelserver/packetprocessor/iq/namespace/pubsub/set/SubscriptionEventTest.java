@@ -273,45 +273,6 @@ public class SubscriptionEventTest extends IQTestHandler {
 	}
 
 	@Test
-	@Ignore("Need to work out how to check set subscription values")
-	public void testPassingValidSubscriptionTypeUpdatesSubscription()
-			throws Exception {
-
-		IQ request = toIq(readStanzaAsString(
-				"/iq/pubsub/subscribe/authorizationPendingGrantReply.stanza")
-				.replaceFirst("subscription='subscribed'",
-						"subscription='subscribed'"));
-
-		NodeAffiliation subscriptionMockActor = Mockito
-				.mock(NodeAffiliation.class);
-		Mockito.when(subscriptionMockActor.getAffiliation()).thenReturn(
-				Affiliations.owner);
-
-		NodeSubscription subscriptionMockSubscriber = Mockito
-				.mock(NodeSubscription.class);
-		Mockito.when(subscriptionMockSubscriber.getSubscription()).thenReturn(
-				Subscriptions.subscribed);
-
-		Mock channelManagerMock = Mockito.mock(Mock.class);
-		Mockito.when(channelManagerMock.nodeExists(node)).thenReturn(true);
-		Mockito.when(channelManagerMock.getUserAffiliation(node, jid))
-				.thenReturn(subscriptionMockActor);
-
-		Mockito.when(
-				channelManagerMock.getUserSubscription(node,
-						new JID(subscriber))).thenReturn(
-				subscriptionMockSubscriber);
-
-		event.setChannelManager(channelManagerMock);
-		event.process(element, jid, request, null);
-
-		NodeSubscription passedValues = channelManagerMock
-				.getLastUserNodeSubscription();
-		assertEquals(passedValues.getSubscription(), Subscriptions.subscribed);
-		assertEquals(passedValues.getNodeId(), node);
-	}
-
-	@Test
 	public void testPassingValidSubscriptionSendsOutExpectedNotifications()
 			throws Exception {
 

@@ -1,139 +1,212 @@
 package org.buddycloud.channelserver.db.mock;
 
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 
-import org.buddycloud.channelserver.db.DataStore;
-import org.buddycloud.channelserver.db.DataStoreException;
-import org.buddycloud.channelserver.db.jedis.NodeSubscriptionImpl;
-import org.buddycloud.channelserver.pubsub.entry.NodeEntry;
-import org.buddycloud.channelserver.pubsub.subscription.NodeSubscription;
-import org.buddycloud.channelserver.pubsub.subscription.NodeSubscriptionMock;
+import org.buddycloud.channelserver.channel.ChannelManager;
+import org.buddycloud.channelserver.db.CloseableIterator;
+import org.buddycloud.channelserver.db.exception.NodeStoreException;
+import org.buddycloud.channelserver.pubsub.affiliation.Affiliations;
+import org.buddycloud.channelserver.pubsub.model.NodeAffiliation;
+import org.buddycloud.channelserver.pubsub.model.NodeItem;
+import org.buddycloud.channelserver.pubsub.model.NodeSubscription;
+import org.xmpp.packet.JID;
 
+public class Mock implements ChannelManager {
 
-public class Mock implements DataStore
-{
-	/**
-	 * Used for testing only 
-	 */
-	private HashMap<String, String> configuration = null;
-	
-	public HashMap<String, String> getConfiguration() throws DataStoreException
-	{
-		return configuration;
-	}
+	// Store last provided configuration
+	private Map<String, String> conf;
+	// Store last provided node subscription
+	private NodeSubscription nodeSubscription;
+    // Store last provided node affiliation
+	private Affiliations nodeAffiliation;	
 	
 	/**
-	 * Implemented methods
+	 * Helper methods
 	 */
-	public boolean isLocalNode(String nodename) throws DataStoreException
-	{
+	public NodeSubscription getLastUserNodeSubscription() {
+		return nodeSubscription;
+	}
+	
+	public Affiliations getLastUserNodeAffiliation() {
+		return nodeAffiliation;
+	}
+	
+	/**
+	 * Standard methods
+	 */
+	
+	@Override
+	public void createNode(JID owner, String nodeId,
+			Map<String, String> nodeConf) throws NodeStoreException {
+		// TODO Auto-generated method stub
+		conf = nodeConf;
+	}
+
+	@Override
+	public void setNodeConfValue(String nodeId, String key, String value)
+			throws NodeStoreException {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public void setNodeConf(String nodeId, Map<String, String> conf)
+			throws NodeStoreException {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public String getNodeConfValue(String nodeId, String key)
+			throws NodeStoreException {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public Map<String, String> getNodeConf(String nodeId)
+			throws NodeStoreException {
+		// TODO Auto-generated method stub
+		return conf;
+	}
+
+	@Override
+	public boolean nodeExists(String nodeId) throws NodeStoreException {
+		// TODO Auto-generated method stub
 		return false;
 	}
 
-	public Long addLocalUser(String bareJID) throws DataStoreException
-	{
+	@Override
+	public void setUserAffiliation(String nodeId, JID user,
+			Affiliations affiliation) throws NodeStoreException {
+		// TODO Auto-generated method stub
+		nodeAffiliation = affiliation;
+	}
+
+	@Override
+	public void addUserSubscription(NodeSubscription subscription)
+			throws NodeStoreException {
+		// TODO Auto-generated method stub
+		nodeSubscription = subscription;
+	}
+
+	@Override
+	public NodeAffiliation getUserAffiliation(String nodeId, JID user)
+			throws NodeStoreException {
+		// TODO Auto-generated method stub
 		return null;
 	}
 
-	public boolean isLocalUser(String bareJID) throws DataStoreException
-	{
-		return false;
-	}
-
-	public String addNodeConf(String nodename, Map<String, String> conf) 
-		throws DataStoreException
-	{
+	@Override
+	public Collection<NodeAffiliation> getUserAffiliations(JID user)
+			throws NodeStoreException {
+		// TODO Auto-generated method stub
 		return null;
 	}
 
-	public String createUserNodes(String owner) throws DataStoreException
-	{
+	@Override
+	public Collection<NodeAffiliation> getNodeAffiliations(String nodeId)
+			throws NodeStoreException {
+		// TODO Auto-generated method stub
 		return null;
 	}
 
-	public void createNode(String owner, String nodename,
-		 Map<String, String> conf) throws DataStoreException
-	{
-		configuration = (HashMap<String, String>) conf;
-	}
-
-	public boolean subscribeUserToNode(String bareJID, String nodename,
-			String aff, String subs, String foreignChannelServer) 
-	    throws DataStoreException
-	{
-		return false;
-	}
-
-	public boolean unsubscribeUserFromNode(String bareJID, String node) 
-		throws DataStoreException
-	{
-		return false;
-	}
-
-	public Iterator<? extends NodeSubscription> getUserSubscriptionsOfNodes(
-			String bareJID) throws DataStoreException
-	{
+	@Override
+	public Collection<NodeSubscription> getUserSubscriptions(JID user)
+			throws NodeStoreException {
+		// TODO Auto-generated method stub
 		return null;
 	}
 
-	public NodeSubscriptionImpl getUserSubscriptionOfNode(String bareJID,
-			String node) throws DataStoreException
-	{
+	@Override
+	public Collection<NodeSubscription> getNodeSubscriptions(String nodeId)
+			throws NodeStoreException {
+		// TODO Auto-generated method stub
 		return null;
 	}
 
-	public Iterator<? extends NodeSubscription> getNodeSubscribers(String node) 
-		throws DataStoreException
-	{
+	@Override
+	public NodeSubscription getUserSubscription(String nodeId, JID user)
+			throws NodeStoreException {
+		// TODO Auto-generated method stub
 		return null;
 	}
 
-	public HashMap<String, String> getNodeConf(String nodename) 
-		throws DataStoreException
-	{
-		return configuration;
-	}
-
-	public Iterator<? extends NodeEntry> getNodeEntries(String node, int limit,
-			String afterItemId) throws DataStoreException
-    {
+	@Override
+	public CloseableIterator<NodeItem> getNodeItems(String nodeId,
+			String afterItemId, int count) throws NodeStoreException {
+		// TODO Auto-generated method stub
 		return null;
 	}
 
-	public int getNodeEntriesCount(String node) throws DataStoreException
-	{
+	@Override
+	public CloseableIterator<NodeItem> getNodeItems(String nodeId)
+			throws NodeStoreException {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public int countNodeItems(String nodeId) throws NodeStoreException {
+		// TODO Auto-generated method stub
 		return 0;
 	}
 
-	public boolean storeEntry(String nodename, String id, String entry) 
-		throws DataStoreException
-	{
+	@Override
+	public NodeItem getNodeItem(String nodeId, String nodeItemId)
+			throws NodeStoreException {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public void addNodeItem(NodeItem item) throws NodeStoreException {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public void updateNodeItem(NodeItem item) throws NodeStoreException {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public void deleteNodeItemById(String nodeId, String nodeItemId)
+			throws NodeStoreException {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public void close() throws NodeStoreException {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public Transaction beginTransaction() throws NodeStoreException {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public void createPersonalChannel(JID ownerJID) throws NodeStoreException {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public boolean isLocalNode(String nodeId) {
+		// TODO Auto-generated method stub
 		return false;
 	}
 
-	public String storeState(String oldID, String newID,
-			Map<String, String> state) throws DataStoreException
-    {
-		return null;
-	}
-
-	public Map<String, String> getState(String id) throws DataStoreException
-	{
-		return null;
-	}
-
-	public boolean nodeExists(String createNodeId) throws DataStoreException
-	{
+	@Override
+	public boolean isLocalJID(JID jid) {
+		// TODO Auto-generated method stub
 		return false;
 	}
-	
-	public Iterator<? extends NodeSubscription> findUserSubscriptionOfNodes(
-        String listener, String nodeMatch)
-    {
-		return null;
-    }
+
 }

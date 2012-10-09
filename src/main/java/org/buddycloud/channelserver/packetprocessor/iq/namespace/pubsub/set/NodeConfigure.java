@@ -1,17 +1,19 @@
 package org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.set;
 
+import java.util.Collection;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.concurrent.BlockingQueue;
+
 import org.apache.log4j.Logger;
+import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.channel.node.configuration.NodeConfigurationException;
-import org.buddycloud.channelserver.db.DataStore;
-import org.buddycloud.channelserver.db.DataStoreException;
+import org.buddycloud.channelserver.channel.node.configuration.field.Owner;
+import org.buddycloud.channelserver.db.exception.NodeStoreException;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.JabberPubsub;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.PubSubElementProcessorAbstract;
 import org.buddycloud.channelserver.pubsub.affiliation.Affiliation;
 import org.buddycloud.channelserver.pubsub.event.Event;
-import org.buddycloud.channelserver.pubsub.subscription.NodeSubscription;
+import org.buddycloud.channelserver.pubsub.model.NodeSubscription;
 import org.dom4j.Document;
 import org.dom4j.Element;
 import org.dom4j.Namespace;
@@ -27,8 +29,9 @@ public class NodeConfigure extends PubSubElementProcessorAbstract {
 
 	private static final Logger LOGGER = Logger.getLogger(NodeConfigure.class);
 
-	public NodeConfigure(BlockingQueue<Packet> outQueue, DataStore dataStore) {
-		setDataStore(dataStore);
+	public NodeConfigure(BlockingQueue<Packet> outQueue,
+			ChannelManager channelManager) {
+		setChannelManager(channelManager);
 		setOutQueue(outQueue);
 	}
 
@@ -49,7 +52,7 @@ public class NodeConfigure extends PubSubElementProcessorAbstract {
 				outQueue.put(response);
 				return;
 			}
-		} catch (DataStoreException e) {
+		} catch (NodeStoreException e) {
 			setErrorCondition(PacketError.Type.cancel,
 					PacketError.Condition.internal_server_error);
 			outQueue.put(response);
@@ -64,6 +67,9 @@ public class NodeConfigure extends PubSubElementProcessorAbstract {
 			if (true == getNodeConfigurationHelper().isValid()) {
 				HashMap<String, String> configuration = getNodeConfigurationHelper()
 						.getValues();
+				configuration
+						.put(Owner.FIELD_NAME, channelManager.getNodeConfValue(
+								node, Owner.FIELD_NAME));
 				updateNodeConfiguration(configuration);
 				notifySubscribers();
 				return;
@@ -74,7 +80,7 @@ public class NodeConfigure extends PubSubElementProcessorAbstract {
 					PacketError.Condition.bad_request);
 			outQueue.put(response);
 			return;
-		} catch (DataStoreException e) {
+		} catch (NodeStoreException e) {
 			LOGGER.error("Data Store Exception", e);
 			setErrorCondition(PacketError.Type.cancel,
 					PacketError.Condition.internal_server_error);
@@ -88,14 +94,14 @@ public class NodeConfigure extends PubSubElementProcessorAbstract {
 
 	private void updateNodeConfiguration(HashMap<String, String> configuration)
 			throws Exception {
-		dataStore.addNodeConf(node, configuration);
+		channelManager.setNodeConf(node, configuration);
 		outQueue.put(response);
 	}
 
-	private void notifySubscribers() throws DataStoreException,
+	private void notifySubscribers() throws NodeStoreException,
 			InterruptedException {
-		Iterator<? extends NodeSubscription> subscribers = dataStore
-				.getNodeSubscribers(node);
+		Collection<NodeSubscription> subscribers = channelManager
+				.getNodeSubscriptions(node);
 		Document document = getDocumentHelper();
 		Element message = document.addElement("message");
 		Element event = message.addElement("event");
@@ -104,27 +110,21 @@ public class NodeConfigure extends PubSubElementProcessorAbstract {
 		event.addNamespace("", Event.NAMESPACE);
 		message.addAttribute("id", request.getID());
 		message.addAttribute("from", request.getTo().toString());
+		message.addAttribute("type", "headline");
 		Message rootElement = new Message(message);
 
-		while (true == subscribers.hasNext()) {
-			String subscriber = subscribers.next().getBareJID();
-			if (false == subscriber.contains(actor.toBareJID())) {
-				message.addAttribute("to", subscriber);
-				Message notification = rootElement.createCopy();
-				outQueue.put(notification);
-			}
+		for (NodeSubscription subscriber : subscribers) {
+			Message notification = rootElement.createCopy();
+			notification.setTo(subscriber.getListener());
+			outQueue.put(notification);
 		}
 	}
 
-	private boolean userCanModify() throws DataStoreException {
-		HashMap<String, String> nodeConfiguration = dataStore.getNodeConf(node);
-		if (null == nodeConfiguration) {
-			setErrorCondition(PacketError.Type.cancel,
-					PacketError.Condition.not_allowed);
-		}
-		String owner = nodeConfiguration.get(Affiliation.OWNER.toString());
+	private boolean userCanModify() throws NodeStoreException {
+		String owner = channelManager.getNodeConfValue(node,
+				Affiliation.OWNER.toString());
 
-		if (true == owner.equals(actor.toBareJID())) {
+		if ((null != owner) && (true == owner.equals(actor.toBareJID()))) {
 			return true;
 		}
 		setErrorCondition(PacketError.Type.auth,
@@ -132,8 +132,8 @@ public class NodeConfigure extends PubSubElementProcessorAbstract {
 		return false;
 	}
 
-	private boolean nodeExists() throws DataStoreException {
-		if (true == dataStore.nodeExists(node)) {
+	private boolean nodeExists() throws NodeStoreException {
+		if (true == channelManager.nodeExists(node)) {
 			return true;
 		}
 		setErrorCondition(PacketError.Type.cancel,

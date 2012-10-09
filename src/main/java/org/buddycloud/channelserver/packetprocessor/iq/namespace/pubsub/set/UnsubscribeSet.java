@@ -1,15 +1,21 @@
 package org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.set;
 
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.concurrent.BlockingQueue;
 
-import org.buddycloud.channelserver.db.DataStore;
-import org.buddycloud.channelserver.db.DataStoreException;
+import org.apache.log4j.Logger;
+import org.buddycloud.channelserver.channel.ChannelManager;
+import org.buddycloud.channelserver.db.exception.NodeStoreException;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.JabberPubsub;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.PubSubElementProcessor;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.PubSubElementProcessorAbstract;
+import org.buddycloud.channelserver.pubsub.affiliation.Affiliations;
 import org.buddycloud.channelserver.pubsub.event.Event;
-import org.buddycloud.channelserver.pubsub.subscription.NodeSubscription;
+import org.buddycloud.channelserver.pubsub.model.NodeAffiliation;
+import org.buddycloud.channelserver.pubsub.model.NodeSubscription;
+import org.buddycloud.channelserver.pubsub.model.impl.NodeSubscriptionImpl;
+import org.buddycloud.channelserver.pubsub.subscription.Subscriptions;
 import org.buddycloud.channelserver.queue.statemachine.Unsubscribe;
 import org.dom4j.Document;
 import org.dom4j.Element;
@@ -24,15 +30,18 @@ import org.xmpp.packet.PacketError;
 public class UnsubscribeSet extends PubSubElementProcessorAbstract {
 
 	private final BlockingQueue<Packet> outQueue;
-	private final DataStore dataStore;
+	private final ChannelManager channelManager;
+
+	private static final Logger logger = Logger.getLogger(UnsubscribeSet.class);
 
 	private String node;
-	private IQ     request;
-	private JID    unsubscribingJid;
+	private IQ request;
+	private JID unsubscribingJid;
 
-	public UnsubscribeSet(BlockingQueue<Packet> outQueue, DataStore dataStore) {
+	public UnsubscribeSet(BlockingQueue<Packet> outQueue,
+			ChannelManager channelManager) {
 		this.outQueue = outQueue;
-		this.dataStore = dataStore;
+		this.channelManager = channelManager;
 	}
 
 	@Override
@@ -47,15 +56,14 @@ public class UnsubscribeSet extends PubSubElementProcessorAbstract {
 			return;
 		}
 
-	    unsubscribingJid          = request.getFrom();
-		boolean isLocalNode       = dataStore.isLocalNode(node);
+		unsubscribingJid = request.getFrom();
+		boolean isLocalNode = channelManager.isLocalNode(node);
 		boolean isLocalSubscriber = false;
 
 		if (actorJID != null) {
 			unsubscribingJid = actorJID;
 		} else {
-			isLocalSubscriber = dataStore.isLocalUser(unsubscribingJid
-					.toBareJID());
+			isLocalSubscriber = channelManager.isLocalJID(unsubscribingJid);
 			// Check that user is registered.
 			if (!isLocalSubscriber) {
 				failAuthRequired();
@@ -66,13 +74,12 @@ public class UnsubscribeSet extends PubSubElementProcessorAbstract {
 
 		if (!isLocalNode) {
 
-			/*if (isLocalSubscriber) {
-				// Start process to unsubscribe from external node.
-				Unsubscribe unsub = Unsubscribe.buildUnsubscribeStatemachine(
-						node, request, dataStore);
-				outQueue.put(unsub.nextStep());
-				return;
-			}*/
+			/*
+			 * if (isLocalSubscriber) { // Start process to unsubscribe from
+			 * external node. Unsubscribe unsub =
+			 * Unsubscribe.buildUnsubscribeStatemachine( node, request,
+			 * channelManager); outQueue.put(unsub.nextStep()); return; }
+			 */
 
 			// Foreign client is trying to subscribe on a node that does not
 			// exists.
@@ -94,44 +101,85 @@ public class UnsubscribeSet extends PubSubElementProcessorAbstract {
 			outQueue.put(reply);
 			return;
 		}
+		if (false == channelManager.nodeExists(node)) {
+			IQ reply = IQ.createResultIQ(request);
+			reply.setType(Type.error);
+			PacketError pe = new PacketError(
+					org.xmpp.packet.PacketError.Condition.item_not_found,
+					org.xmpp.packet.PacketError.Type.cancel);
+			reply.setError(pe);
+			outQueue.put(reply);
+			return;
+		}
 
-		dataStore.unsubscribeUserFromNode(unsubscribingJid.toBareJID(), node);
+		NodeSubscription existingSubscription = channelManager
+				.getUserSubscription(node, unsubscribingJid);
+		NodeAffiliation existingAffiliation = channelManager
+				.getUserAffiliation(node, unsubscribingJid);
+		String fromJID = request.getFrom().toBareJID();
+
+		// Check that the requesting user is allowed to unsubscribe according to
+		// XEP-0060 section 6.2.3.3
+		if (false == fromJID.equals(existingSubscription.getUser().toBareJID())) {
+			IQ reply = IQ.createResultIQ(request);
+			reply.setType(Type.error);
+			PacketError pe = new PacketError(
+					org.xmpp.packet.PacketError.Condition.forbidden,
+					org.xmpp.packet.PacketError.Type.auth);
+			reply.setError(pe);
+			outQueue.put(reply);
+			return;
+		}
+
+		NodeSubscription newSubscription = new NodeSubscriptionImpl(
+				existingSubscription.getNodeId(),
+				existingSubscription.getUser(),
+				existingSubscription.getListener(), Subscriptions.none);
+
+		channelManager.addUserSubscription(newSubscription);
+		if (false == Affiliations.outcast.toString().equals(
+				existingAffiliation.getAffiliation().toString())) {
+			channelManager.setUserAffiliation(node, unsubscribingJid,
+					Affiliations.none);
+		}
 
 		IQ reply = IQ.createResultIQ(request);
 		outQueue.put(reply);
 		notifySubscribers();
 	}
 
-	private void notifySubscribers() throws DataStoreException, InterruptedException
-	{
-	    Iterator<? extends NodeSubscription> subscribers = dataStore.getNodeSubscribers(node);
-	    Document document     = getDocumentHelper();
-        Element message       = document.addElement("message");
-        Element event         = message.addElement("event");
-        Element subscription  = event.addElement("subscription");
-        Element affiliation   = event.addElement("affiliation");
-        subscription.addAttribute("node", node);
-        subscription.addAttribute("jid", unsubscribingJid.toBareJID());
-        subscription.addAttribute("subscription", "none");
-        event.addNamespace("", Event.NAMESPACE);
-        message.addAttribute("id", request.getID());
-        message.addAttribute("from", unsubscribingJid.toBareJID());
-        affiliation.addAttribute("affiliation", "none");
-        affiliation.addAttribute("jid", unsubscribingJid.toBareJID());
-        affiliation.addAttribute("node", node);
+	private void notifySubscribers() throws NodeStoreException,
+			InterruptedException {
+		Collection<NodeSubscription> subscribers = channelManager
+				.getNodeSubscriptions(node);
 
-        Message rootElement = new Message(message);
-        
-		while (true == subscribers.hasNext()) {
-			String subscriber = subscribers.next().getBareJID();
-			if (false == subscriber.contains(unsubscribingJid.toBareJID())) {
-				message.addAttribute("to", subscriber);
-	            Message notification = rootElement.createCopy();
-				outQueue.put(notification);
-			}
+		Document document = getDocumentHelper();
+		Element message = document.addElement("message");
+		Element event = message.addElement("event");
+		Element subscription = event.addElement("subscription");
+		Element affiliation = event.addElement("affiliation");
+		subscription.addAttribute("node", node);
+		subscription.addAttribute("jid", unsubscribingJid.toBareJID());
+		subscription
+				.addAttribute("subscription", Subscriptions.none.toString());
+		event.addNamespace("", Event.NAMESPACE);
+		message.addAttribute("id", request.getID());
+		message.addAttribute("from", unsubscribingJid.toBareJID());
+		message.addAttribute("type", "headline");
+		// "None" because we don't glorify the bad
+		affiliation.addAttribute("affiliation", Affiliations.none.toString());
+		affiliation.addAttribute("jid", unsubscribingJid.toBareJID());
+		affiliation.addAttribute("node", node);
+
+		Message rootElement = new Message(message);
+
+		for (NodeSubscription subscriber : subscribers) {
+			Message notification = rootElement.createCopy();
+			notification.setTo(subscriber.getUser());
+			outQueue.put(notification);
 		}
 	}
-	
+
 	private void failAuthRequired() throws InterruptedException {
 		// If the packet did not have actor, and the sender is not a
 		// local user
@@ -139,9 +187,9 @@ public class UnsubscribeSet extends PubSubElementProcessorAbstract {
 
 		/*
 		 * <iq type='error' from='pubsub.shakespeare.lit'
-		 * to='hamlet@denmark.lit/elsinore' id='unsub1'> <error
-		 * type='auth'> <registration-required
-		 * xmlns='urn:ietf:params:xml:ns:xmpp-stanzas'/> </error> </iq>
+		 * to='hamlet@denmark.lit/elsinore' id='unsub1'> <error type='auth'>
+		 * <registration-required xmlns='urn:ietf:params:xml:ns:xmpp-stanzas'/>
+		 * </error> </iq>
 		 */
 
 		IQ reply = IQ.createResultIQ(request);

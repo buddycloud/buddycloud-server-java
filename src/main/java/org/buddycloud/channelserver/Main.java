@@ -8,7 +8,7 @@ import org.xmpp.component.ComponentException;
 public class Main
 {
     private static Logger LOGGER = Logger.getLogger(Main.class);
-    
+	
     public static void main(String[] args) {
         
         PropertyConfigurator.configure("log4j.properties");
@@ -24,13 +24,7 @@ public class Main
             + conf.getProperty("xmpp.subdomain") + "'.");
 
         try {
-            XmppComponent xmppComponent = new XmppComponent(
-                conf.getProperty("xmpp.host"),
-                Integer.valueOf(conf.getProperty("xmpp.port")), 
-                conf.getProperty("xmpp.subdomain"), 
-                conf.getProperty("xmpp.secretkey")
-            );
-            xmppComponent.setConf(conf);
+            XmppComponent xmppComponent = new XmppComponent(conf);
             xmppComponent.run();
         } catch (ComponentException e1) {
             // TODO Auto-generated catch block

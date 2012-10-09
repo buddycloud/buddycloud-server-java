@@ -1,6 +1,6 @@
 package org.buddycloud.channelserver.channel.node.configuration.field;
 
-public abstract class Field<E>
+public abstract class Field
 {
     public static String FIELD_NAME    = "FIELD";
     public static String DEFAULT_VALUE = "DEFAULT_VALUE";

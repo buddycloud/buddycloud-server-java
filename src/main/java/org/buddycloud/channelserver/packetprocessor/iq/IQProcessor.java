@@ -6,7 +6,8 @@ import java.util.Properties;
 import java.util.concurrent.BlockingQueue;
 
 import org.buddycloud.channelserver.packetprocessor.PacketProcessor;
-import org.buddycloud.channelserver.db.DataStore;
+import org.buddycloud.channelserver.channel.ChannelManager;
+import org.buddycloud.channelserver.db.NodeStore;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.discoinfo.JabberDiscoInfo;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.JabberPubsub;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.register.JabberRegister;
@@ -26,18 +27,18 @@ public class IQProcessor implements PacketProcessor<IQ> {
     private Map<String, PacketProcessor<IQ>> processorsPerNamespace = 
             new HashMap<String, PacketProcessor<IQ>>();
     private BlockingQueue<Packet> outQueue;
-    private DataStore dataStore;
+    private ChannelManager channelManager;
 	
-	public IQProcessor(BlockingQueue<Packet> outQueue, Properties conf, DataStore dataStore) {
+	public IQProcessor(BlockingQueue<Packet> outQueue, Properties conf, ChannelManager channelManager) {
 		this.outQueue  = outQueue;
-		this.dataStore = dataStore;
+		this.channelManager = channelManager;
 		
-		JabberPubsub ps = new JabberPubsub(outQueue, conf, dataStore);
+		JabberPubsub ps = new JabberPubsub(outQueue, conf, channelManager);
 		
         processorsPerNamespace.put(JabberDiscoInfo.NAMESPACE_URI,
-                new JabberDiscoInfo(outQueue, conf, dataStore));
+                new JabberDiscoInfo(outQueue, conf, channelManager));
         processorsPerNamespace.put(JabberRegister.NAMESPACE_URI, 
-                new JabberRegister(outQueue, conf, dataStore));
+                new JabberRegister(outQueue, conf, channelManager));
         processorsPerNamespace.put(JabberPubsub.NAMESPACE_URI, ps);
         processorsPerNamespace.put(JabberPubsub.NS_PUBSUB_OWNER, ps);
 	}
@@ -75,19 +76,19 @@ public class IQProcessor implements PacketProcessor<IQ> {
             return;
 
         }
-
+// TODO
+        /*
         if (packet.getType() == IQ.Type.result || packet.getType() == IQ.Type.error) {
-
             // This might be a reply to a state we are on.
-            Map<String, String> state = dataStore.getState(packet.getID());
+            Map<String, String> state = channelManager.getState(packet.getID());
             if (!state.isEmpty()) {
                 IStatemachine sm = StateMachineBuilder.buildFromState(packet,
-                        state, dataStore);
+                        state, channelManager);
                 outQueue.put(sm.nextStep());
                 return;
             }
-
         }
+        */
 
         LOGGER.error("Could not handle packet " + packet.toXML());
         

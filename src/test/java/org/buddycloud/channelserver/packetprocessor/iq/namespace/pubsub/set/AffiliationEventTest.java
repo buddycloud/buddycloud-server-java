@@ -1,28 +1,21 @@
 package org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.set;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.log4j.Logger;
-import org.buddycloud.channelserver.channel.node.configuration.Helper;
-import org.buddycloud.channelserver.channel.node.configuration.HelperMock;
-import org.buddycloud.channelserver.channel.node.configuration.NodeConfigurationException;
-import org.buddycloud.channelserver.channel.node.configuration.field.ChannelTitle;
-import org.buddycloud.channelserver.db.DataStore;
-import org.buddycloud.channelserver.db.DataStoreException;
-import org.buddycloud.channelserver.db.jedis.NodeSubscriptionImpl;
+import org.buddycloud.channelserver.channel.ChannelManager;
+import org.buddycloud.channelserver.db.exception.NodeStoreException;
 import org.buddycloud.channelserver.db.mock.Mock;
 import org.buddycloud.channelserver.packetHandler.iq.IQTestHandler;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.JabberPubsub;
-import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.set.AffiliationEvent;
 import org.buddycloud.channelserver.pubsub.affiliation.Affiliations;
-import org.buddycloud.channelserver.pubsub.subscription.NodeSubscription;
+import org.buddycloud.channelserver.pubsub.model.NodeAffiliation;
+import org.buddycloud.channelserver.pubsub.model.NodeSubscription;
+import org.buddycloud.channelserver.pubsub.model.impl.NodeSubscriptionImpl;
 import org.buddycloud.channelserver.pubsub.subscription.NodeSubscriptionMock;
 import org.buddycloud.channelserver.pubsub.subscription.Subscriptions;
 import org.dom4j.Element;
@@ -134,12 +127,12 @@ public class AffiliationEventTest extends IQTestHandler {
 	}
 
 	@Test
-	public void testDataStoreExceptionResultsInInternalServerErrorStanza()
+	public void testNodeStoreExceptionResultsInInternalServerErrorStanza()
 			throws Exception {
-		DataStore dataStoreMock = Mockito.mock(Mock.class);
-		Mockito.when(dataStoreMock.nodeExists(node)).thenThrow(
-				DataStoreException.class);
-		event.setDataStore(dataStoreMock);
+		ChannelManager channelManagerMock = Mockito.mock(Mock.class);
+		Mockito.when(channelManagerMock.nodeExists(node)).thenThrow(
+				NodeStoreException.class);
+		event.setChannelManager(channelManagerMock);
 
 		event.process(element, jid, request, null);
 		Packet response = queue.poll(100, TimeUnit.MILLISECONDS);
@@ -153,9 +146,9 @@ public class AffiliationEventTest extends IQTestHandler {
 
 	@Test
 	public void testNonExistantNodeRetunsErrorStanza() throws Exception {
-		DataStore dataStoreMock = Mockito.mock(Mock.class);
-		Mockito.when(dataStoreMock.nodeExists(node)).thenReturn(false);
-		event.setDataStore(dataStoreMock);
+		ChannelManager channelManagerMock = Mockito.mock(Mock.class);
+		Mockito.when(channelManagerMock.nodeExists(node)).thenReturn(false);
+		event.setChannelManager(channelManagerMock);
 
 		event.process(element, jid, request, null);
 		Packet response = queue.poll(100, TimeUnit.MILLISECONDS);
@@ -168,12 +161,11 @@ public class AffiliationEventTest extends IQTestHandler {
 
 	@Test
 	public void testUserWithoutAffiliationReturnsErrorStanza() throws Exception {
-		DataStore dataStoreMock = Mockito.mock(Mock.class);
-		Mockito.when(dataStoreMock.nodeExists(node)).thenReturn(true);
-		Mockito.when(
-				dataStoreMock.getUserSubscriptionOfNode(jid.toBareJID(), node))
+		ChannelManager channelManagerMock = Mockito.mock(Mock.class);
+		Mockito.when(channelManagerMock.nodeExists(node)).thenReturn(true);
+		Mockito.when(channelManagerMock.getUserSubscription(node, jid))
 				.thenReturn(null);
-		event.setDataStore(dataStoreMock);
+		event.setChannelManager(channelManagerMock);
 
 		event.process(element, jid, request, null);
 		Packet response = queue.poll(100, TimeUnit.MILLISECONDS);
@@ -187,16 +179,15 @@ public class AffiliationEventTest extends IQTestHandler {
 	@Test
 	public void testUserWhoIsntOwnerOrModeratorCantUpdateAffiliation()
 			throws Exception {
-		NodeSubscriptionImpl subscriptionMock = Mockito
-				.mock(NodeSubscriptionImpl.class);
-		Mockito.when(subscriptionMock.getAffiliation()).thenReturn("member");
+		NodeAffiliation affiliationMock = Mockito.mock(NodeAffiliation.class);
+		Mockito.when(affiliationMock.getAffiliation()).thenReturn(
+				Affiliations.member);
 
-		DataStore dataStoreMock = Mockito.mock(Mock.class);
-		Mockito.when(dataStoreMock.nodeExists(node)).thenReturn(true);
-		Mockito.when(
-				dataStoreMock.getUserSubscriptionOfNode(jid.toBareJID(), node))
-				.thenReturn(subscriptionMock);
-		event.setDataStore(dataStoreMock);
+		ChannelManager channelManagerMock = Mockito.mock(Mock.class);
+		Mockito.when(channelManagerMock.nodeExists(node)).thenReturn(true);
+		Mockito.when(channelManagerMock.getUserAffiliation(node, jid))
+				.thenReturn(affiliationMock);
+		event.setChannelManager(channelManagerMock);
 
 		event.process(element, jid, request, null);
 		Packet response = queue.poll(100, TimeUnit.MILLISECONDS);
@@ -209,19 +200,20 @@ public class AffiliationEventTest extends IQTestHandler {
 
 	@Test
 	public void testUserMustHaveExistingAffiliationToUpdate() throws Exception {
-		NodeSubscriptionImpl subscriptionMockActor = Mockito
-				.mock(NodeSubscriptionImpl.class);
-		Mockito.when(subscriptionMockActor.getAffiliation())
-				.thenReturn("owner");
+		NodeAffiliation affiliationMock = Mockito.mock(NodeAffiliation.class);
+		Mockito.when(affiliationMock.getAffiliation()).thenReturn(
+				Affiliations.owner);
 
-		DataStore dataStoreMock = Mockito.mock(Mock.class);
-		Mockito.when(dataStoreMock.nodeExists(node)).thenReturn(true);
+		ChannelManager channelManagerMock = Mockito.mock(Mock.class);
+		Mockito.when(channelManagerMock.nodeExists(node)).thenReturn(true);
+		// actorHasPermission
+		Mockito.when(channelManagerMock.getUserAffiliation(node, jid))
+				.thenReturn(affiliationMock);
+		// subscriberHasCurrentAffiliation
 		Mockito.when(
-				dataStoreMock.getUserSubscriptionOfNode(jid.toBareJID(), node))
-				.thenReturn(subscriptionMockActor);
-		Mockito.when(dataStoreMock.getUserSubscriptionOfNode(subscriber, node))
-				.thenReturn(null);
-		event.setDataStore(dataStoreMock);
+				channelManagerMock.getUserAffiliation(node, new JID(
+						"francisco@denmark.lit"))).thenReturn(null);
+		event.setChannelManager(channelManagerMock);
 
 		event.process(element, jid, request, null);
 		Packet response = queue.poll(100, TimeUnit.MILLISECONDS);
@@ -229,40 +221,35 @@ public class AffiliationEventTest extends IQTestHandler {
 		PacketError error = response.getError();
 		assertNotNull(error);
 		assertEquals(PacketError.Type.modify, error.getType());
-		assertEquals(PacketError.Condition.unexpected_request, error.getCondition());
+		assertEquals(PacketError.Condition.unexpected_request,
+				error.getCondition());
 	}
 
 	@Test
 	public void testItIsNotPossibleToChangeTheAffiliationOfNodeOwner()
 			throws Exception {
-		NodeSubscriptionImpl subscriptionMockActor = Mockito
-				.mock(NodeSubscriptionImpl.class);
-		Mockito.when(subscriptionMockActor.getAffiliation())
-				.thenReturn("owner");
 
-		NodeSubscriptionImpl subscriptionMockSubscriber = Mockito
-				.mock(NodeSubscriptionImpl.class);
-		Mockito.when(subscriptionMockSubscriber.getAffiliation()).thenReturn(
-				Affiliations.owner.toString());
-		Mockito.when(subscriptionMockSubscriber.getSubscription()).thenReturn(
-				Subscriptions.subscribed.toString());
+		NodeAffiliation affiliationSubscriber = Mockito
+				.mock(NodeAffiliation.class);
+		Mockito.when(affiliationSubscriber.getAffiliation()).thenReturn(
+				Affiliations.owner);
 
-		DataStore dataStoreMock = Mockito.mock(Mock.class);
-		Mockito.when(dataStoreMock.nodeExists(node)).thenReturn(true);
+		ChannelManager channelManagerMock = Mockito.mock(Mock.class);
+		Mockito.when(channelManagerMock.nodeExists(node)).thenReturn(true);
+
 		Mockito.when(
-				dataStoreMock.getUserSubscriptionOfNode(jid.toBareJID(), node))
-				.thenReturn(subscriptionMockActor);
-		Mockito.when(dataStoreMock.getUserSubscriptionOfNode(subscriber, node))
-				.thenReturn(subscriptionMockSubscriber);
-		event.setDataStore(dataStoreMock);
+				channelManagerMock.getUserAffiliation(Mockito.anyString(),
+						Mockito.any(JID.class))).thenReturn(
+				affiliationSubscriber);
+		event.setChannelManager(channelManagerMock);
 
 		event.process(element, jid, request, null);
 		Packet response = queue.poll(100, TimeUnit.MILLISECONDS);
-
 		PacketError error = response.getError();
 		assertNotNull(error);
 		assertEquals(PacketError.Type.modify, error.getType());
 		assertEquals(PacketError.Condition.not_acceptable, error.getCondition());
+		
 	}
 
 	@Test
@@ -274,37 +261,19 @@ public class AffiliationEventTest extends IQTestHandler {
 				.replaceFirst("affiliation='member'",
 						"affiliation='i-can-haz-all-the-items'"));
 
-		NodeSubscriptionImpl subscriptionMockActor = Mockito
-				.mock(NodeSubscriptionImpl.class);
-		Mockito.when(subscriptionMockActor.getAffiliation())
-				.thenReturn("owner");
+		NodeAffiliation affiliationActor = Mockito.mock(NodeAffiliation.class);
+		Mockito.when(affiliationActor.getAffiliation()).thenReturn(
+				Affiliations.moderator);
 
-		NodeSubscriptionImpl subscriptionMockSubscriber = Mockito
-				.mock(NodeSubscriptionImpl.class);
-		Mockito.when(subscriptionMockSubscriber.getAffiliation()).thenReturn(
-				"member");
-		Mockito.when(subscriptionMockSubscriber.getSubscription()).thenReturn(
-				"subscribed");
+		Mock channelManagerMock = Mockito.mock(Mock.class);
+		Mockito.when(channelManagerMock.nodeExists(node)).thenReturn(true);
+		Mockito.when(channelManagerMock.getUserAffiliation(Mockito.anyString(), Mockito.any(JID.class)))
+				.thenReturn(affiliationActor);
 
-		DataStore dataStoreMock = Mockito.mock(Mock.class);
-		Mockito.when(dataStoreMock.nodeExists(node)).thenReturn(true);
-		Mockito.when(
-				dataStoreMock.getUserSubscriptionOfNode(jid.toBareJID(), node))
-				.thenReturn(subscriptionMockActor);
-
-		Mockito.when(dataStoreMock.getUserSubscriptionOfNode(subscriber, node))
-				.thenReturn(subscriptionMockSubscriber);
-
-		Mockito.when(dataStoreMock.unsubscribeUserFromNode(subscriber, node))
-				.thenReturn(true);
-
-		event.setDataStore(dataStoreMock);
-
+		event.setChannelManager(channelManagerMock);
 		event.process(element, jid, request, null);
 
-		Mockito.verify(dataStoreMock).subscribeUserToNode(subscriber, node,
-				Affiliations.none.toString(),
-				Subscriptions.subscribed.toString(), null);
+		Mockito.verify(channelManagerMock).setUserAffiliation(Mockito.anyString(), Mockito.any(JID.class), Mockito.eq(Affiliations.none));
 	}
 
 	@Test
@@ -315,37 +284,21 @@ public class AffiliationEventTest extends IQTestHandler {
 				"/iq/pubsub/affiliation/affiliationChange.stanza")
 				.replaceFirst("affiliation='member'", "affiliation='moderator'"));
 
-		NodeSubscriptionImpl subscriptionMockActor = Mockito
-				.mock(NodeSubscriptionImpl.class);
-		Mockito.when(subscriptionMockActor.getAffiliation())
-				.thenReturn("owner");
+		NodeAffiliation affiliationMock = Mockito.mock(NodeAffiliation.class);
+		Mockito.when(affiliationMock.getAffiliation()).thenReturn(
+				Affiliations.moderator);
 
-		NodeSubscriptionImpl subscriptionMockSubscriber = Mockito
-				.mock(NodeSubscriptionImpl.class);
-		Mockito.when(subscriptionMockSubscriber.getAffiliation()).thenReturn(
-				"member");
-		Mockito.when(subscriptionMockSubscriber.getSubscription()).thenReturn(
-				"subscribed");
+		Mock channelManagerMock = Mockito.mock(Mock.class);
+		Mockito.when(channelManagerMock.nodeExists(node)).thenReturn(true);
+		Mockito.when(channelManagerMock.getUserAffiliation(Mockito.anyString(), Mockito.any(JID.class)))
+				.thenReturn(affiliationMock);
 
-		DataStore dataStoreMock = Mockito.mock(Mock.class);
-		Mockito.when(dataStoreMock.nodeExists(node)).thenReturn(true);
-		Mockito.when(
-				dataStoreMock.getUserSubscriptionOfNode(jid.toBareJID(), node))
-				.thenReturn(subscriptionMockActor);
-
-		Mockito.when(dataStoreMock.getUserSubscriptionOfNode(subscriber, node))
-				.thenReturn(subscriptionMockSubscriber);
-
-		Mockito.when(dataStoreMock.unsubscribeUserFromNode(subscriber, node))
-				.thenReturn(true);
-
-		event.setDataStore(dataStoreMock);
-
+		event.setChannelManager(channelManagerMock);
 		event.process(element, jid, request, null);
 
-		Mockito.verify(dataStoreMock).subscribeUserToNode(subscriber, node,
-				Affiliations.moderator.toString(),
-				Subscriptions.subscribed.toString(), null);
+		Mockito.verify(channelManagerMock).setUserAffiliation(
+				Mockito.anyString(), Mockito.any(JID.class),
+				Mockito.eq(Affiliations.moderator));
 	}
 
 	@Test
@@ -356,41 +309,26 @@ public class AffiliationEventTest extends IQTestHandler {
 				"/iq/pubsub/affiliation/affiliationChange.stanza")
 				.replaceFirst("affiliation='member'", "affiliation='moderator'"));
 
-		NodeSubscriptionImpl subscriptionMockActor = Mockito
-				.mock(NodeSubscriptionImpl.class);
-		Mockito.when(subscriptionMockActor.getAffiliation())
-				.thenReturn("owner");
+		NodeAffiliation affiliationMock = Mockito.mock(NodeAffiliation.class);
+		Mockito.when(affiliationMock.getAffiliation()).thenReturn(
+				Affiliations.moderator);
 
-		NodeSubscriptionImpl subscriptionMockSubscriber = Mockito
-				.mock(NodeSubscriptionImpl.class);
-		Mockito.when(subscriptionMockSubscriber.getAffiliation()).thenReturn(
-				"member");
-		Mockito.when(subscriptionMockSubscriber.getSubscription()).thenReturn(
-				"subscribed");
+		ChannelManager channelManagerMock = Mockito.mock(Mock.class);
+		Mockito.when(channelManagerMock.nodeExists(node)).thenReturn(true);
+		Mockito.when(channelManagerMock.getUserAffiliation(Mockito.anyString(), Mockito.any(JID.class)))
+				.thenReturn(affiliationMock);
 
-		DataStore dataStoreMock = Mockito.mock(Mock.class);
-		Mockito.when(dataStoreMock.nodeExists(node)).thenReturn(true);
-		Mockito.when(
-				dataStoreMock.getUserSubscriptionOfNode(jid.toBareJID(), node))
-				.thenReturn(subscriptionMockActor);
+		ArrayList<NodeSubscriptionMock> subscribers = new ArrayList<NodeSubscriptionMock>();
+		subscribers.add(new NodeSubscriptionMock(new JID(
+				"romeo@shakespeare.lit")));
+		subscribers.add(new NodeSubscriptionMock(new JID(
+				"hamlet@shakespeare.lit")));
 
-		Mockito.when(dataStoreMock.getUserSubscriptionOfNode(subscriber, node))
-				.thenReturn(subscriptionMockSubscriber);
-
-		Mockito.when(dataStoreMock.unsubscribeUserFromNode(subscriber, node))
-				.thenReturn(true);
-
-		event.setDataStore(dataStoreMock);
-
-		List<NodeSubscriptionMock> subscribers = new ArrayList<NodeSubscriptionMock>();
-		subscribers.add(new NodeSubscriptionMock("romeo@shakespeare.lit"));
-		subscribers.add(new NodeSubscriptionMock("hamlet@shakespeare.lit"));
-
-		Mockito.doReturn(
-				(Iterator<? extends NodeSubscription>) subscribers.iterator())
-				.when(dataStoreMock).getNodeSubscribers(Mockito.anyString());
-
-		event.setDataStore(dataStoreMock);
+		Mockito.doReturn(subscribers)
+				.when(channelManagerMock)
+				.getNodeSubscriptions(Mockito.anyString());
+		
+		event.setChannelManager(channelManagerMock);
 		event.process(element, jid, request, null);
 
 		assertEquals(2, queue.size());

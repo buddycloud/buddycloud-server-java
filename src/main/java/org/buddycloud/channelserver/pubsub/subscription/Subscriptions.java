@@ -1,14 +1,11 @@
 package org.buddycloud.channelserver.pubsub.subscription;
 
-public enum Subscriptions
-{
-	none,
-	pending,
-	unconfigured,
-	subscribed;
+import org.buddycloud.channelserver.pubsub.affiliation.Affiliations;
 
-	public static Subscriptions createFromString(String asString)
-	{
+public enum Subscriptions {
+	none, pending, unconfigured, subscribed;
+
+	public static Subscriptions createFromString(String asString) {
 		if ("none".equals(asString)) {
 			return none;
 		} else if ("pending".equals(asString)) {
@@ -19,5 +16,14 @@ public enum Subscriptions
 			return subscribed;
 		}
 		return none;
+	}
+
+	public boolean in(Subscriptions... subscriptions) {
+		for (Subscriptions subscription : subscriptions) {
+			if (subscription.equals(this)) {
+				return true;
+			}
+		}
+		return false;
 	}
 }

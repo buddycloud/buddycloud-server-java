@@ -1,6 +1,6 @@
 package org.buddycloud.channelserver.queue.statemachine;
 
-import org.buddycloud.channelserver.db.DataStoreException;
+import org.buddycloud.channelserver.db.exception.NodeStoreException;
 import org.xmpp.packet.Packet;
 
 public interface IStatemachine {
@@ -12,5 +12,5 @@ public interface IStatemachine {
 
     public final static String STATE_INIT = "init";
     
-    public Packet nextStep() throws DataStoreException;
+    public Packet nextStep() throws NodeStoreException;
 }

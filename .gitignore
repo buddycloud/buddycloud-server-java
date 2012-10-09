@@ -6,5 +6,4 @@ target
 target
 bin
 logs
-log4j.properties
-configuration.properties
+*.properties

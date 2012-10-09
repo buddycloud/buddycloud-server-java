@@ -21,5 +21,19 @@ public enum Affiliations {
 		}
 		return none;
 	}
+	
+	public boolean in(Affiliations... affiliations) {
+		for(Affiliations a : affiliations) {
+			if(a.equals(this)) {
+				return true;
+			}
+		}
+		
+		return false;
+		
+	}
 
+	public boolean canAuthorize() {
+		return in(owner, moderator);
+	}
 }

@@ -1,20 +1,24 @@
 package org.buddycloud.channelserver.pubsub.subscription;
 
+import org.buddycloud.channelserver.pubsub.affiliation.Affiliations;
+import org.buddycloud.channelserver.pubsub.model.NodeSubscription;
+import org.xmpp.packet.JID;
+
 public class NodeSubscriptionMock implements NodeSubscription {
-	private String subscriber;
-	private String affiliation;
-	private String subscription;
+	private JID subscriber;
+	private Affiliations affiliation;
+	private Subscriptions subscription;
 	private String foreignChannelServer;
 
-	public void setBareJID(String jid) {
+	public void setBareJID(JID jid) {
 		this.subscriber = jid;
 	}
 
-	public void setAffiliation(String affiliation) {
+	public void setAffiliation(Affiliations affiliation) {
 		this.affiliation = affiliation;
 	}
 
-	public void setSubscription(String subscription) {
+	public void setSubscription(Subscriptions subscription) {
 		this.subscription = subscription;
 	}
 
@@ -22,35 +26,31 @@ public class NodeSubscriptionMock implements NodeSubscription {
 		this.foreignChannelServer = foreignChannelServer;
 	}
 
-	public NodeSubscriptionMock(String jid) {
+	public NodeSubscriptionMock(JID jid) {
 		subscriber = jid;
 	}
 
 	@Override
-	public String getAffiliation() {
-		// TODO Auto-generated method stub
-		return affiliation;
-	}
-
-	@Override
-	public String getSubscription() {
+	public Subscriptions getSubscription() {
 		// TODO Auto-generated method stub
 		return subscription;
 	}
 
 	@Override
-	public String getBareJID() {
+	public JID getUser() {
+		// TODO Auto-generated method stub
 		return subscriber;
 	}
 
 	@Override
-	public String getNode() {
+	public JID getListener() {
 		// TODO Auto-generated method stub
-		return null;
+		return subscriber;
 	}
 
 	@Override
-	public String getForeignChannelServer() {
-		return foreignChannelServer;
+	public String getNodeId() {
+		// TODO Auto-generated method stub
+		return null;
 	}
 }

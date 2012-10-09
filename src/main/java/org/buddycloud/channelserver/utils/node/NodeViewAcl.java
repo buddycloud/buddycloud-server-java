@@ -19,42 +19,42 @@ public class NodeViewAcl {
 
 	private NodeAclRefuseReason reasonForRefusal;
 
-	public boolean canViewNode(String node, String affilliation,
-			String subscription, String accessModel) {
+	public boolean canViewNode(String node, Affiliations affilliation,
+			Subscriptions subscription, AccessModels accessModel) {
 		LOGGER.trace("Being asked for access to " + node + " with properties "
 				+ affilliation + " :: " + subscription + " :: " + accessModel);
 		reasonForRefusal = null;
 
-		if (Affiliations.outcast.toString().equals(affilliation)) {
+		if (Affiliations.outcast.toString().equals(affilliation.toString())) {
 			reasonForRefusal = new NodeAclRefuseReason(PacketError.Type.auth,
 					PacketError.Condition.forbidden, null);
 			return false;
 		}
 
-		if (accessModel.equals(AccessModels.open.toString())) {
+		if (accessModel.toString().equals(AccessModels.open.toString())) {
 			return openChannelAcl(node, subscription, affilliation);
-		} else if (accessModel.equals(AccessModels.authorize.toString())) {
+		} else if (accessModel.toString().equals(AccessModels.authorize.toString())) {
 			return privateChannelAcl(node, subscription, affilliation);
 		}
 		throw new InvalidParameterException(INVALID_ACCESS_MODEL);
 	}
 
-	private boolean privateChannelAcl(String node, String subscription,
-			String affilliation) {
-		if (Subscriptions.none.toString().equals(subscription)) {
+	private boolean privateChannelAcl(String node, Subscriptions subscription,
+			Affiliations affilliation) {
+		if (Subscriptions.none.toString().equals(subscription.toString())) {
 			reasonForRefusal = new NodeAclRefuseReason(PacketError.Type.auth,
 					PacketError.Condition.forbidden, CLOSED_NODE);
 			return false;
-		} else if (Subscriptions.pending.toString().equals(subscription)) {
+		} else if (Subscriptions.pending.toString().equals(subscription.toString())) {
 			reasonForRefusal = new NodeAclRefuseReason(PacketError.Type.auth,
 					PacketError.Condition.not_authorized, PENDING_SUBSCRIPTION);
 			return false;
-		} else if (Subscriptions.unconfigured.toString().equals(subscription)) {
+		} else if (Subscriptions.unconfigured.toString().equals(subscription.toString())) {
 			reasonForRefusal = new NodeAclRefuseReason(PacketError.Type.auth,
 					PacketError.Condition.not_authorized,
 					CONFIGURATION_REQUIRED);
 			return false;
-		} else if (Affiliations.none.toString().equals(affilliation)) {
+		} else if (Affiliations.none.toString().equals(affilliation.toString())) {
 			reasonForRefusal = new NodeAclRefuseReason(PacketError.Type.auth,
 					PacketError.Condition.not_authorized, CLOSED_NODE);
 			return false;
@@ -62,8 +62,8 @@ public class NodeViewAcl {
 		return true;
 	}
 
-	private boolean openChannelAcl(String node, String subscription,
-			String affilliation) {
+	private boolean openChannelAcl(String node, Subscriptions subscription,
+			Affiliations affilliation) {
 		return true;
 	}
 

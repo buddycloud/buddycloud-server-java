@@ -7,7 +7,8 @@ import java.util.concurrent.BlockingQueue;
 
 import org.apache.log4j.Logger;
 import org.buddycloud.channelserver.packetprocessor.PacketProcessor;
-import org.buddycloud.channelserver.db.DataStore;
+import org.buddycloud.channelserver.channel.ChannelManager;
+import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.set.AffiliationEvent;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.set.NodeConfigure;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.set.NodeCreate;
@@ -29,23 +30,23 @@ public class PubSubSet implements PacketProcessor<IQ> {
     private static final Logger LOGGER = Logger.getLogger(PubSubSet.class);
     
     private final BlockingQueue<Packet> outQueue;
-    private final DataStore dataStore;
+    private final ChannelManager channelManager;
     private final List<PubSubElementProcessor> elementProcessors = new LinkedList<PubSubElementProcessor>();
     
-    public PubSubSet(BlockingQueue<Packet> outQueue, DataStore dataStore) {
+    public PubSubSet(BlockingQueue<Packet> outQueue, ChannelManager channelManager) {
         this.outQueue = outQueue;
-        this.dataStore = dataStore;
+        this.channelManager = channelManager;
         initElementProcessors();
     }
     
     private void initElementProcessors() {
-        elementProcessors.add(new PublishSet(outQueue, dataStore));
-        elementProcessors.add(new SubscribeSet(outQueue, dataStore));
-        elementProcessors.add(new UnsubscribeSet(outQueue, dataStore));
-        elementProcessors.add(new NodeCreate(outQueue, dataStore));
-        elementProcessors.add(new NodeConfigure(outQueue, dataStore));
-        elementProcessors.add(new SubscriptionEvent(outQueue, dataStore));
-        elementProcessors.add(new AffiliationEvent(outQueue, dataStore));
+        elementProcessors.add(new PublishSet(outQueue, channelManager));
+        elementProcessors.add(new SubscribeSet(outQueue, channelManager));
+        elementProcessors.add(new UnsubscribeSet(outQueue, channelManager));
+        elementProcessors.add(new NodeCreate(outQueue, channelManager));
+        elementProcessors.add(new NodeConfigure(outQueue, channelManager));
+        elementProcessors.add(new SubscriptionEvent(outQueue, channelManager));
+        elementProcessors.add(new AffiliationEvent(outQueue, channelManager));
     }
     
     @Override

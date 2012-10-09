@@ -1,22 +1,30 @@
 package org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.get;
 
 import java.io.StringReader;
-import java.util.HashMap;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.TreeMap;
 import java.util.concurrent.BlockingQueue;
-import org.buddycloud.channelserver.pubsub.subscription.NodeSubscription;
-import org.buddycloud.channelserver.pubsub.subscription.Subscriptions;
+
 import org.apache.log4j.Logger;
+import org.buddycloud.channelserver.channel.ChannelManager;
+import org.buddycloud.channelserver.channel.ChannelNodeRef;
 import org.buddycloud.channelserver.channel.node.configuration.field.AccessModel;
-import org.buddycloud.channelserver.db.DataStore;
-import org.buddycloud.channelserver.db.jedis.NodeEntryImpl;
-import org.buddycloud.channelserver.db.jedis.NodeSubscriptionImpl;
+import org.buddycloud.channelserver.db.CloseableIterator;
+import org.buddycloud.channelserver.db.exception.NodeStoreException;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.JabberPubsub;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.PubSubElementProcessor;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.PubSubGet;
 import org.buddycloud.channelserver.pubsub.accessmodel.AccessModels;
 import org.buddycloud.channelserver.pubsub.affiliation.Affiliations;
-import org.buddycloud.channelserver.pubsub.entry.NodeEntry;
+import org.buddycloud.channelserver.pubsub.model.NodeAffiliation;
+import org.buddycloud.channelserver.pubsub.model.NodeItem;
+import org.buddycloud.channelserver.pubsub.model.NodeSubscription;
+import org.buddycloud.channelserver.pubsub.subscription.Subscriptions;
 import org.buddycloud.channelserver.utils.node.NodeAclRefuseReason;
 import org.buddycloud.channelserver.utils.node.NodeViewAcl;
 import org.dom4j.DocumentException;
@@ -29,8 +37,6 @@ import org.xmpp.packet.Packet;
 import org.xmpp.packet.PacketError;
 import org.xmpp.packet.PacketError.Condition;
 import org.xmpp.packet.PacketError.Type;
-import org.buddycloud.channelserver.db.jedis.NodeSubscriptionImpl;
-import org.buddycloud.channelserver.db.DataStoreException;
 
 public class ItemsGet implements PubSubElementProcessor {
 	private static final Logger LOGGER = Logger.getLogger(ItemsGet.class);
@@ -39,7 +45,7 @@ public class ItemsGet implements PubSubElementProcessor {
 
 	private final BlockingQueue<Packet> outQueue;
 
-	private DataStore dataStore;
+	private ChannelManager channelManager;
 	private String node;
 	private String firstItem;
 	private String lastItem;
@@ -52,15 +58,16 @@ public class ItemsGet implements PubSubElementProcessor {
 	private Element element;
 
 	private NodeViewAcl nodeViewAcl;
-	private HashMap<String, String> nodeDetails;
+	private Map<String, String> nodeDetails;
 
-	public ItemsGet(BlockingQueue<Packet> outQueue, DataStore dataStore) {
+	public ItemsGet(BlockingQueue<Packet> outQueue,
+			ChannelManager channelManager) {
 		this.outQueue = outQueue;
-		setDataStore(dataStore);
+		setChannelManager(channelManager);
 	}
 
-	public void setDataStore(DataStore ds) {
-		dataStore = ds;
+	public void setChannelManager(ChannelManager ds) {
+		channelManager = ds;
 	}
 
 	public void setNodeViewAcl(NodeViewAcl acl) {
@@ -84,7 +91,7 @@ public class ItemsGet implements PubSubElementProcessor {
 		resultSetManagement = rsm;
 
 		if ((node == null) || (true == node.equals(""))) {
-			missingJidRequest();
+			missingNodeIdRequest();
 			outQueue.put(reply);
 			return;
 		}
@@ -93,38 +100,36 @@ public class ItemsGet implements PubSubElementProcessor {
 
 		try {
 			if (false == nodeExists()) {
+				setErrorCondition(PacketError.Type.cancel,
+						PacketError.Condition.item_not_found);
+
 				outQueue.put(reply);
 				return;
 			}
-			// boolean isLocalNode = dataStore.isLocalNode(node);
+
+			// boolean isLocalNode = channelManager.isLocalNode(node);
 			// boolean isLocalSubscriber = false;
 
 			if (actorJID != null) {
 				fetchersJid = actorJID;
-			} else {
-				// isLocalSubscriber =
-				// dataStore.isLocalUser(fetchersJid.toBareJID());
 			}
-			/*
-			 * if (!isLocalNode) { handleForeignNode(isLocalSubscriber); return;
-			 * }
-			 */
+
 			if (false == userCanViewNode()) {
 				outQueue.add(reply);
 				return;
 			}
 			getItems();
-		} catch (DataStoreException e) {
+		} catch (NodeStoreException e) {
 			setErrorCondition(PacketError.Type.wait,
 					PacketError.Condition.internal_server_error);
 		}
 		outQueue.put(reply);
 	}
 
-	private boolean nodeExists() throws DataStoreException {
+	private boolean nodeExists() throws NodeStoreException {
 
-		if (true == dataStore.nodeExists(node)) {
-			nodeDetails = dataStore.getNodeConf(node);
+		if (true == channelManager.nodeExists(node)) {
+			nodeDetails = channelManager.getNodeConf(node);
 			return true;
 		}
 		setErrorCondition(PacketError.Type.cancel,
@@ -150,15 +155,6 @@ public class ItemsGet implements PubSubElementProcessor {
 			maxItemsToReturn = Integer.parseInt(max_items);
 		}
 
-		// Requests
-		// <set xmlns='http://jabber.org/protocol/rsm'>
-		// <max>10</max>
-		// </set>
-		//
-		// <set xmlns='http://jabber.org/protocol/rsm'>
-		// <max>10</max>
-		// <after>peterpan@neverland.lit</after>
-		// </set>
 		if (resultSetManagement != null) {
 			Element max = resultSetManagement.element("max");
 			if (max != null) {
@@ -208,19 +204,23 @@ public class ItemsGet implements PubSubElementProcessor {
 		reply.setChildElement(pubsub);
 	}
 
-	private boolean userCanViewNode() throws DataStoreException {
-		NodeSubscriptionImpl nodeSubscription = dataStore
-				.getUserSubscriptionOfNode(fetchersJid.toBareJID(), node);
-		String possibleExistingAffiliation = Affiliations.none.toString();
-		String possibleExistingSubscription = Subscriptions.none.toString();
-        if (null != nodeSubscription) {
-			if (null != nodeSubscription.getAffiliation()) {
-				possibleExistingAffiliation = nodeSubscription.getAffiliation();
+	private boolean userCanViewNode() throws NodeStoreException {
+		NodeSubscription nodeSubscription = channelManager.getUserSubscription(
+				node, fetchersJid);
+		NodeAffiliation nodeAffiliation = channelManager.getUserAffiliation(
+				node, fetchersJid);
+
+		Affiliations possibleExistingAffiliation = Affiliations.none;
+		Subscriptions possibleExistingSubscription = Subscriptions.none;
+		if (null != nodeSubscription) {
+			if (null != nodeAffiliation.getAffiliation()) {
+				possibleExistingAffiliation = nodeAffiliation.getAffiliation();
 			}
 			if (null != nodeSubscription.getSubscription()) {
-				possibleExistingSubscription = nodeSubscription.getSubscription();
+				possibleExistingSubscription = nodeSubscription
+						.getSubscription();
 			}
-        }
+		}
 		if (true == getNodeViewAcl().canViewNode(node,
 				possibleExistingAffiliation, possibleExistingSubscription,
 				getNodeAccessModel())) {
@@ -232,11 +232,12 @@ public class ItemsGet implements PubSubElementProcessor {
 		return false;
 	}
 
-	private String getNodeAccessModel() {
+	private AccessModels getNodeAccessModel() {
 		if (false == nodeDetails.containsKey(AccessModel.FIELD_NAME)) {
-			return AccessModels.authorize.toString();
+			return AccessModels.authorize;
 		}
-		return nodeDetails.get(AccessModel.FIELD_NAME);
+		return AccessModels.createFromString(nodeDetails
+				.get(AccessModel.FIELD_NAME));
 	}
 
 	private void handleForeignNode(boolean isLocalSubscriber)
@@ -247,21 +248,11 @@ public class ItemsGet implements PubSubElementProcessor {
 
 			// Start process to fetch items from nodes.
 			// Subscribe sub = Subscribe.buildSubscribeStatemachine(node,
-			// requestIq, dataStore);
+			// requestIq, channelManager);
 			// outQueue.put(sub.nextStep());
 			// return;
 		}
 
-		// Foreign client is trying to fetch items of a node that does not
-		// exists.
-		/*
-		 * 6.1.3.12 Node Does Not Exist
-		 * 
-		 * <iq type='error' from='pubsub.shakespeare.lit'
-		 * to='francisco@denmark.lit/barracks' id='sub1'> <error type='cancel'>
-		 * <item-not-found xmlns='urn:ietf:params:xml:ns:xmpp-stanzas'/>
-		 * </error> </iq>
-		 */
 		IQ reply = IQ.createResultIQ(requestIq);
 		reply.setType(IQ.Type.error);
 		PacketError pe = new PacketError(
@@ -272,39 +263,53 @@ public class ItemsGet implements PubSubElementProcessor {
 		return;
 	}
 
+	/**
+	 * Get items for !/subscriptions nodes
+	 */
 	private int getNodeItems(Element items, int maxItemsToReturn,
-			String afterItemId) throws Exception {
-		Iterator<? extends NodeEntry> cur = dataStore.getNodeEntries(node,
-				maxItemsToReturn, afterItemId);
+			String afterItemId) throws NodeStoreException {
 
-		if (null == cur) {
+		CloseableIterator<NodeItem> itemIt = channelManager.getNodeItems(node,
+				afterItemId, maxItemsToReturn);
+		if (null == itemIt) {
 			return 0;
 		}
-		while (cur.hasNext()) {
-			NodeEntryImpl nodeEntry = (NodeEntryImpl) cur.next();
-			if (firstItem == null) {
-				firstItem = nodeEntry.getMongoId();
-			}
-			try {
-				entry = xmlReader.read(new StringReader(nodeEntry.getEntry()))
-						.getRootElement();
-				Element item = items.addElement("item");
-				item.addAttribute("id", nodeEntry.getId());
-				item.add(entry);
-				lastItem = nodeEntry.getMongoId();
-			} catch (DocumentException e) {
-				LOGGER.error("Error parsing a node entry, ignoring (id: "
-						+ nodeEntry.getMongoId() + ")");
-			}
+		try {
+			while (itemIt.hasNext()) {
+				NodeItem nodeItem = itemIt.next();
 
+				if (firstItem == null) {
+					firstItem = nodeItem.getId();
+				}
+				try {
+					entry = xmlReader.read(
+							new StringReader(nodeItem.getPayload()))
+							.getRootElement();
+					Element item = items.addElement("item");
+					item.addAttribute("id", nodeItem.getId());
+					item.add(entry);
+					lastItem = nodeItem.getId();
+				} catch (DocumentException e) {
+					LOGGER.error("Error parsing a node entry, ignoring. "
+							+ nodeItem);
+				}
+
+			}
+			return channelManager.countNodeItems(node);
+		} finally {
+			if (itemIt != null)
+				itemIt.close();
 		}
-		return dataStore.getNodeEntriesCount(node);
 	}
 
+	/**
+	 * Get items for the /subscriptions node
+	 */
 	private int getSubscriptionItems(Element items, int maxItemsToReturn,
-			String afterItemId) throws DataStoreException {
-		Iterator<? extends NodeSubscription> subscribers = dataStore
-				.getNodeSubscribers(node);
+			String afterItemId) throws NodeStoreException {
+
+		Collection<NodeSubscription> subscribers = channelManager
+				.getNodeSubscriptions(node);
 		int entries = 0;
 		if (null == subscribers) {
 			return entries;
@@ -312,49 +317,54 @@ public class ItemsGet implements PubSubElementProcessor {
 		Element jidItem;
 		Element query;
 
-		while (subscribers.hasNext()) {
-			NodeSubscriptionImpl subscriber = (NodeSubscriptionImpl) subscribers
-					.next();
+		for (NodeSubscription subscriber : subscribers) {
+    
 			jidItem = items.addElement("item");
-			jidItem.addAttribute("id", subscriber.getBareJID());
+			jidItem.addAttribute("id", subscriber.getUser().toString());
 			query = jidItem.addElement("query");
 			query.addNamespace("", JabberPubsub.NS_DISCO_ITEMS);
-
+			
 			if (firstItem == null) {
-				firstItem = subscriber.getBareJID();
+				firstItem = subscriber.getUser().toString();
 			}
-			lastItem = subscriber.getBareJID();
-			addSubscriptionItems(query, subscriber.getBareJID());
+			lastItem = subscriber.getUser().toString();
+			addSubscriptionItems(query, subscriber.getUser());
 			entries++;
 		}
 		return entries;
 	}
 
-	private void addSubscriptionItems(Element query, String subscriber) {
-		Iterator<? extends NodeSubscription> subscriptions = dataStore
-				.findUserSubscriptionOfNodes(fetchersJid.toBareJID(),
-						subscriber);
-		Element item;
+	private void addSubscriptionItems(Element query, JID subscriber)
+			throws NodeStoreException {
+
+		Collection<NodeSubscription> subscriptions = channelManager
+				.getUserSubscriptions(subscriber);
 		
-		if (null == subscriptions) {
+		if ((null == subscriptions) || (0 == subscriptions.size())) {
 			return;
 		}
-		while (subscriptions.hasNext()) {
-			// TODO Query in a loop, remove this as and when possible
-			NodeSubscriptionImpl subscription = (NodeSubscriptionImpl) subscriptions
-					.next();
+		Element item;
+		
+        // TODO: This whole section of code is very inefficient
+		for (NodeSubscription subscription : subscriptions) {
+			////if (false == subscription.getNodeId().contains(fetchersJid.toBareJID())) {
+			//	continue;
+			//}			
+			NodeAffiliation affiliation = channelManager.getUserAffiliation(
+					subscription.getNodeId(), subscription.getUser());
 			item = query.addElement("item");
 			item.addNamespace("ns1", JabberPubsub.NAMESPACE_URI);
 			item.addNamespace("ns2", JabberPubsub.NAMESPACE_URI);
-			item.addAttribute("jid", fetchersJid.toBareJID());
-			item.addAttribute("node", subscription.getNode());
-			item.addAttribute("ns1:affiliation", subscription.getAffiliation());
-			item.addAttribute("ns2:subscription",
-					subscription.getSubscription());
+			item.addAttribute("jid", subscriber.toBareJID());
+			item.addAttribute("node", subscription.getNodeId());
+			item.addAttribute("ns1:affiliation", affiliation.getAffiliation()
+					.toString());
+			item.addAttribute("ns2:subscription", subscription.getSubscription()
+					.toString());
 		}
 	}
 
-	private void missingJidRequest() {
+	private void missingNodeIdRequest() {
 		createExtendedErrorReply(PacketError.Type.modify,
 				PacketError.Condition.bad_request, "nodeid-required");
 	}

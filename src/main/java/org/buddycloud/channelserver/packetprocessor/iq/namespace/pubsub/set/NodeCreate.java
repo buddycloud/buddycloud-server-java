@@ -2,13 +2,12 @@ package org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.set;
 
 import java.util.HashMap;
 import java.util.concurrent.BlockingQueue;
-import java.util.regex.Pattern;
 
 import org.apache.log4j.Logger;
+import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.channel.node.configuration.NodeConfigurationException;
 import org.buddycloud.channelserver.channel.node.configuration.field.Owner;
-import org.buddycloud.channelserver.db.DataStore;
-import org.buddycloud.channelserver.db.DataStoreException;
+import org.buddycloud.channelserver.db.exception.NodeStoreException;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.JabberPubsub;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.PubSubElementProcessorAbstract;
 import org.dom4j.Element;
@@ -23,8 +22,11 @@ public class NodeCreate extends PubSubElementProcessorAbstract {
 	private static final String NODE_REG_EX = "^/user/[^@]+@[^/]+/[^/]+$";
 	private static final String INVALID_NODE_CONFIGURATION = "Invalid node configuration";
 
-	public NodeCreate(BlockingQueue<Packet> outQueue, DataStore dataStore) {
-		setDataStore(dataStore);
+	private static final Logger LOGGER = Logger.getLogger(NodeCreate.class);
+
+	public NodeCreate(BlockingQueue<Packet> outQueue,
+			ChannelManager channelManager) {
+		setChannelManager(channelManager);
 		setOutQueue(outQueue);
 	}
 
@@ -50,9 +52,8 @@ public class NodeCreate extends PubSubElementProcessorAbstract {
 
 	private void createNode() throws InterruptedException {
 		try {
-			dataStore
-					.createNode(actor.toString(), node, getNodeConfiguration());
-		} catch (DataStoreException e) {
+			channelManager.createNode(actor, node, getNodeConfiguration());
+		} catch (NodeStoreException e) {
 			setErrorCondition(PacketError.Type.wait,
 					PacketError.Condition.internal_server_error);
 			outQueue.put(response);
@@ -100,8 +101,8 @@ public class NodeCreate extends PubSubElementProcessorAbstract {
 		return false;
 	}
 
-	private boolean doesNodeExist() throws DataStoreException {
-		if (false == dataStore.nodeExists(node)) {
+	private boolean doesNodeExist() throws NodeStoreException {
+		if (false == channelManager.nodeExists(node)) {
 			return false;
 		}
 		setErrorCondition(PacketError.Type.cancel,

@@ -5,6 +5,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.StringReader;
 import java.net.UnknownHostException;
+import java.sql.SQLException;
 import java.util.Properties;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
@@ -17,6 +18,16 @@ import org.apache.log4j.Logger;
 import org.apache.log4j.PropertyConfigurator;
 import org.buddycloud.channelserver.Configuration;
 import org.buddycloud.channelserver.Main;
+import org.buddycloud.channelserver.channel.ChannelManager;
+import org.buddycloud.channelserver.channel.ChannelManagerFactory;
+import org.buddycloud.channelserver.channel.ChannelManagerFactoryImpl;
+import org.buddycloud.channelserver.channel.ChannelManagerImpl;
+import org.buddycloud.channelserver.channel.TestHelper;
+import org.buddycloud.channelserver.db.NodeStore;
+import org.buddycloud.channelserver.db.NodeStoreFactory;
+import org.buddycloud.channelserver.db.jdbc.DatabaseTester;
+import org.buddycloud.channelserver.db.jdbc.JDBCNodeStore;
+import org.buddycloud.channelserver.db.jdbc.dialect.Sql92NodeStoreDialect;
 import org.buddycloud.channelserver.queue.InQueueConsumer;
 import org.dom4j.DocumentException;
 import org.dom4j.Element;
@@ -36,57 +47,6 @@ public class IQTestHandler extends TestCase
 	private final static String CONFIGURATION_PROPERTIES = "src/test/resources/configuration.properties";
     public final static String  STANZA_PATH              = "src/test/resources/stanzas";
     public final static String  LOGGER_PROPERTIES        = "src/test/resources/log4j.properties";
-    
-
-    
-    public static void dropMongodb() throws FileNotFoundException, IOException
-    {
-        Properties conf = readConf();
-        
-        PropertyConfigurator.configure(LOGGER_PROPERTIES);
-        Logger.getRootLogger().setLevel(Level.TRACE);
-        
-        Mongo mongo = null;
-        try {
-            mongo = new Mongo(conf.getProperty("mongo.host"), 
-                    Integer.parseInt(conf.getProperty("mongo.port")));
-        } catch (NumberFormatException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        } catch (UnknownHostException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        } catch (MongoException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
-        
-        DB mdb = mongo.getDB(conf.getProperty("mongo.db"));
-        //mdb.dropDatabase();
-        DBCollection subscriptions = mdb.getCollection("subscriptions");
-        subscriptions.drop();
-        DBCollection entries = mdb.getCollection("entries");
-        entries.drop();
-    }
-    
-    /**
-     * Side-effect: resets Jedis
-     * @return
-     * @throws IOException 
-     * @throws FileNotFoundException 
-     */
-    public static Jedis getJedis() throws FileNotFoundException, IOException
-    {
-        Properties conf = readConf();
-        Jedis jedis = new Jedis(conf.getProperty("redis.host"), 
-                Integer.valueOf(conf.getProperty("redis.port")));
-        jedis.configSet("timeout", "0");
-        
-        jedis.flushAll();
-        dropMongodb();
-        
-        return jedis;
-    }
     
     public static Properties readConf() 
         throws FileNotFoundException, IOException
@@ -134,17 +94,14 @@ public class IQTestHandler extends TestCase
         IQ request = readStanzaAsIq("/iq/featureNotImplemented/request.stanza");
         String expectedReply = readStanzaAsString("/iq/featureNotImplemented/reply.stanza");
         
-        LinkedBlockingQueue<Packet> outQueue = new LinkedBlockingQueue<Packet>();
-        LinkedBlockingQueue<Packet> inQueue = new LinkedBlockingQueue<Packet>();
-        InQueueConsumer consumer = new InQueueConsumer(outQueue, IQTestHandler.readConf(), inQueue);
-        consumer.start();
+        TestHelper helper = new TestHelper();
         
-        inQueue.put(request);
         
-        IQ replyIQ = (IQ)outQueue.poll(1000, TimeUnit.MILLISECONDS);
+        helper.getInQueue().put(request);
+        
+        IQ replyIQ = (IQ)helper.getOutQueue().poll(1000, TimeUnit.MILLISECONDS);
         
         assertNotNull(replyIQ);
         assertEquals(expectedReply, replyIQ.toXML());
     }
-    
 }

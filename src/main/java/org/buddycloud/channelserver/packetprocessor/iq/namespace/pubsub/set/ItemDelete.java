@@ -168,15 +168,14 @@ public class ItemDelete extends PubSubElementProcessorAbstract {
 		}
 	}
 
-	private boolean itemExists() {
-		try {
-			nodeItem = channelManager.getNodeItem(node, itemId);
+	private boolean itemExists() throws NodeStoreException {
+		nodeItem = channelManager.getNodeItem(node, itemId);
+		if (null != nodeItem) {
 			return true;
-		} catch (NodeStoreException e) {
-			setErrorCondition(PacketError.Type.cancel,
-					PacketError.Condition.item_not_found);
-			return false;
 		}
+		setErrorCondition(PacketError.Type.cancel,
+				PacketError.Condition.item_not_found);
+		return false;
 	}
 
 	private boolean itemIdProvided() {

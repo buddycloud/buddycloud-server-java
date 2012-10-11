@@ -66,15 +66,17 @@ public class ItemDelete extends PubSubElementProcessorAbstract {
 			deleteItem();
 			outQueue.add(response);
 			sendNotifications();
+			return;
 		} catch (NodeStoreException e) {
 			setErrorCondition(PacketError.Type.wait,
 					PacketError.Condition.internal_server_error);
-			outQueue.add(response);
 		} catch (NullPointerException e) {
 			setErrorCondition(PacketError.Type.modify,
 					PacketError.Condition.bad_request);
-			outQueue.add(response);
+		} catch (IllegalArgumentException e) {
+			setErrorCondition(PacketError.Type.modify, PacketError.Condition.bad_request);
 		}
+		outQueue.add(response);
 	}
 
 	private void sendNotifications() throws NodeStoreException {
@@ -218,7 +220,7 @@ public class ItemDelete extends PubSubElementProcessorAbstract {
 				PacketError.Condition.bad_request.toXMPP(), new Namespace("",
 						JabberPubsub.NS_XMPP_STANZAS));
 		Element error = new DOMElement("error");
-		error.addAttribute("type", PacketError.Type.modify.toXMPP());
+		error.addAttribute("type", "modify");
 		error.add(badRequest);
 		error.add(nodeIdRequired);
 		response.setChildElement(error);

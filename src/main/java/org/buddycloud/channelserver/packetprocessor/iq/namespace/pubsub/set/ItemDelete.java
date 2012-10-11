@@ -81,24 +81,28 @@ public class ItemDelete extends PubSubElementProcessorAbstract {
 	}
 
 	private void sendNotifications() throws NodeStoreException {
-	    try {
-	    	String notify = request.getElement().element("pubsub").element("retract").attributeValue("notify");
-	    	if ((false == notify.equals("true")) && (false == notify.equals("1"))) {
-	    		return;
-	    	}
-	    	Collection<NodeSubscription> subscriptions = channelManager.getNodeSubscriptions(node);
-	    	Message notification = getNotificationMessage();
-	    	for (NodeSubscription subscription : subscriptions) {
-	    		if (subscription.getSubscription().equals(Subscriptions.subscribed)) {
-	    			notification.setTo(subscription.getUser().toBareJID());
-	    			outQueue.put(notification.createCopy());
-	    		}
-	    	}
-	    } catch (NullPointerException e) {
-	    	return;
-	    } catch (InterruptedException e) {
-	    	return;
-	    }
+		try {
+			String notify = request.getElement().element("pubsub")
+					.element("retract").attributeValue("notify");
+			if ((false == notify.equals("true"))
+					&& (false == notify.equals("1"))) {
+				return;
+			}
+			Collection<NodeSubscription> subscriptions = channelManager
+					.getNodeSubscriptions(node);
+			Message notification = getNotificationMessage();
+			for (NodeSubscription subscription : subscriptions) {
+				if (subscription.getSubscription().equals(
+						Subscriptions.subscribed)) {
+					notification.setTo(subscription.getUser().toBareJID());
+					outQueue.put(notification.createCopy());
+				}
+			}
+		} catch (NullPointerException e) {
+			return;
+		} catch (InterruptedException e) {
+			return;
+		}
 	}
 
 	private Message getNotificationMessage() {
@@ -115,7 +119,7 @@ public class ItemDelete extends PubSubElementProcessorAbstract {
 	}
 
 	private void deleteItem() throws NodeStoreException {
-		channelManager.deleteNodeItemById(node, itemId);	
+		channelManager.deleteNodeItemById(node, itemId);
 	}
 
 	private boolean canDelete() throws NodeStoreException {
@@ -137,11 +141,13 @@ public class ItemDelete extends PubSubElementProcessorAbstract {
 	}
 
 	private boolean userManagesNode() throws NodeStoreException {
-        NodeAffiliation affiliation = channelManager.getUserAffiliation(node, new JID(request.getFrom().toBareJID()));
-        if (null == affiliation) { 
-        	return false;
-        }
-        return affiliation.getAffiliation().in(Affiliations.owner, Affiliations.moderator);
+		NodeAffiliation affiliation = channelManager.getUserAffiliation(node,
+				new JID(request.getFrom().toBareJID()));
+		if (null == affiliation) {
+			return false;
+		}
+		return affiliation.getAffiliation().in(Affiliations.owner,
+				Affiliations.moderator);
 	}
 
 	private boolean validPayload() {

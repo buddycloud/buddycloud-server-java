@@ -79,16 +79,18 @@ public class IQTestHandler extends TestCase
 
     public static IQ toIq(String stanzaStr) throws DocumentException
     {
-        SAXReader xmlReader = new SAXReader();
+        return new IQ(parseXml(stanzaStr));
+    }
+    
+    public static Element parseXml(String stanzaStr) throws DocumentException {
+    	SAXReader xmlReader = new SAXReader();
         xmlReader.setMergeAdjacentText(true);
         xmlReader.setStringInternEnabled(true);
         xmlReader.setStripWhitespaceText(true);
-        Element entry = xmlReader.read(new StringReader(stanzaStr)).getRootElement();
-        
-        return new IQ(entry);
-    }
-    
-    public void featureNotImplementedSuccess()
+        return xmlReader.read(new StringReader(stanzaStr)).getRootElement();
+	}
+
+	public void featureNotImplementedSuccess()
         throws IOException, InterruptedException, DocumentException
     {    
         IQ request = readStanzaAsIq("/iq/featureNotImplemented/request.stanza");

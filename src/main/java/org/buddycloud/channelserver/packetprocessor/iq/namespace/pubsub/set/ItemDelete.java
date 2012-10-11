@@ -70,14 +70,11 @@ public class ItemDelete extends PubSubElementProcessorAbstract {
 			setErrorCondition(PacketError.Type.wait,
 					PacketError.Condition.internal_server_error);
 			outQueue.add(response);
-			e.printStackTrace();
 		} catch (NullPointerException e) {
 			setErrorCondition(PacketError.Type.modify,
 					PacketError.Condition.bad_request);
 			outQueue.add(response);
-			e.printStackTrace();
 		}
-
 	}
 
 	private void sendNotifications() throws NodeStoreException {
@@ -231,5 +228,4 @@ public class ItemDelete extends PubSubElementProcessorAbstract {
 	public boolean accept(Element elm) {
 		return elm.getName().equals("retract");
 	}
-
 }

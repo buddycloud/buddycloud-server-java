@@ -84,8 +84,9 @@ public class ItemDelete extends PubSubElementProcessorAbstract {
 		try {
 			String notify = request.getElement().element("pubsub")
 					.element("retract").attributeValue("notify");
-			if ((false == notify.equals("true"))
-					&& (false == notify.equals("1"))) {
+
+			if ((null == notify) || ((false == notify.equals("true"))
+					&& (false == notify.equals("1")))) {
 				return;
 			}
 			Collection<NodeSubscription> subscriptions = channelManager
@@ -111,9 +112,9 @@ public class ItemDelete extends PubSubElementProcessorAbstract {
 		notification.setID(request.getID() + "-1");
 		Element event = notification.addChildElement("event",
 				JabberPubsub.NS_PUBSUB_EVENT);
-		Element item = event.addElement("item");
-		item.addAttribute("node", node);
-		Element retract = item.addElement("retract");
+		Element items = event.addElement("items");
+		items.addAttribute("node", node);
+		Element retract = items.addElement("retract");
 		retract.addAttribute("id", itemId);
 		return notification;
 	}

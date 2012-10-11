@@ -199,7 +199,7 @@ public class ItemDeleteTest extends IQTestHandler {
 		Mockito.when(channelManagerMock.isLocalNode(node)).thenReturn(true);
 		Mockito.when(channelManagerMock.nodeExists(node)).thenReturn(true);
 		Mockito.when(channelManagerMock.getNodeItem(node, "item-id"))
-				.thenThrow(new NodeStoreException());
+				.thenReturn(null);
 		itemDelete.setChannelManager(channelManagerMock);
 
 		itemDelete.process(element, jid, request, null);

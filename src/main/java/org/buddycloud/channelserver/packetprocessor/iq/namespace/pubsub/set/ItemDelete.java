@@ -62,6 +62,7 @@ public class ItemDelete extends PubSubElementProcessorAbstract {
 					|| (false == itemIdProvided()) || (false == itemExists())
 					|| (false == validPayload()) || (false == canDelete())) {
 				outQueue.add(response);
+				return;
 			}
 			deleteItem();
 			outQueue.add(response);

@@ -88,7 +88,19 @@ public class PublishSet implements PubSubElementProcessor {
 		}
 
 		JID publishersJID = reqIQ.getFrom();
-		boolean isLocalNode = channelManager.isLocalNode(node);
+		boolean isLocalNode = false;
+		try {
+		    isLocalNode = channelManager.isLocalNode(node);
+		} catch (IllegalArgumentException e) {
+			IQ reply = IQ.createResultIQ(reqIQ);
+			reply.setType(Type.error);
+			PacketError pe = new PacketError(
+					org.xmpp.packet.PacketError.Condition.bad_request,
+					org.xmpp.packet.PacketError.Type.modify);
+			reply.setError(pe);
+			outQueue.put(reply);
+			return;
+		}
 		boolean isLocalSubscriber = false;
 
 		if (actorJID != null) {

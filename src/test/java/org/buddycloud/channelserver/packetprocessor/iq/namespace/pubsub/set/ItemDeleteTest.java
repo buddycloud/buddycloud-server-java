@@ -363,6 +363,6 @@ public class ItemDeleteTest extends IQTestHandler {
 		Packet notification = queue.poll(100, TimeUnit.MILLISECONDS);
 		assertNotNull(notification);
 		assertEquals("item-id", notification.getElement().element("event")
-				.element("item").element("retract").attributeValue("id"));
+				.element("items").element("retract").attributeValue("id"));
 	}
 }

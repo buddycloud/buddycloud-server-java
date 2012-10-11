@@ -328,7 +328,7 @@ public class PublishSet implements PubSubElementProcessor {
 		// Payload
 		Message msg = new Message();
 		msg.setType(Message.Type.headline);
-		msg.setID(id);
+		msg.setID(reqIQ.getID() + "-1");
 		Element event = msg.addChildElement("event",
 				JabberPubsub.NS_PUBSUB_EVENT);
 		Element items = event.addElement("items");

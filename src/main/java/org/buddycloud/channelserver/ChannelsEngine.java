@@ -25,8 +25,8 @@ public class ChannelsEngine implements Component {
 	private JID jid = null;
 	private ComponentManager manager = null;
 	
-	private BlockingQueue<Packet> outQueue = new LinkedBlockingQueue<Packet>();;
-	private BlockingQueue<Packet> inQueue = new LinkedBlockingQueue<Packet>();;
+	private BlockingQueue<Packet> outQueue = new LinkedBlockingQueue<Packet>();
+	private BlockingQueue<Packet> inQueue = new LinkedBlockingQueue<Packet>();
 	
 	private Properties conf;
 	

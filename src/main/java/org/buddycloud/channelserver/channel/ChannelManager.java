@@ -1,12 +1,7 @@
 package org.buddycloud.channelserver.channel;
 
-import java.util.Collection;
-import java.util.Map;
-
-import org.buddycloud.channelserver.channel.subscription.ChannelSubscription;
 import org.buddycloud.channelserver.db.NodeStore;
 import org.buddycloud.channelserver.db.exception.NodeStoreException;
-import org.buddycloud.channelserver.pubsub.affiliation.Affiliations;
 import org.xmpp.packet.JID;
 
 public interface ChannelManager extends NodeStore {

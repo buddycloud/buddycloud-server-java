@@ -3,7 +3,6 @@ package org.buddycloud.channelserver.channel;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Properties;
-import java.util.regex.Pattern;
 
 import org.apache.log4j.Logger;
 import org.buddycloud.channelserver.Configuration;

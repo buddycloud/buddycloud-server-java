@@ -5,16 +5,12 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.BlockingQueue;
 
-import org.buddycloud.channelserver.packetprocessor.PacketProcessor;
+import org.apache.log4j.Logger;
 import org.buddycloud.channelserver.channel.ChannelManager;
-import org.buddycloud.channelserver.db.NodeStore;
+import org.buddycloud.channelserver.packetprocessor.PacketProcessor;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.discoinfo.JabberDiscoInfo;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.JabberPubsub;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.register.JabberRegister;
-import org.buddycloud.channelserver.queue.statemachine.IStatemachine;
-import org.buddycloud.channelserver.queue.statemachine.StateMachineBuilder;
-
-import org.apache.log4j.Logger;
 import org.xmpp.packet.IQ;
 import org.xmpp.packet.IQ.Type;
 import org.xmpp.packet.Packet;
@@ -76,7 +72,8 @@ public class IQProcessor implements PacketProcessor<IQ> {
             return;
 
         }
-// TODO
+
+        // TODO
         /*
         if (packet.getType() == IQ.Type.result || packet.getType() == IQ.Type.error) {
             // This might be a reply to a state we are on.

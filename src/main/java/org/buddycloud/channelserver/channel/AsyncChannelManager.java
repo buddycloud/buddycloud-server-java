@@ -14,8 +14,9 @@ public class AsyncChannelManager {
 	private final ChannelManager delegate;
 	private final IQRequestProcessor iqRequestProcessor;
 
-	public AsyncChannelManager(ChannelManager delgate) {
+	public AsyncChannelManager(ChannelManager delgate, IQRequestProcessor iqRequestProcessor) {
 		this.delegate = delgate;
+		this.iqRequestProcessor = iqRequestProcessor;
 	}
 
 	void getUserAffiliations(final GetUserAffiliationsProcessor.Handler handler, JID user) throws NodeStoreException {

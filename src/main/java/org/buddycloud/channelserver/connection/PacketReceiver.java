@@ -6,6 +6,7 @@ public interface PacketReceiver {
 	/**
 	 * Called when a packet is received.
 	 * @param p the packet which has been received.
+	 * @return <code>true</code> if the packet was handled, <code>false</code> otherwise.
 	 */
-	void packetReceived(Packet p);
+	boolean packetReceived(Packet p);
 }

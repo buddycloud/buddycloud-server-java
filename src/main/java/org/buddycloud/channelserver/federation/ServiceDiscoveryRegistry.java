@@ -1,7 +1,9 @@
 package org.buddycloud.channelserver.federation;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.Map;
 
 import org.buddycloud.channelserver.connection.iq.IQRequestProcessor;
 import org.buddycloud.channelserver.federation.requests.disco.DiscoInfoIQRequest;
@@ -12,12 +14,12 @@ import org.xmpp.packet.JID;
 public class ServiceDiscoveryRegistry {
 	public interface JIDDiscoveryHandler {
 		void onSuccess(JID jid);
-		void onError();
+		void onError(Throwable t);
 	}
 	
 	private final IQRequestProcessor iqRequestProcessor;
 	
-	private final HashMap<String,JID> channelServers;
+	private final Map<String,JID> channelServers;
 	
 	public ServiceDiscoveryRegistry(final IQRequestProcessor iqRequestProcessor) {
 		this.iqRequestProcessor = iqRequestProcessor;
@@ -30,6 +32,8 @@ public class ServiceDiscoveryRegistry {
 	 * @param remoteJID
 	 */
 	public void discoverChannelServerJID(final JID remoteJID, final JIDDiscoveryHandler handler) {
+		// TODO Ensure that we don't send the same request twice at the same time
+		
 		// We first discover the items on the JID's domain
 		final String remoteDomain = remoteJID.getDomain();
 		
@@ -46,6 +50,8 @@ public class ServiceDiscoveryRegistry {
 			public void onSuccess(final Collection<JID> result) {
 				// Then for each item we do an info query until we find the appropriate identity
 				for(final JID jid : result) {
+					// We will recheck the map each iteration in case another thread has added it a result in the meantime.
+					// This is less expensive than potentially sending more disco#info requests than we strictly need to.
 					final JID cachedJID = channelServers.get(remoteDomain);
 					
 					if(cachedJID != null) {

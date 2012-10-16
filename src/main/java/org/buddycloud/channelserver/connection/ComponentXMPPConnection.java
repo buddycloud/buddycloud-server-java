@@ -3,9 +3,6 @@ package org.buddycloud.channelserver.connection;
 import java.util.HashMap;
 import java.util.Queue;
 
-import org.buddycloud.channelserver.connection.iq.IQRequest;
-import org.buddycloud.channelserver.connection.iq.IQRequestProcessor;
-import org.buddycloud.channelserver.packetprocessor.iq.IQProcessor;
 import org.xmpp.packet.IQ;
 import org.xmpp.packet.Packet;
 
@@ -32,7 +29,7 @@ public class ComponentXMPPConnection implements XMPPConnection, PacketReceiver {
 	}
 
 	@Override
-	public void packetReceived(Packet p) {
+	public boolean packetReceived(Packet p) {
 		if(p instanceof IQ) {
 			IQ iq = (IQ) p;
 			
@@ -45,9 +42,12 @@ public class ComponentXMPPConnection implements XMPPConnection, PacketReceiver {
 					} else {
 						handler.onError(iq);
 					}
+
+					return true;
 				}
 			}
 		}
+		return false;
 	}
 
 }

@@ -7,6 +7,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 import org.apache.log4j.Logger;
 import org.buddycloud.channelserver.channel.ChannelManagerFactory;
 import org.buddycloud.channelserver.channel.ChannelManagerFactoryImpl;
+import org.buddycloud.channelserver.connection.ComponentXMPPConnection;
 import org.buddycloud.channelserver.db.DefaultNodeStoreFactoryImpl;
 import org.buddycloud.channelserver.db.NodeStoreFactory;
 import org.buddycloud.channelserver.db.exception.NodeStoreException;
@@ -25,13 +26,16 @@ public class ChannelsEngine implements Component {
 	private JID jid = null;
 	private ComponentManager manager = null;
 	
-	private BlockingQueue<Packet> outQueue = new LinkedBlockingQueue<Packet>();;
-	private BlockingQueue<Packet> inQueue = new LinkedBlockingQueue<Packet>();;
+	private BlockingQueue<Packet> outQueue = new LinkedBlockingQueue<Packet>();
+	private BlockingQueue<Packet> inQueue = new LinkedBlockingQueue<Packet>();
+	
+	private ComponentXMPPConnection xmppConnection;
 	
 	private Properties conf;
 	
 	public ChannelsEngine(Properties conf) {
 		this.conf = conf;
+		xmppConnection = new ComponentXMPPConnection(outQueue);
 	}
 	
 	@Override
@@ -63,7 +67,7 @@ public class ChannelsEngine implements Component {
 		OutQueueConsumer outQueueConsumer = new OutQueueConsumer(this, outQueue);
 		outQueueConsumer.start();
 		
-		InQueueConsumer inQueueConsumer = new InQueueConsumer(outQueue, conf, inQueue, channelManagerFactory);
+		InQueueConsumer inQueueConsumer = new InQueueConsumer(outQueue, conf, inQueue, channelManagerFactory, xmppConnection);
 		inQueueConsumer.start();
 		
 		LOGGER.info("XMPP Component started. We are '" + jid.toBareJID() + "' and ready to accept packages.");

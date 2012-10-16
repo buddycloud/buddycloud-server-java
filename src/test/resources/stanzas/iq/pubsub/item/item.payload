@@ -1,0 +1,17 @@
+<entry xmlns="http://www.w3.org/2005/Atom" xmlns:activity="http://activitystrea.ms/sp ec/1.0/">
+    <id>tag:null@channels.shakespeare.lit,/user/capulet@shakespeare.lit/posts,item-id</id>
+    <title>Post</title>
+    <content>this is a 
+ multi-line message</content>
+    <published>2012-10-10T08:37:02Z</published>
+    <updated>2012-10-10T08:37:02Z</updated>
+    <author>
+        <name>romeo@shakespeare.lit</name>
+        <uri>acct:romeo@shakespeare.lit</uri>
+        <activity:object-type>person</activity:object-type>
+    </author>
+    <activity:verb>post</activity:verb>
+    <activity:object>
+        <activity:object-type>note</activity:object-type>
+    </activity:object>
+</entry>

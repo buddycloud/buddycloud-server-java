@@ -4,43 +4,19 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.StringReader;
-import java.net.UnknownHostException;
-import java.sql.SQLException;
 import java.util.Properties;
-import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
 import junit.framework.TestCase;
 
 import org.apache.commons.io.IOUtils;
-import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
-import org.apache.log4j.PropertyConfigurator;
 import org.buddycloud.channelserver.Configuration;
-import org.buddycloud.channelserver.Main;
-import org.buddycloud.channelserver.channel.ChannelManager;
-import org.buddycloud.channelserver.channel.ChannelManagerFactory;
-import org.buddycloud.channelserver.channel.ChannelManagerFactoryImpl;
-import org.buddycloud.channelserver.channel.ChannelManagerImpl;
 import org.buddycloud.channelserver.channel.TestHelper;
-import org.buddycloud.channelserver.db.NodeStore;
-import org.buddycloud.channelserver.db.NodeStoreFactory;
-import org.buddycloud.channelserver.db.jdbc.DatabaseTester;
-import org.buddycloud.channelserver.db.jdbc.JDBCNodeStore;
-import org.buddycloud.channelserver.db.jdbc.dialect.Sql92NodeStoreDialect;
-import org.buddycloud.channelserver.queue.InQueueConsumer;
 import org.dom4j.DocumentException;
 import org.dom4j.Element;
 import org.dom4j.io.SAXReader;
 import org.xmpp.packet.IQ;
-import org.xmpp.packet.Packet;
-
-import redis.clients.jedis.Jedis;
-
-import com.mongodb.DB;
-import com.mongodb.DBCollection;
-import com.mongodb.Mongo;
-import com.mongodb.MongoException;
+import org.xmpp.packet.IQ.Type;
 
 public class IQTestHandler extends TestCase
 {
@@ -79,16 +55,18 @@ public class IQTestHandler extends TestCase
 
     public static IQ toIq(String stanzaStr) throws DocumentException
     {
-        SAXReader xmlReader = new SAXReader();
+        return new IQ(parseXml(stanzaStr));
+    }
+    
+    public static Element parseXml(String stanzaStr) throws DocumentException {
+    	SAXReader xmlReader = new SAXReader();
         xmlReader.setMergeAdjacentText(true);
         xmlReader.setStringInternEnabled(true);
         xmlReader.setStripWhitespaceText(true);
-        Element entry = xmlReader.read(new StringReader(stanzaStr)).getRootElement();
-        
-        return new IQ(entry);
-    }
-    
-    public void featureNotImplementedSuccess()
+        return xmlReader.read(new StringReader(stanzaStr)).getRootElement();
+	}
+
+	public void featureNotImplementedSuccess()
         throws IOException, InterruptedException, DocumentException
     {    
         IQ request = readStanzaAsIq("/iq/featureNotImplemented/request.stanza");

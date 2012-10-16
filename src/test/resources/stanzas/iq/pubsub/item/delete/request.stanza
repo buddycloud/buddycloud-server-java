@@ -1,0 +1,10 @@
+<iq type='set'
+    from='juliet@shakespeare.lit/thebalcony'
+    to='channels.shakespeare.lit'
+    id='retract1'>
+  <pubsub xmlns='http://jabber.org/protocol/pubsub'>
+    <retract node='/user/capulet@shakespeare.lit/posts'>
+      <item id='item-id' notify='true' />
+    </retract>
+  </pubsub>
+</iq>

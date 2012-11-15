@@ -15,52 +15,59 @@ import org.xmpp.packet.Packet;
 
 public class InQueueConsumer extends QueueConsumer {
 
-    private static final Logger LOGGER = Logger.getLogger(InQueueConsumer.class);
-    
-    private final BlockingQueue<Packet> outQueue;
-    private final Properties conf;
-    private final BlockingQueue<Packet> inQueue;
-    private final ChannelManagerFactory channelManagerFactory;
+	private static final Logger LOGGER = Logger
+			.getLogger(InQueueConsumer.class);
 
-    public InQueueConsumer(BlockingQueue<Packet> outQueue, 
-            Properties conf, BlockingQueue<Packet> inQueue, ChannelManagerFactory channelManagerFactory) {
-        super(inQueue);
-        this.outQueue = outQueue;
-        this.conf = conf;
-        this.inQueue = inQueue;
-        this.channelManagerFactory = channelManagerFactory;
-    }
+	private final BlockingQueue<Packet> outQueue;
+	private final Properties conf;
+	private final BlockingQueue<Packet> inQueue;
+	private final ChannelManagerFactory channelManagerFactory;
+	private final FederatedQueueManager federatedQueueManager;
 
-    @Override
-    protected void consume(Packet p) {
-    	ChannelManager channelManager = null;
-        try {
-            Long start = System.currentTimeMillis();
+	public InQueueConsumer(BlockingQueue<Packet> outQueue, Properties conf,
+			BlockingQueue<Packet> inQueue,
+			ChannelManagerFactory channelManagerFactory,
+			FederatedQueueManager federatedQueueManager) {
+		super(inQueue);
+		this.outQueue = outQueue;
+		this.conf = conf;
+		this.inQueue = inQueue;
+		this.channelManagerFactory = channelManagerFactory;
+		this.federatedQueueManager = federatedQueueManager;
+	}
 
-            String xml = p.toXML();
-            LOGGER.debug("Received payload: '" + xml + "'.");
-            channelManager = channelManagerFactory.create();
-            if (p instanceof IQ) {
-            	new IQProcessor(outQueue, conf, channelManager).process((IQ) p);
-            } else if (p instanceof Message) {
-            	new MessageProcessor(outQueue, inQueue, conf, channelManager).process((Message) p);
-            } else {
-                LOGGER.info("Not handling following stanzas yet: '" + xml + "'.");
-            }
+	@Override
+	protected void consume(Packet p) {
+		ChannelManager channelManager = null;
+		try {
+			Long start = System.currentTimeMillis();
 
-            LOGGER.debug("Payload handled in '"
-                    + Long.toString((System.currentTimeMillis() - start))
-                    + "' milliseconds.");
+			String xml = p.toXML();
+			LOGGER.debug("Received payload: '" + xml + "'.");
+			channelManager = channelManagerFactory.create();
+			if (p instanceof IQ) {
+				new IQProcessor(outQueue, conf, channelManager, federatedQueueManager).process((IQ) p);
+			} else if (p instanceof Message) {
+				new MessageProcessor(outQueue, inQueue, conf, channelManager)
+						.process((Message) p);
+			} else {
+				LOGGER.info("Not handling following stanzas yet: '" + xml
+						+ "'.");
+			}
 
-        } catch (Exception e) {
-            LOGGER.debug("Exception: " + e.getMessage(), e);
-        } finally {
-        	try {
+			LOGGER.debug("Payload handled in '"
+					+ Long.toString((System.currentTimeMillis() - start))
+					+ "' milliseconds.");
+
+		} catch (Exception e) {
+			LOGGER.debug("Exception: " + e.getMessage(), e);
+		} finally {
+			try {
 				channelManager.close();
 			} catch (NodeStoreException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-        }
-    }
+		}
+	}
 }

@@ -39,6 +39,7 @@ import org.xmpp.packet.Packet;
 import org.xmpp.packet.PacketError;
 import org.xmpp.packet.PacketError.Condition;
 import org.xmpp.packet.PacketError.Type;
+import org.xmpp.packet.PacketExtension;
 
 public class ItemsGet implements PubSubElementProcessor {
 	private static final Logger LOGGER = Logger.getLogger(ItemsGet.class);
@@ -100,6 +101,11 @@ public class ItemsGet implements PubSubElementProcessor {
 
 		fetchersJid = requestIq.getFrom();
 
+		if (false == channelManager.isLocalNode(node)) {
+			makeRemoteRequest();
+		    return;
+		}
+		
 		try {
 			if (false == nodeExists()) {
 				setErrorCondition(PacketError.Type.cancel,
@@ -126,6 +132,15 @@ public class ItemsGet implements PubSubElementProcessor {
 					PacketError.Condition.internal_server_error);
 		}
 		outQueue.put(reply);
+	}
+
+	private void makeRemoteRequest() {
+		requestIq.setTo(new JID(node.split("/")[2]).getDomain());
+		Element actor = requestIq.getElement()
+		    .element("pubsub")
+		    .addElement("actor", JabberPubsub.NS_BUDDYCLOUD);
+		actor.addText(requestIq.getFrom().toBareJID());
+	    outQueue.add(requestIq);
 	}
 
 	private boolean nodeExists() throws NodeStoreException {

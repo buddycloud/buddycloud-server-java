@@ -26,6 +26,7 @@ import org.buddycloud.channelserver.utils.node.NodeAclRefuseReason;
 import org.buddycloud.channelserver.utils.node.NodeViewAcl;
 import org.dom4j.Element;
 import org.dom4j.Namespace;
+import org.dom4j.Node;
 import org.dom4j.QName;
 import org.dom4j.tree.BaseElement;
 import org.junit.Before;
@@ -45,15 +46,20 @@ public class ItemsGetTest extends IQTestHandler {
 
 	private String node = "/user/pamela@denmark.lit/posts";
 	private JID jid = new JID("juliet@shakespeare.lit");
-	private Mock channelManager = new Mock();
+	private ChannelManager channelManager;
 
 	@Before
 	public void setUp() throws Exception {
 
 		queue = new LinkedBlockingQueue<Packet>();
 		itemsGet = new ItemsGet(queue, channelManager);
-		request = readStanzaAsIq("/iq/pubsub/affiliation/affiliationChange.stanza");
+		request = readStanzaAsIq("/iq/pubsub/items/request.stanza");
 		element = new BaseElement("items");
+
+		channelManager = Mockito.mock(Mock.class);
+		Mockito.when(channelManager.isLocalNode(Mockito.anyString()))
+				.thenReturn(true);
+		itemsGet.setChannelManager(channelManager);
 	}
 
 	@Test
@@ -79,13 +85,31 @@ public class ItemsGetTest extends IQTestHandler {
 	}
 
 	@Test
+	public void testExternalNodeReturnsExpectedStanzaEarly() throws Exception {
+
+		Mockito.when(channelManager.isLocalNode(Mockito.anyString()))
+				.thenReturn(false);
+
+		element.addAttribute("node", "/user/user@remote-server.com/posts");
+
+		itemsGet.process(element, jid, request, null);
+		Packet response = queue.poll(100, TimeUnit.MILLISECONDS);
+
+		Element element = response.getElement();
+
+		assertEquals(IQ.Type.get.toString(), element.attributeValue("type"));
+		assertEquals("remote-server.com", response.getTo().getDomain());
+
+		assertEquals(element.element("pubsub").element("actor").getText(),
+				response.getFrom().toBareJID());
+	}
+
+	@Test
 	public void testNodeWhichDoesntExistReturnsNotFoundStanza()
 			throws Exception {
 
-		ChannelManager channelManagerMock = Mockito.mock(Mock.class);
-		Mockito.when(channelManagerMock.nodeExists(node)).thenReturn(false);
+		Mockito.when(channelManager.nodeExists(node)).thenReturn(false);
 		element.addAttribute("node", node);
-		itemsGet.setChannelManager(channelManagerMock);
 
 		itemsGet.process(element, jid, request, null);
 		Packet response = queue.poll(100, TimeUnit.MILLISECONDS);
@@ -100,10 +124,9 @@ public class ItemsGetTest extends IQTestHandler {
 	public void testNodeStoreExceptionReturnsInternalServerErrorStanza()
 			throws Exception {
 		element.addAttribute("node", node);
-		ChannelManager channelManagerMock = Mockito.mock(Mock.class);
-		Mockito.when(channelManagerMock.nodeExists(node)).thenThrow(
+
+		Mockito.when(channelManager.nodeExists(node)).thenThrow(
 				NodeStoreException.class);
-		itemsGet.setChannelManager(channelManagerMock);
 
 		itemsGet.process(element, jid, request, null);
 		Packet response = queue.poll(100, TimeUnit.MILLISECONDS);
@@ -119,17 +142,11 @@ public class ItemsGetTest extends IQTestHandler {
 	public void testSubscriptionIncompatibleWithItemRetrievalReturnsExpectedStanza()
 			throws Exception {
 
-		Affiliations affiliation = Affiliations.none;
-		Subscriptions subscription = Subscriptions.none;
-		AccessModels accessModel = AccessModels.authorize;
-
 		element.addAttribute("node", node);
 
-		ChannelManager channelManagerMock = Mockito.mock(Mock.class);
-		Mockito.when(channelManagerMock.nodeExists(node)).thenReturn(true);
-		Mockito.when(channelManagerMock.getUserSubscription(node, jid))
-				.thenReturn(null);
-		itemsGet.setChannelManager(channelManagerMock);
+		Mockito.when(channelManager.nodeExists(node)).thenReturn(true);
+		Mockito.when(channelManager.getUserSubscription(node, jid)).thenReturn(
+				null);
 
 		NodeViewAcl nodeViewAclMock = Mockito.mock(NodeViewAcl.class);
 		Mockito.doReturn(false)
@@ -162,8 +179,6 @@ public class ItemsGetTest extends IQTestHandler {
 
 		element.addAttribute("node", node);
 
-		ChannelManager channelManagerMock = Mockito.mock(Mock.class);
-
 		NodeSubscriptionImpl subscription = Mockito
 				.mock(NodeSubscriptionImpl.class);
 		NodeAffiliationImpl affiliation = Mockito
@@ -172,18 +187,16 @@ public class ItemsGetTest extends IQTestHandler {
 				Affiliations.member);
 		Mockito.when(subscription.getSubscription()).thenReturn(
 				Subscriptions.subscribed);
-		Mockito.when(channelManagerMock.getUserSubscription(node, jid))
-				.thenReturn(subscription);
-		Mockito.when(channelManagerMock.getUserAffiliation(node, jid))
-				.thenReturn(affiliation);
+		Mockito.when(channelManager.getUserSubscription(node, jid)).thenReturn(
+				subscription);
+		Mockito.when(channelManager.getUserAffiliation(node, jid)).thenReturn(
+				affiliation);
 
 		Mockito.when(
-				channelManagerMock.getNodeItems(Mockito.anyString(),
+				channelManager.getNodeItems(Mockito.anyString(),
 						Mockito.anyString(), Mockito.anyInt()))
 				.thenReturn(null);
-		Mockito.when(channelManagerMock.nodeExists(node)).thenReturn(true);
-
-		itemsGet.setChannelManager(channelManagerMock);
+		Mockito.when(channelManager.nodeExists(node)).thenReturn(true);
 
 		NodeViewAcl nodeViewAclMock = Mockito.mock(NodeViewAcl.class);
 		Mockito.doReturn(true)
@@ -207,11 +220,9 @@ public class ItemsGetTest extends IQTestHandler {
 	@Test
 	public void testSubscriptionsNodeWithNoItemsReturnsNoItems()
 			throws Exception {
-		AccessModels accessModel = AccessModels.authorize;
+
 		node = node.replace("posts", "subscriptions");
 		element.addAttribute("node", node);
-
-		ChannelManager channelManagerMock = Mockito.mock(Mock.class);
 
 		NodeSubscriptionImpl subscription = Mockito
 				.mock(NodeSubscriptionImpl.class);
@@ -221,18 +232,16 @@ public class ItemsGetTest extends IQTestHandler {
 				Affiliations.member);
 		Mockito.when(subscription.getSubscription()).thenReturn(
 				Subscriptions.subscribed);
-		Mockito.when(channelManagerMock.getUserSubscription(node, jid))
-				.thenReturn(subscription);
-		Mockito.when(channelManagerMock.getUserAffiliation(node, jid))
-				.thenReturn(affiliation);
+		Mockito.when(channelManager.getUserSubscription(node, jid)).thenReturn(
+				subscription);
+		Mockito.when(channelManager.getUserAffiliation(node, jid)).thenReturn(
+				affiliation);
 
 		Mockito.when(
-				channelManagerMock.getNodeItems(Mockito.anyString(),
+				channelManager.getNodeItems(Mockito.anyString(),
 						Mockito.anyString(), Mockito.anyInt()))
 				.thenReturn(null);
-		Mockito.when(channelManagerMock.nodeExists(node)).thenReturn(true);
-
-		itemsGet.setChannelManager(channelManagerMock);
+		Mockito.when(channelManager.nodeExists(node)).thenReturn(true);
 
 		NodeViewAcl nodeViewAclMock = Mockito.mock(NodeViewAcl.class);
 		Mockito.doReturn(true)
@@ -260,8 +269,6 @@ public class ItemsGetTest extends IQTestHandler {
 
 		element.addAttribute("node", node);
 
-		ChannelManager channelManagerMock = Mockito.mock(Mock.class);
-
 		NodeSubscriptionImpl subscription = Mockito
 				.mock(NodeSubscriptionImpl.class);
 		NodeAffiliationImpl affiliation = Mockito
@@ -270,10 +277,10 @@ public class ItemsGetTest extends IQTestHandler {
 				Affiliations.member);
 		Mockito.when(subscription.getSubscription()).thenReturn(
 				Subscriptions.subscribed);
-		Mockito.when(channelManagerMock.getUserSubscription(node, jid))
-				.thenReturn(subscription);
-		Mockito.when(channelManagerMock.getUserAffiliation(node, jid))
-				.thenReturn(affiliation);
+		Mockito.when(channelManager.getUserSubscription(node, jid)).thenReturn(
+				subscription);
+		Mockito.when(channelManager.getUserAffiliation(node, jid)).thenReturn(
+				affiliation);
 
 		NodeItem item = Mockito.mock(NodeItem.class);
 		Mockito.when(item.getId()).thenReturn("id");
@@ -286,13 +293,11 @@ public class ItemsGetTest extends IQTestHandler {
 		CloseableIterator<NodeItem> itemList = new ClosableIteratorImpl<NodeItem>(
 				Arrays.asList(items).iterator());
 		Mockito.doReturn(itemList)
-				.when(channelManagerMock)
+				.when(channelManager)
 				.getNodeItems(Mockito.anyString(), Mockito.anyString(),
 						Mockito.anyInt());
 
-		Mockito.when(channelManagerMock.nodeExists(node)).thenReturn(true);
-
-		itemsGet.setChannelManager(channelManagerMock);
+		Mockito.when(channelManager.nodeExists(node)).thenReturn(true);
 
 		NodeViewAcl nodeViewAclMock = Mockito.mock(NodeViewAcl.class);
 		Mockito.doReturn(true)
@@ -319,8 +324,6 @@ public class ItemsGetTest extends IQTestHandler {
 
 		element.addAttribute("node", node);
 
-		ChannelManager channelManagerMock = Mockito.mock(Mock.class);
-
 		NodeSubscriptionImpl subscription = Mockito
 				.mock(NodeSubscriptionImpl.class);
 		NodeAffiliationImpl affiliation = Mockito
@@ -329,10 +332,10 @@ public class ItemsGetTest extends IQTestHandler {
 				Affiliations.member);
 		Mockito.when(subscription.getSubscription()).thenReturn(
 				Subscriptions.subscribed);
-		Mockito.when(channelManagerMock.getUserSubscription(node, jid))
-				.thenReturn(subscription);
-		Mockito.when(channelManagerMock.getUserAffiliation(node, jid))
-				.thenReturn(affiliation);
+		Mockito.when(channelManager.getUserSubscription(node, jid)).thenReturn(
+				subscription);
+		Mockito.when(channelManager.getUserAffiliation(node, jid)).thenReturn(
+				affiliation);
 
 		NodeItem item = Mockito.mock(NodeItem.class);
 		Mockito.when(item.getId()).thenReturn("id");
@@ -344,13 +347,11 @@ public class ItemsGetTest extends IQTestHandler {
 		CloseableIterator<NodeItem> itemList = new ClosableIteratorImpl<NodeItem>(
 				Arrays.asList(items).iterator());
 		Mockito.doReturn(itemList)
-				.when(channelManagerMock)
+				.when(channelManager)
 				.getNodeItems(Mockito.anyString(), Mockito.anyString(),
 						Mockito.anyInt());
 
-		Mockito.when(channelManagerMock.nodeExists(node)).thenReturn(true);
-
-		itemsGet.setChannelManager(channelManagerMock);
+		Mockito.when(channelManager.nodeExists(node)).thenReturn(true);
 
 		NodeViewAcl nodeViewAclMock = Mockito.mock(NodeViewAcl.class);
 		Mockito.doReturn(true)
@@ -385,8 +386,6 @@ public class ItemsGetTest extends IQTestHandler {
 
 		element.addAttribute("node", node);
 
-		ChannelManager channelManagerMock = Mockito.mock(Mock.class);
-
 		NodeSubscriptionImpl subscription = Mockito
 				.mock(NodeSubscriptionImpl.class);
 		NodeAffiliationImpl affiliation = Mockito
@@ -395,10 +394,10 @@ public class ItemsGetTest extends IQTestHandler {
 				Affiliations.member);
 		Mockito.when(subscription.getSubscription()).thenReturn(
 				Subscriptions.subscribed);
-		Mockito.when(channelManagerMock.getUserSubscription(node, jid))
-				.thenReturn(subscription);
-		Mockito.when(channelManagerMock.getUserAffiliation(node, jid))
-				.thenReturn(affiliation);
+		Mockito.when(channelManager.getUserSubscription(node, jid)).thenReturn(
+				subscription);
+		Mockito.when(channelManager.getUserAffiliation(node, jid)).thenReturn(
+				affiliation);
 
 		NodeSubscriptionImpl itemSubscription = Mockito
 				.mock(NodeSubscriptionImpl.class);
@@ -415,15 +414,12 @@ public class ItemsGetTest extends IQTestHandler {
 		items.add(itemSubscription);
 		items.add(itemSubscription);
 		items.add(itemSubscription);
-		Mockito.doReturn(items).when(channelManagerMock)
-				.getNodeSubscriptions(node);
+		Mockito.doReturn(items).when(channelManager).getNodeSubscriptions(node);
 
-		Mockito.doReturn(null).when(channelManagerMock)
+		Mockito.doReturn(null).when(channelManager)
 				.getUserAffiliation(node, new JID("pamela@denmark.lit"));
 
-		Mockito.when(channelManagerMock.nodeExists(node)).thenReturn(true);
-
-		itemsGet.setChannelManager(channelManagerMock);
+		Mockito.when(channelManager.nodeExists(node)).thenReturn(true);
 
 		NodeViewAcl nodeViewAclMock = Mockito.mock(NodeViewAcl.class);
 		Mockito.doReturn(true)
@@ -456,8 +452,6 @@ public class ItemsGetTest extends IQTestHandler {
 
 		element.addAttribute("node", node);
 
-		ChannelManager channelManagerMock = Mockito.mock(Mock.class);
-
 		NodeSubscriptionImpl subscription = Mockito
 				.mock(NodeSubscriptionImpl.class);
 		NodeAffiliationImpl affiliation = Mockito
@@ -466,10 +460,10 @@ public class ItemsGetTest extends IQTestHandler {
 				Affiliations.member);
 		Mockito.when(subscription.getSubscription()).thenReturn(
 				Subscriptions.subscribed);
-		Mockito.when(channelManagerMock.getUserSubscription(node, jid))
-				.thenReturn(subscription);
+		Mockito.when(channelManager.getUserSubscription(node, jid)).thenReturn(
+				subscription);
 		Mockito.when(
-				channelManagerMock.getUserAffiliation(Mockito.anyString(),
+				channelManager.getUserAffiliation(Mockito.anyString(),
 						Mockito.any(JID.class))).thenReturn(affiliation);
 
 		NodeSubscriptionImpl itemSubscription = Mockito
@@ -482,8 +476,7 @@ public class ItemsGetTest extends IQTestHandler {
 		Mockito.when(itemSubscription.getNodeId()).thenReturn(node);
 		ArrayList items = new ArrayList<NodeSubscriptionImpl>();
 		items.add(itemSubscription);
-		Mockito.doReturn(items).when(channelManagerMock)
-				.getNodeSubscriptions(node);
+		Mockito.doReturn(items).when(channelManager).getNodeSubscriptions(node);
 
 		NodeSubscriptionImpl childItemSubscription = Mockito
 				.mock(NodeSubscriptionImpl.class);
@@ -498,12 +491,10 @@ public class ItemsGetTest extends IQTestHandler {
 				Subscriptions.subscribed);
 		ArrayList<NodeSubscriptionImpl> childItems = new ArrayList<NodeSubscriptionImpl>();
 		childItems.add(childItemSubscription);
-		Mockito.doReturn(childItems).when(channelManagerMock)
+		Mockito.doReturn(childItems).when(channelManager)
 				.getUserSubscriptions(new JID("juliet@shakespeare.lit"));
 
-		Mockito.when(channelManagerMock.nodeExists(node)).thenReturn(true);
-
-		itemsGet.setChannelManager(channelManagerMock);
+		Mockito.when(channelManager.nodeExists(node)).thenReturn(true);
 
 		NodeViewAcl nodeViewAclMock = Mockito.mock(NodeViewAcl.class);
 		Mockito.doReturn(true)

@@ -2,6 +2,7 @@ package org.buddycloud.channelserver;
 
 import java.util.Properties;
 
+import org.apache.log4j.Logger;
 import org.jivesoftware.whack.ExternalComponentManager;
 import org.xmpp.component.ComponentException;
 import org.logicalcobwebs.proxool.ProxoolException;
@@ -11,6 +12,7 @@ public class XmppComponent {
 
 	private static final String DATABASE_CONFIGURATION_FILE = "db.properties";
 	
+	private static final Logger logger = Logger.getLogger(XmppComponent.class);
 	private String hostname;
 	private int socket;
 	
@@ -31,7 +33,6 @@ public class XmppComponent {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		
 	}
 	
 	public void setConf(Properties conf) {
@@ -42,6 +43,6 @@ public class XmppComponent {
 		ExternalComponentManager manager = new ExternalComponentManager(
 		        this.hostname, this.socket);
 		manager.setSecretKey(this.domainName, this.password);
-		manager.addComponent(this.domainName, new ChannelsEngine(this.conf));
+		manager.addComponent(this.domainName, new ChannelsEngine(conf));
 	}
 }

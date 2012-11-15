@@ -6,6 +6,7 @@ import java.util.concurrent.BlockingQueue;
 
 import org.apache.log4j.Logger;
 import org.buddycloud.channelserver.packetprocessor.PacketProcessor;
+import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.JabberPubsub;
 import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.queue.statemachine.DiscoInfo;
 import org.dom4j.Element;
@@ -13,6 +14,7 @@ import org.xmpp.forms.DataForm;
 import org.xmpp.forms.FormField;
 import org.xmpp.packet.IQ;
 import org.xmpp.packet.IQ.Type;
+import org.xmpp.packet.JID;
 import org.xmpp.packet.Packet;
 import org.xmpp.packet.PacketError;
 
@@ -22,7 +24,10 @@ public class DiscoInfoGet implements PacketProcessor<IQ> {
 	private static final Logger LOGGER = Logger.getLogger(DiscoInfoGet.class);
 	private final BlockingQueue<Packet> outQueue;
 	private final ChannelManager channelManager;
+	private String node;
 
+	private IQ requestIq;
+	
 	public DiscoInfoGet(BlockingQueue<Packet> outQueue, ChannelManager channelManager) {
 		this.outQueue = outQueue;
 		this.channelManager = channelManager;
@@ -31,11 +36,12 @@ public class DiscoInfoGet implements PacketProcessor<IQ> {
 	@Override
 	public void process(IQ reqIQ) throws Exception {
 
+		requestIq = reqIQ;
 		IQ result   = IQ.createResultIQ(reqIQ);
 		Element elm = reqIQ.getChildElement();
-		String node = elm.attributeValue("node");
-
-		if (node == null) {
+		node = elm.attributeValue("node");
+		
+		if ((node == null) || (true == node.equals(""))) {
 			Element query = result.setChildElement(ELEMENT_NAME,
 					JabberDiscoInfo.NAMESPACE_URI);
 			query.addElement("identity").addAttribute("category", "pubsub")
@@ -54,6 +60,11 @@ public class DiscoInfoGet implements PacketProcessor<IQ> {
 			return;
 		}
 
+		if (false == channelManager.isLocalNode(node)) {
+			makeRemoteRequest();
+		    return;
+		}
+		
 		Map<String, String> conf = channelManager.getNodeConf(node);
 		if (conf.isEmpty()) {
 /*
@@ -119,4 +130,8 @@ public class DiscoInfoGet implements PacketProcessor<IQ> {
 		outQueue.put(result);
 	}
 
+	private void makeRemoteRequest() {
+		requestIq.setTo(new JID(node.split("/")[2]).getDomain());
+	    outQueue.add(requestIq);
+	}
 }

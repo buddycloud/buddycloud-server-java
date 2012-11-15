@@ -43,6 +43,8 @@ public class PublishSet implements PubSubElementProcessor {
 
 	private final BlockingQueue<Packet> outQueue;
 	private final ChannelManager channelManager;
+	private IQ requestIq;
+	private String node;
 
 	public PublishSet(BlockingQueue<Packet> outQueue,
 			ChannelManager channelManager) {
@@ -53,8 +55,10 @@ public class PublishSet implements PubSubElementProcessor {
 	@Override
 	public void process(Element elm, JID actorJID, IQ reqIQ, Element rsm)
 			throws InterruptedException, NodeStoreException {
-		String node = elm.attributeValue("node");
-
+		
+		node = elm.attributeValue("node");
+		requestIq = reqIQ;
+		
 		if (node == null || node.equals("")) {
 
 			/*
@@ -101,6 +105,11 @@ public class PublishSet implements PubSubElementProcessor {
 			outQueue.put(reply);
 			return;
 		}
+		
+		if (false == channelManager.isLocalNode(node)) {
+			makeRemoteRequest();
+			return;
+		}
 		boolean isLocalSubscriber = false;
 
 		if (actorJID != null) {
@@ -134,42 +143,6 @@ public class PublishSet implements PubSubElementProcessor {
 			}
 		}
 
-		if (false == isLocalNode) {
-			// TODO Federation!
-			if (true == isLocalSubscriber) {
-
-				// TODO, WORK HERE!
-				Publish pub = Publish.buildSubscribeStatemachine(node, reqIQ,
-						channelManager);
-				outQueue.put(pub.nextStep());
-				return;
-				// Start process to publish to external node.
-				// Subscribe sub = Subscribe.buildSubscribeStatemachine(node,
-				// reqIQ, channelManager);
-				// outQueue.put(sub.nextStep());
-				// return;
-			}
-
-			// Foreign client is trying to subscribe on a node that does not
-			// exists.
-			/*
-			 * 6.1.3.12 Node Does Not Exist
-			 * 
-			 * <iq type='error' from='pubsub.shakespeare.lit'
-			 * to='francisco@denmark.lit/barracks' id='sub1'> <error
-			 * type='cancel'> <item-not-found
-			 * xmlns='urn:ietf:params:xml:ns:xmpp-stanzas'/> </error> </iq>
-			 */
-
-			IQ reply = IQ.createResultIQ(reqIQ);
-			reply.setType(Type.error);
-			PacketError pe = new PacketError(
-					org.xmpp.packet.PacketError.Condition.item_not_found,
-					org.xmpp.packet.PacketError.Type.cancel);
-			reply.setError(pe);
-			outQueue.put(reply);
-			return;
-		}
 		if (false == channelManager.nodeExists(node)) {
 			IQ reply = IQ.createResultIQ(reqIQ);
 			reply.setType(Type.error);
@@ -336,7 +309,8 @@ public class PublishSet implements PubSubElementProcessor {
 		Element i = items.addElement("item");
 		i.addAttribute("id", id);
 		i.add(entry.createCopy());
-
+        Element actor = event.addElement("actor");
+        actor.addNamespace("", JabberPubsub.NS_BUDDYCLOUD);
 		Set<String> externalChannelServerReceivers = new HashSet<String>();
 
 		Collection<NodeSubscription> cur = channelManager
@@ -354,13 +328,23 @@ public class PublishSet implements PubSubElementProcessor {
 			 */
 			if (ns.getSubscription().equals(Subscriptions.subscribed)) {
 			    LOGGER.debug("Sending post notification to " + to.toBareJID());
-			    msg.setTo(to);
+			    msg.setTo(ns.getListener());
+			    actor.setText(to.toBareJID());
 			    outQueue.put(msg.createCopy());
 			}
 		}
 
 	}
 
+	private void makeRemoteRequest() throws InterruptedException {
+		requestIq.setTo(new JID(node.split("/")[2]).getDomain());
+		Element actor = requestIq.getElement()
+		    .element("pubsub")
+		    .addElement("actor", JabberPubsub.NS_BUDDYCLOUD);
+		actor.addText(requestIq.getFrom().toBareJID());
+	    outQueue.put(requestIq);
+	}
+	
 	@Override
 	public boolean accept(Element elm) {
 		return elm.getName().equals("publish");

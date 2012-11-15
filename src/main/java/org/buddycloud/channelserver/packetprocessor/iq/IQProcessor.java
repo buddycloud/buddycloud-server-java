@@ -85,18 +85,6 @@ public class IQProcessor implements PacketProcessor<IQ> {
 			return;
 
 		}
-		// TODO
-		/*
-		 * if (packet.getType() == IQ.Type.result || packet.getType() ==
-		 * IQ.Type.error) { // This might be a reply to a state we are on.
-		 * Map<String, String> state = channelManager.getState(packet.getID());
-		 * if (!state.isEmpty()) { IStatemachine sm =
-		 * StateMachineBuilder.buildFromState(packet, state, channelManager);
-		 * outQueue.put(sm.nextStep()); return; } }
-		 */
-
 		logger.error("Could not handle packet " + packet.toXML());
-
 	}
-
 }

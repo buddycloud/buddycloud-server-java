@@ -59,9 +59,12 @@ public class SubscribeSet extends PubSubElementProcessorAbstract {
 			missingNodeName();
 			return;
 		}
-
+        if (false == channelManager.isLocalNode(node)) {
+        	makeRemoteRequest();
+        	return;
+        }
 		subscribingJid = request.getFrom();
-		boolean isLocalNode = channelManager.isLocalNode(node);
+		boolean isLocalNode = true;
 		boolean isLocalSubscriber = false;
 
 		if (actorJID != null) {
@@ -106,35 +109,6 @@ public class SubscribeSet extends PubSubElementProcessorAbstract {
 			return;
 		}
 
-		if (false == isLocalNode) {
-			/*
-			 * if (isLocalSubscriber) { // Start process to subscribe to
-			 * external node. Subscribe sub =
-			 * Subscribe.buildSubscribeStatemachine(node, request,
-			 * channelManager); outQueue.put(sub.nextStep()); return; }
-			 */
-
-			// Foreign client is trying to subscribe on a node that does not
-			// exists.
-
-			/*
-			 * 6.1.3.12 Node Does Not Exist
-			 * 
-			 * <iq type='error' from='pubsub.shakespeare.lit'
-			 * to='francisco@denmark.lit/barracks' id='sub1'> <error
-			 * type='cancel'> <item-not-found
-			 * xmlns='urn:ietf:params:xml:ns:xmpp-stanzas'/> </error> </iq>
-			 */
-
-			IQ reply = IQ.createResultIQ(request);
-			reply.setType(Type.error);
-			PacketError pe = new PacketError(
-					PacketError.Condition.item_not_found,
-					PacketError.Type.cancel);
-			reply.setError(pe);
-			outQueue.put(reply);
-			return;
-		}
 		if (false == channelManager.nodeExists(node)) {
 			IQ reply = IQ.createResultIQ(request);
 			reply.setType(Type.error);
@@ -237,6 +211,15 @@ public class SubscribeSet extends PubSubElementProcessorAbstract {
 			if (t != null)
 				t.close();
 		}
+	}
+
+	private void makeRemoteRequest() throws InterruptedException {
+		request.setTo(new JID(node.split("/")[2]).getDomain());
+		Element actor = request.getElement()
+		    .element("pubsub")
+		    .addElement("actor", JabberPubsub.NS_BUDDYCLOUD);
+		actor.addText(request.getFrom().toBareJID());
+	    outQueue.put(request);
 	}
 
 	private void notifySubscribers(Subscriptions subscriptionStatus,

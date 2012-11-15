@@ -31,7 +31,6 @@ public class FederatedQueueManager {
 	private int id = 1;
 
 	private final ChannelsEngine component;
-	private BlockingQueue<Packet> inQueue = new LinkedBlockingQueue<Packet>();
 	private HashMap<String, String> discoveredServers = new HashMap<String, String>();
 	private HashMap<String, List<Packet>> waitingStanzas = new HashMap<String, List<Packet>>();
 	private HashMap<String, String> remoteChannelDiscoveryStatus = new HashMap<String, String>();
@@ -57,6 +56,7 @@ public class FederatedQueueManager {
 			// Do we have a map already?
 			if (discoveredServers.containsKey(to)) {
 				packet.setTo(new JID(discoveredServers.get(to)));
+				logger.debug("\n\n\n***** Already have a server for packet: " + packet.toXML());
 				component.sendPacket(packet);
 				return;
 			}
@@ -77,8 +77,8 @@ public class FederatedQueueManager {
 			if (false == waitingStanzas.containsKey(to)) {
 				waitingStanzas.put(to, new ArrayList<Packet>());
 			}
-			logger.debug("\n\nAdding packet to waiting stanza list (size "
-					+ waitingStanzas.size() + ")\n\n");
+			logger.debug("\n\nAdding packet to waiting stanza list for " 
+			        + to + " (size " + waitingStanzas.get(to).size() + ")\n\n");
 			waitingStanzas.get(to).add(packet);
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -152,8 +152,12 @@ public class FederatedQueueManager {
 	private void sendFederatedRequests(String originatingServer) throws ComponentException {
 		String remoteServer = discoveredServers.get(originatingServer);
 		List<Packet> packetsToSend = waitingStanzas.get(originatingServer);
+		if (null == packetsToSend) {
+			return;
+		}
 		for (Packet packet : packetsToSend) {
 			packet.setTo(remoteServer);
+			logger.debug("\n** Catching up on packet: " + packet.toString());
 			component.sendPacket(packet);
 		}
 		waitingStanzas.remove(originatingServer);		

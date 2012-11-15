@@ -61,11 +61,11 @@ public class ItemDelete extends PubSubElementProcessorAbstract {
 			if ((false == validNodeProvided()) || (false == nodeExists())
 					|| (false == itemIdProvided()) || (false == itemExists())
 					|| (false == validPayload()) || (false == canDelete())) {
-				outQueue.add(response);
+				outQueue.put(response);
 				return;
 			}
 			deleteItem();
-			outQueue.add(response);
+			outQueue.put(response);
 			sendNotifications();
 			return;
 		} catch (NodeStoreException e) {
@@ -77,7 +77,7 @@ public class ItemDelete extends PubSubElementProcessorAbstract {
 		} catch (IllegalArgumentException e) {
 			setErrorCondition(PacketError.Type.modify, PacketError.Condition.bad_request);
 		}
-		outQueue.add(response);
+		outQueue.put(response);
 	}
 
 	private void sendNotifications() throws NodeStoreException {

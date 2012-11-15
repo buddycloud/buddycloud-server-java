@@ -130,8 +130,8 @@ public class DiscoInfoGet implements PacketProcessor<IQ> {
 		outQueue.put(result);
 	}
 
-	private void makeRemoteRequest() {
+	private void makeRemoteRequest() throws InterruptedException {
 		requestIq.setTo(new JID(node.split("/")[2]).getDomain());
-	    outQueue.add(requestIq);
+	    outQueue.put(requestIq);
 	}
 }

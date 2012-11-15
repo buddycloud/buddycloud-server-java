@@ -123,7 +123,7 @@ public class ItemsGet implements PubSubElementProcessor {
 			}
 
 			if (false == userCanViewNode()) {
-				outQueue.add(reply);
+				outQueue.put(reply);
 				return;
 			}
 			getItems();
@@ -134,13 +134,13 @@ public class ItemsGet implements PubSubElementProcessor {
 		outQueue.put(reply);
 	}
 
-	private void makeRemoteRequest() {
+	private void makeRemoteRequest() throws InterruptedException {
 		requestIq.setTo(new JID(node.split("/")[2]).getDomain());
 		Element actor = requestIq.getElement()
 		    .element("pubsub")
 		    .addElement("actor", JabberPubsub.NS_BUDDYCLOUD);
 		actor.addText(requestIq.getFrom().toBareJID());
-	    outQueue.add(requestIq);
+	    outQueue.put(requestIq);
 	}
 
 	private boolean nodeExists() throws NodeStoreException {

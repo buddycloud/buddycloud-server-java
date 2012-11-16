@@ -10,6 +10,8 @@ import org.apache.log4j.Logger;
 import org.buddycloud.channelserver.ChannelsEngine;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.JabberPubsub;
 import org.dom4j.Element;
+import org.dom4j.Namespace;
+import org.dom4j.dom.DOMElement;
 import org.xmpp.component.ComponentException;
 import org.xmpp.packet.IQ;
 import org.xmpp.packet.JID;
@@ -75,6 +77,15 @@ public class FederatedQueueManager {
 				component.sendPacket(reply);
 				return;
 			}
+			/* TODO: Handle no remote XMPP server
+			 * 
+			 * <iq xmlns='jabber:client' type='error' to='romeo@server1.com/client' 
+			 *     from='channels.server1.com' id='1:items'>
+			 *     <error type='cancel'>
+			 *         <text>timeout</text>
+			 *     </error>
+			 * </iq>
+			 */
 			// Add packet to list
 			if (false == waitingStanzas.containsKey(to)) {
 				waitingStanzas.put(to, new ArrayList<Packet>());
@@ -153,6 +164,7 @@ public class FederatedQueueManager {
 			if (false == discoveredServers.containsKey(originatingServer)) {
 			    sendRemoteChannelServerNotFoundErrorResponses(originatingServer);
 			    remoteChannelDiscoveryStatus.put(originatingServer, NO_CHANNEL_SERVER);
+			    waitingStanzas.remove(originatingServer);
 			} else {
 				remoteChannelDiscoveryStatus.put(originatingServer, DISCOVERED);
 			}
@@ -172,8 +184,30 @@ public class FederatedQueueManager {
 		waitingStanzas.remove(originatingServer);		
 	}
 
-	private void sendRemoteChannelServerNotFoundErrorResponses(String server) {
-		// TODO: Send error responses		
+	private void sendRemoteChannelServerNotFoundErrorResponses(String server)
+			throws ComponentException {
+		
+        List<Packet> queued = waitingStanzas.get(server);
+        if (null == queued) {
+        	return;
+        }
+        Element noRemoteServer = new DOMElement("text",
+				new Namespace("", JabberPubsub.NS_PUBSUB_ERROR));
+        noRemoteServer.setText("No pubsub channel service discovered for " + server);
+		Element itemNotFound = new DOMElement(
+				PacketError.Condition.item_not_found.toXMPP(), new Namespace("",
+						JabberPubsub.NS_XMPP_STANZAS));
+		Element error = new DOMElement("error");
+		error.addAttribute("type", PacketError.Type.cancel.toXMPP());
+		error.add(itemNotFound);
+		error.add(noRemoteServer);
+        IQ response;
+        for (Packet packet : queued) {
+        	response = IQ.createResultIQ((IQ) packet);
+        	response.setType(IQ.Type.error);
+    		response.setChildElement(error);
+    		component.sendPacket(response);
+        }
 	}
 
 	public void passResponseToRequester(IQ packet) throws Exception {

@@ -7,7 +7,6 @@
    * Update remote subscriptions / affiliations on event receiving
    * Push event notifications to appropriate users
 * Handle s2s failure cases (FederatedQueueManager)
-* Handle 'no remote channel server' case (FederatedQueueManager)
 * Fix case where remote server dials in before local server has discovered it
 
 ## More general fixes

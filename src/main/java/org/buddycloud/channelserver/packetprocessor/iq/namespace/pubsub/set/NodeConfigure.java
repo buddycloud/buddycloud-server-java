@@ -49,6 +49,10 @@ public class NodeConfigure extends PubSubElementProcessorAbstract {
 		if (null == actor) {
 			actor = request.getFrom();
 		}
+		if (false == channelManager.isLocalNode(node)) {
+			makeRemoteRequest();
+			return;
+		}
 		try {
 			if ((false == nodeProvided()) || (false == nodeExists())
 					|| (false == userCanModify())) {
@@ -171,6 +175,15 @@ public class NodeConfigure extends PubSubElementProcessorAbstract {
 		error.add(nodeIdRequired);
 		response.setChildElement(error);
 		return false;
+	}
+	
+	private void makeRemoteRequest() throws InterruptedException {
+		request.setTo(new JID(node.split("/")[2]).getDomain());
+		Element actor = request.getElement()
+		    .element("pubsub")
+		    .addElement("actor", JabberPubsub.NS_BUDDYCLOUD);
+		actor.addText(request.getFrom().toBareJID());
+	    outQueue.put(request);
 	}
 
 	public boolean accept(Element elm) {

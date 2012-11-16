@@ -101,6 +101,14 @@ public class FederatedQueueManager {
 	public void sendInfoRequests(JID from, List<Element> items)
 			throws ComponentException {
 
+		for (Element item : items) {
+			String name = item.attributeValue("name");
+			if ((null != name) && (true == name.equals(BUDDYCLOUD_SERVER))) {
+				remoteChannelDiscoveryStatus.put(from.toString(), DISCOVERED);
+				discoveredServers.put(from.toString(), item.attributeValue("jid"));
+				return;
+			}
+		}
 		IQ infoRequest = new IQ(IQ.Type.get);
 		infoRequest.setFrom(localServer);
 		infoRequest.getElement()

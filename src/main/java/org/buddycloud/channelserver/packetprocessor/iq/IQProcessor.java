@@ -70,14 +70,12 @@ public class IQProcessor implements PacketProcessor<IQ> {
 	
 			}
 		}
-
-		if (IQ.Type.result == packet.getType()) {
-			try {
-			    federatedQueueManager.passResponseToRequester(packet);
-			    return;
-			} catch (UnknownFederatedPacketException e) {
-				logger.error(e);
-			}
+        // See if this was an externally sent packet
+		try {
+		    federatedQueueManager.passResponseToRequester(packet);
+		    return;
+		} catch (UnknownFederatedPacketException e) {
+			logger.error(e);
 		}
 		logger.debug("Couldn't find processor for namespace "
 				+ packet.getChildElement().getNamespaceURI());

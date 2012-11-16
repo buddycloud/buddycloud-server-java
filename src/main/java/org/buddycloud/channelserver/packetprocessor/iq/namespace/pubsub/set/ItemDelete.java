@@ -56,6 +56,12 @@ public class ItemDelete extends PubSubElementProcessorAbstract {
 		element = elm;
 		request = reqIQ;
 		response = IQ.createResultIQ(request);
+		node    = element.attributeValue("node");
+		
+		if (false == channelManager.isLocalNode(node)) {
+			makeRemoteRequest();
+			return;
+		}
 
 		try {
 			if ((false == validNodeProvided()) || (false == nodeExists())
@@ -95,7 +101,7 @@ public class ItemDelete extends PubSubElementProcessorAbstract {
 			for (NodeSubscription subscription : subscriptions) {
 				if (subscription.getSubscription().equals(
 						Subscriptions.subscribed)) {
-					notification.setTo(subscription.getUser().toBareJID());
+					notification.setTo(subscription.getListener().toString());
 					outQueue.put(notification.createCopy());
 				}
 			}
@@ -210,7 +216,6 @@ public class ItemDelete extends PubSubElementProcessorAbstract {
 	}
 
 	private boolean validNodeProvided() {
-		node = element.attributeValue("node");
 		if ((null != node) && (false == node.equals(""))) {
 			return true;
 		}
@@ -226,6 +231,15 @@ public class ItemDelete extends PubSubElementProcessorAbstract {
 		error.add(nodeIdRequired);
 		response.setChildElement(error);
 		return false;
+	}
+	
+	private void makeRemoteRequest() throws InterruptedException {
+		request.setTo(new JID(node.split("/")[2]).getDomain());
+		Element actor = request.getElement()
+		    .element("pubsub")
+		    .addElement("actor", JabberPubsub.NS_BUDDYCLOUD);
+		actor.addText(request.getFrom().toBareJID());
+	    outQueue.put(request);
 	}
 
 	public boolean accept(Element elm) {

@@ -108,7 +108,6 @@ public class AffiliationsGet implements PubSubElementProcessor {
 	}
 	
 	private void makeRemoteRequest(String node) throws InterruptedException {
-		logger.debug("\n\n**** Making remote affiliation request for " + node);
 		requestIq.setTo(new JID(node).getDomain());
 		Element actor = requestIq.getElement()
 		    .element("pubsub")

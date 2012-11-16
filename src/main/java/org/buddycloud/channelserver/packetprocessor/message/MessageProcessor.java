@@ -23,7 +23,7 @@ import org.xmpp.packet.Packet;
 
 public class MessageProcessor implements PacketProcessor<Message> {
 
-    private static final Logger LOGGER = Logger.getLogger(MessageProcessor.class);
+    private static final Logger logger = Logger.getLogger(MessageProcessor.class);
     
     private final BlockingQueue<Packet> inQueue;
     private final BlockingQueue<Packet> outQueue;
@@ -39,7 +39,7 @@ public class MessageProcessor implements PacketProcessor<Message> {
     @Override
     public void process(Message packet) throws Exception {
         
-        LOGGER.debug("Message handler got body '" + packet.getBody() + "'.");
+        logger.debug("Message handler got body '" + packet.getBody() + "'.");
         
         if(channelManager.isLocalJID(packet.getFrom())) {
             
@@ -50,7 +50,7 @@ public class MessageProcessor implements PacketProcessor<Message> {
             String[] privateBodyparts = body.split(" ", 2);
             if (privateBodyparts[0].equals(":subscribe")) {
                 
-                LOGGER.debug("Got subscribe command. Rest of the body '" + privateBodyparts[1] + "'.");
+                logger.debug("Got subscribe command. Rest of the body '" + privateBodyparts[1] + "'.");
                 
                 IQ iq = new IQ();
                 iq.setType(IQ.Type.set);
@@ -66,7 +66,7 @@ public class MessageProcessor implements PacketProcessor<Message> {
                 
             } else if (privateBodyparts[0].equals(":unsubscribe")) {
                 
-                LOGGER.debug("Got unsubscribe command. Rest of the body '" + privateBodyparts[1] + "'.");
+                logger.debug("Got unsubscribe command. Rest of the body '" + privateBodyparts[1] + "'.");
                 
                 IQ iq = new IQ();
                 iq.setType(IQ.Type.set);
@@ -150,7 +150,7 @@ public class MessageProcessor implements PacketProcessor<Message> {
                 
             } else if (privateBodyparts[0].equals(":subscriptions")) {
                 
-                LOGGER.debug("Got subscriptions command.");
+                logger.debug("Got subscriptions command.");
                 
                 IQ iq = new IQ();
                 iq.setType(IQ.Type.get);
@@ -163,7 +163,7 @@ public class MessageProcessor implements PacketProcessor<Message> {
                 this.inQueue.put(iq);
             
             } else {
-                LOGGER.debug("Sorry, did not understand this command '" + privateBodyparts[0] + "' (yet).");
+                logger.debug("Sorry, did not understand this command '" + privateBodyparts[0] + "' (yet).");
             }
         }
     
@@ -180,7 +180,7 @@ public class MessageProcessor implements PacketProcessor<Message> {
         if(node == null) {
             return;
         }
-        
+        logger.debug("\n\n\n****** incoming remote request: " + packet.toXML());
         // Let's modify the package a bit.
         String[] splittedNode = node.split("/");
         String sentToNode = "@" + splittedNode[2];

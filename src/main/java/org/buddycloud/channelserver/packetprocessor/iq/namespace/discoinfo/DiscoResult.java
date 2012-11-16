@@ -29,7 +29,12 @@ public class DiscoResult implements PacketProcessor<IQ> {
 	@Override
 	public void process(IQ reqIQ) throws Exception {
 	    requestIq = reqIQ;
-	    List<Element> identities = requestIq.getChildElement().elements("identity");
-	    federatedQueueManager.processInfoResponses(requestIq.getFrom(), requestIq.getID(), identities);
+	    String node = requestIq.getElement().element("query").attributeValue("node");
+	    if (null == node) {
+	        List<Element> identities = requestIq.getChildElement().elements("identity");
+	        federatedQueueManager.processInfoResponses(requestIq.getFrom(), requestIq.getID(), identities);
+	        return;
+	    }
+	    federatedQueueManager.passResponseToRequester(requestIq);
 	}
 }

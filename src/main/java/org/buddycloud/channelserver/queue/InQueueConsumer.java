@@ -15,7 +15,7 @@ import org.xmpp.packet.Packet;
 
 public class InQueueConsumer extends QueueConsumer {
 
-	private static final Logger LOGGER = Logger
+	private static final Logger logger = Logger
 			.getLogger(InQueueConsumer.class);
 
 	private final BlockingQueue<Packet> outQueue;
@@ -43,7 +43,7 @@ public class InQueueConsumer extends QueueConsumer {
 			Long start = System.currentTimeMillis();
 
 			String xml = p.toXML();
-			LOGGER.debug("Received payload: '" + xml + "'.");
+			logger.debug("Received payload: '" + xml + "'.");
 			channelManager = channelManagerFactory.create();
 			if (p instanceof IQ) {
 				new IQProcessor(outQueue, conf, channelManager, federatedQueueManager).process((IQ) p);
@@ -51,16 +51,16 @@ public class InQueueConsumer extends QueueConsumer {
 				new MessageProcessor(outQueue, inQueue, conf, channelManager)
 						.process((Message) p);
 			} else {
-				LOGGER.info("Not handling following stanzas yet: '" + xml
+				logger.info("Not handling following stanzas yet: '" + xml
 						+ "'.");
 			}
 
-			LOGGER.debug("Payload handled in '"
+			logger.debug("Payload handled in '"
 					+ Long.toString((System.currentTimeMillis() - start))
 					+ "' milliseconds.");
 
 		} catch (Exception e) {
-			LOGGER.debug("Exception: " + e.getMessage(), e);
+			logger.debug("Exception: " + e.getMessage(), e);
 		} finally {
 			try {
 				channelManager.close();

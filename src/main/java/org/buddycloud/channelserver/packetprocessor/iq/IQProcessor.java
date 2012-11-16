@@ -13,6 +13,7 @@ import org.buddycloud.channelserver.packetprocessor.iq.namespace.discoitems.Jabb
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.JabberPubsub;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.register.JabberRegister;
 import org.buddycloud.channelserver.queue.FederatedQueueManager;
+import org.buddycloud.channelserver.queue.UnknownFederatedPacketException;
 import org.buddycloud.channelserver.queue.statemachine.IStatemachine;
 import org.buddycloud.channelserver.queue.statemachine.StateMachineBuilder;
 
@@ -36,8 +37,9 @@ public class IQProcessor implements PacketProcessor<IQ> {
 			FederatedQueueManager federatedQueueManager) {
 		this.outQueue = outQueue;
 		this.channelManager = channelManager;
+        this.federatedQueueManager = federatedQueueManager;
 
-		JabberPubsub ps = new JabberPubsub(outQueue, conf, channelManager);
+		JabberPubsub ps = new JabberPubsub(outQueue, conf, channelManager, federatedQueueManager);
 
 		processorsPerNamespace.put(JabberDiscoItems.NAMESPACE_URI,
 				new JabberDiscoItems(outQueue, conf, channelManager, federatedQueueManager));
@@ -52,22 +54,31 @@ public class IQProcessor implements PacketProcessor<IQ> {
 	@Override
 	public void process(IQ packet) throws Exception {
 
-		logger.debug("Finding IQ processor for namespace "
-				+ packet.getChildElement().getNamespaceURI());
-
-		PacketProcessor<IQ> namespaceProcessor = processorsPerNamespace
-				.get(packet.getChildElement().getNamespaceURI());
-
-		if (packet.getChildElement() != null
-				&& packet.getChildElement().getNamespaceURI() != null
-				&& namespaceProcessor != null) {
-			logger.trace("Using namespace processor: "
-					+ namespaceProcessor.getClass().getName());
-			namespaceProcessor.process(packet);
-			return;
-
+		if (null != packet.getChildElement()) {
+			logger.debug("Finding IQ processor for namespace "
+					+ packet.getChildElement().getNamespaceURI());
+	
+			PacketProcessor<IQ> namespaceProcessor = processorsPerNamespace
+					.get(packet.getChildElement().getNamespaceURI());
+	
+			if (packet.getChildElement().getNamespaceURI() != null
+					&& namespaceProcessor != null) {
+				logger.trace("Using namespace processor: "
+						+ namespaceProcessor.getClass().getName());
+				namespaceProcessor.process(packet);
+				return;
+	
+			}
 		}
 
+		if (IQ.Type.result == packet.getType()) {
+			try {
+			    federatedQueueManager.passResponseToRequester(packet);
+			    return;
+			} catch (UnknownFederatedPacketException e) {
+				logger.error(e);
+			}
+		}
 		logger.debug("Couldn't find processor for namespace "
 				+ packet.getChildElement().getNamespaceURI());
 

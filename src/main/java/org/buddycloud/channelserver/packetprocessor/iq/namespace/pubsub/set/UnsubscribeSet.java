@@ -57,7 +57,10 @@ public class UnsubscribeSet extends PubSubElementProcessorAbstract {
 		}
 
 		unsubscribingJid = request.getFrom();
-		boolean isLocalNode = channelManager.isLocalNode(node);
+		if (false == channelManager.isLocalNode(node)) {
+			makeRemoteRequest();
+			return;
+		}
 		boolean isLocalSubscriber = false;
 
 		if (actorJID != null) {
@@ -72,35 +75,6 @@ public class UnsubscribeSet extends PubSubElementProcessorAbstract {
 			}
 		}
 
-		if (!isLocalNode) {
-
-			/*
-			 * if (isLocalSubscriber) { // Start process to unsubscribe from
-			 * external node. Unsubscribe unsub =
-			 * Unsubscribe.buildUnsubscribeStatemachine( node, request,
-			 * channelManager); outQueue.put(unsub.nextStep()); return; }
-			 */
-
-			// Foreign client is trying to subscribe on a node that does not
-			// exists.
-			/*
-			 * 6.1.3.12 Node Does Not Exist
-			 * 
-			 * <iq type='error' from='pubsub.shakespeare.lit'
-			 * to='francisco@denmark.lit/barracks' id='sub1'> <error
-			 * type='cancel'> <item-not-found
-			 * xmlns='urn:ietf:params:xml:ns:xmpp-stanzas'/> </error> </iq>
-			 */
-
-			IQ reply = IQ.createResultIQ(request);
-			reply.setType(Type.error);
-			PacketError pe = new PacketError(
-					org.xmpp.packet.PacketError.Condition.item_not_found,
-					org.xmpp.packet.PacketError.Type.cancel);
-			reply.setError(pe);
-			outQueue.put(reply);
-			return;
-		}
 		if (false == channelManager.nodeExists(node)) {
 			IQ reply = IQ.createResultIQ(request);
 			reply.setType(Type.error);
@@ -231,6 +205,15 @@ public class UnsubscribeSet extends PubSubElementProcessorAbstract {
 		outQueue.put(reply);
 	}
 
+	private void makeRemoteRequest() throws InterruptedException {
+		request.setTo(new JID(node.split("/")[2]).getDomain());
+		Element actor = request.getElement()
+		    .element("pubsub")
+		    .addElement("actor", JabberPubsub.NS_BUDDYCLOUD);
+		actor.addText(request.getFrom().toBareJID());
+	    outQueue.put(request);
+	}
+	
 	@Override
 	public boolean accept(Element elm) {
 		return elm.getName().equals("unsubscribe");

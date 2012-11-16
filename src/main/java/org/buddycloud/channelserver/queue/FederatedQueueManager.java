@@ -36,6 +36,7 @@ public class FederatedQueueManager {
 	private HashMap<String, String> remoteChannelDiscoveryStatus = new HashMap<String, String>();
 	private HashMap<String, Integer> remoteServerItemsToProcess = new HashMap<String, Integer>();
 	private HashMap<String, String> remoteServerInfoRequestIds = new HashMap<String, String>();
+	private HashMap<String, JID> sentRemotePackets = new HashMap<String, JID>();
 
 	private String localServer;
 
@@ -52,11 +53,12 @@ public class FederatedQueueManager {
 
 	public void process(Packet packet) throws ComponentException {
 		String to = packet.getTo().toString();
+		sentRemotePackets.put(packet.getID(), packet.getFrom());
+		packet.setFrom(localServer);
 		try {
 			// Do we have a map already?
 			if (discoveredServers.containsKey(to)) {
 				packet.setTo(new JID(discoveredServers.get(to)));
-				logger.debug("\n\n\n***** Already have a server for packet: " + packet.toXML());
 				component.sendPacket(packet);
 				return;
 			}
@@ -157,7 +159,6 @@ public class FederatedQueueManager {
 		}
 		for (Packet packet : packetsToSend) {
 			packet.setTo(remoteServer);
-			logger.debug("\n** Catching up on packet: " + packet.toString());
 			component.sendPacket(packet);
 		}
 		waitingStanzas.remove(originatingServer);		
@@ -165,5 +166,17 @@ public class FederatedQueueManager {
 
 	private void sendRemoteChannelServerNotFoundErrorResponses(String server) {
 		// TODO: Send error responses		
+	}
+
+	public void passResponseToRequester(IQ packet) throws Exception {
+		if (false == sentRemotePackets.containsKey(packet.getID())) {
+			throw new UnknownFederatedPacketException(
+			    "Can not find original requesting packet! (ID:" + packet.getID() + ")"
+			);
+		}
+		packet.setTo(sentRemotePackets.get(packet.getID()));
+		packet.setFrom(localServer);
+		sentRemotePackets.remove(packet.getID());
+		component.sendPacket(packet);
 	}
 }

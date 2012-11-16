@@ -1,37 +1,24 @@
-* Create a jar file 0.1
+# Task list:
 
-* install to lobstermonster.org
+## Immediate fixes
 
-* Commit to github
+* Events
+   * Need to store remote affiliations / subscriptions in database
+   * Update remote subscriptions / affiliations on event receiving
+   * Push event notifications to appropriate users
+* Handle s2s failure cases (FederatedQueueManager)
+* Handle 'no remote channel server' case (FederatedQueueManager)
+* Fix case where remote server dials in before local server has discovered it
+
+## More general fixes
 
 * Write a quick how to and explanation of the "logic"
 
-* Release and Call for partisipation
-
-* make "configuration.properties" to be read when passed as parameter to the jar
-
-* make the system echo correclty in start up
-
-* Check that owner cannot be deleted from a channel
-
 * Check that user cannot unsubscribe from a node when she is a owner
-
 * Add presence subscription
-
-* Handle errors for pubsub requests that are going to foreign pubsub nodes
-
-* Check that the message ID's are correct, both for Bc and Atom
-
 * Handle error case 6.2.3.2 No Such Subscriber
-
-* Check that node variable in the code is always called node, not nodename or similar
-
-* Check all the error cases for when doing discoInfo
-
 * Add command :version to return the current version of the channel server.
-
 * when user subscribes to local node, increase subscribers counter.
-
 * when user unsubscribes from local node, decrease subscribers counter.
 
 * Check that this server sends the same as the node.js one (the entry id is not valid though):
@@ -59,8 +46,6 @@
         </items>
      </event>
   </message>
-  
-  * Clean libs, use maeven
   
   
   

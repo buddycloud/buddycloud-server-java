@@ -200,7 +200,7 @@ public class Mock implements ChannelManager {
 	@Override
 	public boolean isLocalNode(String nodeId) {
 		// TODO Auto-generated method stub
-		return false;
+		return true;
 	}
 
 	@Override

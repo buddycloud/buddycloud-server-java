@@ -31,7 +31,7 @@ import org.xmpp.packet.PacketError;
 
 public class NodeConfigureTest extends IQTestHandler {
 	private IQ request;
-	private Mock channelManager;
+	private ChannelManager channelManagerMock;
 	private NodeConfigure nodeConfigure;
 	private JID jid;
 	private Element element;
@@ -39,9 +39,11 @@ public class NodeConfigureTest extends IQTestHandler {
 
 	@Before
 	public void setUp() throws Exception {
-		channelManager = new Mock();
+		channelManagerMock = Mockito.mock(ChannelManager.class);
+		Mockito.when(channelManagerMock.isLocalNode(Mockito.anyString())).thenReturn(true);
+		
 		queue = new LinkedBlockingQueue<Packet>();
-		nodeConfigure = new NodeConfigure(queue, channelManager);
+		nodeConfigure = new NodeConfigure(queue, channelManagerMock);
 		jid = new JID("juliet@shakespeare.lit");
 		request = readStanzaAsIq("/iq/pubsub/channel/configure/request.stanza");
 
@@ -81,10 +83,9 @@ public class NodeConfigureTest extends IQTestHandler {
 		Element element = new BaseElement("configure");
 		element.addAttribute("node", "/user/not-here@shakespeare.lit/status");
 
-		ChannelManager channelManagerMock = Mockito.mock(Mock.class);
 		Mockito.when(
 				channelManagerMock
-						.nodeExists("/user/not-here@shakespeare.lit/status"))
+						.nodeExists(Mockito.anyString()))
 				.thenReturn(false);
 		nodeConfigure.setChannelManager(channelManagerMock);
 
@@ -102,7 +103,6 @@ public class NodeConfigureTest extends IQTestHandler {
 		Element element = new BaseElement("configure");
 		element.addAttribute("node", "/user/juliet@shakespeare.lit/posts");
 
-		ChannelManager channelManagerMock = Mockito.mock(Mock.class);
 		Mockito.when(
 				channelManagerMock
 						.nodeExists("/user/juliet@shakespeare.lit/posts"))
@@ -127,8 +127,6 @@ public class NodeConfigureTest extends IQTestHandler {
 			throws Exception {
 		Element element = new BaseElement("configure");
 		element.addAttribute("node", "/user/juliet@shakespeare.lit/posts");
-
-		ChannelManager channelManagerMock = Mockito.mock(Mock.class);
 
 		Mockito.when(
 				channelManagerMock
@@ -158,8 +156,6 @@ public class NodeConfigureTest extends IQTestHandler {
 		Element element = new BaseElement("configure");
 		element.addAttribute("node", "/user/juliet@shakespeare.lit/posts");
 
-		ChannelManager channelManagerMock = Mockito.mock(Mock.class);
-
 		Mockito.when(
 				channelManagerMock
 						.nodeExists("/user/juliet@shakespeare.lit/posts"))
@@ -188,8 +184,6 @@ public class NodeConfigureTest extends IQTestHandler {
 			throws Exception {
 		Element element = new BaseElement("configure");
 		element.addAttribute("node", "/user/juliet@shakespeare.lit/posts");
-
-		ChannelManager channelManagerMock = Mockito.mock(Mock.class);
 
 		Mockito.when(
 				channelManagerMock
@@ -223,8 +217,6 @@ public class NodeConfigureTest extends IQTestHandler {
 		Element element = new BaseElement("configure");
 		element.addAttribute("node", "/user/juliet@shakespeare.lit/posts");
 
-		ChannelManager channelManagerMock = Mockito.mock(Mock.class);
-
 		Mockito.when(
 				channelManagerMock
 						.nodeExists("/user/juliet@shakespeare.lit/posts"))
@@ -253,8 +245,6 @@ public class NodeConfigureTest extends IQTestHandler {
 	public void testSettingConfigurationUpdatesSubscribers() throws Exception {
 		Element element = new BaseElement("configure");
 		element.addAttribute("node", "/user/juliet@shakespeare.lit/posts");
-
-		ChannelManager channelManagerMock = Mockito.mock(Mock.class);
 
 		Mockito.when(
 				channelManagerMock

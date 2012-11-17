@@ -38,13 +38,18 @@ public class AffiliationEventTest extends IQTestHandler {
 	private String subscriber = "francisco@denmark.lit";
 	private String node = "/user/pamela@denmark.lit/posts";
 	private JID jid = new JID("juliet@shakespeare.lit");
-	private Mock dataStore = new Mock();
+
+	private Mock channelManagerMock;
 
 	@Before
 	public void setUp() throws Exception {
 
+		channelManagerMock = Mockito.mock(Mock.class);
+		Mockito.when(channelManagerMock.isLocalNode(Mockito.anyString()))
+				.thenReturn(true);
+		
 		queue = new LinkedBlockingQueue<Packet>();
-		event = new AffiliationEvent(queue, dataStore);
+		event = new AffiliationEvent(queue, channelManagerMock);
 		request = readStanzaAsIq("/iq/pubsub/affiliation/affiliationChange.stanza");
 		event.setServerDomain("shakespeare.lit");
 
@@ -129,7 +134,7 @@ public class AffiliationEventTest extends IQTestHandler {
 	@Test
 	public void testNodeStoreExceptionResultsInInternalServerErrorStanza()
 			throws Exception {
-		ChannelManager channelManagerMock = Mockito.mock(Mock.class);
+
 		Mockito.when(channelManagerMock.nodeExists(node)).thenThrow(
 				NodeStoreException.class);
 		event.setChannelManager(channelManagerMock);
@@ -146,7 +151,7 @@ public class AffiliationEventTest extends IQTestHandler {
 
 	@Test
 	public void testNonExistantNodeRetunsErrorStanza() throws Exception {
-		ChannelManager channelManagerMock = Mockito.mock(Mock.class);
+
 		Mockito.when(channelManagerMock.nodeExists(node)).thenReturn(false);
 		event.setChannelManager(channelManagerMock);
 
@@ -161,7 +166,7 @@ public class AffiliationEventTest extends IQTestHandler {
 
 	@Test
 	public void testUserWithoutAffiliationReturnsErrorStanza() throws Exception {
-		ChannelManager channelManagerMock = Mockito.mock(Mock.class);
+
 		Mockito.when(channelManagerMock.nodeExists(node)).thenReturn(true);
 		Mockito.when(channelManagerMock.getUserSubscription(node, jid))
 				.thenReturn(null);
@@ -183,7 +188,6 @@ public class AffiliationEventTest extends IQTestHandler {
 		Mockito.when(affiliationMock.getAffiliation()).thenReturn(
 				Affiliations.member);
 
-		ChannelManager channelManagerMock = Mockito.mock(Mock.class);
 		Mockito.when(channelManagerMock.nodeExists(node)).thenReturn(true);
 		Mockito.when(channelManagerMock.getUserAffiliation(node, jid))
 				.thenReturn(affiliationMock);
@@ -204,7 +208,6 @@ public class AffiliationEventTest extends IQTestHandler {
 		Mockito.when(affiliationMock.getAffiliation()).thenReturn(
 				Affiliations.owner);
 
-		ChannelManager channelManagerMock = Mockito.mock(Mock.class);
 		Mockito.when(channelManagerMock.nodeExists(node)).thenReturn(true);
 		// actorHasPermission
 		Mockito.when(channelManagerMock.getUserAffiliation(node, jid))
@@ -234,7 +237,6 @@ public class AffiliationEventTest extends IQTestHandler {
 		Mockito.when(affiliationSubscriber.getAffiliation()).thenReturn(
 				Affiliations.owner);
 
-		ChannelManager channelManagerMock = Mockito.mock(Mock.class);
 		Mockito.when(channelManagerMock.nodeExists(node)).thenReturn(true);
 
 		Mockito.when(
@@ -249,7 +251,7 @@ public class AffiliationEventTest extends IQTestHandler {
 		assertNotNull(error);
 		assertEquals(PacketError.Type.modify, error.getType());
 		assertEquals(PacketError.Condition.not_acceptable, error.getCondition());
-		
+
 	}
 
 	@Test
@@ -265,15 +267,18 @@ public class AffiliationEventTest extends IQTestHandler {
 		Mockito.when(affiliationActor.getAffiliation()).thenReturn(
 				Affiliations.moderator);
 
-		Mock channelManagerMock = Mockito.mock(Mock.class);
+
 		Mockito.when(channelManagerMock.nodeExists(node)).thenReturn(true);
-		Mockito.when(channelManagerMock.getUserAffiliation(Mockito.anyString(), Mockito.any(JID.class)))
-				.thenReturn(affiliationActor);
+		Mockito.when(
+				channelManagerMock.getUserAffiliation(Mockito.anyString(),
+						Mockito.any(JID.class))).thenReturn(affiliationActor);
 
 		event.setChannelManager(channelManagerMock);
 		event.process(element, jid, request, null);
 
-		Mockito.verify(channelManagerMock).setUserAffiliation(Mockito.anyString(), Mockito.any(JID.class), Mockito.eq(Affiliations.none));
+		Mockito.verify(channelManagerMock).setUserAffiliation(
+				Mockito.anyString(), Mockito.any(JID.class),
+				Mockito.eq(Affiliations.none));
 	}
 
 	@Test
@@ -288,10 +293,11 @@ public class AffiliationEventTest extends IQTestHandler {
 		Mockito.when(affiliationMock.getAffiliation()).thenReturn(
 				Affiliations.moderator);
 
-		Mock channelManagerMock = Mockito.mock(Mock.class);
+
 		Mockito.when(channelManagerMock.nodeExists(node)).thenReturn(true);
-		Mockito.when(channelManagerMock.getUserAffiliation(Mockito.anyString(), Mockito.any(JID.class)))
-				.thenReturn(affiliationMock);
+		Mockito.when(
+				channelManagerMock.getUserAffiliation(Mockito.anyString(),
+						Mockito.any(JID.class))).thenReturn(affiliationMock);
 
 		event.setChannelManager(channelManagerMock);
 		event.process(element, jid, request, null);
@@ -313,10 +319,10 @@ public class AffiliationEventTest extends IQTestHandler {
 		Mockito.when(affiliationMock.getAffiliation()).thenReturn(
 				Affiliations.moderator);
 
-		ChannelManager channelManagerMock = Mockito.mock(Mock.class);
 		Mockito.when(channelManagerMock.nodeExists(node)).thenReturn(true);
-		Mockito.when(channelManagerMock.getUserAffiliation(Mockito.anyString(), Mockito.any(JID.class)))
-				.thenReturn(affiliationMock);
+		Mockito.when(
+				channelManagerMock.getUserAffiliation(Mockito.anyString(),
+						Mockito.any(JID.class))).thenReturn(affiliationMock);
 
 		ArrayList<NodeSubscriptionMock> subscribers = new ArrayList<NodeSubscriptionMock>();
 		subscribers.add(new NodeSubscriptionMock(new JID(
@@ -324,10 +330,9 @@ public class AffiliationEventTest extends IQTestHandler {
 		subscribers.add(new NodeSubscriptionMock(new JID(
 				"hamlet@shakespeare.lit")));
 
-		Mockito.doReturn(subscribers)
-				.when(channelManagerMock)
+		Mockito.doReturn(subscribers).when(channelManagerMock)
 				.getNodeSubscriptions(Mockito.anyString());
-		
+
 		event.setChannelManager(channelManagerMock);
 		event.process(element, jid, request, null);
 

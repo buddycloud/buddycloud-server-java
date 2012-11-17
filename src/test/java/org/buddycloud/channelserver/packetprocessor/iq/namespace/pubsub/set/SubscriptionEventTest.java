@@ -38,7 +38,7 @@ public class SubscriptionEventTest extends IQTestHandler {
 	private String subscriber = "francisco@denmark.lit";
 	private String node = "/user/pamela@denmark.lit/posts";
 	private JID jid = new JID("juliet@shakespeare.lit");
-	private Mock dataStore = new Mock();
+	private Mock dataStore;
 
 	@Before
 	public void setUp() throws Exception {
@@ -50,6 +50,12 @@ public class SubscriptionEventTest extends IQTestHandler {
 
 		element = new BaseElement("subscriptions");
 		element.addAttribute("node", node);
+		
+		dataStore = Mockito.mock(Mock.class);
+		Mockito.when(dataStore.isLocalNode(Mockito.anyString()))
+		    .thenReturn(true);
+		
+		event.setChannelManager(dataStore);
 	}
 
 	@Test
@@ -129,10 +135,8 @@ public class SubscriptionEventTest extends IQTestHandler {
 	@Test
 	public void testNodeStoreExceptionResultsInInternalServerErrorStanza()
 			throws Exception {
-		ChannelManager channelManagerMock = Mockito.mock(Mock.class);
-		Mockito.when(channelManagerMock.nodeExists(node)).thenThrow(
+		Mockito.when(dataStore.nodeExists(Mockito.anyString())).thenThrow(
 				NodeStoreException.class);
-		event.setChannelManager(channelManagerMock);
 
 		event.process(element, jid, request, null);
 		Packet response = queue.poll(100, TimeUnit.MILLISECONDS);
@@ -146,9 +150,9 @@ public class SubscriptionEventTest extends IQTestHandler {
 
 	@Test
 	public void testNonExistantNodeRetunsErrorStanza() throws Exception {
-		ChannelManager channelManagerMock = Mockito.mock(Mock.class);
-		Mockito.when(channelManagerMock.nodeExists(node)).thenReturn(false);
-		event.setChannelManager(channelManagerMock);
+
+		Mockito.when(dataStore.nodeExists(node)).thenReturn(false);
+		event.setChannelManager(dataStore);
 
 		event.process(element, jid, request, null);
 		Packet response = queue.poll(100, TimeUnit.MILLISECONDS);
@@ -162,11 +166,11 @@ public class SubscriptionEventTest extends IQTestHandler {
 	@Test
 	public void testUserWithoutSubscriptionReturnsErrorStanza()
 			throws Exception {
-		ChannelManager channelManagerMock = Mockito.mock(Mock.class);
-		Mockito.when(channelManagerMock.nodeExists(node)).thenReturn(true);
-		Mockito.when(channelManagerMock.getUserSubscription(node, jid))
+
+		Mockito.when(dataStore.nodeExists(node)).thenReturn(true);
+		Mockito.when(dataStore.getUserSubscription(node, jid))
 				.thenReturn(null);
-		event.setChannelManager(channelManagerMock);
+		event.setChannelManager(dataStore);
 
 		event.process(element, jid, request, null);
 		Packet response = queue.poll(100, TimeUnit.MILLISECONDS);
@@ -184,11 +188,11 @@ public class SubscriptionEventTest extends IQTestHandler {
 		Mockito.when(subscriptionMock.getAffiliation()).thenReturn(
 				Affiliations.member);
 
-		ChannelManager channelManagerMock = Mockito.mock(Mock.class);
-		Mockito.when(channelManagerMock.nodeExists(node)).thenReturn(true);
-		Mockito.when(channelManagerMock.getUserAffiliation(node, jid))
+
+		Mockito.when(dataStore.nodeExists(node)).thenReturn(true);
+		Mockito.when(dataStore.getUserAffiliation(node, jid))
 				.thenReturn(subscriptionMock);
-		event.setChannelManager(channelManagerMock);
+		event.setChannelManager(dataStore);
 
 		event.process(element, jid, request, null);
 		Packet response = queue.poll(100, TimeUnit.MILLISECONDS);
@@ -207,14 +211,14 @@ public class SubscriptionEventTest extends IQTestHandler {
 		Mockito.when(subscriptionMockActor.getAffiliation()).thenReturn(
 				Affiliations.owner);
 
-		ChannelManager channelManagerMock = Mockito.mock(Mock.class);
-		Mockito.when(channelManagerMock.nodeExists(node)).thenReturn(true);
-		Mockito.when(channelManagerMock.getUserAffiliation(node, jid))
+
+		Mockito.when(dataStore.nodeExists(node)).thenReturn(true);
+		Mockito.when(dataStore.getUserAffiliation(node, jid))
 				.thenReturn(subscriptionMockActor);
 		Mockito.when(
-				channelManagerMock.getUserSubscription(node,
+				dataStore.getUserSubscription(node,
 						new JID(subscriber))).thenReturn(null);
-		event.setChannelManager(channelManagerMock);
+		event.setChannelManager(dataStore);
 
 		event.process(element, jid, request, null);
 		Packet response = queue.poll(100, TimeUnit.MILLISECONDS);
@@ -246,18 +250,17 @@ public class SubscriptionEventTest extends IQTestHandler {
 		Mockito.when(subscriptionMockSubscriber.getSubscription()).thenReturn(
 				Subscriptions.subscribed);
 
-		Mock channelManagerMock = Mockito.mock(Mock.class);
-		Mockito.when(channelManagerMock.nodeExists(node)).thenReturn(true);
-		Mockito.when(channelManagerMock.getUserAffiliation(node, jid))
+		Mockito.when(dataStore.nodeExists(node)).thenReturn(true);
+		Mockito.when(dataStore.getUserAffiliation(node, jid))
 				.thenReturn(subscriptionMockActor);
-		Mockito.doCallRealMethod().when(channelManagerMock)
+		Mockito.doCallRealMethod().when(dataStore)
 				.addUserSubscription(Mockito.any(NodeSubscription.class));
 		Mockito.when(
-				channelManagerMock.getUserSubscription(node,
+				dataStore.getUserSubscription(node,
 						new JID(subscriber))).thenReturn(
 				subscriptionMockSubscriber);
 	    
-		event.setChannelManager(channelManagerMock);
+		event.setChannelManager(dataStore);
 		event.process(element, jid, request, null);
 
 		NodeSubscription subscriptionMock = new NodeSubscriptionImpl(node,
@@ -268,7 +271,7 @@ public class SubscriptionEventTest extends IQTestHandler {
 		 * subscriptionMock Mockito.anyString(), Mockito.any(JID.class),
 		 * Mockito.any(JID.class), Mockito.eq(Subscriptions.none));
 		 */
-		Mockito.verify(channelManagerMock)
+		Mockito.verify(dataStore)
 				.addUserSubscription(subscriptionMock);
 	}
 
@@ -291,17 +294,17 @@ public class SubscriptionEventTest extends IQTestHandler {
 		Mockito.when(subscriptionMockSubscriber.getSubscription()).thenReturn(
 				Subscriptions.subscribed);
 
-		ChannelManager channelManagerMock = Mockito.mock(Mock.class);
-		Mockito.when(channelManagerMock.nodeExists(node)).thenReturn(true);
-		Mockito.when(channelManagerMock.getUserAffiliation(node, jid))
+
+		Mockito.when(dataStore.nodeExists(node)).thenReturn(true);
+		Mockito.when(dataStore.getUserAffiliation(node, jid))
 				.thenReturn(subscriptionMockActor);
 
 		Mockito.when(
-				channelManagerMock.getUserSubscription(node,
+				dataStore.getUserSubscription(node,
 						new JID(subscriber))).thenReturn(
 				subscriptionMockSubscriber);
 
-		event.setChannelManager(channelManagerMock);
+		event.setChannelManager(dataStore);
 
 		ArrayList<NodeSubscriptionMock> subscribers = new ArrayList<NodeSubscriptionMock>();
 		subscribers.add(new NodeSubscriptionMock(new JID(
@@ -309,10 +312,10 @@ public class SubscriptionEventTest extends IQTestHandler {
 		subscribers.add(new NodeSubscriptionMock(new JID(
 				"hamlet@shakespeare.lit")));
 
-		Mockito.doReturn(subscribers).when(channelManagerMock)
+		Mockito.doReturn(subscribers).when(dataStore)
 				.getNodeSubscriptions(Mockito.anyString());
 
-		event.setChannelManager(channelManagerMock);
+		event.setChannelManager(dataStore);
 		event.process(element, jid, request, null);
 
 		assertEquals(2, queue.size());

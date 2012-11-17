@@ -44,7 +44,9 @@ public class ItemDeleteTest extends IQTestHandler {
 	@Before
 	public void setUp() throws Exception {
 		channelManagerMock = Mockito.mock(ChannelManager.class);
-
+		Mockito.when(channelManagerMock.isLocalNode(Mockito.anyString()))
+		    .thenReturn(true);
+		
 		queue = new LinkedBlockingQueue<Packet>();
 		itemDelete = new ItemDelete(queue, channelManagerMock);
 		jid = new JID("juliet@shakespeare.lit");
@@ -100,23 +102,6 @@ public class ItemDeleteTest extends IQTestHandler {
 				error.getCondition());
 		assertEquals(PacketError.Type.wait, error.getType());
 
-	}
-
-	@Test
-	public void testNonLocalNodeReturnsError() throws Exception {
-		String node = "/user/capulet@marlowe.lit/posts";
-		element.addAttribute("node", node);
-		Mockito.when(channelManagerMock.isLocalNode(node)).thenReturn(false);
-		itemDelete.setChannelManager(channelManagerMock);
-
-		itemDelete.process(element, jid, request, null);
-
-		Packet response = queue.poll(100, TimeUnit.MILLISECONDS);
-
-		PacketError error = response.getError();
-		assertNotNull(error);
-		assertEquals(PacketError.Type.cancel, error.getType());
-		assertEquals(PacketError.Condition.item_not_found, error.getCondition());
 	}
 
 	@Test
@@ -236,8 +221,11 @@ public class ItemDeleteTest extends IQTestHandler {
 
 	@Test
 	public void testUserDoesNotOwnItemCanNotDelete() throws Exception {
+
+		String payload = readStanzaAsString("/iq/pubsub/item/item.payload");
+
 		NodeItem nodeItem = new NodeItemImpl(node, "item-id", new Date(),
-				payload);
+				payload.replace("juliet@shakespeare.lit", "romeo@shakespeare.lit"));
 		Mockito.when(channelManagerMock.isLocalNode(node)).thenReturn(true);
 		Mockito.when(channelManagerMock.nodeExists(node)).thenReturn(true);
 		Mockito.when(channelManagerMock.getNodeItem(node, "item-id"))
@@ -256,23 +244,20 @@ public class ItemDeleteTest extends IQTestHandler {
 	}
 
 	@Test
-	@Ignore("Mockito not working as expected")
 	public void testUserDoesNotOwnNodeCanNotDelete() throws Exception {
 
 		NodeAffiliation affiliation = new NodeAffiliationImpl(node, jid,
 				Affiliations.member);
 
 		NodeItem nodeItem = new NodeItemImpl(node, "item-id", new Date(),
-				payload.replaceAll("romeo@shakespeare.lit",
-						"juliet@shakespeare.lit"));
-		Mockito.when(channelManagerMock.isLocalNode(node)).thenReturn(true);
+				payload);
+
 		Mockito.when(channelManagerMock.nodeExists(node)).thenReturn(true);
 		Mockito.when(channelManagerMock.getNodeItem(Mockito.anyString(), Mockito.anyString()))
 				.thenReturn(nodeItem);
 		Mockito.when(
 				channelManagerMock.getUserAffiliation(Mockito.anyString(),
 						Mockito.any(JID.class))).thenReturn(affiliation);
-		itemDelete.setChannelManager(channelManagerMock);
 
 		itemDelete.process(element, jid, request, null);
 

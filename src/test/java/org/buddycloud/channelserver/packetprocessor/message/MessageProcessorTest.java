@@ -57,26 +57,3 @@ public class MessageProcessorTest extends IQTestHandler {
 		messageProcessor.process(message);
 	}
 }
-
-/**
- * <message from="channels.surevine.com" type="headline"
- * to="channels.ip-10-66-2-93"><event
- * xmlns="http://jabber.org/protocol/pubsub#event"><items
- * node="/user/lounge@topics.surevine.com/posts"><item
- * id="17fb16fa-defe-4a5e-b85f-c57a91019e51"><entry
- * xmlns="http://www.w3.org/2005/Atom"><content>making a post
- * here.</content><author
- * ><name>lloyd.watkin@surevine.com</name><uri>acct:lloyd.watkin
- * @surevine.com</uri></author><in-reply-to
- * xmlns="http://purl.org/syndication/thread/1.0"
- * ref="d2c8ec95-61f1-4f12-ba2c-7038044751eb"
- * /><id>17fb16fa-defe-4a5e-b85f-c57a91019e51
- * </id><published>2012-11-17T15:41:17.874
- * Z</published><updated>2012-11-17T15:41:17.874Z</updated><link rel="self"
- * href=
- * "xmpp:channels.surevine.com?pubsub;action=retrieve;node=/user/lounge@topics.surevine.com/posts;item=17fb16fa-defe-4a5e-b85f-c57a91019e51"
- * /><verb xmlns="http://activitystrea.ms/spec/1.0/">comment</verb><object
- * xmlns=
- * "http://activitystrea.ms/spec/1.0/"><object-type>comment</object-type></
- * object></entry></item></items></event></message>
- */

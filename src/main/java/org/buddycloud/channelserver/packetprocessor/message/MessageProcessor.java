@@ -14,6 +14,7 @@ import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.packetprocessor.PacketProcessor;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.JabberPubsub;
 import org.buddycloud.channelserver.packetprocessor.message.event.ItemsProcessor;
+import org.buddycloud.channelserver.packetprocessor.message.event.SubscriptionProcessor;
 import org.buddycloud.channelserver.pubsub.model.NodeSubscription;
 import org.dom4j.Element;
 import org.dom4j.dom.DOMElement;
@@ -32,6 +33,8 @@ public class MessageProcessor implements PacketProcessor<Message> {
 	private Properties configuration;
 
 	public static final String ITEMS = "items";
+	public static final String SUBSCRIPTION = "subscription";
+	private static final Object AFFILIATION = "affiliation";
 
 	public MessageProcessor(BlockingQueue<Packet> outQueue, Properties conf,
 			ChannelManager channelManager) {
@@ -55,9 +58,13 @@ public class MessageProcessor implements PacketProcessor<Message> {
 
 	private void processEventContent(String name) throws Exception {
 		logger.info("Processing event content type: '" + name + "'");
+		try {
 		PacketProcessor<Message> handler = null;
 		if (name.equals(ITEMS)) {
 			handler = new ItemsProcessor(outQueue, configuration,
+					channelManager);
+		} else if (name.equals(SUBSCRIPTION) || name.equals(AFFILIATION)) {
+			handler = new SubscriptionProcessor(outQueue, configuration,
 					channelManager);
 		}
 		if (null == handler) {
@@ -65,5 +72,8 @@ public class MessageProcessor implements PacketProcessor<Message> {
 					+ name + "'");
 		}
 		handler.process(message);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 	}
 }

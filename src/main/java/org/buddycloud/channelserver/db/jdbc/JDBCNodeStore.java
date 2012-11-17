@@ -81,6 +81,24 @@ public class JDBCNodeStore implements NodeStore {
 			close(addStatement);
 		}
 	}
+	
+	@Override
+	public void addRemoteNode(String nodeId) throws NodeStoreException {
+		if (null == nodeId) {
+			throw new NullPointerException("nodeId must not be null");
+		}
+		PreparedStatement addStatement = null;
+		try {
+			addStatement = conn.prepareStatement(dialect.insertNode());
+			addStatement.setString(1, nodeId);
+			addStatement.executeUpdate();
+			addStatement.close();
+		} catch (SQLException e) {
+			throw new NodeStoreException(e);
+		} finally {
+			close(addStatement);
+		}
+	}
 
 	@Override
 	public void setNodeConfValue(String nodeId, String key, String value)

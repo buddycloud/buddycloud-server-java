@@ -32,5 +32,5 @@ public interface ChannelManager extends NodeStore {
 	 * @return <code>true</code> if the jid appears to be local, <code>false</code> otherwise.
 	 * @throws NodeStoreException 
 	 */
-	boolean isLocalJID(JID jid) throws NodeStoreException;
+	boolean isLocalJID(JID jid) throws NodeStoreException; 
 }

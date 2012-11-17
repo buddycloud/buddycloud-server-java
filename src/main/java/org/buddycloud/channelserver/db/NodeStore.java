@@ -33,6 +33,16 @@ public interface NodeStore {
 			throws NodeStoreException;
 
 	/**
+	 * Add a remote node into the database
+	 * 
+	 * @param nodeId
+	 *          the node reference
+	 * @throws NodeStoreException
+	 *             if the operation could not be completed.
+	 */
+	void addRemoteNode(String node) throws NodeStoreException;
+	
+	/**
 	 * Sets a single configuration option on the node
 	 * 
 	 * @param nodeId

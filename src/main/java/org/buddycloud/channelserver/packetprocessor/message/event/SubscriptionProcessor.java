@@ -54,18 +54,16 @@ public class SubscriptionProcessor implements PacketProcessor<Message> {
 	private void handleSubscriptionElement() throws NodeStoreException {
 		Element subscriptionElement = message.getElement().element("event")
 				.element("subscription");
-		if (subscriptionElement == null) {
+		if (null == subscriptionElement) {
 			return;
 		}
-		logger.debug(subscriptionElement);
 
 		jid = new JID(subscriptionElement.attributeValue("jid"));
 		node = subscriptionElement.attributeValue("node");
 		subscription = Subscriptions.valueOf(subscriptionElement
 				.attributeValue("subscription"));
-		logger.debug("******* " + node);
-		logger.debug("******** " + subscription.toString());
-		if ((null == node) || (true == channelManager.isLocalNode(node))) {
+
+		if (true == channelManager.isLocalNode(node)) {
 			return;
 		}
 		if (true == channelManager.isLocalJID(jid)) {
@@ -76,14 +74,14 @@ public class SubscriptionProcessor implements PacketProcessor<Message> {
 	private void handleAffiliationElement() throws NodeStoreException {
 		Element affiliationElement = message.getElement().element("event")
 				.element("affiliation");
-		if (affiliationElement == null) {
+		if (null == affiliationElement) {
 			return;
 		}
 		jid = new JID(affiliationElement.attributeValue("jid"));
 		node = affiliationElement.attributeValue("node");
 		affiliation = Affiliations.valueOf(affiliationElement
 				.attributeValue("affiliation"));
-		if ((null == node) || (true == channelManager.isLocalNode(node))) {
+		if (true == channelManager.isLocalNode(node)) {
 			return;
 		}
 		if (true == channelManager.isLocalJID(jid)) {
@@ -115,10 +113,10 @@ public class SubscriptionProcessor implements PacketProcessor<Message> {
 	}
 
 	private void addRemoteNode() {
-		//try {
-			//channelManager.addRemoteNode(node);
-		//} catch (NodeStoreException e) {
-			//logger.error(e);
-		//}
+		try {
+			channelManager.addRemoteNode(node);
+		} catch (NodeStoreException e) {
+			logger.error(e);
+		}
 	}
 }

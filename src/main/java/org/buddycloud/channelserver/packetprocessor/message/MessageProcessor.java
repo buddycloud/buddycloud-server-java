@@ -57,8 +57,8 @@ public class MessageProcessor implements PacketProcessor<Message> {
 	}
 
 	private void processEventContent(String name) throws Exception {
+		
 		logger.info("Processing event content type: '" + name + "'");
-		try {
 		PacketProcessor<Message> handler = null;
 		if (name.equals(ITEMS)) {
 			handler = new ItemsProcessor(outQueue, configuration,
@@ -72,8 +72,5 @@ public class MessageProcessor implements PacketProcessor<Message> {
 					+ name + "'");
 		}
 		handler.process(message);
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
 	}
 }

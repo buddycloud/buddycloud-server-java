@@ -6,6 +6,8 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
+import junit.framework.Assert;
+
 import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.channel.node.configuration.Helper;
 import org.buddycloud.channelserver.channel.node.configuration.HelperMock;
@@ -57,13 +59,13 @@ public class NodeCreateTest extends IQTestHandler {
 	@Test
 	public void testPassingCreateAsElementNameReturnsTrue() {
 		Element element = new BaseElement("create");
-		assertTrue(nodeCreate.accept(element));
+		Assert.assertTrue(nodeCreate.accept(element));
 	}
 
 	@Test
 	public void testPassingNotCreateAsElementNameReturnsFalse() {
 		Element element = new BaseElement("not-create");
-		assertFalse(nodeCreate.accept(element));
+		Assert.assertFalse(nodeCreate.accept(element));
 	}
 
 	@Test
@@ -74,9 +76,9 @@ public class NodeCreateTest extends IQTestHandler {
 		Packet response = queue.poll(100, TimeUnit.MILLISECONDS);
 
 		PacketError error = response.getError();
-		assertNotNull(error);
-		assertEquals(PacketError.Type.modify, error.getType());
-		assertEquals("nodeid-required", error.getApplicationConditionName());
+		Assert.assertNotNull(error);
+		Assert.assertEquals(PacketError.Type.modify, error.getType());
+		Assert.assertEquals("nodeid-required", error.getApplicationConditionName());
 	}
 
 	@Test
@@ -94,12 +96,12 @@ public class NodeCreateTest extends IQTestHandler {
 		Packet response = queue.poll(100, TimeUnit.MILLISECONDS);
 
 		PacketError error = response.getError();
-		assertNotNull(error);
-		assertEquals(PacketError.Type.cancel, error.getType());
-		assertEquals(PacketError.Condition.conflict, error.getCondition());
+		Assert.assertNotNull(error);
+		Assert.assertEquals(PacketError.Type.cancel, error.getType());
+		Assert.assertEquals(PacketError.Condition.conflict, error.getCondition());
 		/**
 		 * Add this check back in once Tinder supports xmlns on standard
-		 * conditions assertEquals(JabberPubsub.NS_XMPP_STANZAS,
+		 * conditions Assert.assertEquals(JabberPubsub.NS_XMPP_STANZAS,
 		 * error.getApplicationConditionNamespaceURI());
 		 */
 	}
@@ -112,12 +114,12 @@ public class NodeCreateTest extends IQTestHandler {
 		Packet response = queue.poll(100, TimeUnit.MILLISECONDS);
 
 		PacketError error = response.getError();
-		assertNotNull(error);
-		assertEquals(PacketError.Condition.forbidden, error.getCondition());
-		assertEquals(PacketError.Type.auth, error.getType());
+		Assert.assertNotNull(error);
+		Assert.assertEquals(PacketError.Condition.forbidden, error.getCondition());
+		Assert.assertEquals(PacketError.Type.auth, error.getType());
 		/**
 		 * Add this check back in once Tinder supports xmlns on standard
-		 * conditions assertEquals(JabberPubsub.NS_XMPP_STANZAS,
+		 * conditions Assert.assertEquals(JabberPubsub.NS_XMPP_STANZAS,
 		 * error.getApplicationConditionNamespaceURI());
 		 */
 	}
@@ -130,12 +132,12 @@ public class NodeCreateTest extends IQTestHandler {
 		Packet response = queue.poll(100, TimeUnit.MILLISECONDS);
 
 		PacketError error = response.getError();
-		assertNotNull(error);
-		assertEquals(PacketError.Type.modify, error.getType());
-		assertEquals(PacketError.Condition.bad_request, error.getCondition());
+		Assert.assertNotNull(error);
+		Assert.assertEquals(PacketError.Type.modify, error.getType());
+		Assert.assertEquals(PacketError.Condition.bad_request, error.getCondition());
 		/**
 		 * Add this check back in once Tinder supports xmlns on standard
-		 * conditions assertEquals(JabberPubsub.NS_XMPP_STANZAS,
+		 * conditions Assert.assertEquals(JabberPubsub.NS_XMPP_STANZAS,
 		 * error.getApplicationConditionNamespaceURI());
 		 */
 	}
@@ -151,12 +153,12 @@ public class NodeCreateTest extends IQTestHandler {
 		Packet response = queue.poll(100, TimeUnit.MILLISECONDS);
 
 		PacketError error = response.getError();
-		assertNotNull(error);
-		assertEquals(PacketError.Type.modify, error.getType());
-		assertEquals(PacketError.Condition.not_acceptable, error.getCondition());
+		Assert.assertNotNull(error);
+		Assert.assertEquals(PacketError.Type.modify, error.getType());
+		Assert.assertEquals(PacketError.Condition.not_acceptable, error.getCondition());
 		/**
 		 * Add this check back in once Tinder supports xmlns on standard
-		 * conditions assertEquals(JabberPubsub.NS_XMPP_STANZAS,
+		 * conditions Assert.assertEquals(JabberPubsub.NS_XMPP_STANZAS,
 		 * error.getApplicationConditionNamespaceURI());
 		 */
 	}
@@ -177,13 +179,13 @@ public class NodeCreateTest extends IQTestHandler {
 		Packet response = queue.poll(100, TimeUnit.MILLISECONDS);
 
 		PacketError error = response.getError();
-		assertNotNull(error);
-		assertEquals(PacketError.Condition.internal_server_error,
+		Assert.assertNotNull(error);
+		Assert.assertEquals(PacketError.Condition.internal_server_error,
 				error.getCondition());
-		assertEquals(PacketError.Type.wait, error.getType());
+		Assert.assertEquals(PacketError.Type.wait, error.getType());
 		/**
 		 * Add this check back in once Tinder supports xmlns on standard
-		 * conditions assertEquals(JabberPubsub.NS_XMPP_STANZAS,
+		 * conditions Assert.assertEquals(JabberPubsub.NS_XMPP_STANZAS,
 		 * error.getApplicationConditionNamespaceURI());
 		 */
 	}
@@ -200,11 +202,11 @@ public class NodeCreateTest extends IQTestHandler {
 		String error = null;
 		try {
 			error = response.getError().toString();
-			fail("Unexpected error response");
+			Assert.fail("Unexpected error response");
 		} catch (NullPointerException e) {
-			assertNull(error);
+			Assert.assertNull(error);
 		}
-		assertEquals(IQ.Type.result.toString(), response.getElement()
+		Assert.assertEquals(IQ.Type.result.toString(), response.getElement()
 				.attribute("type").getValue());
 	}
 
@@ -232,13 +234,13 @@ public class NodeCreateTest extends IQTestHandler {
 		String error = null;
 		try {
 			error = response.getError().toString();
-			fail("Unexpected error response");
+			Assert.fail("Unexpected error response");
 		} catch (NullPointerException e) {
-			assertNull(error);
+			Assert.assertNull(error);
 		}
 		Map<String, String> nodeConfiguration = channelManagerMock
 				.getNodeConf(node);
-		assertEquals(channelTitle,
+		Assert.assertEquals(channelTitle,
 				nodeConfiguration.get(ChannelTitle.FIELD_NAME));
 	}
 
@@ -259,12 +261,12 @@ public class NodeCreateTest extends IQTestHandler {
 
 		Packet response = queue.poll(100, TimeUnit.MILLISECONDS);
 		PacketError error = response.getError();
-		assertNotNull(error);
-		assertEquals(PacketError.Type.modify, error.getType());
-		assertEquals(PacketError.Condition.bad_request, error.getCondition());
+		Assert.assertNotNull(error);
+		Assert.assertEquals(PacketError.Type.modify, error.getType());
+		Assert.assertEquals(PacketError.Condition.bad_request, error.getCondition());
 		/**
 		 * Add this check back in once Tinder supports xmlns on standard
-		 * conditions assertEquals(JabberPubsub.NS_XMPP_STANZAS,
+		 * conditions Assert.assertEquals(JabberPubsub.NS_XMPP_STANZAS,
 		 * error.getApplicationConditionNamespaceURI());
 		 */
 	}

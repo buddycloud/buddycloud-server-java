@@ -2,6 +2,8 @@ package org.buddycloud.channelserver.channel.node.configuration;
 
 import java.util.HashMap;
 
+import junit.framework.Assert;
+
 import org.buddycloud.channelserver.channel.node.configuration.field.ChannelTitle;
 import org.buddycloud.channelserver.channel.node.configuration.field.ConfigurationFieldException;
 import org.buddycloud.channelserver.channel.node.configuration.field.Field;
@@ -32,20 +34,14 @@ public class HelperTest extends IQTestHandler
 		parser = new Helper();
 	}
     
-    @Test 
+    @Test(expected=NodeConfigurationException.class)
     public void testPassingPacketWhichDoesntContainConfigureElementThrowsException() 
 	{
 		Element iq     = new DOMElement("iq");
 		iq.addElement("pubsub", JabberPubsub.NS_PUBSUB_OWNER);
 		IQ request = new IQ(iq);
 
-		try {
-		    parser.parse(request);
-		} catch (NodeConfigurationException e) {
-			assertSame(NodeConfigurationException.class, e.getClass());
-			return;
-		}
-		fail("Exception not thrown");
+	    parser.parse(request);
 	}
     
     @Test
@@ -59,10 +55,10 @@ public class HelperTest extends IQTestHandler
     	IQ request        = new IQ(iq);
     	
     	parser.parse(request);
-    	assertEquals(0, parser.getValues().size());
+    	Assert.assertEquals(0, parser.getValues().size());
     }
 
-    @Test
+    @Test(expected=NodeConfigurationException.class)
     public void testBadFieldConfigurationValueThrowsException()
     {
     	Factory factoryMock = Mockito.mock(Factory.class);
@@ -79,13 +75,7 @@ public class HelperTest extends IQTestHandler
     	field.addAttribute("var", ChannelTitle.FIELD_NAME);
     	IQ request          = new IQ(iq);
 
-    	try {
-    	    parser.parse(request); 
-    	} catch (Exception e) {
-    		assertSame(NodeConfigurationException.class, e.getClass());
-    		return;
-    	}
-    	fail("Exception not thrown");
+        parser.parse(request); 
     }
     
     @Test
@@ -118,12 +108,12 @@ public class HelperTest extends IQTestHandler
     	
     	parser.parse(request);
         
-    	assertEquals(2, parser.getValues().size());
-    	assertEquals(
+    	Assert.assertEquals(2, parser.getValues().size());
+    	Assert.assertEquals(
     	    Mock.DEFAULT_VALUE,
     	    parser.getValues().get(fieldMock.getName())
     	);
-    	assertEquals(
+    	Assert.assertEquals(
     		"My field value",
     		parser.getValues().get(fieldMock2.getName())
     	);
@@ -156,8 +146,8 @@ public class HelperTest extends IQTestHandler
     	
     	parser.parse(request);
         
-    	assertEquals(1, parser.getValues().size());
-    	assertTrue(parser.isValid());
+    	Assert.assertEquals(1, parser.getValues().size());
+    	Assert.assertTrue(parser.isValid());
     }
     
     @Test
@@ -187,7 +177,7 @@ public class HelperTest extends IQTestHandler
     	
     	parser.parse(request);
         
-    	assertEquals(1, parser.getValues().size());
-    	assertFalse(parser.isValid());
+    	Assert.assertEquals(1, parser.getValues().size());
+    	Assert.assertFalse(parser.isValid());
     }
 }

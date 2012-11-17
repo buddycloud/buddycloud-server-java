@@ -7,6 +7,8 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
+import junit.framework.Assert;
+
 import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.db.exception.NodeStoreException;
 import org.buddycloud.channelserver.db.mock.Mock;
@@ -60,13 +62,13 @@ public class AffiliationEventTest extends IQTestHandler {
 	@Test
 	public void testPassingAffiliationsAsElementNameReturnsTrue() {
 		Element element = new BaseElement("affiliations");
-		assertTrue(event.accept(element));
+		Assert.assertTrue(event.accept(element));
 	}
 
 	@Test
 	public void testPassingNotAffiliationsAsElementNameReturnsFalse() {
 		Element element = new BaseElement("not-affiliations");
-		assertFalse(event.accept(element));
+		Assert.assertFalse(event.accept(element));
 	}
 
 	@Test
@@ -77,9 +79,9 @@ public class AffiliationEventTest extends IQTestHandler {
 		Packet response = queue.poll(100, TimeUnit.MILLISECONDS);
 
 		PacketError error = response.getError();
-		assertNotNull(error);
-		assertEquals(PacketError.Type.modify, error.getType());
-		assertEquals("nodeid-required", error.getApplicationConditionName());
+		Assert.assertNotNull(error);
+		Assert.assertEquals(PacketError.Type.modify, error.getType());
+		Assert.assertEquals("nodeid-required", error.getApplicationConditionName());
 	}
 
 	@Test
@@ -96,9 +98,9 @@ public class AffiliationEventTest extends IQTestHandler {
 		Packet response = queue.poll(100, TimeUnit.MILLISECONDS);
 
 		PacketError error = response.getError();
-		assertNotNull(error);
-		assertEquals(PacketError.Type.modify, error.getType());
-		assertEquals(PacketError.Condition.bad_request, error.getCondition());
+		Assert.assertNotNull(error);
+		Assert.assertEquals(PacketError.Type.modify, error.getType());
+		Assert.assertEquals(PacketError.Condition.bad_request, error.getCondition());
 	}
 
 	@Test
@@ -111,9 +113,9 @@ public class AffiliationEventTest extends IQTestHandler {
 		Packet response = queue.poll(100, TimeUnit.MILLISECONDS);
 
 		PacketError error = response.getError();
-		assertNotNull(error);
-		assertEquals(PacketError.Type.modify, error.getType());
-		assertEquals(PacketError.Condition.bad_request, error.getCondition());
+		Assert.assertNotNull(error);
+		Assert.assertEquals(PacketError.Type.modify, error.getType());
+		Assert.assertEquals(PacketError.Condition.bad_request, error.getCondition());
 	}
 
 	@Test
@@ -126,9 +128,9 @@ public class AffiliationEventTest extends IQTestHandler {
 		Packet response = queue.poll(100, TimeUnit.MILLISECONDS);
 
 		PacketError error = response.getError();
-		assertNotNull(error);
-		assertEquals(PacketError.Type.modify, error.getType());
-		assertEquals(PacketError.Condition.bad_request, error.getCondition());
+		Assert.assertNotNull(error);
+		Assert.assertEquals(PacketError.Type.modify, error.getType());
+		Assert.assertEquals(PacketError.Condition.bad_request, error.getCondition());
 	}
 
 	@Test
@@ -143,9 +145,9 @@ public class AffiliationEventTest extends IQTestHandler {
 		Packet response = queue.poll(100, TimeUnit.MILLISECONDS);
 
 		PacketError error = response.getError();
-		assertNotNull(error);
-		assertEquals(PacketError.Type.wait, error.getType());
-		assertEquals(PacketError.Condition.internal_server_error,
+		Assert.assertNotNull(error);
+		Assert.assertEquals(PacketError.Type.wait, error.getType());
+		Assert.assertEquals(PacketError.Condition.internal_server_error,
 				error.getCondition());
 	}
 
@@ -159,9 +161,9 @@ public class AffiliationEventTest extends IQTestHandler {
 		Packet response = queue.poll(100, TimeUnit.MILLISECONDS);
 
 		PacketError error = response.getError();
-		assertNotNull(error);
-		assertEquals(PacketError.Type.cancel, error.getType());
-		assertEquals(PacketError.Condition.item_not_found, error.getCondition());
+		Assert.assertNotNull(error);
+		Assert.assertEquals(PacketError.Type.cancel, error.getType());
+		Assert.assertEquals(PacketError.Condition.item_not_found, error.getCondition());
 	}
 
 	@Test
@@ -176,9 +178,9 @@ public class AffiliationEventTest extends IQTestHandler {
 		Packet response = queue.poll(100, TimeUnit.MILLISECONDS);
 
 		PacketError error = response.getError();
-		assertNotNull(error);
-		assertEquals(PacketError.Type.auth, error.getType());
-		assertEquals(PacketError.Condition.not_authorized, error.getCondition());
+		Assert.assertNotNull(error);
+		Assert.assertEquals(PacketError.Type.auth, error.getType());
+		Assert.assertEquals(PacketError.Condition.not_authorized, error.getCondition());
 	}
 
 	@Test
@@ -197,9 +199,9 @@ public class AffiliationEventTest extends IQTestHandler {
 		Packet response = queue.poll(100, TimeUnit.MILLISECONDS);
 
 		PacketError error = response.getError();
-		assertNotNull(error);
-		assertEquals(PacketError.Type.auth, error.getType());
-		assertEquals(PacketError.Condition.not_authorized, error.getCondition());
+		Assert.assertNotNull(error);
+		Assert.assertEquals(PacketError.Type.auth, error.getType());
+		Assert.assertEquals(PacketError.Condition.not_authorized, error.getCondition());
 	}
 
 	@Test
@@ -222,9 +224,9 @@ public class AffiliationEventTest extends IQTestHandler {
 		Packet response = queue.poll(100, TimeUnit.MILLISECONDS);
 
 		PacketError error = response.getError();
-		assertNotNull(error);
-		assertEquals(PacketError.Type.modify, error.getType());
-		assertEquals(PacketError.Condition.unexpected_request,
+		Assert.assertNotNull(error);
+		Assert.assertEquals(PacketError.Type.modify, error.getType());
+		Assert.assertEquals(PacketError.Condition.unexpected_request,
 				error.getCondition());
 	}
 
@@ -248,9 +250,9 @@ public class AffiliationEventTest extends IQTestHandler {
 		event.process(element, jid, request, null);
 		Packet response = queue.poll(100, TimeUnit.MILLISECONDS);
 		PacketError error = response.getError();
-		assertNotNull(error);
-		assertEquals(PacketError.Type.modify, error.getType());
-		assertEquals(PacketError.Condition.not_acceptable, error.getCondition());
+		Assert.assertNotNull(error);
+		Assert.assertEquals(PacketError.Type.modify, error.getType());
+		Assert.assertEquals(PacketError.Condition.not_acceptable, error.getCondition());
 
 	}
 
@@ -336,21 +338,21 @@ public class AffiliationEventTest extends IQTestHandler {
 		event.setChannelManager(channelManagerMock);
 		event.process(element, jid, request, null);
 
-		assertEquals(2, queue.size());
+		Assert.assertEquals(2, queue.size());
 		Packet notification = queue.poll(100, TimeUnit.MILLISECONDS);
-		assertEquals("romeo@shakespeare.lit", notification.getTo().toString());
+		Assert.assertEquals("romeo@shakespeare.lit", notification.getTo().toString());
 		notification = queue.poll(100, TimeUnit.MILLISECONDS);
-		assertEquals("hamlet@shakespeare.lit", notification.getTo().toString());
+		Assert.assertEquals("hamlet@shakespeare.lit", notification.getTo().toString());
 
-		assertEquals(
+		Assert.assertEquals(
 				node,
 				notification.getElement().element("event")
 						.element("affiliation").attributeValue("node"));
-		assertTrue(notification.toXML().contains(JabberPubsub.NS_PUBSUB_EVENT));
-		assertEquals(Affiliations.moderator.toString(), notification
+		Assert.assertTrue(notification.toXML().contains(JabberPubsub.NS_PUBSUB_EVENT));
+		Assert.assertEquals(Affiliations.moderator.toString(), notification
 				.getElement().element("event").element("affiliation")
 				.attributeValue("affiliation"));
-		assertEquals(subscriber, notification.getElement().element("event")
+		Assert.assertEquals(subscriber, notification.getElement().element("event")
 				.element("affiliation").attributeValue("jid"));
 	}
 }

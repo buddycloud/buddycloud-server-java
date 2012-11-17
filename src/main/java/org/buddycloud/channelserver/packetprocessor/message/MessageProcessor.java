@@ -37,5 +37,9 @@ public class MessageProcessor implements PacketProcessor<Message> {
 	@Override
 	public void process(Message packet) throws Exception {
 
+		if (false == packet.getType().equals(Message.Type.headline)) {
+			return;
+		}
+		Element event = (Element) packet.getElement().element("event").elements().get(0);
 	}
 }

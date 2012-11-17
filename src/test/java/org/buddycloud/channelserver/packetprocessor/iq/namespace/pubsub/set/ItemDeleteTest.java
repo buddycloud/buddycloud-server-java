@@ -45,8 +45,8 @@ public class ItemDeleteTest extends IQTestHandler {
 	public void setUp() throws Exception {
 		channelManagerMock = Mockito.mock(ChannelManager.class);
 		Mockito.when(channelManagerMock.isLocalNode(Mockito.anyString()))
-		    .thenReturn(true);
-		
+				.thenReturn(true);
+
 		queue = new LinkedBlockingQueue<Packet>();
 		itemDelete = new ItemDelete(queue, channelManagerMock);
 		jid = new JID("juliet@shakespeare.lit");
@@ -64,13 +64,13 @@ public class ItemDeleteTest extends IQTestHandler {
 	@Test
 	public void testPassingRetractAsElementNameReturnsTrue() {
 		Element element = new BaseElement("retract");
-		assertTrue(itemDelete.accept(element));
+		Assert.assertTrue(itemDelete.accept(element));
 	}
 
 	@Test
 	public void testPassingNotRetractAsElementNameReturnsFalse() {
 		Element element = new BaseElement("not-retract");
-		assertFalse(itemDelete.accept(element));
+		Assert.assertFalse(itemDelete.accept(element));
 	}
 
 	@Test
@@ -81,9 +81,10 @@ public class ItemDeleteTest extends IQTestHandler {
 		Packet response = queue.poll(100, TimeUnit.MILLISECONDS);
 
 		PacketError error = response.getError();
-		assertNotNull(error);
-		assertEquals(PacketError.Type.modify, error.getType());
-		assertEquals("nodeid-required", error.getApplicationConditionName());
+		Assert.assertNotNull(error);
+		Assert.assertEquals(PacketError.Type.modify, error.getType());
+		Assert.assertEquals("nodeid-required",
+				error.getApplicationConditionName());
 	}
 
 	@Test
@@ -97,10 +98,10 @@ public class ItemDeleteTest extends IQTestHandler {
 		Packet response = queue.poll(100, TimeUnit.MILLISECONDS);
 
 		PacketError error = response.getError();
-		assertNotNull(error);
-		assertEquals(PacketError.Condition.internal_server_error,
+		Assert.assertNotNull(error);
+		Assert.assertEquals(PacketError.Condition.internal_server_error,
 				error.getCondition());
-		assertEquals(PacketError.Type.wait, error.getType());
+		Assert.assertEquals(PacketError.Type.wait, error.getType());
 
 	}
 
@@ -116,9 +117,9 @@ public class ItemDeleteTest extends IQTestHandler {
 		Packet response = queue.poll(100, TimeUnit.MILLISECONDS);
 
 		PacketError error = response.getError();
-		assertNotNull(error);
-		assertEquals(PacketError.Type.cancel, error.getType());
-		assertEquals(PacketError.Condition.item_not_found, error.getCondition());
+		Assert.assertNotNull(error);
+		Assert.assertEquals(PacketError.Type.cancel, error.getType());
+		Assert.assertEquals(PacketError.Condition.item_not_found, error.getCondition());
 	}
 
 	@Test
@@ -135,9 +136,9 @@ public class ItemDeleteTest extends IQTestHandler {
 		Packet response = queue.poll(100, TimeUnit.MILLISECONDS);
 
 		PacketError error = response.getError();
-		assertNotNull(error);
-		assertEquals(PacketError.Type.modify, error.getType());
-		assertEquals(PacketError.Condition.bad_request, error.getCondition());
+		Assert.assertNotNull(error);
+		Assert.assertEquals(PacketError.Type.modify, error.getType());
+		Assert.assertEquals(PacketError.Condition.bad_request, error.getCondition());
 	}
 
 	@Test
@@ -154,9 +155,9 @@ public class ItemDeleteTest extends IQTestHandler {
 		Packet response = queue.poll(100, TimeUnit.MILLISECONDS);
 
 		PacketError error = response.getError();
-		assertNotNull(error);
-		assertEquals(PacketError.Type.modify, error.getType());
-		assertEquals("item-required", error.getApplicationConditionName());
+		Assert.assertNotNull(error);
+		Assert.assertEquals(PacketError.Type.modify, error.getType());
+		Assert.assertEquals("item-required", error.getApplicationConditionName());
 	}
 
 	@Test
@@ -173,9 +174,10 @@ public class ItemDeleteTest extends IQTestHandler {
 		Packet response = queue.poll(100, TimeUnit.MILLISECONDS);
 
 		PacketError error = response.getError();
-		assertNotNull(error);
-		assertEquals(PacketError.Type.modify, error.getType());
-		assertEquals("item-required", error.getApplicationConditionName());
+		Assert.assertNotNull(error);
+		Assert.assertEquals(PacketError.Type.modify, error.getType());
+		Assert.assertEquals("item-required",
+				error.getApplicationConditionName());
 	}
 
 	@Test
@@ -192,9 +194,10 @@ public class ItemDeleteTest extends IQTestHandler {
 		Packet response = queue.poll(100, TimeUnit.MILLISECONDS);
 
 		PacketError error = response.getError();
-		assertNotNull(error);
-		assertEquals(PacketError.Type.cancel, error.getType());
-		assertEquals(PacketError.Condition.item_not_found, error.getCondition());
+		Assert.assertNotNull(error);
+		Assert.assertEquals(PacketError.Type.cancel, error.getType());
+		Assert.assertEquals(PacketError.Condition.item_not_found,
+				error.getCondition());
 	}
 
 	@Test
@@ -213,9 +216,9 @@ public class ItemDeleteTest extends IQTestHandler {
 		Packet response = queue.poll(100, TimeUnit.MILLISECONDS);
 
 		PacketError error = response.getError();
-		assertNotNull(error);
-		assertEquals(PacketError.Type.wait, error.getType());
-		assertEquals(PacketError.Condition.internal_server_error,
+		Assert.assertNotNull(error);
+		Assert.assertEquals(PacketError.Type.wait, error.getType());
+		Assert.assertEquals(PacketError.Condition.internal_server_error,
 				error.getCondition());
 	}
 
@@ -225,7 +228,8 @@ public class ItemDeleteTest extends IQTestHandler {
 		String payload = readStanzaAsString("/iq/pubsub/item/item.payload");
 
 		NodeItem nodeItem = new NodeItemImpl(node, "item-id", new Date(),
-				payload.replace("juliet@shakespeare.lit", "romeo@shakespeare.lit"));
+				payload.replace("juliet@shakespeare.lit",
+						"romeo@shakespeare.lit"));
 		Mockito.when(channelManagerMock.isLocalNode(node)).thenReturn(true);
 		Mockito.when(channelManagerMock.nodeExists(node)).thenReturn(true);
 		Mockito.when(channelManagerMock.getNodeItem(node, "item-id"))
@@ -238,9 +242,10 @@ public class ItemDeleteTest extends IQTestHandler {
 		Packet response = queue.poll(100, TimeUnit.MILLISECONDS);
 
 		PacketError error = response.getError();
-		assertNotNull(error);
-		assertEquals(PacketError.Type.auth, error.getType());
-		assertEquals(PacketError.Condition.forbidden, error.getCondition());
+		Assert.assertNotNull(error);
+		Assert.assertEquals(PacketError.Type.auth, error.getType());
+		Assert.assertEquals(PacketError.Condition.forbidden,
+				error.getCondition());
 	}
 
 	@Test
@@ -253,8 +258,9 @@ public class ItemDeleteTest extends IQTestHandler {
 				payload);
 
 		Mockito.when(channelManagerMock.nodeExists(node)).thenReturn(true);
-		Mockito.when(channelManagerMock.getNodeItem(Mockito.anyString(), Mockito.anyString()))
-				.thenReturn(nodeItem);
+		Mockito.when(
+				channelManagerMock.getNodeItem(Mockito.anyString(),
+						Mockito.anyString())).thenReturn(nodeItem);
 		Mockito.when(
 				channelManagerMock.getUserAffiliation(Mockito.anyString(),
 						Mockito.any(JID.class))).thenReturn(affiliation);
@@ -264,9 +270,10 @@ public class ItemDeleteTest extends IQTestHandler {
 		Packet response = queue.poll(100, TimeUnit.MILLISECONDS);
 
 		PacketError error = response.getError();
-		assertNotNull(error);
-		assertEquals(PacketError.Type.auth, error.getType());
-		assertEquals(PacketError.Condition.forbidden, error.getCondition());
+		Assert.assertNotNull(error);
+		Assert.assertEquals(PacketError.Type.auth, error.getType());
+		Assert.assertEquals(PacketError.Condition.forbidden,
+				error.getCondition());
 	}
 
 	@Test
@@ -294,11 +301,11 @@ public class ItemDeleteTest extends IQTestHandler {
 		Mockito.verify(channelManagerMock).deleteNodeItemById(node, "item-id");
 		IQ response = (IQ) queue.poll(100, TimeUnit.MILLISECONDS);
 
-		assertEquals(IQ.Type.result.toString(), response.getElement()
+		Assert.assertEquals(IQ.Type.result.toString(), response.getElement()
 				.attribute("type").getValue());
 		// Check that no notifications are sent
 		Packet notification = queue.poll(100, TimeUnit.MILLISECONDS);
-		assertNull(notification);
+		Assert.assertNull(notification);
 	}
 
 	@Test
@@ -340,14 +347,15 @@ public class ItemDeleteTest extends IQTestHandler {
 		Mockito.verify(channelManagerMock).deleteNodeItemById(node, "item-id");
 		IQ response = (IQ) queue.poll(100, TimeUnit.MILLISECONDS);
 
-		assertEquals(IQ.Type.result.toString(), response.getElement()
+		Assert.assertEquals(IQ.Type.result.toString(), response.getElement()
 				.attribute("type").getValue());
 		// Check that one notification is sent
-		assertEquals(1, queue.size());
+		Assert.assertEquals(1, queue.size());
 
 		Packet notification = queue.poll(100, TimeUnit.MILLISECONDS);
-		assertNotNull(notification);
-		assertEquals("item-id", notification.getElement().element("event")
-				.element("items").element("retract").attributeValue("id"));
+		Assert.assertNotNull(notification);
+		Assert.assertEquals("item-id",
+				notification.getElement().element("event").element("items")
+						.element("retract").attributeValue("id"));
 	}
 }

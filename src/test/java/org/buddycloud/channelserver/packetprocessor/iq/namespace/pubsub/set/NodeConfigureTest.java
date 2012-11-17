@@ -9,6 +9,8 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
+import junit.framework.Assert;
+
 import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.channel.node.configuration.Helper;
 import org.buddycloud.channelserver.channel.node.configuration.HelperMock;
@@ -56,13 +58,13 @@ public class NodeConfigureTest extends IQTestHandler {
 	@Test
 	public void testPassingConfigureAsElementNameReturnsTrue() {
 		Element element = new BaseElement("configure");
-		assertTrue(nodeConfigure.accept(element));
+		Assert.assertTrue(nodeConfigure.accept(element));
 	}
 
 	@Test
 	public void testPassingNotConfigureAsElementNameReturnsFalse() {
 		Element element = new BaseElement("not-configure");
-		assertFalse(nodeConfigure.accept(element));
+		Assert.assertFalse(nodeConfigure.accept(element));
 	}
 
 	@Test
@@ -73,9 +75,9 @@ public class NodeConfigureTest extends IQTestHandler {
 		Packet response = queue.poll(100, TimeUnit.MILLISECONDS);
 
 		PacketError error = response.getError();
-		assertNotNull(error);
-		assertEquals(PacketError.Type.modify, error.getType());
-		assertEquals("nodeid-required", error.getApplicationConditionName());
+		Assert.assertNotNull(error);
+		Assert.assertEquals(PacketError.Type.modify, error.getType());
+		Assert.assertEquals("nodeid-required", error.getApplicationConditionName());
 	}
 
 	@Test
@@ -93,9 +95,9 @@ public class NodeConfigureTest extends IQTestHandler {
 
 		Packet response = queue.poll(100, TimeUnit.MILLISECONDS);
 		PacketError error = response.getError();
-		assertNotNull(error);
-		assertEquals(PacketError.Type.cancel, error.getType());
-		assertEquals(PacketError.Condition.item_not_found, error.getCondition());
+		Assert.assertNotNull(error);
+		Assert.assertEquals(PacketError.Type.cancel, error.getType());
+		Assert.assertEquals(PacketError.Condition.item_not_found, error.getCondition());
 	}
 
 	@Test
@@ -117,9 +119,9 @@ public class NodeConfigureTest extends IQTestHandler {
 
 		Packet response = queue.poll(100, TimeUnit.MILLISECONDS);
 		PacketError error = response.getError();
-		assertNotNull(error);
-		assertEquals(PacketError.Type.auth, error.getType());
-		assertEquals(PacketError.Condition.forbidden, error.getCondition());
+		Assert.assertNotNull(error);
+		Assert.assertEquals(PacketError.Type.auth, error.getType());
+		Assert.assertEquals(PacketError.Condition.forbidden, error.getCondition());
 	}
 
 	@Test
@@ -146,9 +148,9 @@ public class NodeConfigureTest extends IQTestHandler {
 		nodeConfigure.process(element, jid, request, null);
 		Packet response = queue.poll(100, TimeUnit.MILLISECONDS);
 		PacketError error = response.getError();
-		assertNotNull(error);
-		assertEquals(PacketError.Type.modify, error.getType());
-		assertEquals(PacketError.Condition.bad_request, error.getCondition());
+		Assert.assertNotNull(error);
+		Assert.assertEquals(PacketError.Type.modify, error.getType());
+		Assert.assertEquals(PacketError.Condition.bad_request, error.getCondition());
 	}
 
 	@Test
@@ -174,9 +176,9 @@ public class NodeConfigureTest extends IQTestHandler {
 
 		Packet response = queue.poll(100, TimeUnit.MILLISECONDS);
 		PacketError error = response.getError();
-		assertNotNull(error);
-		assertEquals(PacketError.Type.modify, error.getType());
-		assertEquals(PacketError.Condition.bad_request, error.getCondition());
+		Assert.assertNotNull(error);
+		Assert.assertEquals(PacketError.Type.modify, error.getType());
+		Assert.assertEquals(PacketError.Condition.bad_request, error.getCondition());
 	}
 
 	@Test
@@ -205,9 +207,9 @@ public class NodeConfigureTest extends IQTestHandler {
 
 		Packet response = queue.poll(100, TimeUnit.MILLISECONDS);
 		PacketError error = response.getError();
-		assertNotNull(error);
-		assertEquals(PacketError.Type.cancel, error.getType());
-		assertEquals(PacketError.Condition.internal_server_error,
+		Assert.assertNotNull(error);
+		Assert.assertEquals(PacketError.Type.cancel, error.getType());
+		Assert.assertEquals(PacketError.Condition.internal_server_error,
 				error.getCondition());
 	}
 
@@ -238,7 +240,7 @@ public class NodeConfigureTest extends IQTestHandler {
 		nodeConfigure.process(element, jid, request, null);
 
 		IQ response = (IQ) queue.poll(100, TimeUnit.MILLISECONDS);
-		assertEquals(IQ.Type.result.toString(), response.getType().toString());
+		Assert.assertEquals(IQ.Type.result.toString(), response.getType().toString());
 	}
 
 	@Test
@@ -274,12 +276,12 @@ public class NodeConfigureTest extends IQTestHandler {
 		nodeConfigure.process(element, jid, request, null);
 
 		Packet response = queue.poll(100, TimeUnit.MILLISECONDS);
-		assertEquals(3, queue.size());
+		Assert.assertEquals(3, queue.size());
 		Packet notification = queue.poll(100, TimeUnit.MILLISECONDS);
-		assertEquals("romeo@shakespeare.lit", notification.getTo().toString());
+		Assert.assertEquals("romeo@shakespeare.lit", notification.getTo().toString());
 		notification = queue.poll(100, TimeUnit.MILLISECONDS);
-		assertEquals("hamlet@shakespeare.lit", notification.getTo().toString());
+		Assert.assertEquals("hamlet@shakespeare.lit", notification.getTo().toString());
 		notification = queue.poll(100, TimeUnit.MILLISECONDS);
-		assertEquals("bottom@shakespeare.lit", notification.getTo().toString());
+		Assert.assertEquals("bottom@shakespeare.lit", notification.getTo().toString());
 	}
 }

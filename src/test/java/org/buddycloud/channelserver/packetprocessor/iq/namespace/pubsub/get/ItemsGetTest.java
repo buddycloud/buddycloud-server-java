@@ -8,6 +8,8 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
+import junit.framework.Assert;
+
 import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.db.ClosableIteratorImpl;
 import org.buddycloud.channelserver.db.CloseableIterator;
@@ -64,13 +66,13 @@ public class ItemsGetTest extends IQTestHandler {
 
 	@Test
 	public void testPassingAffiliationsAsElementNameReturnsTrue() {
-		assertTrue(itemsGet.accept(element));
+		Assert.assertTrue(itemsGet.accept(element));
 	}
 
 	@Test
 	public void testPassingNotCreateAsElementNameReturnsFalse() {
 		Element element = new BaseElement("not-items");
-		assertFalse(itemsGet.accept(element));
+		Assert.assertFalse(itemsGet.accept(element));
 	}
 
 	@Test
@@ -79,9 +81,9 @@ public class ItemsGetTest extends IQTestHandler {
 		Packet response = queue.poll(100, TimeUnit.MILLISECONDS);
 
 		PacketError error = response.getError();
-		assertNotNull(error);
-		assertEquals(PacketError.Type.modify, error.getType());
-		assertEquals("nodeid-required", error.getApplicationConditionName());
+		Assert.assertNotNull(error);
+		Assert.assertEquals(PacketError.Type.modify, error.getType());
+		Assert.assertEquals("nodeid-required", error.getApplicationConditionName());
 	}
 
 	@Test
@@ -97,10 +99,10 @@ public class ItemsGetTest extends IQTestHandler {
 
 		Element element = response.getElement();
 
-		assertEquals(IQ.Type.get.toString(), element.attributeValue("type"));
-		assertEquals("remote-server.com", response.getTo().getDomain());
+		Assert.assertEquals(IQ.Type.get.toString(), element.attributeValue("type"));
+		Assert.assertEquals("remote-server.com", response.getTo().getDomain());
 
-		assertEquals(element.element("pubsub").element("actor").getText(),
+		Assert.assertEquals(element.element("pubsub").element("actor").getText(),
 				response.getFrom().toBareJID());
 	}
 
@@ -115,9 +117,9 @@ public class ItemsGetTest extends IQTestHandler {
 		Packet response = queue.poll(100, TimeUnit.MILLISECONDS);
 
 		PacketError error = response.getError();
-		assertNotNull(error);
-		assertEquals(PacketError.Type.cancel, error.getType());
-		assertEquals(PacketError.Condition.item_not_found, error.getCondition());
+		Assert.assertNotNull(error);
+		Assert.assertEquals(PacketError.Type.cancel, error.getType());
+		Assert.assertEquals(PacketError.Condition.item_not_found, error.getCondition());
 	}
 
 	@Test
@@ -132,9 +134,9 @@ public class ItemsGetTest extends IQTestHandler {
 		Packet response = queue.poll(100, TimeUnit.MILLISECONDS);
 
 		PacketError error = response.getError();
-		assertNotNull(error);
-		assertEquals(PacketError.Type.wait, error.getType());
-		assertEquals(PacketError.Condition.internal_server_error,
+		Assert.assertNotNull(error);
+		Assert.assertEquals(PacketError.Type.wait, error.getType());
+		Assert.assertEquals(PacketError.Condition.internal_server_error,
 				error.getCondition());
 	}
 
@@ -165,10 +167,10 @@ public class ItemsGetTest extends IQTestHandler {
 		Packet response = queue.poll(100, TimeUnit.MILLISECONDS);
 
 		PacketError error = response.getError();
-		assertNotNull(error);
-		assertEquals(PacketError.Type.auth, error.getType());
-		assertEquals(PacketError.Condition.forbidden, error.getCondition());
-		assertEquals("pending-subscription",
+		Assert.assertNotNull(error);
+		Assert.assertEquals(PacketError.Type.auth, error.getType());
+		Assert.assertEquals(PacketError.Condition.forbidden, error.getCondition());
+		Assert.assertEquals("pending-subscription",
 				error.getApplicationConditionName());
 	}
 
@@ -211,10 +213,10 @@ public class ItemsGetTest extends IQTestHandler {
 		Packet response = queue.poll(100, TimeUnit.MILLISECONDS);
 		Element element = response.getElement();
 
-		assertEquals(IQ.Type.result.toString(), element.attributeValue("type"));
-		assertEquals(node, element.element("pubsub").element("items")
+		Assert.assertEquals(IQ.Type.result.toString(), element.attributeValue("type"));
+		Assert.assertEquals(node, element.element("pubsub").element("items")
 				.attributeValue("node"));
-		assertNull(element.element("pubsub").element("items").element("item"));
+		Assert.assertNull(element.element("pubsub").element("items").element("item"));
 	}
 
 	@Test
@@ -256,10 +258,10 @@ public class ItemsGetTest extends IQTestHandler {
 		Packet response = queue.poll(100, TimeUnit.MILLISECONDS);
 		Element element = response.getElement();
 
-		assertEquals(IQ.Type.result.toString(), element.attributeValue("type"));
-		assertEquals(node, element.element("pubsub").element("items")
+		Assert.assertEquals(IQ.Type.result.toString(), element.attributeValue("type"));
+		Assert.assertEquals(node, element.element("pubsub").element("items")
 				.attributeValue("node"));
-		assertNull(element.element("pubsub").element("items").element("item"));
+		Assert.assertNull(element.element("pubsub").element("items").element("item"));
 	}
 
 	@Test
@@ -312,10 +314,10 @@ public class ItemsGetTest extends IQTestHandler {
 		Packet response = queue.poll(100, TimeUnit.MILLISECONDS);
 		Element element = response.getElement();
 
-		assertEquals(IQ.Type.result.toString(), element.attributeValue("type"));
-		assertEquals(node, element.element("pubsub").element("items")
+		Assert.assertEquals(IQ.Type.result.toString(), element.attributeValue("type"));
+		Assert.assertEquals(node, element.element("pubsub").element("items")
 				.attributeValue("node"));
-		assertEquals(0, element.element("pubsub").element("items").nodeCount());
+		Assert.assertEquals(0, element.element("pubsub").element("items").nodeCount());
 	}
 
 	@Test
@@ -366,15 +368,15 @@ public class ItemsGetTest extends IQTestHandler {
 		Packet response = queue.poll(100, TimeUnit.MILLISECONDS);
 		Element element = response.getElement();
 
-		assertEquals(IQ.Type.result.toString(), element.attributeValue("type"));
-		assertEquals(node, element.element("pubsub").element("items")
+		Assert.assertEquals(IQ.Type.result.toString(), element.attributeValue("type"));
+		Assert.assertEquals(node, element.element("pubsub").element("items")
 				.attributeValue("node"));
 
-		assertEquals(2, element.element("pubsub").element("items").nodeCount());
-		assertEquals("id",
+		Assert.assertEquals(2, element.element("pubsub").element("items").nodeCount());
+		Assert.assertEquals("id",
 				element.element("pubsub").element("items").element("item")
 						.attributeValue("id"));
-		assertEquals("entry text", element.element("pubsub").element("items")
+		Assert.assertEquals("entry text", element.element("pubsub").element("items")
 				.element("item").elementText("entry"));
 	}
 
@@ -434,12 +436,12 @@ public class ItemsGetTest extends IQTestHandler {
 		Packet response = queue.poll(100, TimeUnit.MILLISECONDS);
 		Element element = response.getElement();
 
-		assertEquals(IQ.Type.result.toString(), element.attributeValue("type"));
-		assertEquals(node, element.element("pubsub").element("items")
+		Assert.assertEquals(IQ.Type.result.toString(), element.attributeValue("type"));
+		Assert.assertEquals(node, element.element("pubsub").element("items")
 				.attributeValue("node"));
 
-		assertEquals(3, element.element("pubsub").element("items").nodeCount());
-		assertEquals(0,
+		Assert.assertEquals(3, element.element("pubsub").element("items").nodeCount());
+		Assert.assertEquals(0,
 				element.element("pubsub").element("items").element("item")
 						.element("query").elements().size());
 	}
@@ -510,20 +512,20 @@ public class ItemsGetTest extends IQTestHandler {
 		Packet response = queue.poll(100, TimeUnit.MILLISECONDS);
 		Element element = response.getElement();
 
-		assertEquals(IQ.Type.result.toString(), element.attributeValue("type"));
-		assertEquals(node, element.element("pubsub").element("items")
+		Assert.assertEquals(IQ.Type.result.toString(), element.attributeValue("type"));
+		Assert.assertEquals(node, element.element("pubsub").element("items")
 				.attributeValue("node"));
-		assertEquals(1, element.element("pubsub").element("items").nodeCount());
-		assertEquals(2,
+		Assert.assertEquals(1, element.element("pubsub").element("items").nodeCount());
+		Assert.assertEquals(2,
 				element.element("pubsub").element("items").element("item")
 						.element("query").nodeCount());
-		assertEquals(jid.toBareJID(), element.element("pubsub")
+		Assert.assertEquals(jid.toBareJID(), element.element("pubsub")
 				.element("items").element("item").attributeValue("id"));
-		assertEquals("/user/juliet@shakespeare.lit/posts",
+		Assert.assertEquals("/user/juliet@shakespeare.lit/posts",
 				element.element("pubsub").element("items").element("item")
 						.element("query").element("item")
 						.attributeValue("node"));
-		assertEquals(
+		Assert.assertEquals(
 				Affiliations.member.toString(),
 				element.element("pubsub")
 						.element("items")
@@ -533,7 +535,7 @@ public class ItemsGetTest extends IQTestHandler {
 						.attributeValue(
 								new QName("affiliation", new Namespace("ns1",
 										JabberPubsub.NAMESPACE_URI))));
-		assertEquals(
+		Assert.assertEquals(
 				Subscriptions.subscribed.toString(),
 				element.element("pubsub")
 						.element("items")

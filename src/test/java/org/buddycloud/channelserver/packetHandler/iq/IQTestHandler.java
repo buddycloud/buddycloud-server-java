@@ -7,6 +7,7 @@ import java.io.StringReader;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 
+import junit.framework.Assert;
 import junit.framework.TestCase;
 
 import org.apache.commons.io.IOUtils;
@@ -18,7 +19,7 @@ import org.dom4j.io.SAXReader;
 import org.xmpp.packet.IQ;
 import org.xmpp.packet.IQ.Type;
 
-public class IQTestHandler extends TestCase
+public class IQTestHandler
 {
 	private final static String CONFIGURATION_PROPERTIES = "src/test/resources/configuration.properties";
     public final static String  STANZA_PATH              = "src/test/resources/stanzas";
@@ -79,7 +80,7 @@ public class IQTestHandler extends TestCase
         
         IQ replyIQ = (IQ)helper.getOutQueue().poll(1000, TimeUnit.MILLISECONDS);
         
-        assertNotNull(replyIQ);
-        assertEquals(expectedReply, replyIQ.toXML());
+        Assert.assertNotNull(replyIQ);
+        Assert.assertEquals(expectedReply, replyIQ.toXML());
     }
 }

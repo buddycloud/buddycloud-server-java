@@ -46,9 +46,10 @@ public class InQueueConsumer extends QueueConsumer {
 			logger.debug("Received payload: '" + xml + "'.");
 			channelManager = channelManagerFactory.create();
 			if (p instanceof IQ) {
-				new IQProcessor(outQueue, conf, channelManager, federatedQueueManager).process((IQ) p);
+				new IQProcessor(outQueue, conf, channelManager,
+						federatedQueueManager).process((IQ) p);
 			} else if (p instanceof Message) {
-				new MessageProcessor(outQueue, inQueue, conf, channelManager)
+				new MessageProcessor(outQueue, conf, channelManager)
 						.process((Message) p);
 			} else {
 				logger.info("Not handling following stanzas yet: '" + xml

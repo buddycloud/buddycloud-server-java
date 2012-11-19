@@ -209,4 +209,10 @@ public class Mock implements ChannelManager {
 		return false;
 	}
 
+	@Override
+	public void addRemoteNode(String node) throws NodeStoreException {
+		// TODO Auto-generated method stub
+		
+	}
+
 }

@@ -113,9 +113,10 @@ public class SubscriptionProcessor implements PacketProcessor<Message> {
 	}
 
 	private void addRemoteNode() {
-		/*
-		 * try { channelManager.addRemoteNode(node); } catch (NodeStoreException
-		 * e) { logger.error(e); }
-		 */
+        try { 
+            channelManager.addRemoteNode(node); 
+        } catch (NodeStoreException e) { 
+        	logger.error(e);
+        }
 	}
 }

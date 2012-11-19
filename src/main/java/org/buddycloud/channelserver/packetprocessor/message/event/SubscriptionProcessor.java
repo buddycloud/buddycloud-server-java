@@ -28,7 +28,7 @@ public class SubscriptionProcessor implements PacketProcessor<Message> {
 	private Properties configuration;
 	private BlockingQueue<Packet> outQueue;
 	private Message message;
-	
+
 	private static final Logger logger = Logger
 			.getLogger(SubscriptionProcessor.class);
 
@@ -42,7 +42,7 @@ public class SubscriptionProcessor implements PacketProcessor<Message> {
 	@Override
 	public void process(Message packet) throws Exception {
 		message = packet;
-		
+
 		handleSubscriptionElement();
 		handleAffiliationElement();
 
@@ -67,10 +67,10 @@ public class SubscriptionProcessor implements PacketProcessor<Message> {
 			return;
 		}
 		if (true == channelManager.isLocalJID(jid)) {
-		    storeNewSubscription();
+			storeNewSubscription();
 		}
 	}
-	
+
 	private void handleAffiliationElement() throws NodeStoreException {
 		Element affiliationElement = message.getElement().element("event")
 				.element("affiliation");
@@ -85,7 +85,7 @@ public class SubscriptionProcessor implements PacketProcessor<Message> {
 			return;
 		}
 		if (true == channelManager.isLocalJID(jid)) {
-		    storeNewAffiliation();
+			storeNewAffiliation();
 		}
 	}
 
@@ -113,10 +113,9 @@ public class SubscriptionProcessor implements PacketProcessor<Message> {
 	}
 
 	private void addRemoteNode() {
-		try {
-			channelManager.addRemoteNode(node);
-		} catch (NodeStoreException e) {
-			logger.error(e);
-		}
+		/*
+		 * try { channelManager.addRemoteNode(node); } catch (NodeStoreException
+		 * e) { logger.error(e); }
+		 */
 	}
 }

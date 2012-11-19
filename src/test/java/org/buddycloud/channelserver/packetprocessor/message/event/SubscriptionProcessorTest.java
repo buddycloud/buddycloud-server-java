@@ -32,28 +32,29 @@ public class SubscriptionProcessorTest extends IQTestHandler {
 
 	private BlockingQueue<Packet> queue = new LinkedBlockingQueue<Packet>();
 	private ChannelManager channelManager;
-	
+
 	private JID jid = new JID("juliet@shakespeare.lit");
 
 	@Before
 	public void setUp() throws Exception {
 
 		Properties configuration = new Properties();
-		configuration.setProperty("server.domain.channels", "chgnnels.shakespeare.lit");
-		
+		configuration.setProperty("server.domain.channels",
+				"chgnnels.shakespeare.lit");
+
 		channelManager = Mockito.mock(ChannelManager.class);
 		Mockito.when(channelManager.isLocalNode(Mockito.anyString()))
 				.thenReturn(false);
 		Mockito.when(channelManager.isLocalJID(Mockito.any(JID.class)))
 				.thenReturn(true);
-		
+
 		ArrayList<NodeSubscription> subscribers = new ArrayList<NodeSubscription>();
 		subscribers.add(new NodeSubscriptionImpl(
 				"/users/romeo@shakespeare.lit/posts", jid,
 				Subscriptions.subscribed));
 		Mockito.doReturn(subscribers).when(channelManager)
 				.getNodeSubscriptions(Mockito.anyString());
-		
+
 		subscriptionProcessor = new SubscriptionProcessor(queue, configuration,
 				channelManager);
 
@@ -94,19 +95,23 @@ public class SubscriptionProcessorTest extends IQTestHandler {
 	}
 
 	@Test
-	public void testMissingSubscriptionElementDoesNotCauseError() throws Exception {
-	    Message noSubscriptionElement = message.createCopy();
-	    noSubscriptionElement.getElement().element("event").element("subscription").detach();
-	    subscriptionProcessor.process(noSubscriptionElement);
+	public void testMissingSubscriptionElementDoesNotCauseError()
+			throws Exception {
+		Message noSubscriptionElement = message.createCopy();
+		noSubscriptionElement.getElement().element("event")
+				.element("subscription").detach();
+		subscriptionProcessor.process(noSubscriptionElement);
 	}
 
 	@Test
-	public void testMissingAffiliationElementDoesNotCauseError() throws Exception {
-	    Message noAffiliationElement = message.createCopy();
-	    noAffiliationElement.getElement().element("event").element("affiliation").detach();
-	    subscriptionProcessor.process(noAffiliationElement);
+	public void testMissingAffiliationElementDoesNotCauseError()
+			throws Exception {
+		Message noAffiliationElement = message.createCopy();
+		noAffiliationElement.getElement().element("event")
+				.element("affiliation").detach();
+		subscriptionProcessor.process(noAffiliationElement);
 	}
-	
+
 	@Test
 	public void testEventForLocalNodeIsIgnored() throws Exception {
 

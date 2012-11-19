@@ -9,6 +9,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 import org.apache.log4j.Logger;
 import org.buddycloud.channelserver.ChannelsEngine;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.JabberPubsub;
+import org.dom4j.Attribute;
 import org.dom4j.Element;
 import org.dom4j.Namespace;
 import org.dom4j.dom.DOMElement;
@@ -69,7 +70,7 @@ public class FederatedQueueManager {
 				discoverRemoteChannelServer(to, packet.getID());
 			} else if (remoteChannelDiscoveryStatus.get(to).equals(
 					NO_CHANNEL_SERVER)) {
-				logger.debug("\n\nNo remote channel server for " + to + "\n\n");
+				logger.error("No remote channel server for " + to);
 				IQ reply = IQ.createResultIQ((IQ) packet);
 				reply.setError(new PacketError(
 						PacketError.Condition.remote_server_not_found,
@@ -90,11 +91,11 @@ public class FederatedQueueManager {
 			if (false == waitingStanzas.containsKey(to)) {
 				waitingStanzas.put(to, new ArrayList<Packet>());
 			}
-			logger.debug("\n\nAdding packet to waiting stanza list for " 
-			        + to + " (size " + waitingStanzas.get(to).size() + ")\n\n");
+			logger.debug("Adding packet to waiting stanza list for " 
+			        + to + " (size " + waitingStanzas.get(to).size() + ")");
 			waitingStanzas.get(to).add(packet);
 		} catch (Exception e) {
-			e.printStackTrace();
+			logger.error(e);
 		}
 	}
 
@@ -113,10 +114,11 @@ public class FederatedQueueManager {
 			throws ComponentException {
 
 		for (Element item : items) {
-			String name = item.attributeValue("name");
-			if ((null != name) && (true == name.equals(BUDDYCLOUD_SERVER))) {
+            Attribute name = item.attribute("name");
+			if ((null != name) && (true == name.getStringValue().equals(BUDDYCLOUD_SERVER))) {
 				remoteChannelDiscoveryStatus.put(from.toString(), DISCOVERED);
 				discoveredServers.put(from.toString(), item.attributeValue("jid"));
+				sendFederatedRequests(from.toString());
 				return;
 			}
 		}
@@ -127,18 +129,12 @@ public class FederatedQueueManager {
 
 		remoteServerItemsToProcess.put(from.toString(), items.size());
 		String infoRequestId;
-        String itemName;
 		for (Element item : items) {
-			itemName = item.attributeValue("name");
-			if ((itemName != null) && (true == itemName.equals(BUDDYCLOUD_SERVER))) {
-				discoveredServers.put(from.toString(), item.attributeValue("jid"));
-			} else {
-				infoRequestId = "info:" + getId();
-				infoRequest.setTo(item.attributeValue("jid"));
-				infoRequest.setID(infoRequestId);
-				remoteServerInfoRequestIds.put(infoRequestId, from.toString());
-				component.sendPacket(infoRequest.createCopy());
-			}
+			infoRequestId = getId() + ":info";
+			infoRequest.setTo(item.attributeValue("jid"));
+			infoRequest.setID(infoRequestId);
+			remoteServerInfoRequestIds.put(infoRequestId, from.toString());
+			component.sendPacket(infoRequest.createCopy());
 		}
 		remoteChannelDiscoveryStatus.put(from.toString(), DISCO_INFO);
 	}
@@ -204,6 +200,7 @@ public class FederatedQueueManager {
         IQ response;
         for (Packet packet : queued) {
         	response = IQ.createResultIQ((IQ) packet);
+        	response.setFrom(localServer);
         	response.setType(IQ.Type.error);
     		response.setChildElement(error);
     		component.sendPacket(response);

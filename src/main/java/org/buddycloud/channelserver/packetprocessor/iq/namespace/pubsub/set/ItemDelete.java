@@ -31,6 +31,7 @@ import org.xmpp.packet.JID;
 import org.xmpp.packet.Message;
 import org.xmpp.packet.Packet;
 import org.xmpp.packet.PacketError;
+import org.xmpp.resultsetmanagement.ResultSet;
 
 public class ItemDelete extends PubSubElementProcessorAbstract {
 
@@ -95,7 +96,7 @@ public class ItemDelete extends PubSubElementProcessorAbstract {
 					&& (false == notify.equals("1")))) {
 				return;
 			}
-			Collection<NodeSubscription> subscriptions = channelManager
+			ResultSet<NodeSubscription> subscriptions = channelManager
 					.getNodeSubscriptions(node);
 			Message notification = getNotificationMessage();
 			for (NodeSubscription subscription : subscriptions) {

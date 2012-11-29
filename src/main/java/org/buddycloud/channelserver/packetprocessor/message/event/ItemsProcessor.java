@@ -10,6 +10,7 @@ import org.buddycloud.channelserver.pubsub.model.NodeSubscription;
 import org.xmpp.packet.JID;
 import org.xmpp.packet.Message;
 import org.xmpp.packet.Packet;
+import org.xmpp.resultsetmanagement.ResultSet;
 
 public class ItemsProcessor implements PacketProcessor<Message> {
 
@@ -43,7 +44,7 @@ public class ItemsProcessor implements PacketProcessor<Message> {
 	}
 
 	private void sendLocalNotifications() throws Exception {
-		Collection<NodeSubscription> subscribers = channelManager
+		ResultSet<NodeSubscription> subscribers = channelManager
 				.getNodeSubscriptions(node);
 		for (NodeSubscription subscriber : subscribers) {
 			message.setTo(subscriber.getUser());

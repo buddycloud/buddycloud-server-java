@@ -8,22 +8,22 @@ import org.xmpp.resultsetmanagement.Result;
 /**
  * Represents a user's affiliation with a node
  */
-public abstract class NodeAffiliation implements Result {
+public interface NodeAffiliation extends Result {
 	/**
 	 * Gets the user who is affiliated with the node
 	 * @return the JID
 	 */
-	public abstract JID getUser();
+	JID getUser();
 	
 	/**
 	 * Gets the node to which the user is affiliated
 	 * @return
 	 */
-	public abstract String getNodeId();
+	String getNodeId();
 	
 	/**
 	 * The type of affiliation
 	 * @return
 	 */
-	public abstract Affiliations getAffiliation();
+	Affiliations getAffiliation();
 }

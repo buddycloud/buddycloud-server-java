@@ -21,6 +21,7 @@ import org.buddycloud.channelserver.pubsub.accessmodel.AccessModels;
 import org.buddycloud.channelserver.pubsub.affiliation.Affiliations;
 import org.buddycloud.channelserver.pubsub.model.NodeAffiliation;
 import org.buddycloud.channelserver.pubsub.model.NodeItem;
+import org.buddycloud.channelserver.pubsub.model.NodeSubscription;
 import org.buddycloud.channelserver.pubsub.model.impl.NodeAffiliationImpl;
 import org.buddycloud.channelserver.pubsub.model.impl.NodeSubscriptionImpl;
 import org.buddycloud.channelserver.pubsub.subscription.Subscriptions;
@@ -38,6 +39,8 @@ import org.xmpp.packet.IQ;
 import org.xmpp.packet.JID;
 import org.xmpp.packet.Packet;
 import org.xmpp.packet.PacketError;
+import org.xmpp.resultsetmanagement.Result;
+import org.xmpp.resultsetmanagement.ResultSetImpl;
 
 public class ItemsGetTest extends IQTestHandler {
 
@@ -83,7 +86,8 @@ public class ItemsGetTest extends IQTestHandler {
 		PacketError error = response.getError();
 		Assert.assertNotNull(error);
 		Assert.assertEquals(PacketError.Type.modify, error.getType());
-		Assert.assertEquals("nodeid-required", error.getApplicationConditionName());
+		Assert.assertEquals("nodeid-required",
+				error.getApplicationConditionName());
 	}
 
 	@Test
@@ -99,11 +103,12 @@ public class ItemsGetTest extends IQTestHandler {
 
 		Element element = response.getElement();
 
-		Assert.assertEquals(IQ.Type.get.toString(), element.attributeValue("type"));
+		Assert.assertEquals(IQ.Type.get.toString(),
+				element.attributeValue("type"));
 		Assert.assertEquals("remote-server.com", response.getTo().getDomain());
 
-		Assert.assertEquals(element.element("pubsub").element("actor").getText(),
-				response.getFrom().toBareJID());
+		Assert.assertEquals(element.element("pubsub").element("actor")
+				.getText(), response.getFrom().toBareJID());
 	}
 
 	@Test
@@ -119,7 +124,8 @@ public class ItemsGetTest extends IQTestHandler {
 		PacketError error = response.getError();
 		Assert.assertNotNull(error);
 		Assert.assertEquals(PacketError.Type.cancel, error.getType());
-		Assert.assertEquals(PacketError.Condition.item_not_found, error.getCondition());
+		Assert.assertEquals(PacketError.Condition.item_not_found,
+				error.getCondition());
 	}
 
 	@Test
@@ -169,7 +175,8 @@ public class ItemsGetTest extends IQTestHandler {
 		PacketError error = response.getError();
 		Assert.assertNotNull(error);
 		Assert.assertEquals(PacketError.Type.auth, error.getType());
-		Assert.assertEquals(PacketError.Condition.forbidden, error.getCondition());
+		Assert.assertEquals(PacketError.Condition.forbidden,
+				error.getCondition());
 		Assert.assertEquals("pending-subscription",
 				error.getApplicationConditionName());
 	}
@@ -213,10 +220,12 @@ public class ItemsGetTest extends IQTestHandler {
 		Packet response = queue.poll(100, TimeUnit.MILLISECONDS);
 		Element element = response.getElement();
 
-		Assert.assertEquals(IQ.Type.result.toString(), element.attributeValue("type"));
+		Assert.assertEquals(IQ.Type.result.toString(),
+				element.attributeValue("type"));
 		Assert.assertEquals(node, element.element("pubsub").element("items")
 				.attributeValue("node"));
-		Assert.assertNull(element.element("pubsub").element("items").element("item"));
+		Assert.assertNull(element.element("pubsub").element("items")
+				.element("item"));
 	}
 
 	@Test
@@ -258,10 +267,12 @@ public class ItemsGetTest extends IQTestHandler {
 		Packet response = queue.poll(100, TimeUnit.MILLISECONDS);
 		Element element = response.getElement();
 
-		Assert.assertEquals(IQ.Type.result.toString(), element.attributeValue("type"));
+		Assert.assertEquals(IQ.Type.result.toString(),
+				element.attributeValue("type"));
 		Assert.assertEquals(node, element.element("pubsub").element("items")
 				.attributeValue("node"));
-		Assert.assertNull(element.element("pubsub").element("items").element("item"));
+		Assert.assertNull(element.element("pubsub").element("items")
+				.element("item"));
 	}
 
 	@Test
@@ -314,10 +325,12 @@ public class ItemsGetTest extends IQTestHandler {
 		Packet response = queue.poll(100, TimeUnit.MILLISECONDS);
 		Element element = response.getElement();
 
-		Assert.assertEquals(IQ.Type.result.toString(), element.attributeValue("type"));
+		Assert.assertEquals(IQ.Type.result.toString(),
+				element.attributeValue("type"));
 		Assert.assertEquals(node, element.element("pubsub").element("items")
 				.attributeValue("node"));
-		Assert.assertEquals(0, element.element("pubsub").element("items").nodeCount());
+		Assert.assertEquals(0, element.element("pubsub").element("items")
+				.nodeCount());
 	}
 
 	@Test
@@ -368,16 +381,18 @@ public class ItemsGetTest extends IQTestHandler {
 		Packet response = queue.poll(100, TimeUnit.MILLISECONDS);
 		Element element = response.getElement();
 
-		Assert.assertEquals(IQ.Type.result.toString(), element.attributeValue("type"));
+		Assert.assertEquals(IQ.Type.result.toString(),
+				element.attributeValue("type"));
 		Assert.assertEquals(node, element.element("pubsub").element("items")
 				.attributeValue("node"));
 
-		Assert.assertEquals(2, element.element("pubsub").element("items").nodeCount());
-		Assert.assertEquals("id",
+		Assert.assertEquals(2, element.element("pubsub").element("items")
+				.nodeCount());
+		Assert.assertEquals("id", element.element("pubsub").element("items")
+				.element("item").attributeValue("id"));
+		Assert.assertEquals("entry text",
 				element.element("pubsub").element("items").element("item")
-						.attributeValue("id"));
-		Assert.assertEquals("entry text", element.element("pubsub").element("items")
-				.element("item").elementText("entry"));
+						.elementText("entry"));
 	}
 
 	@Test
@@ -401,22 +416,43 @@ public class ItemsGetTest extends IQTestHandler {
 		Mockito.when(channelManager.getUserAffiliation(node, jid)).thenReturn(
 				affiliation);
 
-		NodeSubscriptionImpl itemSubscription = Mockito
-				.mock(NodeSubscriptionImpl.class);
 		NodeAffiliationImpl itemAffiliation = Mockito
 				.mock(NodeAffiliationImpl.class);
 		Mockito.when(itemAffiliation.getAffiliation()).thenReturn(
 				Affiliations.member);
-		Mockito.when(itemSubscription.getSubscription()).thenReturn(
-				Subscriptions.subscribed);
-		Mockito.when(itemSubscription.getUser()).thenReturn(jid);
-		Mockito.when(itemSubscription.getNodeId()).thenReturn(node);
 
-		ArrayList items = new ArrayList<NodeSubscriptionImpl>();
-		items.add(itemSubscription);
-		items.add(itemSubscription);
-		items.add(itemSubscription);
-		Mockito.doReturn(items).when(channelManager).getNodeSubscriptions(node);
+		NodeSubscriptionImpl itemSubscription1 = Mockito
+				.mock(NodeSubscriptionImpl.class);
+		Mockito.when(itemSubscription1.getSubscription()).thenReturn(
+				Subscriptions.subscribed);
+		Mockito.when(itemSubscription1.getUser()).thenReturn(jid);
+		Mockito.when(itemSubscription1.getNodeId()).thenReturn(node);
+		Mockito.when(itemSubscription1.getUID()).thenReturn(jid.toString());
+
+		JID jid2 = new JID("mercutio@shakespeare.lit");
+		NodeSubscriptionImpl itemSubscription2 = Mockito
+				.mock(NodeSubscriptionImpl.class);
+		Mockito.when(itemSubscription2.getSubscription()).thenReturn(
+				Subscriptions.subscribed);
+		Mockito.when(itemSubscription2.getUser()).thenReturn(jid2);
+		Mockito.when(itemSubscription2.getNodeId()).thenReturn(node);
+		Mockito.when(itemSubscription2.getUID()).thenReturn(jid2.toString());
+
+		JID jid3 = new JID("titania@shakespeare.lit");
+		NodeSubscriptionImpl itemSubscription3 = Mockito
+				.mock(NodeSubscriptionImpl.class);
+		Mockito.when(itemSubscription3.getSubscription()).thenReturn(
+				Subscriptions.subscribed);
+		Mockito.when(itemSubscription3.getUser()).thenReturn(jid3);
+		Mockito.when(itemSubscription3.getNodeId()).thenReturn(node);
+		Mockito.when(itemSubscription3.getUID()).thenReturn(jid3.toString());
+
+		ArrayList<NodeSubscription> items = new ArrayList<NodeSubscription>();
+		items.add(itemSubscription1);
+		items.add(itemSubscription2);
+		items.add(itemSubscription3);
+		Mockito.doReturn(new ResultSetImpl<NodeSubscription>(items))
+				.when(channelManager).getNodeSubscriptions(node);
 
 		Mockito.doReturn(null).when(channelManager)
 				.getUserAffiliation(node, new JID("pamela@denmark.lit"));
@@ -436,14 +472,15 @@ public class ItemsGetTest extends IQTestHandler {
 		Packet response = queue.poll(100, TimeUnit.MILLISECONDS);
 		Element element = response.getElement();
 
-		Assert.assertEquals(IQ.Type.result.toString(), element.attributeValue("type"));
+		Assert.assertEquals(IQ.Type.result.toString(),
+				element.attributeValue("type"));
 		Assert.assertEquals(node, element.element("pubsub").element("items")
 				.attributeValue("node"));
 
-		Assert.assertEquals(3, element.element("pubsub").element("items").nodeCount());
-		Assert.assertEquals(0,
-				element.element("pubsub").element("items").element("item")
-						.element("query").elements().size());
+		Assert.assertEquals(3, element.element("pubsub").element("items")
+				.nodeCount());
+		Assert.assertEquals(0, element.element("pubsub").element("items")
+				.element("item").element("query").elements().size());
 	}
 
 	@Test
@@ -475,10 +512,12 @@ public class ItemsGetTest extends IQTestHandler {
 		Mockito.when(itemSubscription.getSubscription()).thenReturn(
 				Subscriptions.subscribed);
 		Mockito.when(itemSubscription.getUser()).thenReturn(jid);
+		Mockito.when(itemSubscription.getUID()).thenReturn(jid.toString());
 		Mockito.when(itemSubscription.getNodeId()).thenReturn(node);
 		ArrayList items = new ArrayList<NodeSubscriptionImpl>();
 		items.add(itemSubscription);
-		Mockito.doReturn(items).when(channelManager).getNodeSubscriptions(node);
+		Mockito.doReturn(new ResultSetImpl<NodeSubscription>(items))
+				.when(channelManager).getNodeSubscriptions(node);
 
 		NodeSubscriptionImpl childItemSubscription = Mockito
 				.mock(NodeSubscriptionImpl.class);
@@ -487,13 +526,14 @@ public class ItemsGetTest extends IQTestHandler {
 		Mockito.when(childItemAffiliation.getAffiliation()).thenReturn(
 				Affiliations.member);
 		Mockito.when(childItemSubscription.getUser()).thenReturn(jid);
+		Mockito.when(childItemSubscription.getUID()).thenReturn(jid.toString());
 		Mockito.when(childItemSubscription.getNodeId()).thenReturn(
 				"/user/juliet@shakespeare.lit/posts");
 		Mockito.when(childItemSubscription.getSubscription()).thenReturn(
 				Subscriptions.subscribed);
-		ArrayList<NodeSubscriptionImpl> childItems = new ArrayList<NodeSubscriptionImpl>();
+		ArrayList<NodeSubscription> childItems = new ArrayList<NodeSubscription>();
 		childItems.add(childItemSubscription);
-		Mockito.doReturn(childItems).when(channelManager)
+		Mockito.doReturn(new ResultSetImpl<NodeSubscription>(childItems)).when(channelManager)
 				.getUserSubscriptions(new JID("juliet@shakespeare.lit"));
 
 		Mockito.when(channelManager.nodeExists(node)).thenReturn(true);
@@ -512,15 +552,17 @@ public class ItemsGetTest extends IQTestHandler {
 		Packet response = queue.poll(100, TimeUnit.MILLISECONDS);
 		Element element = response.getElement();
 
-		Assert.assertEquals(IQ.Type.result.toString(), element.attributeValue("type"));
+		Assert.assertEquals(IQ.Type.result.toString(),
+				element.attributeValue("type"));
 		Assert.assertEquals(node, element.element("pubsub").element("items")
 				.attributeValue("node"));
-		Assert.assertEquals(1, element.element("pubsub").element("items").nodeCount());
-		Assert.assertEquals(2,
+		Assert.assertEquals(1, element.element("pubsub").element("items")
+				.nodeCount());
+		Assert.assertEquals(2, element.element("pubsub").element("items")
+				.element("item").element("query").nodeCount());
+		Assert.assertEquals(jid.toBareJID(),
 				element.element("pubsub").element("items").element("item")
-						.element("query").nodeCount());
-		Assert.assertEquals(jid.toBareJID(), element.element("pubsub")
-				.element("items").element("item").attributeValue("id"));
+						.attributeValue("id"));
 		Assert.assertEquals("/user/juliet@shakespeare.lit/posts",
 				element.element("pubsub").element("items").element("item")
 						.element("query").element("item")

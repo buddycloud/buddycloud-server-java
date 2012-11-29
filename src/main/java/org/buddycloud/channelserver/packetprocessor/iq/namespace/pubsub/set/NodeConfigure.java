@@ -26,6 +26,7 @@ import org.xmpp.packet.JID;
 import org.xmpp.packet.Message;
 import org.xmpp.packet.Packet;
 import org.xmpp.packet.PacketError;
+import org.xmpp.resultsetmanagement.ResultSet;
 
 public class NodeConfigure extends PubSubElementProcessorAbstract {
 	protected String node;
@@ -107,7 +108,7 @@ public class NodeConfigure extends PubSubElementProcessorAbstract {
 
 	private void notifySubscribers(HashMap<String, String> configuration) throws NodeStoreException,
 			InterruptedException {
-		Collection<NodeSubscription> subscribers = channelManager
+		ResultSet<NodeSubscription> subscribers = channelManager
 				.getNodeSubscriptions(node);
 		Document document = getDocumentHelper();
 		Element message = document.addElement("message");

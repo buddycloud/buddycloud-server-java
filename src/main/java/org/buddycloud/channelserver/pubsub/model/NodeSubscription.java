@@ -7,29 +7,29 @@ import org.xmpp.resultsetmanagement.Result;
 /**
  * Represents a user's subscription to a node
  */
-public abstract class NodeSubscription implements Result {
+public interface NodeSubscription extends Result {
 
 	/**
 	 * Gets the subscription type
 	 * @return
 	 */
-	public abstract Subscriptions getSubscription();
+    Subscriptions getSubscription();
     
     /**
      * Gets the user
      * @return
      */
-	public abstract JID getUser();
+    JID getUser();
     
     /**
      * Gets the listener for notifications (for the inbox protocol)
      * @return the listener's JID, or <code>null</code> if not a remote subscription.
      */
-	public abstract JID getListener();
+    JID getListener();
     
     /**
      * Gets the node id
      * @return
      */
-	public abstract String getNodeId();
+    String getNodeId();
 }

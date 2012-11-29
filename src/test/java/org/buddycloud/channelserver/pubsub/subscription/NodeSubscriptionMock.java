@@ -53,4 +53,9 @@ public class NodeSubscriptionMock implements NodeSubscription {
 		// TODO Auto-generated method stub
 		return null;
 	}
+
+	@Override
+	public String getUID() {
+		return subscriber.toString();
+	}
 }

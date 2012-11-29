@@ -22,6 +22,8 @@ import org.xmpp.packet.JID;
 import org.xmpp.packet.Message;
 import org.xmpp.packet.Packet;
 import org.xmpp.packet.PacketError.Condition;
+import org.xmpp.resultsetmanagement.ResultSet;
+import org.xmpp.resultsetmanagement.ResultSetImpl;
 
 public class ItemsProcessorTest extends IQTestHandler {
 
@@ -42,7 +44,7 @@ public class ItemsProcessorTest extends IQTestHandler {
 		subscribers.add(new NodeSubscriptionImpl(
 				"/users/romeo@shakespeare.lit/posts", jid,
 				Subscriptions.subscribed));
-		Mockito.doReturn(subscribers).when(channelManager)
+		Mockito.doReturn(new ResultSetImpl<NodeSubscription>(subscribers)).when(channelManager)
 				.getNodeSubscriptions(Mockito.anyString());
 		Mockito.when(channelManager.isLocalNode(Mockito.anyString()))
 				.thenReturn(false);

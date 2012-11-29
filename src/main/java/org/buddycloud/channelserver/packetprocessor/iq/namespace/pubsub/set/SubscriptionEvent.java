@@ -23,6 +23,7 @@ import org.xmpp.packet.JID;
 import org.xmpp.packet.Message;
 import org.xmpp.packet.Packet;
 import org.xmpp.packet.PacketError;
+import org.xmpp.resultsetmanagement.ResultSet;
 
 public class SubscriptionEvent extends PubSubElementProcessorAbstract {
 
@@ -84,7 +85,7 @@ public class SubscriptionEvent extends PubSubElementProcessorAbstract {
 	}
 
 	private void sendNotifications() throws Exception {
-		Collection<NodeSubscription> subscribers = channelManager
+		ResultSet<NodeSubscription> subscribers = channelManager
 				.getNodeSubscriptions(node);
 
 		Document document = getDocumentHelper();

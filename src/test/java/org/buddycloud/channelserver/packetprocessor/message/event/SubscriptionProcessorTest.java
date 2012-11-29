@@ -23,6 +23,7 @@ import org.mockito.Mockito;
 import org.xmpp.packet.JID;
 import org.xmpp.packet.Message;
 import org.xmpp.packet.Packet;
+import org.xmpp.resultsetmanagement.ResultSetImpl;
 
 public class SubscriptionProcessorTest extends IQTestHandler {
 	private Message message;
@@ -52,7 +53,7 @@ public class SubscriptionProcessorTest extends IQTestHandler {
 		subscribers.add(new NodeSubscriptionImpl(
 				"/users/romeo@shakespeare.lit/posts", jid,
 				Subscriptions.subscribed));
-		Mockito.doReturn(subscribers).when(channelManager)
+		Mockito.doReturn(new ResultSetImpl<NodeSubscription>(subscribers)).when(channelManager)
 				.getNodeSubscriptions(Mockito.anyString());
 
 		subscriptionProcessor = new SubscriptionProcessor(queue, configuration,

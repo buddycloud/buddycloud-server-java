@@ -4,27 +4,27 @@ import java.util.Date;
 
 import org.xmpp.resultsetmanagement.Result;
 
-public abstract class NodeItem implements Result {
+public interface NodeItem extends Result {
 	/**
 	 * Retrieves the node id.
 	 * @return
 	 */
-	public abstract String getNodeId();
+	String getNodeId();
 
 	/**
 	 * Retrieves the item id.
 	 * @return
 	 */
-	public abstract String getId();
+	String getId();
 	
 	/**
 	 * Retrieves the payload.
 	 * @return
 	 */
-	public abstract String getPayload();
+	String getPayload();
 	
 	/**
 	 * Retrieves the datestamp when the record was published/updated
 	 */
-	public abstract Date getUpdated();
+	Date getUpdated();
 }

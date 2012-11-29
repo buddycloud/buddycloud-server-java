@@ -30,6 +30,9 @@ import org.xmpp.packet.IQ;
 import org.xmpp.packet.JID;
 import org.xmpp.packet.Packet;
 import org.xmpp.packet.PacketError;
+import org.xmpp.resultsetmanagement.Result;
+import org.xmpp.resultsetmanagement.ResultSet;
+import org.xmpp.resultsetmanagement.ResultSetImpl;
 
 public class NodeConfigureTest extends IQTestHandler {
 	private IQ request;
@@ -228,8 +231,9 @@ public class NodeConfigureTest extends IQTestHandler {
 						"/user/juliet@shakespeare.lit/posts", "pubsub#owner"))
 				.thenReturn("juliet@shakespeare.lit");
 
-		List<NodeSubscriptionMock> subscribers = new ArrayList<NodeSubscriptionMock>();
-		Mockito.doReturn(subscribers).when(channelManagerMock)
+		ArrayList<NodeSubscriptionMock> subscribers = new ArrayList<NodeSubscriptionMock>();
+		
+		Mockito.doReturn(new ResultSetImpl(subscribers)).when(channelManagerMock)
 				.getNodeSubscriptions(Mockito.anyString());
 
 		HelperMock helperMock = Mockito.mock(HelperMock.class);
@@ -257,15 +261,15 @@ public class NodeConfigureTest extends IQTestHandler {
 						"/user/juliet@shakespeare.lit/posts", "pubsub#owner"))
 				.thenReturn("juliet@shakespeare.lit");
 
-		List<NodeSubscriptionMock> subscribers = new ArrayList<NodeSubscriptionMock>();
+		ArrayList<NodeSubscription> subscribers = new ArrayList<NodeSubscription>();
 		subscribers.add(new NodeSubscriptionMock(new JID(
 				"romeo@shakespeare.lit")));
 		subscribers.add(new NodeSubscriptionMock(new JID(
 				"hamlet@shakespeare.lit")));
 		subscribers.add(new NodeSubscriptionMock(new JID(
 				"bottom@shakespeare.lit")));
-
-		Mockito.doReturn(subscribers).when(channelManagerMock)
+        ResultSetImpl<NodeSubscription> res = new ResultSetImpl<NodeSubscription>(subscribers);
+		Mockito.doReturn(res).when(channelManagerMock)
 				.getNodeSubscriptions(Mockito.anyString());
 
 		HelperMock helperMock = Mockito.mock(HelperMock.class);
@@ -275,7 +279,7 @@ public class NodeConfigureTest extends IQTestHandler {
 		nodeConfigure.setConfigurationHelper(helperMock);
 		nodeConfigure.process(element, jid, request, null);
 
-		Packet response = queue.poll(100, TimeUnit.MILLISECONDS);
+		queue.poll(100, TimeUnit.MILLISECONDS);
 		Assert.assertEquals(3, queue.size());
 		Packet notification = queue.poll(100, TimeUnit.MILLISECONDS);
 		Assert.assertEquals("romeo@shakespeare.lit", notification.getTo().toString());

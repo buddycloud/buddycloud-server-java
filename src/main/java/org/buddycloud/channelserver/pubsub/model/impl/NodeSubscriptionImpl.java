@@ -6,7 +6,7 @@ import org.buddycloud.channelserver.pubsub.subscription.Subscriptions;
 import org.xmpp.packet.JID;
 import org.xmpp.resultsetmanagement.Result;
 
-public class NodeSubscriptionImpl extends NodeSubscription {
+public class NodeSubscriptionImpl implements NodeSubscription {
 
 	private final Subscriptions subscription;
 	private final JID user;
@@ -100,6 +100,6 @@ public class NodeSubscriptionImpl extends NodeSubscription {
 
 	@Override
 	public String getUID() {
-		return user.toFullJID();
+		return user.toBareJID();
 	}
 }

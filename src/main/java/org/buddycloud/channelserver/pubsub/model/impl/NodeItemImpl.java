@@ -5,7 +5,7 @@ import java.util.Date;
 import org.buddycloud.channelserver.pubsub.model.NodeItem;
 import org.xmpp.resultsetmanagement.Result;
 
-public class NodeItemImpl extends NodeItem {
+public class NodeItemImpl implements NodeItem {
 
 	private final String nodeId;
 	private final String id;

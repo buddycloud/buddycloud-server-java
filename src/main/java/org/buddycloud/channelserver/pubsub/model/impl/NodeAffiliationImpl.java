@@ -8,7 +8,7 @@ import org.xmpp.resultsetmanagement.Result;
 /**
  * Basic implementation of a NodeAffiliation
  */
-public class NodeAffiliationImpl extends NodeAffiliation {
+public class NodeAffiliationImpl implements NodeAffiliation {
 
 	private final JID user;
 	private final String nodeId;

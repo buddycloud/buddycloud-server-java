@@ -30,6 +30,8 @@ import org.xmpp.packet.IQ;
 import org.xmpp.packet.JID;
 import org.xmpp.packet.Packet;
 import org.xmpp.packet.PacketError;
+import org.xmpp.resultsetmanagement.ResultSet;
+import org.xmpp.resultsetmanagement.ResultSetImpl;
 
 public class SubscriptionEventTest extends IQTestHandler {
 	private IQ request;
@@ -308,13 +310,13 @@ public class SubscriptionEventTest extends IQTestHandler {
 
 		event.setChannelManager(dataStore);
 
-		ArrayList<NodeSubscriptionMock> subscribers = new ArrayList<NodeSubscriptionMock>();
+		ArrayList<NodeSubscription> subscribers = new ArrayList<NodeSubscription>();
 		subscribers.add(new NodeSubscriptionMock(new JID(
 				"romeo@shakespeare.lit")));
 		subscribers.add(new NodeSubscriptionMock(new JID(
 				"hamlet@shakespeare.lit")));
 
-		Mockito.doReturn(subscribers).when(dataStore)
+		Mockito.doReturn(new ResultSetImpl<NodeSubscription>(subscribers)).when(dataStore)
 				.getNodeSubscriptions(Mockito.anyString());
 
 		event.setChannelManager(dataStore);

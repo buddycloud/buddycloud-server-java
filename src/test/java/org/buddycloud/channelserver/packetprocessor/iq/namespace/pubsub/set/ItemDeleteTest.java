@@ -30,6 +30,7 @@ import org.xmpp.packet.IQ;
 import org.xmpp.packet.JID;
 import org.xmpp.packet.Packet;
 import org.xmpp.packet.PacketError;
+import org.xmpp.resultsetmanagement.ResultSetImpl;
 
 public class ItemDeleteTest extends IQTestHandler {
 	private IQ request;
@@ -119,7 +120,8 @@ public class ItemDeleteTest extends IQTestHandler {
 		PacketError error = response.getError();
 		Assert.assertNotNull(error);
 		Assert.assertEquals(PacketError.Type.cancel, error.getType());
-		Assert.assertEquals(PacketError.Condition.item_not_found, error.getCondition());
+		Assert.assertEquals(PacketError.Condition.item_not_found,
+				error.getCondition());
 	}
 
 	@Test
@@ -138,7 +140,8 @@ public class ItemDeleteTest extends IQTestHandler {
 		PacketError error = response.getError();
 		Assert.assertNotNull(error);
 		Assert.assertEquals(PacketError.Type.modify, error.getType());
-		Assert.assertEquals(PacketError.Condition.bad_request, error.getCondition());
+		Assert.assertEquals(PacketError.Condition.bad_request,
+				error.getCondition());
 	}
 
 	@Test
@@ -157,7 +160,8 @@ public class ItemDeleteTest extends IQTestHandler {
 		PacketError error = response.getError();
 		Assert.assertNotNull(error);
 		Assert.assertEquals(PacketError.Type.modify, error.getType());
-		Assert.assertEquals("item-required", error.getApplicationConditionName());
+		Assert.assertEquals("item-required",
+				error.getApplicationConditionName());
 	}
 
 	@Test
@@ -337,8 +341,9 @@ public class ItemDeleteTest extends IQTestHandler {
 		Mockito.when(
 				channelManagerMock.getUserAffiliation(Mockito.anyString(),
 						Mockito.any(JID.class))).thenReturn(affiliation);
-		Mockito.when(channelManagerMock.getNodeSubscriptions(node)).thenReturn(
-				subscriptions);
+
+		Mockito.doReturn(new ResultSetImpl<NodeSubscription>(subscriptions))
+				.when(channelManagerMock).getNodeSubscriptions(node);
 
 		itemDelete.setChannelManager(channelManagerMock);
 

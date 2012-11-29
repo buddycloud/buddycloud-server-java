@@ -40,6 +40,7 @@ import org.xmpp.packet.PacketError;
 import org.xmpp.packet.PacketError.Condition;
 import org.xmpp.packet.PacketError.Type;
 import org.xmpp.packet.PacketExtension;
+import org.xmpp.resultsetmanagement.ResultSet;
 
 public class ItemsGet implements PubSubElementProcessor {
 	private static final Logger LOGGER = Logger.getLogger(ItemsGet.class);
@@ -325,7 +326,7 @@ public class ItemsGet implements PubSubElementProcessor {
 	private int getSubscriptionItems(Element items, int maxItemsToReturn,
 			String afterItemId) throws NodeStoreException {
 
-		Collection<NodeSubscription> subscribers = channelManager
+		ResultSet<NodeSubscription> subscribers = channelManager
 				.getNodeSubscriptions(node);
 		int entries = 0;
 		if (null == subscribers) {

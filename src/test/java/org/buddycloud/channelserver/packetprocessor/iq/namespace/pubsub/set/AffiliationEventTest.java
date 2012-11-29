@@ -29,6 +29,7 @@ import org.xmpp.packet.IQ;
 import org.xmpp.packet.JID;
 import org.xmpp.packet.Packet;
 import org.xmpp.packet.PacketError;
+import org.xmpp.resultsetmanagement.ResultSetImpl;
 
 public class AffiliationEventTest extends IQTestHandler {
 
@@ -326,13 +327,13 @@ public class AffiliationEventTest extends IQTestHandler {
 				channelManagerMock.getUserAffiliation(Mockito.anyString(),
 						Mockito.any(JID.class))).thenReturn(affiliationMock);
 
-		ArrayList<NodeSubscriptionMock> subscribers = new ArrayList<NodeSubscriptionMock>();
+		ArrayList<NodeSubscription> subscribers = new ArrayList<NodeSubscription>();
 		subscribers.add(new NodeSubscriptionMock(new JID(
 				"romeo@shakespeare.lit")));
 		subscribers.add(new NodeSubscriptionMock(new JID(
 				"hamlet@shakespeare.lit")));
 
-		Mockito.doReturn(subscribers).when(channelManagerMock)
+		Mockito.doReturn(new ResultSetImpl<NodeSubscription>(subscribers)).when(channelManagerMock)
 				.getNodeSubscriptions(Mockito.anyString());
 
 		event.setChannelManager(channelManagerMock);

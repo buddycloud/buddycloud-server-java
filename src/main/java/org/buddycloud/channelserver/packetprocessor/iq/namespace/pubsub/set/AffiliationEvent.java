@@ -20,6 +20,7 @@ import org.xmpp.packet.JID;
 import org.xmpp.packet.Message;
 import org.xmpp.packet.Packet;
 import org.xmpp.packet.PacketError;
+import org.xmpp.resultsetmanagement.ResultSet;
 
 public class AffiliationEvent extends PubSubElementProcessorAbstract {
 
@@ -93,7 +94,7 @@ public class AffiliationEvent extends PubSubElementProcessorAbstract {
 	}
 
 	private void sendNotifications() throws Exception {
-		Collection<NodeSubscription> subscribers = channelManager
+		ResultSet<NodeSubscription> subscribers = channelManager
 				.getNodeSubscriptions(node);
 		if (null == subscribers) {
 			return;

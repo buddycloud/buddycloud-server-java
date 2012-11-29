@@ -1,14 +1,20 @@
 package org.buddycloud.channelserver.db.jdbc;
 
-import static org.junit.Assert.*;
-import static org.mockito.Mockito.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.inOrder;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.Date;
 import java.sql.SQLException;
 import java.sql.Timestamp;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -16,7 +22,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.collections.MapUtils;
 import org.buddycloud.channelserver.db.NodeStore;
 import org.buddycloud.channelserver.db.exception.ItemNotFoundException;
 import org.buddycloud.channelserver.db.exception.NodeStoreException;
@@ -36,6 +41,7 @@ import org.junit.Test;
 import org.mockito.InOrder;
 import org.mockito.Mockito;
 import org.xmpp.packet.JID;
+import org.xmpp.resultsetmanagement.ResultSet;
 
 @SuppressWarnings("serial")
 public class JDBCNodeStoreTest {
@@ -570,7 +576,7 @@ public class JDBCNodeStoreTest {
 		dbTester.loadData("node_1");
 		dbTester.loadData("node_2");
 		
-		Collection<NodeAffiliation> result = store.getUserAffiliations(TEST_SERVER1_USER1_JID);
+		ResultSet<NodeAffiliation> result = store.getUserAffiliations(TEST_SERVER1_USER1_JID);
 		
 		HashSet<NodeAffiliation> expected = new HashSet<NodeAffiliation>() {{
 			add(new NodeAffiliationImpl(TEST_SERVER1_NODE1_ID, TEST_SERVER1_USER1_JID, Affiliations.owner));
@@ -586,7 +592,7 @@ public class JDBCNodeStoreTest {
 		dbTester.loadData("node_1");
 		dbTester.loadData("node_2");
 		
-		Collection<NodeAffiliation> result = store.getUserAffiliations(TEST_SERVER1_USER1_JID_WITH_RESOURCE);
+		ResultSet<NodeAffiliation> result = store.getUserAffiliations(TEST_SERVER1_USER1_JID_WITH_RESOURCE);
 		
 		HashSet<NodeAffiliation> expected = new HashSet<NodeAffiliation>() {{
 			add(new NodeAffiliationImpl(TEST_SERVER1_NODE1_ID, TEST_SERVER1_USER1_JID, Affiliations.owner));
@@ -601,7 +607,7 @@ public class JDBCNodeStoreTest {
 	public void testGetNodeAffiliations() throws Exception {
 		dbTester.loadData("node_1");
 		
-		Collection<NodeAffiliation> result = store.getNodeAffiliations(TEST_SERVER1_NODE1_ID);
+		ResultSet<NodeAffiliation> result = store.getNodeAffiliations(TEST_SERVER1_NODE1_ID);
 		
 		HashSet<NodeAffiliation> expected = new HashSet<NodeAffiliation>() {{
 			add(new NodeAffiliationImpl(TEST_SERVER1_NODE1_ID, TEST_SERVER1_USER1_JID, Affiliations.owner));
@@ -650,7 +656,7 @@ public class JDBCNodeStoreTest {
 		dbTester.loadData("node_1");
 		dbTester.loadData("node_2");
 		
-		Collection<NodeSubscription> result = store.getUserSubscriptions(TEST_SERVER1_USER1_JID);
+		ResultSet<NodeSubscription> result = store.getUserSubscriptions(TEST_SERVER1_USER1_JID);
 		
 		HashSet<NodeSubscription> expected = new HashSet<NodeSubscription>() {{
 			add(new NodeSubscriptionImpl(TEST_SERVER1_NODE1_ID, TEST_SERVER1_USER1_JID, Subscriptions.subscribed));
@@ -666,7 +672,7 @@ public class JDBCNodeStoreTest {
 		dbTester.loadData("node_1");
 		dbTester.loadData("node_2");
 		
-		Collection<NodeSubscription> result = store.getUserSubscriptions(TEST_SERVER2_USER1_JID);
+		ResultSet<NodeSubscription> result = store.getUserSubscriptions(TEST_SERVER2_USER1_JID);
 		
 		HashSet<NodeSubscription> expected = new HashSet<NodeSubscription>() {{
 			add(new NodeSubscriptionImpl(TEST_SERVER1_NODE1_ID, TEST_SERVER2_USER1_JID, TEST_SERVER2_CHANNELS_JID, Subscriptions.subscribed));
@@ -682,7 +688,7 @@ public class JDBCNodeStoreTest {
 		dbTester.loadData("node_1");
 		dbTester.loadData("node_2");
 		
-		Collection<NodeSubscription> result = store.getUserSubscriptions(TEST_SERVER2_CHANNELS_JID);
+		ResultSet<NodeSubscription> result = store.getUserSubscriptions(TEST_SERVER2_CHANNELS_JID);
 		
 		HashSet<NodeSubscription> expected = new HashSet<NodeSubscription>() {{
 			add(new NodeSubscriptionImpl(TEST_SERVER1_NODE1_ID, TEST_SERVER2_USER1_JID, TEST_SERVER2_CHANNELS_JID, Subscriptions.subscribed));
@@ -698,7 +704,7 @@ public class JDBCNodeStoreTest {
 		dbTester.loadData("node_1");
 		dbTester.loadData("node_2");
 		
-		Collection<NodeSubscription> result = store.getUserSubscriptions(TEST_SERVER1_USER1_JID_WITH_RESOURCE);
+		ResultSet<NodeSubscription> result = store.getUserSubscriptions(TEST_SERVER1_USER1_JID_WITH_RESOURCE);
 		
 		HashSet<NodeSubscription> expected = new HashSet<NodeSubscription>() {{
 			add(new NodeSubscriptionImpl(TEST_SERVER1_NODE1_ID, TEST_SERVER1_USER1_JID, Subscriptions.subscribed));
@@ -713,7 +719,7 @@ public class JDBCNodeStoreTest {
 	public void testGetNodeSubscriptions() throws Exception {
 		dbTester.loadData("node_1");
 		
-		Collection<NodeSubscription> result = store.getNodeSubscriptions(TEST_SERVER1_NODE1_ID);
+		ResultSet<NodeSubscription> result = store.getNodeSubscriptions(TEST_SERVER1_NODE1_ID);
 		
 		HashSet<NodeSubscription> expected = new HashSet<NodeSubscription>() {{
 			add(new NodeSubscriptionImpl(TEST_SERVER1_NODE1_ID, TEST_SERVER1_USER1_JID, TEST_SERVER1_USER1_JID, Subscriptions.subscribed));
@@ -730,7 +736,7 @@ public class JDBCNodeStoreTest {
 		dbTester.loadData("node_1");
 		dbTester.loadData("node_2");
 		
-		Collection<NodeSubscription> result = store.getUserSubscriptions(new JID("unknown@example.com"));
+		ResultSet<NodeSubscription> result = store.getUserSubscriptions(new JID("unknown@example.com"));
 		
 		assertTrue("Incorrect user subscriptions returned", result.isEmpty());
 	}

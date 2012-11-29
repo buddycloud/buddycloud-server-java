@@ -1,18 +1,16 @@
 package org.buddycloud.channelserver.packetprocessor.message.event;
 
-import java.util.Collection;
 import java.util.Properties;
 import java.util.concurrent.BlockingQueue;
 
 import org.apache.log4j.Logger;
-import org.buddycloud.channelserver.pubsub.model.NodeSubscription;
-import org.buddycloud.channelserver.pubsub.model.impl.NodeSubscriptionImpl;
-import org.buddycloud.channelserver.pubsub.subscription.Subscriptions;
 import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.db.exception.NodeStoreException;
 import org.buddycloud.channelserver.packetprocessor.PacketProcessor;
-import org.buddycloud.channelserver.packetprocessor.message.MessageProcessor;
 import org.buddycloud.channelserver.pubsub.affiliation.Affiliations;
+import org.buddycloud.channelserver.pubsub.model.NodeSubscription;
+import org.buddycloud.channelserver.pubsub.model.impl.NodeSubscriptionImpl;
+import org.buddycloud.channelserver.pubsub.subscription.Subscriptions;
 import org.dom4j.Element;
 import org.xmpp.packet.JID;
 import org.xmpp.packet.Message;

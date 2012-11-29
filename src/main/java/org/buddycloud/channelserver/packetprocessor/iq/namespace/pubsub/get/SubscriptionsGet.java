@@ -1,6 +1,5 @@
 package org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.get;
 
-import java.util.Collection;
 import java.util.concurrent.BlockingQueue;
 
 import org.apache.log4j.Logger;
@@ -14,6 +13,7 @@ import org.dom4j.Element;
 import org.xmpp.packet.IQ;
 import org.xmpp.packet.JID;
 import org.xmpp.packet.Packet;
+import org.xmpp.resultsetmanagement.ResultSet;
 
 public class SubscriptionsGet implements PubSubElementProcessor {
 
@@ -64,7 +64,7 @@ public class SubscriptionsGet implements PubSubElementProcessor {
 			makeRemoteRequest(new JID(node.split("/")[2]).getDomain());
 		    return;
 		}
-		Collection<NodeSubscription> cur = channelManager
+		ResultSet<NodeSubscription> cur = channelManager
 				.getNodeSubscriptions(node);
 		subscriptions.addAttribute("node", node);
 
@@ -87,7 +87,7 @@ public class SubscriptionsGet implements PubSubElementProcessor {
 			return;
 		}
 		// let's get all subscriptions.
-		Collection<NodeSubscription> cur = channelManager
+		ResultSet<NodeSubscription> cur = channelManager
 				.getUserSubscriptions(actorJid);
 		
 		for (NodeSubscription ns : cur) {

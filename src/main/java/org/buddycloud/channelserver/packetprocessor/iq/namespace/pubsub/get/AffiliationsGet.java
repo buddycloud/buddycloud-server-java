@@ -1,6 +1,5 @@
 package org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.get;
 
-import java.util.Collection;
 import java.util.concurrent.BlockingQueue;
 
 import org.apache.log4j.Logger;
@@ -15,6 +14,7 @@ import org.dom4j.Element;
 import org.xmpp.packet.IQ;
 import org.xmpp.packet.JID;
 import org.xmpp.packet.Packet;
+import org.xmpp.resultsetmanagement.ResultSet;
 
 public class AffiliationsGet implements PubSubElementProcessor {
 
@@ -65,7 +65,7 @@ public class AffiliationsGet implements PubSubElementProcessor {
 			makeRemoteRequest(node.split("/")[2]);
 		    return;
 		}
-		Collection<NodeAffiliation> nodeAffiliations = channelManager
+		ResultSet<NodeAffiliation> nodeAffiliations = channelManager
 				.getNodeAffiliations(node);
 
 		for (NodeAffiliation nodeAffiliation : nodeAffiliations) {
@@ -90,7 +90,7 @@ public class AffiliationsGet implements PubSubElementProcessor {
 			makeRemoteRequest(actorJid.getDomain());
 		    return;
 		}
-		Collection<NodeAffiliation> affs = channelManager
+		ResultSet<NodeAffiliation> affs = channelManager
 				.getUserAffiliations(actorJid);
 
 		for (NodeAffiliation aff : affs) {

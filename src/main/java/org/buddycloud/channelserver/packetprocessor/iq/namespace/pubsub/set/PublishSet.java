@@ -1,10 +1,7 @@
 package org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.set;
 
-import java.awt.List;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.Arrays;
-import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
@@ -23,7 +20,6 @@ import org.buddycloud.channelserver.pubsub.model.NodeAffiliation;
 import org.buddycloud.channelserver.pubsub.model.NodeSubscription;
 import org.buddycloud.channelserver.pubsub.model.impl.NodeItemImpl;
 import org.buddycloud.channelserver.pubsub.subscription.Subscriptions;
-import org.buddycloud.channelserver.queue.statemachine.Publish;
 import org.dom4j.Element;
 import org.dom4j.dom.DOMElement;
 import org.xmpp.packet.IQ;
@@ -32,7 +28,7 @@ import org.xmpp.packet.JID;
 import org.xmpp.packet.Message;
 import org.xmpp.packet.Packet;
 import org.xmpp.packet.PacketError;
-import org.xmpp.packet.PacketError.Condition;
+import org.xmpp.resultsetmanagement.ResultSet;
 
 public class PublishSet implements PubSubElementProcessor {
 
@@ -314,7 +310,7 @@ public class PublishSet implements PubSubElementProcessor {
         actor.addNamespace("", JabberPubsub.NS_BUDDYCLOUD);
 		Set<String> externalChannelServerReceivers = new HashSet<String>();
 
-		Collection<NodeSubscription> cur = channelManager
+		ResultSet<NodeSubscription> cur = channelManager
 				.getNodeSubscriptions(node);
 		for (NodeSubscription ns : cur) {
 			JID to = ns.getUser();

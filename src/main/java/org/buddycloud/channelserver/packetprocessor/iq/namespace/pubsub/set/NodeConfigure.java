@@ -1,6 +1,5 @@
 package org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.set;
 
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;

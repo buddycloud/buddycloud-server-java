@@ -1,14 +1,11 @@
 package org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.set;
 
-import java.util.Collection;
-import java.util.Iterator;
 import java.util.concurrent.BlockingQueue;
 
 import org.apache.log4j.Logger;
 import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.db.exception.NodeStoreException;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.JabberPubsub;
-import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.PubSubElementProcessor;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.PubSubElementProcessorAbstract;
 import org.buddycloud.channelserver.pubsub.affiliation.Affiliations;
 import org.buddycloud.channelserver.pubsub.event.Event;
@@ -16,7 +13,6 @@ import org.buddycloud.channelserver.pubsub.model.NodeAffiliation;
 import org.buddycloud.channelserver.pubsub.model.NodeSubscription;
 import org.buddycloud.channelserver.pubsub.model.impl.NodeSubscriptionImpl;
 import org.buddycloud.channelserver.pubsub.subscription.Subscriptions;
-import org.buddycloud.channelserver.queue.statemachine.Unsubscribe;
 import org.dom4j.Document;
 import org.dom4j.Element;
 import org.dom4j.dom.DOMElement;
@@ -26,6 +22,7 @@ import org.xmpp.packet.JID;
 import org.xmpp.packet.Message;
 import org.xmpp.packet.Packet;
 import org.xmpp.packet.PacketError;
+import org.xmpp.resultsetmanagement.ResultSet;
 
 public class UnsubscribeSet extends PubSubElementProcessorAbstract {
 
@@ -124,7 +121,7 @@ public class UnsubscribeSet extends PubSubElementProcessorAbstract {
 
 	private void notifySubscribers() throws NodeStoreException,
 			InterruptedException {
-		Collection<NodeSubscription> subscribers = channelManager
+		ResultSet<NodeSubscription> subscribers = channelManager
 				.getNodeSubscriptions(node);
 
 		Document document = getDocumentHelper();

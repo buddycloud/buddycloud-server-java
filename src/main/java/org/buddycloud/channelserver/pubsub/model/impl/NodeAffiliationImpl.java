@@ -84,6 +84,6 @@ public class NodeAffiliationImpl implements NodeAffiliation {
 
 	@Override
 	public String getUID() {
-		return user.toFullJID();
+		return String.valueOf(hashCode());
 	}
 }

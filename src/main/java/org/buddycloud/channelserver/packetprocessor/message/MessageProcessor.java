@@ -1,24 +1,14 @@
 package org.buddycloud.channelserver.packetprocessor.message;
 
-import java.text.SimpleDateFormat;
-import java.util.Collection;
-import java.util.Date;
-import java.util.Iterator;
 import java.util.Properties;
-import java.util.TimeZone;
-import java.util.UUID;
 import java.util.concurrent.BlockingQueue;
 
 import org.apache.log4j.Logger;
 import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.packetprocessor.PacketProcessor;
-import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.JabberPubsub;
 import org.buddycloud.channelserver.packetprocessor.message.event.ItemsProcessor;
 import org.buddycloud.channelserver.packetprocessor.message.event.SubscriptionProcessor;
-import org.buddycloud.channelserver.pubsub.model.NodeSubscription;
 import org.dom4j.Element;
-import org.dom4j.dom.DOMElement;
-import org.xmpp.packet.IQ;
 import org.xmpp.packet.Message;
 import org.xmpp.packet.Packet;
 

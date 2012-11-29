@@ -1,11 +1,10 @@
 
 package org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.set;
 
-import java.util.Collection;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
-import java.lang.NullPointerException;
+
 import org.apache.log4j.Logger;
 import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.channel.Conf;
@@ -21,7 +20,6 @@ import org.buddycloud.channelserver.pubsub.model.NodeAffiliation;
 import org.buddycloud.channelserver.pubsub.model.NodeSubscription;
 import org.buddycloud.channelserver.pubsub.model.impl.NodeSubscriptionImpl;
 import org.buddycloud.channelserver.pubsub.subscription.Subscriptions;
-import org.buddycloud.channelserver.queue.statemachine.Subscribe;
 import org.dom4j.Document;
 import org.dom4j.Element;
 import org.dom4j.dom.DOMElement;
@@ -33,6 +31,7 @@ import org.xmpp.packet.JID;
 import org.xmpp.packet.Message;
 import org.xmpp.packet.Packet;
 import org.xmpp.packet.PacketError;
+import org.xmpp.resultsetmanagement.ResultSet;
 
 public class SubscribeSet extends PubSubElementProcessorAbstract {
 	private final BlockingQueue<Packet> outQueue;
@@ -226,11 +225,11 @@ public class SubscribeSet extends PubSubElementProcessorAbstract {
 			Affiliations affiliationType) throws NodeStoreException,
 			InterruptedException {
 
-		Collection<NodeSubscription> subscribers = channelManager
+		ResultSet<NodeSubscription> subscribers = channelManager
 				.getNodeSubscriptions(node);
 
 		// Get all the affiliated users (so we can work out moderators)
-		Collection<NodeAffiliation> nodeAffiliations = channelManager
+		ResultSet<NodeAffiliation> nodeAffiliations = channelManager
 				.getNodeAffiliations(node);
 		HashSet<JID> moderatorOwners = new HashSet<JID>();
 

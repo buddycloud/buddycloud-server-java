@@ -1,6 +1,5 @@
 package org.buddycloud.channelserver.channel;
 
-import java.util.Collection;
 import java.util.Map;
 import java.util.Properties;
 import java.util.regex.Pattern;
@@ -15,6 +14,7 @@ import org.buddycloud.channelserver.pubsub.model.NodeAffiliation;
 import org.buddycloud.channelserver.pubsub.model.NodeItem;
 import org.buddycloud.channelserver.pubsub.model.NodeSubscription;
 import org.xmpp.packet.JID;
+import org.xmpp.resultsetmanagement.ResultSet;
 
 /**
  * A basic implementation of a channel manager which delegates pretty much
@@ -97,13 +97,13 @@ public class ChannelManagerImpl implements ChannelManager {
 	}
 
 	@Override
-	public Collection<NodeAffiliation> getUserAffiliations(JID user)
+	public ResultSet<NodeAffiliation> getUserAffiliations(JID user)
 			throws NodeStoreException {
 		return nodeStore.getUserAffiliations(user);
 	}
 
 	@Override
-	public Collection<NodeAffiliation> getNodeAffiliations(String nodeId)
+	public ResultSet<NodeAffiliation> getNodeAffiliations(String nodeId)
 			throws NodeStoreException {
 		return nodeStore.getNodeAffiliations(nodeId);
 	}
@@ -115,13 +115,13 @@ public class ChannelManagerImpl implements ChannelManager {
 	}
 
 	@Override
-	public Collection<NodeSubscription> getUserSubscriptions(JID user)
+	public ResultSet<NodeSubscription> getUserSubscriptions(JID user)
 			throws NodeStoreException {
 		return nodeStore.getUserSubscriptions(user);
 	}
 
 	@Override
-	public Collection<NodeSubscription> getNodeSubscriptions(String nodeId)
+	public ResultSet<NodeSubscription> getNodeSubscriptions(String nodeId)
 			throws NodeStoreException {
 		return nodeStore.getNodeSubscriptions(nodeId);
 	}

@@ -1,18 +1,11 @@
 package org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.set;
 
-import java.io.IOException;
 import java.io.StringReader;
-import java.util.Collection;
 import java.util.concurrent.BlockingQueue;
 
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
-import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
 import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.db.exception.NodeStoreException;
-import org.buddycloud.channelserver.packetprocessor.iq.IQProcessor;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.JabberPubsub;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.PubSubElementProcessorAbstract;
 import org.buddycloud.channelserver.pubsub.affiliation.Affiliations;
@@ -22,10 +15,8 @@ import org.buddycloud.channelserver.pubsub.model.NodeSubscription;
 import org.buddycloud.channelserver.pubsub.subscription.Subscriptions;
 import org.dom4j.Element;
 import org.dom4j.Namespace;
-import org.dom4j.Document;
 import org.dom4j.dom.DOMElement;
 import org.dom4j.io.SAXReader;
-import org.xml.sax.SAXException;
 import org.xmpp.packet.IQ;
 import org.xmpp.packet.JID;
 import org.xmpp.packet.Message;

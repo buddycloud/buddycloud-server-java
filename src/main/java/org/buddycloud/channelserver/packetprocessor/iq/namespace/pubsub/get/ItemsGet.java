@@ -1,18 +1,11 @@
 package org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.get;
 
 import java.io.StringReader;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
-import java.util.TreeMap;
 import java.util.concurrent.BlockingQueue;
 
 import org.apache.log4j.Logger;
 import org.buddycloud.channelserver.channel.ChannelManager;
-import org.buddycloud.channelserver.channel.ChannelNodeRef;
 import org.buddycloud.channelserver.channel.node.configuration.field.AccessModel;
 import org.buddycloud.channelserver.db.CloseableIterator;
 import org.buddycloud.channelserver.db.exception.NodeStoreException;
@@ -39,7 +32,6 @@ import org.xmpp.packet.Packet;
 import org.xmpp.packet.PacketError;
 import org.xmpp.packet.PacketError.Condition;
 import org.xmpp.packet.PacketError.Type;
-import org.xmpp.packet.PacketExtension;
 import org.xmpp.resultsetmanagement.ResultSet;
 
 public class ItemsGet implements PubSubElementProcessor {
@@ -355,7 +347,7 @@ public class ItemsGet implements PubSubElementProcessor {
 	private void addSubscriptionItems(Element query, JID subscriber)
 			throws NodeStoreException {
 
-		Collection<NodeSubscription> subscriptions = channelManager
+		ResultSet<NodeSubscription> subscriptions = channelManager
 				.getUserSubscriptions(subscriber);
 		
 		if ((null == subscriptions) || (0 == subscriptions.size())) {

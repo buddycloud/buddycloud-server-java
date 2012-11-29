@@ -1,7 +1,5 @@
 package org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.set;
 
-import java.util.Collection;
-import java.util.Iterator;
 import java.util.concurrent.BlockingQueue;
 
 import org.apache.log4j.Logger;
@@ -9,7 +7,6 @@ import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.db.exception.NodeStoreException;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.JabberPubsub;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.PubSubElementProcessorAbstract;
-import org.buddycloud.channelserver.pubsub.affiliation.Affiliations;
 import org.buddycloud.channelserver.pubsub.model.NodeAffiliation;
 import org.buddycloud.channelserver.pubsub.model.NodeSubscription;
 import org.buddycloud.channelserver.pubsub.model.impl.NodeSubscriptionImpl;

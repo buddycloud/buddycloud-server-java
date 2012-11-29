@@ -2,13 +2,11 @@ package org.buddycloud.channelserver.db.jdbc;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Deque;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -30,6 +28,8 @@ import org.buddycloud.channelserver.pubsub.model.impl.NodeItemImpl;
 import org.buddycloud.channelserver.pubsub.model.impl.NodeSubscriptionImpl;
 import org.buddycloud.channelserver.pubsub.subscription.Subscriptions;
 import org.xmpp.packet.JID;
+import org.xmpp.resultsetmanagement.ResultSet;
+import org.xmpp.resultsetmanagement.ResultSetImpl;
 
 public class JDBCNodeStore implements NodeStore {
 	private Logger logger = Logger.getLogger(JDBCNodeStore.class);
@@ -167,7 +167,7 @@ public class JDBCNodeStore implements NodeStore {
 		try {
 			existsStatement = conn.prepareStatement(dialect.nodeExists());
 			existsStatement.setString(1, nodeId);
-			ResultSet rs = existsStatement.executeQuery();
+			java.sql.ResultSet rs = existsStatement.executeQuery();
 
 			boolean exists = rs.next();
 
@@ -241,7 +241,7 @@ public class JDBCNodeStore implements NodeStore {
 			stmt.setString(1, nodeId);
 			stmt.setString(2, key);
 
-			ResultSet rs = stmt.executeQuery();
+			java.sql.ResultSet rs = stmt.executeQuery();
 
 			String result = null;
 
@@ -267,7 +267,7 @@ public class JDBCNodeStore implements NodeStore {
 
 			stmt.setString(1, nodeId);
 
-			ResultSet rs = stmt.executeQuery();
+			java.sql.ResultSet rs = stmt.executeQuery();
 
 			HashMap<String, String> result = new HashMap<String, String>();
 
@@ -352,7 +352,7 @@ public class JDBCNodeStore implements NodeStore {
 			selectStatement.setString(1, nodeId);
 			selectStatement.setString(2, user.toBareJID());
 
-			ResultSet rs = selectStatement.executeQuery();
+			java.sql.ResultSet rs = selectStatement.executeQuery();
 
 			if (rs.next()) {
 				affiliation = new NodeAffiliationImpl(nodeId, user,
@@ -372,7 +372,7 @@ public class JDBCNodeStore implements NodeStore {
 	}
 
 	@Override
-	public Collection<NodeAffiliation> getUserAffiliations(JID user)
+	public ResultSet<NodeAffiliation> getUserAffiliations(JID user)
 			throws NodeStoreException {
 		PreparedStatement stmt = null;
 
@@ -380,7 +380,7 @@ public class JDBCNodeStore implements NodeStore {
 			stmt = conn.prepareStatement(dialect.selectAffiliationsForUser());
 			stmt.setString(1, user.toBareJID());
 
-			ResultSet rs = stmt.executeQuery();
+			java.sql.ResultSet rs = stmt.executeQuery();
 
 			ArrayList<NodeAffiliation> result = new ArrayList<NodeAffiliation>();
 
@@ -391,7 +391,7 @@ public class JDBCNodeStore implements NodeStore {
 				result.add(nodeSub);
 			}
 
-			return result;
+			return new ResultSetImpl<NodeAffiliation>(result);
 		} catch (SQLException e) {
 			throw new NodeStoreException(e);
 		} finally {
@@ -400,7 +400,7 @@ public class JDBCNodeStore implements NodeStore {
 	}
 
 	@Override
-	public Collection<NodeAffiliation> getNodeAffiliations(String nodeId)
+	public ResultSet<NodeAffiliation> getNodeAffiliations(String nodeId)
 			throws NodeStoreException {
 		PreparedStatement stmt = null;
 
@@ -408,7 +408,7 @@ public class JDBCNodeStore implements NodeStore {
 			stmt = conn.prepareStatement(dialect.selectAffiliationsForNode());
 			stmt.setString(1, nodeId);
 
-			ResultSet rs = stmt.executeQuery();
+			java.sql.ResultSet rs = stmt.executeQuery();
 
 			ArrayList<NodeAffiliation> result = new ArrayList<NodeAffiliation>();
 
@@ -419,7 +419,7 @@ public class JDBCNodeStore implements NodeStore {
 				result.add(nodeSub);
 			}
 
-			return result;
+			return new ResultSetImpl<NodeAffiliation>(result);
 		} catch (SQLException e) {
 			throw new NodeStoreException(e);
 		} finally {
@@ -441,7 +441,7 @@ public class JDBCNodeStore implements NodeStore {
 			selectStatement.setString(2, user.toBareJID());
 			selectStatement.setString(3, user.toString());
 
-			ResultSet rs = selectStatement.executeQuery();
+			java.sql.ResultSet rs = selectStatement.executeQuery();
 
 			if (rs.next()) {
 				subscription = new NodeSubscriptionImpl(nodeId, new JID(
@@ -462,7 +462,7 @@ public class JDBCNodeStore implements NodeStore {
 	}
 
 	@Override
-	public Collection<NodeSubscription> getUserSubscriptions(final JID user)
+	public ResultSet<NodeSubscription> getUserSubscriptions(final JID user)
 			throws NodeStoreException {
 		PreparedStatement stmt = null;
 
@@ -471,7 +471,7 @@ public class JDBCNodeStore implements NodeStore {
 			stmt.setString(1, user.toBareJID());
 			stmt.setString(2, user.toString());
 
-			ResultSet rs = stmt.executeQuery();
+			java.sql.ResultSet rs = stmt.executeQuery();
 
 			ArrayList<NodeSubscription> result = new ArrayList<NodeSubscription>();
 
@@ -483,7 +483,7 @@ public class JDBCNodeStore implements NodeStore {
 				result.add(nodeSub);
 			}
 
-			return result;
+			return new ResultSetImpl<NodeSubscription>(result);
 		} catch (SQLException e) {
 			throw new NodeStoreException(e);
 		} finally {
@@ -492,7 +492,7 @@ public class JDBCNodeStore implements NodeStore {
 	}
 
 	@Override
-	public Collection<NodeSubscription> getNodeSubscriptions(String nodeId)
+	public ResultSet<NodeSubscription> getNodeSubscriptions(String nodeId)
 			throws NodeStoreException {
 		PreparedStatement stmt = null;
 
@@ -500,7 +500,7 @@ public class JDBCNodeStore implements NodeStore {
 			stmt = conn.prepareStatement(dialect.selectSubscriptionsForNode());
 			stmt.setString(1, nodeId);
 
-			ResultSet rs = stmt.executeQuery();
+			java.sql.ResultSet rs = stmt.executeQuery();
 
 			ArrayList<NodeSubscription> result = new ArrayList<NodeSubscription>();
 
@@ -512,7 +512,7 @@ public class JDBCNodeStore implements NodeStore {
 				result.add(nodeSub);
 			}
 
-			return result;
+			return new ResultSetImpl<NodeSubscription>(result);
 		} catch (SQLException e) {
 			throw new NodeStoreException(e);
 		} finally {
@@ -546,7 +546,7 @@ public class JDBCNodeStore implements NodeStore {
 						+ countSQL);
 				stmt.setString(1, nodeId);
 
-				ResultSet rs = stmt.executeQuery();
+				java.sql.ResultSet rs = stmt.executeQuery();
 
 				stmt = null; // Prevent the finally block from closing the
 								// statement
@@ -554,7 +554,7 @@ public class JDBCNodeStore implements NodeStore {
 				return new ResultSetIterator<NodeItem>(rs,
 						new ResultSetIterator.RowConverter<NodeItem>() {
 							@Override
-							public NodeItem convertRow(ResultSet rs)
+							public NodeItem convertRow(java.sql.ResultSet rs)
 									throws SQLException {
 								return new NodeItemImpl(rs.getString(1),
 										rs.getString(2), rs.getTimestamp(3),
@@ -571,7 +571,7 @@ public class JDBCNodeStore implements NodeStore {
 						.getTime()));
 				stmt.setString(4, afterItemId);
 
-				ResultSet rs = stmt.executeQuery();
+				java.sql.ResultSet rs = stmt.executeQuery();
 
 				LinkedList<NodeItem> results = new LinkedList<NodeItem>();
 
@@ -604,7 +604,7 @@ public class JDBCNodeStore implements NodeStore {
 					.prepareStatement(dialect.countItemsForNode());
 			selectStatement.setString(1, nodeId);
 
-			ResultSet rs = selectStatement.executeQuery();
+			java.sql.ResultSet rs = selectStatement.executeQuery();
 
 			if (rs.next()) {
 				return rs.getInt(1);
@@ -630,7 +630,7 @@ public class JDBCNodeStore implements NodeStore {
 			stmt.setString(1, nodeId);
 			stmt.setString(2, nodeItemId);
 
-			ResultSet rs = stmt.executeQuery();
+			java.sql.ResultSet rs = stmt.executeQuery();
 
 			if (rs.next()) {
 				return new NodeItemImpl(rs.getString(1), rs.getString(2),

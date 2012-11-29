@@ -1,6 +1,5 @@
 package org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.set;
 
-import java.util.Collection;
 import java.util.concurrent.BlockingQueue;
 
 import org.apache.log4j.Logger;

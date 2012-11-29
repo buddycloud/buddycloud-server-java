@@ -1,6 +1,5 @@
 package org.buddycloud.channelserver.packetprocessor.message.event;
 
-import java.util.Collection;
 import java.util.Properties;
 import java.util.concurrent.BlockingQueue;
 

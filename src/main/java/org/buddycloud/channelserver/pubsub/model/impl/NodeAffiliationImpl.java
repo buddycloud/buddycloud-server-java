@@ -3,11 +3,12 @@ package org.buddycloud.channelserver.pubsub.model.impl;
 import org.buddycloud.channelserver.pubsub.affiliation.Affiliations;
 import org.buddycloud.channelserver.pubsub.model.NodeAffiliation;
 import org.xmpp.packet.JID;
+import org.xmpp.resultsetmanagement.Result;
 
 /**
  * Basic implementation of a NodeAffiliation
  */
-public class NodeAffiliationImpl implements NodeAffiliation {
+public class NodeAffiliationImpl extends NodeAffiliation {
 
 	private final JID user;
 	private final String nodeId;
@@ -28,17 +29,14 @@ public class NodeAffiliationImpl implements NodeAffiliation {
 		this.affiliation = affiliation;
 	}
 	
-	@Override
 	public JID getUser() {
 		return user;
 	}
 
-	@Override
 	public String getNodeId() {
 		return nodeId;
 	}
 
-	@Override
 	public Affiliations getAffiliation() {
 		return affiliation;
 	}
@@ -84,4 +82,8 @@ public class NodeAffiliationImpl implements NodeAffiliation {
 		return true;
 	}
 
+	@Override
+	public String getUID() {
+		return user.toFullJID();
+	}
 }

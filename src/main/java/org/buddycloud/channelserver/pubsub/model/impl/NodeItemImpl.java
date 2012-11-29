@@ -3,8 +3,9 @@ package org.buddycloud.channelserver.pubsub.model.impl;
 import java.util.Date;
 
 import org.buddycloud.channelserver.pubsub.model.NodeItem;
+import org.xmpp.resultsetmanagement.Result;
 
-public class NodeItemImpl implements NodeItem {
+public class NodeItemImpl extends NodeItem {
 
 	private final String nodeId;
 	private final String id;
@@ -38,4 +39,8 @@ public class NodeItemImpl implements NodeItem {
 		return updated;
 	}
 
+	@Override
+	public String getUID() {
+		return id;
+	}
 }

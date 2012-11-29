@@ -1,6 +1,5 @@
 package org.buddycloud.channelserver.db;
 
-import java.util.Collection;
 import java.util.Iterator;
 import java.util.Map;
 
@@ -11,6 +10,7 @@ import org.buddycloud.channelserver.pubsub.model.NodeAffiliation;
 import org.buddycloud.channelserver.pubsub.model.NodeItem;
 import org.buddycloud.channelserver.pubsub.model.NodeSubscription;
 import org.xmpp.packet.JID;
+import org.xmpp.resultsetmanagement.ResultSet;
 
 /**
  * NodeStore is a interface for classes which have the ability to store and
@@ -157,7 +157,7 @@ public interface NodeStore {
 	 *            the user's JID
 	 * @return
 	 */
-	Collection<NodeAffiliation> getUserAffiliations(JID user)
+	ResultSet<NodeAffiliation> getUserAffiliations(JID user)
 			throws NodeStoreException;
 
 	/**
@@ -167,7 +167,7 @@ public interface NodeStore {
 	 *            the node id
 	 * @return
 	 */
-	Collection<NodeAffiliation> getNodeAffiliations(String nodeId)
+	ResultSet<NodeAffiliation> getNodeAffiliations(String nodeId)
 			throws NodeStoreException;
 
 	/**
@@ -177,7 +177,7 @@ public interface NodeStore {
 	 *            the user's JID
 	 * @return
 	 */
-	Collection<NodeSubscription> getUserSubscriptions(JID user)
+	ResultSet<NodeSubscription> getUserSubscriptions(JID user)
 			throws NodeStoreException;
 
 	/**
@@ -187,7 +187,7 @@ public interface NodeStore {
 	 *            the node reference.
 	 * @return
 	 */
-	Collection<NodeSubscription> getNodeSubscriptions(String nodeId)
+	ResultSet<NodeSubscription> getNodeSubscriptions(String nodeId)
 			throws NodeStoreException;
 
 	/**

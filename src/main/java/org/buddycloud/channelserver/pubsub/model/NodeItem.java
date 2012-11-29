@@ -2,27 +2,29 @@ package org.buddycloud.channelserver.pubsub.model;
 
 import java.util.Date;
 
-public interface NodeItem {
+import org.xmpp.resultsetmanagement.Result;
+
+public abstract class NodeItem implements Result {
 	/**
 	 * Retrieves the node id.
 	 * @return
 	 */
-	String getNodeId();
+	public abstract String getNodeId();
 
 	/**
 	 * Retrieves the item id.
 	 * @return
 	 */
-	String getId();
+	public abstract String getId();
 	
 	/**
 	 * Retrieves the payload.
 	 * @return
 	 */
-	String getPayload();
+	public abstract String getPayload();
 	
 	/**
 	 * Retrieves the datestamp when the record was published/updated
 	 */
-	Date getUpdated();
+	public abstract Date getUpdated();
 }

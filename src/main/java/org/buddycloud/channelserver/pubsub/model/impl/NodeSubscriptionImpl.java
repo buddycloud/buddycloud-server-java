@@ -4,8 +4,9 @@ import org.buddycloud.channelserver.pubsub.affiliation.Affiliations;
 import org.buddycloud.channelserver.pubsub.model.NodeSubscription;
 import org.buddycloud.channelserver.pubsub.subscription.Subscriptions;
 import org.xmpp.packet.JID;
+import org.xmpp.resultsetmanagement.Result;
 
-public class NodeSubscriptionImpl implements NodeSubscription {
+public class NodeSubscriptionImpl extends NodeSubscription {
 
 	private final Subscriptions subscription;
 	private final JID user;
@@ -95,5 +96,10 @@ public class NodeSubscriptionImpl implements NodeSubscription {
 	public String toString() {
 		return "NodeSubscriptionImpl [subscription=" + subscription + ", user="
 				+ user + ", listener=" + listener + ", nodeId=" + nodeId + "]";
+	}
+
+	@Override
+	public String getUID() {
+		return user.toFullJID();
 	}
 }

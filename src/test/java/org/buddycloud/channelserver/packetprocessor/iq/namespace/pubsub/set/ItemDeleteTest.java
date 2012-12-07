@@ -343,7 +343,7 @@ public class ItemDeleteTest extends IQTestHandler {
 						Mockito.any(JID.class))).thenReturn(affiliation);
 
 		Mockito.doReturn(new ResultSetImpl<NodeSubscription>(subscriptions))
-				.when(channelManagerMock).getNodeSubscriptions(node);
+				.when(channelManagerMock).getNodeSubscriptionListeners(node);
 
 		itemDelete.setChannelManager(channelManagerMock);
 

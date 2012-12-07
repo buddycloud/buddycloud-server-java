@@ -234,7 +234,7 @@ public class NodeConfigureTest extends IQTestHandler {
 		ArrayList<NodeSubscriptionMock> subscribers = new ArrayList<NodeSubscriptionMock>();
 		
 		Mockito.doReturn(new ResultSetImpl(subscribers)).when(channelManagerMock)
-				.getNodeSubscriptions(Mockito.anyString());
+				.getNodeSubscriptionListeners(Mockito.anyString());
 
 		HelperMock helperMock = Mockito.mock(HelperMock.class);
 		Mockito.when(helperMock.isValid()).thenReturn(true);
@@ -270,7 +270,7 @@ public class NodeConfigureTest extends IQTestHandler {
 				"bottom@shakespeare.lit")));
         ResultSetImpl<NodeSubscription> res = new ResultSetImpl<NodeSubscription>(subscribers);
 		Mockito.doReturn(res).when(channelManagerMock)
-				.getNodeSubscriptions(Mockito.anyString());
+				.getNodeSubscriptionListeners(Mockito.anyString());
 
 		HelperMock helperMock = Mockito.mock(HelperMock.class);
 		Mockito.when(helperMock.isValid()).thenReturn(true);

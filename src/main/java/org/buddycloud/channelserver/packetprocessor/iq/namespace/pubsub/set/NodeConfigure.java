@@ -108,7 +108,7 @@ public class NodeConfigure extends PubSubElementProcessorAbstract {
 	private void notifySubscribers(HashMap<String, String> configuration) throws NodeStoreException,
 			InterruptedException {
 		ResultSet<NodeSubscription> subscribers = channelManager
-				.getNodeSubscriptions(node);
+				.getNodeSubscriptionListeners(node);
 		Document document = getDocumentHelper();
 		Element message = document.addElement("message");
 		Element event = message.addElement("event");

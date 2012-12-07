@@ -226,7 +226,7 @@ public class SubscribeSet extends PubSubElementProcessorAbstract {
 			InterruptedException {
 
 		ResultSet<NodeSubscription> subscribers = channelManager
-				.getNodeSubscriptions(node);
+				.getNodeSubscriptionListeners(node);
 
 		// Get all the affiliated users (so we can work out moderators)
 		ResultSet<NodeAffiliation> nodeAffiliations = channelManager

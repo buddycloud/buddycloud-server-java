@@ -88,7 +88,7 @@ public class ItemDelete extends PubSubElementProcessorAbstract {
 				return;
 			}
 			ResultSet<NodeSubscription> subscriptions = channelManager
-					.getNodeSubscriptions(node);
+					.getNodeSubscriptionListeners(node);
 			Message notification = getNotificationMessage();
 			for (NodeSubscription subscription : subscriptions) {
 				if (subscription.getSubscription().equals(

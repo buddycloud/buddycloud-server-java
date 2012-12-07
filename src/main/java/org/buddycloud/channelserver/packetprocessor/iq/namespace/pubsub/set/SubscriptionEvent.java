@@ -83,7 +83,7 @@ public class SubscriptionEvent extends PubSubElementProcessorAbstract {
 
 	private void sendNotifications() throws Exception {
 		ResultSet<NodeSubscription> subscribers = channelManager
-				.getNodeSubscriptions(node);
+				.getNodeSubscriptionListeners(node);
 
 		Document document = getDocumentHelper();
 		Element message = document.addElement("message");

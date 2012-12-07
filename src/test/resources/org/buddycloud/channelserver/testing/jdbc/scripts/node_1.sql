@@ -9,6 +9,7 @@ INSERT INTO "affiliations" ("node", "user", "affiliation", "updated") VALUES ('u
 INSERT INTO "subscriptions" ("node", "user", "listener", "subscription", "updated") VALUES ('users/node1@server1/posts', 'user1@server1', 'user1@server1', 'subscribed', now());
 INSERT INTO "subscriptions" ("node", "user", "listener", "subscription", "updated") VALUES ('users/node1@server1/posts', 'user2@server1', 'user2@server1', 'subscribed', now());
 INSERT INTO "subscriptions" ("node", "user", "listener", "subscription", "updated") VALUES ('users/node1@server1/posts', 'user1@server2', 'channels.server2', 'subscribed', now());
+INSERT INTO "subscriptions" ("node", "user", "listener", "subscription", "updated") VALUES ('users/node1@server1/posts', 'user3@server2', 'channels.server2', 'subscribed', now());
 
 -- The strange order of insertion of the items is deliberate
             

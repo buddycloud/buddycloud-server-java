@@ -78,6 +78,9 @@ public class Sql92NodeStoreDialect implements NodeStoreSQLDialect {
 
 	private static final String DELETE_ITEM = "DELETE FROM \"items\" WHERE \"node\" = ? AND \"id\" = ?;";
 
+	private static final String SELECT_SUBSCRIPTION_LISTENERS_FOR_NODE = "SELECT DISTINCT \"node\", \"listener\", \"subscription\""
+			+ " FROM \"subscriptions\" WHERE \"node\" = ?";
+
 	@Override
 	public String insertNode() {
 		return INSERT_NODE;
@@ -206,6 +209,11 @@ public class Sql92NodeStoreDialect implements NodeStoreSQLDialect {
 	@Override
 	public String deleteItem() {
 		return DELETE_ITEM;
+	}
+
+	@Override
+	public String selectSubscriptionListenersForNode() {
+		return SELECT_SUBSCRIPTION_LISTENERS_FOR_NODE;
 	}
 
 }

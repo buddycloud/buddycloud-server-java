@@ -72,8 +72,9 @@ public class JDBCNodeStore implements NodeStore {
 			if (nodeConf != null) {
 				setNodeConf(nodeId, nodeConf);
 			}
-			NodeSubscriptionImpl subscription = new NodeSubscriptionImpl(nodeId,  owner, Subscriptions.subscribed);
-            addUserSubscription(subscription);
+			NodeSubscriptionImpl subscription = new NodeSubscriptionImpl(
+					nodeId, owner, Subscriptions.subscribed);
+			addUserSubscription(subscription);
 			setUserAffiliation(nodeId, owner, Affiliations.owner);
 		} catch (SQLException e) {
 			throw new NodeStoreException(e);
@@ -81,7 +82,7 @@ public class JDBCNodeStore implements NodeStore {
 			close(addStatement);
 		}
 	}
-	
+
 	@Override
 	public void addRemoteNode(String nodeId) throws NodeStoreException {
 		if (null == nodeId) {
@@ -191,7 +192,7 @@ public class JDBCNodeStore implements NodeStore {
 		PreparedStatement addStatement = null;
 		Transaction t = null;
 
-        try {
+		try {
 			t = beginTransaction();
 			if (affiliation.equals(Affiliations.none)) {
 				deleteStatement = conn.prepareStatement(dialect
@@ -296,7 +297,8 @@ public class JDBCNodeStore implements NodeStore {
 				deleteStatement = conn.prepareStatement(dialect
 						.deleteSubscription());
 				deleteStatement.setString(1, subscription.getNodeId());
-				deleteStatement.setString(2, subscription.getUser().toBareJID());
+				deleteStatement
+						.setString(2, subscription.getUser().toBareJID());
 				deleteStatement.executeUpdate();
 				deleteStatement.close();
 			} else {
@@ -308,7 +310,8 @@ public class JDBCNodeStore implements NodeStore {
 				updateStatement.setString(2, subscription.getListener()
 						.toString());
 				updateStatement.setString(3, subscription.getNodeId());
-				updateStatement.setString(4, subscription.getUser().toBareJID());
+				updateStatement
+						.setString(4, subscription.getUser().toBareJID());
 
 				int rows = updateStatement.executeUpdate();
 				updateStatement.close();
@@ -317,8 +320,8 @@ public class JDBCNodeStore implements NodeStore {
 					addStatement = conn.prepareStatement(dialect
 							.insertSubscription());
 					addStatement.setString(1, subscription.getNodeId());
-					addStatement
-							.setString(2, subscription.getUser().toBareJID());
+					addStatement.setString(2, subscription.getUser()
+							.toBareJID());
 					addStatement.setString(3, subscription.getListener()
 							.toString());
 					addStatement.setString(4, subscription.getSubscription()
@@ -509,6 +512,35 @@ public class JDBCNodeStore implements NodeStore {
 						rs.getString(1), new JID(rs.getString(2)), new JID(
 								rs.getString(3)), Subscriptions.valueOf(rs
 								.getString(4)));
+				result.add(nodeSub);
+			}
+
+			return new ResultSetImpl<NodeSubscription>(result);
+		} catch (SQLException e) {
+			throw new NodeStoreException(e);
+		} finally {
+			close(stmt); // Will implicitly close the resultset if required
+		}
+	}
+
+	@Override
+	public ResultSet<NodeSubscription> getNodeSubscriptionListeners(
+			String nodeId) throws NodeStoreException {
+		PreparedStatement stmt = null;
+
+		try {
+			stmt = conn.prepareStatement(dialect
+					.selectSubscriptionListenersForNode());
+			stmt.setString(1, nodeId);
+
+			java.sql.ResultSet rs = stmt.executeQuery();
+
+			ArrayList<NodeSubscription> result = new ArrayList<NodeSubscription>();
+
+			while (rs.next()) {
+				NodeSubscriptionImpl nodeSub = new NodeSubscriptionImpl(
+						rs.getString(1), new JID(rs.getString(2)),
+						Subscriptions.valueOf(rs.getString(3)));
 				result.add(nodeSub);
 			}
 
@@ -733,8 +765,9 @@ public class JDBCNodeStore implements NodeStore {
 	private void close(final Statement stmt) {
 		if (stmt != null) {
 			try {
-				if (false == stmt.isClosed()) stmt.close();
-				//stmt.getConnection().close();
+				if (false == stmt.isClosed())
+					stmt.close();
+				// stmt.getConnection().close();
 			} catch (SQLException e) {
 				logger.error(
 						"SQLException thrown while trying to close a statement",
@@ -863,6 +896,8 @@ public class JDBCNodeStore implements NodeStore {
 		String selectSubscriptionsForUser();
 
 		String selectSubscriptionsForNode();
+
+		String selectSubscriptionListenersForNode();
 
 		String insertSubscription();
 

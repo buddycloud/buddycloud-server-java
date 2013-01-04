@@ -59,7 +59,6 @@ public class TopicsEngine implements Component {
 			        Element item = query.addElement("item");
 			        item.addAttribute("name",  "buddycloud-server");
 			        item.addAttribute("jid", configuration.getProperty("server.domain.channels"));
-			        logger.debug("**** TOPICS COMPONENT sending: " + response.toXML());
 			        this.sendPacket(response);
 			        return;
 				}

@@ -334,7 +334,7 @@ public class AffiliationEventTest extends IQTestHandler {
 				"hamlet@shakespeare.lit")));
 
 		Mockito.doReturn(new ResultSetImpl<NodeSubscription>(subscribers)).when(channelManagerMock)
-				.getNodeSubscriptions(Mockito.anyString());
+				.getNodeSubscriptionListeners(Mockito.anyString());
 
 		event.setChannelManager(channelManagerMock);
 		event.process(element, jid, request, null);

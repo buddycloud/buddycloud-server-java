@@ -84,6 +84,7 @@ public class JDBCNodeStoreTest {
 
 	private static final JID TEST_SERVER2_USER1_JID = new JID("user1@server2");
 	private static final JID TEST_SERVER2_USER2_JID = new JID("user2@server2");
+	private static final JID TEST_SERVER2_USER3_JID = new JID("user3@server2");
 
 	DatabaseTester dbTester;
 	Connection conn;
@@ -693,6 +694,7 @@ public class JDBCNodeStoreTest {
 		HashSet<NodeSubscription> expected = new HashSet<NodeSubscription>() {{
 			add(new NodeSubscriptionImpl(TEST_SERVER1_NODE1_ID, TEST_SERVER2_USER1_JID, TEST_SERVER2_CHANNELS_JID, Subscriptions.subscribed));
 			add(new NodeSubscriptionImpl(TEST_SERVER1_NODE2_ID, TEST_SERVER2_USER1_JID, TEST_SERVER2_CHANNELS_JID, Subscriptions.subscribed));
+			add(new NodeSubscriptionImpl(TEST_SERVER1_NODE1_ID, TEST_SERVER2_USER3_JID, TEST_SERVER2_CHANNELS_JID, Subscriptions.subscribed));
 		}};
 		
 		assertEquals("Incorrect number of user subscriptions returned", expected.size(), result.size());
@@ -725,12 +727,29 @@ public class JDBCNodeStoreTest {
 			add(new NodeSubscriptionImpl(TEST_SERVER1_NODE1_ID, TEST_SERVER1_USER1_JID, TEST_SERVER1_USER1_JID, Subscriptions.subscribed));
 			add(new NodeSubscriptionImpl(TEST_SERVER1_NODE1_ID, TEST_SERVER1_USER2_JID, TEST_SERVER1_USER2_JID, Subscriptions.subscribed));
 			add(new NodeSubscriptionImpl(TEST_SERVER1_NODE1_ID, TEST_SERVER2_USER1_JID, TEST_SERVER2_CHANNELS_JID, Subscriptions.subscribed));
+			add(new NodeSubscriptionImpl(TEST_SERVER1_NODE1_ID, TEST_SERVER2_USER3_JID, TEST_SERVER2_CHANNELS_JID, Subscriptions.subscribed));
 		}};
 		
 		assertEquals("Incorrect number of node subscriptions returned", expected.size(), result.size());
 		assertTrue("Incorrect node subscriptions returned", CollectionUtils.isEqualCollection(expected, result));
 	}
-	
+
+	@Test
+	public void testGetNodeSubscriptionListeners() throws Exception {
+		dbTester.loadData("node_1");
+		
+		ResultSet<NodeSubscription> result = store.getNodeSubscriptionListeners(TEST_SERVER1_NODE1_ID);
+		
+		HashSet<NodeSubscription> expected = new HashSet<NodeSubscription>() {{
+			add(new NodeSubscriptionImpl(TEST_SERVER1_NODE1_ID, TEST_SERVER1_USER1_JID, Subscriptions.subscribed));
+			add(new NodeSubscriptionImpl(TEST_SERVER1_NODE1_ID, TEST_SERVER1_USER2_JID, Subscriptions.subscribed));
+			add(new NodeSubscriptionImpl(TEST_SERVER1_NODE1_ID, TEST_SERVER2_CHANNELS_JID, Subscriptions.subscribed));
+		}};
+		
+		assertEquals("Incorrect number of node subscriptions returned", expected.size(), result.size());
+		assertTrue("Incorrect node subscriptions returned", CollectionUtils.isEqualCollection(expected, result));
+	}
+
 	@Test
 	public void testGetUserSubscriptionsForUnknownUserReturnsNone() throws Exception {
 		dbTester.loadData("node_1");

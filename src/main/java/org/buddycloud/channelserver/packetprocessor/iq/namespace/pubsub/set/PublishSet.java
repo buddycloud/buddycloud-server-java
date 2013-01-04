@@ -152,7 +152,7 @@ public class PublishSet implements PubSubElementProcessor {
 
 		NodeSubscription nodeSubscription = channelManager.getUserSubscription(
 				node, publishersJID);
-		Subscriptions possibleExistingSusbcription = nodeSubscription
+		Subscriptions possibleExistingSubscription = nodeSubscription
 				.getSubscription();
 
 		NodeAffiliation nodeaffiliation = channelManager.getUserAffiliation(
@@ -160,7 +160,7 @@ public class PublishSet implements PubSubElementProcessor {
 		Affiliations possibleExistingAffiliation = nodeaffiliation
 				.getAffiliation();
 
-		if ((false == possibleExistingSusbcription.equals(
+		if ((false == possibleExistingSubscription.equals(
 				Subscriptions.subscribed))
 				|| (false == possibleExistingAffiliation.in(Affiliations.moderator,
 						Affiliations.owner, Affiliations.publisher))) {
@@ -308,10 +308,9 @@ public class PublishSet implements PubSubElementProcessor {
 		i.add(entry.createCopy());
         Element actor = event.addElement("actor");
         actor.addNamespace("", JabberPubsub.NS_BUDDYCLOUD);
-		Set<String> externalChannelServerReceivers = new HashSet<String>();
 
 		ResultSet<NodeSubscription> cur = channelManager
-				.getNodeSubscriptions(node);
+				.getNodeSubscriptionListeners(node);
 		for (NodeSubscription ns : cur) {
 			JID to = ns.getUser();
 

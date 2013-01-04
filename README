@@ -1,8 +1,5 @@
-...Work in progress...
+# Buddycloud Java Server implementation
 
-WATCH OUT! DOES NOT WORK VERY WELL YET! Don't use if you are not a dev. 
+Note: This server is not as fully featured as the nodejs server https://github.com/buddycloud/buddycloud-server.
 
-/* Currently committing basic code and writing simple how-to's and instructions. */
-
-
-Stay tuned!
+Currently the server has enough features that it is usable. It federates with remote servers but does not currently cache posts i.e. every time you make a request from a remote node you're acutally getting data from the remote server.

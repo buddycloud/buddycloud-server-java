@@ -229,6 +229,12 @@ public class ChannelManagerImpl implements ChannelManager {
 
 	@Override
 	public void addRemoteNode(String node) throws NodeStoreException {
-		nodeStore.addRemoteNode(node);		
+		nodeStore.addRemoteNode(node);
+	}
+
+	@Override
+	public ResultSet<NodeSubscription> getNodeSubscriptionListeners(
+			String nodeId) throws NodeStoreException {
+		return nodeStore.getNodeSubscriptionListeners(nodeId);
 	}
 }

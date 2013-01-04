@@ -317,7 +317,7 @@ public class SubscriptionEventTest extends IQTestHandler {
 				"hamlet@shakespeare.lit")));
 
 		Mockito.doReturn(new ResultSetImpl<NodeSubscription>(subscribers)).when(dataStore)
-				.getNodeSubscriptions(Mockito.anyString());
+				.getNodeSubscriptionListeners(Mockito.anyString());
 
 		event.setChannelManager(dataStore);
 		event.process(element, jid, request, null);

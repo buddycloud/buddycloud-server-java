@@ -191,6 +191,16 @@ public interface NodeStore {
 			throws NodeStoreException;
 
 	/**
+	 * Gets the set of listeners to the node.
+	 * 
+	 * @param nodeId
+	 *            the node reference.
+	 * @return
+	 */
+	ResultSet<NodeSubscription> getNodeSubscriptionListeners(String nodeId)
+			throws NodeStoreException;
+
+	/**
 	 * Gets the user's subscription to a certain node.
 	 * 
 	 * @param nodeId

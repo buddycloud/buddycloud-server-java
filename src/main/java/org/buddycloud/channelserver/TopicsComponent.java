@@ -8,35 +8,30 @@ import org.xmpp.component.ComponentException;
 import org.logicalcobwebs.proxool.ProxoolException;
 import org.logicalcobwebs.proxool.configuration.PropertyConfigurator;
 
-public class XmppComponent {
+public class TopicsComponent {
 
-	private static final String DATABASE_CONFIGURATION_FILE = "db.properties";
-	
-	private static final Logger logger = Logger.getLogger(XmppComponent.class);
+	private static final Logger logger = Logger.getLogger(TopicsComponent.class);
 	private String hostname;
 	private int socket;
 	
 	private String domain;
 	private String password;
 	private Properties configuration;
-	private ChannelsEngine channelsEngine;
+	private TopicsEngine topicsEngine;
 	
-	public XmppComponent(Properties configuration, String domain) {
+	public TopicsComponent(Properties configuration, String domain) {
+		if (null == domain) {
+			return;
+		}
 	    setConf(configuration);
 		hostname = configuration.getProperty("xmpp.host");
 		socket = Integer.valueOf(configuration.getProperty("xmpp.port"));
 		this.domain = domain;
 		password = configuration.getProperty("xmpp.secretkey");
-		channelsEngine = new ChannelsEngine(configuration);
+		topicsEngine = new TopicsEngine(configuration);
 
-		try {
-			PropertyConfigurator.configure(DATABASE_CONFIGURATION_FILE);
-		} catch (ProxoolException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
 	}
-
+	
 	public void setConf(Properties configuration) {
 		this.configuration = configuration;
 	}
@@ -45,6 +40,6 @@ public class XmppComponent {
 		ExternalComponentManager manager = new ExternalComponentManager(
 		        hostname, socket);
 		manager.setDefaultSecretKey(password);
-		manager.addComponent(domain, channelsEngine);
+		manager.addComponent(domain, topicsEngine);
 	}
 }

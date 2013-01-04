@@ -24,8 +24,11 @@ public class Main
             + conf.getProperty("xmpp.subdomain") + "'.");
 
         try {
-            XmppComponent xmppComponent = new XmppComponent(conf);
+            XmppComponent xmppComponent = new XmppComponent(conf, conf.getProperty("server.domain.channels"));
             xmppComponent.run();
+            
+            TopicsComponent topicsComponent = new TopicsComponent(conf, conf.getProperty("server.domain.topics"));
+            topicsComponent.run();
         } catch (ComponentException e1) {
             // TODO Auto-generated catch block
             e1.printStackTrace();

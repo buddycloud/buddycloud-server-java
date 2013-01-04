@@ -37,12 +37,12 @@ public class ChannelsEngine implements Component {
 
 	@Override
 	public String getDescription() {
-		return "Description (TODO)";
+		return "buddycloud channel server (Java implementation)";
 	}
 
 	@Override
 	public String getName() {
-		return "Description (TODO)";
+		return "buddycloud-channel-server";
 	}
 
 	@Override
@@ -75,7 +75,7 @@ public class ChannelsEngine implements Component {
 				inQueue, channelManagerFactory, federatedQueueManager);
 		inQueueConsumer.start();
 
-		LOGGER.info("XMPP Component started. We are '" + jid.toBareJID()
+		LOGGER.info("XMPP Component started. We are '" + jid.toString()
 				+ "' and ready to accept packages.");
 	}
 

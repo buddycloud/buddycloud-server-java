@@ -19,6 +19,7 @@ public class ValidateEntry {
    
 	private String errorMsg = "";
 	private String inReplyTo;
+	private Element meta;
 	
 	Map<String, String>params = new HashMap<String, String>();
 	
@@ -97,6 +98,10 @@ public class ValidateEntry {
 				inReplyTo       = tokens[2];
 			}
 		}
+		Element meta = this.entry.element("meta");
+		if (null != meta) {
+			this.meta = meta;
+		}
 		return true;
 	}
 	
@@ -122,6 +127,9 @@ public class ValidateEntry {
              <activity:object>
                 <activity:object-type>note</activity:object-type>
              </activity:object>
+             <meta>
+                ... additional meta ...
+             </meta>
           </entry>
 		 */
 		String id       = UUID.randomUUID().toString();
@@ -178,6 +186,9 @@ public class ValidateEntry {
 		activity_object.addElement("activity:object-type")
 		               .setText(postType);
 		
+		if (null != meta) {
+			entry.add(meta.createCopy());
+		}
 		return entry;
 	}
 	

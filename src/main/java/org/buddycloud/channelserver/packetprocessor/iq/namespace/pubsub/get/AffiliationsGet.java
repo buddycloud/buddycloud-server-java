@@ -38,16 +38,19 @@ public class AffiliationsGet implements PubSubElementProcessor {
 	@Override
 	public void process(Element elm, JID actorJID, IQ reqIQ, Element rsm)
 			throws Exception {
-		result = IQ.createResultIQ(reqIQ);
+		result    = IQ.createResultIQ(reqIQ);
 		requestIq = reqIQ;
-		actorJid = actorJID;
-			
-		Element pubsub = result.setChildElement(PubSubGet.ELEMENT_NAME,
-				JabberPubsub.NS_PUBSUB_OWNER);
+		actorJid  = actorJID;
+		node      = elm.attributeValue("node");
+
+		String namespace = JabberPubsub.NS_PUBSUB_OWNER;
+		if (node == null) {
+			namespace = JabberPubsub.NAMESPACE_URI;
+		}
+
+		Element pubsub = result.setChildElement(PubSubGet.ELEMENT_NAME, namespace);
 		Element affiliations = pubsub.addElement("affiliations");
-
-		node = elm.attributeValue("node");
-
+		
 		if (actorJid == null) {
 			actorJid = requestIq.getFrom();
 		}

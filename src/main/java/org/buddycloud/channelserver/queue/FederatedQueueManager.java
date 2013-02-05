@@ -117,7 +117,7 @@ public class FederatedQueueManager {
             Attribute name = item.attribute("name");
 			if ((null != name) && (true == name.getStringValue().equals(BUDDYCLOUD_SERVER))) {
 				remoteChannelDiscoveryStatus.put(from.toString(), DISCOVERED);
-				discoveredServers.put(from.toString(), item.attributeValue("jid"));
+				setDiscoveredServer(from.toString(), item.attributeValue("jid"));
 				sendFederatedRequests(from.toString());
 				return;
 			}

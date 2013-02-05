@@ -41,6 +41,9 @@ public class SubscriptionsGet implements PubSubElementProcessor {
 		actorJid = actorJID;
 		requestIq = reqIQ;
 		
+		if (false == channelManager.isLocalJID(requestIq.getFrom())) {
+        	result.getElement().addAttribute("remote-server-discover", "false");
+        }
 		Element pubsub = result.setChildElement(PubSubGet.ELEMENT_NAME,
 				elm.getNamespaceURI());
 		Element subscriptions = pubsub.addElement("subscriptions");

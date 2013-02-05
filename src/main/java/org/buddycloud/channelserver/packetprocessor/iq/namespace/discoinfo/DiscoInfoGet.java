@@ -21,7 +21,7 @@ import org.xmpp.packet.PacketError;
 public class DiscoInfoGet implements PacketProcessor<IQ> {
 
 	public static final String ELEMENT_NAME = "query";
-	private static final Logger LOGGER = Logger.getLogger(DiscoInfoGet.class);
+	private static final Logger logger = Logger.getLogger(DiscoInfoGet.class);
 	private final BlockingQueue<Packet> outQueue;
 	private final ChannelManager channelManager;
 	private String node;
@@ -36,14 +36,17 @@ public class DiscoInfoGet implements PacketProcessor<IQ> {
 	@Override
 	public void process(IQ reqIQ) throws Exception {
 
-		requestIq = reqIQ;
-		IQ result   = IQ.createResultIQ(reqIQ);
-		Element elm = reqIQ.getChildElement();
-		node = elm.attributeValue("node");
-		
+		requestIq     = reqIQ;
+		IQ result     = IQ.createResultIQ(reqIQ);
+		Element elm   = reqIQ.getChildElement();
+		node          = elm.attributeValue("node");
+		Element query = result.setChildElement(ELEMENT_NAME,
+				JabberDiscoInfo.NAMESPACE_URI);
+        if (false == channelManager.isLocalJID(requestIq.getFrom())) {
+        	result.getElement().addAttribute("remote-server-discover", "false");
+        }
 		if ((node == null) || (true == node.equals(""))) {
-			Element query = result.setChildElement(ELEMENT_NAME,
-					JabberDiscoInfo.NAMESPACE_URI);
+
 			query.addElement("identity").addAttribute("category", "pubsub")
 					.addAttribute("type", "channels");
 
@@ -55,7 +58,6 @@ public class DiscoInfoGet implements PacketProcessor<IQ> {
 
 			query.addElement("feature").addAttribute("var",
 					"http://jabber.org/protocol/disco#info");
-
 			outQueue.put(result);
 			return;
 		}
@@ -116,9 +118,7 @@ public class DiscoInfoGet implements PacketProcessor<IQ> {
 		for (String key : sorted_conf.keySet()) {
 			x.addField(key, null, null).addValue(sorted_conf.get(key));
 		}
-
-		Element query = result.setChildElement(ELEMENT_NAME,
-				JabberDiscoInfo.NAMESPACE_URI);
+		
 		query.addAttribute("node", node);
 		query.addElement("identity").addAttribute("category", "pubsub")
 				.addAttribute("type", "leaf");
@@ -126,7 +126,7 @@ public class DiscoInfoGet implements PacketProcessor<IQ> {
 				"http://jabber.org/protocol/pubsub");
 
 		query.add(x.getElement());
-        LOGGER.trace("Returning DISCO info for node: " + node);
+        logger.trace("Returning DISCO info for node: " + node);
 		outQueue.put(result);
 	}
 

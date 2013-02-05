@@ -42,7 +42,10 @@ public class AffiliationsGet implements PubSubElementProcessor {
 		requestIq = reqIQ;
 		actorJid  = actorJID;
 		node      = elm.attributeValue("node");
-
+		
+		if (false == channelManager.isLocalJID(requestIq.getFrom())) {
+        	result.getElement().addAttribute("remote-server-discover", "false");
+        }
 		String namespace = JabberPubsub.NS_PUBSUB_OWNER;
 		if (node == null) {
 			namespace = JabberPubsub.NAMESPACE_URI;

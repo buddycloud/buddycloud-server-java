@@ -4,6 +4,7 @@ import java.util.concurrent.BlockingQueue;
 
 import org.apache.log4j.Logger;
 import org.buddycloud.channelserver.ChannelsEngine;
+import org.dom4j.Attribute;
 import org.xmpp.component.ComponentException;
 import org.xmpp.packet.Packet;
 
@@ -24,12 +25,21 @@ public class OutQueueConsumer extends QueueConsumer {
 
 	@Override
     protected void consume(Packet p) {
+	
         try {
         	if ((-1 == p.getTo().toString().indexOf("@")) 
-        	    && (p.getTo().toBareJID().indexOf(server) == -1)) {
+        	    && (p.getTo().toBareJID().indexOf(server) == -1)
+        	) {
         		// i.e. a remote server
-        		federatedQueue.process(p);
-        		return;
+        		if (null == p.getElement().attributeValue("remote-server-discover")) {
+        		    federatedQueue.process(p);
+        		    return;
+        		}
+        	}
+        	
+			if (p.getElement().attribute("remote-server-discover") != null) {
+				Attribute process = p.getElement().attribute("remote-server-discover");
+				p.getElement().remove(process);
         	}
             component.sendPacket(p);
             logger.debug("OUT -> " + p.toXML());

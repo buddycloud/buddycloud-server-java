@@ -442,8 +442,11 @@ public class JDBCNodeStore implements NodeStore {
 					.selectSubscription());
 			selectStatement.setString(1, nodeId);
 			selectStatement.setString(2, user.toBareJID());
-			selectStatement.setString(3, user.toString());
-
+			if (true == user.getNode().isEmpty()) {
+				selectStatement.setString(3, user.getDomain());
+			} else {
+			    selectStatement.setString(3, user.toString());
+			}
 			java.sql.ResultSet rs = selectStatement.executeQuery();
 
 			if (rs.next()) {

@@ -35,6 +35,7 @@ public class OutQueueConsumer extends QueueConsumer {
         		    federatedQueue.process(p);
         		    return;
         		}
+        		federatedQueue.addChannelMap(p.getTo());
         	}
         	
 			if (p.getElement().attribute("remote-server-discover") != null) {

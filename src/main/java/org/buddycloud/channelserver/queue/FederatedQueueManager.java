@@ -13,6 +13,7 @@ import org.dom4j.Attribute;
 import org.dom4j.Element;
 import org.dom4j.Namespace;
 import org.dom4j.dom.DOMElement;
+import org.hsqldb.Server;
 import org.xmpp.component.ComponentException;
 import org.xmpp.packet.IQ;
 import org.xmpp.packet.JID;
@@ -62,7 +63,7 @@ public class FederatedQueueManager {
 			// Do we have a map already?
 			if (discoveredServers.containsKey(to)) {
 				packet.setTo(new JID(discoveredServers.get(to)));
-				component.sendPacket(packet);
+				sendPacket(packet.createCopy());
 				return;
 			}
 			// Are we already discovering a remote server?
@@ -97,6 +98,10 @@ public class FederatedQueueManager {
 		} catch (Exception e) {
 			logger.error(e);
 		}
+	}
+
+	private void sendPacket(Packet packet) throws ComponentException {
+		component.sendPacket(packet.createCopy());
 	}
 
 	private void discoverRemoteChannelServer(String remoteDomain, String id)
@@ -173,9 +178,10 @@ public class FederatedQueueManager {
 		if (null == packetsToSend) {
 			return;
 		}
+		logger.info("****************** Going to send federated packets to " + remoteServer);
 		for (Packet packet : packetsToSend) {
 			packet.setTo(remoteServer);
-			component.sendPacket(packet);
+			sendPacket(packet);
 		}
 		waitingStanzas.remove(originatingServer);		
 	}
@@ -208,14 +214,28 @@ public class FederatedQueueManager {
 	}
 
 	public void passResponseToRequester(IQ packet) throws Exception {
+		logger.info("**************** Attempting to forward packet " + packet.getID() + " ::: " + sentRemotePackets.get(packet.getID()));
 		if (false == sentRemotePackets.containsKey(packet.getID())) {
 			throw new UnknownFederatedPacketException(
 			    "Can not find original requesting packet! (ID:" + packet.getID() + ")"
 			);
 		}
+		logger.debug("Forwarding remote packet to " + sentRemotePackets.get(packet.getID()) + " from " + packet.getFrom());
 		packet.setTo(sentRemotePackets.get(packet.getID()));
 		packet.setFrom(localServer);
 		sentRemotePackets.remove(packet.getID());
 		component.sendPacket(packet);
+	}
+
+	public void addChannelMap(JID server) {
+		// TODO Auto-generated method stub
+		discoveredServers.put(server.getDomain(), server.getDomain());
+		remoteChannelDiscoveryStatus.put(server.getDomain(), DISCOVERED);
+		try {
+			sendFederatedRequests(server.getDomain());
+		} catch (ComponentException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 }

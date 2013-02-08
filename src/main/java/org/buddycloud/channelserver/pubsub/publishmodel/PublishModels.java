@@ -2,20 +2,24 @@ package org.buddycloud.channelserver.pubsub.publishmodel;
 
 public enum PublishModels {
 	
-    publishers,
-    subscribers,
-    open;
-
+    owner,
+    moderator,
+    publisher,
+    member,
+    outcast;
+	
 	public static PublishModels createFromString(String asString) {
 		
-		if("publishers".equals(asString)) {
-			return publishers;
-		} else if ("subscribers".equals(asString)) {
-			return subscribers;
-		} else if ("open".equals(asString)) {
-			return open;
+		if ("owner".equals(asString)) {
+			return owner;
+		} else if ("moderator".equals(asString)) {
+			return moderator;
+		} else if ("publisher".equals(asString)) {
+			return publisher;
+		} else if ("outcast".equals(asString)) {
+			return outcast;
 		}
-		return publishers;
+		return member;
 	}
 		
 }

@@ -79,15 +79,6 @@ public class FederatedQueueManager {
 				component.sendPacket(reply);
 				return;
 			}
-			/* TODO: Handle no remote XMPP server
-			 * 
-			 * <iq xmlns='jabber:client' type='error' to='romeo@server1.com/client' 
-			 *     from='channels.server1.com' id='1:items'>
-			 *     <error type='cancel'>
-			 *         <text>timeout</text>
-			 *     </error>
-			 * </iq>
-			 */
 			// Add packet to list
 			if (false == waitingStanzas.containsKey(to)) {
 				waitingStanzas.put(to, new ArrayList<Packet>());
@@ -119,8 +110,9 @@ public class FederatedQueueManager {
 			throws ComponentException {
 
 		for (Element item : items) {
-            Attribute name = item.attribute("name");
-			if ((null != name) && (true == name.getStringValue().equals(BUDDYCLOUD_SERVER))) {
+			Attribute name = item.attribute("name");
+			if ((null != name)
+					&& (true == name.getStringValue().equals(BUDDYCLOUD_SERVER))) {
 				remoteChannelDiscoveryStatus.put(from.toString(), DISCOVERED);
 				setDiscoveredServer(from.toString(), item.attributeValue("jid"));
 				sendFederatedRequests(from.toString());
@@ -228,8 +220,7 @@ public class FederatedQueueManager {
 	}
 
 	public void addChannelMap(JID server) {
-		// TODO Auto-generated method stub
-		discoveredServers.put(server.getDomain(), server.getDomain());
+		setDiscoveredServer(server.getDomain(), server.getDomain());
 		remoteChannelDiscoveryStatus.put(server.getDomain(), DISCOVERED);
 		try {
 			sendFederatedRequests(server.getDomain());

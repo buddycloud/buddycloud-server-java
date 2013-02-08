@@ -83,8 +83,8 @@ public class FederatedQueueManager {
 			if (false == waitingStanzas.containsKey(to)) {
 				waitingStanzas.put(to, new ArrayList<Packet>());
 			}
-			logger.debug("Adding packet to waiting stanza list for " 
-			        + to + " (size " + waitingStanzas.get(to).size() + ")");
+			logger.debug("Adding packet to waiting stanza list for " + to
+					+ " (size " + waitingStanzas.get(to).size() + ")");
 			waitingStanzas.get(to).add(packet);
 		} catch (Exception e) {
 			logger.error(e);
@@ -136,83 +136,90 @@ public class FederatedQueueManager {
 		remoteChannelDiscoveryStatus.put(from.toString(), DISCO_INFO);
 	}
 
+	private void setDiscoveredServer(String server, String handler) {
+		discoveredServers.put(server, handler);
+	}
+
 	public void processInfoResponses(JID from, String id,
 			List<Element> identities) throws ComponentException {
 		String originatingServer = remoteServerInfoRequestIds.get(id);
 		remoteServerInfoRequestIds.remove(id);
 		remoteServerItemsToProcess.put(originatingServer,
 				remoteServerItemsToProcess.get(originatingServer) - 1);
-		
+
 		String identityType;
 		for (Element identity : identities) {
 			identityType = identity.attributeValue("type");
 			if ((identityType != null)
 					&& (true == identityType.equals(IDENTITY_TYPE_CHANNELS))) {
-				discoveredServers.put(originatingServer, from.toString());
+				setDiscoveredServer(originatingServer, from.toString());
 				sendFederatedRequests(originatingServer);
 			}
 		}
 		if (remoteServerItemsToProcess.get(originatingServer) < 1) {
 			remoteServerItemsToProcess.remove(originatingServer);
 			if (false == discoveredServers.containsKey(originatingServer)) {
-			    sendRemoteChannelServerNotFoundErrorResponses(originatingServer);
-			    remoteChannelDiscoveryStatus.put(originatingServer, NO_CHANNEL_SERVER);
-			    waitingStanzas.remove(originatingServer);
+				sendRemoteChannelServerNotFoundErrorResponses(originatingServer);
+				remoteChannelDiscoveryStatus.put(originatingServer,
+						NO_CHANNEL_SERVER);
+				waitingStanzas.remove(originatingServer);
 			} else {
 				remoteChannelDiscoveryStatus.put(originatingServer, DISCOVERED);
 			}
 		}
 	}
 
-	private void sendFederatedRequests(String originatingServer) throws ComponentException {
+	private void sendFederatedRequests(String originatingServer)
+			throws ComponentException {
 		String remoteServer = discoveredServers.get(originatingServer);
 		List<Packet> packetsToSend = waitingStanzas.get(originatingServer);
 		if (null == packetsToSend) {
 			return;
 		}
-		logger.info("****************** Going to send federated packets to " + remoteServer);
 		for (Packet packet : packetsToSend) {
 			packet.setTo(remoteServer);
 			sendPacket(packet);
 		}
-		waitingStanzas.remove(originatingServer);		
+		waitingStanzas.remove(originatingServer);
 	}
 
 	private void sendRemoteChannelServerNotFoundErrorResponses(String server)
 			throws ComponentException {
-		
-        List<Packet> queued = waitingStanzas.get(server);
-        if (null == queued) {
-        	return;
-        }
-        Element noRemoteServer = new DOMElement("text",
-				new Namespace("", JabberPubsub.NS_PUBSUB_ERROR));
-        noRemoteServer.setText("No pubsub channel service discovered for " + server);
+
+		List<Packet> queued = waitingStanzas.get(server);
+		if (null == queued) {
+			return;
+		}
+		Element noRemoteServer = new DOMElement("text", new Namespace("",
+				JabberPubsub.NS_PUBSUB_ERROR));
+		noRemoteServer.setText("No pubsub channel service discovered for "
+				+ server);
 		Element itemNotFound = new DOMElement(
-				PacketError.Condition.item_not_found.toXMPP(), new Namespace("",
-						JabberPubsub.NS_XMPP_STANZAS));
+				PacketError.Condition.item_not_found.toXMPP(), new Namespace(
+						"", JabberPubsub.NS_XMPP_STANZAS));
 		Element error = new DOMElement("error");
 		error.addAttribute("type", PacketError.Type.cancel.toXMPP());
 		error.add(itemNotFound);
 		error.add(noRemoteServer);
-        IQ response;
-        for (Packet packet : queued) {
-        	response = IQ.createResultIQ((IQ) packet);
-        	response.setFrom(localServer);
-        	response.setType(IQ.Type.error);
-    		response.setChildElement(error);
-    		component.sendPacket(response);
-        }
+		IQ response;
+		for (Packet packet : queued) {
+			response = IQ.createResultIQ((IQ) packet);
+			response.setFrom(localServer);
+			response.setType(IQ.Type.error);
+			response.setChildElement(error);
+			component.sendPacket(response);
+		}
 	}
 
 	public void passResponseToRequester(IQ packet) throws Exception {
-		logger.info("**************** Attempting to forward packet " + packet.getID() + " ::: " + sentRemotePackets.get(packet.getID()));
 		if (false == sentRemotePackets.containsKey(packet.getID())) {
 			throw new UnknownFederatedPacketException(
-			    "Can not find original requesting packet! (ID:" + packet.getID() + ")"
-			);
+					"Can not find original requesting packet! (ID:"
+							+ packet.getID() + ")");
 		}
-		logger.debug("Forwarding remote packet to " + sentRemotePackets.get(packet.getID()) + " from " + packet.getFrom());
+		logger.debug("Forwarding remote packet to "
+				+ sentRemotePackets.get(packet.getID()) + " from "
+				+ packet.getFrom());
 		packet.setTo(sentRemotePackets.get(packet.getID()));
 		packet.setFrom(localServer);
 		sentRemotePackets.remove(packet.getID());

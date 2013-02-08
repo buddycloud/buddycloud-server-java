@@ -45,7 +45,7 @@ public class Conf {
         conf.put(TYPE, "http://www.w3.org/2005/Atom");
         conf.put(TITLE, channelJID.toBareJID() + "'s very own buddycloud channel!");
         conf.put(DESCRIPTION, "This channel belongs to " + channelJID.toBareJID() + ". To nobody else!");
-        conf.put(PUBLISH_MODEL, PublishModels.subscribers.toString());
+        conf.put(PUBLISH_MODEL, PublishModels.publisher.toString());
         conf.put(ACCESS_MODEL, AccessModels.open.toString());
         conf.put(CREATION_DATE, sdf.format(new Date()));
         conf.put(OWNER, channelJID.toBareJID());
@@ -74,7 +74,7 @@ public class Conf {
         conf.put(TYPE, "http://www.w3.org/2005/Atom");
         conf.put(TITLE, channelJID.toBareJID() + "'s very own buddycloud status!");
         conf.put(DESCRIPTION, "This is " + channelJID.toBareJID() + "'s mood a.k.a status -channel. Depends how geek you are.");
-        conf.put(PUBLISH_MODEL, org.buddycloud.channelserver.pubsub.publishmodel.PublishModels.publishers.toString());
+        conf.put(PUBLISH_MODEL, org.buddycloud.channelserver.pubsub.publishmodel.PublishModels.publisher.toString());
         conf.put(ACCESS_MODEL, org.buddycloud.channelserver.pubsub.accessmodel.AccessModels.open.toString());
         conf.put(CREATION_DATE, sdf.format(new Date()));
         conf.put(OWNER, channelJID.toBareJID());
@@ -102,7 +102,7 @@ public class Conf {
         conf.put(TYPE, "http://www.w3.org/2005/Atom");
         conf.put(TITLE, channelJID.toBareJID() + "'s previous location.");
         conf.put(DESCRIPTION, "Where " + channelJID.toBareJID() + " has been before.");
-        conf.put(PUBLISH_MODEL, org.buddycloud.channelserver.pubsub.publishmodel.PublishModels.publishers.toString());
+        conf.put(PUBLISH_MODEL, org.buddycloud.channelserver.pubsub.publishmodel.PublishModels.publisher.toString());
         conf.put(ACCESS_MODEL, org.buddycloud.channelserver.pubsub.accessmodel.AccessModels.open.toString());
         conf.put(CREATION_DATE, sdf.format(new Date()));
         conf.put(OWNER, channelJID.toBareJID());
@@ -130,7 +130,7 @@ public class Conf {
         conf.put(TYPE, "http://www.w3.org/2005/Atom");
         conf.put(TITLE, channelJID.toBareJID() + "'s current location.");
         conf.put(DESCRIPTION, "Where " + channelJID.toBareJID() + " is now.");
-        conf.put(PUBLISH_MODEL, org.buddycloud.channelserver.pubsub.publishmodel.PublishModels.publishers.toString());
+        conf.put(PUBLISH_MODEL, org.buddycloud.channelserver.pubsub.publishmodel.PublishModels.publisher.toString());
         conf.put(ACCESS_MODEL, org.buddycloud.channelserver.pubsub.accessmodel.AccessModels.open.toString());
         conf.put(CREATION_DATE, sdf.format(new Date()));
         conf.put(OWNER, channelJID.toBareJID());
@@ -158,7 +158,7 @@ public class Conf {
         conf.put(TYPE, "http://www.w3.org/2005/Atom");
         conf.put(TITLE, channelJID.toBareJID() + "'s next location.");
         conf.put(DESCRIPTION, "Where " + channelJID.toBareJID() + " is going to go.");
-        conf.put(PUBLISH_MODEL, org.buddycloud.channelserver.pubsub.publishmodel.PublishModels.publishers.toString());
+        conf.put(PUBLISH_MODEL, org.buddycloud.channelserver.pubsub.publishmodel.PublishModels.publisher.toString());
         conf.put(ACCESS_MODEL, org.buddycloud.channelserver.pubsub.accessmodel.AccessModels.open.toString());
         conf.put(CREATION_DATE, sdf.format(new Date()));
         conf.put(OWNER, channelJID.toBareJID());
@@ -186,7 +186,7 @@ public class Conf {
         conf.put(TYPE, "http://www.w3.org/2005/Atom");
         conf.put(TITLE, channelJID.toBareJID() + "'s susbcriptions.");
         conf.put(DESCRIPTION, channelJID.toBareJID() + "'s subscriptions. ");
-        conf.put(PUBLISH_MODEL, org.buddycloud.channelserver.pubsub.publishmodel.PublishModels.publishers.toString());
+        conf.put(PUBLISH_MODEL, org.buddycloud.channelserver.pubsub.publishmodel.PublishModels.publisher.toString());
         conf.put(ACCESS_MODEL, org.buddycloud.channelserver.pubsub.accessmodel.AccessModels.open.toString());
         conf.put(CREATION_DATE, sdf.format(new Date()));
         conf.put(OWNER, channelJID.toBareJID());

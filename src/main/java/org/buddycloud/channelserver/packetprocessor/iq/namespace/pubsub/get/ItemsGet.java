@@ -86,6 +86,10 @@ public class ItemsGet implements PubSubElementProcessor {
 		element = elm;
 		resultSetManagement = rsm;
 
+		if (false == channelManager.isLocalJID(requestIq.getFrom())) {
+        	reply.getElement().addAttribute("remote-server-discover", "false");
+        }
+		
 		if ((node == null) || (true == node.equals(""))) {
 			missingNodeIdRequest();
 			outQueue.put(reply);

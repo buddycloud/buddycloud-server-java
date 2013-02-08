@@ -6,6 +6,7 @@ import java.util.concurrent.BlockingQueue;
 import org.apache.log4j.Logger;
 import org.buddycloud.channelserver.packetprocessor.PacketProcessor;
 import org.buddycloud.channelserver.queue.FederatedQueueManager;
+import org.buddycloud.channelserver.queue.UnknownFederatedPacketException;
 import org.dom4j.Element;
 import org.xmpp.packet.IQ;
 import org.xmpp.packet.Packet;
@@ -35,6 +36,10 @@ public class DiscoResult implements PacketProcessor<IQ> {
 	        federatedQueueManager.processInfoResponses(requestIq.getFrom(), requestIq.getID(), identities);
 	        return;
 	    }
-	    federatedQueueManager.passResponseToRequester(requestIq);
+	    try {
+	        federatedQueueManager.passResponseToRequester(requestIq);
+	    } catch (UnknownFederatedPacketException e) {
+	    	logger.error(e);
+	    }
 	}
 }

@@ -65,10 +65,9 @@ public class UnsubscribeSet extends PubSubElementProcessorAbstract {
 		} else {
 			isLocalSubscriber = channelManager.isLocalJID(unsubscribingJid);
 			// Check that user is registered.
-			if (!isLocalSubscriber) {
+			if (false == isLocalSubscriber) {
 				failAuthRequired();
 				return;
-
 			}
 		}
 
@@ -90,8 +89,8 @@ public class UnsubscribeSet extends PubSubElementProcessorAbstract {
 		String fromJID = request.getFrom().toBareJID();
 
 		// Check that the requesting user is allowed to unsubscribe according to
-		// XEP-0060 section 6.2.3.3
-		if (false == fromJID.equals(existingSubscription.getUser().toBareJID())) {
+		// XEP-0060 section 6.2.3.3		
+		if (false == unsubscribingJid.equals(existingSubscription.getUser())) {
 			IQ reply = IQ.createResultIQ(request);
 			reply.setType(Type.error);
 			PacketError pe = new PacketError(
@@ -162,7 +161,6 @@ public class UnsubscribeSet extends PubSubElementProcessorAbstract {
 		 * <registration-required xmlns='urn:ietf:params:xml:ns:xmpp-stanzas'/>
 		 * </error> </iq>
 		 */
-
 		IQ reply = IQ.createResultIQ(request);
 		reply.setType(Type.error);
 		PacketError pe = new PacketError(

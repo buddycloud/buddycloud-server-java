@@ -58,8 +58,9 @@ public class PubSubSet implements PacketProcessor<IQ> {
         
         //Let's get the possible actor
         JID actorJID = null;
-        if(pubsub.element("actor") != null) {
-            actorJID = new JID(pubsub.element("actor").getTextTrim());
+        if (pubsub.elementText("actor") != null) {
+            actorJID = new JID(pubsub.elementText("actor").trim());
+            LOGGER.info("***** setting actor details");
             /**
              * TODO validate here that the JID is somehow sane.
              *      We could check that the domains are the same etc.

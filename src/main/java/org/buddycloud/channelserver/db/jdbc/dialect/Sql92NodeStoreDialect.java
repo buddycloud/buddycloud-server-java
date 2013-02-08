@@ -38,7 +38,7 @@ public class Sql92NodeStoreDialect implements NodeStoreSQLDialect {
 	private static final String DELETE_AFFILIATION = "DELETE FROM \"affiliations\" WHERE \"node\" = ? AND \"user\" = ?;";
 
 	private static final String SELECT_SUBSCRIPTION = "SELECT \"node\", \"user\", \"listener\", \"subscription\""
-			+ " FROM \"subscriptions\" WHERE \"node\" = ? AND ( \"user\" = ? OR \"listener\" = ? )";
+			+ " FROM \"subscriptions\" WHERE \"node\" = ? AND (\"user\" = ? OR \"listener\" = ? )";
 
 	private static final String SELECT_SUBSCRIPTIONS_FOR_USER = "SELECT \"node\", \"user\", \"listener\", \"subscription\""
 			+ " FROM \"subscriptions\" WHERE \"user\" = ? OR \"listener\" = ?";

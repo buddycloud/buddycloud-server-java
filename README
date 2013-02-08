@@ -2,4 +2,10 @@
 
 Note: This server is not as fully featured as the nodejs server https://github.com/buddycloud/buddycloud-server.
 
-Currently the server has enough features that it is usable. It federates with remote servers but does not currently cache posts i.e. every time you make a request from a remote node you're acutally getting data from the remote server.
+Not yet implemented:
+
+- Caching (server always goes to remote server to collect data)
+- Special nodes
+- MAM/Sync (not caching so no need so far)
+
+Currently the server has enough features that it is usable. It federates with remote servers but may appear to be slow due to lack of caching.

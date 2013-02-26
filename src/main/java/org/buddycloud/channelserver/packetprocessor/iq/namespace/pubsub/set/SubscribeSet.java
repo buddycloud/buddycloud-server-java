@@ -177,8 +177,9 @@ public class SubscribeSet extends PubSubElementProcessorAbstract {
 				defaultAffiliation = Affiliations.member;
 			}
 			Subscriptions defaultSubscription = Subscriptions.subscribed;
-			if (true == nodeConf.get(Conf.ACCESS_MODEL).equals(
-					AccessModels.authorize.toString())) {
+			String accessModel = nodeConf.get(Conf.ACCESS_MODEL);
+			if ((null == accessModel) 
+			    || (true == accessModel.equals(AccessModels.authorize.toString()))) {
 				defaultSubscription = Subscriptions.pending;
 			}
 

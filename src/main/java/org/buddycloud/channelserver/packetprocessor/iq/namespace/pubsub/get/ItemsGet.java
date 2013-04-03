@@ -80,10 +80,10 @@ public class ItemsGet implements PubSubElementProcessor {
 	@Override
 	public void process(Element elm, JID actorJID, IQ reqIQ, Element rsm)
 			throws Exception {
-		node = elm.attributeValue("node");
-		requestIq = reqIQ;
-		reply = IQ.createResultIQ(reqIQ);
-		element = elm;
+		node                = elm.attributeValue("node");
+		requestIq           = reqIQ;
+		reply               = IQ.createResultIQ(reqIQ);
+		element             = elm;
 		resultSetManagement = rsm;
 
 		if (false == channelManager.isLocalJID(requestIq.getFrom())) {
@@ -107,14 +107,10 @@ public class ItemsGet implements PubSubElementProcessor {
 			if (false == nodeExists()) {
 				setErrorCondition(PacketError.Type.cancel,
 						PacketError.Condition.item_not_found);
-
 				outQueue.put(reply);
 				return;
 			}
-
-			// boolean isLocalNode = channelManager.isLocalNode(node);
-			// boolean isLocalSubscriber = false;
-
+			
 			if (actorJID != null) {
 				fetchersJid = actorJID;
 			}

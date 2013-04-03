@@ -442,7 +442,7 @@ public class JDBCNodeStore implements NodeStore {
 					.selectSubscription());
 			selectStatement.setString(1, nodeId);
 			selectStatement.setString(2, user.toBareJID());
-			if (true == user.getNode().isEmpty()) {
+			if ((null == user.getNode()) || (true == user.getNode().isEmpty())) {
 				selectStatement.setString(3, user.getDomain());
 			} else {
 			    selectStatement.setString(3, user.toString());

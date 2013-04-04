@@ -39,8 +39,8 @@ public class MessageProcessorTest extends IQTestHandler {
 		Assert.assertEquals(0, queue.size());
 	}
 
-	@Test(expected=NullPointerException.class)
-	public void testNoEventElementPresentThrowsException() throws Exception {
+	@Test(expected=UnsupportedOperationException.class)
+	public void testNoEventOrDataFormElementPresentThrowsException() throws Exception {
 		Message message = new Message();
 		message.setType(Message.Type.headline);
 		

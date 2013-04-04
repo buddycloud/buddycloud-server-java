@@ -3,6 +3,7 @@ package org.buddycloud.channelserver.packetprocessor.message;
 import java.util.Properties;
 import java.util.concurrent.BlockingQueue;
 
+import org.apache.commons.lang.UnhandledException;
 import org.apache.log4j.Logger;
 import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.packetprocessor.PacketProcessor;
@@ -40,14 +41,26 @@ public class MessageProcessor implements PacketProcessor<Message> {
 		if (false == message.getType().equals(Message.Type.headline)) {
 			return;
 		}
-		Element event = (Element) message.getElement().element("event")
-				.elements().get(0);
+		Element event = message.getElement().element("event");
+		Element x = (Element) message.getElement().element("x");
+		if (null != event) {
+			processEventContent(((Element) event.elements().get(0)).getName());
+			return;
+		} else if (null != x) {
+			processDataFormContent(x);
+			return;
+		}
+		throw new UnsupportedOperationException(
+				"Unknown 'headline' message type", null);
+	}
 
-		processEventContent(event.getName());
+	private void processDataFormContent(Element x) {
+		// TODO Auto-generated method stub
+
 	}
 
 	private void processEventContent(String name) throws Exception {
-		
+
 		logger.info("Processing event content type: '" + name + "'");
 		PacketProcessor<Message> handler = null;
 		if (name.equals(ITEMS)) {

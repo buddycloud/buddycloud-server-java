@@ -77,8 +77,7 @@ public class IQProcessor implements PacketProcessor<IQ> {
 		} catch (UnknownFederatedPacketException e) {
 			logger.error(e);
 		}
-		logger.debug("Couldn't find processor for namespace "
-				+ packet.getChildElement().getNamespaceURI());
+		logger.debug("Couldn't find processor for packet");
 
 		if (packet.getType() == IQ.Type.set || packet.getType() == IQ.Type.get) {
 

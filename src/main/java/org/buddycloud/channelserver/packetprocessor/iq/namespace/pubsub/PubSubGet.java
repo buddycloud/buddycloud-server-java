@@ -46,16 +46,16 @@ public class PubSubGet implements PacketProcessor<IQ> {
         Element pubsub = reqIQ.getChildElement();
         
         JID actorJID = null;
-        if(pubsub.element("actor") != null) {
+        if (pubsub.element("actor") != null) {
             actorJID = new JID(pubsub.element("actor").getTextTrim());
             /**
              * TODO validate here that the JID is somehow sane.
              *      We could check that the domains are the same etc.
              */
-            //actor = actorJID.toBareJID();
+            // actor = actorJID.toBareJID();
         }
         
-        //Let's get the possible rsm element
+        // Let's get the possible rsm element
         Element rsm = pubsub.element(new QName("set", new Namespace("", "http://jabber.org/protocol/rsm")));
         
         @SuppressWarnings("unchecked")

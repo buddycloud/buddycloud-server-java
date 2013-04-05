@@ -62,7 +62,8 @@ public class DiscoInfoGet implements PacketProcessor<IQ> {
 			return;
 		}
 
-		if (false == channelManager.isLocalNode(node)) {
+		if (false == channelManager.isLocalNode(node)
+	        && (false == channelManager.isCachedNode(node))) {
 			makeRemoteRequest();
 		    return;
 		}

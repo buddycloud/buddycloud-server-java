@@ -761,6 +761,22 @@ public class JDBCNodeStoreTest {
 	}
 	
 	@Test
+	public void testIsCachedJidForCachedJid() throws Exception {
+		dbTester.loadData("node_1");
+		
+		boolean result = store.isCachedJID(TEST_SERVER1_USER1_JID);		
+		assertEquals("Expected JID to be shown as cached", true, result);
+	}
+
+	@Test
+	public void testIsCachedJidForNonCachedJid() throws Exception {
+		dbTester.loadData("node_1");
+		
+		boolean result = store.isCachedJID(new JID("anotheruser@sample.com"));
+		assertEquals("Expected JID to be shown as not cached", false, result);
+	}
+	
+	@Test
 	public void testGetNodeItems() throws Exception {
 		dbTester.loadData("node_1");
 		

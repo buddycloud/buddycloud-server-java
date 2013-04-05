@@ -755,6 +755,29 @@ public class JDBCNodeStore implements NodeStore {
 	}
 	
 	@Override
+	public boolean isCachedJID(JID jid) throws NodeStoreException {
+		PreparedStatement selectStatement = null;
+		try {
+			selectStatement = conn
+					.prepareStatement(dialect.countSubscriptionsForJid());
+			selectStatement.setString(1, jid.toBareJID());
+
+			java.sql.ResultSet rs = selectStatement.executeQuery();
+
+			if (rs.next()) {
+				return (rs.getInt(1) > 0);
+			} else {
+				return false; // This really shouldn't happen!
+			}
+		} catch (SQLException e) {
+			throw new NodeStoreException(e);
+		} finally {
+			close(selectStatement); // Will implicitly close the resultset if
+									// required
+		}
+	}
+	
+	@Override
 	public Transaction beginTransaction() throws NodeStoreException {
 		if (transactionHasBeenRolledBack) {
 			throw new IllegalStateException(
@@ -876,6 +899,8 @@ public class JDBCNodeStore implements NodeStore {
 
 	public interface NodeStoreSQLDialect {
 		String insertNode();
+
+		String countSubscriptionsForJid();
 
 		String insertConf();
 

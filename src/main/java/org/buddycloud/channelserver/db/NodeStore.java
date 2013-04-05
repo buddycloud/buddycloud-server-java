@@ -305,6 +305,14 @@ public interface NodeStore {
 	boolean isCachedNode(String nodeId) throws NodeStoreException;
 
 	/**
+	 * Allows the server to determine if the requested JID details are cached locally
+	 * 
+	 * @param jid
+	 *            user/node jid.
+	 */
+	boolean isCachedJID(JID jid) throws NodeStoreException;
+	
+	/**
 	 * Closes this node store instance and releases any resources.
 	 */
 	void close() throws NodeStoreException;

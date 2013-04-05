@@ -18,16 +18,20 @@ import org.xmpp.resultsetmanagement.ResultSet;
 public class SubscriptionsGet implements PubSubElementProcessor {
 
 	private final BlockingQueue<Packet> outQueue;
-	private final ChannelManager channelManager;
+	private ChannelManager channelManager;
 	
 	private IQ result;
 	private String node;
 	private JID actorJid;
 	private IQ requestIq;
 
-	private static final Logger LOGGER = Logger
+	private static final Logger logger = Logger
 			.getLogger(SubscriptionsGet.class);
 
+	public void setChannelManager(ChannelManager ds) {
+		channelManager = ds;
+	}
+	
 	public SubscriptionsGet(BlockingQueue<Packet> outQueue,
 			ChannelManager channelManager) {
 		this.outQueue = outQueue;
@@ -63,7 +67,9 @@ public class SubscriptionsGet implements PubSubElementProcessor {
 
 	private void getNodeSubscriptions(Element subscriptions)
 			throws NodeStoreException, InterruptedException {
-		if (false == channelManager.isLocalNode(node)) {
+		if (false == channelManager.isLocalNode(node) 
+		    && (false == channelManager.isCachedNode(node))
+		) {
 			makeRemoteRequest(new JID(node.split("/")[2]).getDomain());
 		    return;
 		}
@@ -85,7 +91,9 @@ public class SubscriptionsGet implements PubSubElementProcessor {
 
 	private void getUserSubscriptions(Element subscriptions)
 			throws NodeStoreException, InterruptedException {
-		if (false == channelManager.isLocalJID(actorJid)) {
+		if (false == channelManager.isLocalJID(actorJid) 
+		    && (false == channelManager.isCachedJID(actorJid))
+		) {
 			makeRemoteRequest(actorJid.getDomain());
 			return;
 		}

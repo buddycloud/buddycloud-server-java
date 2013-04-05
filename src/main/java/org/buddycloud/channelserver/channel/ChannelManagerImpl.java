@@ -146,6 +146,10 @@ public class ChannelManagerImpl implements ChannelManager {
 	public boolean isCachedNode(String nodeId) throws NodeStoreException {
 		return nodeStore.isCachedNode(nodeId);
 	}
+	
+	public boolean isCachedJID(JID jid) throws NodeStoreException {
+		return nodeStore.isCachedJID(jid);
+	}
 
 	@Override
 	public NodeItem getNodeItem(String nodeId, String nodeItemId)

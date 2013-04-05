@@ -98,7 +98,8 @@ public class ItemsGet implements PubSubElementProcessor {
 
 		fetchersJid = requestIq.getFrom();
 
-		if (false == channelManager.isLocalNode(node)) {
+		if (false == channelManager.isLocalNode(node) 
+			&& (false == channelManager.isCachedNode(node))) {
 			makeRemoteRequest();
 		    return;
 		}

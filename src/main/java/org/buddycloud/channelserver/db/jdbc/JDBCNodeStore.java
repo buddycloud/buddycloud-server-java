@@ -750,6 +750,11 @@ public class JDBCNodeStore implements NodeStore {
 	}
 
 	@Override
+	public boolean isCachedNode(String nodeId) throws NodeStoreException {
+		return (this.countNodeItems(nodeId) > 0);
+	}
+	
+	@Override
 	public Transaction beginTransaction() throws NodeStoreException {
 		if (transactionHasBeenRolledBack) {
 			throw new IllegalStateException(

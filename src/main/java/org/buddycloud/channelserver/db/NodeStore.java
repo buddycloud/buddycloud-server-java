@@ -295,6 +295,14 @@ public interface NodeStore {
 	 */
 	void deleteNodeItemById(String nodeId, String nodeItemId)
 			throws NodeStoreException;
+	
+	/**
+	 * Allows the server to determine if the requested node is cached locally
+	 * 
+	 * @param nodeId
+	 *            the node id.
+	 */
+	boolean isCachedNode(String nodeId) throws NodeStoreException;
 
 	/**
 	 * Closes this node store instance and releases any resources.

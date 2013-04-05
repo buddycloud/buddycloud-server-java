@@ -937,6 +937,23 @@ public class JDBCNodeStoreTest {
 	}
 	
 	@Test
+	public void testIsCachedNode() throws Exception {
+		dbTester.loadData("node_1");
+		
+		boolean result = store.isCachedNode(TEST_SERVER1_NODE1_ID);
+		
+		assertEquals("Incorrect caching reported", true, result);
+	}
+	
+	@Test
+	public void testIsCachedNodeForNonCachedNode() throws Exception {
+		dbTester.loadData("node_1");
+		boolean result = store.isCachedNode("iamanodewhichdoesntexist");
+		
+		assertEquals("Incorrect cached response", false, result);
+	}
+	
+	@Test
 	public void testGetNodeItem() throws Exception {
 		dbTester.loadData("node_1");
 

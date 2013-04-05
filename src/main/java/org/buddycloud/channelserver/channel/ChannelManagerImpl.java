@@ -142,6 +142,10 @@ public class ChannelManagerImpl implements ChannelManager {
 	public int countNodeItems(String nodeId) throws NodeStoreException {
 		return nodeStore.countNodeItems(nodeId);
 	}
+	
+	public boolean isCachedNode(String nodeId) throws NodeStoreException {
+		return nodeStore.isCachedNode(nodeId);
+	}
 
 	@Override
 	public NodeItem getNodeItem(String nodeId, String nodeItemId)

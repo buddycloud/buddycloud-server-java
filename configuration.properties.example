@@ -12,3 +12,5 @@ jdbc.user=username
 jdbc.password=password
 jdbc.proxool.maximum-connection-count=10
 jdbc.proxool.house-keeping-test-sql=select CURRENT_DATE
+
+cache=1

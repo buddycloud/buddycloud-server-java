@@ -21,6 +21,8 @@ public class FederatedResponseQueueConsumer extends QueueConsumer {
 	private final BlockingQueue<Packet> federatedResponseQueue;
 	private final Properties conf;
 	private final ChannelManagerFactory channelManagerFactory;
+	
+	private boolean active = false;
 
 	public FederatedResponseQueueConsumer(BlockingQueue<Packet> federatedResponseQueue, Properties conf,
 			ChannelManagerFactory channelManagerFactory) {
@@ -28,12 +30,19 @@ public class FederatedResponseQueueConsumer extends QueueConsumer {
 		this.federatedResponseQueue = federatedResponseQueue;
 		this.conf = conf;
 		this.channelManagerFactory = channelManagerFactory;
+		
+		if (1 == Integer.parseInt(this.conf.getProperty("cache", "0"))) {
+			this.active = true;
+		}
 	}
 
 	@Override
 	protected void consume(Packet p) {
 		ChannelManager channelManager = null;
-		try {
+		
+		if (false == active) return;
+		
+		try { 
 			Long start = System.currentTimeMillis();
 
 			String xml = p.toXML();

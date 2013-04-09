@@ -29,8 +29,8 @@ public class FederatedQueueManager {
 	public static final String DISCO_INFO = "DISCO_INFO";
 	public static final String DISCOVERED = "DISCOVERED";
 
-	public static final Object IDENTITY_TYPE_CHANNELS = "channels";
-	public static final Object BUDDYCLOUD_SERVER = "buddycloud-server";
+	public static final String IDENTITY_TYPE_CHANNELS = "channels";
+	public static final String BUDDYCLOUD_SERVER = "buddycloud-server";
 
 	private int id = 1;
 
@@ -43,6 +43,8 @@ public class FederatedQueueManager {
 	private HashMap<String, JID> sentRemotePackets = new HashMap<String, JID>();
 
 	private String localServer;
+
+	private BlockingQueue<Packet> federatedResponseQueue;
 
 	public FederatedQueueManager(ChannelsEngine component, String localServer) {
 		this.component = component;
@@ -217,6 +219,7 @@ public class FederatedQueueManager {
 					"Can not find original requesting packet! (ID:"
 							+ packet.getID() + ")");
 		}
+
 		logger.debug("Forwarding remote packet to "
 				+ sentRemotePackets.get(packet.getID()) + " from "
 				+ packet.getFrom());
@@ -224,6 +227,8 @@ public class FederatedQueueManager {
 		packet.setFrom(localServer);
 		sentRemotePackets.remove(packet.getID());
 		component.sendPacket(packet);
+		
+		federatedResponseQueue.put(packet);
 	}
 
 	public void addChannelMap(JID server) {

@@ -13,6 +13,7 @@ import org.buddycloud.channelserver.db.exception.NodeStoreException;
 import org.buddycloud.channelserver.queue.FederatedQueueManager;
 import org.buddycloud.channelserver.queue.InQueueConsumer;
 import org.buddycloud.channelserver.queue.OutQueueConsumer;
+import org.buddycloud.channelserver.queue.FederatedResponseQueueConsumer;
 import org.xmpp.component.Component;
 import org.xmpp.component.ComponentException;
 import org.xmpp.component.ComponentManager;
@@ -28,6 +29,11 @@ public class ChannelsEngine implements Component {
 
 	private BlockingQueue<Packet> outQueue = new LinkedBlockingQueue<Packet>();
 	private BlockingQueue<Packet> inQueue = new LinkedBlockingQueue<Packet>();
+	private BlockingQueue<Packet> federatedResponseQueue = new LinkedBlockingQueue<Packet>();
+	
+	private ChannelManagerFactory channelManagerFactory;
+	private FederatedQueueManager federatedQueueManager;
+	
 
 	private Properties conf;
 
@@ -54,29 +60,41 @@ public class ChannelsEngine implements Component {
 
 		// TODO Some kind of DI framework - probably something lightweight
 		// Set up the factories
+		setupManagers();
+		startQueueConsumers();
+
+		LOGGER.info("XMPP Component started. We are '" + jid.toString()
+				+ "' and ready to accept packages.");
+	}
+
+	private void startQueueConsumers() {
+		OutQueueConsumer outQueueConsumer = new OutQueueConsumer(this,
+				outQueue, federatedQueueManager,
+				conf.getProperty("server.domain"));
+
+		InQueueConsumer inQueueConsumer = new InQueueConsumer(outQueue, conf,
+				inQueue, channelManagerFactory, federatedQueueManager);
+		
+		FederatedResponseQueueConsumer federatedResponseQueueConsumer = new FederatedResponseQueueConsumer(
+				federatedResponseQueue, conf, channelManagerFactory);
+		
+		outQueueConsumer.start();
+		inQueueConsumer.start();
+		federatedResponseQueueConsumer.start();
+	}
+
+	private void setupManagers() throws ComponentException {
 		NodeStoreFactory nodeStoreFactory;
 		try {
 			nodeStoreFactory = new DefaultNodeStoreFactoryImpl(conf);
 		} catch (NodeStoreException e) {
 			throw new ComponentException(e);
 		}
-		ChannelManagerFactory channelManagerFactory = new ChannelManagerFactoryImpl(
+		
+		channelManagerFactory = new ChannelManagerFactoryImpl(
 				conf, nodeStoreFactory);
-
-		FederatedQueueManager federatedQueueManager = new FederatedQueueManager(
+		federatedQueueManager = new FederatedQueueManager(
 				this, conf.getProperty("server.domain.channels"));
-
-		OutQueueConsumer outQueueConsumer = new OutQueueConsumer(this,
-				outQueue, federatedQueueManager,
-				conf.getProperty("server.domain"));
-		outQueueConsumer.start();
-
-		InQueueConsumer inQueueConsumer = new InQueueConsumer(outQueue, conf,
-				inQueue, channelManagerFactory, federatedQueueManager);
-		inQueueConsumer.start();
-
-		LOGGER.info("XMPP Component started. We are '" + jid.toString()
-				+ "' and ready to accept packages.");
 	}
 
 	@Override

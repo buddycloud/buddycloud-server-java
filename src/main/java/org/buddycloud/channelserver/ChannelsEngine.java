@@ -29,7 +29,6 @@ public class ChannelsEngine implements Component {
 
 	private BlockingQueue<Packet> outQueue = new LinkedBlockingQueue<Packet>();
 	private BlockingQueue<Packet> inQueue = new LinkedBlockingQueue<Packet>();
-	private BlockingQueue<Packet> federatedResponseQueue = new LinkedBlockingQueue<Packet>();
 	
 	private ChannelManagerFactory channelManagerFactory;
 	private FederatedQueueManager federatedQueueManager;
@@ -58,8 +57,6 @@ public class ChannelsEngine implements Component {
 		this.jid = jid;
 		this.manager = manager;
 
-		// TODO Some kind of DI framework - probably something lightweight
-		// Set up the factories
 		setupManagers();
 		startQueueConsumers();
 
@@ -74,9 +71,6 @@ public class ChannelsEngine implements Component {
 
 		InQueueConsumer inQueueConsumer = new InQueueConsumer(outQueue, conf,
 				inQueue, channelManagerFactory, federatedQueueManager);
-		
-		FederatedResponseQueueConsumer federatedResponseQueueConsumer = new FederatedResponseQueueConsumer(
-				federatedResponseQueue, conf, channelManagerFactory);
 		
 		outQueueConsumer.start();
 		inQueueConsumer.start();

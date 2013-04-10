@@ -227,8 +227,6 @@ public class FederatedQueueManager {
 		packet.setFrom(localServer);
 		sentRemotePackets.remove(packet.getID());
 		component.sendPacket(packet);
-		
-		federatedResponseQueue.put(packet);
 	}
 
 	public void addChannelMap(JID server) {

@@ -68,7 +68,7 @@ public class ItemsGetTest extends IQTestHandler {
 	}
 
 	@Test
-	public void testPassingNotCreateAsElementNameReturnsFalse() {
+	public void testPassingNotItemsAsElementNameReturnsFalse() {
 		Element element = new BaseElement("not-items");
 		Assert.assertFalse(itemsGet.accept(element));
 	}

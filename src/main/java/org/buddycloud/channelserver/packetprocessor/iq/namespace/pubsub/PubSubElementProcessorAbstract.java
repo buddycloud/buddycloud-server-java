@@ -19,7 +19,7 @@ public abstract class PubSubElementProcessorAbstract
 {
     
     protected BlockingQueue<Packet> outQueue;
-    protected ChannelManager             channelManager;
+    protected ChannelManager        channelManager;
     protected Element               element;
     protected IQ                    response;
     protected IQ                    request;

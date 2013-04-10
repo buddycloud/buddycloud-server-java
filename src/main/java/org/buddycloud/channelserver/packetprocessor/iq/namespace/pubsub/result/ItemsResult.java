@@ -8,21 +8,27 @@ import org.xmpp.packet.JID;
 
 public class ItemsResult extends PubSubElementProcessorAbstract {
 
+	private static final String MISSING_NODE = "Missing node";
+	private static final String MISSING_ITEMS_ELEMENT = "Missing items element";
+	private String node;
+	
 	public ItemsResult(ChannelManager channelManager) {
-		// TODO Auto-generated constructor stub
+		this.channelManager = channelManager;
 	}
 
-	@Override
 	public void process(Element elm, JID actorJID, IQ reqIQ, Element rsm)
 			throws Exception {
-		// TODO Auto-generated method stub
-
+        node = elm.attributeValue("node");
+        if ((null == node) || (true == node.equals(""))) {
+        	throw new NullPointerException(MISSING_NODE);
+        }
+        Element items = elm.element("items");
+		if (items == null) {
+			throw new NullPointerException(MISSING_ITEMS_ELEMENT);
+		}
 	}
 
-	@Override
 	public boolean accept(Element elm) {
-		// TODO Auto-generated method stub
-		return false;
+		return elm.getName().equals("items");
 	}
-
 }

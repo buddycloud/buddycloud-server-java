@@ -1,4 +1,4 @@
-package org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.get;
+package org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.result;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -37,10 +37,10 @@ import org.xmpp.packet.Packet;
 import org.xmpp.packet.PacketError;
 import org.xmpp.resultsetmanagement.ResultSetImpl;
 
-public class SubscriptionsGetTest extends IQTestHandler {
+public class ItemsResultTest extends IQTestHandler {
 
 	private IQ request;
-	private SubscriptionsGet subscriptionsGet;
+	private ItemsResult itemsResult;
 	private Element element;
 	private BlockingQueue<Packet> queue = new LinkedBlockingQueue<Packet>();
 
@@ -52,23 +52,32 @@ public class SubscriptionsGetTest extends IQTestHandler {
 	public void setUp() throws Exception {
 
 		queue = new LinkedBlockingQueue<Packet>();
-		subscriptionsGet = new SubscriptionsGet(queue, channelManager);
-		element = new BaseElement("subscriptions");
+		itemsResult = new ItemsResult(channelManager);
+		request = readStanzaAsIq("/iq/pubsub/items/reply.stanza");
+		element = new BaseElement("items");
 
 		channelManager = Mockito.mock(Mock.class);
-		Mockito.when(channelManager.isLocalNode(Mockito.anyString()))
-				.thenReturn(true);
-		subscriptionsGet.setChannelManager(channelManager);
+		itemsResult.setChannelManager(channelManager);
 	}
 
 	@Test
-	public void testPassingSubscriptionsAsElementNameReturnsTrue() {
-		Assert.assertTrue(subscriptionsGet.accept(element));
+	public void testPassingItemsAsElementNameReturnsTrue() {
+		Assert.assertTrue(itemsResult.accept(element));
+	}
+
+	@Test
+	public void testPassingNotItemsAsElementNameReturnsFalse() {
+		Element element = new BaseElement("not-items");
+		Assert.assertFalse(itemsResult.accept(element));
 	}
 
 	@Test(expected=NullPointerException.class)
-	public void testPassingNotSubscriptionsAsElementNameReturnsFalse() {
-		Element element = new BaseElement("not-subscriptions");
-		Assert.assertFalse(subscriptionsGet.accept(element));
+	public void testMissingNodeAttributeThrowsException() throws Exception {
+		itemsResult.process(element, jid, request, null);
+	}
+	
+	@Test(expected=NullPointerException.class)
+	public void testMissingItemsElementThrowsException() {
+		itemsResult.process(element, jid, request, null);
 	}
 }

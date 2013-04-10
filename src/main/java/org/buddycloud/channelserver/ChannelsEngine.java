@@ -74,7 +74,6 @@ public class ChannelsEngine implements Component {
 		
 		outQueueConsumer.start();
 		inQueueConsumer.start();
-		federatedResponseQueueConsumer.start();
 	}
 
 	private void setupManagers() throws ComponentException {

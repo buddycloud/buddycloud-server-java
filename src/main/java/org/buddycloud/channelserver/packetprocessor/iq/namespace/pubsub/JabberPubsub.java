@@ -38,7 +38,7 @@ public class JabberPubsub extends AbstractNamespace {
 		super(outQueue, conf, channelManager);
 		this.getProcessor = new PubSubGet(outQueue, channelManager);
 		this.setProcessor = new PubSubSet(outQueue, channelManager);
-		this.resultProcessor = new PubSubResult(outQueue, federatedQueueManager);
+		this.resultProcessor = new PubSubResult(outQueue, federatedQueueManager, channelManager);
 	}
 
 	@Override

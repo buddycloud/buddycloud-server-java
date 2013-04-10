@@ -1,5 +1,6 @@
 package org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.result;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.concurrent.BlockingQueue;
@@ -24,6 +25,7 @@ import org.buddycloud.channelserver.pubsub.model.impl.NodeSubscriptionImpl;
 import org.buddycloud.channelserver.pubsub.subscription.Subscriptions;
 import org.buddycloud.channelserver.utils.node.NodeAclRefuseReason;
 import org.buddycloud.channelserver.utils.node.NodeViewAcl;
+import org.dom4j.DocumentException;
 import org.dom4j.Element;
 import org.dom4j.Namespace;
 import org.dom4j.QName;
@@ -77,7 +79,12 @@ public class ItemsResultTest extends IQTestHandler {
 	}
 	
 	@Test(expected=NullPointerException.class)
-	public void testMissingItemsElementThrowsException() {
+	public void testMissingItemsElementThrowsException() throws Exception {
+		
+		request = toIq(readStanzaAsString(
+				"/iq/pubsub/item/delete/request.stanza").replaceFirst(
+				"<item id='item-id' notify='true' />", ""));
+		
 		itemsResult.process(element, jid, request, null);
 	}
 }

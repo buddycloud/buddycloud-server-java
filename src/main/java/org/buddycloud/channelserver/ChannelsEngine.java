@@ -13,7 +13,6 @@ import org.buddycloud.channelserver.db.exception.NodeStoreException;
 import org.buddycloud.channelserver.queue.FederatedQueueManager;
 import org.buddycloud.channelserver.queue.InQueueConsumer;
 import org.buddycloud.channelserver.queue.OutQueueConsumer;
-import org.buddycloud.channelserver.queue.FederatedResponseQueueConsumer;
 import org.xmpp.component.Component;
 import org.xmpp.component.ComponentException;
 import org.xmpp.component.ComponentManager;

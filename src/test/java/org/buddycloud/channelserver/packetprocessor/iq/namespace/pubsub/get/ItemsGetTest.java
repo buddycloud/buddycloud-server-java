@@ -63,7 +63,7 @@ public class ItemsGetTest extends IQTestHandler {
 	}
 
 	@Test
-	public void testPassingAffiliationsAsElementNameReturnsTrue() {
+	public void testPassingItemsAsElementNameReturnsTrue() {
 		Assert.assertTrue(itemsGet.accept(element));
 	}
 

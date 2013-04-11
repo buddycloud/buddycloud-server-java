@@ -66,7 +66,7 @@ public class SubscriptionsGetTest extends IQTestHandler {
 		Assert.assertTrue(subscriptionsGet.accept(element));
 	}
 
-	@Test(expected=NullPointerException.class)
+	@Test
 	public void testPassingNotSubscriptionsAsElementNameReturnsFalse() {
 		Element element = new BaseElement("not-subscriptions");
 		Assert.assertFalse(subscriptionsGet.accept(element));

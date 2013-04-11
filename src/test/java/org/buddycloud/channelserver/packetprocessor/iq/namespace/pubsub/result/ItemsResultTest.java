@@ -10,6 +10,7 @@ import java.util.concurrent.TimeUnit;
 
 import junit.framework.Assert;
 
+import org.apache.commons.lang.StringUtils;
 import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.db.ClosableIteratorImpl;
 import org.buddycloud.channelserver.db.CloseableIterator;
@@ -76,18 +77,31 @@ public class ItemsResultTest extends IQTestHandler {
 		Element element = new BaseElement("not-items");
 		Assert.assertFalse(itemsResult.accept(element));
 	}
-
+	
 	@Test(expected = NullPointerException.class)
 	public void testMissingNodeAttributeThrowsException() throws Exception {
 		Element element = new BaseElement("items");
 		itemsResult.process(element, jid, request, null);
 	}
+	
+
+	@Test
+	public void testEnsureResultsComeFromExternalBuddycloudServers() throws Exception {
+		// If test throws an exception it failed!
+		Element element = new BaseElement("items");
+		
+		request = toIq("<iq type=\"result\" id=\"items1\" "
+				+ "from=\"lloyd@buddycloud.org/junit\" "
+				+ "to=\"channels.buddycloud.org\" />");
+		
+	    itemsResult.process(element, jid, request, null);
+	}
 
 	@Test
 	public void testNoItemsResultsInNoAdditionsToDatabase() throws Exception {
 
-		Mockito.verify(channelManager, Mockito.never()).addNodeItem(
-				Mockito.any(NodeItem.class));
+		Mockito.when(channelManager.nodeExists(Mockito.anyString()))
+				.thenReturn(true);
 
 		request = toIq("<iq type=\"result\" id=\"items1\" "
 				+ "from=\"channels.shakespeare.lit\" "
@@ -97,14 +111,16 @@ public class ItemsResultTest extends IQTestHandler {
 				+ "</items></pubsub></iq>");
 
 		itemsResult.process(element, jid, request, null);
+
+		Mockito.verify(channelManager, Mockito.never()).addNodeItem(
+				Mockito.any(NodeItem.class));
 	}
 
 	@Test
 	public void testNodeCreatedInDatabaseIfItDoesntExist() throws Exception {
+
 		Mockito.when(channelManager.nodeExists(Mockito.anyString()))
 				.thenReturn(false);
-		Mockito.verify(channelManager, Mockito.times(1)).createNode(
-				Mockito.any(JID.class), Mockito.anyString(), Mockito.anyMap());
 
 		request = toIq("<iq type=\"result\" id=\"items1\" "
 				+ "from=\"channels.shakespeare.lit\" "
@@ -114,14 +130,16 @@ public class ItemsResultTest extends IQTestHandler {
 				+ "</items></pubsub></iq>");
 
 		itemsResult.process(element, jid, request, null);
+
+		Mockito.verify(channelManager, Mockito.times(1)).addRemoteNode(
+				Mockito.anyString());
 	}
 
 	@Test
 	public void testNodeNotCreatedInDatabaseIfAlreadyExists() throws Exception {
+
 		Mockito.when(channelManager.nodeExists(Mockito.anyString()))
 				.thenReturn(true);
-		Mockito.verify(channelManager, Mockito.never()).createNode(
-				Mockito.any(JID.class), Mockito.anyString(), Mockito.anyMap());
 
 		request = toIq("<iq type=\"result\" id=\"items1\" "
 				+ "from=\"channels.shakespeare.lit\" "
@@ -131,29 +149,49 @@ public class ItemsResultTest extends IQTestHandler {
 				+ "</items></pubsub></iq>");
 
 		itemsResult.process(element, jid, request, null);
+
+		Mockito.verify(channelManager, Mockito.never()).addRemoteNode(
+				Mockito.anyString());
 	}
 
 	@Test
 	public void testItemWithInvalidDateIsNotAddedToDatabase() throws Exception {
-		
+
 		Mockito.when(channelManager.nodeExists(Mockito.anyString()))
-		.thenReturn(true);
-		
-		request = toIq(readStanzaAsString("/iq/pubsub/items/reply.stanza")
-				.replaceFirst("2011-11-27T19:05:58Z", "star date 23252455"));
-		Mockito.verify(channelManager, Mockito.atMost(3)).addNodeItem(
-				Mockito.any(NodeItem.class));
+				.thenReturn(true);
+
+		request = toIq("<iq type=\"result\" id=\"items1\" "
+			+ "from=\"channels.shakespeare.lit\" "
+			+ "to=\"francisco@denmark.lit/barracks\">"
+			+ "<pubsub xmlns=\"http://jabber.org/protocol/pubsub\">"
+			+ "<items node=\"/user/francisco@denmark.lit/posts\">"
+		    + "<item id=\"3\">"
+            + "<entry xmlns=\"http://www.w3.org/2005/Atom\" xmlns:activity=\"http://activitystrea.ms/spec/1.0/\">"
+            + "<id>tag:channels.buddycloud.com,/user/koski@buddycloud.com/posts,3</id>"
+            + "<updated>November 5, 1955</updated>"
+            + "<author>"
+            + "<name>koski@buddycloud.com</name>"
+            + "</author>"
+            + "</entry>"
+            + "</item>"
+            + "</items></pubsub></iq>");
+
 		itemsResult.process(element, jid, request, null);
+		
+		Mockito.verify(channelManager, Mockito.times(0)).addNodeItem(
+				Mockito.any(NodeItem.class));
 	}
-	
+
 	@Test
-	public void testSendingValidItemsResultsInCorrectNumberOfDatabaseEntries() throws Exception {
-		
+	public void testSendingValidItemsResultsInCorrectNumberOfDatabaseEntries()
+			throws Exception {
+
 		Mockito.when(channelManager.nodeExists(Mockito.anyString()))
-		.thenReturn(true);
-		
-		Mockito.verify(channelManager, Mockito.atMost(4)).addNodeItem(
-				Mockito.any(NodeItem.class));
+				.thenReturn(true);
+
 		itemsResult.process(element, jid, request, null);
+
+		Mockito.verify(channelManager, Mockito.times(3)).addNodeItem(
+				Mockito.any(NodeItem.class));
 	}
 }

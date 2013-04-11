@@ -20,12 +20,12 @@ import org.xmpp.packet.JID;
 public class ItemsResult extends PubSubElementProcessorAbstract {
 
 	private static final String MISSING_NODE = "Missing node";
-    private static final String DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ss'Z'";
- 
+	private static final String DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ss'Z'";
+
 	private static final Logger logger = Logger.getLogger(ItemsResult.class);
 	private String node;
 	private SimpleDateFormat sdf = new SimpleDateFormat(DATE_FORMAT);
-	
+
 	public ItemsResult(ChannelManager channelManager) {
 		this.channelManager = channelManager;
 	}
@@ -35,12 +35,23 @@ public class ItemsResult extends PubSubElementProcessorAbstract {
 
 		this.request = reqIQ;
 
+		if (-1 != request.getFrom().toString().indexOf("@")) {
+			logger.debug("Ignoring result packet, only interested in stanzas "
+		        + "from other buddycloud servers");
+			return;
+		}
 		node = elm.attributeValue("node");
 
 		if ((null == node) || (true == node.equals(""))) {
 			throw new NullPointerException(MISSING_NODE);
 		}
 
+		if (false == channelManager.nodeExists(node)) {
+			System.out.println("Adding remote node");
+			channelManager.addRemoteNode(node);
+		}
+		
+		@SuppressWarnings("unchecked")
 		List<Element> items = request.getElement()
 				.element("pubsub")
 				.element("items")
@@ -51,14 +62,15 @@ public class ItemsResult extends PubSubElementProcessorAbstract {
 		}
 	}
 
-	private void processItem(Element item) throws ParseException, NodeStoreException {
+	private void processItem(Element item) throws ParseException,
+			NodeStoreException {
 
 		Element entry = item.element("entry");
-		
+
 		try {
-		    Date updatedDate = sdf.parse(entry.elementText("updated"));
-			NodeItemImpl nodeItem = new NodeItemImpl(node, entry.elementText("id"),
-					updatedDate, entry.asXML());
+			Date updatedDate = sdf.parse(entry.elementText("updated"));
+			NodeItemImpl nodeItem = new NodeItemImpl(node,
+					entry.elementText("id"), updatedDate, entry.asXML());
 			channelManager.addNodeItem(nodeItem);
 		} catch (ParseException e) {
 			logger.error(e);

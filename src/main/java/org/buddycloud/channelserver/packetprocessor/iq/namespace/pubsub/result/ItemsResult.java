@@ -5,14 +5,15 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 
-import org.apache.commons.lang.time.DateFormatUtils;
 import org.apache.log4j.Logger;
 import org.buddycloud.channelserver.channel.ChannelManager;
-import org.buddycloud.channelserver.channel.ValidateEntry;
 import org.buddycloud.channelserver.db.exception.NodeStoreException;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.PubSubElementProcessorAbstract;
-import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.set.SubscribeSet;
+import org.buddycloud.channelserver.pubsub.affiliation.Affiliations;
+import org.buddycloud.channelserver.pubsub.model.NodeSubscription;
 import org.buddycloud.channelserver.pubsub.model.impl.NodeItemImpl;
+import org.buddycloud.channelserver.pubsub.model.impl.NodeSubscriptionImpl;
+import org.buddycloud.channelserver.pubsub.subscription.Subscriptions;
 import org.dom4j.Element;
 import org.xmpp.packet.IQ;
 import org.xmpp.packet.JID;
@@ -25,6 +26,7 @@ public class ItemsResult extends PubSubElementProcessorAbstract {
 	private static final Logger logger = Logger.getLogger(ItemsResult.class);
 	private String node;
 	private SimpleDateFormat sdf = new SimpleDateFormat(DATE_FORMAT);
+	private boolean subscriptionNode = false;
 
 	public ItemsResult(ChannelManager channelManager) {
 		this.channelManager = channelManager;
@@ -37,32 +39,60 @@ public class ItemsResult extends PubSubElementProcessorAbstract {
 
 		if (-1 != request.getFrom().toString().indexOf("@")) {
 			logger.debug("Ignoring result packet, only interested in stanzas "
-		        + "from other buddycloud servers");
+					+ "from other buddycloud servers");
 			return;
 		}
+
 		node = elm.attributeValue("node");
 
 		if ((null == node) || (true == node.equals(""))) {
 			throw new NullPointerException(MISSING_NODE);
 		}
 
-		if (false == channelManager.nodeExists(node)) {
-			System.out.println("Adding remote node");
+		subscriptionNode = (true == node.substring(
+				node.length() - 13, node.length()).equals("subscriptions"));
+
+		if ((false == subscriptionNode)
+				&& (false == channelManager.nodeExists(node)))
 			channelManager.addRemoteNode(node);
-		}
-		
+
 		@SuppressWarnings("unchecked")
-		List<Element> items = request.getElement()
-				.element("pubsub")
-				.element("items")
-				.elements("item");
+		List<Element> items = request.getElement().element("pubsub")
+				.element("items").elements("item");
 
 		for (Element item : items) {
-			processItem(item);
+			if (true == subscriptionNode) {
+				processSubscriptionItem(item);
+			} else {
+				processPublishedItem(item);
+			}
 		}
 	}
 
-	private void processItem(Element item) throws ParseException,
+	private void processSubscriptionItem(Element item) throws NodeStoreException {
+		JID user = new JID(item.attributeValue("id"));
+		List<Element> items = item.element("query").elements("item");
+		for (Element subscription : items) {
+			addSubscription(subscription, user);
+		}
+	}
+
+	private void addSubscription(Element item, JID user) throws NodeStoreException {
+		
+		String node       = item.attributeValue("node");
+		JID    listener   = new JID(item.attributeValue("jid"));
+		Subscriptions sub = Subscriptions.createFromString(item.attributeValue("subscription"));
+		Affiliations aff  = Affiliations.createFromString(item.attributeValue("affiliation"));
+		NodeSubscription subscription = new NodeSubscriptionImpl(node, user, listener, sub);
+		
+		if (false == channelManager.nodeExists(node)) 
+			channelManager.addRemoteNode(node);
+		
+		channelManager.addUserSubscription(subscription);
+		channelManager.setUserAffiliation(node, user, aff);
+	}
+
+	private void processPublishedItem(Element item) throws ParseException,
 			NodeStoreException {
 
 		Element entry = item.element("entry");

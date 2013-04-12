@@ -46,7 +46,7 @@ import org.xmpp.resultsetmanagement.ResultSetImpl;
 
 public class ItemsResultTest extends IQTestHandler {
 
-	private IQ request;
+	private IQ result;
 	private ItemsResult itemsResult;
 	private Element element;
 
@@ -58,7 +58,7 @@ public class ItemsResultTest extends IQTestHandler {
 	public void setUp() throws Exception {
 
 		itemsResult = new ItemsResult(channelManager);
-		request = readStanzaAsIq("/iq/pubsub/items/reply.stanza");
+		result = readStanzaAsIq("/iq/pubsub/items/reply.stanza");
 
 		element = new BaseElement("items");
 		element.addAttribute("node", node);
@@ -81,7 +81,7 @@ public class ItemsResultTest extends IQTestHandler {
 	@Test(expected = NullPointerException.class)
 	public void testMissingNodeAttributeThrowsException() throws Exception {
 		Element element = new BaseElement("items");
-		itemsResult.process(element, jid, request, null);
+		itemsResult.process(element, jid, result, null);
 	}
 
 	@Test
@@ -90,11 +90,11 @@ public class ItemsResultTest extends IQTestHandler {
 		// If test throws an exception it failed!
 		Element element = new BaseElement("items");
 
-		request = toIq("<iq type=\"result\" id=\"items1\" "
+		result = toIq("<iq type=\"result\" id=\"items1\" "
 				+ "from=\"lloyd@buddycloud.org/junit\" "
 				+ "to=\"channels.buddycloud.org\" />");
 
-		itemsResult.process(element, jid, request, null);
+		itemsResult.process(element, jid, result, null);
 	}
 
 	@Test
@@ -103,14 +103,14 @@ public class ItemsResultTest extends IQTestHandler {
 		Mockito.when(channelManager.nodeExists(Mockito.anyString()))
 				.thenReturn(true);
 
-		request = toIq("<iq type=\"result\" id=\"items1\" "
+		result = toIq("<iq type=\"result\" id=\"items1\" "
 				+ "from=\"channels.shakespeare.lit\" "
 				+ "to=\"francisco@denmark.lit/barracks\">"
 				+ "<pubsub xmlns=\"http://jabber.org/protocol/pubsub\">"
 				+ "<items node=\"/user/francisco@denmark.lit/posts\">"
 				+ "</items></pubsub></iq>");
 
-		itemsResult.process(element, jid, request, null);
+		itemsResult.process(element, jid, result, null);
 
 		Mockito.verify(channelManager, Mockito.never()).addNodeItem(
 				Mockito.any(NodeItem.class));
@@ -122,14 +122,14 @@ public class ItemsResultTest extends IQTestHandler {
 		Mockito.when(channelManager.nodeExists(Mockito.anyString()))
 				.thenReturn(false);
 
-		request = toIq("<iq type=\"result\" id=\"items1\" "
+		result = toIq("<iq type=\"result\" id=\"items1\" "
 				+ "from=\"channels.shakespeare.lit\" "
 				+ "to=\"francisco@denmark.lit/barracks\">"
 				+ "<pubsub xmlns=\"http://jabber.org/protocol/pubsub\">"
 				+ "<items node=\"/user/francisco@denmark.lit/posts\">"
 				+ "</items></pubsub></iq>");
 
-		itemsResult.process(element, jid, request, null);
+		itemsResult.process(element, jid, result, null);
 
 		Mockito.verify(channelManager, Mockito.times(1)).addRemoteNode(
 				Mockito.anyString());
@@ -141,14 +141,14 @@ public class ItemsResultTest extends IQTestHandler {
 		Mockito.when(channelManager.nodeExists(Mockito.anyString()))
 				.thenReturn(true);
 
-		request = toIq("<iq type=\"result\" id=\"items1\" "
+		result = toIq("<iq type=\"result\" id=\"items1\" "
 				+ "from=\"channels.shakespeare.lit\" "
 				+ "to=\"francisco@denmark.lit/barracks\">"
 				+ "<pubsub xmlns=\"http://jabber.org/protocol/pubsub\">"
 				+ "<items node=\"/user/francisco@denmark.lit/posts\">"
 				+ "</items></pubsub></iq>");
 
-		itemsResult.process(element, jid, request, null);
+		itemsResult.process(element, jid, result, null);
 
 		Mockito.verify(channelManager, Mockito.never()).addRemoteNode(
 				Mockito.anyString());
@@ -160,7 +160,7 @@ public class ItemsResultTest extends IQTestHandler {
 		Mockito.when(channelManager.nodeExists(Mockito.anyString()))
 				.thenReturn(true);
 
-		request = toIq("<iq type=\"result\" id=\"items1\" "
+		result = toIq("<iq type=\"result\" id=\"items1\" "
 				+ "from=\"channels.shakespeare.lit\" "
 				+ "to=\"francisco@denmark.lit/barracks\">"
 				+ "<pubsub xmlns=\"http://jabber.org/protocol/pubsub\">"
@@ -172,7 +172,7 @@ public class ItemsResultTest extends IQTestHandler {
 				+ "<name>koski@buddycloud.com</name>" + "</author>"
 				+ "</entry>" + "</item>" + "</items></pubsub></iq>");
 
-		itemsResult.process(element, jid, request, null);
+		itemsResult.process(element, jid, result, null);
 
 		Mockito.verify(channelManager, Mockito.times(0)).addNodeItem(
 				Mockito.any(NodeItem.class));
@@ -185,7 +185,7 @@ public class ItemsResultTest extends IQTestHandler {
 		Mockito.when(channelManager.nodeExists(Mockito.anyString()))
 				.thenReturn(true);
 
-		itemsResult.process(element, jid, request, null);
+		itemsResult.process(element, jid, result, null);
 
 		Mockito.verify(channelManager, Mockito.times(3)).addNodeItem(
 				Mockito.any(NodeItem.class));
@@ -195,10 +195,10 @@ public class ItemsResultTest extends IQTestHandler {
 	public void testSubscriptionsNodeAttemptsToPlaceCorrectDataIntoDatabase()
 			throws Exception {
 
-		request = readStanzaAsIq("/iq/pubsub/items/subscriptions-reply.stanza");
+		result = readStanzaAsIq("/iq/pubsub/items/subscriptions-reply.stanza");
 		element.addAttribute("node", "/user/pamela@denmark.lit/subscriptions");
 
-		itemsResult.process(element, jid, request, null);
+		itemsResult.process(element, jid, result, null);
 
 		Mockito.verify(channelManager, Mockito.times(1)).addUserSubscription(
 				Mockito.any(NodeSubscription.class));
@@ -213,10 +213,10 @@ public class ItemsResultTest extends IQTestHandler {
 		Mockito.when(channelManager.nodeExists(Mockito.anyString()))
 				.thenReturn(false);
 
-		request = readStanzaAsIq("/iq/pubsub/items/subscriptions-reply.stanza");
+		result = readStanzaAsIq("/iq/pubsub/items/subscriptions-reply.stanza");
 		element.addAttribute("node", "/user/pamela@denmark.lit/subscriptions");
 
-		itemsResult.process(element, jid, request, null);
+		itemsResult.process(element, jid, result, null);
 
 		Mockito.verify(channelManager, Mockito.times(1)).addUserSubscription(
 				Mockito.any(NodeSubscription.class));

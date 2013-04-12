@@ -1,0 +1,17 @@
+<iq type="result" id="items1" from="channels.shakespeare.lit" to="francisco@shakespeare.lit/barracks">
+    <pubsub xmlns="http://jabber.org/protocol/pubsub">
+        <items node="/user/pamela@denmark.lit/subscriptions">
+            <item id="juliet@denmark.lit">
+                <query xmlns="http://jabber.org/protocol/disco#items">
+                    <item xmlns="http://jabber.org/protocol/pubsub" 
+                          xmlns:ns1="http://jabber.org/protocol/pubsub" 
+                          xmlns:ns2="http://jabber.org/protocol/pubsub" 
+                          jid="channels.denmark.lit" 
+                          node="/user/juliet@shakespeare.lit/posts" 
+                          ns1:affiliation="member" 
+                          ns2:subscription="subscribed" />
+                </query>
+            </item>
+        </items>
+    </pubsub>
+</iq>

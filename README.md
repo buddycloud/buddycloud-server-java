@@ -19,3 +19,12 @@ Note this points to the main buddycloud repository for the java server.
 ## Database install
 
 The java server purposefully uses the same database schema as the node.js server. See here for database installation instructions https://github.com/buddycloud/buddycloud-server/tree/develop/postgres.
+
+## Build and run
+
+* `git clone https://github.com/buddycloud/buddycloud-server-java`
+* `cd buddycloud-server-java`
+* `mvn package`
+* Edit configuration files as required
+* Install database
+* `java -jar target/channelserver-<VERSION>-jar-with-dependencies.jar

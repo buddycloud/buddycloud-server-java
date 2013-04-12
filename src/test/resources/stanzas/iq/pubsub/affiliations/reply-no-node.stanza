@@ -1,0 +1,11 @@
+<iq type="result"
+    id="affiliations1"
+    from="channels.shakespeare.lit"
+    to="romeo@shakespeare.lit/barracks">
+   <pubsub xmlns="http://jabber.org/protocol/pubsub#owner">
+      <affiliations>
+         <affiliation node="/user/francisco@denmark.lit/posts" affiliation="follower" jid="francisco@denmark.lit"/>
+         <affiliation node="/user/pamela@denmark.lit/posts" affiliation="publisher" jid="francisco@denmark.lit"/>
+      </affiliations>
+   </pubsub>
+</iq>

@@ -15,3 +15,7 @@ Currently the server has enough features that it is usable. It federates with re
 Note this points to the main buddycloud repository for the java server.
 
 [![Build Status](https://travis-ci.org/buddycloud/buddycloud-server-java.png?branch=master)](https://travis-ci.org/buddycloud/buddycloud-server-java)
+
+## Database install
+
+The java server purposefully uses the same database schema as the node.js server. See here for database installation instructions https://github.com/buddycloud/buddycloud-server/tree/develop/postgres.

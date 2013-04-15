@@ -37,7 +37,31 @@ public class Helper
         	throw new NodeConfigurationException();
         }
     }
+    
+    public void parseDiscoInfo(IQ request) throws NodeConfigurationException
+    {
+        try {
+            parseConfiguration(getConfigurationValuesFromDisco(request));
+        } catch (NullPointerException e) {
+        	LOGGER.debug(e.getStackTrace());
+        	throw new NodeConfigurationException(ELEMENT_NOT_FOUND);
+        } catch (ConfigurationFieldException e) {
+        	LOGGER.debug(e.getStackTrace());
+        	throw new NodeConfigurationException();
+        }
+    }
 
+    private List<FormField> getConfigurationValuesFromDisco(IQ request)
+    {
+        Element element = request
+        	.getElement()
+        	.element("query")
+            .element("x");
+        DataForm dataForm      = new DataForm(element);
+        List<FormField> fields = dataForm.getFields();
+        return fields;
+    }
+    
     private List<FormField> getConfigurationValues(IQ request)
     {
         Element element = request

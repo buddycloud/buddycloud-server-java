@@ -33,6 +33,8 @@ public class ItemsProcessorTest extends IQTestHandler {
 	private BlockingQueue<Packet> queue = new LinkedBlockingQueue<Packet>();
 	private ChannelManager channelManager;
 
+	private Element entry;
+
 	@Before
 	public void setUp() throws Exception {
 
@@ -60,7 +62,8 @@ public class ItemsProcessorTest extends IQTestHandler {
 				JabberPubsub.NS_PUBSUB_EVENT);
 		Element items = event.addElement("items");
 		Element item = items.addElement("item");
-		Element entry = item.addElement("entry");
+
+		entry = item.addElement("entry");
 		Element updated = entry.addElement("updated");
 		updated.setText("2012-10-10T08:37:02Z");
 
@@ -127,6 +130,22 @@ public class ItemsProcessorTest extends IQTestHandler {
 		itemsProcessor.process(message);
 
 		Mockito.verify(channelManager, Mockito.times(1)).addNodeItem(
+				Mockito.any(NodeItem.class));
+	}
+
+	@Test
+	public void testWhenRetractElementPassedItemIsDeleted() throws Exception {
+		Element item = message.getElement().element("event").element("items")
+				.element("item");
+		item.remove(entry);
+		Element retract = item.addElement("retract");
+		retract.addAttribute("id", "1234");
+
+		itemsProcessor.process(message);
+
+		Mockito.verify(channelManager, Mockito.times(1)).deleteNodeItemById(
+				Mockito.anyString(), Mockito.anyString());
+		Mockito.verify(channelManager, Mockito.times(0)).addNodeItem(
 				Mockito.any(NodeItem.class));
 	}
 }

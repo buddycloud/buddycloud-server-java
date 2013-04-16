@@ -52,19 +52,35 @@ public class ItemsProcessor implements PacketProcessor<Message> {
 		if (true == channelManager.isLocalNode(node))
 			return;
 		sendLocalNotifications();
-		cacheNewItem();
+		handleItem();
 	}
 
-	private void cacheNewItem() throws NodeStoreException {
+	private void handleItem() throws NodeStoreException {
 		
 		if (false == channelManager.nodeExists(node))
 			channelManager.addRemoteNode(node);
-		Element entry = message.getElement().element("event").element("items")
-				.element("item").element("entry");	
+		Element item = message.getElement().element("event").element("items")
+				.element("item");
+		Element entry = item.element("entry");
+		Element retract = item.element("retract");
+        if (null != entry) {
+		    handleNewItem(entry);
+		    return;
+        }
+        if (null != retract) {
+        	deleteItem(retract.attributeValue("id"));
+        	return;
+        }
+	}
+	
+	private void deleteItem(String id) throws NodeStoreException {
+		channelManager.deleteNodeItemById(node, id);
+	}
 
+	private void handleNewItem(Element entry) throws NodeStoreException {
 		try {
 			Date updatedDate = sdf.parse(entry.elementText("updated"));
-			channelManager.deleteNodeItemById(node, entry.elementText("id"));
+			deleteItem(entry.elementText("id"));
 			NodeItemImpl nodeItem = new NodeItemImpl(node,
 					entry.elementText("id"), updatedDate, entry.asXML());
 			channelManager.addNodeItem(nodeItem);

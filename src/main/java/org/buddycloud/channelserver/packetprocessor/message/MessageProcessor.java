@@ -2,12 +2,12 @@ package org.buddycloud.channelserver.packetprocessor.message;
 
 import java.util.Properties;
 import java.util.concurrent.BlockingQueue;
-
-import org.apache.commons.lang.UnhandledException;
 import org.apache.log4j.Logger;
 import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.packetprocessor.PacketProcessor;
+import org.buddycloud.channelserver.packetprocessor.message.event.AbstractMessageProcessor;
 import org.buddycloud.channelserver.packetprocessor.message.event.ItemsProcessor;
+import org.buddycloud.channelserver.packetprocessor.message.event.RetractItemProcessor;
 import org.buddycloud.channelserver.packetprocessor.message.event.SubscriptionProcessor;
 import org.dom4j.Element;
 import org.xmpp.packet.Message;
@@ -22,6 +22,8 @@ public class MessageProcessor implements PacketProcessor<Message> {
 	private ChannelManager channelManager;
 	private Message message;
 	private Properties configuration;
+	
+	private Element event;
 
 	public static final String ITEMS = "items";
 	public static final String SUBSCRIPTION = "subscription";
@@ -41,22 +43,13 @@ public class MessageProcessor implements PacketProcessor<Message> {
 		if (false == message.getType().equals(Message.Type.headline)) {
 			return;
 		}
-		Element event = message.getElement().element("event");
-		Element x = (Element) message.getElement().element("x");
+		event = message.getElement().element("event");
 		if (null != event) {
 			processEventContent(((Element) event.elements().get(0)).getName());
 			return;
-		} else if (null != x) {
-			processDataFormContent(x);
-			return;
 		}
 		throw new UnsupportedOperationException(
-				"Unknown 'headline' message type", null);
-	}
-
-	private void processDataFormContent(Element x) {
-		// TODO Auto-generated method stub
-
+				"Unknown message type", null);
 	}
 
 	private void processEventContent(String name) throws Exception {
@@ -64,8 +57,7 @@ public class MessageProcessor implements PacketProcessor<Message> {
 		logger.info("Processing event content type: '" + name + "'");
 		PacketProcessor<Message> handler = null;
 		if (name.equals(ITEMS)) {
-			handler = new ItemsProcessor(outQueue, configuration,
-					channelManager);
+			handler = processItems();
 		} else if (name.equals(SUBSCRIPTION) || name.equals(AFFILIATION)) {
 			handler = new SubscriptionProcessor(outQueue, configuration,
 					channelManager);
@@ -75,5 +67,16 @@ public class MessageProcessor implements PacketProcessor<Message> {
 					+ name + "'");
 		}
 		handler.process(message);
+	}
+
+	private AbstractMessageProcessor processItems() {
+		Element item = event.element("items").element("item");
+		if (null != item) 
+			return new ItemsProcessor(outQueue, configuration,
+					channelManager);
+	    Element retract = event.element("items").element("retract");
+	    if (null != retract)
+	    	return new RetractItemProcessor(outQueue, configuration, channelManager);
+		return null;
 	}
 }

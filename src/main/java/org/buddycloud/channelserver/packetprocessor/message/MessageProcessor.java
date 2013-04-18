@@ -7,6 +7,8 @@ import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.packetprocessor.PacketProcessor;
 import org.buddycloud.channelserver.packetprocessor.message.event.AbstractMessageProcessor;
 import org.buddycloud.channelserver.packetprocessor.message.event.AffiliationProcessor;
+import org.buddycloud.channelserver.packetprocessor.message.event.ConfigurationProcessor;
+import org.buddycloud.channelserver.packetprocessor.message.event.DeleteProcessor;
 import org.buddycloud.channelserver.packetprocessor.message.event.ItemsProcessor;
 import org.buddycloud.channelserver.packetprocessor.message.event.RetractItemProcessor;
 import org.buddycloud.channelserver.packetprocessor.message.event.SubscriptionProcessor;
@@ -28,7 +30,9 @@ public class MessageProcessor implements PacketProcessor<Message> {
 
 	public static final String ITEMS = "items";
 	public static final String SUBSCRIPTION = "subscription";
-	private static final Object AFFILIATION = "affiliation";
+	private static final String AFFILIATION = "affiliation";
+	private static final String CONFIGURATION = "configuration";
+	private static final String DELETE = "delete";
 
 	public MessageProcessor(BlockingQueue<Packet> outQueue, Properties conf,
 			ChannelManager channelManager) {
@@ -49,8 +53,7 @@ public class MessageProcessor implements PacketProcessor<Message> {
 			processEventContent(((Element) event.elements().get(0)).getName());
 			return;
 		}
-		throw new UnsupportedOperationException(
-				"Unknown message type", null);
+		throw new UnsupportedOperationException("Unknown message type", null);
 	}
 
 	private void processEventContent(String name) throws Exception {
@@ -65,6 +68,11 @@ public class MessageProcessor implements PacketProcessor<Message> {
 		} else if (true == name.equals(AFFILIATION)) {
 			handler = new AffiliationProcessor(outQueue, configuration,
 					channelManager);
+		} else if (true == name.equals(CONFIGURATION)) {
+			handler = new ConfigurationProcessor(outQueue, configuration,
+					channelManager);
+		} else if (true == name.equals(DELETE)) {
+			handler = new DeleteProcessor(outQueue, configuration, channelManager);
 		}
 		if (null == handler) {
 			throw new UnknownEventContentException("Unknown event content '"
@@ -75,12 +83,12 @@ public class MessageProcessor implements PacketProcessor<Message> {
 
 	private AbstractMessageProcessor processItems() {
 		Element item = event.element("items").element("item");
-		if (null != item) 
-			return new ItemsProcessor(outQueue, configuration,
+		if (null != item)
+			return new ItemsProcessor(outQueue, configuration, channelManager);
+		Element retract = event.element("items").element("retract");
+		if (null != retract)
+			return new RetractItemProcessor(outQueue, configuration,
 					channelManager);
-	    Element retract = event.element("items").element("retract");
-	    if (null != retract)
-	    	return new RetractItemProcessor(outQueue, configuration, channelManager);
 		return null;
 	}
 }

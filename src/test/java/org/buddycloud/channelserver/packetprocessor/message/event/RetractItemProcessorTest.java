@@ -72,6 +72,7 @@ public class RetractItemProcessorTest extends IQTestHandler {
 	public void testLocalNodeEventDoesNotSendNotiifcations() throws Exception {
 		Mockito.when(channelManager.isLocalNode(Mockito.anyString()))
 				.thenReturn(true);
+
 		retractItemProcessor.process(message);
 		Assert.assertEquals(0, queue.size());
 	}

@@ -6,6 +6,7 @@ import org.apache.log4j.Logger;
 import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.packetprocessor.PacketProcessor;
 import org.buddycloud.channelserver.packetprocessor.message.event.AbstractMessageProcessor;
+import org.buddycloud.channelserver.packetprocessor.message.event.AffiliationProcessor;
 import org.buddycloud.channelserver.packetprocessor.message.event.ItemsProcessor;
 import org.buddycloud.channelserver.packetprocessor.message.event.RetractItemProcessor;
 import org.buddycloud.channelserver.packetprocessor.message.event.SubscriptionProcessor;
@@ -58,8 +59,11 @@ public class MessageProcessor implements PacketProcessor<Message> {
 		PacketProcessor<Message> handler = null;
 		if (name.equals(ITEMS)) {
 			handler = processItems();
-		} else if (name.equals(SUBSCRIPTION) || name.equals(AFFILIATION)) {
+		} else if (true == name.equals(SUBSCRIPTION)) {
 			handler = new SubscriptionProcessor(outQueue, configuration,
+					channelManager);
+		} else if (true == name.equals(AFFILIATION)) {
+			handler = new AffiliationProcessor(outQueue, configuration,
 					channelManager);
 		}
 		if (null == handler) {

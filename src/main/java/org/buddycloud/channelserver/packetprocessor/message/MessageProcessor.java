@@ -23,7 +23,7 @@ public class MessageProcessor implements PacketProcessor<Message> {
 	private ChannelManager channelManager;
 	private Message message;
 	private Properties configuration;
-	
+
 	private Element event;
 
 	public static final String ITEMS = "items";

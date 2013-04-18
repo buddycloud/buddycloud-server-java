@@ -33,6 +33,15 @@ public interface NodeStore {
 			throws NodeStoreException;
 
 	/**
+	 * Delete a node
+	 *
+	 * @param nodeId
+	 *            the node reference
+	 * @throws NodeStoreException
+	 */
+	void deleteNode(String nodeId) throws NodeStoreException;
+	
+	/**
 	 * Add a remote node into the database
 	 * 
 	 * @param nodeId

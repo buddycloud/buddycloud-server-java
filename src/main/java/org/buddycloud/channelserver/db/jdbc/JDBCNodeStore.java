@@ -82,6 +82,21 @@ public class JDBCNodeStore implements NodeStore {
 			close(addStatement);
 		}
 	}
+	
+	@Override
+	public void deleteNode(String nodeId) throws NodeStoreException {
+		PreparedStatement deleteStatement = null;
+		try {
+			deleteStatement = conn.prepareStatement(dialect.deleteNode());
+			deleteStatement.setString(1, nodeId);
+			deleteStatement.executeUpdate();
+			deleteStatement.close();
+		} catch (SQLException e) {
+			throw new NodeStoreException(e);
+		} finally {
+			close(deleteStatement);
+		}
+	}
 
 	@Override
 	public void addRemoteNode(String nodeId) throws NodeStoreException {
@@ -899,6 +914,8 @@ public class JDBCNodeStore implements NodeStore {
 
 	public interface NodeStoreSQLDialect {
 		String insertNode();
+
+		String deleteNode();
 
 		String countSubscriptionsForJid();
 

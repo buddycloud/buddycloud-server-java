@@ -63,12 +63,12 @@ public class ItemsGetTest extends IQTestHandler {
 	}
 
 	@Test
-	public void testPassingAffiliationsAsElementNameReturnsTrue() {
+	public void testPassingItemsAsElementNameReturnsTrue() {
 		Assert.assertTrue(itemsGet.accept(element));
 	}
 
 	@Test
-	public void testPassingNotCreateAsElementNameReturnsFalse() {
+	public void testPassingNotItemsAsElementNameReturnsFalse() {
 		Element element = new BaseElement("not-items");
 		Assert.assertFalse(itemsGet.accept(element));
 	}
@@ -524,6 +524,7 @@ public class ItemsGetTest extends IQTestHandler {
 		Mockito.when(childItemSubscription.getUID()).thenReturn(jid.toString());
 		Mockito.when(childItemSubscription.getNodeId()).thenReturn(
 				"/user/juliet@shakespeare.lit/posts");
+		Mockito.when(childItemSubscription.getListener()).thenReturn(jid);
 		Mockito.when(childItemSubscription.getSubscription()).thenReturn(
 				Subscriptions.subscribed);
 		ArrayList<NodeSubscription> childItems = new ArrayList<NodeSubscription>();

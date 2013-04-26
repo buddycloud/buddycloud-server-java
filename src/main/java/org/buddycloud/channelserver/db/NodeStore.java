@@ -33,6 +33,15 @@ public interface NodeStore {
 			throws NodeStoreException;
 
 	/**
+	 * Delete a node
+	 *
+	 * @param nodeId
+	 *            the node reference
+	 * @throws NodeStoreException
+	 */
+	void deleteNode(String nodeId) throws NodeStoreException;
+	
+	/**
 	 * Add a remote node into the database
 	 * 
 	 * @param nodeId
@@ -295,7 +304,23 @@ public interface NodeStore {
 	 */
 	void deleteNodeItemById(String nodeId, String nodeItemId)
 			throws NodeStoreException;
+	
+	/**
+	 * Allows the server to determine if the requested node is cached locally
+	 * 
+	 * @param nodeId
+	 *            the node id.
+	 */
+	boolean isCachedNode(String nodeId) throws NodeStoreException;
 
+	/**
+	 * Allows the server to determine if the requested JID details are cached locally
+	 * 
+	 * @param jid
+	 *            user/node jid.
+	 */
+	boolean isCachedJID(JID jid) throws NodeStoreException;
+	
 	/**
 	 * Closes this node store instance and releases any resources.
 	 */

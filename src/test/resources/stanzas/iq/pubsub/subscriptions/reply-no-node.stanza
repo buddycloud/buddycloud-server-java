@@ -1,0 +1,16 @@
+<iq type="result"
+    id="subscriptions1"
+    from="channels.shakespeare.lit"
+    to="francisco@denmark.lit/barracks">
+   <pubsub xmlns="http://jabber.org/protocol/pubsub#owner">
+      <subscriptions>
+         <subscription node="/user/francisco@denmark.lit/posts" subscription="unconfigured" jid="francisco@denmark.lit"/>
+         <subscription node="/user/francisco@denmark.lit/status" subscription="unconfigured" jid="francisco@denmark.lit"/>
+         <subscription node="/user/francisco@denmark.lit/subscriptions" subscription="unconfigured" jid="francisco@denmark.lit"/>
+         <subscription node="/user/francisco@denmark.lit/geo/previous" subscription="unconfigured" jid="francisco@denmark.lit"/>
+         <subscription node="/user/francisco@denmark.lit/geo/current" subscription="unconfigured" jid="francisco@denmark.lit"/>
+         <subscription node="/user/francisco@denmark.lit/geo/next" subscription="unconfigured" jid="francisco@denmark.lit"/>
+         <subscription node="/user/pamela@denmark.lit/posts" subscription="unconfigured" jid="francisco@denmark.lit"/>
+      </subscriptions>
+   </pubsub>
+</iq>

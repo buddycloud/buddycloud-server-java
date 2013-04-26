@@ -43,7 +43,8 @@ public class AffiliationsGet implements PubSubElementProcessor {
 		actorJid  = actorJID;
 		node      = elm.attributeValue("node");
 		
-		if (false == channelManager.isLocalJID(requestIq.getFrom())) {
+		if (false == channelManager.isLocalJID(requestIq.getFrom()) 
+		    && (false == channelManager.isCachedJID(requestIq.getFrom()))) {
         	result.getElement().addAttribute("remote-server-discover", "false");
         }
 		String namespace = JabberPubsub.NS_PUBSUB_OWNER;
@@ -67,7 +68,8 @@ public class AffiliationsGet implements PubSubElementProcessor {
 
 	private void getNodeAffiliations(Element affiliations)
 			throws NodeStoreException, InterruptedException {
-		if (false == channelManager.isLocalNode(node)) {
+		if (false == channelManager.isLocalNode(node) 
+			&& (false == channelManager.isCachedNode(node))) {
 			makeRemoteRequest(node.split("/")[2]);
 		    return;
 		}
@@ -92,7 +94,8 @@ public class AffiliationsGet implements PubSubElementProcessor {
 
 	private void getUserAffiliations(Element affiliations)
 			throws NodeStoreException, InterruptedException {
-		if (false == channelManager.isLocalJID(actorJid)) {
+		if (false == channelManager.isLocalJID(actorJid) 
+			&& (false == channelManager.isCachedJID(requestIq.getFrom()))) {
 			makeRemoteRequest(actorJid.getDomain());
 		    return;
 		}

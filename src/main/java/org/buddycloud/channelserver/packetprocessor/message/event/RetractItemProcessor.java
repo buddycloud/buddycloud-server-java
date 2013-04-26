@@ -19,24 +19,21 @@ import org.xmpp.packet.Message;
 import org.xmpp.packet.Packet;
 import org.xmpp.resultsetmanagement.ResultSet;
 
-public class ItemsProcessor extends AbstractMessageProcessor {
-	
-	private static final Logger logger = Logger.getLogger(ItemsProcessor.class);
-	private static final String DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ss'Z'";
-	private SimpleDateFormat sdf = new SimpleDateFormat(DATE_FORMAT);
+public class RetractItemProcessor extends AbstractMessageProcessor {
 
-	public ItemsProcessor(BlockingQueue<Packet> outQueue,
+	private static final Logger logger = Logger
+			.getLogger(RetractItemProcessor.class);
+
+	public RetractItemProcessor(BlockingQueue<Packet> outQueue,
 			Properties configuration, ChannelManager channelManager) {
 		super(channelManager, configuration, outQueue);
 	}
 
 	@Override
 	public void process(Message packet) throws Exception {
-
 		message = packet;
 		node = message.getElement().element("event").element("items")
 				.attributeValue("node");
-
 		if (true == channelManager.isLocalNode(node))
 			return;
 		sendLocalNotifications();
@@ -44,32 +41,11 @@ public class ItemsProcessor extends AbstractMessageProcessor {
 	}
 
 	private void handleItem() throws NodeStoreException {
-		
-		if (false == channelManager.nodeExists(node))
-			channelManager.addRemoteNode(node);
-		Element item = message.getElement().element("event").element("items")
-				.element("item");
-		Element entry = item.element("entry");
-        if (null != entry) {
-		    handleNewItem(entry);
-		    return;
-        }
-	}
-	
-	private void deleteItem(String id) throws NodeStoreException {
-		channelManager.deleteNodeItemById(node, id);
+		deleteItem(message.getElement().element("event").element("items")
+				.element("retract").attributeValue("id"));
 	}
 
-	private void handleNewItem(Element entry) throws NodeStoreException {
-		try {
-			Date updatedDate = sdf.parse(entry.elementText("updated"));
-			deleteItem(entry.elementText("id"));
-			NodeItemImpl nodeItem = new NodeItemImpl(node,
-					entry.elementText("id"), updatedDate, entry.asXML());
-			channelManager.addNodeItem(nodeItem);
-		} catch (ParseException e) {
-			logger.error(e);
-			return;
-		}
+	private void deleteItem(String id) throws NodeStoreException {
+		channelManager.deleteNodeItemById(node, id);
 	}
 }

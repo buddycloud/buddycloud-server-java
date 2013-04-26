@@ -1,0 +1,39 @@
+<iq type="result" id="info1" from="channels.shakespeare.lit" to="romeo@montague.net/orchard">
+   <query xmlns="http://jabber.org/protocol/disco#info" node="/user/romeo@shakespeare.lit/posts">
+        <x xmlns='jabber:x:data' type='result'>
+            <field var='FORM_TYPE' type='hidden'>
+                <value>http://jabber.org/protocol/pubsub#meta-data</value>
+            </field>
+            <field var='pubsub#type' label='Payload type' type='text-single'>
+                <value>http://www.w3.org/2005/Atom</value>
+            </field>
+            <field var='pubsub#creator' label='Node creator' type='jid-single'>
+                <value>hamlet@denmark.lit</value>
+            </field>
+            <field var='pubsub#creation_date' label='Creation date' type='text-single'>
+                <value>2003-07-29T22:56Z</value>
+            </field>
+            <field var='pubsub#title' label='A short name for the node' type='text-single'>
+                <value>Princely Musings (Atom)</value>
+            </field>
+            <field var='pubsub#description' label='A description of the node' type='text-single'>
+                <value>Updates for Hamlet&apos;s Princely Musings weblog.</value>
+            </field>
+            <field var='pubsub#language' label='Default language' type='list-single'>
+                <value>en</value>
+            </field>
+            <field var='pubsub#contact' label='People to contact with questions' type='jid-multi'>
+                <value>bard@shakespeare.lit</value>
+            </field>
+            <field var='pubsub#owner' label='Node owners' type='jid-multi'>
+                <value>hamlet@denmark.lit</value>
+            </field>
+            <field var='pubsub#publisher' label='Publishers to this node' type='jid-multi'>
+                <value>hamlet@denmark.lit</value>
+            </field>
+            <field var='pubsub#num_subscribers' label='Number of subscribers to this node' type='text-single'>
+                <value>1066</value>
+            </field>
+        </x>
+    </query>
+</iq>

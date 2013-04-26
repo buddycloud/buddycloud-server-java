@@ -187,6 +187,22 @@ public class JDBCNodeStoreTest {
 		expected.put("affiliation", "owner");
 		dbTester.assertions().assertTableContains("affiliations", expected);
 	}
+	
+	@Test
+	public void testDeleteNode() throws Exception {
+		
+		HashMap<String, Object> expected = new HashMap<String, Object>();
+		expected.put("node", TEST_SERVER1_NODE1_ID);
+		expected.put("user", TEST_SERVER1_USER1_JID.toString());
+		expected.put("affiliation", "owner");
+		
+		store.createNode(TEST_SERVER1_USER1_JID_WITH_RESOURCE, TEST_SERVER1_NODE1_ID,
+				new HashMap<String, String>());
+		dbTester.assertions().assertTableContains("affiliations", expected);
+
+		store.deleteNode(TEST_SERVER1_NODE1_ID);
+		dbTester.assertions().assertTableContains("affiliations", expected, 0);
+	}
 
 	@Test
 	public void testSetNodeConfValueExistingConf() throws Exception {
@@ -761,6 +777,22 @@ public class JDBCNodeStoreTest {
 	}
 	
 	@Test
+	public void testIsCachedJidForCachedJid() throws Exception {
+		dbTester.loadData("node_1");
+		
+		boolean result = store.isCachedJID(TEST_SERVER1_USER1_JID);		
+		assertEquals("Expected JID to be shown as cached", true, result);
+	}
+
+	@Test
+	public void testIsCachedJidForNonCachedJid() throws Exception {
+		dbTester.loadData("node_1");
+		
+		boolean result = store.isCachedJID(new JID("anotheruser@sample.com"));
+		assertEquals("Expected JID to be shown as not cached", false, result);
+	}
+	
+	@Test
 	public void testGetNodeItems() throws Exception {
 		dbTester.loadData("node_1");
 		
@@ -934,6 +966,23 @@ public class JDBCNodeStoreTest {
 		int result = store.countNodeItems("iamanodewhichdoesntexist");
 		
 		assertEquals("Incorrect item count", 0, result);
+	}
+	
+	@Test
+	public void testIsCachedNode() throws Exception {
+		dbTester.loadData("node_1");
+		
+		boolean result = store.isCachedNode(TEST_SERVER1_NODE1_ID);
+		
+		assertEquals("Incorrect caching reported", true, result);
+	}
+	
+	@Test
+	public void testIsCachedNodeForNonCachedNode() throws Exception {
+		dbTester.loadData("node_1");
+		boolean result = store.isCachedNode("iamanodewhichdoesntexist");
+		
+		assertEquals("Incorrect cached response", false, result);
 	}
 	
 	@Test

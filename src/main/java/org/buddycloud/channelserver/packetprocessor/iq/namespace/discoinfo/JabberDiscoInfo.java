@@ -20,10 +20,11 @@ public class JabberDiscoInfo extends AbstractNamespace {
 	public JabberDiscoInfo(BlockingQueue<Packet> outQueue, Properties conf,
 			ChannelManager channelManager,
 			FederatedQueueManager federatedQueueManager) {
-		
-		super(outQueue, conf, channelManager);		
+
+		super(outQueue, conf, channelManager);
 		getProcessor = new DiscoInfoGet(outQueue, channelManager);
-		resultProcessor = new DiscoResult(outQueue, federatedQueueManager);
+		resultProcessor = new DiscoResult(channelManager,
+				federatedQueueManager);
 	}
 
 	@Override

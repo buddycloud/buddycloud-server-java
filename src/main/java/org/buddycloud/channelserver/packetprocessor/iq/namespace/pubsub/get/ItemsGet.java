@@ -98,7 +98,8 @@ public class ItemsGet implements PubSubElementProcessor {
 
 		fetchersJid = requestIq.getFrom();
 
-		if (false == channelManager.isLocalNode(node)) {
+		if (false == channelManager.isLocalNode(node) 
+			&& (false == channelManager.isCachedNode(node))) {
 			makeRemoteRequest();
 		    return;
 		}
@@ -366,7 +367,7 @@ public class ItemsGet implements PubSubElementProcessor {
 			item = query.addElement("item");
 			item.add(ns1);
 			item.add(ns2);
-			item.addAttribute("jid", subscriber.toBareJID());
+			item.addAttribute("jid", subscription.getListener().toString());
 			item.addAttribute("node", subscription.getNodeId());
 			QName affiliationAttribute = new QName("affiliation", ns1);
 			QName subscriptionAttribute = new QName("subscription", ns2);

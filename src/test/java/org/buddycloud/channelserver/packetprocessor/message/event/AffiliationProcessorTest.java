@@ -24,9 +24,9 @@ import org.xmpp.packet.Message;
 import org.xmpp.packet.Packet;
 import org.xmpp.resultsetmanagement.ResultSetImpl;
 
-public class SubscriptionProcessorTest extends IQTestHandler {
+public class AffiliationProcessorTest extends IQTestHandler {
 	private Message message;
-	private SubscriptionProcessor subscriptionProcessor;
+	private AffiliationProcessor affiliationProcessor;
 	private Element subscription;
 	private Element affiliation;
 
@@ -52,41 +52,39 @@ public class SubscriptionProcessorTest extends IQTestHandler {
 		subscribers.add(new NodeSubscriptionImpl(
 				"/users/romeo@shakespeare.lit/posts", jid,
 				Subscriptions.subscribed));
-		Mockito.doReturn(new ResultSetImpl<NodeSubscription>(subscribers)).when(channelManager)
-				.getNodeSubscriptions(Mockito.anyString());
+		Mockito.doReturn(new ResultSetImpl<NodeSubscription>(subscribers))
+				.when(channelManager).getNodeSubscriptions(Mockito.anyString());
 
-		subscriptionProcessor = new SubscriptionProcessor(queue, configuration,
+		affiliationProcessor = new AffiliationProcessor(queue, configuration,
 				channelManager);
 
 		message = new Message();
 		message.setType(Message.Type.headline);
 		Element event = message.addChildElement("event",
 				JabberPubsub.NS_PUBSUB_EVENT);
-		
-		subscription = event.addElement("subscription");
-		subscription.addAttribute("jid", "romeo@shakespeare.lit");
-		subscription
-				.addAttribute("node", "/users/juliet@shakespeare.lit/posts");
-		subscription.addAttribute("subscription",
-				Subscriptions.subscribed.toString());
+
+		affiliation = event.addElement("affiliation");
+		affiliation.addAttribute("jid", "romeo@shakespeare.lit");
+		affiliation.addAttribute("node", "/users/juliet@shakespeare.lit/posts");
+		affiliation.addAttribute("affiliation",
+				Affiliations.publisher.toString());
 	}
 
 	@Test(expected = IllegalArgumentException.class)
-	public void testInvalidSubscriptionValueThrowsException() throws Exception {
-		Message badSubscriptionValue = message.createCopy();
-		badSubscriptionValue.getElement().element("event")
-				.element("subscription")
-				.addAttribute("subscription", "invalid");
-		subscriptionProcessor.process(badSubscriptionValue);
+	public void testInvalidAffiliationValueThrowsException() throws Exception {
+		Message badAffiliationValue = message.createCopy();
+		badAffiliationValue.getElement().element("event")
+				.element("affiliation").addAttribute("affiliation", "invalid");
+		affiliationProcessor.process(badAffiliationValue);
 	}
 
 	@Test
-	public void testMissingSubscriptionElementDoesNotCauseError()
+	public void testMissingAffiliationElementDoesNotCauseError()
 			throws Exception {
-		Message noSubscriptionElement = message.createCopy();
-		noSubscriptionElement.getElement().element("event")
-				.element("subscription").detach();
-		subscriptionProcessor.process(noSubscriptionElement);
+		Message noAffiliationElement = message.createCopy();
+		noAffiliationElement.getElement().element("event")
+				.element("affiliation").detach();
+		affiliationProcessor.process(noAffiliationElement);
 	}
 
 	@Test
@@ -94,22 +92,24 @@ public class SubscriptionProcessorTest extends IQTestHandler {
 
 		Mockito.when(channelManager.isLocalNode(Mockito.anyString()))
 				.thenReturn(true);
-		subscriptionProcessor.process(message);
+		affiliationProcessor.process(message);
 		Assert.assertEquals(0, queue.size());
 	}
 
 	@Test(expected = NodeStoreException.class)
 	public void testNodeStoreExceptionIsThrownWhenExpected() throws Exception {
 
-		Mockito.doThrow(new NodeStoreException()).when(channelManager)
-				.addUserSubscription(Mockito.any(NodeSubscription.class));
-		subscriptionProcessor.process(message);
+		Mockito.doThrow(new NodeStoreException())
+				.when(channelManager)
+				.setUserAffiliation(Mockito.anyString(),
+						Mockito.any(JID.class), Mockito.any(Affiliations.class));
+		affiliationProcessor.process(message);
 	}
 
 	@Test
 	public void testNotificationsAreSentOutAsExpected() throws Exception {
 
-		subscriptionProcessor.process(message);
+		affiliationProcessor.process(message);
 
 		Assert.assertEquals(1, queue.size());
 		message.setTo(jid.toString());

@@ -213,4 +213,16 @@ public class Mock implements ChannelManager {
 		// TODO Auto-generated method stub
 		return null;
 	}
+
+	@Override
+	public boolean isCachedNode(String nodeId) throws NodeStoreException {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	@Override
+	public boolean isCachedJID(JID jid) throws NodeStoreException {
+		// TODO Auto-generated method stub
+		return false;
+	}
 }

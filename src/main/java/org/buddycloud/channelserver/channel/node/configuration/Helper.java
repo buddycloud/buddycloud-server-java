@@ -12,18 +12,19 @@ import org.dom4j.Element;
 import org.xmpp.forms.DataForm;
 import org.xmpp.forms.FormField;
 import org.xmpp.packet.IQ;
+import org.xmpp.packet.Message;
 
 public class Helper
 {
 	protected HashMap<String, Field> elements;
 	
 	HashMap<String, Field> config;
-	private Factory           fieldFactory;
+	private Factory        fieldFactory;
 
-	public  static final String FORM_TYPE               = "http://jabber.org/protocol/pubsub#node_config";
-	private static final String ELEMENT_NOT_FOUND       = "Required XMPP element not found";
+	public  static final String FORM_TYPE         = "http://jabber.org/protocol/pubsub#node_config";
+	private static final String ELEMENT_NOT_FOUND = "Required XMPP element not found";
 
-	private static final Logger LOGGER                  = Logger.getLogger(Helper.class);
+	private static final Logger LOGGER = Logger.getLogger(Helper.class);
 	
     public void parse(IQ request) throws NodeConfigurationException
     {
@@ -38,7 +39,30 @@ public class Helper
         }
     }
     
-    public void parseDiscoInfo(IQ request) throws NodeConfigurationException
+    public void parseEventUpdate(Message request) throws NodeConfigurationException {
+        try {
+            parseConfiguration(getConfigurationValuesFromEvent(request));
+        } catch (NullPointerException e) {
+        	LOGGER.debug(e.getStackTrace());
+        	throw new NodeConfigurationException(ELEMENT_NOT_FOUND);
+        } catch (ConfigurationFieldException e) {
+        	LOGGER.debug(e.getStackTrace());
+        	throw new NodeConfigurationException();
+        }
+    }
+    
+    private List<FormField> getConfigurationValuesFromEvent(Message request) {
+    	Element element = request
+            	.getElement()
+            	.element("event")
+                .element("configuration")
+                .element("x");
+        DataForm dataForm      = new DataForm(element);
+        List<FormField> fields = dataForm.getFields();
+        return fields;
+	}
+
+	public void parseDiscoInfo(IQ request) throws NodeConfigurationException
     {
         try {
             parseConfiguration(getConfigurationValuesFromDisco(request));

@@ -1,6 +1,9 @@
 package org.buddycloud.channelserver.packetprocessor.message.event;
 
+import static org.junit.Assert.fail;
+
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Properties;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -8,6 +11,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 import junit.framework.Assert;
 
 import org.buddycloud.channelserver.channel.ChannelManager;
+import org.buddycloud.channelserver.channel.node.configuration.Helper;
 import org.buddycloud.channelserver.db.exception.NodeStoreException;
 import org.buddycloud.channelserver.packetHandler.iq.IQTestHandler;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.JabberPubsub;
@@ -24,11 +28,11 @@ import org.xmpp.packet.Message;
 import org.xmpp.packet.Packet;
 import org.xmpp.resultsetmanagement.ResultSetImpl;
 
-public class SubscriptionProcessorTest extends IQTestHandler {
+public class ConfigurationProcessorTest extends IQTestHandler {
 	private Message message;
-	private SubscriptionProcessor subscriptionProcessor;
-	private Element subscription;
-	private Element affiliation;
+	private ConfigurationProcessor configurationProcessor;
+	private Element configurationElement;
+	private Element dataForm;
 
 	private BlockingQueue<Packet> queue = new LinkedBlockingQueue<Packet>();
 	private ChannelManager channelManager;
@@ -52,41 +56,35 @@ public class SubscriptionProcessorTest extends IQTestHandler {
 		subscribers.add(new NodeSubscriptionImpl(
 				"/users/romeo@shakespeare.lit/posts", jid,
 				Subscriptions.subscribed));
-		Mockito.doReturn(new ResultSetImpl<NodeSubscription>(subscribers)).when(channelManager)
-				.getNodeSubscriptions(Mockito.anyString());
+		Mockito.doReturn(new ResultSetImpl<NodeSubscription>(subscribers))
+				.when(channelManager).getNodeSubscriptions(Mockito.anyString());
 
-		subscriptionProcessor = new SubscriptionProcessor(queue, configuration,
-				channelManager);
+		configurationProcessor = new ConfigurationProcessor(queue,
+				configuration, channelManager);
+
+		HashMap<String, String> nodeConfiguration = new HashMap<String, String>();
+		nodeConfiguration.put("config1", "value1");
+
+		Helper helper = Mockito.mock(Helper.class);
+		Mockito.when(helper.getValues()).thenReturn(nodeConfiguration);
+		configurationProcessor.setConfigurationHelper(helper);
 
 		message = new Message();
 		message.setType(Message.Type.headline);
 		Element event = message.addChildElement("event",
 				JabberPubsub.NS_PUBSUB_EVENT);
-		
-		subscription = event.addElement("subscription");
-		subscription.addAttribute("jid", "romeo@shakespeare.lit");
-		subscription
-				.addAttribute("node", "/users/juliet@shakespeare.lit/posts");
-		subscription.addAttribute("subscription",
-				Subscriptions.subscribed.toString());
-	}
 
-	@Test(expected = IllegalArgumentException.class)
-	public void testInvalidSubscriptionValueThrowsException() throws Exception {
-		Message badSubscriptionValue = message.createCopy();
-		badSubscriptionValue.getElement().element("event")
-				.element("subscription")
-				.addAttribute("subscription", "invalid");
-		subscriptionProcessor.process(badSubscriptionValue);
-	}
-
-	@Test
-	public void testMissingSubscriptionElementDoesNotCauseError()
-			throws Exception {
-		Message noSubscriptionElement = message.createCopy();
-		noSubscriptionElement.getElement().element("event")
-				.element("subscription").detach();
-		subscriptionProcessor.process(noSubscriptionElement);
+		configurationElement = event.addElement("configuration");
+		configurationElement.addAttribute("jid", "romeo@shakespeare.lit");
+		configurationElement.addAttribute("node",
+				"/users/juliet@shakespeare.lit/posts");
+		dataForm = configurationElement.addElement("x");
+		dataForm.addNamespace("", "jabber:x:data");
+		dataForm.addAttribute("type", "result");
+		Element field = dataForm.addElement("field");
+		field.addAttribute("var", "config1");
+		Element value = field.addElement("value");
+		value.addText("config1");
 	}
 
 	@Test
@@ -94,7 +92,7 @@ public class SubscriptionProcessorTest extends IQTestHandler {
 
 		Mockito.when(channelManager.isLocalNode(Mockito.anyString()))
 				.thenReturn(true);
-		subscriptionProcessor.process(message);
+		configurationProcessor.process(message);
 		Assert.assertEquals(0, queue.size());
 	}
 
@@ -102,14 +100,41 @@ public class SubscriptionProcessorTest extends IQTestHandler {
 	public void testNodeStoreExceptionIsThrownWhenExpected() throws Exception {
 
 		Mockito.doThrow(new NodeStoreException()).when(channelManager)
-				.addUserSubscription(Mockito.any(NodeSubscription.class));
-		subscriptionProcessor.process(message);
+				.isLocalNode(Mockito.anyString());
+		configurationProcessor.process(message);
+	}
+
+	@Test
+	public void testRemoteNodeIsCreatedIfNotInDataStore() throws Exception {
+		Mockito.when(channelManager.nodeExists(Mockito.anyString()))
+				.thenReturn(false);
+
+		configurationProcessor.process(message);
+
+		Mockito.verify(channelManager, Mockito.times(1)).addRemoteNode(
+				Mockito.anyString());
+	}
+
+	@Test
+	public void testExpectedDetailsAreSavedToTheDataStore() throws Exception {
+		Mockito.when(channelManager.nodeExists(Mockito.anyString()))
+				.thenReturn(true);
+
+		configurationProcessor.process(message);
+
+		HashMap<String, String> match = new HashMap<String, String>();
+		match.put("config1", "value1");
+		
+		Mockito.verify(channelManager, Mockito.times(1)).setNodeConf(
+				Mockito.anyString(), Mockito.eq(match));
+		Mockito.verify(channelManager, Mockito.times(0)).addRemoteNode(
+				Mockito.anyString());
 	}
 
 	@Test
 	public void testNotificationsAreSentOutAsExpected() throws Exception {
 
-		subscriptionProcessor.process(message);
+		configurationProcessor.process(message);
 
 		Assert.assertEquals(1, queue.size());
 		message.setTo(jid.toString());

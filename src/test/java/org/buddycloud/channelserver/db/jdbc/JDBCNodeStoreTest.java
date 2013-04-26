@@ -187,6 +187,22 @@ public class JDBCNodeStoreTest {
 		expected.put("affiliation", "owner");
 		dbTester.assertions().assertTableContains("affiliations", expected);
 	}
+	
+	@Test
+	public void testDeleteNode() throws Exception {
+		
+		HashMap<String, Object> expected = new HashMap<String, Object>();
+		expected.put("node", TEST_SERVER1_NODE1_ID);
+		expected.put("user", TEST_SERVER1_USER1_JID.toString());
+		expected.put("affiliation", "owner");
+		
+		store.createNode(TEST_SERVER1_USER1_JID_WITH_RESOURCE, TEST_SERVER1_NODE1_ID,
+				new HashMap<String, String>());
+		dbTester.assertions().assertTableContains("affiliations", expected);
+
+		store.deleteNode(TEST_SERVER1_NODE1_ID);
+		dbTester.assertions().assertTableContains("affiliations", expected, 0);
+	}
 
 	@Test
 	public void testSetNodeConfValueExistingConf() throws Exception {

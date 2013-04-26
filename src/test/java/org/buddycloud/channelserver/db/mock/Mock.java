@@ -225,4 +225,10 @@ public class Mock implements ChannelManager {
 		// TODO Auto-generated method stub
 		return false;
 	}
+
+	@Override
+	public void deleteNode(String nodeId) throws NodeStoreException {
+		// TODO Auto-generated method stub
+		
+	}
 }

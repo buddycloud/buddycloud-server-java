@@ -70,6 +70,9 @@ public class Sql92NodeStoreDialect implements NodeStoreSQLDialect {
 	private static final String COUNT_ITEMS_FOR_NODE = "SELECT COUNT(*)"
 			+ " FROM \"items\" WHERE \"node\" = ?";
 
+	private static final String COUNT_ITEMS_FOR_JID = "SELECT COUNT(*)"
+			+ " FROM \"subscriptions\" WHERE \"user\" = ?";
+	
 	private static final String INSERT_ITEM = "INSERT INTO \"items\" ( \"node\", \"id\", \"updated\", \"xml\" )"
 			+ " VALUES ( ?, ?, ?, ? )";
 
@@ -80,6 +83,8 @@ public class Sql92NodeStoreDialect implements NodeStoreSQLDialect {
 
 	private static final String SELECT_SUBSCRIPTION_LISTENERS_FOR_NODE = "SELECT DISTINCT \"node\", \"listener\", \"subscription\""
 			+ " FROM \"subscriptions\" WHERE \"node\" = ?";
+
+	private static final String DELETE_NODE = "DELETE FROM \"nodes\" WHERE \"node\" = ?;";
 
 	@Override
 	public String insertNode() {
@@ -155,6 +160,10 @@ public class Sql92NodeStoreDialect implements NodeStoreSQLDialect {
 	public String selectSubscriptionsForNode() {
 		return SELECT_SUBSCRIPTIONS_FOR_NODE;
 	}
+	
+	public String countSubscriptionsForJid() {
+		return COUNT_ITEMS_FOR_JID;
+	}
 
 	@Override
 	public String insertSubscription() {
@@ -214,6 +223,11 @@ public class Sql92NodeStoreDialect implements NodeStoreSQLDialect {
 	@Override
 	public String selectSubscriptionListenersForNode() {
 		return SELECT_SUBSCRIPTION_LISTENERS_FOR_NODE;
+	}
+
+	@Override
+	public String deleteNode() {
+		return DELETE_NODE;
 	}
 
 }

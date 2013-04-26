@@ -26,10 +26,10 @@ import org.xmpp.packet.PacketError.Condition;
 import org.xmpp.resultsetmanagement.ResultSet;
 import org.xmpp.resultsetmanagement.ResultSetImpl;
 
-public class ItemsProcessorTest extends IQTestHandler {
+public class RetractItemProcessorTest extends IQTestHandler {
 
 	private Message message;
-	private ItemsProcessor itemsProcessor;
+	private RetractItemProcessor retractItemProcessor;
 	private BlockingQueue<Packet> queue = new LinkedBlockingQueue<Packet>();
 	private ChannelManager channelManager;
 
@@ -53,7 +53,7 @@ public class ItemsProcessorTest extends IQTestHandler {
 		Mockito.when(channelManager.isLocalNode(Mockito.anyString()))
 				.thenReturn(false);
 
-		itemsProcessor = new ItemsProcessor(queue, configuration,
+		retractItemProcessor = new RetractItemProcessor(queue, configuration,
 				channelManager);
 
 		message = new Message();
@@ -61,14 +61,10 @@ public class ItemsProcessorTest extends IQTestHandler {
 		Element event = message.addChildElement("event",
 				JabberPubsub.NS_PUBSUB_EVENT);
 		Element items = event.addElement("items");
-		Element item = items.addElement("item");
-
-		entry = item.addElement("entry");
-		Element updated = entry.addElement("updated");
-		updated.setText("2012-10-10T08:37:02Z");
+		Element retract = items.addElement("retract");
 
 		items.addAttribute("node", "/users/romeo@shakespeare.lit/posts");
-		item.addAttribute("id", "publish:1");
+		retract.addAttribute("id", "publish:1");
 
 	}
 
@@ -76,7 +72,8 @@ public class ItemsProcessorTest extends IQTestHandler {
 	public void testLocalNodeEventDoesNotSendNotiifcations() throws Exception {
 		Mockito.when(channelManager.isLocalNode(Mockito.anyString()))
 				.thenReturn(true);
-		itemsProcessor.process(message);
+
+		retractItemProcessor.process(message);
 		Assert.assertEquals(0, queue.size());
 	}
 
@@ -84,52 +81,27 @@ public class ItemsProcessorTest extends IQTestHandler {
 	public void testNodeStoreExceptionIsThrown() throws Exception {
 		Mockito.doThrow(new NodeStoreException()).when(channelManager)
 				.getNodeSubscriptions(Mockito.anyString());
-		itemsProcessor.process(message);
+		retractItemProcessor.process(message);
 	}
 
 	@Test(expected = NullPointerException.class)
 	public void testConfigurationValueNotSetThrowsException() throws Exception {
-		itemsProcessor.setConfiguration(new Properties());
-		itemsProcessor.process(message);
+		retractItemProcessor.setConfiguration(new Properties());
+		retractItemProcessor.process(message);
 	}
 
 	@Test
 	public void testNotificationsAreForwarded() throws Exception {
-		itemsProcessor.process(message);
+		retractItemProcessor.process(message);
 		Assert.assertEquals(1, queue.size());
 	}
 
 	@Test
-	public void testRemoteNodeIsAddedIfNotInDatastore() throws Exception {
-		Mockito.when(channelManager.nodeExists(Mockito.anyString()))
-				.thenReturn(false);
+	public void testWhenRetractElementPassedItemIsDeleted() throws Exception {
 
-		itemsProcessor.process(message);
-
-		Mockito.verify(channelManager, Mockito.times(1)).addRemoteNode(
-				Mockito.anyString());
-	}
-
-	@Test
-	public void testItemIsDeletedBeforeAttemptToInsertIntoDatabase()
-			throws Exception {
-		Mockito.when(channelManager.nodeExists(Mockito.anyString()))
-				.thenReturn(false);
-
-		itemsProcessor.process(message);
+		retractItemProcessor.process(message);
 
 		Mockito.verify(channelManager, Mockito.times(1)).deleteNodeItemById(
 				Mockito.anyString(), Mockito.anyString());
-	}
-
-	@Test
-	public void testItemsAreCachedToDatastore() throws Exception {
-		Mockito.when(channelManager.nodeExists(Mockito.anyString()))
-				.thenReturn(true);
-
-		itemsProcessor.process(message);
-
-		Mockito.verify(channelManager, Mockito.times(1)).addNodeItem(
-				Mockito.any(NodeItem.class));
 	}
 }

@@ -13,6 +13,7 @@ import org.buddycloud.channelserver.db.exception.NodeStoreException;
 import org.buddycloud.channelserver.queue.FederatedQueueManager;
 import org.buddycloud.channelserver.queue.InQueueConsumer;
 import org.buddycloud.channelserver.queue.OutQueueConsumer;
+import org.buddycloud.channelserver.sync.ServerSync;
 import org.xmpp.component.Component;
 import org.xmpp.component.ComponentException;
 import org.xmpp.component.ComponentManager;
@@ -32,7 +33,8 @@ public class ChannelsEngine implements Component {
 	private ChannelManagerFactory channelManagerFactory;
 	private FederatedQueueManager federatedQueueManager;
 	
-
+	private ServerSync serverSync;
+	
 	private Properties conf;
 
 	public ChannelsEngine(Properties conf) {
@@ -58,9 +60,14 @@ public class ChannelsEngine implements Component {
 
 		setupManagers();
 		startQueueConsumers();
-
+        serverSync();
 		LOGGER.info("XMPP Component started. We are '" + jid.toString()
 				+ "' and ready to accept packages.");
+	}
+
+	private void serverSync() {
+		serverSync = new ServerSync(channelManagerFactory, inQueue, outQueue);
+		serverSync.start();
 	}
 
 	private void startQueueConsumers() {

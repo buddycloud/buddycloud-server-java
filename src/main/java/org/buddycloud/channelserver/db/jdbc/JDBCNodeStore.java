@@ -572,7 +572,7 @@ public class JDBCNodeStore implements NodeStore {
 
 	@Override
 	public CloseableIterator<NodeItem> getNodeItems(String nodeId,
-			String afterItemId, int count) throws NodeStoreException {
+		String afterItemId, int count) throws NodeStoreException {
 		NodeItem afterItem = null;
 
 		PreparedStatement stmt = null;
@@ -763,9 +763,48 @@ public class JDBCNodeStore implements NodeStore {
 			close(stmt); // Will implicitly close the resultset if required
 		}
 	}
+	
+	@Override
+	public void purgeNodeItems(String nodeId) throws NodeStoreException {
+		PreparedStatement stmt = null;
+		
+		try {
+			stmt = conn.prepareStatement(dialect.deleteItems());
+			stmt.setString(1, nodeId);
+			stmt.executeUpdate();
+		} catch (SQLException e) {
+			throw new NodeStoreException(e);
+		} finally {
+			close(stmt); // Will implicitly close the resultset if required
+		}
+	}
+
+	@Override
+	public ArrayList<String> getNodeList() throws NodeStoreException {
+
+		PreparedStatement stmt = null;
+
+		try {
+			stmt = conn.prepareStatement(dialect.selectNodeList());
+
+			java.sql.ResultSet rs = stmt.executeQuery();
+
+			ArrayList<String> result = new ArrayList<String>();
+
+			while (rs.next()) {
+				result.add(rs.getString(1));
+			}
+			return result;
+		} catch (SQLException e) {
+			throw new NodeStoreException(e);
+		} finally {
+			close(stmt); // Will implicitly close the resultset if required
+		}
+	}
 
 	@Override
 	public boolean isCachedNode(String nodeId) throws NodeStoreException {
+		
 		return (this.countNodeItems(nodeId) > 0);
 	}
 	
@@ -914,6 +953,10 @@ public class JDBCNodeStore implements NodeStore {
 
 	public interface NodeStoreSQLDialect {
 		String insertNode();
+
+		String deleteItems();
+
+		String selectNodeList();
 
 		String deleteNode();
 

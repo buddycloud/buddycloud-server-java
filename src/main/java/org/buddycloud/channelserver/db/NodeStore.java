@@ -1,5 +1,6 @@
 package org.buddycloud.channelserver.db;
 
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Map;
 
@@ -321,6 +322,21 @@ public interface NodeStore {
 	 */
 	boolean isCachedJID(JID jid) throws NodeStoreException;
 	
+    /**
+     * Purges all items from a node
+     * 
+     * @param nodeId
+     *            the node id
+     * @throws NodeStoreException 
+     */
+	void purgeNodeItems(String nodeId) throws NodeStoreException;
+	
+	/**
+	 * Retrieves a list of nodes
+	 * @throws NodeStoreException 
+	 */
+	ArrayList<String> getNodeList() throws NodeStoreException;
+	
 	/**
 	 * Closes this node store instance and releases any resources.
 	 */
@@ -383,5 +399,5 @@ public interface NodeStore {
 		 * </blockquote>
 		 */
 		void close() throws NodeStoreException;
-	};
+	}
 }

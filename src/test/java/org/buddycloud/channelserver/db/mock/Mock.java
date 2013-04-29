@@ -1,6 +1,8 @@
 package org.buddycloud.channelserver.db.mock;
 
 import org.xmpp.resultsetmanagement.ResultSet;
+
+import java.util.ArrayList;
 import java.util.Map;
 
 import org.buddycloud.channelserver.channel.ChannelManager;
@@ -228,6 +230,24 @@ public class Mock implements ChannelManager {
 
 	@Override
 	public void deleteNode(String nodeId) throws NodeStoreException {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void purgeNodeItems(String nodeId) throws NodeStoreException {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public ArrayList<String> getNodeList() throws NodeStoreException {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public void deleteRemoteData() throws NodeStoreException {
 		// TODO Auto-generated method stub
 		
 	}

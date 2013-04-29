@@ -6,24 +6,34 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.util.ArrayList;
+
 import org.buddycloud.channelserver.Configuration;
 import org.buddycloud.channelserver.db.NodeStore;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.xmpp.packet.JID;
 
 public class ChannelManagerImplTest {
 
 	private static final String TEST_DOMAIN = "domain.com";
+	private static final String TEST_TOPICS_DOMAIN = "topics.domain.com";
 	
 	@Mock
 	NodeStore nodeStore;
 	
 	@Mock
 	Configuration configuration;
+	
+	String user1 = "/user/user@" + TEST_DOMAIN + "/posts";
+	String user2 = "/user/user@server2.com/posts";
+	String user3 = "/user/user@topics.server3.com/posts";
+	String user4 = "/user/user@" + TEST_TOPICS_DOMAIN + "/status";
+	String user5 = "/user/user@server1.com/meta";
 	
 	/**
 	 * Class under test
@@ -37,6 +47,7 @@ public class ChannelManagerImplTest {
 		
 		// This is used loads
 		when(configuration.getProperty(Configuration.CONFIGURATION_SERVER_DOMAIN)).thenReturn(TEST_DOMAIN);
+		when(configuration.getProperty(Configuration.CONFIGURATION_SERVER_TOPICS_DOMAIN)).thenReturn(TEST_TOPICS_DOMAIN);
 	}
 
 	@After
@@ -93,9 +104,47 @@ public class ChannelManagerImplTest {
 	public void testIsLocalNodeWithInvalidNodeThrowsException() throws Exception {
 		channelManager.isLocalNode("somerandomnodeid");		
 	}
+
+	@Test
+	public void testIsLocalJidForLocaJid() throws Exception {
+		assertTrue(channelManager.isLocalJID(new JID("user@" + TEST_DOMAIN)));
+	}
 	
 	@Test
-	public void testIsLocalJID() throws Exception {
+	public void testIsLocalJidForNonLocaJid() throws Exception {
+		assertFalse(channelManager.isLocalJID(new JID("user@server1.com")));
+	}
+	
+	@Test
+	public void testDeleteRemoteDataDeletesRemoteData() throws Exception {
 		
+		ArrayList<String> nodes = new ArrayList<String>();
+		nodes.add(user2);
+		nodes.add(user3);
+		nodes.add(user5);
+		
+		when(nodeStore.getNodeList()).thenReturn(nodes);
+		
+		channelManager.deleteRemoteData();
+		
+		verify(nodeStore).getNodeList();
+		verify(nodeStore, Mockito.times(3)).purgeNodeItems(Mockito.anyString());
+	}
+	
+	@Test
+	public void testDeleteRemoteDoesNotPurgeLocalNodes() throws Exception {
+				
+		ArrayList<String> nodes = new ArrayList<String>();
+		nodes.add(user1);
+		nodes.add(user2);
+		nodes.add(user3);
+		nodes.add(user4);
+		
+		when(nodeStore.getNodeList()).thenReturn(nodes);
+		
+		channelManager.deleteRemoteData();
+		
+		verify(nodeStore).getNodeList();
+		verify(nodeStore, Mockito.times(2)).purgeNodeItems(Mockito.anyString());
 	}
 }

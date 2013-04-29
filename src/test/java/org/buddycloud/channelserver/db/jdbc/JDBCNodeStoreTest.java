@@ -1069,9 +1069,36 @@ public class JDBCNodeStoreTest {
 	
 	@Test(expected=ItemNotFoundException.class)
 	public void testDeleteNodeItemForNonExistantItemThrowsException() throws Exception {
+		
 		dbTester.loadData("node_1");
 		
 		store.deleteNodeItemById(TEST_SERVER1_NODE1_ID, "test-item-id");
+	}
+	
+	@Test
+	public void testGetNodeListReturnsExpectedNodes() throws Exception {
+		dbTester.loadData("node_1");
+		dbTester.loadData("node_2");
+		assertEquals(2, store.getNodeList().size());
+	}
+	
+	@Test
+	public void testPurgeNodeItemsDeletesNodeItems() throws Exception {
+		
+		dbTester.loadData("node_1");
+		assertTrue(store.countNodeItems(TEST_SERVER1_NODE1_ID) > 0);
+		store.purgeNodeItems(TEST_SERVER1_NODE1_ID);
+		assertEquals(0, store.countNodeItems(TEST_SERVER1_NODE1_ID));
+	}
+	
+	@Test
+	public void testPurgeNodeItemsDoesntDeleteItemsUnexpectedly() throws Exception {
+		
+		dbTester.loadData("node_1");
+		int itemCount = store.countNodeItems(TEST_SERVER1_NODE1_ID);
+		assertTrue(itemCount > 0);
+		store.purgeNodeItems(TEST_SERVER1_NODE2_ID);  // <--- NODE **2**
+		assertEquals(itemCount, store.countNodeItems(TEST_SERVER1_NODE1_ID));
 	}
 	
 	@Test

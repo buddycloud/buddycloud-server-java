@@ -86,6 +86,10 @@ public class Sql92NodeStoreDialect implements NodeStoreSQLDialect {
 
 	private static final String DELETE_NODE = "DELETE FROM \"nodes\" WHERE \"node\" = ?;";
 
+	private static final String SELECT_NODE_LIST = "SELECT \"node\" FROM \"nodes\";";
+
+	private static final String DELETE_ITEMS = "DELETE FROM \"items\" WHERE \"node\" = ?;";
+
 	@Override
 	public String insertNode() {
 		return INSERT_NODE;
@@ -228,6 +232,18 @@ public class Sql92NodeStoreDialect implements NodeStoreSQLDialect {
 	@Override
 	public String deleteNode() {
 		return DELETE_NODE;
+	}
+
+	@Override
+	public String deleteItems() {
+		// TODO Auto-generated method stub
+		return DELETE_ITEMS;
+	}
+
+	@Override
+	public String selectNodeList() {
+		// TODO Auto-generated method stub
+		return SELECT_NODE_LIST;
 	}
 
 }

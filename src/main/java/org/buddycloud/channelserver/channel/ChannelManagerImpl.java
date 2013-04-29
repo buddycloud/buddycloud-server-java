@@ -1,5 +1,6 @@
 package org.buddycloud.channelserver.channel;
 
+import java.util.ArrayList;
 import java.util.Map;
 import java.util.Properties;
 import java.util.regex.Pattern;
@@ -250,5 +251,22 @@ public class ChannelManagerImpl implements ChannelManager {
 	public void deleteNode(String nodeId) throws NodeStoreException {
 		nodeStore.deleteNode(nodeId);
 		
+	}
+
+	@Override
+	public void deleteRemoteData() throws NodeStoreException {
+		ArrayList<String> nodes = this.getNodeList();
+		for (String node : nodes)
+			if (false == this.isLocalNode(node)) nodeStore.purgeNodeItems(node);
+	}
+
+	@Override
+	public void purgeNodeItems(String nodeId) throws NodeStoreException {
+		nodeStore.purgeNodeItems(nodeId);
+	}
+
+	@Override
+	public ArrayList<String> getNodeList() throws NodeStoreException {
+		return nodeStore.getNodeList();
 	}
 }

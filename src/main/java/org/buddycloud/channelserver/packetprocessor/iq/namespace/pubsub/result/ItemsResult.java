@@ -21,7 +21,7 @@ import org.xmpp.packet.JID;
 public class ItemsResult extends PubSubElementProcessorAbstract {
 
 	private static final String MISSING_NODE = "Missing node";
-	private static final String DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ss'Z'";
+	private static final String DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.S'Z'";
 
 	private static final Logger logger = Logger.getLogger(ItemsResult.class);
 	private String node;

@@ -1,5 +1,6 @@
 package org.buddycloud.channelserver.queue;
 
+import java.util.ArrayList;
 import java.util.concurrent.BlockingQueue;
 
 import org.apache.log4j.Logger;
@@ -7,6 +8,7 @@ import org.buddycloud.channelserver.ChannelsEngine;
 import org.buddycloud.channelserver.utils.users.OnlineResourceManager;
 import org.dom4j.Attribute;
 import org.xmpp.component.ComponentException;
+import org.xmpp.packet.JID;
 import org.xmpp.packet.Packet;
 
 public class OutQueueConsumer extends QueueConsumer {
@@ -50,12 +52,12 @@ public class OutQueueConsumer extends QueueConsumer {
 				p.getElement().remove(process);
 			}
 			// Get a list of 'online' resources for this JID
-			// HashMap<JID> resources = onlineUsers.get(p.getTo());
-			// for (JID resource : resources) {
-			// component.sendPacket(p.setTo(resource).createCopy())
-			// }
-			component.sendPacket(p);
-			logger.debug("OUT -> " + p.toXML());
+			ArrayList<JID> resources = onlineUsers.getResources(p.getTo());
+			for (JID resource : resources) {
+		        p.setTo(resource);
+			    component.sendPacket(p.createCopy());
+			    logger.debug("OUT -> " + p.toXML());
+			}
 		} catch (ComponentException e) {
 			logger.error(e);
 		}

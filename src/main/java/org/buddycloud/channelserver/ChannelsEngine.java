@@ -14,6 +14,7 @@ import org.buddycloud.channelserver.queue.FederatedQueueManager;
 import org.buddycloud.channelserver.queue.InQueueConsumer;
 import org.buddycloud.channelserver.queue.OutQueueConsumer;
 import org.buddycloud.channelserver.sync.ServerSync;
+import org.buddycloud.channelserver.utils.users.OnlineResourceManager;
 import org.xmpp.component.Component;
 import org.xmpp.component.ComponentException;
 import org.xmpp.component.ComponentManager;
@@ -34,6 +35,7 @@ public class ChannelsEngine implements Component {
 	private FederatedQueueManager federatedQueueManager;
 	
 	private ServerSync serverSync;
+	private OnlineResourceManager onlineUsers;
 	
 	private Properties conf;
 
@@ -60,6 +62,7 @@ public class ChannelsEngine implements Component {
 
 		setupManagers();
 		startQueueConsumers();
+
         serverSync();
 		LOGGER.info("XMPP Component started. We are '" + jid.toString()
 				+ "' and ready to accept packages.");
@@ -73,10 +76,10 @@ public class ChannelsEngine implements Component {
 	private void startQueueConsumers() {
 		OutQueueConsumer outQueueConsumer = new OutQueueConsumer(this,
 				outQueue, federatedQueueManager,
-				conf.getProperty("server.domain"));
+				conf.getProperty("server.domain"), onlineUsers);
 
 		InQueueConsumer inQueueConsumer = new InQueueConsumer(outQueue, conf,
-				inQueue, channelManagerFactory, federatedQueueManager);
+				inQueue, channelManagerFactory, federatedQueueManager, onlineUsers);
 		
 		outQueueConsumer.start();
 		inQueueConsumer.start();
@@ -94,6 +97,7 @@ public class ChannelsEngine implements Component {
 				conf, nodeStoreFactory);
 		federatedQueueManager = new FederatedQueueManager(
 				this, conf.getProperty("server.domain.channels"));
+		onlineUsers = new OnlineResourceManager(conf);
 	}
 
 	@Override

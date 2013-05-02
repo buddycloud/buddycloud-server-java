@@ -26,7 +26,7 @@ public class PubSubResult implements PacketProcessor<IQ> {
 	private FederatedQueueManager federatedQueueManager;
 	private ChannelManager channelManager;
 	
-	private final List<PubSubElementProcessor> elementProcessors = new LinkedList<PubSubElementProcessor>();
+	private final List<PubSubElementProcessorAbstract> elementProcessors = new LinkedList<PubSubElementProcessorAbstract>();
 
 	public PubSubResult(BlockingQueue<Packet> outQueue,
 			FederatedQueueManager federatedQueueManager,
@@ -47,15 +47,16 @@ public class PubSubResult implements PacketProcessor<IQ> {
 	@Override
 	public void process(IQ reqIQ) throws Exception {
 		try {
-			federatedQueueManager.passResponseToRequester(reqIQ);
+			String node = federatedQueueManager.passResponseToRequester(reqIQ.createCopy());
 			
 			Element pubsub = reqIQ.getChildElement();
 			List<Element> elements = pubsub.elements();
 			
 			boolean handled = false;
 	        for (Element x : elements) {
-	            for (PubSubElementProcessor elementProcessor : elementProcessors) {
+	            for (PubSubElementProcessorAbstract elementProcessor : elementProcessors) {
 	                if (elementProcessor.accept(x)) {
+	                	if (null != node) elementProcessor.setNode(node);
 	                    elementProcessor.process(x, null, reqIQ, x);
 	                    handled = true;
 	                }
@@ -65,7 +66,8 @@ public class PubSubResult implements PacketProcessor<IQ> {
 		} catch (UnknownFederatedPacketException e) {
 			logger.error(e);
 		}
-		sendUnexpectedRequestResponse(reqIQ);
+		if (false == reqIQ.getType().toString().equals("result"))
+		    sendUnexpectedRequestResponse(reqIQ);
 	}
 
 	private void sendUnexpectedRequestResponse(IQ reqIQ)

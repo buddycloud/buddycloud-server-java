@@ -26,7 +26,7 @@ public abstract class PubSubElementProcessorAbstract
     protected JID                   actor;
     protected String                serverDomain;
     protected String                topicsDomain;
-    protected String                node;
+    protected String                node = null;
     protected Helper                configurationHelper;
 
 	public void setOutQueue(BlockingQueue<Packet> outQueue)
@@ -56,6 +56,10 @@ public abstract class PubSubElementProcessorAbstract
 	public void setTopicsDomain(String domain)
 	{
 	    topicsDomain = domain;		
+	}
+	
+	public void setNode(String node) {
+        this.node = node;
 	}
 	
 	protected String getTopicsDomain()

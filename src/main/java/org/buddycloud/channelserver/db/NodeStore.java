@@ -261,6 +261,16 @@ public interface NodeStore {
 	int countNodeItems(String nodeId) throws NodeStoreException;
 
 	/**
+	 * Retrieves the number of subscriptions to a node
+	 * 
+	 * @param nodeId
+	 *            the node id from which to retrieve the item count.
+	 * @return the entries count.
+	 * @throws NodeStoreException
+	 */
+	int countNodeSubscriptions(String nodeId) throws NodeStoreException;
+	
+	/**
 	 * Retrieves a single node item by the node item id.
 	 * 
 	 * @param nodeId
@@ -321,6 +331,16 @@ public interface NodeStore {
 	 *            user/node jid.
 	 */
 	boolean isCachedJID(JID jid) throws NodeStoreException;
+	
+	
+	/**
+	 * Allows the server to determine if the requested (subscriptions) node 
+	 * is cached locally
+	 * 
+	 * @param nodeId
+	 *            the node id.
+	 */
+	boolean nodeHasSubscriptions(String nodeId) throws NodeStoreException;
 	
     /**
      * Purges all items from a node

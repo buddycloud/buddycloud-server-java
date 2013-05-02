@@ -6,8 +6,8 @@
                <id>tag:channels.buddycloud.com,/user/koski@buddycloud.com/posts,3</id>
                <title>Post</title>
                <content>Test</content>
-               <published>2011-11-27T19:05:58Z</published>
-               <updated>2011-11-27T19:05:58Z</updated>
+               <published>2011-11-27T19:05:58.000Z</published>
+               <updated>2011-11-27T19:05:58.000Z</updated>
                <author>
                   <name>koski@buddycloud.com</name>
                   <uri>acct:koski@buddycloud.com</uri>
@@ -29,8 +29,8 @@
                <id>tag:channels.buddycloud.com,/user/koski@buddycloud.com/posts,2</id>
                <title>Post</title>
                <content>Test</content>
-               <published>2011-11-27T19:05:58Z</published>
-               <updated>2011-11-27T19:05:58Z</updated>
+               <published>2011-11-27T19:05:58.000Z</published>
+               <updated>2011-11-27T19:05:58.000Z</updated>
                <author>
                   <name>koski@buddycloud.com</name>
                   <uri>acct:koski@buddycloud.com</uri>
@@ -52,8 +52,8 @@
                <id>tag:channels.buddycloud.com,/user/koski@buddycloud.com/posts,1</id>
                <title>Post</title>
                <content>Test</content>
-               <published>2011-11-27T19:05:57Z</published>
-               <updated>2011-11-27T19:05:57Z</updated>
+               <published>2011-11-27T19:05:57.000Z</published>
+               <updated>2011-11-27T19:05:57.000Z</updated>
                <author>
                   <name>koski@buddycloud.com</name>
                   <uri>acct:koski@buddycloud.com</uri>

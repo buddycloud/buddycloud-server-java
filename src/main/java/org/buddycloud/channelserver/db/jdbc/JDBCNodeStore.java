@@ -557,7 +557,7 @@ public class JDBCNodeStore implements NodeStore {
 
 			while (rs.next()) {
 				NodeSubscriptionImpl nodeSub = new NodeSubscriptionImpl(
-						rs.getString(1), new JID(rs.getString(2)),
+						rs.getString(2), new JID(rs.getString(1)),
 						Subscriptions.valueOf(rs.getString(3)));
 				result.add(nodeSub);
 			}
@@ -804,7 +804,6 @@ public class JDBCNodeStore implements NodeStore {
 
 	@Override
 	public boolean isCachedNode(String nodeId) throws NodeStoreException {
-		
 		return (this.countNodeItems(nodeId) > 0);
 	}
 	
@@ -829,6 +828,36 @@ public class JDBCNodeStore implements NodeStore {
 			close(selectStatement); // Will implicitly close the resultset if
 									// required
 		}
+	}
+
+
+	@Override
+	public int countNodeSubscriptions(String nodeId) throws NodeStoreException {
+		PreparedStatement selectStatement = null;
+		try {
+			selectStatement = conn
+					.prepareStatement(dialect.countSubscriptionsForNode());
+			selectStatement.setString(1, nodeId);
+
+			java.sql.ResultSet rs = selectStatement.executeQuery();
+
+			if (rs.next()) {
+				return rs.getInt(1);
+			} else {
+				return 0; // This really shouldn't happen!
+			}
+		} catch (SQLException e) {
+			throw new NodeStoreException(e);
+		} finally {
+			close(selectStatement); // Will implicitly close the resultset if
+									// required
+		}
+	}
+
+	@Override
+	public boolean nodeHasSubscriptions(String nodeId)
+			throws NodeStoreException {
+		return (this.countNodeSubscriptions(nodeId) > 0);
 	}
 	
 	@Override
@@ -953,6 +982,8 @@ public class JDBCNodeStore implements NodeStore {
 
 	public interface NodeStoreSQLDialect {
 		String insertNode();
+
+		String countSubscriptionsForNode();
 
 		String deleteItems();
 

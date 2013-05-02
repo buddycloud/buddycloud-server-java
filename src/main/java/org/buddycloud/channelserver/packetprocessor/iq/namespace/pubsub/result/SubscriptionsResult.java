@@ -15,7 +15,6 @@ import org.xmpp.packet.JID;
 
 public class SubscriptionsResult extends PubSubElementProcessorAbstract {
 
-	private String node;
 	private IQ request;
 	private boolean ownerRequest;
 	private String lastNode = "";
@@ -38,7 +37,6 @@ public class SubscriptionsResult extends PubSubElementProcessorAbstract {
 			return;
 		}
 
-		node = elm.attributeValue("node");
 		ownerRequest = ((null == node) || (true == node.equals("")));
 
 		@SuppressWarnings("unchecked")
@@ -63,7 +61,7 @@ public class SubscriptionsResult extends PubSubElementProcessorAbstract {
 
 		JID jid = new JID(subscription.attributeValue("jid"));
 		NodeSubscription nodeSubscription = new NodeSubscriptionImpl(node, jid,
-				Subscriptions.createFromString(subscription
+				request.getFrom(), Subscriptions.createFromString(subscription
 						.attributeValue("subscription")));
 		channelManager.addUserSubscription(nodeSubscription);
 		lastNode = node;

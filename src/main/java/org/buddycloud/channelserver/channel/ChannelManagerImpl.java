@@ -148,6 +148,11 @@ public class ChannelManagerImpl implements ChannelManager {
 		return nodeStore.isCachedNode(nodeId);
 	}
 	
+	@Override
+	public boolean nodeHasSubscriptions(String nodeId) throws NodeStoreException {
+		return (nodeStore.countNodeSubscriptions(nodeId) > 0);
+	}
+	
 	public boolean isCachedJID(JID jid) throws NodeStoreException {
 		return nodeStore.isCachedJID(jid);
 	}
@@ -268,5 +273,10 @@ public class ChannelManagerImpl implements ChannelManager {
 	@Override
 	public ArrayList<String> getNodeList() throws NodeStoreException {
 		return nodeStore.getNodeList();
+	}
+
+	@Override
+	public int countNodeSubscriptions(String nodeId) throws NodeStoreException {
+		return nodeStore.countNodeSubscriptions(nodeId);
 	}
 }

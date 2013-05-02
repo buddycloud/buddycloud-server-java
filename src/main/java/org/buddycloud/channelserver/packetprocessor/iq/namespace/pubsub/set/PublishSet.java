@@ -37,6 +37,8 @@ public class PublishSet implements PubSubElementProcessor {
 	private static final SimpleDateFormat ISO_DATE_FORMAT = new SimpleDateFormat(
 			DateFormatUtils.ISO_DATETIME_TIME_ZONE_FORMAT.getPattern());
 
+	private static final String DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SZZ";
+
 	private final BlockingQueue<Packet> outQueue;
 	private final ChannelManager channelManager;
 	private IQ requestIq;
@@ -256,9 +258,7 @@ public class PublishSet implements PubSubElementProcessor {
 			updated = new Date(); // Default to now
 		} else {
 			try {
-				updated = new SimpleDateFormat(
-						DateFormatUtils.ISO_DATETIME_TIME_ZONE_FORMAT
-								.getPattern()).parse(updatedText);
+				updated = new SimpleDateFormat(DATE_FORMAT).parse(updatedText);
 			} catch (ParseException e) {
 				updated = new Date();
 

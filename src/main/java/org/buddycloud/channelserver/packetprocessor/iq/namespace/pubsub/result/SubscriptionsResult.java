@@ -61,7 +61,7 @@ public class SubscriptionsResult extends PubSubElementProcessorAbstract {
 
 		JID jid = new JID(subscription.attributeValue("jid"));
 		NodeSubscription nodeSubscription = new NodeSubscriptionImpl(node, jid,
-				Subscriptions.createFromString(subscription
+				request.getFrom(), Subscriptions.createFromString(subscription
 						.attributeValue("subscription")));
 		channelManager.addUserSubscription(nodeSubscription);
 		lastNode = node;

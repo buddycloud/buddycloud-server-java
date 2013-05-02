@@ -52,6 +52,7 @@ public class ItemsProcessorTest extends IQTestHandler {
 				.when(channelManager).getNodeSubscriptions(Mockito.anyString());
 		Mockito.when(channelManager.isLocalNode(Mockito.anyString()))
 				.thenReturn(false);
+		Mockito.when(channelManager.isLocalJID(Mockito.any(JID.class))).thenReturn(true);
 
 		itemsProcessor = new ItemsProcessor(queue, configuration,
 				channelManager);

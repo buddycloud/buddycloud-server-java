@@ -271,7 +271,7 @@ public class SubscribeSet extends PubSubElementProcessorAbstract {
 			if (moderatorOwners.contains(subscriber.getUser())
 					&& subscriptionStatus.equals(Subscriptions.pending)) {
 				outQueue.put(getPendingSubscriptionNotification(subscriber
-						.getUser().toBareJID(), subscribingJid.toBareJID()));
+						.getListener().toBareJID(), subscribingJid.toBareJID()));
 			} else {
 				Message notification = rootElement.createCopy();
 				notification.setTo(subscriber.getListener());
@@ -338,6 +338,7 @@ public class SubscribeSet extends PubSubElementProcessorAbstract {
 		error.add(badRequest);
 		error.add(nodeIdRequired);
 		reply.setChildElement(error);
+		
 		outQueue.put(reply);
 	}
 

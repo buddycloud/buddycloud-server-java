@@ -78,8 +78,9 @@ public class ItemsResult extends PubSubElementProcessorAbstract {
 
 	private void addSubscription(Element item, JID user) throws NodeStoreException {
 		
+		
 		String node       = item.attributeValue("node");
-		JID    listener   = new JID(item.attributeValue("jid"));
+		JID    listener   = request.getFrom();
 		Subscriptions sub = Subscriptions.createFromString(item.attributeValue("subscription"));
 		Affiliations aff  = Affiliations.createFromString(item.attributeValue("affiliation"));
 		NodeSubscription subscription = new NodeSubscriptionImpl(node, user, listener, sub);

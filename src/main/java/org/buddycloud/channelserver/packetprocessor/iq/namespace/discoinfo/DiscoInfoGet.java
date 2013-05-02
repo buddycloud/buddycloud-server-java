@@ -64,6 +64,8 @@ public class DiscoInfoGet implements PacketProcessor<IQ> {
 
 		if (false == channelManager.isLocalNode(node)
 	        && (false == channelManager.isCachedNode(node))) {
+			logger.info("Node " + node + " is remote and not cached so "
+			    + "we're going off to get disco#info");
 			makeRemoteRequest();
 		    return;
 		}

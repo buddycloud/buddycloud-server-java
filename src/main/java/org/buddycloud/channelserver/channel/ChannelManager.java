@@ -34,5 +34,5 @@ public interface ChannelManager extends NodeStore {
 	 * 
 	 * @throws NodeStoreException
 	 */
-	void deleteRemoteData() throws NodeStoreException; 
+	void deleteRemoteData() throws NodeStoreException;
 }

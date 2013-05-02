@@ -213,7 +213,7 @@ public class Sql92NodeStoreDialect implements NodeStoreSQLDialect {
 	public String insertItem() {
 		return INSERT_ITEM;
 	}
-
+	
 	@Override
 	public String updateItem() {
 		return UPDATE_ITEM;

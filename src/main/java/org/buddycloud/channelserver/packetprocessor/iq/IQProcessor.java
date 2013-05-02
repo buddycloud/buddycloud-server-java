@@ -14,6 +14,7 @@ import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.JabberPu
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.register.JabberRegister;
 import org.buddycloud.channelserver.queue.FederatedQueueManager;
 import org.buddycloud.channelserver.queue.UnknownFederatedPacketException;
+import org.buddycloud.channelserver.utils.users.OnlineResourceManager;
 import org.xmpp.packet.IQ;
 import org.xmpp.packet.IQ.Type;
 import org.xmpp.packet.Packet;
@@ -27,6 +28,8 @@ public class IQProcessor implements PacketProcessor<IQ> {
 	private BlockingQueue<Packet> outQueue;
 	private ChannelManager channelManager;
 	private FederatedQueueManager federatedQueueManager;
+
+	private OnlineResourceManager onlineUsers;
 
 	public IQProcessor(BlockingQueue<Packet> outQueue, Properties conf,
 			ChannelManager channelManager,

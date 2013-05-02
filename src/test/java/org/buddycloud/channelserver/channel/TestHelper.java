@@ -26,7 +26,7 @@ public class TestHelper {
 		
         outQueue = new LinkedBlockingQueue<Packet>();
         inQueue = new LinkedBlockingQueue<Packet>();
-        consumer = new InQueueConsumer(outQueue, IQTestHandler.readConf(), inQueue, channelManagerFactory, null);
+        consumer = new InQueueConsumer(outQueue, IQTestHandler.readConf(), inQueue, channelManagerFactory, null, null);
         consumer.start();
 	}
 	

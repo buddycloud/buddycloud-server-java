@@ -38,6 +38,7 @@ public class AffiliationsResultTest extends IQTestHandler {
 		element.addAttribute("node", node);
 
 		affiliationsResult.setChannelManager(channelManager);
+		affiliationsResult.setNode(node);
 	}
 
 	@Test
@@ -84,6 +85,7 @@ public class AffiliationsResultTest extends IQTestHandler {
 	public void testOwnerAffiliationsResultStanzaHandledCorrectly()
 			throws Exception {
 		element = new BaseElement("affiliations");
+		affiliationsResult.setNode(null);
 		affiliationsResult.process(element, jid, resultNoNode, null);
 
 		Mockito.verify(channelManager, Mockito.times(1)).setUserAffiliation(
@@ -100,7 +102,7 @@ public class AffiliationsResultTest extends IQTestHandler {
 		affiliationsResult.process(element, jid, resultWithNode, null);
 
 		Mockito.verify(channelManager, Mockito.times(2)).setUserAffiliation(
-				Mockito.eq("/user/pamela@denmark.lit/posts"),
+				Mockito.eq(node),
 				Mockito.any(JID.class), Mockito.any(Affiliations.class));
 	}
 }

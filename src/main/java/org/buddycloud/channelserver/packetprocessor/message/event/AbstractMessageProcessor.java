@@ -35,6 +35,7 @@ abstract public class AbstractMessageProcessor implements PacketProcessor<Messag
 		ResultSet<NodeSubscription> subscribers = channelManager
 				.getNodeSubscriptions(node);
 		for (NodeSubscription subscriber : subscribers) {
+			if (false == channelManager.isLocalJID(subscriber.getUser())) continue;
 			message.setTo(subscriber.getUser());
 			message.setFrom(new JID(configuration
 					.getProperty("server.domain.channels")));

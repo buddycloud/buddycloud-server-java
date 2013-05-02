@@ -52,7 +52,8 @@ public class RetractItemProcessorTest extends IQTestHandler {
 				.when(channelManager).getNodeSubscriptions(Mockito.anyString());
 		Mockito.when(channelManager.isLocalNode(Mockito.anyString()))
 				.thenReturn(false);
-
+        Mockito.when(channelManager.isLocalJID(Mockito.any(JID.class))).thenReturn(true);
+        
 		retractItemProcessor = new RetractItemProcessor(queue, configuration,
 				channelManager);
 

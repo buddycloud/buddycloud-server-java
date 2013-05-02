@@ -1,14 +1,10 @@
 package org.buddycloud.channelserver.packetprocessor.iq.namespace;
 
-import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.BlockingQueue;
-
 import org.apache.log4j.Logger;
 import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.packetprocessor.PacketProcessor;
-import org.buddycloud.channelserver.queue.statemachine.IStatemachine;
-import org.buddycloud.channelserver.queue.statemachine.StateMachineBuilder;
 import org.xmpp.packet.IQ;
 import org.xmpp.packet.IQ.Type;
 import org.xmpp.packet.Packet;

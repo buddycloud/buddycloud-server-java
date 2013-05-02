@@ -53,6 +53,7 @@ public class MessageProcessor implements PacketProcessor<Message> {
 			processEventContent(((Element) event.elements().get(0)).getName());
 			return;
 		}
+		logger.debug("Unsupported message type: " + packet.toXML());
 		throw new UnsupportedOperationException("Unknown message type", null);
 	}
 

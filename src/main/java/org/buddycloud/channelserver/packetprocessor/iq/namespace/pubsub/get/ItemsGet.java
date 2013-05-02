@@ -56,6 +56,8 @@ public class ItemsGet implements PubSubElementProcessor {
 	private NodeViewAcl nodeViewAcl;
 	private Map<String, String> nodeDetails;
 
+	private boolean isSubscriptionsNode;
+
 	public ItemsGet(BlockingQueue<Packet> outQueue,
 			ChannelManager channelManager) {
 		this.outQueue = outQueue;
@@ -96,10 +98,20 @@ public class ItemsGet implements PubSubElementProcessor {
 			return;
 		}
 
+		isSubscriptionsNode = node.substring(node.length() - 13).equals("subscriptions");
+		
+		boolean isCached = false;
+		if (true == isSubscriptionsNode) {
+			isCached = channelManager.nodeHasSubscriptions(node);
+		} else {
+			isCached = channelManager.isCachedNode(node);
+		}
+		
 		fetchersJid = requestIq.getFrom();
 
 		if (false == channelManager.isLocalNode(node) 
-			&& (false == channelManager.isCachedNode(node))) {
+			&& (false == isCached)) {
+			LOGGER.debug("Node " + node + " is remote and not cached, off to get some data");
 			makeRemoteRequest();
 		    return;
 		}
@@ -184,7 +196,7 @@ public class ItemsGet implements PubSubElementProcessor {
 		entry = null;
 		int totalEntriesCount = 0;
 
-		if (node.substring(node.length() - 13).equals("subscriptions")) {
+		if (true == isSubscriptionsNode) {
 			totalEntriesCount = getSubscriptionItems(items, maxItemsToReturn,
 					afterItemId);
 		} else {
@@ -367,7 +379,7 @@ public class ItemsGet implements PubSubElementProcessor {
 			item = query.addElement("item");
 			item.add(ns1);
 			item.add(ns2);
-			item.addAttribute("jid", subscription.getListener().toString());
+			item.addAttribute("jid", subscription.getUser().toString());
 			item.addAttribute("node", subscription.getNodeId());
 			QName affiliationAttribute = new QName("affiliation", ns1);
 			QName subscriptionAttribute = new QName("subscription", ns2);

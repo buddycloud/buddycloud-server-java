@@ -9,5 +9,4 @@ public interface PubSubElementProcessor {
     public void process(Element elm, JID actorJID, IQ reqIQ, Element rsm) throws Exception;
     
     public boolean accept(Element elm);
-    
 }

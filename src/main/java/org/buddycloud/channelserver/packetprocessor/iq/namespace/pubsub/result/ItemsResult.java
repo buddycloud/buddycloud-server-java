@@ -21,10 +21,9 @@ import org.xmpp.packet.JID;
 public class ItemsResult extends PubSubElementProcessorAbstract {
 
 	private static final String MISSING_NODE = "Missing node";
-	private static final String DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ss'Z'";
+	private static final String DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.S'Z'";
 
 	private static final Logger logger = Logger.getLogger(ItemsResult.class);
-	private String node;
 	private SimpleDateFormat sdf = new SimpleDateFormat(DATE_FORMAT);
 	private boolean subscriptionNode = false;
 
@@ -43,7 +42,7 @@ public class ItemsResult extends PubSubElementProcessorAbstract {
 			return;
 		}
 
-		node = elm.attributeValue("node");
+		this.setNode(elm.attributeValue("node"));
 
 		if ((null == node) || (true == node.equals(""))) {
 			throw new NullPointerException(MISSING_NODE);
@@ -62,7 +61,7 @@ public class ItemsResult extends PubSubElementProcessorAbstract {
 
 		for (Element item : items) {
 			if (true == subscriptionNode) {
-				processSubscriptionItem(item);
+                processSubscriptionItem(item);
 			} else {
 				processPublishedItem(item);
 			}
@@ -79,8 +78,9 @@ public class ItemsResult extends PubSubElementProcessorAbstract {
 
 	private void addSubscription(Element item, JID user) throws NodeStoreException {
 		
+		
 		String node       = item.attributeValue("node");
-		JID    listener   = new JID(item.attributeValue("jid"));
+		JID    listener   = request.getFrom();
 		Subscriptions sub = Subscriptions.createFromString(item.attributeValue("subscription"));
 		Affiliations aff  = Affiliations.createFromString(item.attributeValue("affiliation"));
 		NodeSubscription subscription = new NodeSubscriptionImpl(node, user, listener, sub);

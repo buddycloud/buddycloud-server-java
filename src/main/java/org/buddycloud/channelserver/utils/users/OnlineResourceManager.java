@@ -22,6 +22,12 @@ public class OnlineResourceManager {
 	}
 
 	public ArrayList<JID> getResources(JID jid) {
+		if (null != jid.getResource()) {
+			ArrayList<JID> user = new ArrayList<JID>();
+			user.add(jid);
+			return user;
+		}
+		
         if (false == users.containsKey(jid.toBareJID()))
 		    return new ArrayList<JID>();
         return users.get(jid.toBareJID());

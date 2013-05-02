@@ -17,8 +17,10 @@ public class OnlineResourceManagerTest extends IQTestHandler {
 
 	private OnlineResourceManager onlineUser;
 	private Properties configuration;
-	private JID localUserLaptop = new JID("user@server1.com/laptop");
-	private JID localUserDesktop = new JID("user@server1.com/desktop");
+	private JID localUserLaptop    = new JID("user@server1.com/laptop");
+	private JID localUserDesktop    = new JID("user@server1.com/desktop");
+	private JID localUserNoResource = new JID("user@server1.com");
+	
 	private JID remoteUser = new JID("user@server2.com/remote");
 
 	@Before
@@ -44,7 +46,7 @@ public class OnlineResourceManagerTest extends IQTestHandler {
 	
 	@Test
 	public void testRequestingOnlineResourcesForOfflineUserReturnsNone() throws Exception {
-		ArrayList<JID> users = onlineUser.getResources(localUserDesktop );
+		ArrayList<JID> users = onlineUser.getResources(localUserNoResource);
 		assertEquals(0, users.size());
 	}
 	
@@ -52,7 +54,7 @@ public class OnlineResourceManagerTest extends IQTestHandler {
 	public void testCanSetAUserAsOnlineAndSeeInOnlineResourcesList() throws Exception {
 		
 		onlineUser.updateStatus(localUserDesktop, "online");
-		ArrayList<JID> users = onlineUser.getResources(localUserDesktop);
+		ArrayList<JID> users = onlineUser.getResources(localUserNoResource);
 		assertEquals(1, users.size());
 	}
 	
@@ -60,7 +62,7 @@ public class OnlineResourceManagerTest extends IQTestHandler {
 	public void testAttemptingToUpdateStatusOfUserNotFromDomainIsIgnored() throws Exception {
 		
 		onlineUser.updateStatus(remoteUser, "online");
-		ArrayList<JID> users = onlineUser.getResources(remoteUser);
+		ArrayList<JID> users = onlineUser.getResources(new JID(remoteUser.toBareJID()));
 		assertEquals(0, users.size());
 	}
 	
@@ -68,7 +70,7 @@ public class OnlineResourceManagerTest extends IQTestHandler {
 	public void testCanGoOnlineOnTwoResourcesAndRetrieveBoth() throws Exception {
 		onlineUser.updateStatus(localUserDesktop, "online");
 		onlineUser.updateStatus(localUserLaptop, "online");
-		ArrayList<JID> users = onlineUser.getResources(localUserDesktop);
+		ArrayList<JID> users = onlineUser.getResources(localUserNoResource);
 		assertEquals(2, users.size());
 	}
 	
@@ -77,7 +79,7 @@ public class OnlineResourceManagerTest extends IQTestHandler {
 		onlineUser.updateStatus(localUserDesktop, "online");
 		onlineUser.updateStatus(localUserLaptop, "online");
 		onlineUser.updateStatus(localUserDesktop, onlineUser.UNAVAILABLE);
-		ArrayList<JID> users = onlineUser.getResources(localUserDesktop);
+		ArrayList<JID> users = onlineUser.getResources(localUserNoResource);
 		assertEquals(1, users.size());
 		assertEquals(localUserLaptop, users.get(0));
 	}
@@ -87,8 +89,15 @@ public class OnlineResourceManagerTest extends IQTestHandler {
 		onlineUser.updateStatus(localUserDesktop, "online");
 		onlineUser.updateStatus(localUserLaptop, "online");
 		onlineUser.updateStatus(new JID(localUserDesktop.toFullJID()), onlineUser.UNAVAILABLE);
-		ArrayList<JID> users = onlineUser.getResources(localUserDesktop);
+		ArrayList<JID> users = onlineUser.getResources(localUserNoResource);
 		assertEquals(1, users.size());
 		assertEquals(new JID(localUserLaptop.toFullJID()), users.get(0));
+	}
+	
+	@Test
+	public void testPassingAFullJidReturnsToGetResourcesOnlyReturnsThatJid() throws Exception {
+		ArrayList<JID> users = onlineUser.getResources(localUserDesktop);
+		assertEquals(1, users.size());
+		assertEquals(localUserDesktop, users.get(0));
 	}
 }

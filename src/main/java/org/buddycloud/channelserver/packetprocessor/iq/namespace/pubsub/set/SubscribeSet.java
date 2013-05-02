@@ -157,38 +157,42 @@ public class SubscribeSet extends PubSubElementProcessorAbstract {
 				return;
 			}
 
-			if (false == possibleExistingSubscription.toString().equals(
-					Subscriptions.none.toString())) {
+			Affiliations defaultAffiliation = null;
+			Subscriptions defaultSubscription = null;
+			
+			if (false == possibleExistingSubscription.in(Subscriptions.none)) {
 				logger.debug("User already has a '"
 						+ possibleExistingSubscription.toString()
 						+ "' subscription");
-				tooManySubscriptions();
-				return;
-			}
+				//tooManySubscriptions();
+				//return;
+				defaultAffiliation = possibleExistingAffiliation;
+				defaultSubscription = possibleExistingSubscription;
+			} else {
 
-			// Finally subscribe to the node :-)
-			Map<String, String> nodeConf = channelManager.getNodeConf(node);
-			Affiliations defaultAffiliation = null;
-			try {
-				defaultAffiliation = Affiliations.createFromString(nodeConf
-						.get(Conf.DEFAULT_AFFILIATION));
-			} catch (NullPointerException e) {
-				e.printStackTrace();
-				defaultAffiliation = Affiliations.member;
+				// Finally subscribe to the node :-)
+				Map<String, String> nodeConf = channelManager.getNodeConf(node);
+				try {
+					defaultAffiliation = Affiliations.createFromString(nodeConf
+							.get(Conf.DEFAULT_AFFILIATION));
+				} catch (NullPointerException e) {
+					e.printStackTrace();
+					defaultAffiliation = Affiliations.member;
+				}
+				defaultSubscription = Subscriptions.subscribed;
+				String accessModel = nodeConf.get(Conf.ACCESS_MODEL);
+				if ((null == accessModel) 
+				    || (true == accessModel.equals(AccessModels.authorize.toString()))) {
+					defaultSubscription = Subscriptions.pending;
+				}
+	
+				NodeSubscription newSubscription = new NodeSubscriptionImpl(node,
+						subscribingJid, request.getFrom(), defaultSubscription);
+				channelManager.addUserSubscription(newSubscription);
+	
+				channelManager.setUserAffiliation(node, subscribingJid,
+						defaultAffiliation);
 			}
-			Subscriptions defaultSubscription = Subscriptions.subscribed;
-			String accessModel = nodeConf.get(Conf.ACCESS_MODEL);
-			if ((null == accessModel) 
-			    || (true == accessModel.equals(AccessModels.authorize.toString()))) {
-				defaultSubscription = Subscriptions.pending;
-			}
-
-			NodeSubscription newSubscription = new NodeSubscriptionImpl(node,
-					subscribingJid, request.getFrom(), defaultSubscription);
-			channelManager.addUserSubscription(newSubscription);
-
-			channelManager.setUserAffiliation(node, subscribingJid,
-					defaultAffiliation);
 
 			IQ reply = IQ.createResultIQ(request);
 			Element pubsub = reply.setChildElement(PubSubSet.ELEMENT_NAME,

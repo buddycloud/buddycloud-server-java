@@ -557,7 +557,7 @@ public class JDBCNodeStore implements NodeStore {
 
 			while (rs.next()) {
 				NodeSubscriptionImpl nodeSub = new NodeSubscriptionImpl(
-						rs.getString(1), new JID(rs.getString(2)),
+						rs.getString(2), new JID(rs.getString(1)),
 						Subscriptions.valueOf(rs.getString(3)));
 				result.add(nodeSub);
 			}

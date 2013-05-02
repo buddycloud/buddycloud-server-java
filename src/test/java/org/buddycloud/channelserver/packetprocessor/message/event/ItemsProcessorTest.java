@@ -65,7 +65,7 @@ public class ItemsProcessorTest extends IQTestHandler {
 
 		entry = item.addElement("entry");
 		Element updated = entry.addElement("updated");
-		updated.setText("2012-10-10T08:37:02Z");
+		updated.setText("2012-10-10T08:37:02.000Z");
 
 		items.addAttribute("node", "/users/romeo@shakespeare.lit/posts");
 		item.addAttribute("id", "publish:1");

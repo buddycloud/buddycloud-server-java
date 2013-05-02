@@ -22,7 +22,7 @@ import org.xmpp.resultsetmanagement.ResultSet;
 public class ItemsProcessor extends AbstractMessageProcessor {
 	
 	private static final Logger logger = Logger.getLogger(ItemsProcessor.class);
-	private static final String DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ss'Z'";
+	private static final String DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.S'Z'";
 	private SimpleDateFormat sdf = new SimpleDateFormat(DATE_FORMAT);
 
 	public ItemsProcessor(BlockingQueue<Packet> outQueue,

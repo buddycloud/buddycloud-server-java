@@ -3,12 +3,9 @@ package org.buddycloud.channelserver.packetprocessor.iq.namespace.discoinfo;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.concurrent.BlockingQueue;
-
 import org.apache.log4j.Logger;
-import org.buddycloud.channelserver.packetprocessor.PacketProcessor;
-import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.JabberPubsub;
 import org.buddycloud.channelserver.channel.ChannelManager;
-import org.buddycloud.channelserver.queue.statemachine.DiscoInfo;
+import org.buddycloud.channelserver.packetprocessor.PacketProcessor;
 import org.dom4j.Element;
 import org.xmpp.forms.DataForm;
 import org.xmpp.forms.FormField;

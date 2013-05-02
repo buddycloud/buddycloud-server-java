@@ -8,6 +8,7 @@ import java.util.concurrent.BlockingQueue;
 
 import org.apache.log4j.Logger;
 import org.buddycloud.channelserver.channel.ChannelManager;
+import org.buddycloud.channelserver.db.exception.ItemNotFoundException;
 import org.buddycloud.channelserver.db.exception.NodeStoreException;
 import org.buddycloud.channelserver.packetprocessor.PacketProcessor;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.result.ItemsResult;
@@ -57,7 +58,11 @@ public class ItemsProcessor extends AbstractMessageProcessor {
 	}
 	
 	private void deleteItem(String id) throws NodeStoreException {
-		channelManager.deleteNodeItemById(node, id);
+		try {
+		    channelManager.deleteNodeItemById(node, id);
+		} catch (ItemNotFoundException e) {
+			logger.debug("No item to delete, not a problem");
+		}
 	}
 
 	private void handleNewItem(Element entry) throws NodeStoreException {

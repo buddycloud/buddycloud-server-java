@@ -53,6 +53,7 @@ public class OutQueueConsumer extends QueueConsumer {
 			}
 			// Get a list of 'online' resources for this JID
 			ArrayList<JID> resources = onlineUsers.getResources(p.getTo());
+			logger.debug("There are " + resources.size() + " online resources for " + p.getTo());
 			for (JID resource : resources) {
 		        p.setTo(resource);
 			    component.sendPacket(p.createCopy());

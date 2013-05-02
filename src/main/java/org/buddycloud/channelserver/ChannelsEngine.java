@@ -62,14 +62,10 @@ public class ChannelsEngine implements Component {
 
 		setupManagers();
 		startQueueConsumers();
-		setupOnlineUserManager();
+
         serverSync();
 		LOGGER.info("XMPP Component started. We are '" + jid.toString()
 				+ "' and ready to accept packages.");
-	}
-
-	private void setupOnlineUserManager() {
-		onlineUsers = new OnlineResourceManager(conf);		
 	}
 
 	private void serverSync() {
@@ -101,6 +97,7 @@ public class ChannelsEngine implements Component {
 				conf, nodeStoreFactory);
 		federatedQueueManager = new FederatedQueueManager(
 				this, conf.getProperty("server.domain.channels"));
+		onlineUsers = new OnlineResourceManager(conf);
 	}
 
 	@Override

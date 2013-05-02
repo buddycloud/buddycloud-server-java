@@ -69,23 +69,6 @@ public class DiscoInfoGet implements PacketProcessor<IQ> {
 		
 		Map<String, String> conf = channelManager.getNodeConf(node);
 		if (conf.isEmpty()) {
-/*
-			// Add the possibility to do disco info on foreign node.
-			// Only available for local users.
-			if (channelManager.isLocalUser(reqIQ.getFrom().toBareJID())) {
-
-				// If we are here, it means we have a node that was not on this
-				// channel server
-				// but the user was local. Let's try to find it from a foreign
-				// node.
-
-				DiscoInfo di = DiscoInfo.buildDiscoInfoStatemachine(node,
-						reqIQ, channelManager);
-				outQueue.put(di.nextStep());
-				return;
-
-			}
-*/
 			/*
 			 * Not found. Let's return something like this: <iq type='error'
 			 * from='plays.shakespeare.lit' to='romeo@montague.net/orchard'

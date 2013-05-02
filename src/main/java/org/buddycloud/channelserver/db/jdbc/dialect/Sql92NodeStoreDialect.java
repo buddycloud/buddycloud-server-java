@@ -69,6 +69,10 @@ public class Sql92NodeStoreDialect implements NodeStoreSQLDialect {
 
 	private static final String COUNT_ITEMS_FOR_NODE = "SELECT COUNT(*)"
 			+ " FROM \"items\" WHERE \"node\" = ?";
+	
+
+	private static final String COUNT_SUBSCRIPTIONS_FOR_NODE = "SELECT COUNT(*) "
+			+ "FROM \"subscriptions\" WHERE \"node\" = ?;";
 
 	private static final String COUNT_ITEMS_FOR_JID = "SELECT COUNT(*)"
 			+ " FROM \"subscriptions\" WHERE \"user\" = ?";
@@ -167,6 +171,11 @@ public class Sql92NodeStoreDialect implements NodeStoreSQLDialect {
 	
 	public String countSubscriptionsForJid() {
 		return COUNT_ITEMS_FOR_JID;
+	}
+	
+	@Override
+	public String countSubscriptionsForNode() {
+		return COUNT_SUBSCRIPTIONS_FOR_NODE;
 	}
 
 	@Override

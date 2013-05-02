@@ -1102,6 +1102,34 @@ public class JDBCNodeStoreTest {
 	}
 	
 	@Test
+	public void testGetNodeSubscriptionCountReturnsZeroWhereThereAreNone() throws Exception {
+		int subscriptionCount = store.countNodeSubscriptions(TEST_SERVER1_NODE1_ID);
+		assertEquals(0, subscriptionCount);
+	}
+	
+	@Test
+	public void testGetNodeSubscriptionCountReturnsResultWhereThereAreSome() throws Exception {
+		dbTester.loadData("node_1");
+		int subscriptionCount = store.countNodeSubscriptions(TEST_SERVER1_NODE1_ID);
+		assertEquals(4, subscriptionCount);
+	}
+	
+	@Test
+	public void testGetIsCachedSubscriptionNodeReturnsFalseWhereThereAreNoSubscriptions() throws Exception {
+		boolean cached = store.nodeHasSubscriptions(TEST_SERVER1_NODE1_ID);
+		assertEquals(false, cached);
+	}
+	
+	@Test
+	public void testGetIsCachedSubscriptionNodeReturnsTrueWhereThereAreSubscriptions() throws Exception {
+		dbTester.loadData("node_1");
+		int subscriptionCount = store.countNodeSubscriptions(TEST_SERVER1_NODE1_ID);
+		boolean cached = store.nodeHasSubscriptions(TEST_SERVER1_NODE1_ID);
+		assertEquals(true, cached);
+	}
+	
+	
+	@Test
 	public void testBeginTransaction() throws Exception {
 		Connection conn = Mockito.mock(Connection.class);
 		JDBCNodeStore store = new JDBCNodeStore(conn, mock(NodeStoreSQLDialect.class));

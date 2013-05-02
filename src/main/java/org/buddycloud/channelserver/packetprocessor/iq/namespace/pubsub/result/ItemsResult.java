@@ -62,7 +62,7 @@ public class ItemsResult extends PubSubElementProcessorAbstract {
 
 		for (Element item : items) {
 			if (true == subscriptionNode) {
-				processSubscriptionItem(item);
+                processSubscriptionItem(item);
 			} else {
 				processPublishedItem(item);
 			}

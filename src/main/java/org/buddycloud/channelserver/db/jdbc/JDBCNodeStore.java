@@ -829,6 +829,36 @@ public class JDBCNodeStore implements NodeStore {
 									// required
 		}
 	}
+
+
+	@Override
+	public int countNodeSubscriptions(String nodeId) throws NodeStoreException {
+		PreparedStatement selectStatement = null;
+		try {
+			selectStatement = conn
+					.prepareStatement(dialect.countSubscriptionsForNode());
+			selectStatement.setString(1, nodeId);
+
+			java.sql.ResultSet rs = selectStatement.executeQuery();
+
+			if (rs.next()) {
+				return rs.getInt(1);
+			} else {
+				return 0; // This really shouldn't happen!
+			}
+		} catch (SQLException e) {
+			throw new NodeStoreException(e);
+		} finally {
+			close(selectStatement); // Will implicitly close the resultset if
+									// required
+		}
+	}
+
+	@Override
+	public boolean nodeHasSubscriptions(String nodeId)
+			throws NodeStoreException {
+		return (this.countNodeSubscriptions(nodeId) > 0);
+	}
 	
 	@Override
 	public Transaction beginTransaction() throws NodeStoreException {
@@ -952,6 +982,8 @@ public class JDBCNodeStore implements NodeStore {
 
 	public interface NodeStoreSQLDialect {
 		String insertNode();
+
+		String countSubscriptionsForNode();
 
 		String deleteItems();
 

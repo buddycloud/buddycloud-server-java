@@ -15,7 +15,6 @@ import org.xmpp.packet.JID;
 
 public class SubscriptionsResult extends PubSubElementProcessorAbstract {
 
-	private String node;
 	private IQ request;
 	private boolean ownerRequest;
 	private String lastNode = "";
@@ -38,7 +37,6 @@ public class SubscriptionsResult extends PubSubElementProcessorAbstract {
 			return;
 		}
 
-		node = elm.attributeValue("node");
 		ownerRequest = ((null == node) || (true == node.equals("")));
 
 		@SuppressWarnings("unchecked")

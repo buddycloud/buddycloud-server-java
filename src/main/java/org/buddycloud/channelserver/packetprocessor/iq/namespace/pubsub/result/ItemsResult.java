@@ -24,7 +24,6 @@ public class ItemsResult extends PubSubElementProcessorAbstract {
 	private static final String DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.S'Z'";
 
 	private static final Logger logger = Logger.getLogger(ItemsResult.class);
-	private String node;
 	private SimpleDateFormat sdf = new SimpleDateFormat(DATE_FORMAT);
 	private boolean subscriptionNode = false;
 
@@ -43,7 +42,7 @@ public class ItemsResult extends PubSubElementProcessorAbstract {
 			return;
 		}
 
-		node = elm.attributeValue("node");
+		this.setNode(elm.attributeValue("node"));
 
 		if ((null == node) || (true == node.equals(""))) {
 			throw new NullPointerException(MISSING_NODE);

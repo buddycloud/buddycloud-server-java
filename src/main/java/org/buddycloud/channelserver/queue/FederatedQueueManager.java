@@ -41,6 +41,7 @@ public class FederatedQueueManager {
 	private HashMap<String, Integer> remoteServerItemsToProcess = new HashMap<String, Integer>();
 	private HashMap<String, String> remoteServerInfoRequestIds = new HashMap<String, String>();
 	private HashMap<String, JID> sentRemotePackets = new HashMap<String, JID>();
+	private HashMap<String, String> nodeMap = new HashMap<String, String>();
 
 	private String localServer;
 
@@ -62,6 +63,7 @@ public class FederatedQueueManager {
 		sentRemotePackets.put(packet.getID(), packet.getFrom());
 		packet.setFrom(localServer);
 		try {
+			extractNodeDetails(packet);
 			// Do we have a map already?
 			if (discoveredServers.containsKey(to)) {
 				packet.setTo(new JID(discoveredServers.get(to)));
@@ -89,6 +91,23 @@ public class FederatedQueueManager {
 					+ " (size " + waitingStanzas.get(to).size() + ")");
 			waitingStanzas.get(to).add(packet);
 		} catch (Exception e) {
+			logger.error(e);
+		}
+	}
+
+	private void extractNodeDetails(Packet packet) {
+		try {
+			String packetXml = packet.toXML();
+			if (false == packetXml.contains("node=")) return;
+			nodeMap.put(
+			    packet.getID(),
+			    packetXml.split("node=\"")[1].split("\"")[0]
+			);
+		} catch (NullPointerException e) {
+			logger.info("No node details found in federated packet");
+			logger.error(e);
+		} catch (ArrayIndexOutOfBoundsException e) {
+			logger.info("Error extracting node information from federated packet");
 			logger.error(e);
 		}
 	}
@@ -213,7 +232,7 @@ public class FederatedQueueManager {
 		}
 	}
 
-	public void passResponseToRequester(IQ packet) throws Exception {
+	public String passResponseToRequester(IQ packet) throws Exception {
 		if (false == sentRemotePackets.containsKey(packet.getID())) {
 			throw new UnknownFederatedPacketException(
 					"Can not find original requesting packet! (ID:"
@@ -226,7 +245,15 @@ public class FederatedQueueManager {
 		packet.setTo(sentRemotePackets.get(packet.getID()));
 		packet.setFrom(localServer);
 		sentRemotePackets.remove(packet.getID());
+		
 		component.sendPacket(packet);
+		
+		String id = null;
+		if (nodeMap.containsKey(packet.getID())) {
+			id = nodeMap.get(packet.getID());
+			nodeMap.remove(packet.getID());
+		}
+		return id;
 	}
 
 	public void addChannelMap(JID server) {

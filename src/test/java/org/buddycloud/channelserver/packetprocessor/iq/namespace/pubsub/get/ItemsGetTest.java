@@ -59,6 +59,8 @@ public class ItemsGetTest extends IQTestHandler {
 		channelManager = Mockito.mock(Mock.class);
 		Mockito.when(channelManager.isLocalNode(Mockito.anyString()))
 				.thenReturn(true);
+		Mockito.when(channelManager.isLocalJID(Mockito.any(JID.class)))
+		.thenReturn(true);
 		itemsGet.setChannelManager(channelManager);
 	}
 

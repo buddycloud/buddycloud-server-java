@@ -16,6 +16,7 @@ public class JDBCConnectionFactory {
 
 	public JDBCConnectionFactory(Configuration conf)
 			throws ClassNotFoundException, ProxoolException {
+
 		Class.forName("org.logicalcobwebs.proxool.ProxoolDriver");
 	}
 

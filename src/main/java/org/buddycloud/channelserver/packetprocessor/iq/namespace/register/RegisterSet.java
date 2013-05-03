@@ -41,9 +41,9 @@ public class RegisterSet implements PacketProcessor<IQ>
             return;
         }
         LOGGER.trace("Processing register request from " + request.getFrom());
-        if (true == channelManager.nodeExists("/user/" + request.getFrom() + "/posts")) {
+        if (true == channelManager.nodeExists("/user/" + request.getFrom().toBareJID() + "/posts")) {
             //userAlreadyRegistered();
-        	LOGGER.trace("User " + request.getFrom() + " is already registered");
+        	LOGGER.trace("User " + request.getFrom().toBareJID() + " is already registered");
         	IQ reply = IQ.createResultIQ(request);
             outQueue.put(reply);
             return;

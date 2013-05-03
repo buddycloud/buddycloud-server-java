@@ -98,9 +98,17 @@ public class ItemsResult extends PubSubElementProcessorAbstract {
 		Element entry = item.element("entry");
 
 		try {
+			// Probably a tombstone'd item
+			if (null == entry.elementText("updated")) return;
+			
 			Date updatedDate = sdf.parse(entry.elementText("updated"));
 			NodeItemImpl nodeItem = new NodeItemImpl(node,
 					entry.elementText("id"), updatedDate, entry.asXML());
+			try {
+			    channelManager.deleteNodeItemById(node, entry.elementText("id"));
+			} catch (NodeStoreException e) {
+				logger.error("Attempt to delete an item which didn't exist... its ok");
+			}
 			channelManager.addNodeItem(nodeItem);
 		} catch (ParseException e) {
 			logger.error(e);

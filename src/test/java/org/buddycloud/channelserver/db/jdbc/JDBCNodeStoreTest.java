@@ -842,17 +842,17 @@ public class JDBCNodeStoreTest {
 	public void testGetNodeItemsWithLimits() throws Exception {
 		dbTester.loadData("node_1");
 		
-		Iterator<NodeItem> result = store.getNodeItems(TEST_SERVER1_NODE1_ID, TEST_SERVER1_NODE1_ITEM1_ID, 3);
+		Iterator<NodeItem> result = store.getNodeItems(TEST_SERVER1_NODE1_ID, TEST_SERVER1_NODE1_ITEM4_ID, 4);
 		
 		String[] expectedNodeIds = {
-				TEST_SERVER1_NODE1_ITEM4_ID,
-				TEST_SERVER1_NODE1_ITEM3_ID,
+				TEST_SERVER1_NODE1_ITEM1_ID,
 				TEST_SERVER1_NODE1_ITEM2_ID,
+				TEST_SERVER1_NODE1_ITEM3_ID
 			};
 		String[] expectedEntryContent = {
-				TEST_SERVER1_NODE1_ITEM4_CONTENT,
-				TEST_SERVER1_NODE1_ITEM3_CONTENT,
+				TEST_SERVER1_NODE1_ITEM1_CONTENT,
 				TEST_SERVER1_NODE1_ITEM2_CONTENT,
+				TEST_SERVER1_NODE1_ITEM3_CONTENT
 			};
 		
 		int i = 0;

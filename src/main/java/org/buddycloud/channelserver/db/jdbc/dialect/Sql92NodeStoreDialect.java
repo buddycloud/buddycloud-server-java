@@ -67,6 +67,10 @@ public class Sql92NodeStoreDialect implements NodeStoreSQLDialect {
 			+ " FROM \"items\" WHERE \"node\" = ? AND ( \"updated\" > ? OR ( \"updated\" = ? AND \"id\" > ? ) )"
 			+ " ORDER BY \"updated\" ASC, \"id\" DESC";
 
+	private static final String SELECT_ITEMS_FOR_NODE_BEFORE_DATE = "SELECT \"node\", \"id\", \"updated\", \"xml\""
+			+ " FROM \"items\" WHERE \"node\" = ? AND ( \"updated\" < ? OR ( \"updated\" = ? AND \"id\" < ? ) )"
+			+ " ORDER BY \"updated\" DESC, \"id\" ASC";
+	
 	private static final String COUNT_ITEMS_FOR_NODE = "SELECT COUNT(*)"
 			+ " FROM \"items\" WHERE \"node\" = ?";
 	
@@ -213,6 +217,11 @@ public class Sql92NodeStoreDialect implements NodeStoreSQLDialect {
 		return SELECT_ITEMS_FOR_NODE_AFTER_DATE;
 	}
 
+	@Override
+	public String selectItemsForNodeBeforeDate() {
+		return SELECT_ITEMS_FOR_NODE_BEFORE_DATE;
+	}
+	
 	@Override
 	public String countItemsForNode() {
 		return COUNT_ITEMS_FOR_NODE;

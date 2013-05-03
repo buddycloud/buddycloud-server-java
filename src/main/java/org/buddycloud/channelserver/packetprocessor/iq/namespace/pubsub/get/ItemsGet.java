@@ -58,6 +58,8 @@ public class ItemsGet implements PubSubElementProcessor {
 
 	private boolean isSubscriptionsNode;
 
+	private int rsmEntriesCount;
+
 	public ItemsGet(BlockingQueue<Packet> outQueue,
 			ChannelManager channelManager) {
 		this.outQueue = outQueue;
@@ -203,9 +205,9 @@ public class ItemsGet implements PubSubElementProcessor {
 			totalEntriesCount = getNodeItems(items, maxItemsToReturn,
 					afterItemId);
 		}
-		
-		if ((false == channelManager.isLocalJID(requestIq.getFrom()))
-	        && (0 == totalEntriesCount)) {
+		logger.debug("Node " + node + " is local? " + channelManager.isLocalNode(node) + " and there were " + rsmEntriesCount + " entries");
+		if ((false == channelManager.isLocalNode(node))
+	        && (0 == rsmEntriesCount)) {
 			logger.debug("No results in cache for remote node, so "
 			    + "we're going federated to get more");
         	makeRemoteRequest();
@@ -279,13 +281,13 @@ public class ItemsGet implements PubSubElementProcessor {
 
 		CloseableIterator<NodeItem> itemIt = channelManager.getNodeItems(node,
 				afterItemId, maxItemsToReturn);
-		int itemCount = 0;
+		rsmEntriesCount = 0;
 		if (null == itemIt) {
 			return 0;
 		}
 		try {
 			while (itemIt.hasNext()) {
-				++itemCount;
+				++rsmEntriesCount;
 				NodeItem nodeItem = itemIt.next();
     
 				if (firstItem == null) {
@@ -305,7 +307,7 @@ public class ItemsGet implements PubSubElementProcessor {
 				}
 
 			}
-			logger.debug("Including RSM there are " + itemCount 
+			logger.debug("Including RSM there are " + rsmEntriesCount 
 			    + " items for node " + node);
 			return channelManager.countNodeItems(node);
 		} finally {

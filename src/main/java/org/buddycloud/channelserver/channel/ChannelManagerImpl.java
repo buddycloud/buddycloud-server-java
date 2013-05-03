@@ -26,7 +26,7 @@ public class ChannelManagerImpl implements ChannelManager {
 	private final NodeStore nodeStore;
 	private final Properties configuration;
 
-	private static final Logger LOGGER = Logger
+	private static final Logger logger = Logger
 			.getLogger(ChannelManagerImpl.class);
 
 	private static final String INVALID_NODE = "Illegal node format";
@@ -261,8 +261,13 @@ public class ChannelManagerImpl implements ChannelManager {
 	@Override
 	public void deleteRemoteData() throws NodeStoreException {
 		ArrayList<String> nodes = this.getNodeList();
-		for (String node : nodes)
-			if (false == this.isLocalNode(node)) nodeStore.purgeNodeItems(node);
+		for (String node : nodes) {
+			try {
+			    if (false == this.isLocalNode(node)) nodeStore.purgeNodeItems(node);
+			} catch (IllegalArgumentException e) {
+				logger.error("Invalid remote node in datastore " + node, e);
+			}
+		}
 	}
 
 	@Override

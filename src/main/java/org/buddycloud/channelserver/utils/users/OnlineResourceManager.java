@@ -25,7 +25,8 @@ public class OnlineResourceManager {
 	}
 
 	public ArrayList<JID> getResources(JID jid) {
-		if (null != jid.getResource()) {
+		if ((null != jid.getResource())
+		    || ((null == jid.getResource()) && (null == jid.getNode()))) {
 			ArrayList<JID> user = new ArrayList<JID>();
 			user.add(jid);
 			return user;

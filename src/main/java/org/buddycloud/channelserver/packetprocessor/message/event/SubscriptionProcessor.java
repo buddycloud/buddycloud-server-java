@@ -64,7 +64,8 @@ public class SubscriptionProcessor extends AbstractMessageProcessor {
 
 	private void addRemoteNode() {
         try { 
-            channelManager.addRemoteNode(node); 
+            if (false == channelManager.nodeExists(node))
+                channelManager.addRemoteNode(node); 
         } catch (NodeStoreException e) { 
         	logger.error(e);
         }

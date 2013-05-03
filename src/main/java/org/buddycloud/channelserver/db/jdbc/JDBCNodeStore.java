@@ -613,7 +613,7 @@ public class JDBCNodeStore implements NodeStore {
 						});
 			} else {
 				stmt = conn.prepareStatement(dialect
-						.selectItemsForNodeAfterDate() + countSQL);
+						.selectItemsForNodeBeforeDate() + countSQL);
 				stmt.setString(1, nodeId);
 				stmt.setDate(2, new java.sql.Date(afterItem.getUpdated()
 						.getTime()));
@@ -1036,6 +1036,8 @@ public class JDBCNodeStore implements NodeStore {
 		String selectItemsForNode();
 
 		String selectItemsForNodeAfterDate();
+		
+		String selectItemsForNodeBeforeDate();
 
 		String countItemsForNode();
 

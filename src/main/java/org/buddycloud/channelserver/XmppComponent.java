@@ -10,7 +10,7 @@ import org.logicalcobwebs.proxool.configuration.PropertyConfigurator;
 
 public class XmppComponent {
 
-	private static final String DATABASE_CONFIGURATION_FILE = "db.properties";
+	private static final String DATABASE_CONFIGURATION_FILE = "configuration.properties";
 	
 	private static final Logger logger = Logger.getLogger(XmppComponent.class);
 	private String hostname;

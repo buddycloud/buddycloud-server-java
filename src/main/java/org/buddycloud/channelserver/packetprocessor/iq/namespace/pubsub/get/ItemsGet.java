@@ -35,7 +35,7 @@ import org.xmpp.packet.PacketError.Type;
 import org.xmpp.resultsetmanagement.ResultSet;
 
 public class ItemsGet implements PubSubElementProcessor {
-	private static final Logger LOGGER = Logger.getLogger(ItemsGet.class);
+	private static final Logger logger = Logger.getLogger(ItemsGet.class);
 
 	private static final int MAX_ITEMS_TO_RETURN = 50;
 
@@ -111,7 +111,7 @@ public class ItemsGet implements PubSubElementProcessor {
 
 		if (false == channelManager.isLocalNode(node) 
 			&& (false == isCached)) {
-			LOGGER.debug("Node " + node + " is remote and not cached, off to get some data");
+			logger.debug("Node " + node + " is remote and not cached, off to get some data");
 			makeRemoteRequest();
 		    return;
 		}
@@ -203,6 +203,14 @@ public class ItemsGet implements PubSubElementProcessor {
 			totalEntriesCount = getNodeItems(items, maxItemsToReturn,
 					afterItemId);
 		}
+		
+		if ((false == channelManager.isLocalJID(requestIq.getFrom()))
+	        && (0 == totalEntriesCount)) {
+			logger.debug("No results in cache for remote node, so "
+			    + "we're going federated to get more");
+        	makeRemoteRequest();
+        	return;
+        }
 
 		if ((resultSetManagement != null)
 				|| (totalEntriesCount > maxItemsToReturn)) {
@@ -263,29 +271,6 @@ public class ItemsGet implements PubSubElementProcessor {
 				.get(AccessModel.FIELD_NAME));
 	}
 
-	private void handleForeignNode(boolean isLocalSubscriber)
-			throws InterruptedException {
-		if (isLocalSubscriber) {
-
-			// TODO, WORK HERE!
-
-			// Start process to fetch items from nodes.
-			// Subscribe sub = Subscribe.buildSubscribeStatemachine(node,
-			// requestIq, channelManager);
-			// outQueue.put(sub.nextStep());
-			// return;
-		}
-
-		IQ reply = IQ.createResultIQ(requestIq);
-		reply.setType(IQ.Type.error);
-		PacketError pe = new PacketError(
-				org.xmpp.packet.PacketError.Condition.item_not_found,
-				org.xmpp.packet.PacketError.Type.cancel);
-		reply.setError(pe);
-		outQueue.put(reply);
-		return;
-	}
-
 	/**
 	 * Get items for !/subscriptions nodes
 	 */
@@ -294,13 +279,15 @@ public class ItemsGet implements PubSubElementProcessor {
 
 		CloseableIterator<NodeItem> itemIt = channelManager.getNodeItems(node,
 				afterItemId, maxItemsToReturn);
+		int itemCount = 0;
 		if (null == itemIt) {
 			return 0;
 		}
 		try {
 			while (itemIt.hasNext()) {
+				++itemCount;
 				NodeItem nodeItem = itemIt.next();
-
+    
 				if (firstItem == null) {
 					firstItem = nodeItem.getId();
 				}
@@ -313,11 +300,13 @@ public class ItemsGet implements PubSubElementProcessor {
 					item.add(entry);
 					lastItem = nodeItem.getId();
 				} catch (DocumentException e) {
-					LOGGER.error("Error parsing a node entry, ignoring. "
+					logger.error("Error parsing a node entry, ignoring. "
 							+ nodeItem);
 				}
 
 			}
+			logger.debug("Including RSM there are " + itemCount 
+			    + " items for node " + node);
 			return channelManager.countNodeItems(node);
 		} finally {
 			if (itemIt != null)

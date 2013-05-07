@@ -25,6 +25,8 @@ public class Conf {
     public static final String NOTIFY_CONFIG       = "pubsub#notify_config";
     public static final String CHANNEL_TYPE        = "buddycloud#channel_type";
     
+	private static final String PUBLISHERS = "publishers";
+    
     // Most of these are copied from here
     // https://github.com/buddycloud/buddycloud-server/blob/master/src/local/operations.coffee#L14
     
@@ -45,7 +47,7 @@ public class Conf {
         conf.put(TYPE, "http://www.w3.org/2005/Atom");
         conf.put(TITLE, channelJID.toBareJID() + "'s very own buddycloud channel!");
         conf.put(DESCRIPTION, "This channel belongs to " + channelJID.toBareJID() + ". To nobody else!");
-        conf.put(PUBLISH_MODEL, PublishModels.publisher.toString());
+        conf.put(PUBLISH_MODEL, PUBLISHERS);
         conf.put(ACCESS_MODEL, AccessModels.open.toString());
         conf.put(CREATION_DATE, sdf.format(new Date()));
         conf.put(OWNER, channelJID.toBareJID());
@@ -74,11 +76,11 @@ public class Conf {
         conf.put(TYPE, "http://www.w3.org/2005/Atom");
         conf.put(TITLE, channelJID.toBareJID() + "'s very own buddycloud status!");
         conf.put(DESCRIPTION, "This is " + channelJID.toBareJID() + "'s mood a.k.a status -channel. Depends how geek you are.");
-        conf.put(PUBLISH_MODEL, org.buddycloud.channelserver.pubsub.publishmodel.PublishModels.publisher.toString());
-        conf.put(ACCESS_MODEL, org.buddycloud.channelserver.pubsub.accessmodel.AccessModels.open.toString());
+        conf.put(PUBLISH_MODEL, PUBLISHERS);
+        conf.put(ACCESS_MODEL, AccessModels.open.toString());
         conf.put(CREATION_DATE, sdf.format(new Date()));
         conf.put(OWNER, channelJID.toBareJID());
-        conf.put(DEFAULT_AFFILIATION, org.buddycloud.channelserver.pubsub.affiliation.Affiliations.member.toString());
+        conf.put(DEFAULT_AFFILIATION, Affiliations.member.toString());
         conf.put(NUM_SUBSCRIBERS, "1");
         conf.put(NOTIFY_CONFIG, "1");
         
@@ -102,11 +104,11 @@ public class Conf {
         conf.put(TYPE, "http://www.w3.org/2005/Atom");
         conf.put(TITLE, channelJID.toBareJID() + "'s previous location.");
         conf.put(DESCRIPTION, "Where " + channelJID.toBareJID() + " has been before.");
-        conf.put(PUBLISH_MODEL, org.buddycloud.channelserver.pubsub.publishmodel.PublishModels.publisher.toString());
-        conf.put(ACCESS_MODEL, org.buddycloud.channelserver.pubsub.accessmodel.AccessModels.open.toString());
+        conf.put(PUBLISH_MODEL, PUBLISHERS);
+        conf.put(ACCESS_MODEL, AccessModels.open.toString());
         conf.put(CREATION_DATE, sdf.format(new Date()));
         conf.put(OWNER, channelJID.toBareJID());
-        conf.put(DEFAULT_AFFILIATION, org.buddycloud.channelserver.pubsub.affiliation.Affiliations.member.toString());
+        conf.put(DEFAULT_AFFILIATION, Affiliations.member.toString());
         conf.put(NUM_SUBSCRIBERS, "1");
         conf.put(NOTIFY_CONFIG, "1");
         
@@ -130,11 +132,11 @@ public class Conf {
         conf.put(TYPE, "http://www.w3.org/2005/Atom");
         conf.put(TITLE, channelJID.toBareJID() + "'s current location.");
         conf.put(DESCRIPTION, "Where " + channelJID.toBareJID() + " is now.");
-        conf.put(PUBLISH_MODEL, org.buddycloud.channelserver.pubsub.publishmodel.PublishModels.publisher.toString());
-        conf.put(ACCESS_MODEL, org.buddycloud.channelserver.pubsub.accessmodel.AccessModels.open.toString());
+        conf.put(PUBLISH_MODEL, PUBLISHERS);
+        conf.put(ACCESS_MODEL, AccessModels.open.toString());
         conf.put(CREATION_DATE, sdf.format(new Date()));
         conf.put(OWNER, channelJID.toBareJID());
-        conf.put(DEFAULT_AFFILIATION, org.buddycloud.channelserver.pubsub.affiliation.Affiliations.member.toString());
+        conf.put(DEFAULT_AFFILIATION, Affiliations.member.toString());
         conf.put(NUM_SUBSCRIBERS, "1");
         conf.put(NOTIFY_CONFIG, "1");
         
@@ -158,11 +160,11 @@ public class Conf {
         conf.put(TYPE, "http://www.w3.org/2005/Atom");
         conf.put(TITLE, channelJID.toBareJID() + "'s next location.");
         conf.put(DESCRIPTION, "Where " + channelJID.toBareJID() + " is going to go.");
-        conf.put(PUBLISH_MODEL, org.buddycloud.channelserver.pubsub.publishmodel.PublishModels.publisher.toString());
-        conf.put(ACCESS_MODEL, org.buddycloud.channelserver.pubsub.accessmodel.AccessModels.open.toString());
+        conf.put(PUBLISH_MODEL, PUBLISHERS);
+        conf.put(ACCESS_MODEL, AccessModels.open.toString());
         conf.put(CREATION_DATE, sdf.format(new Date()));
         conf.put(OWNER, channelJID.toBareJID());
-        conf.put(DEFAULT_AFFILIATION, org.buddycloud.channelserver.pubsub.affiliation.Affiliations.member.toString());
+        conf.put(DEFAULT_AFFILIATION, Affiliations.member.toString());
         conf.put(NUM_SUBSCRIBERS, "1");
         conf.put(NOTIFY_CONFIG, "1");
         
@@ -186,11 +188,11 @@ public class Conf {
         conf.put(TYPE, "http://www.w3.org/2005/Atom");
         conf.put(TITLE, channelJID.toBareJID() + "'s susbcriptions.");
         conf.put(DESCRIPTION, channelJID.toBareJID() + "'s subscriptions. ");
-        conf.put(PUBLISH_MODEL, org.buddycloud.channelserver.pubsub.publishmodel.PublishModels.publisher.toString());
-        conf.put(ACCESS_MODEL, org.buddycloud.channelserver.pubsub.accessmodel.AccessModels.open.toString());
+        conf.put(PUBLISH_MODEL, PUBLISHERS);
+        conf.put(ACCESS_MODEL, AccessModels.open.toString());
         conf.put(CREATION_DATE, sdf.format(new Date()));
         conf.put(OWNER, channelJID.toBareJID());
-        conf.put(DEFAULT_AFFILIATION, org.buddycloud.channelserver.pubsub.affiliation.Affiliations.member.toString());
+        conf.put(DEFAULT_AFFILIATION, Affiliations.member.toString());
         conf.put(NUM_SUBSCRIBERS, "1");
         conf.put(NOTIFY_CONFIG, "1");
         

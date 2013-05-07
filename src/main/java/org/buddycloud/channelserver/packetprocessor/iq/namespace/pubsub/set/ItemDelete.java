@@ -90,10 +90,14 @@ public class ItemDelete extends PubSubElementProcessorAbstract {
 			ResultSet<NodeSubscription> subscriptions = channelManager
 					.getNodeSubscriptionListeners(node);
 			Message notification = getNotificationMessage();
+			String id = notification.getID();
+			int counter = 0;
 			for (NodeSubscription subscription : subscriptions) {
+				++counter;
 				if (subscription.getSubscription().equals(
 						Subscriptions.subscribed)) {
 					notification.setTo(subscription.getListener().toString());
+					notification.setID(id + ":" + counter);
 					outQueue.put(notification.createCopy());
 				}
 			}

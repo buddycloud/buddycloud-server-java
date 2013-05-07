@@ -311,7 +311,11 @@ public class PublishSet implements PubSubElementProcessor {
 
 		ResultSet<NodeSubscription> cur = channelManager
 				.getNodeSubscriptionListeners(node);
+		
+		String messageId = msg.getID();
+		int counter = 0;
 		for (NodeSubscription ns : cur) {
+			++counter;
 			JID to = ns.getUser();
 
 			// TODO Federation!
@@ -325,6 +329,7 @@ public class PublishSet implements PubSubElementProcessor {
 			if (ns.getSubscription().equals(Subscriptions.subscribed)) {
 			    LOGGER.debug("Sending post notification to " + to.toBareJID());
 			    msg.setTo(ns.getListener());
+			    msg.setID(messageId + ":" + counter);
 			    actor.setText(to.toBareJID());
 			    outQueue.put(msg.createCopy());
 			}

@@ -142,9 +142,13 @@ public class UnsubscribeSet extends PubSubElementProcessorAbstract {
 		affiliation.addAttribute("node", node);
 
 		Message rootElement = new Message(message);
-
+        String id = rootElement.getID();
+        int counter = 0;
+        
 		for (NodeSubscription subscriber : subscribers) {
+			++counter;
 			Message notification = rootElement.createCopy();
+			notification.setID(id + ":" + counter);
 			notification.setTo(subscriber.getUser());
 			outQueue.put(notification);
 		}

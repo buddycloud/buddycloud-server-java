@@ -113,9 +113,13 @@ public class AffiliationEvent extends PubSubElementProcessorAbstract {
 				requestedAffiliation.attributeValue("affiliation"));
 		Message rootElement = new Message(message);
 
+		int counter = 0;
+		String id = rootElement.getID();
 		for (NodeSubscription subscriber : subscribers) {
+			++counter;
 			Message notification = rootElement.createCopy();
 			notification.setTo(subscriber.getListener());
+			notification.setID(id + ":" + counter);
 			outQueue.put(notification);
 		}
 	}

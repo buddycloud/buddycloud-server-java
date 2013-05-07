@@ -110,4 +110,14 @@ public class OnlineResourceManagerTest extends IQTestHandler {
 		assertEquals(1, users.size());
 		assertEquals(remoteBuddycloudServer, users.get(0));
 	}
+	
+	@Test
+	public void testAddingTheSameResourceTwiceDoesntResultInTwoEntries() throws Exception {
+		onlineUser.updateStatus(localUserDesktop, "online");
+		onlineUser.updateStatus(localUserDesktop, "online");
+
+		ArrayList<JID> users = onlineUser.getResources(localUserNoResource);
+		assertEquals(1, users.size());
+		assertEquals(new JID(localUserDesktop.toFullJID()), users.get(0));
+	}
 }

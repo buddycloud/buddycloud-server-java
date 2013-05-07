@@ -113,11 +113,13 @@ public class FederatedQueueManager {
 	}
 
 	private void sendPacket(Packet packet) throws ComponentException {
+		logger.info("OUT-> " + packet.toXML());
 		component.sendPacket(packet.createCopy());
 	}
 
 	private void discoverRemoteChannelServer(String remoteDomain, String id)
 			throws ComponentException {
+		logger.info("Attemping to discover remote server " + remoteDomain);
 		IQ discover = new IQ(IQ.Type.get);
 		discover.setFrom(localServer);
 		discover.setTo(remoteDomain);

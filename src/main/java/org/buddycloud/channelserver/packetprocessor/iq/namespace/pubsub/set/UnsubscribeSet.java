@@ -133,7 +133,6 @@ public class UnsubscribeSet extends PubSubElementProcessorAbstract {
 		subscription
 				.addAttribute("subscription", Subscriptions.none.toString());
 		event.addNamespace("", Event.NAMESPACE);
-		message.addAttribute("id", request.getID());
 		message.addAttribute("from", unsubscribingJid.toBareJID());
 		message.addAttribute("type", "headline");
 		// "None" because we don't glorify the bad
@@ -142,13 +141,9 @@ public class UnsubscribeSet extends PubSubElementProcessorAbstract {
 		affiliation.addAttribute("node", node);
 
 		Message rootElement = new Message(message);
-        String id = rootElement.getID();
-        int counter = 0;
         
 		for (NodeSubscription subscriber : subscribers) {
-			++counter;
 			Message notification = rootElement.createCopy();
-			notification.setID(id + ":" + counter);
 			notification.setTo(subscriber.getUser());
 			outQueue.put(notification);
 		}

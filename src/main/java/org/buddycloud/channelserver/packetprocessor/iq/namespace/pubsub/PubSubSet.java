@@ -103,18 +103,6 @@ public class PubSubSet implements PacketProcessor<IQ> {
                 }
             }
         }
-        // <iq type='error'
-        //     from='pubsub.shakespeare.lit'
-        //     to='hamlet@denmark.lit/elsinore'
-        //     id='create1'>
-        //     <error type='cancel'>
-        //       <feature-not-implemented xmlns='urn:ietf:params:xml:ns:xmpp-stanzas'/>
-        //       <unsupported xmlns='http://jabber.org/protocol/pubsub#errors' feature='create-nodes'/>
-        //     </error>
-        // </iq>
-
-        // TODO, fix this. Now we just reply unexpected_request.
-        //       We should answer something like above.
         
         IQ reply = IQ.createResultIQ(reqIQ);
         reply.setChildElement(reqIQ.getChildElement().createCopy());

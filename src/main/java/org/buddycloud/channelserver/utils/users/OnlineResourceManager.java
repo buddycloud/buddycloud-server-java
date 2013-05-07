@@ -50,7 +50,8 @@ public class OnlineResourceManager {
 		if (false == users.containsKey(jid.toBareJID())) {
 			users.put(jid.toBareJID(), new ArrayList<JID>());
 		}
-		users.get(jid.toBareJID()).add(jid);
+		ArrayList<JID> entry = users.get(jid.toBareJID());
+		if (!entry.contains(jid)) entry.add(jid);
 		logger.info("User now online: " + jid.toFullJID());
 	}
 }

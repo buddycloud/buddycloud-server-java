@@ -199,10 +199,10 @@ public class AffiliationEvent extends PubSubElementProcessorAbstract {
 			return false;
 		}
 
-		if ((false == affiliation.getAffiliation().toString().equals(
-				Affiliations.moderator.toString()))
-				&& (false == affiliation.getAffiliation().toString().equals(
-						Affiliations.owner.toString()))) {
+		if ((false == affiliation.getAffiliation().equals(
+				Affiliations.moderator))
+				&& (false == affiliation.getAffiliation().equals(
+						Affiliations.owner))) {
 			setErrorCondition(PacketError.Type.auth,
 					PacketError.Condition.not_authorized);
 			return false;

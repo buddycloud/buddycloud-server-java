@@ -122,6 +122,7 @@ public class NodeConfigure extends PubSubElementProcessorAbstract {
 		
 		Element dataForm = configurationElement.addElement("x");
 		DataForm df = new DataForm(dataForm);
+
 		FormField field;
 		for (Map.Entry<String, String> entry : configuration.entrySet()) {
 		    String key = entry.getKey();
@@ -131,9 +132,14 @@ public class NodeConfigure extends PubSubElementProcessorAbstract {
 		    // ...
 		}	
 
+		String id = rootElement.getID();
+		int counter = 0;
+		
 		for (NodeSubscription subscriber : subscribers) {
+			++counter;
 			Message notification = rootElement.createCopy();
 			notification.setTo(subscriber.getListener());
+			notification.setID(id + ":" + counter);
 			outQueue.put(notification);
 		}
 	}

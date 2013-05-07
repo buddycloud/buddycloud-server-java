@@ -99,8 +99,12 @@ public class SubscriptionEvent extends PubSubElementProcessorAbstract {
 				requestedSubscription.attributeValue("subscription"));
 		Message rootElement = new Message(message);
 
+		int counter = 0;
+		String id = rootElement.getID();
 		for (NodeSubscription subscriber : subscribers) {
+			++counter;
 			Message notification = rootElement.createCopy();
+			notification.setID(id + ":" + counter);
 			notification.setTo(subscriber.getUser());
 			outQueue.put(notification);
 		}

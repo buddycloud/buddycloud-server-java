@@ -73,6 +73,8 @@ public class OnlineResourceManagerTest extends IQTestHandler {
 		onlineUser.updateStatus(localUserLaptop, "online");
 		ArrayList<JID> users = onlineUser.getResources(localUserNoResource);
 		assertEquals(2, users.size());
+		assertEquals(localUserDesktop, users.get(0));
+		assertEquals(localUserLaptop, users.get(1));
 	}
 	
 	@Test

@@ -266,26 +266,30 @@ public class SubscribeSet extends PubSubElementProcessorAbstract {
 			affiliation.addAttribute("affiliation", affiliationType.toString());
 		}
 		Message rootElement = new Message(message);
-
+        String id = rootElement.getID();
+        int counter = 0;
+        
 		for (NodeSubscription subscriber : subscribers) {
+			++counter;
+			
 			if (moderatorOwners.contains(subscriber.getUser())
 					&& subscriptionStatus.equals(Subscriptions.pending)) {
 				outQueue.put(getPendingSubscriptionNotification(subscriber
-						.getListener().toBareJID(), subscribingJid.toBareJID()));
+						.getListener().toBareJID(), subscribingJid.toBareJID(), counter));
 			} else {
 				Message notification = rootElement.createCopy();
 				notification.setTo(subscriber.getListener());
-				notification.setID(notification.getID() + "-1");
+				notification.setID(notification.getID() + ":" + counter);
 				outQueue.put(notification);
 			}
 		}
 	}
 
-	private Message getPendingSubscriptionNotification(String receiver, String subscriber) {
+	private Message getPendingSubscriptionNotification(String receiver, String subscriber, int counter) {
 
 		Document document = getDocumentHelper();
 		Element message = document.addElement("message");
-		message.addAttribute("id", request.getID() + "-1");
+		message.addAttribute("id", request.getID() + ":" + counter);
 		message.addAttribute("from", request.getTo().toString());
 		message.addAttribute("type", "headline");
 		message.addAttribute("to",  receiver);

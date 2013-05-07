@@ -20,6 +20,7 @@ public class OnlineResourceManagerTest extends IQTestHandler {
 	private JID localUserLaptop    = new JID("user@server1.com/laptop");
 	private JID localUserDesktop    = new JID("user@server1.com/desktop");
 	private JID localUserNoResource = new JID("user@server1.com");
+	private JID remoteBuddycloudServer = new JID("channels.buddycloud.org");
 	
 	private JID remoteUser = new JID("user@server2.com/remote");
 
@@ -72,6 +73,8 @@ public class OnlineResourceManagerTest extends IQTestHandler {
 		onlineUser.updateStatus(localUserLaptop, "online");
 		ArrayList<JID> users = onlineUser.getResources(localUserNoResource);
 		assertEquals(2, users.size());
+		assertEquals(localUserDesktop, users.get(0));
+		assertEquals(localUserLaptop, users.get(1));
 	}
 	
 	@Test
@@ -99,5 +102,12 @@ public class OnlineResourceManagerTest extends IQTestHandler {
 		ArrayList<JID> users = onlineUser.getResources(localUserDesktop);
 		assertEquals(1, users.size());
 		assertEquals(localUserDesktop, users.get(0));
+	}
+	
+	@Test
+	public void testPassingRemoteBuddycloudServerReturnsOnlyThatJid() throws Exception {
+		ArrayList<JID> users = onlineUser.getResources(remoteBuddycloudServer);
+		assertEquals(1, users.size());
+		assertEquals(remoteBuddycloudServer, users.get(0));
 	}
 }

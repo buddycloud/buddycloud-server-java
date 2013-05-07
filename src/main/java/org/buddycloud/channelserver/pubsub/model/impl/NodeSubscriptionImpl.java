@@ -10,7 +10,7 @@ public class NodeSubscriptionImpl implements NodeSubscription {
 
 	private final Subscriptions subscription;
 	private final JID user;
-	private final JID listener; // If different from user
+	private JID listener; // If different from user
 	private final String nodeId;
 
 	public NodeSubscriptionImpl(final String nodeId, final JID user,
@@ -19,15 +19,23 @@ public class NodeSubscriptionImpl implements NodeSubscription {
 	}
 
 	public NodeSubscriptionImpl(final String nodeId, final JID user,
-			final JID listener, final Subscriptions subscription) {
+			JID listener, final Subscriptions subscription) {
 		this.nodeId = nodeId;
 		if (user.getResource() == null) {
 			this.user = user;
 		} else {
 			this.user = new JID(user.toBareJID());
 		}
-		this.listener = listener;
+		setListener(listener);
 		this.subscription = subscription;
+	}
+
+	private void setListener(JID listener) {
+		if (null == listener.getNode()) {
+			this.listener = new JID(listener.getDomain());
+			return;
+		}
+		this.listener = new JID(listener.toBareJID());
 	}
 
 	@Override

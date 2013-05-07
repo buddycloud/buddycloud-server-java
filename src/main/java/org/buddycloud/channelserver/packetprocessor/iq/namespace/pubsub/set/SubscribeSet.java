@@ -253,7 +253,6 @@ public class SubscribeSet extends PubSubElementProcessorAbstract {
 		message.addAttribute("id", request.getID());
 		message.addAttribute("from", request.getTo().toString());
 		message.addAttribute("type", "headline");
-		message.addNamespace("", "jabber:client");
 		subscription
 				.addAttribute("subscription", subscriptionStatus.toString());
 		subscription.addAttribute("jid", subscribingJid.toBareJID());
@@ -293,7 +292,6 @@ public class SubscribeSet extends PubSubElementProcessorAbstract {
 		message.addAttribute("from", request.getTo().toString());
 		message.addAttribute("type", "headline");
 		message.addAttribute("to",  receiver);
-		message.addNamespace("", "jabber:client");
 		DataForm dataForm = new DataForm(DataForm.Type.form);
 		dataForm.addInstruction("Allow " + subscriber
 				+ " to subscribe to node " + node + "?");

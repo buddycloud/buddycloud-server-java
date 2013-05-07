@@ -115,7 +115,6 @@ public class NodeConfigure extends PubSubElementProcessorAbstract {
 		Element configurationElement = event.addElement("configuration");
 		configurationElement.addAttribute("node", node);
 		event.addNamespace("", Event.NAMESPACE);
-		message.addAttribute("id", request.getID() + "-1");
 		message.addAttribute("from", request.getTo().toString());
 		message.addAttribute("type", "headline");
 		Message rootElement = new Message(message);
@@ -132,14 +131,9 @@ public class NodeConfigure extends PubSubElementProcessorAbstract {
 		    // ...
 		}	
 
-		String id = rootElement.getID();
-		int counter = 0;
-		
 		for (NodeSubscription subscriber : subscribers) {
-			++counter;
 			Message notification = rootElement.createCopy();
 			notification.setTo(subscriber.getListener());
-			notification.setID(id + ":" + counter);
 			outQueue.put(notification);
 		}
 	}

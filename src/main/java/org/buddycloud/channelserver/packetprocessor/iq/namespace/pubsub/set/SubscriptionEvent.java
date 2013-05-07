@@ -90,7 +90,6 @@ public class SubscriptionEvent extends PubSubElementProcessorAbstract {
 		Element event = message.addElement("event");
 		Element subscription = event.addElement("subscription");
 		event.addNamespace("", JabberPubsub.NS_PUBSUB_EVENT);
-		message.addAttribute("id", request.getID());
 		message.addAttribute("from", request.getTo().toString());
 		subscription.addAttribute("node", node);
 		subscription.addAttribute("jid",
@@ -99,12 +98,8 @@ public class SubscriptionEvent extends PubSubElementProcessorAbstract {
 				requestedSubscription.attributeValue("subscription"));
 		Message rootElement = new Message(message);
 
-		int counter = 0;
-		String id = rootElement.getID();
 		for (NodeSubscription subscriber : subscribers) {
-			++counter;
 			Message notification = rootElement.createCopy();
-			notification.setID(id + ":" + counter);
 			notification.setTo(subscriber.getUser());
 			outQueue.put(notification);
 		}

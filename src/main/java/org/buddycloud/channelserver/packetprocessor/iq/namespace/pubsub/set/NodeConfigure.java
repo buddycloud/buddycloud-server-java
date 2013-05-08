@@ -120,6 +120,8 @@ public class NodeConfigure extends PubSubElementProcessorAbstract {
 		Message rootElement = new Message(message);
 		
 		Element dataForm = configurationElement.addElement("x");
+		dataForm.addAttribute("type", "result");
+		dataForm.addNamespace("", DataForm.NAMESPACE);
 		DataForm df = new DataForm(dataForm);
 
 		FormField field;

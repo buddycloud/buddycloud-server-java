@@ -12,8 +12,8 @@ import org.xmpp.packet.JID;
 import org.xmpp.packet.Message;
 import org.xmpp.packet.Packet;
 
-public class AffiliationProcessor extends AbstractMessageProcessor  {
- 
+public class AffiliationProcessor extends AbstractMessageProcessor {
+
 	private JID jid;
 	private Affiliations affiliation;
 
@@ -37,19 +37,20 @@ public class AffiliationProcessor extends AbstractMessageProcessor  {
 	}
 
 	private void handleAffiliationElement() throws NodeStoreException {
-		Element affiliationElement = message.getElement().element("event")
-				.element("affiliation");
+		Element affiliationsElement = message.getElement().element("event")
+				.element("affiliations");
+		Element affiliationElement = affiliationsElement.element("affiliation");
 		if (null == affiliationElement) {
 			return;
 		}
 		jid = new JID(affiliationElement.attributeValue("jid"));
-		node = affiliationElement.attributeValue("node");
+		node = affiliationsElement.attributeValue("node");
 		affiliation = Affiliations.valueOf(affiliationElement
 				.attributeValue("affiliation"));
 		if (true == channelManager.isLocalNode(node)) {
 			return;
 		}
-        storeNewAffiliation();
+		storeNewAffiliation();
 	}
 
 	private void storeNewAffiliation() throws NodeStoreException {
@@ -57,11 +58,8 @@ public class AffiliationProcessor extends AbstractMessageProcessor  {
 		channelManager.setUserAffiliation(node, jid, affiliation);
 	}
 
-	private void addRemoteNode() {
-        try { 
-            channelManager.addRemoteNode(node); 
-        } catch (NodeStoreException e) { 
-        	logger.error(e);
-        }
+	private void addRemoteNode() throws NodeStoreException {
+		if (false == channelManager.nodeExists(node))
+				channelManager.addRemoteNode(node);
 	}
 }

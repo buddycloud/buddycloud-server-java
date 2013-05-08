@@ -26,6 +26,9 @@ public class Conf {
     public static final String CHANNEL_TYPE        = "buddycloud#channel_type";
     
 	private static final String PUBLISHERS = "publishers";
+	
+	public static final String DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.S'Z'";
+
     
     // Most of these are copied from here
     // https://github.com/buddycloud/buddycloud-server/blob/master/src/local/operations.coffee#L14
@@ -35,11 +38,7 @@ public class Conf {
     }
 
     public static HashMap<String, String> getDefaultPostChannelConf(JID channelJID) {
-        
-        // TODO! Refactor this!
-        
-        String DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ss'Z'";
-        SimpleDateFormat sdf = new SimpleDateFormat(DATE_FORMAT);
+    	SimpleDateFormat sdf = new SimpleDateFormat(DATE_FORMAT);
         sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
         
         HashMap<String, String> conf = new HashMap<String, String>();
@@ -64,11 +63,7 @@ public class Conf {
     }
     
     public static HashMap<String, String> getDefaultStatusChannelConf(JID channelJID) {
-        
-        // TODO! Refactor this!
-        
-        String DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ss'Z'";
-        SimpleDateFormat sdf = new SimpleDateFormat(DATE_FORMAT);
+    	SimpleDateFormat sdf = new SimpleDateFormat(DATE_FORMAT);
         sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
         
         HashMap<String, String> conf = new HashMap<String, String>();
@@ -92,11 +87,7 @@ public class Conf {
     }
     
     public static HashMap<String, String> getDefaultGeoPreviousChannelConf(JID channelJID) {
-        
-        // TODO! Refactor this!
-        
-        String DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ss'Z'";
-        SimpleDateFormat sdf = new SimpleDateFormat(DATE_FORMAT);
+    	SimpleDateFormat sdf = new SimpleDateFormat(DATE_FORMAT);
         sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
         
         HashMap<String, String> conf = new HashMap<String, String>();
@@ -120,11 +111,7 @@ public class Conf {
     }
     
     public static HashMap<String, String> getDefaultGeoCurrentChannelConf(JID channelJID) {
-        
-        // TODO! Refactor this!
-        
-        String DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ss'Z'";
-        SimpleDateFormat sdf = new SimpleDateFormat(DATE_FORMAT);
+    	SimpleDateFormat sdf = new SimpleDateFormat(DATE_FORMAT);
         sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
         
         HashMap<String, String> conf = new HashMap<String, String>();
@@ -148,11 +135,7 @@ public class Conf {
     }
     
     public static HashMap<String, String> getDefaultGeoNextChannelConf(JID channelJID) {
-        
-        // TODO! Refactor this!
-        
-        String DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ss'Z'";
-        SimpleDateFormat sdf = new SimpleDateFormat(DATE_FORMAT);
+    	SimpleDateFormat sdf = new SimpleDateFormat(DATE_FORMAT);
         sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
         
         HashMap<String, String> conf = new HashMap<String, String>();
@@ -176,11 +159,7 @@ public class Conf {
     }
     
     public static HashMap<String, String> getDefaultSubscriptionsChannelConf(JID channelJID) {
-        
-        // TODO! Refactor this!
-        
-        String DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ss'Z'";
-        SimpleDateFormat sdf = new SimpleDateFormat(DATE_FORMAT);
+    	SimpleDateFormat sdf = new SimpleDateFormat(DATE_FORMAT);
         sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
         
         HashMap<String, String> conf = new HashMap<String, String>();

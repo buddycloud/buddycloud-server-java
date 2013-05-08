@@ -348,7 +348,7 @@ public class AffiliationEventTest extends IQTestHandler {
 		Assert.assertEquals(
 				node,
 				notification.getElement().element("event")
-						.element("affiliations").element("affiliation").attributeValue("node"));
+						.element("affiliations").attributeValue("node"));
 		Assert.assertTrue(notification.toXML().contains(JabberPubsub.NS_PUBSUB_EVENT));
 		Assert.assertEquals(Affiliations.moderator.toString(), notification
 				.getElement().element("event").element("affiliations").element("affiliation")

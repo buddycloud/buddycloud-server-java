@@ -106,7 +106,7 @@ public class AffiliationEvent extends PubSubElementProcessorAbstract {
 		event.addNamespace("", JabberPubsub.NS_PUBSUB_EVENT);
 		message.addAttribute("from", request.getTo().toString());
 		message.addAttribute("type", "headline");
-		affiliation.addAttribute("node", node);
+		affiliations.addAttribute("node", node);
 		affiliation.addAttribute("jid",
 				requestedAffiliation.attributeValue("jid"));
 		affiliation.addAttribute("affiliation",

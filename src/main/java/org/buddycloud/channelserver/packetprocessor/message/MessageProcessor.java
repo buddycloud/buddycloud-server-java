@@ -30,7 +30,7 @@ public class MessageProcessor implements PacketProcessor<Message> {
 
 	public static final String ITEMS = "items";
 	public static final String SUBSCRIPTION = "subscription";
-	private static final String AFFILIATION = "affiliation";
+	private static final String AFFILIATIONS = "affiliations";
 	private static final String CONFIGURATION = "configuration";
 	private static final String DELETE = "delete";
 
@@ -66,7 +66,7 @@ public class MessageProcessor implements PacketProcessor<Message> {
 		} else if (true == name.equals(SUBSCRIPTION)) {
 			handler = new SubscriptionProcessor(outQueue, configuration,
 					channelManager);
-		} else if (true == name.equals(AFFILIATION)) {
+		} else if (true == name.equals(AFFILIATIONS)) {
 			handler = new AffiliationProcessor(outQueue, configuration,
 					channelManager);
 		} else if (true == name.equals(CONFIGURATION)) {

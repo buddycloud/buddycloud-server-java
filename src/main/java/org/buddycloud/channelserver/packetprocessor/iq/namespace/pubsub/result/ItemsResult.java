@@ -48,8 +48,8 @@ public class ItemsResult extends PubSubElementProcessorAbstract {
 			throw new NullPointerException(MISSING_NODE);
 		}
 
-		subscriptionNode = (true == node.substring(
-				node.length() - 13, node.length()).equals("subscriptions"));
+		subscriptionNode = (true == node.substring(node.length() - 13,
+				node.length()).equals("subscriptions"));
 
 		if ((false == subscriptionNode)
 				&& (false == channelManager.nodeExists(node)))
@@ -61,14 +61,15 @@ public class ItemsResult extends PubSubElementProcessorAbstract {
 
 		for (Element item : items) {
 			if (true == subscriptionNode) {
-                processSubscriptionItem(item);
+				processSubscriptionItem(item);
 			} else {
 				processPublishedItem(item);
 			}
 		}
 	}
 
-	private void processSubscriptionItem(Element item) throws NodeStoreException {
+	private void processSubscriptionItem(Element item)
+			throws NodeStoreException {
 		JID user = new JID(item.attributeValue("id"));
 		List<Element> items = item.element("query").elements("item");
 		for (Element subscription : items) {
@@ -109,13 +110,15 @@ public class ItemsResult extends PubSubElementProcessorAbstract {
 
 		try {
 			// Probably a tombstone'd item
-			if (null == entry.elementText("updated")) return;
-			
+			if (null == entry.elementText("updated"))
+				return;
+
 			Date updatedDate = sdf.parse(entry.elementText("updated"));
 			NodeItemImpl nodeItem = new NodeItemImpl(node,
 					entry.elementText("id"), updatedDate, entry.asXML());
 			try {
-			    channelManager.deleteNodeItemById(node, entry.elementText("id"));
+				channelManager
+						.deleteNodeItemById(node, entry.elementText("id"));
 			} catch (NodeStoreException e) {
 				logger.error("Attempt to delete an item which didn't exist... its ok");
 			}

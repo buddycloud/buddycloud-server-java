@@ -60,6 +60,7 @@ public class OutQueueConsumer extends QueueConsumer {
 			    logger.debug("OUT -> " + p.toXML());
 			}
 		} catch (ComponentException e) {
+			logger.error("Sending packet caused error: " + p.toXML());
 			logger.error(e);
 		}
 	}

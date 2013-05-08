@@ -29,7 +29,8 @@ public class AffiliationProcessorTest extends IQTestHandler {
 	private AffiliationProcessor affiliationProcessor;
 	private Element subscription;
 	private Element affiliation;
-
+	private Element affiliations;
+	
 	private BlockingQueue<Packet> queue = new LinkedBlockingQueue<Packet>();
 	private ChannelManager channelManager;
 
@@ -63,9 +64,11 @@ public class AffiliationProcessorTest extends IQTestHandler {
 		Element event = message.addChildElement("event",
 				JabberPubsub.NS_PUBSUB_EVENT);
 
-		affiliation = event.addElement("affiliation");
+		affiliations = event.addElement("affiliations");
+		affiliations.addAttribute("node", "/users/juliet@shakespeare.lit/posts");
+		
+		affiliation = affiliations.addElement("affiliation");
 		affiliation.addAttribute("jid", "romeo@shakespeare.lit");
-		affiliation.addAttribute("node", "/users/juliet@shakespeare.lit/posts");
 		affiliation.addAttribute("affiliation",
 				Affiliations.publisher.toString());
 	}
@@ -73,7 +76,7 @@ public class AffiliationProcessorTest extends IQTestHandler {
 	@Test(expected = IllegalArgumentException.class)
 	public void testInvalidAffiliationValueThrowsException() throws Exception {
 		Message badAffiliationValue = message.createCopy();
-		badAffiliationValue.getElement().element("event")
+		badAffiliationValue.getElement().element("event").element("affiliations")
 				.element("affiliation").addAttribute("affiliation", "invalid");
 		affiliationProcessor.process(badAffiliationValue);
 	}
@@ -82,7 +85,7 @@ public class AffiliationProcessorTest extends IQTestHandler {
 	public void testMissingAffiliationElementDoesNotCauseError()
 			throws Exception {
 		Message noAffiliationElement = message.createCopy();
-		noAffiliationElement.getElement().element("event")
+		noAffiliationElement.getElement().element("event").element("affiliations")
 				.element("affiliation").detach();
 		affiliationProcessor.process(noAffiliationElement);
 	}

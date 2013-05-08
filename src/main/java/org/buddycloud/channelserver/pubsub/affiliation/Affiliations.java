@@ -23,14 +23,10 @@ public enum Affiliations {
 	}
 	
 	public boolean in(Affiliations... affiliations) {
-		for(Affiliations a : affiliations) {
-			if(a.equals(this)) {
-				return true;
-			}
+		for (Affiliations a : affiliations) {
+			if (a.equals(this)) return true;
 		}
-		
 		return false;
-		
 	}
 
 	public boolean canAuthorize() {

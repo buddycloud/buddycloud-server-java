@@ -48,8 +48,8 @@ public class ItemsResult extends PubSubElementProcessorAbstract {
 			throw new NullPointerException(MISSING_NODE);
 		}
 
-		subscriptionNode = (true == node.substring(
-				node.length() - 13, node.length()).equals("subscriptions"));
+		subscriptionNode = (true == node.substring(node.length() - 13,
+				node.length()).equals("subscriptions"));
 
 		if ((false == subscriptionNode)
 				&& (false == channelManager.nodeExists(node)))
@@ -61,14 +61,15 @@ public class ItemsResult extends PubSubElementProcessorAbstract {
 
 		for (Element item : items) {
 			if (true == subscriptionNode) {
-                processSubscriptionItem(item);
+				processSubscriptionItem(item);
 			} else {
 				processPublishedItem(item);
 			}
 		}
 	}
 
-	private void processSubscriptionItem(Element item) throws NodeStoreException {
+	private void processSubscriptionItem(Element item)
+			throws NodeStoreException {
 		JID user = new JID(item.attributeValue("id"));
 		List<Element> items = item.element("query").elements("item");
 		for (Element subscription : items) {
@@ -76,18 +77,28 @@ public class ItemsResult extends PubSubElementProcessorAbstract {
 		}
 	}
 
-	private void addSubscription(Element item, JID user) throws NodeStoreException {
+	private void addSubscription(Element item, JID user)
+			throws NodeStoreException {
+
+		String node = item.attributeValue("node");
 		
-		
-		String node       = item.attributeValue("node");
-		JID    listener   = request.getFrom();
-		Subscriptions sub = Subscriptions.createFromString(item.attributeValue("subscription"));
-		Affiliations aff  = Affiliations.createFromString(item.attributeValue("affiliation"));
-		NodeSubscription subscription = new NodeSubscriptionImpl(node, user, listener, sub);
-		
-		if (false == channelManager.nodeExists(node)) 
+		// If its a local JID and/or a local node, that's our turf!
+		if ((true == channelManager.isLocalNode(node))
+				&& (true == channelManager.isLocalJID(user)))
+			return;
+        if (true == channelManager.isLocalNode(node)) return; 
+        
+		JID listener = request.getFrom();
+		Subscriptions sub = Subscriptions.createFromString(item
+				.attributeValue("subscription"));
+		Affiliations aff = Affiliations.createFromString(item
+				.attributeValue("affiliation"));
+		NodeSubscription subscription = new NodeSubscriptionImpl(node, user,
+				listener, sub);
+
+		if (false == channelManager.nodeExists(node))
 			channelManager.addRemoteNode(node);
-		
+
 		channelManager.addUserSubscription(subscription);
 		channelManager.setUserAffiliation(node, user, aff);
 	}
@@ -99,13 +110,15 @@ public class ItemsResult extends PubSubElementProcessorAbstract {
 
 		try {
 			// Probably a tombstone'd item
-			if (null == entry.elementText("updated")) return;
-			
+			if (null == entry.elementText("updated"))
+				return;
+
 			Date updatedDate = sdf.parse(entry.elementText("updated"));
 			NodeItemImpl nodeItem = new NodeItemImpl(node,
 					entry.elementText("id"), updatedDate, entry.asXML());
 			try {
-			    channelManager.deleteNodeItemById(node, entry.elementText("id"));
+				channelManager
+						.deleteNodeItemById(node, entry.elementText("id"));
 			} catch (NodeStoreException e) {
 				logger.error("Attempt to delete an item which didn't exist... its ok");
 			}

@@ -164,8 +164,6 @@ public class SubscribeSet extends PubSubElementProcessorAbstract {
 				logger.debug("User already has a '"
 						+ possibleExistingSubscription.toString()
 						+ "' subscription");
-				//tooManySubscriptions();
-				//return;
 				defaultAffiliation = possibleExistingAffiliation;
 				defaultSubscription = possibleExistingSubscription;
 			} else {

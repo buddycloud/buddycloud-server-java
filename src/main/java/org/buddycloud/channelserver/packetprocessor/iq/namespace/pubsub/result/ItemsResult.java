@@ -76,18 +76,28 @@ public class ItemsResult extends PubSubElementProcessorAbstract {
 		}
 	}
 
-	private void addSubscription(Element item, JID user) throws NodeStoreException {
+	private void addSubscription(Element item, JID user)
+			throws NodeStoreException {
+
+		String node = item.attributeValue("node");
 		
-		
-		String node       = item.attributeValue("node");
-		JID    listener   = request.getFrom();
-		Subscriptions sub = Subscriptions.createFromString(item.attributeValue("subscription"));
-		Affiliations aff  = Affiliations.createFromString(item.attributeValue("affiliation"));
-		NodeSubscription subscription = new NodeSubscriptionImpl(node, user, listener, sub);
-		
-		if (false == channelManager.nodeExists(node)) 
+		// If its a local JID and/or a local node, that's our turf!
+		if ((true == channelManager.isLocalNode(node))
+				&& (true == channelManager.isLocalJID(user)))
+			return;
+        if (true == channelManager.isLocalNode(node)) return; 
+        
+		JID listener = request.getFrom();
+		Subscriptions sub = Subscriptions.createFromString(item
+				.attributeValue("subscription"));
+		Affiliations aff = Affiliations.createFromString(item
+				.attributeValue("affiliation"));
+		NodeSubscription subscription = new NodeSubscriptionImpl(node, user,
+				listener, sub);
+
+		if (false == channelManager.nodeExists(node))
 			channelManager.addRemoteNode(node);
-		
+
 		channelManager.addUserSubscription(subscription);
 		channelManager.setUserAffiliation(node, user, aff);
 	}

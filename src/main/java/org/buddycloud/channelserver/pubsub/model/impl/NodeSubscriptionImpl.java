@@ -31,6 +31,10 @@ public class NodeSubscriptionImpl implements NodeSubscription {
 	}
 
 	private void setListener(JID listener) {
+		if (null == listener) {
+			listener = this.user;
+			return;
+		}
 		if (null == listener.getNode()) {
 			this.listener = new JID(listener.getDomain());
 			return;

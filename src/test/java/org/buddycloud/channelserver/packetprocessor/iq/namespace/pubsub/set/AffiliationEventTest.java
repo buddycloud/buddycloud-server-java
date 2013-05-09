@@ -347,13 +347,13 @@ public class AffiliationEventTest extends IQTestHandler {
 
 		Assert.assertEquals(
 				node,
-				notification.getElement().element("event")
+				notification.getElement().element("pubsub")
 						.element("affiliations").attributeValue("node"));
-		Assert.assertTrue(notification.toXML().contains(JabberPubsub.NS_PUBSUB_EVENT));
+		Assert.assertTrue(notification.toXML().contains(JabberPubsub.NAMESPACE_URI));
 		Assert.assertEquals(Affiliations.moderator.toString(), notification
-				.getElement().element("event").element("affiliations").element("affiliation")
+				.getElement().element("pubsub").element("affiliations").element("affiliation")
 				.attributeValue("affiliation"));
-		Assert.assertEquals(subscriber, notification.getElement().element("event")
+		Assert.assertEquals(subscriber, notification.getElement().element("pubsub")
 				.element("affiliations").element("affiliation").attributeValue("jid"));
 	}
 }

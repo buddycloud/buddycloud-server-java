@@ -248,7 +248,6 @@ public class SubscribeSet extends PubSubElementProcessorAbstract {
 		Element event = message.addElement("event");
 		Element subscription = event.addElement("subscription");
 		event.addNamespace("", Event.NAMESPACE);
-		message.addAttribute("id", request.getID());
 		message.addAttribute("from", request.getTo().toString());
 		message.addAttribute("type", "headline");
 		subscription
@@ -256,24 +255,23 @@ public class SubscribeSet extends PubSubElementProcessorAbstract {
 		subscription.addAttribute("jid", subscribingJid.toBareJID());
 		subscription.addAttribute("node", node);
 
-		if (true == subscriptionStatus.in(Subscriptions.subscribed, Subscriptions.pending)) {
-			Element affiliation = event.addElement("affiliation");
-			affiliation.addAttribute("node", node);
-			affiliation.addAttribute("jid", subscribingJid.toBareJID());
-			affiliation.addAttribute("affiliation", affiliationType.toString());
-		}
+		Element affiliations = event.addElement("affiliations");
+		Element affiliation = affiliations.addElement("affiliation");
+		affiliation.addAttribute("node", node);
+		affiliation.addAttribute("jid", subscribingJid.toBareJID());
+		affiliation.addAttribute("affiliation", affiliationType.toString());
+
 		Message rootElement = new Message(message);
         
 		for (NodeSubscription subscriber : subscribers) {
-
+			
+			Message notification = rootElement.createCopy();
+			notification.setTo(subscriber.getListener());
+			outQueue.put(notification);
 			if (moderatorOwners.contains(subscriber.getUser())
 					&& subscriptionStatus.equals(Subscriptions.pending)) {
 				outQueue.put(getPendingSubscriptionNotification(subscriber
 						.getListener().toBareJID(), subscribingJid.toBareJID()));
-			} else {
-				Message notification = rootElement.createCopy();
-				notification.setTo(subscriber.getListener());
-				outQueue.put(notification);
 			}
 		}
 	}
@@ -304,37 +302,12 @@ public class SubscribeSet extends PubSubElementProcessorAbstract {
 		jid.setLabel("Subscriber Address");
 		jid.setVariable(JabberPubsub.VAR_SUBSCRIBER_JID);
 		FormField allow = dataForm.addField();
-		allow.setLabel("Allow?");
+		allow.setLabel("Allow " + subscriber + " to subscribe to posts of " + node + "?");
 		allow.setVariable(JabberPubsub.VAR_ALLOW);
 		allow.addValue("false");
 		allow.setType(FormField.Type.boolean_type);
 		message.add(dataForm.getElement());
 		return new Message(message);
-	}
-
-	private void tooManySubscriptions() throws InterruptedException {
-		/*
-		 * 6.1.3.9 Too Many Subscriptions <iq type='error'
-		 * from='pubsub.shakespeare.lit' to='francisco@denmark.lit/barracks'
-		 * id='sub1'> <error type='wait'> <policy-violation
-		 * xmlns='urn:ietf:params:xml:ns:xmpp-stanzas'/> <too-many-subscriptions
-		 * xmlns='http://jabber.org/protocol/pubsub#errors'/> </error> </iq>
-		 */
-
-		IQ reply = IQ.createResultIQ(request);
-		reply.setType(Type.error);
-
-		Element badRequest = new DOMElement("policy-violation",
-				new org.dom4j.Namespace("", JabberPubsub.NS_XMPP_STANZAS));
-		Element nodeIdRequired = new DOMElement("too-many-subscriptions",
-				new org.dom4j.Namespace("", JabberPubsub.NS_PUBSUB_ERROR));
-		Element error = new DOMElement("error");
-		error.addAttribute("type", "wait");
-		error.add(badRequest);
-		error.add(nodeIdRequired);
-		reply.setChildElement(error);
-		
-		outQueue.put(reply);
 	}
 
 	private void failAuthRequired() throws InterruptedException {

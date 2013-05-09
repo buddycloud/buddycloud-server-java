@@ -33,21 +33,26 @@ public class ConfigurationProcessor extends AbstractMessageProcessor  {
 	@Override
 	public void process(Message packet) throws Exception {
 		message = packet;
+		getPacketDetails();
 
-		if (true == channelManager.isLocalNode(node)) {
+		if ((null == node) || (true == channelManager.isLocalNode(node))) {
 			return;
 		}
 		sendLocalNotifications();
 		handleDataForm();
 	}
 
-	private void handleDataForm() throws NodeStoreException {
+	private void getPacketDetails() {
 		Element configurationElement = message.getElement().element("event")
 				.element("configuration");
 		if (null == configurationElement) {
 			return;
 		}
+		
 		node = configurationElement.attributeValue("node");
+	}
+
+	private void handleDataForm() throws NodeStoreException {
 
 		if (true == channelManager.isLocalNode(node)) {
 			return;

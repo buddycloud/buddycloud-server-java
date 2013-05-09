@@ -107,8 +107,7 @@ public class SubscriptionEvent extends PubSubElementProcessorAbstract {
 
 	private void saveUpdatedSubscription() throws NodeStoreException {
 		NodeSubscription newSubscription = new NodeSubscriptionImpl(node,
-				new JID(requestedSubscription.attributeValue("jid")), new JID(
-						requestedSubscription.attributeValue("jid")),
+				new JID(requestedSubscription.attributeValue("jid")), currentSubscription.getListener(),
 				Subscriptions.valueOf(requestedSubscription
 						.attributeValue("subscription")));
 

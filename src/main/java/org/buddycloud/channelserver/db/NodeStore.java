@@ -91,6 +91,15 @@ public interface NodeStore {
 	String getNodeConfValue(String nodeId, String key)
 			throws NodeStoreException;
 
+    /**
+     * Delete the configuration for a node
+     * 
+     * @param nodeId
+     *            the node id.
+     * @throws NodeStoreException
+     */
+	void deleteNodeConfiguration(String nodeId) throws NodeStoreException;
+	
 	/**
 	 * Retrieves a map of all all the configuration properties for the node.
 	 * 

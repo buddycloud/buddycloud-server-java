@@ -69,6 +69,12 @@ public class ChannelManagerImpl implements ChannelManager {
 	}
 
 	@Override
+	public void deleteNodeConfiguration(String nodeId)
+			throws NodeStoreException {
+		nodeStore.deleteNodeConfiguration(nodeId);
+	}
+	
+	@Override
 	public Map<String, String> getNodeConf(String nodeId)
 			throws NodeStoreException {
 		return nodeStore.getNodeConf(nodeId);

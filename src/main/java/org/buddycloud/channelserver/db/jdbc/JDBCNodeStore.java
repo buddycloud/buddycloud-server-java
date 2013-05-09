@@ -155,24 +155,17 @@ public class JDBCNodeStore implements NodeStore {
 	public void setNodeConf(String nodeId, Map<String, String> conf)
 			throws NodeStoreException {
 		Transaction t = null;
-		PreparedStatement stmt = null;
 
 		try {
 			t = beginTransaction();
-
-			stmt = conn.prepareStatement(dialect.deleteConfFromNode());
-			stmt.setString(1, nodeId);
-			stmt.executeUpdate();
-			stmt.close();
 
 			for (final Entry<String, String> entry : conf.entrySet()) {
 				setNodeConfValue(nodeId, entry.getKey(), entry.getValue());
 			}
 			t.commit();
-		} catch (SQLException e) {
+		} catch (NodeStoreException e) {
 			throw new NodeStoreException(e);
 		} finally {
-			close(stmt);
 			close(t);
 		}
 	}
@@ -266,6 +259,23 @@ public class JDBCNodeStore implements NodeStore {
 			}
 
 			return result;
+		} catch (SQLException e) {
+			throw new NodeStoreException(e);
+		} finally {
+			close(stmt); // Will implicitly close the resultset if required
+		}
+	}
+	
+	@Override
+	public void deleteNodeConfiguration(String nodeId)
+	    throws NodeStoreException {
+		PreparedStatement stmt = null;
+		
+		try {
+			stmt = conn.prepareStatement(dialect.deleteConfFromNode());
+			stmt.setString(1, nodeId);
+			stmt.executeUpdate();
+			stmt.close();
 		} catch (SQLException e) {
 			throw new NodeStoreException(e);
 		} finally {

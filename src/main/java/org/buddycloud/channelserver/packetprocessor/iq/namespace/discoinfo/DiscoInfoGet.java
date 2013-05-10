@@ -6,6 +6,7 @@ import java.util.concurrent.BlockingQueue;
 import org.apache.log4j.Logger;
 import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.packetprocessor.PacketProcessor;
+import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.JabberPubsub;
 import org.dom4j.Element;
 import org.xmpp.forms.DataForm;
 import org.xmpp.forms.FormField;
@@ -22,8 +23,10 @@ public class DiscoInfoGet implements PacketProcessor<IQ> {
 	private final BlockingQueue<Packet> outQueue;
 	private final ChannelManager channelManager;
 	private String node;
-
+	private IQ result;
 	private IQ requestIq;
+	private Element query;
+	private Map<String, String> conf;
 	
 	public DiscoInfoGet(BlockingQueue<Packet> outQueue, ChannelManager channelManager) {
 		this.outQueue = outQueue;
@@ -34,31 +37,18 @@ public class DiscoInfoGet implements PacketProcessor<IQ> {
 	public void process(IQ reqIQ) throws Exception {
 
 		requestIq     = reqIQ;
-		IQ result     = IQ.createResultIQ(reqIQ);
+		result     = IQ.createResultIQ(reqIQ);
 		Element elm   = reqIQ.getChildElement();
 		node          = elm.attributeValue("node");
-		Element query = result.setChildElement(ELEMENT_NAME,
+		query        = result.setChildElement(ELEMENT_NAME,
 				JabberDiscoInfo.NAMESPACE_URI);
         if (false == channelManager.isLocalJID(requestIq.getFrom())) {
         	result.getElement().addAttribute("remote-server-discover", "false");
         }
 		if ((node == null) || (true == node.equals(""))) {
-
-			query.addElement("identity").addAttribute("category", "pubsub")
-					.addAttribute("type", "channels");
-
-			query.addElement("identity").addAttribute("category", "pubsub")
-					.addAttribute("type", "inbox");
-
-			query.addElement("feature").addAttribute("var",
-					"jabber:iq:register");
-
-			query.addElement("feature").addAttribute("var",
-					"http://jabber.org/protocol/disco#info");
-			outQueue.put(result);
+			sendServerDiscoInfo();
 			return;
 		}
-
 		if (false == channelManager.isLocalNode(node)
 	        && (false == channelManager.isCachedNode(node))) {
 			logger.info("Node " + node + " is remote and not cached so "
@@ -66,32 +56,20 @@ public class DiscoInfoGet implements PacketProcessor<IQ> {
 			makeRemoteRequest();
 		    return;
 		}
-		
-		Map<String, String> conf = channelManager.getNodeConf(node);
+		conf = channelManager.getNodeConf(node);
 		if (conf.isEmpty()) {
-			/*
-			 * Not found. Let's return something like this: <iq type='error'
-			 * from='plays.shakespeare.lit' to='romeo@montague.net/orchard'
-			 * id='info1'> <query xmlns='http://jabber.org/protocol/disco#info'
-			 * node='/user/pretty@lady.com/posts'/> <error type='cancel'>
-			 * <item-not-found xmlns='urn:ietf:params:xml:ns:xmpp-stanzas'/>
-			 * </error> </iq>
-			 */
-
-			IQ reply = IQ.createResultIQ(reqIQ);
-			reply.setChildElement(reqIQ.getChildElement().createCopy());
-			reply.setType(Type.error);
-			PacketError pe = new PacketError(
-					org.xmpp.packet.PacketError.Condition.item_not_found,
-					org.xmpp.packet.PacketError.Type.cancel);
-			reply.setError(pe);
-			outQueue.put(reply);
+			nodeDoesntExistResponse();
 			return;
 		}
+		sendNodeConfigurationInformation();
+	}
 
+	private void sendNodeConfigurationInformation() throws InterruptedException {
+		
 		TreeMap<String, String> sorted_conf = new TreeMap<String, String>();
 
 		DataForm x = new DataForm(DataForm.Type.result);
+
 		FormField formType = x.addField();
 		formType.setType(FormField.Type.hidden);
 		formType.setVariable("FORM_TYPE");
@@ -109,7 +87,48 @@ public class DiscoInfoGet implements PacketProcessor<IQ> {
 				"http://jabber.org/protocol/pubsub");
 
 		query.add(x.getElement());
+		
+		query.addElement("feature").addAttribute("var", JabberPubsub.NAMESPACE_URI);
+		Element identity = query.addElement("identity");
+		identity.addAttribute("category", "pubsub");
+		identity.addAttribute("type",  "leaf");
+		
         logger.trace("Returning DISCO info for node: " + node);
+		outQueue.put(result);
+	}
+
+	private void nodeDoesntExistResponse() throws InterruptedException {
+		/*
+		 * Not found. Let's return something like this: <iq type='error'
+		 * from='plays.shakespeare.lit' to='romeo@montague.net/orchard'
+		 * id='info1'> <query xmlns='http://jabber.org/protocol/disco#info'
+		 * node='/user/pretty@lady.com/posts'/> <error type='cancel'>
+		 * <item-not-found xmlns='urn:ietf:params:xml:ns:xmpp-stanzas'/>
+		 * </error> </iq>
+		 */
+
+		result.setChildElement(result.getChildElement().createCopy());
+		result.setType(Type.error);
+		PacketError pe = new PacketError(
+				org.xmpp.packet.PacketError.Condition.item_not_found,
+				org.xmpp.packet.PacketError.Type.cancel);
+		result.setError(pe);
+		outQueue.put(result);
+	}
+
+	private void sendServerDiscoInfo()
+			throws InterruptedException {
+		query.addElement("identity").addAttribute("category", "pubsub")
+				.addAttribute("type", "channels");
+
+		query.addElement("identity").addAttribute("category", "pubsub")
+				.addAttribute("type", "inbox");
+
+		query.addElement("feature").addAttribute("var",
+				"jabber:iq:register");
+
+		query.addElement("feature").addAttribute("var",
+				"http://jabber.org/protocol/disco#info");
 		outQueue.put(result);
 	}
 

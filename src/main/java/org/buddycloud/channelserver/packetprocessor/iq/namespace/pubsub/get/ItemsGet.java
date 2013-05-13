@@ -205,7 +205,7 @@ public class ItemsGet implements PubSubElementProcessor {
 			totalEntriesCount = getNodeItems(items, maxItemsToReturn,
 					afterItemId);
 		}
-		logger.debug("Node " + node + " is local? " + channelManager.isLocalNode(node) + " and there were " + rsmEntriesCount + " entries");
+
 		if ((false == channelManager.isLocalNode(node))
 	        && (0 == rsmEntriesCount)) {
 			logger.debug("No results in cache for remote node, so "

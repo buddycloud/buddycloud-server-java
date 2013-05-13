@@ -100,12 +100,14 @@ public class AffiliationEvent extends PubSubElementProcessorAbstract {
 		}
 		Document document = getDocumentHelper();
 		Element message = document.addElement("message");
-		Element pubsub = message.addElement("pubsub");
+		Element pubsub = message.addElement("event");
 		Element affiliations = pubsub.addElement("affiliations");
 		Element affiliation  = affiliations.addElement("affiliation");
-		pubsub.addNamespace("", JabberPubsub.NAMESPACE_URI);
+		
+		pubsub.addNamespace("", JabberPubsub.NS_PUBSUB_EVENT);
 		message.addAttribute("from", request.getTo().toString());
 		message.addAttribute("type", "headline");
+
 		affiliations.addAttribute("node", node);
 		affiliation.addAttribute("jid",
 				requestedAffiliation.attributeValue("jid"));

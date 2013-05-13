@@ -77,6 +77,13 @@ public class SubscriptionsGet implements PubSubElementProcessor {
 				.getNodeSubscriptions(node);
 		subscriptions.addAttribute("node", node);
 
+		if ((null != requestIq.getElement().element("pubsub").element("set"))
+				&& (0 == cur.size())
+				&& (false == channelManager.isLocalNode(node))) {
+			makeRemoteRequest(new JID(node.split("/")[2]).getDomain());
+			return;
+		}
+		
 		for (NodeSubscription ns : cur) {
 
 			subscriptions
@@ -100,6 +107,13 @@ public class SubscriptionsGet implements PubSubElementProcessor {
 		// let's get all subscriptions.
 		ResultSet<NodeSubscription> cur = channelManager
 				.getUserSubscriptions(actorJid);
+
+		if ((null != requestIq.getElement().element("pubsub").element("set"))
+				&& (0 == cur.size())
+				&& (false == channelManager.isLocalJID(actorJid))) {
+			makeRemoteRequest(actorJid.getDomain());
+			return;
+		}
 		
 		for (NodeSubscription ns : cur) {
 			subscriptions

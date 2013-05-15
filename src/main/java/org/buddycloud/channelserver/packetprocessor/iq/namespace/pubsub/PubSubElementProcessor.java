@@ -6,6 +6,8 @@ import org.xmpp.packet.JID;
 
 public interface PubSubElementProcessor {
 
+	static final int MAX_ITEMS_TO_RETURN = 50;
+	
     public void process(Element elm, JID actorJID, IQ reqIQ, Element rsm) throws Exception;
     
     public boolean accept(Element elm);

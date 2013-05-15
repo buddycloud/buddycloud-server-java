@@ -179,6 +179,25 @@ public interface NodeStore {
 	ResultSet<NodeAffiliation> getUserAffiliations(JID user)
 			throws NodeStoreException;
 
+    /**
+     * Get given user's affiliations using RSM
+     * 
+     * @param actorJid
+     * @param maxItemsToReturn
+     * @param afterItemId
+     * @return
+     */
+	ResultSet<NodeAffiliation> getUserAffiliations(JID actorJid, 
+			String afterItemId, int maxItemsToReturn) throws NodeStoreException;
+	
+    /**
+     * Count the number of affiliations for a user
+     * 
+     * @param actorJid
+     * @return
+     */
+	int countUserAffiliations(JID actorJid) throws NodeStoreException;
+	
 	/**
 	 * Gets all the affiliations with the node.
 	 * 
@@ -189,6 +208,24 @@ public interface NodeStore {
 	ResultSet<NodeAffiliation> getNodeAffiliations(String nodeId)
 			throws NodeStoreException;
 
+    /**
+     * Gets affiliations for a node with RSM 
+     * @param node
+     * @param maxItemsToReturn
+     * @param afterItemId
+     * @return
+     */
+	ResultSet<NodeAffiliation> getNodeAffiliations(String node
+			, String afterItemId, int maxItemsToReturn) throws NodeStoreException;
+	
+	/**
+	 * Count the number of affiliations for a node
+	 * 
+	 * @param nodeId
+	 * @return
+	 */  
+	int countNodeAffiliations(String nodeId) throws NodeStoreException;
+	
 	/**
 	 * Gets the set of nodes to which the user is subscribed.
 	 * 

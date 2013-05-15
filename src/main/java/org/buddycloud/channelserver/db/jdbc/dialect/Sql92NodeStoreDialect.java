@@ -25,9 +25,21 @@ public class Sql92NodeStoreDialect implements NodeStoreSQLDialect {
 	private static final String SELECT_AFFILIATIONS_FOR_USER = "SELECT \"node\", \"user\", \"affiliation\", \"updated\""
 			+ " FROM \"affiliations\" WHERE \"user\" = ?";
 	
+	private static final String SELECT_AFFILIATIONS_FOR_USER_AFTER_NODE_ID = "SELECT \"node\", \"user\", \"affiliation\", \"updated\""
+			+ " FROM \"affiliations\" WHERE \"user\" = ? AND \"node\" > ? LIMIT ?";
+	
+	private static final String COUNT_AFFILIATIONS_FOR_USER = "SELECT COUNT(*)"
+			+ " FROM \"affiliations\" WHERE \"user\" = ?";
+	
 	private static final String SELECT_AFFILIATIONS_FOR_NODE = "SELECT \"node\", \"user\", \"affiliation\", \"updated\""
 			+ " FROM \"affiliations\" WHERE \"node\" = ?";
 
+	private static final String SELECT_AFFILIATIONS_FOR_NODE_AFTER_JID = "SELECT \"node\", \"user\", \"affiliation\", \"updated\""
+			+ " FROM \"affiliations\" WHERE \"node\" = ? AND \"user\" > ? LIMIT ?";
+	
+	private static final String COUNT_AFFILIATIONS_FOR_NODE = "SELECT COUNT(*)"
+			+ " FROM \"affiliations\" WHERE \"node\" = ?";
+	
 	private static final String INSERT_AFFILIATION = "INSERT INTO \"affiliations\" ( \"node\", \"user\", \"affiliation\", \"updated\" )"
 			+ " VALUES ( ?, ?, ?, now() )";
 
@@ -139,8 +151,30 @@ public class Sql92NodeStoreDialect implements NodeStoreSQLDialect {
 	}
 
 	@Override
+	public String selectAffiliationsForUserAfterNodeId() {
+		return SELECT_AFFILIATIONS_FOR_USER_AFTER_NODE_ID;
+	}
+	
+	@Override
+	public String countUserAffiliations() {
+		return COUNT_AFFILIATIONS_FOR_USER;
+	}
+	
+	@Override
 	public String selectAffiliationsForNode() {
 		return SELECT_AFFILIATIONS_FOR_NODE;
+	}
+	
+	@Override
+	public String selectAffiliationsForNodeAfterJid() {
+		// TODO Auto-generated method stub
+		return SELECT_AFFILIATIONS_FOR_NODE_AFTER_JID;
+	}
+	
+
+	@Override
+	public String countNodeAffiliations() {
+		return COUNT_AFFILIATIONS_FOR_NODE;
 	}
 
 	@Override
@@ -263,5 +297,4 @@ public class Sql92NodeStoreDialect implements NodeStoreSQLDialect {
 		// TODO Auto-generated method stub
 		return SELECT_NODE_LIST;
 	}
-
 }

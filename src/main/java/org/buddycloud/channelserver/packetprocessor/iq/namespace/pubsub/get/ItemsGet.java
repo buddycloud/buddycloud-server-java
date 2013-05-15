@@ -37,8 +37,6 @@ import org.xmpp.resultsetmanagement.ResultSet;
 public class ItemsGet implements PubSubElementProcessor {
 	private static final Logger logger = Logger.getLogger(ItemsGet.class);
 
-	private static final int MAX_ITEMS_TO_RETURN = 50;
-
 	private final BlockingQueue<Packet> outQueue;
 
 	private ChannelManager channelManager;
@@ -230,6 +228,9 @@ public class ItemsGet implements PubSubElementProcessor {
 				rsm.addElement("first").setText(firstItem);
 				rsm.addElement("last").setText(lastItem);
 			}
+			// Force the client to come back, eventually going federated and 
+			// getting true count of records
+			if (false == channelManager.isLocalNode(node)) ++totalEntriesCount;
 			rsm.addElement("count")
 					.setText(Integer.toString(totalEntriesCount));
 		}

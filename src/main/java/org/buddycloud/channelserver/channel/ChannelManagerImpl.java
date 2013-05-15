@@ -290,4 +290,26 @@ public class ChannelManagerImpl implements ChannelManager {
 	public int countNodeSubscriptions(String nodeId) throws NodeStoreException {
 		return nodeStore.countNodeSubscriptions(nodeId);
 	}
+
+	@Override
+	public ResultSet<NodeAffiliation> getUserAffiliations(JID user,
+			String afterItemId, int maxItemsToReturn) throws NodeStoreException {
+		return nodeStore.getUserAffiliations(user, afterItemId, maxItemsToReturn);
+	}
+
+	@Override
+	public int countUserAffiliations(JID jid) throws NodeStoreException {
+		return nodeStore.countUserAffiliations(jid);
+	}
+
+	@Override
+	public ResultSet<NodeAffiliation> getNodeAffiliations(String nodeId,
+			String afterItemId, int maxItemsToReturn) throws NodeStoreException {
+		return nodeStore.getNodeAffiliations(nodeId, afterItemId, maxItemsToReturn);
+	}
+
+	@Override
+	public int countNodeAffiliations(String nodeId) throws NodeStoreException {
+		return nodeStore.countNodeAffiliations(nodeId);
+	}
 }

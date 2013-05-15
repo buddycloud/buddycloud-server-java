@@ -271,4 +271,30 @@ public class Mock implements ChannelManager {
 		// TODO Auto-generated method stub
 		
 	}
+
+	@Override
+	public ResultSet<NodeAffiliation> getUserAffiliations(JID actorJid,
+			String afterItemId, int maxItemsToReturn) throws NodeStoreException {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public int countUserAffiliations(JID actorJid) throws NodeStoreException {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	@Override
+	public ResultSet<NodeAffiliation> getNodeAffiliations(String node,
+			String afterItemId, int maxItemsToReturn) throws NodeStoreException {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public int countNodeAffiliations(String nodeId) throws NodeStoreException {
+		// TODO Auto-generated method stub
+		return 0;
+	}
 }

@@ -426,6 +426,61 @@ public class JDBCNodeStore implements NodeStore {
 			close(stmt); // Will implicitly close the resultset if required
 		}
 	}
+	
+	@Override
+	public ResultSet<NodeAffiliation> getUserAffiliations(JID user, String afterItemId,
+			int maxItemsToReturn) throws NodeStoreException {
+		PreparedStatement stmt = null;
+
+		if (maxItemsToReturn < 1) maxItemsToReturn = -1;
+		try {
+			stmt = conn.prepareStatement(dialect.selectAffiliationsForUserAfterNodeId());
+			stmt.setString(1, user.toBareJID());
+			stmt.setString(2, afterItemId);
+			stmt.setInt(3, maxItemsToReturn);
+
+			java.sql.ResultSet rs = stmt.executeQuery();
+
+			ArrayList<NodeAffiliation> result = new ArrayList<NodeAffiliation>();
+
+			while (rs.next()) {
+				NodeAffiliationImpl nodeSub = new NodeAffiliationImpl(
+						rs.getString(1), user, Affiliations.valueOf(rs
+								.getString(3)));
+				result.add(nodeSub);
+			}
+
+			return new ResultSetImpl<NodeAffiliation>(result);
+		} catch (SQLException e) {
+			throw new NodeStoreException(e);
+		} finally {
+			close(stmt); // Will implicitly close the resultset if required
+		}
+	}
+	
+	@Override
+	public int countNodeAffiliations(String nodeId) throws NodeStoreException {
+		PreparedStatement selectStatement = null;
+
+		try {
+			selectStatement = conn
+					.prepareStatement(dialect.countNodeAffiliations());
+			selectStatement.setString(1, nodeId);
+
+			java.sql.ResultSet rs = selectStatement.executeQuery();
+
+			if (rs.next()) {
+				return rs.getInt(1);
+			} else {
+				return 0; // This really shouldn't happen!
+			}
+		} catch (SQLException e) {
+			throw new NodeStoreException(e);
+		} finally {
+			close(selectStatement); // Will implicitly close the resultset if
+									// required
+		}
+	}
 
 	@Override
 	public ResultSet<NodeAffiliation> getNodeAffiliations(String nodeId)
@@ -452,6 +507,62 @@ public class JDBCNodeStore implements NodeStore {
 			throw new NodeStoreException(e);
 		} finally {
 			close(stmt); // Will implicitly close the resultset if required
+		}
+	}
+
+	@Override
+	public ResultSet<NodeAffiliation> getNodeAffiliations(String nodeId, 
+			String afterItemId, int maxItemsToReturn) throws NodeStoreException {
+		PreparedStatement stmt = null;
+
+		if (maxItemsToReturn < 1) maxItemsToReturn = -1;
+		
+		try {
+			stmt = conn.prepareStatement(dialect.selectAffiliationsForNodeAfterJid());
+			stmt.setString(1, nodeId);
+			stmt.setString(2, afterItemId);
+			stmt.setInt(2, maxItemsToReturn);
+
+			java.sql.ResultSet rs = stmt.executeQuery();
+
+			ArrayList<NodeAffiliation> result = new ArrayList<NodeAffiliation>();
+
+			while (rs.next()) {
+				NodeAffiliationImpl nodeSub = new NodeAffiliationImpl(
+						rs.getString(1), new JID(rs.getString(2)),
+						Affiliations.valueOf(rs.getString(3)));
+				result.add(nodeSub);
+			}
+
+			return new ResultSetImpl<NodeAffiliation>(result);
+		} catch (SQLException e) {
+			throw new NodeStoreException(e);
+		} finally {
+			close(stmt); // Will implicitly close the resultset if required
+		}
+	}
+
+	@Override
+	public int countUserAffiliations(JID actorJid) throws NodeStoreException {
+		PreparedStatement selectStatement = null;
+
+		try {
+			selectStatement = conn
+					.prepareStatement(dialect.countUserAffiliations());
+			selectStatement.setString(1, actorJid.toBareJID());
+
+			java.sql.ResultSet rs = selectStatement.executeQuery();
+
+			if (rs.next()) {
+				return rs.getInt(1);
+			} else {
+				return 0; // This really shouldn't happen!
+			}
+		} catch (SQLException e) {
+			throw new NodeStoreException(e);
+		} finally {
+			close(selectStatement); // Will implicitly close the resultset if
+									// required
 		}
 	}
 
@@ -993,6 +1104,10 @@ public class JDBCNodeStore implements NodeStore {
 	public interface NodeStoreSQLDialect {
 		String insertNode();
 
+		String countNodeAffiliations();
+
+		String countUserAffiliations();
+
 		String countSubscriptionsForNode();
 
 		String deleteItems();
@@ -1016,8 +1131,12 @@ public class JDBCNodeStore implements NodeStore {
 		String selectAffiliation();
 
 		String selectAffiliationsForUser();
+		
+		String selectAffiliationsForUserAfterNodeId();
 
 		String selectAffiliationsForNode();
+		
+		String selectAffiliationsForNodeAfterJid();
 
 		String insertAffiliation();
 

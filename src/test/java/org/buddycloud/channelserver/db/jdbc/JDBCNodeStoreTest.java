@@ -728,6 +728,19 @@ public class JDBCNodeStoreTest {
 		assertTrue("Incorrect user affiliations returned",
 				CollectionUtils.isEqualCollection(expected, result));
 	}
+	
+	@Test
+	public void testCanGetCountOfUserAffiliations() throws Exception {
+	    int affiliations = store.countUserAffiliations(TEST_SERVER1_USER1_JID);
+	    assertEquals(0, affiliations);
+	}
+	
+	@Test
+	public void testCanGetCountOfUserAffiliationWithResults() throws Exception {
+		dbTester.loadData("node_1");
+		int affiliations = store.countUserAffiliations(TEST_SERVER1_USER1_JID);
+		assertEquals(1, affiliations);
+	}
 
 	@Test
 	public void testGetNodeAffiliations() throws Exception {
@@ -751,6 +764,19 @@ public class JDBCNodeStoreTest {
 				CollectionUtils.isEqualCollection(expected, result));
 	}
 
+	@Test
+	public void testCanGetCountOfNodeAffiliations() throws Exception {
+	    int affiliations = store.countNodeAffiliations(TEST_SERVER1_NODE1_ID);
+	    assertEquals(0, affiliations);
+	}
+	
+	@Test
+	public void testCanGetCountOfNodeAffiliationWithResults() throws Exception {
+		dbTester.loadData("node_1");
+		int affiliations = store.countNodeAffiliations(TEST_SERVER1_NODE1_ID);
+		assertEquals(2, affiliations);
+	}
+	
 	@Test
 	public void testGetUserSubscription() throws Exception {
 		dbTester.loadData("node_1");

@@ -25,6 +25,10 @@ public class AffiliationsGet implements PubSubElementProcessor {
 	private String node;
 	private JID actorJid;
 	private IQ result;
+	private Element resultSetManagement;
+	private String firstItem;
+	private String lastItem;
+	private int totalEntriesCount;
 
 	private static final Logger logger = Logger
 			.getLogger(AffiliationsGet.class);
@@ -42,6 +46,7 @@ public class AffiliationsGet implements PubSubElementProcessor {
 		requestIq = reqIQ;
 		actorJid = actorJID;
 		node = elm.attributeValue("node");
+		resultSetManagement = rsm;
 
 		if (false == channelManager.isLocalJID(requestIq.getFrom())) {
 			result.getElement().addAttribute("remote-server-discover", "false");
@@ -125,7 +130,9 @@ public class AffiliationsGet implements PubSubElementProcessor {
 							aff.getAffiliation().toString())
 					.addAttribute("jid", aff.getUser().toString());
 		}
-		outQueue.put(result);
+		
+		totalEntriesCount = channelManager.countUserAffiliations(actorJid);
+		return true;
 	}
 
 	private void makeRemoteRequest(String node) throws InterruptedException {

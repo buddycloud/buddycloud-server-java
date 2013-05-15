@@ -521,7 +521,7 @@ public class JDBCNodeStore implements NodeStore {
 			stmt = conn.prepareStatement(dialect.selectAffiliationsForNodeAfterJid());
 			stmt.setString(1, nodeId);
 			stmt.setString(2, afterItemId);
-			stmt.setInt(2, maxItemsToReturn);
+			stmt.setInt(3, maxItemsToReturn);
 
 			java.sql.ResultSet rs = stmt.executeQuery();
 

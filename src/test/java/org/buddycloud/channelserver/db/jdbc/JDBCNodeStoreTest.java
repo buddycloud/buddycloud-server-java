@@ -728,6 +728,36 @@ public class JDBCNodeStoreTest {
 		assertTrue("Incorrect user affiliations returned",
 				CollectionUtils.isEqualCollection(expected, result));
 	}
+
+	@Test
+	public void testCanGetUserAffiliationsWithRsm() throws Exception {
+		dbTester.loadData("node_1");
+		dbTester.loadData("node_2");
+		
+		store.setUserAffiliation(TEST_SERVER1_NODE2_ID, TEST_SERVER1_USER1_JID, Affiliations.member);
+		
+		ResultSet<NodeAffiliation> result = store
+				.getUserAffiliations(TEST_SERVER1_USER1_JID, "", 50);
+
+		ResultSet<NodeAffiliation> result1 = store
+				.getUserAffiliations(TEST_SERVER1_USER1_JID, TEST_SERVER1_NODE1_ID, 50);
+		
+		ResultSet<NodeAffiliation> result2 = store
+				.getUserAffiliations(TEST_SERVER1_USER1_JID, TEST_SERVER1_NODE2_ID, 50);
+		
+		assertEquals(2, result.size());
+		assertEquals(1,  result1.size());
+		assertEquals(0, result2.size());
+	}
+	
+	@Test
+	public void testCanRetrictUserAffiliationCountWithRsm() throws Exception {
+        dbTester.loadData("node_1");
+		
+		ResultSet<NodeAffiliation> result = store
+				.getUserAffiliations(TEST_SERVER1_USER1_JID, "", 1);
+		assertEquals(1,  result.size());
+	}
 	
 	@Test
 	public void testCanGetCountOfUserAffiliations() throws Exception {
@@ -763,7 +793,34 @@ public class JDBCNodeStoreTest {
 		assertTrue("Incorrect node affiliations returned",
 				CollectionUtils.isEqualCollection(expected, result));
 	}
+	
+	@Test
+	public void testCanGetNodeAffiliationsWithRsm() throws Exception {
+		dbTester.loadData("node_1");
+		
+		ResultSet<NodeAffiliation> result = store
+				.getNodeAffiliations(TEST_SERVER1_NODE1_ID, "", 50);
 
+		ResultSet<NodeAffiliation> result1 = store
+				.getNodeAffiliations(TEST_SERVER1_NODE1_ID, TEST_SERVER1_USER1_JID.toBareJID(), 50);
+		
+		ResultSet<NodeAffiliation> result2 = store
+				.getNodeAffiliations(TEST_SERVER1_NODE1_ID, TEST_SERVER1_USER2_JID.toBareJID(), 50);
+		
+		assertEquals(2, result.size());
+		assertEquals(1,  result1.size());
+		assertEquals(0, result2.size());
+	}
+	
+	@Test
+	public void testCanRetrictNodeAffiliationCountWithRsm() throws Exception {
+        dbTester.loadData("node_1");
+		
+		ResultSet<NodeAffiliation> result = store
+				.getNodeAffiliations(TEST_SERVER1_NODE1_ID, "", 1);
+		assertEquals(1,  result.size());
+	}
+	
 	@Test
 	public void testCanGetCountOfNodeAffiliations() throws Exception {
 	    int affiliations = store.countNodeAffiliations(TEST_SERVER1_NODE1_ID);

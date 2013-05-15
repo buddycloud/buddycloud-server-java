@@ -2,7 +2,9 @@ package org.buddycloud.channelserver.channel;
 
 import org.buddycloud.channelserver.db.NodeStore;
 import org.buddycloud.channelserver.db.exception.NodeStoreException;
+import org.buddycloud.channelserver.pubsub.model.NodeAffiliation;
 import org.xmpp.packet.JID;
+import org.xmpp.resultsetmanagement.ResultSet;
 
 public interface ChannelManager extends NodeStore {
 	

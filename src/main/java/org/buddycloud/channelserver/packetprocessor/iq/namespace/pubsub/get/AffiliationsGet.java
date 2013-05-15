@@ -64,34 +64,83 @@ public class AffiliationsGet implements PubSubElementProcessor {
 			actorJid = requestIq.getFrom();
 		}
 
-		if (node == null) {
-			getUserAffiliations(affiliations);
-		} else {
-			getNodeAffiliations(affiliations);
+		int maxItemsToReturn = MAX_ITEMS_TO_RETURN;
+		String afterItemId = null;
+
+		String max_items = elm.attributeValue("max_items");
+		if (max_items != null) {
+			maxItemsToReturn = Integer.parseInt(max_items);
 		}
+
+		if (resultSetManagement != null) {
+			Element max = resultSetManagement.element("max");
+			if (max != null) {
+				maxItemsToReturn = Integer.parseInt(max.getTextTrim());
+			}
+			Element after = resultSetManagement.element("after");
+			if (after != null) {
+				afterItemId = after.getTextTrim();
+			}
+		}
+		boolean isProcessedLocally = true;
+		if (node == null) {
+			isProcessedLocally = getUserAffiliations(affiliations, maxItemsToReturn, afterItemId);
+		} else {
+			isProcessedLocally = getNodeAffiliations(affiliations, maxItemsToReturn, afterItemId);
+		}
+		if (false == isProcessedLocally) return;
+
+		if ((resultSetManagement != null)
+				|| (totalEntriesCount > maxItemsToReturn)) {
+			/*
+			 * TODO, add result set here as defined in 6.5.4 Returning Some
+			 * Items <set xmlns='http://jabber.org/protocol/rsm'> <first
+			 * index='0'>368866411b877c30064a5f62b917cffe</first>
+			 * <last>4e30f35051b7b8b42abe083742187228</last> <count>19</count>
+			 * </set>
+			 */
+			Element rsmElement = pubsub.addElement("set",
+					"http://jabber.org/protocol/rsm");
+
+			if (firstItem != null) {
+				rsm.addElement("first").setText(firstItem);
+				rsm.addElement("last").setText(lastItem);
+			}
+			// Force the client to come back, eventually going federated and 
+			// getting true count of records
+			if (false == channelManager.isLocalNode(node)) ++totalEntriesCount;
+			rsm.addElement("count")
+					.setText(Integer.toString(totalEntriesCount));
+		}
+			
+		outQueue.put(result);
 	}
 
-	private void getNodeAffiliations(Element affiliations)
+	private boolean getNodeAffiliations(Element affiliations, int maxItemsToReturn, String afterItemId)
 			throws NodeStoreException, InterruptedException {
 		if (false == channelManager.isLocalNode(node)
 				&& (false == channelManager.isCachedNode(node))) {
 			makeRemoteRequest(node.split("/")[2]);
-			return;
+			return false;
 		}
 		ResultSet<NodeAffiliation> nodeAffiliations = channelManager
-				.getNodeAffiliations(node);
+				.getNodeAffiliations(node, afterItemId, maxItemsToReturn);
 
-		if ((null != requestIq.getElement().element("pubsub").element("set"))
+		if ((null != resultSetManagement)
 				&& (0 == nodeAffiliations.size())
 				&& (false == channelManager.isLocalNode(node))) {
 			makeRemoteRequest(node);
-			return;
+			return false;
 		}
 		
 		for (NodeAffiliation nodeAffiliation : nodeAffiliations) {
 
 			logger.trace("Adding affiliation for " + nodeAffiliation.getUser()
 					+ " affiliation " + nodeAffiliation.getAffiliation());
+			
+			if (null == firstItem) firstItem = nodeAffiliation.getUser().toString();
+			lastItem = nodeAffiliation.getUser().toString();
+			
 			affiliations
 					.addElement("affiliation")
 					.addAttribute("node", nodeAffiliation.getNodeId())
@@ -99,30 +148,37 @@ public class AffiliationsGet implements PubSubElementProcessor {
 							nodeAffiliation.getAffiliation().toString())
 					.addAttribute("jid", nodeAffiliation.getUser().toString());
 		}
-		outQueue.put(result);
+		totalEntriesCount = channelManager.countNodeAffiliations(node);
+		return true;
 	}
 
-	private void getUserAffiliations(Element affiliations)
+	private boolean getUserAffiliations(Element affiliations, int maxItemsToReturn, String afterItemId)
 			throws NodeStoreException, InterruptedException {
+		
 		if (false == channelManager.isLocalJID(actorJid)
 				&& (false == channelManager.isCachedJID(requestIq.getFrom()))) {
 			makeRemoteRequest(actorJid.getDomain());
-			return;
+			return false;
 		}
+		
 		ResultSet<NodeAffiliation> affs = channelManager
-				.getUserAffiliations(actorJid);
+				.getUserAffiliations(actorJid, afterItemId, maxItemsToReturn);
 
-		if ((null != requestIq.getElement().element("pubsub").element("set"))
+		if ((null != resultSetManagement)
 				&& (0 == affs.size())
 				&& (false == channelManager.isLocalJID(actorJid))) {
 			makeRemoteRequest(actorJid.getDomain());
-			return;
+			return false;
 		}
 		
 		for (NodeAffiliation aff : affs) {
 			logger.trace("Adding affiliation for " + aff.getUser()
 					+ " affiliation " + aff.getAffiliation()
 					+ " (no node provided)");
+			
+			if (null == firstItem) firstItem = aff.getNodeId();
+			lastItem = aff.getNodeId();
+			
 			affiliations
 					.addElement("affiliation")
 					.addAttribute("node", aff.getNodeId())

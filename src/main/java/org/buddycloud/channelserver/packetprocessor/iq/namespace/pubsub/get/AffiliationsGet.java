@@ -65,7 +65,7 @@ public class AffiliationsGet implements PubSubElementProcessor {
 		}
 
 		int maxItemsToReturn = MAX_ITEMS_TO_RETURN;
-		String afterItemId = null;
+		String afterItemId   = "";
 
 		String max_items = elm.attributeValue("max_items");
 		if (max_items != null) {
@@ -103,13 +103,13 @@ public class AffiliationsGet implements PubSubElementProcessor {
 					"http://jabber.org/protocol/rsm");
 
 			if (firstItem != null) {
-				rsm.addElement("first").setText(firstItem);
-				rsm.addElement("last").setText(lastItem);
+				rsmElement.addElement("first").setText(firstItem);
+				rsmElement.addElement("last").setText(lastItem);
 			}
 			// Force the client to come back, eventually going federated and 
 			// getting true count of records
 			if (false == channelManager.isLocalNode(node)) ++totalEntriesCount;
-			rsm.addElement("count")
+			rsmElement.addElement("count")
 					.setText(Integer.toString(totalEntriesCount));
 		}
 			
@@ -123,6 +123,7 @@ public class AffiliationsGet implements PubSubElementProcessor {
 			makeRemoteRequest(node.split("/")[2]);
 			return false;
 		}
+
 		ResultSet<NodeAffiliation> nodeAffiliations = channelManager
 				.getNodeAffiliations(node, afterItemId, maxItemsToReturn);
 

@@ -682,7 +682,7 @@ public class JDBCNodeStoreTest {
 		assertEquals("An unexpected node affiliation was returned", expected,
 				result);
 	}
-
+	
 	@Test
 	public void testGetUserAffiliations() throws Exception {
 		dbTester.loadData("node_1");
@@ -705,7 +705,7 @@ public class JDBCNodeStoreTest {
 		assertTrue("Incorrect user affiliations returned",
 				CollectionUtils.isEqualCollection(expected, result));
 	}
-
+	
 	@Test
 	public void testGetUserAffiliationsUsesBareJID() throws Exception {
 		dbTester.loadData("node_1");
@@ -1044,6 +1044,46 @@ public class JDBCNodeStoreTest {
 		assertTrue("Incorrect user subscriptions returned", result.isEmpty());
 	}
 
+	@Test
+	public void testCanGetNodeSubscriptionsWithRsm() throws Exception {
+		dbTester.loadData("node_1");
+		
+		ResultSet<NodeSubscription> result = store
+				.getNodeSubscriptions(TEST_SERVER1_NODE1_ID, null, 50);
+
+		ResultSet<NodeSubscription> result1 = store
+				.getNodeSubscriptions(TEST_SERVER1_NODE1_ID, TEST_SERVER1_USER1_JID, 50);
+		
+		ResultSet<NodeSubscription> result2 = store
+				.getNodeSubscriptions(TEST_SERVER1_NODE1_ID, TEST_SERVER1_USER2_JID, 50);
+		
+		assertEquals(4, result.size());
+		assertEquals(3,  result1.size());
+		assertEquals(1, result2.size());
+	}
+	
+	@Test
+	public void testCanRetrictNodeSubscriptionsCountWithRsm() throws Exception {
+        dbTester.loadData("node_1");
+		
+		ResultSet<NodeSubscription> result = store
+				.getNodeSubscriptions(TEST_SERVER1_NODE1_ID, null, 1);
+		assertEquals(1,  result.size());
+	}
+	
+	@Test
+	public void testCanGetCountOfNodeSubscriptions() throws Exception {
+	    int affiliations = store.countNodeSubscriptions(TEST_SERVER1_NODE1_ID);
+	    assertEquals(0, affiliations);
+	}
+	
+	@Test
+	public void testCanGetCountOfNodeSubscriptionsWithResults() throws Exception {
+		dbTester.loadData("node_1");
+		int affiliations = store.countNodeSubscriptions(TEST_SERVER1_NODE1_ID);
+		assertEquals(4, affiliations);
+	}
+	
 	@Test
 	public void testIsCachedJidForCachedJid() throws Exception {
 		dbTester.loadData("node_1");

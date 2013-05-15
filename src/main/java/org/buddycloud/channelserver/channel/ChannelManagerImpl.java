@@ -3,7 +3,6 @@ package org.buddycloud.channelserver.channel;
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.Properties;
-import java.util.regex.Pattern;
 
 import org.apache.log4j.Logger;
 import org.buddycloud.channelserver.Configuration;
@@ -106,13 +105,35 @@ public class ChannelManagerImpl implements ChannelManager {
 	@Override
 	public ResultSet<NodeAffiliation> getUserAffiliations(JID user)
 			throws NodeStoreException {
-		return nodeStore.getUserAffiliations(user);
+		return nodeStore.getUserAffiliations(user, "", -1);
+	}
+
+	@Override
+	public ResultSet<NodeAffiliation> getUserAffiliations(JID user,
+			String afterItemId, int maxItemsToReturn) throws NodeStoreException {
+		return nodeStore.getUserAffiliations(user, afterItemId, maxItemsToReturn);
+	}
+
+	@Override
+	public int countUserAffiliations(JID jid) throws NodeStoreException {
+		return nodeStore.countUserAffiliations(jid);
 	}
 
 	@Override
 	public ResultSet<NodeAffiliation> getNodeAffiliations(String nodeId)
 			throws NodeStoreException {
-		return nodeStore.getNodeAffiliations(nodeId);
+		return nodeStore.getNodeAffiliations(nodeId, "", -1);
+	}
+
+	@Override
+	public ResultSet<NodeAffiliation> getNodeAffiliations(String nodeId,
+			String afterItemId, int maxItemsToReturn) throws NodeStoreException {
+		return nodeStore.getNodeAffiliations(nodeId, afterItemId, maxItemsToReturn);
+	}
+
+	@Override
+	public int countNodeAffiliations(String nodeId) throws NodeStoreException {
+		return nodeStore.countNodeAffiliations(nodeId);
 	}
 
 	@Override
@@ -124,7 +145,18 @@ public class ChannelManagerImpl implements ChannelManager {
 	@Override
 	public ResultSet<NodeSubscription> getUserSubscriptions(JID user)
 			throws NodeStoreException {
-		return nodeStore.getUserSubscriptions(user);
+		return nodeStore.getUserSubscriptions(user, "", -1);
+	}
+
+	@Override
+	public ResultSet<NodeSubscription> getUserSubscriptions(JID user,
+			String afterNodeId, int maxItemsToReturn) throws NodeStoreException {
+		return nodeStore.getUserSubscriptions(user, afterNodeId, maxItemsToReturn);
+	}
+
+	@Override
+	public int countUserSubscriptions(JID user) throws NodeStoreException {
+		return nodeStore.countUserSubscriptions(user);
 	}
 
 	@Override
@@ -133,6 +165,17 @@ public class ChannelManagerImpl implements ChannelManager {
 		return nodeStore.getNodeSubscriptions(nodeId);
 	}
 
+	@Override
+	public ResultSet<NodeSubscription> getNodeSubscriptions(String nodeId,
+			JID afterItemId, int maxItemsToReturn) throws NodeStoreException {
+		return nodeStore.getNodeSubscriptions(nodeId, afterItemId, maxItemsToReturn);
+	}
+	
+	@Override
+	public int countNodeSubscriptions(String nodeId) throws NodeStoreException {
+		return nodeStore.countNodeSubscriptions(nodeId);
+	}
+	
 	@Override
 	public CloseableIterator<NodeItem> getNodeItems(String nodeId,
 			String afterItemId, int count) throws NodeStoreException {
@@ -284,32 +327,5 @@ public class ChannelManagerImpl implements ChannelManager {
 	@Override
 	public ArrayList<String> getNodeList() throws NodeStoreException {
 		return nodeStore.getNodeList();
-	}
-
-	@Override
-	public int countNodeSubscriptions(String nodeId) throws NodeStoreException {
-		return nodeStore.countNodeSubscriptions(nodeId);
-	}
-
-	@Override
-	public ResultSet<NodeAffiliation> getUserAffiliations(JID user,
-			String afterItemId, int maxItemsToReturn) throws NodeStoreException {
-		return nodeStore.getUserAffiliations(user, afterItemId, maxItemsToReturn);
-	}
-
-	@Override
-	public int countUserAffiliations(JID jid) throws NodeStoreException {
-		return nodeStore.countUserAffiliations(jid);
-	}
-
-	@Override
-	public ResultSet<NodeAffiliation> getNodeAffiliations(String nodeId,
-			String afterItemId, int maxItemsToReturn) throws NodeStoreException {
-		return nodeStore.getNodeAffiliations(nodeId, afterItemId, maxItemsToReturn);
-	}
-
-	@Override
-	public int countNodeAffiliations(String nodeId) throws NodeStoreException {
-		return nodeStore.countNodeAffiliations(nodeId);
 	}
 }

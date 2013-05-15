@@ -24,12 +24,17 @@ public class SubscriptionsGet implements PubSubElementProcessor {
 	private String node;
 	private JID actorJid;
 	private IQ requestIq;
+	private Element resultSetManagement;
+	
+	private String firstItem;
+	private String lastItem;
+	private int totalEntriesCount;
 
 	private static final Logger logger = Logger
 			.getLogger(SubscriptionsGet.class);
 
-	public void setChannelManager(ChannelManager ds) {
-		channelManager = ds;
+	public void setChannelManager(ChannelManager dataStore) {
+		channelManager = dataStore;
 	}
 	
 	public SubscriptionsGet(BlockingQueue<Packet> outQueue,
@@ -44,6 +49,7 @@ public class SubscriptionsGet implements PubSubElementProcessor {
 		result = IQ.createResultIQ(reqIQ);
 		actorJid = actorJID;
 		requestIq = reqIQ;
+		resultSetManagement = rsm;
 		
 		if (false == channelManager.isLocalJID(requestIq.getFrom())) {
         	result.getElement().addAttribute("remote-server-discover", "false");
@@ -57,21 +63,65 @@ public class SubscriptionsGet implements PubSubElementProcessor {
 		if (actorJid == null) {
 			actorJid = reqIQ.getFrom();
 		}
+		
+		int maxItemsToReturn = MAX_ITEMS_TO_RETURN;
+		String afterItemId   = "";
+
+		String max_items = elm.attributeValue("max_items");
+		if (max_items != null) {
+			maxItemsToReturn = Integer.parseInt(max_items);
+		}
+
+		if (resultSetManagement != null) {
+			Element max = resultSetManagement.element("max");
+			if (max != null) {
+				maxItemsToReturn = Integer.parseInt(max.getTextTrim());
+			}
+			Element after = resultSetManagement.element("after");
+			if (after != null) {
+				afterItemId = after.getTextTrim();
+			}
+		}
+		boolean isProcessedLocally = true;
 
 		if (node == null) {
-			getUserSubscriptions(subscriptions);
+			isProcessedLocally = getUserSubscriptions(subscriptions, maxItemsToReturn, afterItemId);
 		} else {
-			getNodeSubscriptions(subscriptions);
+			isProcessedLocally = getNodeSubscriptions(subscriptions, maxItemsToReturn, afterItemId);
 		}
+		if (false == isProcessedLocally) return;
+		if ((resultSetManagement != null)
+				|| (totalEntriesCount > maxItemsToReturn)) {
+			/*
+			 * TODO, add result set here as defined in 6.5.4 Returning Some
+			 * Items <set xmlns='http://jabber.org/protocol/rsm'> <first
+			 * index='0'>368866411b877c30064a5f62b917cffe</first>
+			 * <last>4e30f35051b7b8b42abe083742187228</last> <count>19</count>
+			 * </set>
+			 */
+			Element rsmElement = pubsub.addElement("set",
+					"http://jabber.org/protocol/rsm");
+
+			if (firstItem != null) {
+				rsmElement.addElement("first").setText(firstItem);
+				rsmElement.addElement("last").setText(lastItem);
+			}
+			// Force the client to come back, eventually going federated and 
+			// getting true count of records
+			if (false == channelManager.isLocalNode(node)) ++totalEntriesCount;
+			rsmElement.addElement("count")
+					.setText(Integer.toString(totalEntriesCount));
+		}
+		outQueue.put(result);
 	}
 
-	private void getNodeSubscriptions(Element subscriptions)
+	private boolean getNodeSubscriptions(Element subscriptions, int maxItemsToReturn, String afterItemId)
 			throws NodeStoreException, InterruptedException {
 		if (false == channelManager.isLocalNode(node) 
 		    && (false == channelManager.isCachedNode(node))
 		) {
 			makeRemoteRequest(new JID(node.split("/")[2]).getDomain());
-		    return;
+		    return false;
 		}
 		ResultSet<NodeSubscription> cur = channelManager
 				.getNodeSubscriptions(node);
@@ -81,11 +131,13 @@ public class SubscriptionsGet implements PubSubElementProcessor {
 				&& (0 == cur.size())
 				&& (false == channelManager.isLocalNode(node))) {
 			makeRemoteRequest(new JID(node.split("/")[2]).getDomain());
-			return;
+			return false;
 		}
 		
 		for (NodeSubscription ns : cur) {
 
+			if (null == firstItem) firstItem = ns.getUser().toBareJID();
+			lastItem = ns.getUser().toBareJID();
 			subscriptions
 					.addElement("subscription")
 					.addAttribute("node", ns.getNodeId())
@@ -93,16 +145,17 @@ public class SubscriptionsGet implements PubSubElementProcessor {
 							ns.getSubscription().toString())
 					.addAttribute("jid", ns.getUser().toBareJID());
 		}
-		outQueue.put(result);
+		totalEntriesCount = channelManager.countNodeSubscriptions(node);
+		return true;
 	}
 
-	private void getUserSubscriptions(Element subscriptions)
+	private boolean getUserSubscriptions(Element subscriptions, int maxItemsToReturn, String afterItemId)
 			throws NodeStoreException, InterruptedException {
 		if (false == channelManager.isLocalJID(actorJid) 
 		    && (false == channelManager.isCachedJID(actorJid))
 		) {
 			makeRemoteRequest(actorJid.getDomain());
-			return;
+			return false;
 		}
 		// let's get all subscriptions.
 		ResultSet<NodeSubscription> cur = channelManager
@@ -112,10 +165,12 @@ public class SubscriptionsGet implements PubSubElementProcessor {
 				&& (0 == cur.size())
 				&& (false == channelManager.isLocalJID(actorJid))) {
 			makeRemoteRequest(actorJid.getDomain());
-			return;
+			return false;
 		}
 		
 		for (NodeSubscription ns : cur) {
+			if (null == firstItem) firstItem = ns.getNodeId();
+			lastItem = ns.getNodeId();
 			subscriptions
 					.addElement("subscription")
 					.addAttribute("node", ns.getNodeId())
@@ -123,7 +178,8 @@ public class SubscriptionsGet implements PubSubElementProcessor {
 							ns.getSubscription().toString())
 					.addAttribute("jid", ns.getUser().toBareJID());
 		}
-		outQueue.put(result);
+		totalEntriesCount = channelManager.countUserSubscriptions(actorJid);
+		return true;
 	}
 	
 	private void makeRemoteRequest(String to) throws InterruptedException {

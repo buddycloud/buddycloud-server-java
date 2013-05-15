@@ -37,7 +37,6 @@ public class Mock implements ChannelManager {
 	/**
 	 * Standard methods
 	 */
-
 	@Override
 	public void createNode(JID owner, String nodeId,
 			Map<String, String> nodeConf) throws NodeStoreException {
@@ -294,6 +293,26 @@ public class Mock implements ChannelManager {
 
 	@Override
 	public int countNodeAffiliations(String nodeId) throws NodeStoreException {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	@Override
+	public ResultSet<NodeSubscription> getUserSubscriptions(JID user,
+			String afterNodeId, int maxItemsToReturn) throws NodeStoreException {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public ResultSet<NodeSubscription> getNodeSubscriptions(String nodeId,
+			JID afterItemId, int maxItemsToReturn) throws NodeStoreException {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public int countUserSubscriptions(JID nodeId) throws NodeStoreException {
 		// TODO Auto-generated method stub
 		return 0;
 	}

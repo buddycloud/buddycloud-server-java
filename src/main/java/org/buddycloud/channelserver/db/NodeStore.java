@@ -231,11 +231,25 @@ public interface NodeStore {
 	 * 
 	 * @param user
 	 *            the user's JID
+	 * @param afterNodeId
+	 * @param maxItemsToReturn 
+	 * @param user 
+	 * @return
+	 */
+	ResultSet<NodeSubscription> getUserSubscriptions(JID user, String afterNodeId, int maxItemsToReturn)
+			throws NodeStoreException;
+
+	/**
+	 * Gets the set of nodes to which the user is subscribed.
+	 * 
+	 * @param user
+	 *            the user's JID
+	 * @param user 
 	 * @return
 	 */
 	ResultSet<NodeSubscription> getUserSubscriptions(JID user)
 			throws NodeStoreException;
-
+	
 	/**
 	 * Gets the set of subscriptions to the node.
 	 * 
@@ -245,7 +259,20 @@ public interface NodeStore {
 	 */
 	ResultSet<NodeSubscription> getNodeSubscriptions(String nodeId)
 			throws NodeStoreException;
+	
 
+	/**
+	 * Gets the set of subscriptions to the node.
+	 * 
+	 * @param nodeId
+	 *            the node reference.
+	 * @param afterItemId
+	 *            after this JID
+	 * @return
+	 */
+	ResultSet<NodeSubscription> getNodeSubscriptions(String nodeId, JID afterItemId,
+			int maxItemsToReturn) throws NodeStoreException;
+	
 	/**
 	 * Gets the set of listeners to the node.
 	 * 
@@ -268,6 +295,16 @@ public interface NodeStore {
 	NodeSubscription getUserSubscription(String nodeId, JID user)
 			throws NodeStoreException;
 
+	/**
+	 * Retrieves the number of user subscriptions
+	 * 
+	 * @param user
+	 *            the user's JID from which to retrieve the item count.
+	 * @return the entries count.
+	 * @throws NodeStoreException
+	 */
+	int countUserSubscriptions(JID nodeId) throws NodeStoreException;
+	
 	/**
 	 * Retrieves an iterator of items within a node.
 	 * 

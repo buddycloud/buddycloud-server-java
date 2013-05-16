@@ -4,7 +4,6 @@ Note: This server is not as fully featured as the nodejs server https://github.c
 
 Not yet implemented:
 
-- Caching (server always goes to remote server to collect data)
 - Special nodes
 - MAM/Sync (not caching so no need so far)
 

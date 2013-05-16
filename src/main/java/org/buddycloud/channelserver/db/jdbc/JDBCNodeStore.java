@@ -515,19 +515,12 @@ public class JDBCNodeStore implements NodeStore {
 	public ResultSet<NodeAffiliation> getNodeAffiliations(String nodeId, 
 			String afterItemId, int maxItemsToReturn) throws NodeStoreException {
 		PreparedStatement stmt = null;
-
-		String maxItems;
-		if (-1 == maxItemsToReturn) {
-			maxItems = "ALL";
-		} else {
-			maxItems = String.valueOf(maxItemsToReturn);
-		}
 		
 		try {
 			stmt = conn.prepareStatement(dialect.selectAffiliationsForNodeAfterJid());
 			stmt.setString(1, nodeId);
 			stmt.setString(2, afterItemId);
-			stmt.setString(3, maxItems);
+			stmt.setInt(3, maxItemsToReturn);
 
 			java.sql.ResultSet rs = stmt.executeQuery();
 

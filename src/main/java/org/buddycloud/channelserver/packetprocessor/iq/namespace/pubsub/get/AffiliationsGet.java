@@ -130,7 +130,7 @@ public class AffiliationsGet implements PubSubElementProcessor {
 		if ((null != resultSetManagement)
 				&& (0 == nodeAffiliations.size())
 				&& (false == channelManager.isLocalNode(node))) {
-			makeRemoteRequest(node);
+			makeRemoteRequest(node.split("/")[2]);
 			return false;
 		}
 		

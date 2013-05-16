@@ -122,7 +122,7 @@ public class ChannelManagerImpl implements ChannelManager {
 	@Override
 	public ResultSet<NodeAffiliation> getNodeAffiliations(String nodeId)
 			throws NodeStoreException {
-		return nodeStore.getNodeAffiliations(nodeId, "", -1);
+		return nodeStore.getNodeAffiliations(nodeId);
 	}
 
 	@Override

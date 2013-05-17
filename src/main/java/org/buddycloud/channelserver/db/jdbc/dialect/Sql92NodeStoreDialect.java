@@ -23,19 +23,19 @@ public class Sql92NodeStoreDialect implements NodeStoreSQLDialect {
 			+ " WHERE \"node\" = ? AND \"user\" = ?";
 
 	private static final String SELECT_AFFILIATIONS_FOR_USER = "SELECT \"node\", \"user\", \"affiliation\", \"updated\""
-			+ " FROM \"affiliations\" WHERE \"user\" = ? ORDER BY \"node\" ASC";
+			+ " FROM \"affiliations\" WHERE \"user\" = ? ORDER BY \"updated\"";
 	
 	private static final String SELECT_AFFILIATIONS_FOR_USER_AFTER_NODE_ID = "SELECT \"node\", \"user\", \"affiliation\", \"updated\""
-			+ " FROM \"affiliations\" WHERE \"user\" = ? AND \"node\" > ? ORDER BY \"node\" ASC LIMIT ?";
+			+ " FROM \"affiliations\" WHERE \"user\" = ? AND \"node\" > ? ORDER BY \"updated\" LIMIT ?";
 	
 	private static final String COUNT_AFFILIATIONS_FOR_USER = "SELECT COUNT(*)"
 			+ " FROM \"affiliations\" WHERE \"user\" = ?";
 	
 	private static final String SELECT_AFFILIATIONS_FOR_NODE = "SELECT \"node\", \"user\", \"affiliation\", \"updated\""
-			+ " FROM \"affiliations\" WHERE \"node\" = ? ORDER BY \"user\" ASC";
+			+ " FROM \"affiliations\" WHERE \"node\" = ? ORDER BY \"updated\"";
 
 	private static final String SELECT_AFFILIATIONS_FOR_NODE_AFTER_JID = "SELECT \"node\", \"user\", \"affiliation\", \"updated\""
-			+ " FROM \"affiliations\" WHERE \"node\" = ? AND \"user\" > ? ORDER BY \"user\" ASC LIMIT ?";
+			+ " FROM \"affiliations\" WHERE \"node\" = ? AND \"user\" > ? ORDER BY \"updated\" LIMIT ?";
 	
 	private static final String COUNT_AFFILIATIONS_FOR_NODE = "SELECT COUNT(*)"
 			+ " FROM \"affiliations\" WHERE \"node\" = ?";
@@ -50,20 +50,20 @@ public class Sql92NodeStoreDialect implements NodeStoreSQLDialect {
 	private static final String DELETE_AFFILIATION = "DELETE FROM \"affiliations\" WHERE \"node\" = ? AND \"user\" = ?;";
 
 	private static final String SELECT_SUBSCRIPTION = "SELECT \"node\", \"user\", \"listener\", \"subscription\""
-			+ " FROM \"subscriptions\" WHERE \"node\" = ? AND (\"user\" = ? OR \"listener\" = ? ) ORDER BY \"user\" ASC";
+			+ " FROM \"subscriptions\" WHERE \"node\" = ? AND (\"user\" = ? OR \"listener\" = ? ) ORDER BY \"updated\"";
 
 	private static final String SELECT_SUBSCRIPTIONS_FOR_USER = "SELECT \"node\", \"user\", \"listener\", \"subscription\""
-			+ " FROM \"subscriptions\" WHERE \"user\" = ? OR \"listener\" = ? ORDER BY \"node\" ASC";
+			+ " FROM \"subscriptions\" WHERE \"user\" = ? OR \"listener\" = ? ORDER BY \"updated\"";
 
 	private static final String SELECT_SUBSCRIPTIONS_FOR_USER_AFTER_NODE = "SELECT \"node\", \"user\", \"listener\", \"subscription\""
 			+ " FROM \"subscriptions\" WHERE (\"user\" = ? OR \"listener\" = ?) "
-			+ "AND \"node\" > ? ORDER BY \"node\" ASC LIMIT ?";
+			+ "AND \"node\" > ? ORDER BY \"updated\" LIMIT ?";
 	
 	private static final String SELECT_SUBSCRIPTIONS_FOR_NODE = "SELECT \"node\", \"user\", \"listener\", \"subscription\""
-			+ " FROM \"subscriptions\" WHERE \"node\" = ? ORDER BY \"user\" ASC";
+			+ " FROM \"subscriptions\" WHERE \"node\" = ? ORDER BY \"updated\"";
 
 	private static final String SELECT_SUBSCRIPTIONS_FOR_NODE_AFTER_JID = "SELECT \"node\", \"user\", \"listener\", \"subscription\""
-			+ " FROM \"subscriptions\" WHERE \"node\" = ? AND \"user\" > ? ORDER BY \"user\" ASC LIMIT ?";
+			+ " FROM \"subscriptions\" WHERE \"node\" = ? AND \"user\" > ? ORDER BY \"updated\" LIMIT ?";
 	
 	private static final String INSERT_SUBSCRIPTION = "INSERT INTO \"subscriptions\" ( \"node\", \"user\", \"listener\", \"subscription\", \"updated\" )"
 			+ " VALUES ( ?, ?, ?, ?, now() )";
@@ -108,11 +108,11 @@ public class Sql92NodeStoreDialect implements NodeStoreSQLDialect {
 	private static final String DELETE_ITEM = "DELETE FROM \"items\" WHERE \"node\" = ? AND \"id\" = ?;";
 
 	private static final String SELECT_SUBSCRIPTION_LISTENERS_FOR_NODE = "SELECT DISTINCT \"listener\", \"node\", \"subscription\""
-			+ " FROM \"subscriptions\" WHERE \"node\" = ? ORDER BY \"listener\" ASC";
+			+ " FROM \"subscriptions\" WHERE \"node\" = ? ORDER BY \"updated\"";
 
 	private static final String DELETE_NODE = "DELETE FROM \"nodes\" WHERE \"node\" = ?;";
 
-	private static final String SELECT_NODE_LIST = "SELECT \"node\" FROM \"nodes\" ORDER BY \"node\" ASC;";
+	private static final String SELECT_NODE_LIST = "SELECT \"node\" FROM \"nodes\" ORDER BY \"updated\";";
 
 	private static final String DELETE_ITEMS = "DELETE FROM \"items\" WHERE \"node\" = ?;";
 

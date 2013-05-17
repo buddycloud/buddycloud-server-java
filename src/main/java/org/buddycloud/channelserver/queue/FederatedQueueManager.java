@@ -234,7 +234,7 @@ public class FederatedQueueManager {
 		}
 	}
 
-	public String passResponseToRequester(IQ packet) throws Exception {
+	public void passResponseToRequester(IQ packet) throws Exception {
 		if (false == sentRemotePackets.containsKey(packet.getID())) {
 			throw new UnknownFederatedPacketException(
 					"Can not find original requesting packet! (ID:"
@@ -249,12 +249,12 @@ public class FederatedQueueManager {
 		sentRemotePackets.remove(packet.getID());
 		
 		component.sendPacket(packet);
-		
+	}
+	
+	public String getRelatedNodeForRemotePacket(IQ packet) {
 		String id = null;
-		if (nodeMap.containsKey(packet.getID())) {
-			id = nodeMap.get(packet.getID());
-			nodeMap.remove(packet.getID());
-		}
+		if (nodeMap.containsKey(packet.getID()))
+			id = nodeMap.remove(packet.getID());
 		return id;
 	}
 

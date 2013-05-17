@@ -47,7 +47,8 @@ public class PubSubResult implements PacketProcessor<IQ> {
 	@Override
 	public void process(IQ reqIQ) throws Exception {
 		try {
-			String node = federatedQueueManager.passResponseToRequester(reqIQ.createCopy());
+			String node = federatedQueueManager.getRelatedNodeForRemotePacket(reqIQ);
+			federatedQueueManager.passResponseToRequester(reqIQ.createCopy());
 			
 			Element pubsub = reqIQ.getChildElement();
 			List<Element> elements = pubsub.elements();

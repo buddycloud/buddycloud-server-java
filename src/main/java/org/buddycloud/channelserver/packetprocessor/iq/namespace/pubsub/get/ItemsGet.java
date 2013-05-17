@@ -228,9 +228,6 @@ public class ItemsGet implements PubSubElementProcessor {
 				rsm.addElement("first").setText(firstItem);
 				rsm.addElement("last").setText(lastItem);
 			}
-			// Force the client to come back, eventually going federated and 
-			// getting true count of records
-			if (false == channelManager.isLocalNode(node)) ++totalEntriesCount;
 			rsm.addElement("count")
 					.setText(Integer.toString(totalEntriesCount));
 		}

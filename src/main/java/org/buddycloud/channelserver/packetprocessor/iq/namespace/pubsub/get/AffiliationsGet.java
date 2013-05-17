@@ -106,9 +106,6 @@ public class AffiliationsGet implements PubSubElementProcessor {
 				rsmElement.addElement("first").setText(firstItem);
 				rsmElement.addElement("last").setText(lastItem);
 			}
-			// Force the client to come back, eventually going federated and 
-			// getting true count of records
-			if (false == channelManager.isLocalNode(node)) ++totalEntriesCount;
 			rsmElement.addElement("count")
 					.setText(Integer.toString(totalEntriesCount));
 		}

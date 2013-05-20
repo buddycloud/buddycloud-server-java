@@ -1,5 +1,6 @@
 package org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.result;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.log4j.Logger;
@@ -38,14 +39,22 @@ public class AffiliationsResult extends PubSubElementProcessorAbstract {
 		ownerRequest = ((null == node) || (true == node.equals("")));
 
 		@SuppressWarnings("unchecked")
-		List<Element> affiliations = request.getElement().element("pubsub")
-				.element("affiliations").elements("affiliation");
+		List<Element> affiliations = reverseList(request.getElement().element("pubsub")
+				.element("affiliations").elements("affiliation"));
 
 		for (Element affiliation : affiliations) {
 			addAffiliation(affiliation);
 		}
 	}
 
+	private List<Element> reverseList(List<Element> originalList) {
+	    List<Element> invertedList = new ArrayList<Element>();
+	    for (int i = originalList.size() - 1; i >= 0; i--) {
+	        invertedList.add(originalList.get(i));
+	    }
+	    return invertedList;
+	}
+	
 	private void addAffiliation(Element affiliation) throws NodeStoreException {
 
 		if (true == ownerRequest) {

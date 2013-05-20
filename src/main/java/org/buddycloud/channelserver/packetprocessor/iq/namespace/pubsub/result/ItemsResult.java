@@ -73,7 +73,11 @@ public class ItemsResult extends PubSubElementProcessorAbstract {
 		JID user = new JID(item.attributeValue("id"));
 		List<Element> items = item.element("query").elements("item");
 		for (Element subscription : items) {
-			addSubscription(subscription, user);
+			try {
+			    addSubscription(subscription, user);
+			} catch (IllegalArgumentException e) {
+				logger.error(e);
+			}
 		}
 	}
 

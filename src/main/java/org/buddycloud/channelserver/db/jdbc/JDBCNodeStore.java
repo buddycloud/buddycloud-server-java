@@ -435,14 +435,13 @@ public class JDBCNodeStore implements NodeStore {
 		try {
 			stmt = conn.prepareStatement(dialect.selectAffiliationsForUserAfterNodeId());
 			stmt.setString(1, user.toBareJID());
-			stmt.setString(2, afterItemId);
-
-			stmt.setInt(3, maxItemsToReturn);
+			stmt.setString(2, user.toBareJID());
+			stmt.setString(3, afterItemId);
+			stmt.setInt(4, maxItemsToReturn);
 
 			java.sql.ResultSet rs = stmt.executeQuery();
 
 			ArrayList<NodeAffiliation> result = new ArrayList<NodeAffiliation>();
-
 			while (rs.next()) {
 				NodeAffiliationImpl nodeSub = new NodeAffiliationImpl(
 						rs.getString(1), user, Affiliations.valueOf(rs
@@ -519,11 +518,11 @@ public class JDBCNodeStore implements NodeStore {
 		try {
 			stmt = conn.prepareStatement(dialect.selectAffiliationsForNodeAfterJid());
 			stmt.setString(1, nodeId);
-			stmt.setString(2, afterItemId);
-			stmt.setInt(3, maxItemsToReturn);
+			stmt.setString(2, nodeId);
+			stmt.setString(3, afterItemId);
+			stmt.setInt(4, maxItemsToReturn);
 
 			java.sql.ResultSet rs = stmt.executeQuery();
-
 			ArrayList<NodeAffiliation> result = new ArrayList<NodeAffiliation>();
 
 			while (rs.next()) {
@@ -692,8 +691,9 @@ public class JDBCNodeStore implements NodeStore {
 			}
 			stmt = conn.prepareStatement(dialect.selectSubscriptionsForNodeAfterJid());
 			stmt.setString(1, nodeId);
-			stmt.setString(2, jid);
-			stmt.setString(3, maxItems);
+			stmt.setString(2, nodeId);
+			stmt.setString(3, jid);
+			stmt.setString(4, maxItems);
 
 			java.sql.ResultSet rs = stmt.executeQuery();
 

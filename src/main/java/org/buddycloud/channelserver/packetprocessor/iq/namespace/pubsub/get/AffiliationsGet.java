@@ -65,7 +65,7 @@ public class AffiliationsGet implements PubSubElementProcessor {
 		}
 
 		int maxItemsToReturn = MAX_ITEMS_TO_RETURN;
-		String afterItemId   = "";
+		String afterItemId   = null;
 
 		String max_items = elm.attributeValue("max_items");
 		if (max_items != null) {
@@ -120,13 +120,16 @@ public class AffiliationsGet implements PubSubElementProcessor {
 			makeRemoteRequest(node.split("/")[2]);
 			return false;
 		}
-
-		ResultSet<NodeAffiliation> nodeAffiliations = channelManager
+		ResultSet<NodeAffiliation> nodeAffiliations;
+		if (null == afterItemId) {
+			nodeAffiliations = channelManager.getNodeAffiliations(node);
+		} else {
+			nodeAffiliations = channelManager
 				.getNodeAffiliations(node, afterItemId, maxItemsToReturn);
+		}
 
-		if ((null != resultSetManagement)
-				&& (0 == nodeAffiliations.size())
-				&& (false == channelManager.isLocalNode(node))) {
+		if ((0 == nodeAffiliations.size())
+			&& (false == channelManager.isLocalNode(node))) {
 			makeRemoteRequest(node.split("/")[2]);
 			return false;
 		}

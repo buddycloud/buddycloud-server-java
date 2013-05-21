@@ -162,8 +162,13 @@ public class AffiliationsGet implements PubSubElementProcessor {
 			return false;
 		}
 		
-		ResultSet<NodeAffiliation> affs = channelManager
+		ResultSet<NodeAffiliation> affs;
+		if (null == afterItemId) {
+			affs = channelManager.getUserAffiliations(actorJid);
+		} else {
+			affs = channelManager
 				.getUserAffiliations(actorJid, afterItemId, maxItemsToReturn);
+		}
 
 		if ((null != resultSetManagement)
 				&& (0 == affs.size())

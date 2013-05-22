@@ -31,44 +31,50 @@ public class MessageArchiveManagementTest extends IQTestHandler {
 		channelManager = Mockito.mock(ChannelManagerImpl.class);
 		queue = new LinkedBlockingQueue<Packet>();
 		mam = new MessageArchiveManagement(queue, channelManager);
-		
+
 		request = readStanzaAsIq("/iq/mam/request.stanza");
-		
-		Mockito.when(channelManager.isLocalJID(Mockito.any(JID.class))).thenReturn(true);
+
+		Mockito.when(channelManager.isLocalJID(Mockito.any(JID.class)))
+				.thenReturn(true);
 	}
-	
+
 	@Test
 	public void testRequestsOnlyHonouredForLocalUsers() throws Exception {
-		Mockito.when(channelManager.isLocalJID(Mockito.any(JID.class))).thenReturn(false);
+		Mockito.when(channelManager.isLocalJID(Mockito.any(JID.class)))
+				.thenReturn(false);
 
 		mam.process(request);
-		
+
 		Assert.assertEquals(1, queue.size());
-		
+
 		Packet response = queue.poll(100, TimeUnit.MILLISECONDS);
 		PacketError error = response.getError();
 		Assert.assertNotNull(error);
 		Assert.assertEquals(PacketError.Type.cancel, error.getType());
-		Assert.assertEquals(PacketError.Condition.service_unavailable, error.getCondition());
+		Assert.assertEquals(PacketError.Condition.service_unavailable,
+				error.getCondition());
 	}
-	
-	@Test
-	public void testMissingStartTimestampResultsInBadRequestStanza() throws Exception {
 
+	@Test
+	public void testInvalidStartTimestampResultsInBadRequestStanza()
+			throws Exception {
+
+		request.getChildElement().addAttribute("start", "not-a-date");
 		mam.process(request);
-		
+
 		Assert.assertEquals(1, queue.size());
-		
+
 		Packet response = queue.poll(100, TimeUnit.MILLISECONDS);
+		
 		PacketError error = response.getError();
 		Assert.assertNotNull(error);
-		Assert.assertEquals(PacketError.Type.cancel, error.getType());
-		Assert.assertEquals(PacketError.Condition.service_unavailable, error.getCondition());
+		Assert.assertEquals(PacketError.Type.modify, error.getType());
+		Assert.assertEquals(PacketError.Condition.bad_request,
+				error.getCondition());
 	}
-	
-	@Test
-	public void testNoNotificationsResultsInJustResultPacket() throws Exception {
-		
-		
-	}
+
+	//@Test
+	//public void testNoNotificationsResultsInJustResultPacket() throws Exception {
+
+	//}
 }

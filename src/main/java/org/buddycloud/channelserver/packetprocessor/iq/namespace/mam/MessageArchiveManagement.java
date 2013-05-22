@@ -1,19 +1,19 @@
 package org.buddycloud.channelserver.packetprocessor.iq.namespace.mam;
 
-import java.util.List;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.TimeZone;
 import java.util.concurrent.BlockingQueue;
-
 import org.apache.log4j.Logger;
 import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.packetprocessor.PacketProcessor;
-import org.buddycloud.channelserver.packetprocessor.iq.namespace.discoinfo.DiscoInfoGet;
-import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.JabberPubsub;
-import org.buddycloud.channelserver.queue.FederatedQueueManager;
 import org.dom4j.Element;
 import org.xmpp.packet.IQ;
+import org.xmpp.packet.IQ.Type;
 import org.xmpp.packet.Packet;
 import org.xmpp.packet.PacketError;
-import org.xmpp.packet.IQ.Type;
+import org.xmpp.packet.PacketError.Condition;
 
 public class MessageArchiveManagement implements PacketProcessor<IQ> {
 
@@ -25,17 +25,28 @@ public class MessageArchiveManagement implements PacketProcessor<IQ> {
 	private final BlockingQueue<Packet> outQueue;
 	private ChannelManager channelManager;
 
+	public static final String DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.S'Z'";
+	SimpleDateFormat sdf;
+    
+	private Date startTimestamp;
+	private Date endTimestamp;
+
 	private IQ requestIq;
+	private IQ reply;
 
 	public MessageArchiveManagement(BlockingQueue<Packet> outQueue,
 			ChannelManager channelManager) {
 		this.outQueue = outQueue;
 		this.channelManager = channelManager;
+		
+		sdf = new SimpleDateFormat(DATE_FORMAT);
+	    sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
 	}
 
 	@Override
 	public void process(IQ reqIQ) throws Exception {
-		this.requestIq = reqIQ;
+		requestIq = reqIQ;
+		reply = IQ.createResultIQ(requestIq);
 
 		if (false == channelManager.isLocalJID(requestIq.getFrom())) {
 			this._sendNotHandledStanza();
@@ -51,9 +62,24 @@ public class MessageArchiveManagement implements PacketProcessor<IQ> {
 		outQueue.put(IQ.createResultIQ(this.requestIq));
 	}
 
-	private boolean isValidRequest() {
-		// TODO Auto-generated method stub
-		return false;
+	private boolean isValidRequest() throws InterruptedException {
+		try {
+			Element query = requestIq.getChildElement();
+			
+			startTimestamp = sdf.parse("1970-01-01T00:00:00");
+			if (query.attribute("start") != null) {
+				startTimestamp = sdf.parse(query.attributeValue("start"));
+			}
+			endTimestamp = new Date();
+			if (query.attribute("end") != null) {
+				endTimestamp = sdf.parse(query.attributeValue("end"));
+			}
+			return true;
+		} catch (ParseException e) {
+			logger.error(e);
+			sendErrorPacket(PacketError.Type.modify, PacketError.Condition.bad_request);
+			return false;
+		}
 	}
 
 	private void sendItemUpdates() {
@@ -72,14 +98,15 @@ public class MessageArchiveManagement implements PacketProcessor<IQ> {
 	}
 
 	private void _sendNotHandledStanza() throws InterruptedException {
-		IQ reply = IQ.createResultIQ(requestIq);
+		sendErrorPacket(PacketError.Type.cancel, PacketError.Condition.service_unavailable);
+	}
+
+
+	private void sendErrorPacket(PacketError.Type type,
+			Condition condition) throws InterruptedException {
 		reply.setChildElement(requestIq.getChildElement().createCopy());
 		reply.setType(Type.error);
-		PacketError pe = new PacketError(
-				PacketError.Condition.service_unavailable,
-				PacketError.Type.cancel);
+		PacketError pe = new PacketError(condition, type);
 		reply.setError(pe);
-
 		outQueue.put(reply);
-	}
-}
+	}}

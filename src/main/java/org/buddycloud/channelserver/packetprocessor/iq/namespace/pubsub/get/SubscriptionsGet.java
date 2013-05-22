@@ -65,7 +65,7 @@ public class SubscriptionsGet implements PubSubElementProcessor {
 		}
 		
 		int maxItemsToReturn = MAX_ITEMS_TO_RETURN;
-		String afterItemId   = "";
+		String afterItemId   = null;
 
 		String max_items = elm.attributeValue("max_items");
 		if (max_items != null) {
@@ -120,8 +120,12 @@ public class SubscriptionsGet implements PubSubElementProcessor {
 			makeRemoteRequest(new JID(node.split("/")[2]).getDomain());
 		    return false;
 		}
-		ResultSet<NodeSubscription> cur = channelManager
-				.getNodeSubscriptions(node);
+		ResultSet<NodeSubscription> cur;
+		if (null == afterItemId) {
+		     cur = channelManager.getNodeSubscriptions(node);
+		} else {
+			cur = channelManager.getNodeSubscriptions(node, new JID(afterItemId), maxItemsToReturn);
+		}
 		subscriptions.addAttribute("node", node);
 
 		if ((null != requestIq.getElement().element("pubsub").element("set"))
@@ -155,8 +159,12 @@ public class SubscriptionsGet implements PubSubElementProcessor {
 			return false;
 		}
 		// let's get all subscriptions.
-		ResultSet<NodeSubscription> cur = channelManager
-				.getUserSubscriptions(actorJid);
+		ResultSet<NodeSubscription> cur;
+		if (null == afterItemId) {
+		    cur = channelManager.getUserSubscriptions(actorJid);
+		} else {
+			cur = channelManager.getUserSubscriptions(actorJid, afterItemId, maxItemsToReturn);
+		}
 
 		if ((null != requestIq.getElement().element("pubsub").element("set"))
 				&& (0 == cur.size())

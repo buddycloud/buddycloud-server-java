@@ -105,7 +105,7 @@ public class ChannelManagerImpl implements ChannelManager {
 	@Override
 	public ResultSet<NodeAffiliation> getUserAffiliations(JID user)
 			throws NodeStoreException {
-		return nodeStore.getUserAffiliations(user, "", -1);
+		return nodeStore.getUserAffiliations(user);
 	}
 
 	@Override
@@ -145,7 +145,7 @@ public class ChannelManagerImpl implements ChannelManager {
 	@Override
 	public ResultSet<NodeSubscription> getUserSubscriptions(JID user)
 			throws NodeStoreException {
-		return nodeStore.getUserSubscriptions(user, "", -1);
+		return nodeStore.getUserSubscriptions(user);
 	}
 
 	@Override

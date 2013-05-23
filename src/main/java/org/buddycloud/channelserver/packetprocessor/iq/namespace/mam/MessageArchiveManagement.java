@@ -67,13 +67,11 @@ public class MessageArchiveManagement implements PacketProcessor<IQ> {
 			Element query = requestIq.getChildElement();
 			
 			startTimestamp = sdf.parse("1970-01-01T00:00:00");
-			if (query.attribute("start") != null) {
-				startTimestamp = sdf.parse(query.attributeValue("start"));
-			}
+			if (query.element("start") != null)
+				startTimestamp = sdf.parse(query.elementText("start"));
 			endTimestamp = new Date();
-			if (query.attribute("end") != null) {
-				endTimestamp = sdf.parse(query.attributeValue("end"));
-			}
+			if (query.element("end") != null)
+				endTimestamp = sdf.parse(query.elementText("end"));
 			return true;
 		} catch (ParseException e) {
 			logger.error(e);

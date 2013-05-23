@@ -59,7 +59,7 @@ public class MessageArchiveManagementTest extends IQTestHandler {
 	public void testInvalidStartTimestampResultsInBadRequestStanza()
 			throws Exception {
 
-		request.getChildElement().addAttribute("start", "not-a-date");
+		request.getChildElement().element("start").setText("not-a-date");
 		mam.process(request);
 
 		Assert.assertEquals(1, queue.size());
@@ -73,6 +73,24 @@ public class MessageArchiveManagementTest extends IQTestHandler {
 				error.getCondition());
 	}
 
+	@Test
+	public void testInvalidEndTimestampResultsInBadRequestStanza()
+			throws Exception {
+
+		request.getChildElement().element("end").setText("not-a-date");
+		mam.process(request);
+
+		Assert.assertEquals(1, queue.size());
+
+		Packet response = queue.poll(100, TimeUnit.MILLISECONDS);
+		
+		PacketError error = response.getError();
+		Assert.assertNotNull(error);
+		Assert.assertEquals(PacketError.Type.modify, error.getType());
+		Assert.assertEquals(PacketError.Condition.bad_request,
+				error.getCondition());
+	}
+	
 	//@Test
 	//public void testNoNotificationsResultsInJustResultPacket() throws Exception {
 

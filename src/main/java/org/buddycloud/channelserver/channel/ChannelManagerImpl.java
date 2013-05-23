@@ -1,6 +1,7 @@
 package org.buddycloud.channelserver.channel;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.Map;
 import java.util.Properties;
 

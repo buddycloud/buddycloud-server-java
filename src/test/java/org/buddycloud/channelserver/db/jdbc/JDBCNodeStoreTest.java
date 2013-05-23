@@ -12,9 +12,9 @@ import static org.mockito.Mockito.verify;
 
 import java.io.IOException;
 import java.sql.Connection;
-import java.sql.Date;
 import java.sql.SQLException;
 import java.sql.Timestamp;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -648,7 +648,7 @@ public class JDBCNodeStoreTest {
 
 		NodeAffiliationImpl expected = new NodeAffiliationImpl(
 				TEST_SERVER1_NODE1_ID, TEST_SERVER1_USER1_JID,
-				Affiliations.owner);
+				Affiliations.owner, new Date());
 
 		assertEquals("An unexpected node affiliation was returned", expected,
 				result);
@@ -663,7 +663,7 @@ public class JDBCNodeStoreTest {
 
 		NodeAffiliationImpl expected = new NodeAffiliationImpl(
 				TEST_SERVER1_NODE1_ID, new JID("anotheruser@sample.com"),
-				Affiliations.none);
+				Affiliations.none, new Date());
 
 		assertEquals("An unexpected node affiliation was returned", expected,
 				result);
@@ -678,7 +678,7 @@ public class JDBCNodeStoreTest {
 
 		NodeAffiliationImpl expected = new NodeAffiliationImpl(
 				TEST_SERVER1_NODE1_ID, TEST_SERVER1_USER1_JID,
-				Affiliations.owner);
+				Affiliations.owner, new Date());
 
 		assertEquals("An unexpected node affiliation was returned", expected,
 				result);
@@ -695,9 +695,9 @@ public class JDBCNodeStoreTest {
 		HashSet<NodeAffiliation> expected = new HashSet<NodeAffiliation>() {
 			{
 				add(new NodeAffiliationImpl(TEST_SERVER1_NODE1_ID,
-						TEST_SERVER1_USER1_JID, Affiliations.owner));
+						TEST_SERVER1_USER1_JID, Affiliations.owner, new Date()));
 				add(new NodeAffiliationImpl(TEST_SERVER1_NODE2_ID,
-						TEST_SERVER1_USER1_JID, Affiliations.publisher));
+						TEST_SERVER1_USER1_JID, Affiliations.publisher, new Date()));
 			}
 		};
 
@@ -718,9 +718,9 @@ public class JDBCNodeStoreTest {
 		HashSet<NodeAffiliation> expected = new HashSet<NodeAffiliation>() {
 			{
 				add(new NodeAffiliationImpl(TEST_SERVER1_NODE1_ID,
-						TEST_SERVER1_USER1_JID, Affiliations.owner));
+						TEST_SERVER1_USER1_JID, Affiliations.owner, new Date()));
 				add(new NodeAffiliationImpl(TEST_SERVER1_NODE2_ID,
-						TEST_SERVER1_USER1_JID, Affiliations.publisher));
+						TEST_SERVER1_USER1_JID, Affiliations.publisher, new Date()));
 			}
 		};
 
@@ -804,9 +804,9 @@ public class JDBCNodeStoreTest {
 		HashSet<NodeAffiliation> expected = new HashSet<NodeAffiliation>() {
 			{
 				add(new NodeAffiliationImpl(TEST_SERVER1_NODE1_ID,
-						TEST_SERVER1_USER1_JID, Affiliations.owner));
+						TEST_SERVER1_USER1_JID, Affiliations.owner, new Date()));
 				add(new NodeAffiliationImpl(TEST_SERVER1_NODE1_ID,
-						TEST_SERVER1_USER2_JID, Affiliations.publisher));
+						TEST_SERVER1_USER2_JID, Affiliations.publisher, new Date()));
 			}
 		};
 

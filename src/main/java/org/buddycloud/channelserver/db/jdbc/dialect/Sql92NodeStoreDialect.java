@@ -19,7 +19,7 @@ public class Sql92NodeStoreDialect implements NodeStoreSQLDialect {
 	private static final String SELECT_NODE_CONF = "SELECT \"key\", \"value\" FROM \"node_config\""
 			+ " WHERE \"node\" = ? ORDER BY \"key\" ASC";
 
-	private static final String SELECT_AFFILIATION = "SELECT \"affiliation\" FROM \"affiliations\""
+	private static final String SELECT_AFFILIATION = "SELECT \"affiliation\", \"updated\" FROM \"affiliations\""
 			+ " WHERE \"node\" = ? AND \"user\" = ?";
 
 	private static final String SELECT_AFFILIATIONS_FOR_USER = "SELECT \"node\", \"user\", \"affiliation\", \"updated\""

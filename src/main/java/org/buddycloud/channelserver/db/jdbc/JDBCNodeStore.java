@@ -5,8 +5,11 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.Deque;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -37,6 +40,9 @@ public class JDBCNodeStore implements NodeStore {
 	private final NodeStoreSQLDialect dialect;
 	private final Deque<JDBCTransaction> transactionStack;
 	private boolean transactionHasBeenRolledBack = false;
+	private SimpleDateFormat sdf;
+	
+	private static final String DATE_FORMAT = "yyyy-MM-dd HH:mm:ss.S";
 
 	/**
 	 * Create a new node store connection backed by the given JDBC
@@ -50,6 +56,7 @@ public class JDBCNodeStore implements NodeStore {
 		this.conn = conn;
 		this.dialect = dialect;
 		transactionStack = new ArrayDeque<JDBCTransaction>();
+		sdf = new SimpleDateFormat(DATE_FORMAT);
 	}
 
 	@Override
@@ -384,14 +391,16 @@ public class JDBCNodeStore implements NodeStore {
 
 			if (rs.next()) {
 				affiliation = new NodeAffiliationImpl(nodeId, user,
-						Affiliations.valueOf(rs.getString(1)));
+						Affiliations.valueOf(rs.getString(1)), sdf.parse(rs.getString(2)));
 			} else {
 				affiliation = new NodeAffiliationImpl(nodeId, user,
-						Affiliations.none);
+						Affiliations.none, new Date());
 			}
 
 			return affiliation;
 		} catch (SQLException e) {
+			throw new NodeStoreException(e);
+		} catch (ParseException e) {
 			throw new NodeStoreException(e);
 		} finally {
 			close(selectStatement); // Will implicitly close the resultset if
@@ -415,12 +424,14 @@ public class JDBCNodeStore implements NodeStore {
 			while (rs.next()) {
 				NodeAffiliationImpl nodeSub = new NodeAffiliationImpl(
 						rs.getString(1), user, Affiliations.valueOf(rs
-								.getString(3)));
+								.getString(3)), sdf.parse(rs.getString(4)));
 				result.add(nodeSub);
 			}
 
 			return new ResultSetImpl<NodeAffiliation>(result);
 		} catch (SQLException e) {
+			throw new NodeStoreException(e);
+		} catch (ParseException e) {
 			throw new NodeStoreException(e);
 		} finally {
 			close(stmt); // Will implicitly close the resultset if required
@@ -445,12 +456,14 @@ public class JDBCNodeStore implements NodeStore {
 			while (rs.next()) {
 				NodeAffiliationImpl nodeSub = new NodeAffiliationImpl(
 						rs.getString(1), user, Affiliations.valueOf(rs
-								.getString(3)));
+								.getString(3)), sdf.parse(rs.getString(4)));
 				result.add(nodeSub);
 			}
 
 			return new ResultSetImpl<NodeAffiliation>(result);
 		} catch (SQLException e) {
+			throw new NodeStoreException(e);
+		} catch (ParseException e) {
 			throw new NodeStoreException(e);
 		} finally {
 			close(stmt); // Will implicitly close the resultset if required
@@ -498,12 +511,14 @@ public class JDBCNodeStore implements NodeStore {
 			while (rs.next()) {
 				NodeAffiliationImpl nodeSub = new NodeAffiliationImpl(
 						rs.getString(1), new JID(rs.getString(2)),
-						Affiliations.valueOf(rs.getString(3)));
+						Affiliations.valueOf(rs.getString(3)), sdf.parse(rs.getString(4)));
 				result.add(nodeSub);
 			}
 
 			return new ResultSetImpl<NodeAffiliation>(result);
 		} catch (SQLException e) {
+			throw new NodeStoreException(e);
+		} catch (ParseException e) {
 			throw new NodeStoreException(e);
 		} finally {
 			close(stmt); // Will implicitly close the resultset if required
@@ -528,12 +543,14 @@ public class JDBCNodeStore implements NodeStore {
 			while (rs.next()) {
 				NodeAffiliationImpl nodeSub = new NodeAffiliationImpl(
 						rs.getString(1), new JID(rs.getString(2)),
-						Affiliations.valueOf(rs.getString(3)));
+						Affiliations.valueOf(rs.getString(3)), sdf.parse(rs.getString(4)));
 				result.add(nodeSub);
 			}
 
 			return new ResultSetImpl<NodeAffiliation>(result);
 		} catch (SQLException e) {
+			throw new NodeStoreException(e);
+		} catch (ParseException e) {
 			throw new NodeStoreException(e);
 		} finally {
 			close(stmt); // Will implicitly close the resultset if required

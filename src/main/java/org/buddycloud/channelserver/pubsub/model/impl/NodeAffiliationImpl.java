@@ -1,5 +1,7 @@
 package org.buddycloud.channelserver.pubsub.model.impl;
 
+import java.util.Date;
+
 import org.buddycloud.channelserver.pubsub.affiliation.Affiliations;
 import org.buddycloud.channelserver.pubsub.model.NodeAffiliation;
 import org.xmpp.packet.JID;
@@ -13,13 +15,14 @@ public class NodeAffiliationImpl implements NodeAffiliation {
 	private final JID user;
 	private final String nodeId;
 	private final Affiliations affiliation;
+	private final Date lastUpdated;
 	
 	/**
 	 * Constructs a new object to represent a user's affiliation with a node
 	 * @param nodeId
 	 * @param user
 	 */
-	public NodeAffiliationImpl(final String nodeId, final JID user, final Affiliations affiliation) {
+	public NodeAffiliationImpl(final String nodeId, final JID user, final Affiliations affiliation, final Date lastUpdated) {
 		this.nodeId = nodeId;
 		if(user.getResource() == null) {
 			this.user = user;
@@ -27,6 +30,7 @@ public class NodeAffiliationImpl implements NodeAffiliation {
 			this.user = new JID(user.toBareJID());
 		}
 		this.affiliation = affiliation;
+		this.lastUpdated = lastUpdated;
 	}
 	
 	public JID getUser() {
@@ -85,5 +89,10 @@ public class NodeAffiliationImpl implements NodeAffiliation {
 	@Override
 	public String getUID() {
 		return String.valueOf(hashCode());
+	}
+
+	@Override
+	public Date getLastUpdated() {
+		return lastUpdated;
 	}
 }

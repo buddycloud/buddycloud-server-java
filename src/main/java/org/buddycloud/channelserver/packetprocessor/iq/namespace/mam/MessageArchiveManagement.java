@@ -14,6 +14,7 @@ import org.xmpp.packet.IQ.Type;
 import org.xmpp.packet.Packet;
 import org.xmpp.packet.PacketError;
 import org.xmpp.packet.PacketError.Condition;
+import org.xmpp.resultsetmanagement.ResultSet;
 
 public class MessageArchiveManagement implements PacketProcessor<IQ> {
 

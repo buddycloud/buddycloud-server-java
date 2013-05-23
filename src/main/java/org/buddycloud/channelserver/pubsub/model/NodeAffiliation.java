@@ -1,5 +1,7 @@
 package org.buddycloud.channelserver.pubsub.model;
 
+import java.util.Date;
+
 import org.buddycloud.channelserver.node.NodeRef;
 import org.buddycloud.channelserver.pubsub.affiliation.Affiliations;
 import org.xmpp.packet.JID;
@@ -26,4 +28,10 @@ public interface NodeAffiliation extends Result {
 	 * @return
 	 */
 	Affiliations getAffiliation();
+	
+	/**
+	 * Gets the date this affiliation was last updated
+	 * @return
+	 */
+	Date getLastUpdated();
 }

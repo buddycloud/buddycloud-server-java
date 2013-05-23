@@ -254,7 +254,7 @@ public class ItemDeleteTest extends IQTestHandler {
 	public void testUserDoesNotOwnNodeCanNotDelete() throws Exception {
 
 		NodeAffiliation affiliation = new NodeAffiliationImpl(node, jid,
-				Affiliations.member);
+				Affiliations.member, new Date());
 
 		NodeItem nodeItem = new NodeItemImpl(node, "item-id", new Date(),
 				payload);
@@ -281,7 +281,7 @@ public class ItemDeleteTest extends IQTestHandler {
 	@Test
 	public void testSuccessfulRequestSendsResponseStanza() throws Exception {
 		NodeAffiliation affiliation = new NodeAffiliationImpl(node, jid,
-				Affiliations.member);
+				Affiliations.member, new Date());
 
 		NodeItem nodeItem = new NodeItemImpl(node, "item-id", new Date(),
 				payload.replaceAll("romeo@shakespeare.lit",
@@ -314,7 +314,7 @@ public class ItemDeleteTest extends IQTestHandler {
 	public void testRequestingNotificationsSendsRetractionNotifications()
 			throws Exception {
 		NodeAffiliation affiliation = new NodeAffiliationImpl(node, jid,
-				Affiliations.member);
+				Affiliations.member, new Date());
 
 		NodeItem nodeItem = new NodeItemImpl(node, "item-id", new Date(),
 				payload.replaceAll("romeo@shakespeare.lit",

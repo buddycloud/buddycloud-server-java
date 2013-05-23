@@ -10,7 +10,6 @@ import junit.framework.Assert;
 
 import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.db.exception.NodeStoreException;
-import org.buddycloud.channelserver.db.mock.Mock;
 import org.buddycloud.channelserver.packetHandler.iq.IQTestHandler;
 import org.buddycloud.channelserver.pubsub.affiliation.Affiliations;
 import org.buddycloud.channelserver.pubsub.model.NodeAffiliation;
@@ -23,7 +22,6 @@ import org.buddycloud.channelserver.pubsub.subscription.Subscriptions;
 import org.dom4j.Element;
 import org.dom4j.tree.BaseElement;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.xmpp.packet.IQ;

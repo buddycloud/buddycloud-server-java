@@ -16,7 +16,6 @@ import org.buddycloud.channelserver.channel.node.configuration.Helper;
 import org.buddycloud.channelserver.channel.node.configuration.HelperMock;
 import org.buddycloud.channelserver.channel.node.configuration.NodeConfigurationException;
 import org.buddycloud.channelserver.db.exception.NodeStoreException;
-import org.buddycloud.channelserver.db.mock.Mock;
 import org.buddycloud.channelserver.packetHandler.iq.IQTestHandler;
 import org.buddycloud.channelserver.pubsub.affiliation.Affiliation;
 import org.buddycloud.channelserver.pubsub.model.NodeSubscription;

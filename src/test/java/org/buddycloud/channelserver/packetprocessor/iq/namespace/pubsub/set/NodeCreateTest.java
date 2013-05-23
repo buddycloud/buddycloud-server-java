@@ -14,7 +14,6 @@ import org.buddycloud.channelserver.channel.node.configuration.HelperMock;
 import org.buddycloud.channelserver.channel.node.configuration.NodeConfigurationException;
 import org.buddycloud.channelserver.channel.node.configuration.field.ChannelTitle;
 import org.buddycloud.channelserver.db.exception.NodeStoreException;
-import org.buddycloud.channelserver.db.mock.Mock;
 import org.buddycloud.channelserver.packetHandler.iq.IQTestHandler;
 import org.dom4j.Element;
 import org.dom4j.tree.BaseElement;
@@ -28,7 +27,7 @@ import org.xmpp.packet.PacketError;
 
 public class NodeCreateTest extends IQTestHandler {
 	private IQ request;
-	private Mock channelManager;
+	private ChannelManager channelManager;
 	private NodeCreate nodeCreate;
 	private JID jid;
 	private Element element;
@@ -39,7 +38,7 @@ public class NodeCreateTest extends IQTestHandler {
 
 	@Before
 	public void setUp() throws Exception {
-		channelManagerMock = Mockito.mock(Mock.class);
+		channelManagerMock = Mockito.mock(ChannelManager.class);
 		Mockito.when(channelManagerMock.isLocalNode(Mockito.anyString()))
 				.thenReturn(true);
 		
@@ -223,8 +222,12 @@ public class NodeCreateTest extends IQTestHandler {
 				.thenReturn(configurationProperties);
 		Mockito.doReturn(true).when(helperMock).isValid();
 
-		ChannelManager channelManagerMock = new Mock();
+		ChannelManager channelManagerMock = Mockito.mock(ChannelManager.class);
 		
+		HashMap<String, String> conf = new HashMap<String, String>();
+		conf.put(ChannelTitle.FIELD_NAME, channelTitle);
+		
+		Mockito.when(channelManagerMock.getNodeConf(Mockito.anyString())).thenReturn(conf);
 		nodeCreate.setChannelManager(channelManagerMock);
 		nodeCreate.setConfigurationHelper(helperMock);
 

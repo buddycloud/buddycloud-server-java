@@ -3,7 +3,6 @@ package org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.result;
 import junit.framework.Assert;
 
 import org.buddycloud.channelserver.channel.ChannelManager;
-import org.buddycloud.channelserver.db.mock.Mock;
 import org.buddycloud.channelserver.packetHandler.iq.IQTestHandler;
 import org.buddycloud.channelserver.pubsub.affiliation.Affiliations;
 import org.dom4j.Element;
@@ -28,7 +27,7 @@ public class AffiliationsResultTest extends IQTestHandler {
 	@Before
 	public void setUp() throws Exception {
 
-		channelManager = Mockito.mock(Mock.class);
+		channelManager = Mockito.mock(ChannelManager.class);
 
 		affiliationsResult = new AffiliationsResult(channelManager);
 		resultWithNode = readStanzaAsIq("/iq/pubsub/affiliations/reply-with-node.stanza");

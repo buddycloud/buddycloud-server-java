@@ -1,8 +1,6 @@
 package org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.set;
 
 import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
@@ -11,15 +9,12 @@ import junit.framework.Assert;
 
 import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.db.exception.NodeStoreException;
-import org.buddycloud.channelserver.db.mock.Mock;
 import org.buddycloud.channelserver.packetHandler.iq.IQTestHandler;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.JabberPubsub;
 import org.buddycloud.channelserver.pubsub.affiliation.Affiliations;
 import org.buddycloud.channelserver.pubsub.model.NodeAffiliation;
 import org.buddycloud.channelserver.pubsub.model.NodeSubscription;
-import org.buddycloud.channelserver.pubsub.model.impl.NodeSubscriptionImpl;
 import org.buddycloud.channelserver.pubsub.subscription.NodeSubscriptionMock;
-import org.buddycloud.channelserver.pubsub.subscription.Subscriptions;
 import org.dom4j.Element;
 import org.dom4j.tree.BaseElement;
 import org.junit.Before;
@@ -42,12 +37,12 @@ public class AffiliationEventTest extends IQTestHandler {
 	private String node = "/user/pamela@denmark.lit/posts";
 	private JID jid = new JID("juliet@shakespeare.lit");
 
-	private Mock channelManagerMock;
+	private ChannelManager channelManagerMock;
 
 	@Before
 	public void setUp() throws Exception {
 
-		channelManagerMock = Mockito.mock(Mock.class);
+		channelManagerMock = Mockito.mock(ChannelManager.class);
 		Mockito.when(channelManagerMock.isLocalNode(Mockito.anyString()))
 				.thenReturn(true);
 		

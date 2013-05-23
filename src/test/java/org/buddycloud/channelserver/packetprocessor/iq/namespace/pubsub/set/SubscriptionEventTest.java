@@ -1,8 +1,6 @@
 package org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.set;
 
 import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
@@ -11,7 +9,6 @@ import junit.framework.Assert;
 
 import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.db.exception.NodeStoreException;
-import org.buddycloud.channelserver.db.mock.Mock;
 import org.buddycloud.channelserver.packetHandler.iq.IQTestHandler;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.JabberPubsub;
 import org.buddycloud.channelserver.pubsub.affiliation.Affiliations;
@@ -30,7 +27,6 @@ import org.xmpp.packet.IQ;
 import org.xmpp.packet.JID;
 import org.xmpp.packet.Packet;
 import org.xmpp.packet.PacketError;
-import org.xmpp.resultsetmanagement.ResultSet;
 import org.xmpp.resultsetmanagement.ResultSetImpl;
 
 public class SubscriptionEventTest extends IQTestHandler {
@@ -42,7 +38,7 @@ public class SubscriptionEventTest extends IQTestHandler {
 	private String subscriber = "francisco@denmark.lit";
 	private String node = "/user/pamela@denmark.lit/posts";
 	private JID jid = new JID("juliet@shakespeare.lit");
-	private Mock dataStore;
+	private ChannelManager dataStore;
 
 	@Before
 	public void setUp() throws Exception {
@@ -55,7 +51,7 @@ public class SubscriptionEventTest extends IQTestHandler {
 		element = new BaseElement("subscriptions");
 		element.addAttribute("node", node);
 		
-		dataStore = Mockito.mock(Mock.class);
+		dataStore = Mockito.mock(ChannelManager.class);
 		Mockito.when(dataStore.isLocalNode(Mockito.anyString()))
 		    .thenReturn(true);
 		

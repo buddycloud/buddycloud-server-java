@@ -12,7 +12,6 @@ import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.db.ClosableIteratorImpl;
 import org.buddycloud.channelserver.db.CloseableIterator;
 import org.buddycloud.channelserver.db.exception.NodeStoreException;
-import org.buddycloud.channelserver.db.mock.Mock;
 import org.buddycloud.channelserver.packetHandler.iq.IQTestHandler;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.JabberPubsub;
 import org.buddycloud.channelserver.pubsub.accessmodel.AccessModels;
@@ -55,7 +54,7 @@ public class SubscriptionsGetTest extends IQTestHandler {
 		subscriptionsGet = new SubscriptionsGet(queue, channelManager);
 		element = new BaseElement("subscriptions");
 
-		channelManager = Mockito.mock(Mock.class);
+		channelManager = Mockito.mock(ChannelManager.class);
 		Mockito.when(channelManager.isLocalNode(Mockito.anyString()))
 				.thenReturn(true);
 		subscriptionsGet.setChannelManager(channelManager);

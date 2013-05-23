@@ -15,7 +15,6 @@ import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.db.ClosableIteratorImpl;
 import org.buddycloud.channelserver.db.CloseableIterator;
 import org.buddycloud.channelserver.db.exception.NodeStoreException;
-import org.buddycloud.channelserver.db.mock.Mock;
 import org.buddycloud.channelserver.packetHandler.iq.IQTestHandler;
 import org.buddycloud.channelserver.packetprocessor.iq.IQProcessor;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.JabberPubsub;
@@ -63,7 +62,7 @@ public class ItemsResultTest extends IQTestHandler {
 		element = new BaseElement("items");
 		element.addAttribute("node", node);
 
-		channelManager = Mockito.mock(Mock.class);
+		channelManager = Mockito.mock(ChannelManager.class);
 		itemsResult.setChannelManager(channelManager);
 	}
 

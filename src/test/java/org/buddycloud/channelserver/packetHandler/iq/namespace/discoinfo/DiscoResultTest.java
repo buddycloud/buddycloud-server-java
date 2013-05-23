@@ -3,7 +3,6 @@ package org.buddycloud.channelserver.packetHandler.iq.namespace.discoinfo;
 import java.io.IOException;
 
 import org.buddycloud.channelserver.channel.ChannelManager;
-import org.buddycloud.channelserver.db.mock.Mock;
 import org.buddycloud.channelserver.packetHandler.iq.IQTestHandler;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.discoinfo.DiscoResult;
 import org.buddycloud.channelserver.queue.FederatedQueueManager;

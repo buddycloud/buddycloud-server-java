@@ -17,7 +17,7 @@ import org.xmpp.packet.PacketError.Condition;
 
 public class MessageArchiveManagement implements PacketProcessor<IQ> {
 
-	public static final String NAMESPACE = "urn:xmpp:archive#management";
+	public static final String NAMESPACE = "urn:xmpp:mam:tmp";
 
 	public static final String ELEMENT_NAME = "query";
 	private static final Logger logger = Logger

@@ -1,7 +1,8 @@
 <iq type='get' id='sync1'
     from='francisco@denmark.lit/barracks'
     to='channels.denmark.lit'>
-  <query xmlns='urn:xmpp:archive#management'
-         start='2010-06-07T00:00:00Z'
-         end='2002-07-07T13:23:54Z'/>
+    <query xmlns='urn:xmpp:mam:tmp'>
+         <start>2010-06-07T00:00:00Z</start>
+         <end>2002-07-07T13:23:54Z</end>
+    </query>
 </iq>

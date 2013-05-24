@@ -1096,6 +1096,30 @@ public class JDBCNodeStoreTest {
 
 		assertTrue("Incorrect user subscriptions returned", result.isEmpty());
 	}
+	
+	@Test
+	public void testCanGetSubscriptionChanges() throws Exception {
+		dbTester.loadData("node_1");
+		
+		store.addUserSubscription(new NodeSubscriptionImpl(TEST_SERVER1_NODE1_ID, TEST_SERVER1_USER2_JID, Subscriptions.subscribed));
+		store.addUserSubscription(new NodeSubscriptionImpl(TEST_SERVER1_NODE1_ID, TEST_SERVER1_USER3_JID, Subscriptions.pending));
+		
+		
+		ResultSet<NodeSubscription> changes = store.getSubscriptionChanges(TEST_SERVER1_USER1_JID, new Date(0), new Date());
+		assertEquals(5, changes.size());
+	}
+	
+	@Test
+	public void testNoSubscriptionChangesFromOutcastNode() throws Exception {
+		dbTester.loadData("node_1");
+		
+		store.addUserSubscription(new NodeSubscriptionImpl(TEST_SERVER1_NODE1_ID, TEST_SERVER1_USER2_JID, Subscriptions.subscribed));
+		store.addUserSubscription(new NodeSubscriptionImpl(TEST_SERVER1_NODE1_ID, TEST_SERVER1_USER3_JID, Subscriptions.pending));
+		store.setUserAffiliation(TEST_SERVER1_NODE1_ID, TEST_SERVER1_USER1_JID, Affiliations.outcast);
+		
+		ResultSet<NodeSubscription> changes = store.getSubscriptionChanges(TEST_SERVER1_USER1_JID, new Date(0), new Date());
+		assertEquals(0, changes.size());
+	}
 
 	@Test
 	public void testCanGetNodeSubscriptionsWithRsm() throws Exception {

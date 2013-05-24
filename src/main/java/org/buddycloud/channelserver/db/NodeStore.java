@@ -262,6 +262,18 @@ public interface NodeStore {
 	 */
 	ResultSet<NodeSubscription> getUserSubscriptions(JID user)
 			throws NodeStoreException;
+
+	/**
+	 * Gets subscription changes for a user
+	 * 
+	 * @param user
+	 * @param startDate
+	 * @param endDate
+	 * @return
+	 * @throws NodeStoreException 
+	 */
+	ResultSet<NodeSubscription> getSubscriptionChanges(JID user,
+			Date startDate, Date endDate) throws NodeStoreException;
 	
 	/**
 	 * Gets the set of subscriptions to the node.

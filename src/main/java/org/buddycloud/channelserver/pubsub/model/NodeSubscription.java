@@ -1,5 +1,7 @@
 package org.buddycloud.channelserver.pubsub.model;
 
+import java.util.Date;
+
 import org.buddycloud.channelserver.pubsub.subscription.Subscriptions;
 import org.xmpp.packet.JID;
 import org.xmpp.resultsetmanagement.Result;
@@ -32,4 +34,10 @@ public interface NodeSubscription extends Result {
      * @return
      */
     String getNodeId();
+    
+    /**
+     * Get last updated
+     * @return
+     */
+    Date getLastUpdated();
 }

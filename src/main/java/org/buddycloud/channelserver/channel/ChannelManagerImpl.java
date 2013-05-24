@@ -161,6 +161,13 @@ public class ChannelManagerImpl implements ChannelManager {
 			String afterNodeId, int maxItemsToReturn) throws NodeStoreException {
 		return nodeStore.getUserSubscriptions(user, afterNodeId, maxItemsToReturn);
 	}
+	
+
+	@Override
+	public ResultSet<NodeSubscription> getSubscriptionChanges(JID user,
+			Date startDate, Date endDate) throws NodeStoreException {
+		return nodeStore.getSubscriptionChanges(user, startDate, endDate);
+	}
 
 	@Override
 	public int countUserSubscriptions(JID user) throws NodeStoreException {

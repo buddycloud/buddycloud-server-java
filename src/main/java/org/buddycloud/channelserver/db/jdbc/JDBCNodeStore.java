@@ -636,7 +636,7 @@ public class JDBCNodeStore implements NodeStore {
 			if (rs.next()) {
 				subscription = new NodeSubscriptionImpl(nodeId, new JID(
 						rs.getString(2)), new JID(rs.getString(3)),
-						Subscriptions.valueOf(rs.getString(4)));
+						Subscriptions.valueOf(rs.getString(4)), sdf.parse(rs.getString(5)));
 			} else {
 				subscription = new NodeSubscriptionImpl(nodeId, user, user,
 						Subscriptions.none);
@@ -644,6 +644,8 @@ public class JDBCNodeStore implements NodeStore {
 
 			return subscription;
 		} catch (SQLException e) {
+			throw new NodeStoreException(e);
+		} catch (ParseException e) {
 			throw new NodeStoreException(e);
 		} finally {
 			close(selectStatement); // Will implicitly close the resultset if
@@ -680,12 +682,47 @@ public class JDBCNodeStore implements NodeStore {
 				NodeSubscriptionImpl nodeSub = new NodeSubscriptionImpl(
 						rs.getString(1), new JID(rs.getString(2)), new JID(
 								rs.getString(3)), Subscriptions.valueOf(rs
-								.getString(4)));
+								.getString(4)), sdf.parse(rs.getString(5)));
 				result.add(nodeSub);
 			}
 
 			return new ResultSetImpl<NodeSubscription>(result);
 		} catch (SQLException e) {
+			throw new NodeStoreException(e);
+		} catch (ParseException e) {
+			throw new NodeStoreException(e);
+		} finally {
+			close(stmt); // Will implicitly close the resultset if required
+		}
+	}
+	
+    @Override
+	public ResultSet<NodeSubscription> getSubscriptionChanges(
+			JID user, Date startDate, Date endDate) throws NodeStoreException {
+		PreparedStatement stmt = null;
+
+		try {
+			stmt = conn.prepareStatement(dialect.getSubscriptionChanges());
+			stmt.setString(1, sdf.format(startDate));
+			stmt.setString(2, sdf.format(endDate.getTime()));
+			stmt.setString(3, user.toBareJID());
+
+			java.sql.ResultSet rs = stmt.executeQuery();
+
+			ArrayList<NodeSubscription> result = new ArrayList<NodeSubscription>();
+
+			while (rs.next()) {
+				NodeSubscriptionImpl nodeSub = new NodeSubscriptionImpl(
+						rs.getString(1), new JID(rs.getString(2)), new JID(
+								rs.getString(3)), Subscriptions.valueOf(rs
+								.getString(4)), sdf.parse(rs.getString(5)));
+				result.add(nodeSub);
+			}
+
+			return new ResultSetImpl<NodeSubscription>(result);
+		} catch (SQLException e) {
+			throw new NodeStoreException(e);
+		} catch (ParseException e) {
 			throw new NodeStoreException(e);
 		} finally {
 			close(stmt); // Will implicitly close the resultset if required
@@ -710,12 +747,14 @@ public class JDBCNodeStore implements NodeStore {
 				NodeSubscriptionImpl nodeSub = new NodeSubscriptionImpl(
 						rs.getString(1), new JID(rs.getString(2)), new JID(
 								rs.getString(3)), Subscriptions.valueOf(rs
-								.getString(4)));
+								.getString(4)), sdf.parse(rs.getString(5)));
 				result.add(nodeSub);
 			}
 
 			return new ResultSetImpl<NodeSubscription>(result);
 		} catch (SQLException e) {
+			throw new NodeStoreException(e);
+		} catch (ParseException e) {
 			throw new NodeStoreException(e);
 		} finally {
 			close(stmt); // Will implicitly close the resultset if required
@@ -753,12 +792,14 @@ public class JDBCNodeStore implements NodeStore {
 				NodeSubscriptionImpl nodeSub = new NodeSubscriptionImpl(
 						rs.getString(1), new JID(rs.getString(2)), new JID(
 								rs.getString(3)), Subscriptions.valueOf(rs
-								.getString(4)));
+								.getString(4)), sdf.parse(rs.getString(5)));
 				result.add(nodeSub);
 			}
 
 			return new ResultSetImpl<NodeSubscription>(result);
 		} catch (SQLException e) {
+			throw new NodeStoreException(e);
+		} catch (ParseException e) {
 			throw new NodeStoreException(e);
 		} finally {
 			close(stmt); // Will implicitly close the resultset if required
@@ -1276,6 +1317,8 @@ public class JDBCNodeStore implements NodeStore {
 		String selectSubscriptionsForUser();
 
 		String selectSubscriptionsForUserAfterNode();
+		
+		String getSubscriptionChanges();
 		
 		String selectSubscriptionsForNode();
 

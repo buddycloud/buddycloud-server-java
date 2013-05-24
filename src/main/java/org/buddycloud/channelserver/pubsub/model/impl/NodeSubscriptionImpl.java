@@ -1,5 +1,7 @@
 package org.buddycloud.channelserver.pubsub.model.impl;
 
+import java.util.Date;
+
 import org.buddycloud.channelserver.pubsub.affiliation.Affiliations;
 import org.buddycloud.channelserver.pubsub.model.NodeSubscription;
 import org.buddycloud.channelserver.pubsub.subscription.Subscriptions;
@@ -12,14 +14,26 @@ public class NodeSubscriptionImpl implements NodeSubscription {
 	private final JID user;
 	private JID listener; // If different from user
 	private final String nodeId;
+	private Date lastUpdated;
+
 
 	public NodeSubscriptionImpl(final String nodeId, final JID user,
 			final Subscriptions subscription) {
-		this(nodeId, user, user, subscription);
+		this(nodeId, user, user, subscription, new Date());
+	}
+	
+	public NodeSubscriptionImpl(final String nodeId, final JID user,
+			final Subscriptions subscription, Date lastUpdated) {
+		this(nodeId, user, user, subscription, lastUpdated);
 	}
 
 	public NodeSubscriptionImpl(final String nodeId, final JID user,
 			JID listener, final Subscriptions subscription) {
+		this(nodeId, user, listener, subscription, new Date());
+	}
+	
+	public NodeSubscriptionImpl(final String nodeId, final JID user,
+			JID listener, final Subscriptions subscription, Date lastUpdated) {
 		this.nodeId = nodeId;
 		if (user.getResource() == null) {
 			this.user = user;
@@ -113,5 +127,10 @@ public class NodeSubscriptionImpl implements NodeSubscription {
 	@Override
 	public String getUID() {
 		return String.valueOf(hashCode());
+	}
+
+	@Override
+	public Date getLastUpdated() {
+		return lastUpdated;
 	}
 }

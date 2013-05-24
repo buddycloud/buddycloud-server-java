@@ -697,7 +697,8 @@ public class JDBCNodeStoreTest {
 				add(new NodeAffiliationImpl(TEST_SERVER1_NODE1_ID,
 						TEST_SERVER1_USER1_JID, Affiliations.owner, new Date()));
 				add(new NodeAffiliationImpl(TEST_SERVER1_NODE2_ID,
-						TEST_SERVER1_USER1_JID, Affiliations.publisher, new Date()));
+						TEST_SERVER1_USER1_JID, Affiliations.publisher,
+						new Date()));
 			}
 		};
 
@@ -720,7 +721,8 @@ public class JDBCNodeStoreTest {
 				add(new NodeAffiliationImpl(TEST_SERVER1_NODE1_ID,
 						TEST_SERVER1_USER1_JID, Affiliations.owner, new Date()));
 				add(new NodeAffiliationImpl(TEST_SERVER1_NODE2_ID,
-						TEST_SERVER1_USER1_JID, Affiliations.publisher, new Date()));
+						TEST_SERVER1_USER1_JID, Affiliations.publisher,
+						new Date()));
 			}
 		};
 
@@ -735,7 +737,8 @@ public class JDBCNodeStoreTest {
 
 		dbTester.loadData("node_1");
 		dbTester.loadData("node_2");
-		store.createNode(TEST_SERVER1_USER3_JID, TEST_SERVER1_NODE3_ID, new HashMap<String, String>());
+		store.createNode(TEST_SERVER1_USER3_JID, TEST_SERVER1_NODE3_ID,
+				new HashMap<String, String>());
 
 		store.setUserAffiliation(TEST_SERVER1_NODE3_ID, TEST_SERVER1_USER1_JID,
 				Affiliations.member);
@@ -762,17 +765,20 @@ public class JDBCNodeStoreTest {
 
 	@Test
 	public void testCanRetrictUserAffiliationCountWithRsm() throws Exception {
-		
-		store.createNode(TEST_SERVER1_USER1_JID, TEST_SERVER1_NODE1_ID, new HashMap<String, String>());
-		store.createNode(TEST_SERVER1_USER1_JID, TEST_SERVER1_NODE2_ID, new HashMap<String, String>());
-		store.createNode(TEST_SERVER1_USER1_JID, TEST_SERVER1_NODE3_ID, new HashMap<String, String>());
+
+		store.createNode(TEST_SERVER1_USER1_JID, TEST_SERVER1_NODE1_ID,
+				new HashMap<String, String>());
+		store.createNode(TEST_SERVER1_USER1_JID, TEST_SERVER1_NODE2_ID,
+				new HashMap<String, String>());
+		store.createNode(TEST_SERVER1_USER1_JID, TEST_SERVER1_NODE3_ID,
+				new HashMap<String, String>());
 
 		store.setUserAffiliation(TEST_SERVER1_NODE3_ID, TEST_SERVER1_USER1_JID,
 				Affiliations.member);
 		Thread.sleep(1);
 		store.setUserAffiliation(TEST_SERVER1_NODE2_ID, TEST_SERVER1_USER1_JID,
 				Affiliations.member);
-		
+
 		store.setUserAffiliation(TEST_SERVER1_NODE1_ID, TEST_SERVER1_USER1_JID,
 				Affiliations.member);
 
@@ -797,26 +803,33 @@ public class JDBCNodeStoreTest {
 	@Test
 	public void testCanGetAffiliationsChanges() throws Exception {
 		dbTester.loadData("node_1");
-		
-		store.setUserAffiliation(TEST_SERVER1_NODE1_ID, TEST_SERVER2_USER1_JID, Affiliations.publisher);
-		store.setUserAffiliation(TEST_SERVER1_NODE1_ID, TEST_SERVER1_USER3_JID, Affiliations.publisher);
-		
-		ResultSet<NodeAffiliation> changes = store.getAffiliationChanges(TEST_SERVER1_USER1_JID, new Date(0), new Date());
+
+		store.setUserAffiliation(TEST_SERVER1_NODE1_ID, TEST_SERVER2_USER1_JID,
+				Affiliations.publisher);
+		store.setUserAffiliation(TEST_SERVER1_NODE1_ID, TEST_SERVER1_USER3_JID,
+				Affiliations.publisher);
+
+		ResultSet<NodeAffiliation> changes = store.getAffiliationChanges(
+				TEST_SERVER1_USER1_JID, new Date(0), new Date());
 		assertEquals(4, changes.size());
 	}
-	
+
 	@Test
 	public void testNoAffiliationChangesFromOutcastNode() throws Exception {
 		dbTester.loadData("node_1");
-		
-		store.setUserAffiliation(TEST_SERVER1_NODE1_ID, TEST_SERVER2_USER1_JID, Affiliations.publisher);
-		store.setUserAffiliation(TEST_SERVER1_NODE1_ID, TEST_SERVER1_USER3_JID, Affiliations.publisher);
-		store.setUserAffiliation(TEST_SERVER1_NODE1_ID, TEST_SERVER1_USER1_JID, Affiliations.outcast);
-		
-		ResultSet<NodeAffiliation> changes = store.getAffiliationChanges(TEST_SERVER1_USER1_JID, new Date(0), new Date());
+
+		store.setUserAffiliation(TEST_SERVER1_NODE1_ID, TEST_SERVER2_USER1_JID,
+				Affiliations.publisher);
+		store.setUserAffiliation(TEST_SERVER1_NODE1_ID, TEST_SERVER1_USER3_JID,
+				Affiliations.publisher);
+		store.setUserAffiliation(TEST_SERVER1_NODE1_ID, TEST_SERVER1_USER1_JID,
+				Affiliations.outcast);
+
+		ResultSet<NodeAffiliation> changes = store.getAffiliationChanges(
+				TEST_SERVER1_USER1_JID, new Date(0), new Date());
 		assertEquals(0, changes.size());
 	}
-	
+
 	@Test
 	public void testGetNodeAffiliations() throws Exception {
 		dbTester.loadData("node_1");
@@ -829,7 +842,8 @@ public class JDBCNodeStoreTest {
 				add(new NodeAffiliationImpl(TEST_SERVER1_NODE1_ID,
 						TEST_SERVER1_USER1_JID, Affiliations.owner, new Date()));
 				add(new NodeAffiliationImpl(TEST_SERVER1_NODE1_ID,
-						TEST_SERVER1_USER2_JID, Affiliations.publisher, new Date()));
+						TEST_SERVER1_USER2_JID, Affiliations.publisher,
+						new Date()));
 			}
 		};
 
@@ -843,10 +857,12 @@ public class JDBCNodeStoreTest {
 	public void testCanGetNodeAffiliationsWithRsm() throws Exception {
 		dbTester.loadData("node_1");
 
-		store.setUserAffiliation(TEST_SERVER1_NODE1_ID, TEST_SERVER1_USER2_JID, Affiliations.member);
+		store.setUserAffiliation(TEST_SERVER1_NODE1_ID, TEST_SERVER1_USER2_JID,
+				Affiliations.member);
 		Thread.sleep(1);
-		store.setUserAffiliation(TEST_SERVER1_NODE1_ID, TEST_SERVER1_USER3_JID, Affiliations.member);
-		
+		store.setUserAffiliation(TEST_SERVER1_NODE1_ID, TEST_SERVER1_USER3_JID,
+				Affiliations.member);
+
 		ResultSet<NodeAffiliation> result = store.getNodeAffiliations(
 				TEST_SERVER1_NODE1_ID, TEST_SERVER1_USER3_JID.toBareJID(), 50);
 
@@ -865,10 +881,12 @@ public class JDBCNodeStoreTest {
 	public void testCanRetrictNodeAffiliationCountWithRsm() throws Exception {
 		dbTester.loadData("node_1");
 
-		store.setUserAffiliation(TEST_SERVER1_NODE1_ID, TEST_SERVER1_USER3_JID, Affiliations.member);
+		store.setUserAffiliation(TEST_SERVER1_NODE1_ID, TEST_SERVER1_USER3_JID,
+				Affiliations.member);
 		Thread.sleep(1);
-		store.setUserAffiliation(TEST_SERVER1_NODE1_ID, TEST_SERVER1_USER2_JID, Affiliations.member);
-		
+		store.setUserAffiliation(TEST_SERVER1_NODE1_ID, TEST_SERVER1_USER2_JID,
+				Affiliations.member);
+
 		ResultSet<NodeAffiliation> result = store.getNodeAffiliations(
 				TEST_SERVER1_NODE1_ID, TEST_SERVER1_USER3_JID.toBareJID(), 1);
 		assertEquals(1, result.size());
@@ -1096,42 +1114,60 @@ public class JDBCNodeStoreTest {
 
 		assertTrue("Incorrect user subscriptions returned", result.isEmpty());
 	}
-	
+
 	@Test
 	public void testCanGetSubscriptionChanges() throws Exception {
 		dbTester.loadData("node_1");
-		
-		store.addUserSubscription(new NodeSubscriptionImpl(TEST_SERVER1_NODE1_ID, TEST_SERVER1_USER2_JID, Subscriptions.subscribed));
-		store.addUserSubscription(new NodeSubscriptionImpl(TEST_SERVER1_NODE1_ID, TEST_SERVER1_USER3_JID, Subscriptions.pending));
-		
-		
-		ResultSet<NodeSubscription> changes = store.getSubscriptionChanges(TEST_SERVER1_USER1_JID, new Date(0), new Date());
+
+		store.addUserSubscription(new NodeSubscriptionImpl(
+				TEST_SERVER1_NODE1_ID, TEST_SERVER1_USER2_JID,
+				Subscriptions.subscribed));
+		store.addUserSubscription(new NodeSubscriptionImpl(
+				TEST_SERVER1_NODE1_ID, TEST_SERVER1_USER3_JID,
+				Subscriptions.pending));
+
+		ResultSet<NodeSubscription> changes = store.getSubscriptionChanges(
+				TEST_SERVER1_USER1_JID, new Date(0), new Date());
 		assertEquals(5, changes.size());
 	}
-	
+
 	@Test
 	public void testNoSubscriptionChangesFromOutcastNode() throws Exception {
 		dbTester.loadData("node_1");
-		
-		store.addUserSubscription(new NodeSubscriptionImpl(TEST_SERVER1_NODE1_ID, TEST_SERVER1_USER2_JID, Subscriptions.subscribed));
-		store.addUserSubscription(new NodeSubscriptionImpl(TEST_SERVER1_NODE1_ID, TEST_SERVER1_USER3_JID, Subscriptions.pending));
-		store.setUserAffiliation(TEST_SERVER1_NODE1_ID, TEST_SERVER1_USER1_JID, Affiliations.outcast);
-		
-		ResultSet<NodeSubscription> changes = store.getSubscriptionChanges(TEST_SERVER1_USER1_JID, new Date(0), new Date());
+
+		store.addUserSubscription(new NodeSubscriptionImpl(
+				TEST_SERVER1_NODE1_ID, TEST_SERVER1_USER2_JID,
+				Subscriptions.subscribed));
+		store.addUserSubscription(new NodeSubscriptionImpl(
+				TEST_SERVER1_NODE1_ID, TEST_SERVER1_USER3_JID,
+				Subscriptions.pending));
+		store.setUserAffiliation(TEST_SERVER1_NODE1_ID, TEST_SERVER1_USER1_JID,
+				Affiliations.outcast);
+
+		ResultSet<NodeSubscription> changes = store.getSubscriptionChanges(
+				TEST_SERVER1_USER1_JID, new Date(0), new Date());
 		assertEquals(0, changes.size());
 	}
 
 	@Test
 	public void testCanGetNodeSubscriptionsWithRsm() throws Exception {
 		dbTester.loadData("node_1");
-		
-		store.addUserSubscription(new NodeSubscriptionImpl(TEST_SERVER1_NODE1_ID, TEST_SERVER1_USER3_JID, Subscriptions.subscribed));	
+
+		store.addUserSubscription(new NodeSubscriptionImpl(
+				TEST_SERVER1_NODE1_ID, TEST_SERVER1_USER3_JID,
+				Subscriptions.subscribed));
 		Thread.sleep(1);
-		store.addUserSubscription(new NodeSubscriptionImpl(TEST_SERVER1_NODE1_ID, TEST_SERVER1_USER2_JID, Subscriptions.subscribed));
+		store.addUserSubscription(new NodeSubscriptionImpl(
+				TEST_SERVER1_NODE1_ID, TEST_SERVER1_USER2_JID,
+				Subscriptions.subscribed));
 		Thread.sleep(1);
-		store.addUserSubscription(new NodeSubscriptionImpl(TEST_SERVER1_NODE1_ID, TEST_SERVER1_USER1_JID, Subscriptions.subscribed));
+		store.addUserSubscription(new NodeSubscriptionImpl(
+				TEST_SERVER1_NODE1_ID, TEST_SERVER1_USER1_JID,
+				Subscriptions.subscribed));
 		Thread.sleep(1);
-		store.addUserSubscription(new NodeSubscriptionImpl(TEST_SERVER1_NODE1_ID, TEST_SERVER2_USER1_JID, Subscriptions.subscribed));
+		store.addUserSubscription(new NodeSubscriptionImpl(
+				TEST_SERVER1_NODE1_ID, TEST_SERVER2_USER1_JID,
+				Subscriptions.subscribed));
 
 		ResultSet<NodeSubscription> result = store.getNodeSubscriptions(
 				TEST_SERVER1_NODE1_ID, TEST_SERVER1_USER1_JID, 50);

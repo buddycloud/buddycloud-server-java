@@ -49,7 +49,7 @@ public class IQProcessor implements PacketProcessor<IQ> {
 				new JabberRegister(outQueue, conf, channelManager));
 		processorsPerNamespace.put(JabberPubsub.NAMESPACE_URI, ps);
 		processorsPerNamespace.put(JabberPubsub.NS_PUBSUB_OWNER, ps);
-		processorsPerNamespace.put(MessageArchiveManagement.NAMESPACE,
+		processorsPerNamespace.put(MessageArchiveManagement.NAMESPACE_MAM,
 				new MessageArchiveManagement(outQueue, channelManager));
 	}
 

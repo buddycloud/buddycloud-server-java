@@ -40,6 +40,7 @@ public class NodeSubscriptionImpl implements NodeSubscription {
 		} else {
 			this.user = new JID(user.toBareJID());
 		}
+		this.lastUpdated = lastUpdated;
 		setListener(listener);
 		this.subscription = subscription;
 	}

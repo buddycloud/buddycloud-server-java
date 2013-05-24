@@ -11,6 +11,8 @@ import org.buddycloud.channelserver.db.exception.NodeStoreException;
 import org.buddycloud.channelserver.packetprocessor.PacketProcessor;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.JabberPubsub;
 import org.buddycloud.channelserver.pubsub.model.NodeAffiliation;
+import org.buddycloud.channelserver.pubsub.model.NodeSubscription;
+import org.buddycloud.channelserver.pubsub.model.impl.NodeSubscriptionImpl;
 import org.dom4j.Element;
 import org.xmpp.packet.IQ;
 import org.xmpp.packet.IQ.Type;
@@ -137,7 +139,30 @@ public class MessageArchiveManagement implements PacketProcessor<IQ> {
 	}
 
 	private void sendSubscriptionUpdates() {
-		// TODO Auto-generated method stub
+		try {
+			ResultSet<NodeSubscription> changes = channelManager.getSubscriptionChanges(requestIq.getFrom(), endTimestamp, endTimestamp);
+			if (0 == changes.size()) return;
+			Message notification = wrapper.createCopy();
+			Element forwarded = notification.getElement().element("forwarded");
+			
+			Element event = forwarded.addElement("event");
+			event.addNamespace("", JabberPubsub.NS_PUBSUB_EVENT);
+			Element subscription = event.addElement("subscription");
+			
+			for (NodeSubscription change : changes) {
+				subscription.addAttribute("node", change.getNodeId());
+				subscription.addAttribute("jid", change.getUser().toBareJID());
+				subscription.addAttribute("subscription", change.getSubscription().toString());
+				forwarded.element("delay").addAttribute("stamp", sdf.format(change.getLastUpdated()));
+				outQueue.put(notification.createCopy());
+			}
+		} catch (NodeStoreException e) {
+			logger.error(e);
+		} catch (InterruptedException e) {
+			logger.error(e);
+		}
+		
+		
 
 	}
 

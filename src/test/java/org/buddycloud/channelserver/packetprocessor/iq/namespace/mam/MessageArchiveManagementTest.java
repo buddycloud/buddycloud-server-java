@@ -24,6 +24,7 @@ import org.buddycloud.channelserver.pubsub.model.NodeItem;
 import org.buddycloud.channelserver.pubsub.model.NodeSubscription;
 import org.buddycloud.channelserver.pubsub.model.impl.NodeAffiliationImpl;
 import org.buddycloud.channelserver.pubsub.model.impl.NodeSubscriptionImpl;
+import org.buddycloud.channelserver.pubsub.subscription.Subscriptions;
 import org.dom4j.Element;
 import org.junit.Before;
 import org.junit.Test;
@@ -141,6 +142,10 @@ public class MessageArchiveManagementTest extends IQTestHandler {
 				channelManager.getAffiliationChanges(Mockito.any(JID.class),
 						Mockito.any(Date.class), Mockito.any(Date.class)))
 				.thenReturn(noAffiliations);
+		Mockito.when(
+				channelManager.getSubscriptionChanges(Mockito.any(JID.class),
+						Mockito.any(Date.class), Mockito.any(Date.class)))
+				.thenReturn(noSubscriptions);
 		mam.process(request);
 
 		Assert.assertEquals(1, queue.size());
@@ -163,6 +168,11 @@ public class MessageArchiveManagementTest extends IQTestHandler {
 						Mockito.any(Date.class), Mockito.any(Date.class)))
 				.thenReturn(new ResultSetImpl<NodeAffiliation>(affiliations));
 
+		Mockito.when(
+				channelManager.getSubscriptionChanges(Mockito.any(JID.class),
+						Mockito.any(Date.class), Mockito.any(Date.class)))
+				.thenReturn(noSubscriptions);
+		
 		mam.process(request);
 
 		Assert.assertEquals(3, queue.size());
@@ -194,5 +204,55 @@ public class MessageArchiveManagementTest extends IQTestHandler {
 		Assert.assertEquals(date, sdf.parse(delay.attributeValue("stamp")));
 		Assert.assertTrue(outgoingMessage.contains(node));
 		Assert.assertTrue(outgoingMessage.contains(affiliation.toString()));
+	}
+	
+	@Test
+	public void testTwoSubscriptionChangesReportAsExpected() throws Exception {
+
+		ArrayList<NodeSubscription> subscriptions = new ArrayList<NodeSubscription>();
+		subscriptions.add(new NodeSubscriptionImpl(node1, jid1,
+				Subscriptions.subscribed, date1));
+		subscriptions.add(new NodeSubscriptionImpl(node2, jid2,
+				Subscriptions.pending, date2));
+		
+		Mockito.when(
+				channelManager.getAffiliationChanges(Mockito.any(JID.class),
+						Mockito.any(Date.class), Mockito.any(Date.class)))
+				.thenReturn(noAffiliations);
+
+		Mockito.when(
+				channelManager.getSubscriptionChanges(Mockito.any(JID.class),
+						Mockito.any(Date.class), Mockito.any(Date.class)))
+				.thenReturn(new ResultSetImpl<NodeSubscription>(subscriptions));
+		
+		mam.process(request);
+
+		Assert.assertEquals(3, queue.size());
+		checkSubscriptionStanza(queue.poll(), jid1, date1, node1,
+				Subscriptions.subscribed);
+		checkSubscriptionStanza(queue.poll(), jid2, date2, node2,
+				Subscriptions.pending);
+
+		IQ result = (IQ) queue.poll();
+		Assert.assertEquals("result", result.getType().toString());
+	}
+
+	private void checkSubscriptionStanza(Packet result, JID jid, Date date,
+			String node, Subscriptions subscription) throws ParseException {
+
+		Element message = result.getElement();
+		Assert.assertEquals(MessageArchiveManagement.NAMESPACE_MAM, message
+				.element("result").getNamespaceURI());
+		Assert.assertEquals(MessageArchiveManagement.NAMESPACE_FORWARDED,
+				message.element("forwarded").getNamespaceURI());
+
+		Element delay = message.element("forwarded").element("delay");
+		Element sub = message.element("forwarded").element("event").element("subscription");
+		
+		Assert.assertEquals(node, sub.attributeValue("node"));
+		Assert.assertEquals(jid.toBareJID(), sub.attributeValue("jid"));
+		Assert.assertEquals(subscription, Subscriptions.valueOf(sub.attributeValue("subscription")));
+
+		Assert.assertEquals(date, sdf.parse(delay.attributeValue("stamp")));
 	}
 }

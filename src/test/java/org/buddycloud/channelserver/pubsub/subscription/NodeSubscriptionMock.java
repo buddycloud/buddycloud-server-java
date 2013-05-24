@@ -1,5 +1,7 @@
 package org.buddycloud.channelserver.pubsub.subscription;
 
+import java.util.Date;
+
 import org.buddycloud.channelserver.pubsub.affiliation.Affiliations;
 import org.buddycloud.channelserver.pubsub.model.NodeSubscription;
 import org.xmpp.packet.JID;
@@ -57,5 +59,10 @@ public class NodeSubscriptionMock implements NodeSubscription {
 	@Override
 	public String getUID() {
 		return subscriber.toString();
+	}
+
+	@Override
+	public Date getLastUpdated() {
+		return new Date();
 	}
 }

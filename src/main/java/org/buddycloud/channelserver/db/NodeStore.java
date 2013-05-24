@@ -343,10 +343,22 @@ public interface NodeStore {
 	 * @return an {@link Iterator} of the node entries.
 	 * @throws NodeStoreException
 	 */
-
 	CloseableIterator<NodeItem> getNodeItems(String nodeId, String afterItemId,
 			int count) throws NodeStoreException;
 
+	/**
+	 * Get node items between two dates
+	 * 
+	 * @param nodeId
+	 *            the node id from which to retrieve items
+	 * @param startDate
+	 *            items older than (or same age as) start date
+	 * @param endDate
+	 *            items younger than (or same age as) end date
+	 */
+	CloseableIterator<NodeItem> getNewNodeItemsForUser(JID user,
+			Date startDate, Date endDate) throws NodeStoreException;
+	
 	/**
 	 * Retrieves an iterator of all items within a node.
 	 * 

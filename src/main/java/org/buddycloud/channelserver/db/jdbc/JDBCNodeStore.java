@@ -939,6 +939,36 @@ public class JDBCNodeStore implements NodeStore {
 			throws NodeStoreException {
 		return getNodeItems(nodeId, null, -1);
 	}
+	
+	@Override
+	public CloseableIterator<NodeItem> getNewNodeItemsForUser(JID user, Date startDate, Date endDate) throws NodeStoreException {
+
+		PreparedStatement stmt = null;
+
+		try {
+			
+			stmt = conn.prepareStatement(dialect
+					.selectItemsForUsersNodesBetweenDates());
+			stmt.setString(3, user.toBareJID());
+			stmt.setString(1, sdf.format(startDate));
+			stmt.setString(2, sdf.format(endDate.getTime()));
+
+			java.sql.ResultSet rs = stmt.executeQuery();
+
+			LinkedList<NodeItem> results = new LinkedList<NodeItem>();
+
+			while (rs.next()) {
+				results.push(new NodeItemImpl(rs.getString(1), rs
+						.getString(2), rs.getTimestamp(3), rs.getString(4)));
+			}
+
+			return new ClosableIteratorImpl<NodeItem>(results.iterator());
+		} catch (SQLException e) {
+			throw new NodeStoreException(e);
+		} finally {
+			close(stmt); // Will implicitly close the resultset if required
+		}	
+	}
 
 	@Override
 	public int countNodeItems(String nodeId) throws NodeStoreException {
@@ -1348,6 +1378,8 @@ public class JDBCNodeStore implements NodeStore {
 		String selectItemsForNodeAfterDate();
 
 		String selectItemsForNodeBeforeDate();
+
+		String selectItemsForUsersNodesBetweenDates();
 
 		String countItemsForNode();
 

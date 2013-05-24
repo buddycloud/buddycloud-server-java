@@ -202,6 +202,13 @@ public class ChannelManagerImpl implements ChannelManager {
 			throws NodeStoreException {
 		return nodeStore.getNodeItems(nodeId);
 	}
+	
+
+	@Override
+	public CloseableIterator<NodeItem> getNewNodeItemsForUser(JID user,
+			Date startDate, Date endDate) throws NodeStoreException {
+		return nodeStore.getNewNodeItemsForUser(user, startDate, endDate);
+	}
 
 	@Override
 	public int countNodeItems(String nodeId) throws NodeStoreException {

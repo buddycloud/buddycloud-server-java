@@ -49,6 +49,8 @@ public class JDBCNodeStoreTest {
 	private static final String TEST_SERVER1_NODE1_ID = "users/node1@server1/posts";
 	private static final String TEST_SERVER1_NODE2_ID = "users/node2@server1/posts";
 	private static final String TEST_SERVER1_NODE3_ID = "users/node3@server1/posts";
+	
+	private static final String TEST_SERVER2_NODE1_ID = "users/node1@server2/posts";
 
 	private static final String TEST_SERVER1_NODE1_ITEM1_ID = "a1";
 	private static final String TEST_SERVER1_NODE1_ITEM1_CONTENT = "Test 1";
@@ -1396,6 +1398,61 @@ public class JDBCNodeStoreTest {
 		assertEquals("Incorrect item count", 5, result);
 	}
 
+	@Test
+	public void testGetNewNodeItemsForUserBetweenDates() throws Exception {
+		
+		dbTester.loadData("node_1");
+
+		// We shouldn't see this item come out!
+		store.addRemoteNode(TEST_SERVER2_NODE1_ID);
+		store.addNodeItem(new NodeItemImpl(TEST_SERVER2_NODE1_ID, "1", new Date(), "item-payload"));
+		
+		Iterator<NodeItem> result = store.getNewNodeItemsForUser(TEST_SERVER1_USER1_JID, new Date(0), new Date());
+
+		String[] expectedNodeIds = { TEST_SERVER1_NODE1_ITEM5_ID,
+				TEST_SERVER1_NODE1_ITEM4_ID, TEST_SERVER1_NODE1_ITEM3_ID,
+				TEST_SERVER1_NODE1_ITEM2_ID, TEST_SERVER1_NODE1_ITEM1_ID, };
+		String[] expectedEntryContent = { TEST_SERVER1_NODE1_ITEM5_CONTENT,
+				TEST_SERVER1_NODE1_ITEM4_CONTENT,
+				TEST_SERVER1_NODE1_ITEM3_CONTENT,
+				TEST_SERVER1_NODE1_ITEM2_CONTENT,
+				TEST_SERVER1_NODE1_ITEM1_CONTENT, };
+
+		int i = 0;
+
+		while (result.hasNext()) {
+			NodeItem item = result.next();
+
+			assertEquals("The " + i
+					+ " node returned does not have the expected id",
+					expectedNodeIds[i], item.getId());
+			assertTrue("The " + i
+					+ " node returned does not have the expected content", item
+					.getPayload().contains(expectedEntryContent[i]));
+
+			++i;
+		}
+
+		assertEquals("Too few items returned", expectedNodeIds.length, i);
+		assertFalse("Too many items were returned", result.hasNext());
+	}
+	
+	@Test
+	public void testGetNewNodeItemsForUserBetweenDatesWhenOutcast() throws Exception {
+		
+		dbTester.loadData("node_1");
+
+		store.setUserAffiliation(TEST_SERVER1_NODE1_ID, TEST_SERVER1_USER1_JID,
+				Affiliations.outcast);
+		
+		Iterator<NodeItem> result = store.getNewNodeItemsForUser(TEST_SERVER1_USER1_JID, new Date(0), new Date());
+
+		int i = 0;
+		while (result.hasNext()) ++i;
+
+		assertEquals(0, i);
+	}
+	
 	@Test
 	public void testCountNodeItemsNonExistantNode() throws Exception {
 		dbTester.loadData("node_1");

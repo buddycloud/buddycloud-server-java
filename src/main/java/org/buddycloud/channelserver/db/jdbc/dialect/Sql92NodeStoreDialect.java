@@ -121,6 +121,19 @@ public class Sql92NodeStoreDialect implements NodeStoreSQLDialect {
 	private static final String SELECT_ITEMS_FOR_NODE_BEFORE_DATE = "SELECT \"node\", \"id\", \"updated\", \"xml\""
 			+ " FROM \"items\" WHERE \"node\" = ? AND ( \"updated\" < ? OR ( \"updated\" = ? AND \"id\" < ? ) )"
 			+ " ORDER BY \"updated\" DESC, \"id\" ASC";
+	
+	private static final String SELECT_ITEMS_FOR_USER_BETWEEN_DATES = ""
+	        + "SELECT \"node\", \"id\", \"updated\", \"xml\""
+			+ " FROM \"items\" "
+			+ "WHERE \"updated\" >= ? AND \"updated\" <= ? AND \"node\" IN "
+			+ "(SELECT \"subscriptions\".\"node\" FROM \"subscriptions\", \"affiliations\" "
+			+ "WHERE \"subscriptions\".\"user\" = ? AND "
+			+ "\"subscriptions\".\"subscription\" = 'subscribed' AND "
+			+ "\"affiliations\".\"node\" = \"subscriptions\".\"node\" "
+			+ "AND \"subscriptions\".\"user\" = \"affiliations\".\"user\" "
+			+ "AND \"affiliations\".\"affiliation\" != 'banned'  "
+			+ "AND \"affiliations\".\"affiliation\" != 'outcast') "
+			+ "ORDER BY \"updated\" ASC;";
 
 	private static final String COUNT_ITEMS_FOR_NODE = "SELECT COUNT(*)"
 			+ " FROM \"items\" WHERE \"node\" = ?";
@@ -310,6 +323,11 @@ public class Sql92NodeStoreDialect implements NodeStoreSQLDialect {
 	@Override
 	public String selectItemsForNodeBeforeDate() {
 		return SELECT_ITEMS_FOR_NODE_BEFORE_DATE;
+	}
+	
+	@Override
+	public String selectItemsForUsersNodesBetweenDates() {
+		return SELECT_ITEMS_FOR_USER_BETWEEN_DATES;
 	}
 
 	@Override

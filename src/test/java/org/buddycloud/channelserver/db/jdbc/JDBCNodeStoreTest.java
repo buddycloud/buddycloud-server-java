@@ -795,6 +795,29 @@ public class JDBCNodeStoreTest {
 	}
 
 	@Test
+	public void testCanGetAffiliationsChanges() throws Exception {
+		dbTester.loadData("node_1");
+		
+		store.setUserAffiliation(TEST_SERVER1_NODE1_ID, TEST_SERVER2_USER1_JID, Affiliations.publisher);
+		store.setUserAffiliation(TEST_SERVER1_NODE1_ID, TEST_SERVER1_USER3_JID, Affiliations.publisher);
+		
+		ResultSet<NodeAffiliation> changes = store.getAffiliationChanges(TEST_SERVER1_USER1_JID, new Date(0), new Date());
+		assertEquals(4, changes.size());
+	}
+	
+	@Test
+	public void testNoAffiliationChangesFromOutcastNode() throws Exception {
+		dbTester.loadData("node_1");
+		
+		store.setUserAffiliation(TEST_SERVER1_NODE1_ID, TEST_SERVER2_USER1_JID, Affiliations.publisher);
+		store.setUserAffiliation(TEST_SERVER1_NODE1_ID, TEST_SERVER1_USER3_JID, Affiliations.publisher);
+		store.setUserAffiliation(TEST_SERVER1_NODE1_ID, TEST_SERVER1_USER1_JID, Affiliations.outcast);
+		
+		ResultSet<NodeAffiliation> changes = store.getAffiliationChanges(TEST_SERVER1_USER1_JID, new Date(0), new Date());
+		assertEquals(0, changes.size());
+	}
+	
+	@Test
 	public void testGetNodeAffiliations() throws Exception {
 		dbTester.loadData("node_1");
 

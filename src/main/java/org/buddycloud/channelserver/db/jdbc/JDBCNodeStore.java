@@ -408,6 +408,39 @@ public class JDBCNodeStore implements NodeStore {
 		}
 	}
 
+
+	@Override
+	public ResultSet<NodeAffiliation> getAffiliationChanges(JID user,
+			Date startDate, Date endDate) throws NodeStoreException {
+		PreparedStatement stmt = null;
+
+		try {
+			stmt = conn.prepareStatement(dialect.selectAffiliationChanges());
+			stmt.setString(3, user.toBareJID());
+			stmt.setString(1, sdf.format(startDate));
+			stmt.setString(2, sdf.format(endDate.getTime()));
+
+			java.sql.ResultSet rs = stmt.executeQuery();
+
+			ArrayList<NodeAffiliation> result = new ArrayList<NodeAffiliation>();
+
+			while (rs.next()) {
+				NodeAffiliationImpl nodeSub = new NodeAffiliationImpl(
+						rs.getString(1), new JID(rs.getString(2)), Affiliations.valueOf(rs
+								.getString(3)), sdf.parse(rs.getString(4)));
+				result.add(nodeSub);
+			}
+
+			return new ResultSetImpl<NodeAffiliation>(result);
+		} catch (SQLException e) {
+			throw new NodeStoreException(e);
+		} catch (ParseException e) {
+			throw new NodeStoreException(e);
+		} finally {
+			close(stmt); // Will implicitly close the resultset if required
+		}
+	}
+	
 	@Override
 	public ResultSet<NodeAffiliation> getUserAffiliations(JID user)
 			throws NodeStoreException {
@@ -1229,6 +1262,8 @@ public class JDBCNodeStore implements NodeStore {
 		String selectAffiliationsForNode();
 		
 		String selectAffiliationsForNodeAfterJid();
+		
+		String selectAffiliationChanges();
 
 		String insertAffiliation();
 

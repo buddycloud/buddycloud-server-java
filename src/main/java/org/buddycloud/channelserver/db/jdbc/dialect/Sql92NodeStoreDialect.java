@@ -25,6 +25,18 @@ public class Sql92NodeStoreDialect implements NodeStoreSQLDialect {
 	private static final String SELECT_AFFILIATIONS_FOR_USER = "SELECT \"node\", \"user\", \"affiliation\", \"updated\""
 			+ " FROM \"affiliations\" WHERE \"user\" = ? ORDER BY \"updated\" DESC";
 	
+	private static final String SELECT_AFFILIATION_CHANGES = ""
+	    + "SELECT \"node\", \"user\", \"affiliation\", \"updated\" FROM \"affiliations\" "
+		+ "WHERE \"updated\" >= ? AND \"updated\" <= ? AND \"node\" IN "
+	    + "(SELECT \"subscriptions\".\"node\" FROM \"subscriptions\", \"affiliations\" "
+	        + "WHERE \"subscriptions\".\"user\" = ? AND "
+	        + "\"subscriptions\".\"subscription\" = 'subscribed' AND "
+	        + "\"affiliations\".\"node\" = \"subscriptions\".\"node\" "
+	        + "AND \"subscriptions\".\"user\" = \"affiliations\".\"user\" "
+	        + "AND \"affiliations\".\"affiliation\" != 'banned'  "
+	        + "AND \"affiliations\".\"affiliation\" != 'outcast') "
+	        + "ORDER BY \"updated\" ASC;";
+	
 	private static final String SELECT_AFFILIATIONS_FOR_USER_AFTER_NODE_ID = 
 	    "SELECT \"node\", \"user\", \"affiliation\", \"updated\""
 		+ " FROM \"affiliations\" WHERE \"user\" = ? AND "
@@ -165,6 +177,11 @@ public class Sql92NodeStoreDialect implements NodeStoreSQLDialect {
 	@Override
 	public String selectAffiliationsForUser() {
 		return SELECT_AFFILIATIONS_FOR_USER;
+	}
+	
+	@Override
+	public String selectAffiliationChanges() {
+		return SELECT_AFFILIATION_CHANGES;
 	}
 
 	@Override

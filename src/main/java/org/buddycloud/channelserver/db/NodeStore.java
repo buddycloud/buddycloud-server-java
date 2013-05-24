@@ -192,6 +192,17 @@ public interface NodeStore {
 	ResultSet<NodeAffiliation> getUserAffiliations(JID actorJid, 
 			String afterItemId, int maxItemsToReturn) throws NodeStoreException;
 	
+	/**
+	 * Get affiliation changes for a user
+	 * 
+	 * @param user
+	 * @param startDate
+	 * @param endDate
+	 * @return
+	 */
+	ResultSet<NodeAffiliation> getAffiliationChanges(JID user, Date startDate, Date endDate)
+	    throws NodeStoreException;
+	
     /**
      * Count the number of affiliations for a user
      * 

@@ -102,6 +102,13 @@ public class ChannelManagerImpl implements ChannelManager {
 			throws NodeStoreException {
 		return nodeStore.getUserAffiliation(nodeId, user);
 	}
+	
+
+	@Override
+	public ResultSet<NodeAffiliation> getAffiliationChanges(JID user,
+			Date startDate, Date endDate) throws NodeStoreException {
+		return nodeStore.getAffiliationChanges(user, startDate, endDate);
+	}
 
 	@Override
 	public ResultSet<NodeAffiliation> getUserAffiliations(JID user)

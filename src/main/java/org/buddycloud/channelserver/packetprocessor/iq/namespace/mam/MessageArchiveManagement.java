@@ -1,5 +1,6 @@
 package org.buddycloud.channelserver.packetprocessor.iq.namespace.mam;
 
+import java.io.StringReader;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -7,13 +8,17 @@ import java.util.TimeZone;
 import java.util.concurrent.BlockingQueue;
 import org.apache.log4j.Logger;
 import org.buddycloud.channelserver.channel.ChannelManager;
+import org.buddycloud.channelserver.db.CloseableIterator;
 import org.buddycloud.channelserver.db.exception.NodeStoreException;
 import org.buddycloud.channelserver.packetprocessor.PacketProcessor;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.JabberPubsub;
 import org.buddycloud.channelserver.pubsub.model.NodeAffiliation;
+import org.buddycloud.channelserver.pubsub.model.NodeItem;
 import org.buddycloud.channelserver.pubsub.model.NodeSubscription;
 import org.buddycloud.channelserver.pubsub.model.impl.NodeSubscriptionImpl;
+import org.dom4j.DocumentException;
 import org.dom4j.Element;
+import org.dom4j.io.SAXReader;
 import org.xmpp.packet.IQ;
 import org.xmpp.packet.IQ.Type;
 import org.xmpp.packet.Message;
@@ -34,6 +39,7 @@ public class MessageArchiveManagement implements PacketProcessor<IQ> {
 	private final BlockingQueue<Packet> outQueue;
 	private ChannelManager channelManager;
 	
+	private SAXReader xmlReader = new SAXReader();
 	private Message wrapper;
 
 	public static final String DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ss'Z'";
@@ -109,12 +115,47 @@ public class MessageArchiveManagement implements PacketProcessor<IQ> {
 	}
 
 	private void sendItemUpdates() {
-
+		try {
+			CloseableIterator<NodeItem> items = channelManager.getNewNodeItemsForUser(requestIq.getFrom(), startTimestamp, endTimestamp);
+			if (false == items.hasNext()) {
+				System.out.println("RESUEEGRGR");
+				return;
+			}
+			
+			Message notification = wrapper.createCopy();
+			Element forwarded = notification.getElement().element("forwarded");
+			
+			Element event = forwarded.addElement("event");
+			event.addNamespace("", JabberPubsub.NS_PUBSUB_EVENT);
+			Element itemsElement = event.addElement("items");
+			Element i = itemsElement.addElement("item");
+			
+			NodeItem item;
+			while (items.hasNext()) {
+				item = items.next();
+				itemsElement.addAttribute("node", item.getNodeId());
+				i.addAttribute("id", item.getId());
+				
+				if (null != i.element("entry")) i.remove(i.element("entry"));
+				i.add(xmlReader.read(
+						new StringReader(item.getPayload()))
+						.getRootElement());
+				
+				forwarded.element("delay").addAttribute("stamp", sdf.format(item.getUpdated()));
+				outQueue.put(notification.createCopy());
+			}
+		} catch (NodeStoreException e) {
+			logger.error(e);
+		} catch (InterruptedException e) {
+			logger.error(e);
+		} catch (DocumentException e) {
+			logger.error(e);
+		}
 	}
 
 	private void sendAffiliationUpdated() {
 		try {
-			ResultSet<NodeAffiliation> changes = channelManager.getAffiliationChanges(requestIq.getFrom(), endTimestamp, endTimestamp);
+			ResultSet<NodeAffiliation> changes = channelManager.getAffiliationChanges(requestIq.getFrom(), startTimestamp, endTimestamp);
 			if (0 == changes.size()) return;
 			Message notification = wrapper.createCopy();
 			Element forwarded = notification.getElement().element("forwarded");
@@ -161,9 +202,6 @@ public class MessageArchiveManagement implements PacketProcessor<IQ> {
 		} catch (InterruptedException e) {
 			logger.error(e);
 		}
-		
-		
-
 	}
 
 	private void _sendNotHandledStanza() throws InterruptedException {

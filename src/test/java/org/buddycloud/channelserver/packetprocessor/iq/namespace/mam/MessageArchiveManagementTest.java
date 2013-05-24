@@ -23,6 +23,7 @@ import org.buddycloud.channelserver.pubsub.model.NodeAffiliation;
 import org.buddycloud.channelserver.pubsub.model.NodeItem;
 import org.buddycloud.channelserver.pubsub.model.NodeSubscription;
 import org.buddycloud.channelserver.pubsub.model.impl.NodeAffiliationImpl;
+import org.buddycloud.channelserver.pubsub.model.impl.NodeItemImpl;
 import org.buddycloud.channelserver.pubsub.model.impl.NodeSubscriptionImpl;
 import org.buddycloud.channelserver.pubsub.subscription.Subscriptions;
 import org.dom4j.Element;
@@ -49,6 +50,7 @@ public class MessageArchiveManagementTest extends IQTestHandler {
 
 	private Date date1 = new Date();
 	private Date date2 = new Date();
+	private Date date3 = new Date();
 
 	private String node1 = "node1";
 	private String node2 = "node2";
@@ -80,6 +82,20 @@ public class MessageArchiveManagementTest extends IQTestHandler {
 		sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
 		date1 = sdf.parse("1995-10-26T10:00:00Z");
 		date2 = sdf.parse("2015-10-21T16:29:00Z");
+		date3 = sdf.parse("1985-10-27T09:59:00Z");
+		
+		Mockito.when(
+				channelManager.getAffiliationChanges(Mockito.any(JID.class),
+						Mockito.any(Date.class), Mockito.any(Date.class)))
+				.thenReturn(noAffiliations);
+		Mockito.when(
+				channelManager.getSubscriptionChanges(Mockito.any(JID.class),
+						Mockito.any(Date.class), Mockito.any(Date.class)))
+				.thenReturn(noSubscriptions);
+		Mockito.when(
+				channelManager.getNewNodeItemsForUser(Mockito.any(JID.class),
+						Mockito.any(Date.class), Mockito.any(Date.class)))
+				.thenReturn(noItems);
 	}
 
 	@Test
@@ -138,14 +154,6 @@ public class MessageArchiveManagementTest extends IQTestHandler {
 	@Test
 	public void testNoNotificationsResultsInJustResultPacket() throws Exception {
 
-		Mockito.when(
-				channelManager.getAffiliationChanges(Mockito.any(JID.class),
-						Mockito.any(Date.class), Mockito.any(Date.class)))
-				.thenReturn(noAffiliations);
-		Mockito.when(
-				channelManager.getSubscriptionChanges(Mockito.any(JID.class),
-						Mockito.any(Date.class), Mockito.any(Date.class)))
-				.thenReturn(noSubscriptions);
 		mam.process(request);
 
 		Assert.assertEquals(1, queue.size());
@@ -167,11 +175,6 @@ public class MessageArchiveManagementTest extends IQTestHandler {
 				channelManager.getAffiliationChanges(Mockito.any(JID.class),
 						Mockito.any(Date.class), Mockito.any(Date.class)))
 				.thenReturn(new ResultSetImpl<NodeAffiliation>(affiliations));
-
-		Mockito.when(
-				channelManager.getSubscriptionChanges(Mockito.any(JID.class),
-						Mockito.any(Date.class), Mockito.any(Date.class)))
-				.thenReturn(noSubscriptions);
 		
 		mam.process(request);
 
@@ -214,11 +217,6 @@ public class MessageArchiveManagementTest extends IQTestHandler {
 				Subscriptions.subscribed, date1));
 		subscriptions.add(new NodeSubscriptionImpl(node2, jid2,
 				Subscriptions.pending, date2));
-		
-		Mockito.when(
-				channelManager.getAffiliationChanges(Mockito.any(JID.class),
-						Mockito.any(Date.class), Mockito.any(Date.class)))
-				.thenReturn(noAffiliations);
 
 		Mockito.when(
 				channelManager.getSubscriptionChanges(Mockito.any(JID.class),
@@ -252,6 +250,55 @@ public class MessageArchiveManagementTest extends IQTestHandler {
 		Assert.assertEquals(node, sub.attributeValue("node"));
 		Assert.assertEquals(jid.toBareJID(), sub.attributeValue("jid"));
 		Assert.assertEquals(subscription, Subscriptions.valueOf(sub.attributeValue("subscription")));
+
+		Assert.assertEquals(date, sdf.parse(delay.attributeValue("stamp")));
+	}
+	
+	@Test
+	public void testTwoNewItemsReportAsExpected() throws Exception {
+
+		String item1 = "<entry>item1</entry>";
+		String item2 = "<entry>item2</entry>";
+		String item3 = "<entry>item3</entry>";
+		
+		ArrayList<NodeItem> items = new ArrayList<NodeItem>();
+		items.add(new NodeItemImpl(node1, "1", date1, item1));
+		items.add(new NodeItemImpl(node1, "2", date2, item2));
+		items.add(new NodeItemImpl(node2, "1", date3, item3));
+
+		Mockito.when(
+				channelManager.getNewNodeItemsForUser(Mockito.any(JID.class),
+						Mockito.any(Date.class), Mockito.any(Date.class)))
+				.thenReturn(new ClosableIteratorImpl<NodeItem>(items.iterator()));
+		
+		mam.process(request);
+
+		Assert.assertEquals(4, queue.size());
+		checkItemStanza(queue.poll(), date1, node1, "1", item1);
+		checkItemStanza(queue.poll(), date2, node1, "2", item2);
+		checkItemStanza(queue.poll(), date3, node2, "1", item3);
+
+		IQ result = (IQ) queue.poll();
+		Assert.assertEquals("result", result.getType().toString());
+	}
+
+	private void checkItemStanza(Packet result, Date date,
+			String node, String id, String entry) throws ParseException {
+
+		Element message = result.getElement();
+		Assert.assertEquals(MessageArchiveManagement.NAMESPACE_MAM, message
+				.element("result").getNamespaceURI());
+		Assert.assertEquals(MessageArchiveManagement.NAMESPACE_FORWARDED,
+				message.element("forwarded").getNamespaceURI());
+
+		Element delay = message.element("forwarded").element("delay");
+		Element items = message.element("forwarded").element("event").element("items");
+		Element item = items.element("item");
+		
+		Assert.assertEquals(id, item.attributeValue("id"));
+		Assert.assertEquals(node, items.attributeValue("node"));
+		// Hack to make up for SMACK
+		Assert.assertTrue(item.asXML().replace(" xmlns=\"\"", "").contains(entry));
 
 		Assert.assertEquals(date, sdf.parse(delay.attributeValue("stamp")));
 	}

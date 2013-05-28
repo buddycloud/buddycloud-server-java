@@ -662,7 +662,33 @@ public class JDBCNodeStore implements NodeStore {
 	@Override
 	public ResultSet<NodeSubscription> getUserSubscriptions(final JID user)
 			throws NodeStoreException {
-		return getUserSubscriptions(user, "", -1);
+		PreparedStatement stmt = null;
+
+		try {
+			stmt = conn.prepareStatement(dialect.selectSubscriptionsForUser());
+			stmt.setString(1, user.toBareJID());
+			stmt.setString(2, user.toString());
+
+			java.sql.ResultSet rs = stmt.executeQuery();
+
+			ArrayList<NodeSubscription> result = new ArrayList<NodeSubscription>();
+
+			while (rs.next()) {
+				NodeSubscriptionImpl nodeSub = new NodeSubscriptionImpl(
+						rs.getString(1), new JID(rs.getString(2)), new JID(
+								rs.getString(3)), Subscriptions.valueOf(rs
+								.getString(4)), sdf.parse(rs.getString(5)));
+				result.add(nodeSub);
+			}
+
+			return new ResultSetImpl<NodeSubscription>(result);
+		} catch (SQLException e) {
+			throw new NodeStoreException(e);
+		} catch (ParseException e) {
+			throw new NodeStoreException(e);
+		} finally {
+			close(stmt); // Will implicitly close the resultset if required
+		}
 	}
 
 	@Override
@@ -670,15 +696,13 @@ public class JDBCNodeStore implements NodeStore {
 			String afterNodeId, int maxItemsToReturn) throws NodeStoreException {
 		PreparedStatement stmt = null;
 
-		String maxItems;
-		maxItems = String.valueOf(maxItemsToReturn);
-		if (-1 == maxItemsToReturn) {
-			maxItems = "ALL";
-		}
 		try {
-			stmt = conn.prepareStatement(dialect.selectSubscriptionsForUser());
+			stmt = conn.prepareStatement(dialect.selectSubscriptionsForUserAfterNode());
 			stmt.setString(1, user.toBareJID());
 			stmt.setString(2, user.toString());
+			stmt.setString(3, afterNodeId);
+			stmt.setString(4, user.toBareJID());
+			stmt.setInt(4, maxItemsToReturn);
 
 			java.sql.ResultSet rs = stmt.executeQuery();
 

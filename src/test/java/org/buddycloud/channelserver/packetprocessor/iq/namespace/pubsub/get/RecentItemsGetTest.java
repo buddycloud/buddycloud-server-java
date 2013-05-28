@@ -60,26 +60,74 @@ public class RecentItemsGetTest extends IQTestHandler {
 	}
 
 	@Test
-	public void testPassingItemsAsElementNameReturnsTrue() {
+	public void testPassingRecentItemsAsElementNameReturnsTrue() {
 		Assert.assertTrue(recentItemsGet.accept(element));
 	}
 
 	@Test
-	public void testPassingNotItemsAsElementNameReturnsFalse() {
+	public void testPassingNotRecentItemsAsElementNameReturnsFalse() {
 		Element element = new BaseElement("not-items");
 		Assert.assertFalse(recentItemsGet.accept(element));
 	}
 
 	@Test
-	public void testMissingNodeAttributeReturnsErrorStanza() throws Exception {
+	public void testMissingMaxAttributeReturnsErrorStanza() throws Exception {
+		
+		request.getChildElement().element("recent-items").addAttribute("max", null);
+
 		recentItemsGet.process(element, jid, request, null);
-		Packet response = queue.poll(100, TimeUnit.MILLISECONDS);
+		Packet response = queue.poll();
 
 		PacketError error = response.getError();
 		Assert.assertNotNull(error);
 		Assert.assertEquals(PacketError.Type.modify, error.getType());
-		Assert.assertEquals("nodeid-required",
+		Assert.assertEquals("max-required",
 				error.getApplicationConditionName());
 	}
+	
+	@Test
+	public void testInvalidMaxAttributesReturnsErrorStanza() throws Exception {
+		
+		request.getChildElement().element("recent-items").addAttribute("max", "three");
+
+		recentItemsGet.process(element, jid, request, null);
+		Packet response = queue.poll();
+
+		PacketError error = response.getError();
+		Assert.assertNotNull(error);
+		Assert.assertEquals(PacketError.Type.modify, error.getType());
+		Assert.assertEquals("invalid-max-value-provided",
+				error.getApplicationConditionName());
+	}
+	
+	@Test
+	public void testMissingSinceAttributeReturnsErrorStanza() throws Exception {
+		
+		request.getChildElement().element("recent-items").addAttribute("since", null);
+
+		recentItemsGet.process(element, jid, request, null);
+		Packet response = queue.poll();
+
+		PacketError error = response.getError();
+		Assert.assertNotNull(error);
+		Assert.assertEquals(PacketError.Type.modify, error.getType());
+		Assert.assertEquals("since-required",
+				error.getApplicationConditionName());
+	}
+	
+	@Test
+	public void testInvalidSinceAttributesReturnsErrorStanza() throws Exception {
+		
+		request.getChildElement().element("recent-items").addAttribute("since", "a week ago");
+
+		recentItemsGet.process(element, jid, request, null);
+		Packet response = queue.poll();
+
+		PacketError error = response.getError();
+		Assert.assertNotNull(error);
+		Assert.assertEquals(PacketError.Type.modify, error.getType());
+		Assert.assertEquals("invalid-since-value-provided",
+				error.getApplicationConditionName());
+	}	
 
 }

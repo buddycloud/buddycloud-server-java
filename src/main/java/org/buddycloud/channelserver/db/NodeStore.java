@@ -370,6 +370,24 @@ public interface NodeStore {
 	CloseableIterator<NodeItem> getNodeItems(String nodeId)
 			throws NodeStoreException;
 
+    /**
+     * Get recent items for a user
+     * 
+     * @param user
+     * @param since
+     * @param maxPerNode
+     * @return
+     * @throws NodeStoreException
+     */
+	CloseableIterator<NodeItem> getRecentItems(JID user, Date since,
+			int maxPerNode, int limit, String afterItemId, String node) throws NodeStoreException;
+	
+	/**
+	 * Get count of recent items for a user
+	 * @throws NodeStoreException 
+	 */
+	int getCountRecentItems(JID user, Date since, int maxPerNode, String node) throws NodeStoreException;
+
 	/**
 	 * Retrieves the number of items within a node.
 	 * 
@@ -402,7 +420,7 @@ public interface NodeStore {
 	 */
 	NodeItem getNodeItem(String nodeId, String nodeItemId)
 			throws NodeStoreException;
-
+	
 	/**
 	 * Stores a new item against the node.
 	 * 

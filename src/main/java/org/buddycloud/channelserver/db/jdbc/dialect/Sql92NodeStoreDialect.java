@@ -109,7 +109,7 @@ public class Sql92NodeStoreDialect implements NodeStoreSQLDialect {
 	private static final String NODE_EXISTS = "SELECT \"node\" FROM \"nodes\" WHERE \"node\" = ?";
 
 	private static final String SELECT_SINGLE_ITEM = "SELECT \"node\", \"id\", \"updated\", \"xml\""
-			+ " FROM \"items\" WHERE \"node\" = ? AND \"id\" = ?";
+			+ " FROM \"items\" WHERE \"id\" = ?";
 
 	private static final String SELECT_ITEMS_FOR_NODE = "SELECT \"node\", \"id\", \"updated\", \"xml\""
 			+ " FROM \"items\" WHERE \"node\" = ? ORDER BY \"updated\" DESC, \"id\" ASC";
@@ -134,6 +134,21 @@ public class Sql92NodeStoreDialect implements NodeStoreSQLDialect {
 			+ "AND \"affiliations\".\"affiliation\" != 'banned'  "
 			+ "AND \"affiliations\".\"affiliation\" != 'outcast') "
 			+ "ORDER BY \"updated\" ASC;";
+
+	private static final String SELECT_RECENT_ITEM_PARTS = ""
+	    + "(SELECT \"id\", \"node\", \"xml\", \"updated\" "
+		+ "FROM \"items\" "
+		+ "WHERE \"node\" = ? "
+        + "AND \"updated\" >= ? "
+        + "ORDER BY \"updated\" DESC "
+        + "LIMIT ?)";
+
+	private static final String SELECT_COUNT_RECENT_ITEM_PARTS = ""
+		    + "(SELECT COUNT(\"id\") "
+			+ "FROM \"items\" "
+			+ "WHERE \"node\" = ? "
+	        + "AND \"updated\" >= ? "
+	        + "LIMIT ?)";
 
 	private static final String COUNT_ITEMS_FOR_NODE = "SELECT COUNT(*)"
 			+ " FROM \"items\" WHERE \"node\" = ?";
@@ -362,13 +377,21 @@ public class Sql92NodeStoreDialect implements NodeStoreSQLDialect {
 
 	@Override
 	public String deleteItems() {
-		// TODO Auto-generated method stub
 		return DELETE_ITEMS;
 	}
 
 	@Override
 	public String selectNodeList() {
-		// TODO Auto-generated method stub
 		return SELECT_NODE_LIST;
+	}
+
+	@Override
+	public String selectRecentItemParts() {
+        return SELECT_RECENT_ITEM_PARTS;
+	}
+	
+	@Override
+	public String selectCountRecentItemParts() {
+		return SELECT_COUNT_RECENT_ITEM_PARTS;
 	}
 }

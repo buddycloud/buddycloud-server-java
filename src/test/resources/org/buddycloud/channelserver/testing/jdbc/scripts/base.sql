@@ -8,13 +8,17 @@ CREATE TABLE "items" ("node" TEXT REFERENCES "nodes" ("node") ON DELETE CASCADE,
        	     	    "id" TEXT NOT NULL,
 		    "updated" TIMESTAMP,
 		    "xml" TEXT,
+		    "in_reply_to" TEXT,
 		    PRIMARY KEY ("node", "id"));
 CREATE INDEX "items_updated" ON "items" ("updated");
+CREATE INDEX "items_in_reply_to" ON "items" ("node", "in_reply_to");
+
 CREATE TABLE "subscriptions" ("node" TEXT REFERENCES "nodes" ("node") ON DELETE CASCADE,
        	     		    "user" TEXT,
 			    "listener" TEXT,
 			    "subscription" TEXT,
  			    "updated" TIMESTAMP,
+ 			    "temporary" BOOLEAN DEFAULT FALSE,
 			    PRIMARY KEY ("node", "user"));
 CREATE INDEX "subscriptions_updated" ON "subscriptions" ("updated");
 CREATE TABLE "affiliations" ("node" TEXT REFERENCES "nodes" ("node") ON DELETE CASCADE,

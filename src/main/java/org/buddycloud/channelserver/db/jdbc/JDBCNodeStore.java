@@ -1176,6 +1176,7 @@ public class JDBCNodeStore implements NodeStore {
 			stmt.setString(2, item.getId());
 			stmt.setTimestamp(3, new Timestamp(item.getUpdated().getTime()));
 			stmt.setString(4, item.getPayload());
+			stmt.setString(5, item.getInReplyTo());
 
 			stmt.executeUpdate();
 		} catch (SQLException e) {

@@ -1511,6 +1511,135 @@ public class JDBCNodeStoreTest {
 		assertTrue("Unexpected Node content returned", result.getPayload()
 				.contains(TEST_SERVER1_NODE1_ITEM1_CONTENT));
 	}
+	
+
+	@Test
+	public void testGetRecentItems() throws Exception {
+
+		Date since = new Date();
+		dbTester.loadData("node_1");
+		store.addRemoteNode(TEST_SERVER1_NODE2_ID);
+		store.addUserSubscription(new NodeSubscriptionImpl(
+				TEST_SERVER1_NODE2_ID, TEST_SERVER1_USER1_JID,
+				Subscriptions.subscribed));
+
+		NodeItem nodeItem1 = new NodeItemImpl(TEST_SERVER1_NODE1_ID, "123",
+				new Date(), "payload");
+		NodeItem nodeItem2 = new NodeItemImpl(TEST_SERVER1_NODE2_ID, "123",
+				new Date(), "payload2");
+		store.addNodeItem(nodeItem1);
+		store.addNodeItem(nodeItem2);
+
+		CloseableIterator<NodeItem> items = store.getRecentItems(
+				TEST_SERVER1_USER1_JID, since, -1, -1, null, null);
+
+		// 2 -> 1 on purpose results are most recent first!
+		assertSameNodeItem(items.next(), nodeItem2);
+		assertSameNodeItem(items.next(), nodeItem1);
+		assertEquals(false, items.hasNext());
+	}
+
+	@Test
+	public void testGetRecentItemsWithNoResultsPerNodeRequestedReturnsExpectedCount()
+			throws Exception {
+		Date since = new Date(0);
+		dbTester.loadData("node_1");
+		store.addRemoteNode(TEST_SERVER1_NODE2_ID);
+		store.addUserSubscription(new NodeSubscriptionImpl(
+				TEST_SERVER1_NODE2_ID, TEST_SERVER1_USER1_JID,
+				Subscriptions.subscribed));
+
+		NodeItem nodeItem1 = new NodeItemImpl(TEST_SERVER1_NODE1_ID, "1",
+				new Date(), "payload");
+		NodeItem nodeItem2 = new NodeItemImpl(TEST_SERVER1_NODE2_ID, "2",
+				new Date(), "payload2");
+		store.addNodeItem(nodeItem1);
+		store.addNodeItem(nodeItem2);
+
+		CloseableIterator<NodeItem> items = store.getRecentItems(
+				TEST_SERVER1_USER1_JID, since, 0, -1, null, null);
+
+		int count = 0;
+		while (items.hasNext()) {
+			items.next();
+			++count;
+		}
+		assertEquals(0, count);
+	}
+
+	@Test
+	public void testCanPageGetRecentItemsUsingResultSetManagement()
+			throws Exception {
+		Date since = new Date(0);
+
+		dbTester.loadData("node_1");
+		store.addRemoteNode(TEST_SERVER1_NODE2_ID);
+		store.addUserSubscription(new NodeSubscriptionImpl(
+				TEST_SERVER1_NODE2_ID, TEST_SERVER1_USER1_JID,
+				Subscriptions.subscribed));
+
+		for (int i = 1; i < 20; i++) {
+			Thread.sleep(1);
+			store.addNodeItem(new NodeItemImpl(TEST_SERVER1_NODE1_ID, String
+					.valueOf(i), new Date(), "payload" + String.valueOf(i)));
+		}
+
+		CloseableIterator<NodeItem> items = store.getRecentItems(
+				TEST_SERVER1_USER1_JID, since, -1, -1, "5", null);
+
+		int count = 0;
+		int i = 19;
+
+		NodeItem item;
+		while (items.hasNext()) {
+			assertSameNodeItem(items.next(), new NodeItemImpl(
+					TEST_SERVER1_NODE1_ID, String.valueOf(i), new Date(),
+					"payload" + String.valueOf(i)));
+			--i;
+			++count;
+		}
+		assertEquals(15, count);
+	}
+	
+	@Test
+	public void testGetRecentItemCountWithNoResultsPerNodeRequestedReturnsExpectedCount()
+			throws Exception {
+		Date since = new Date();
+		dbTester.loadData("node_1");
+		store.addRemoteNode(TEST_SERVER1_NODE2_ID);
+		store.addUserSubscription(new NodeSubscriptionImpl(
+				TEST_SERVER1_NODE2_ID, TEST_SERVER1_USER1_JID,
+				Subscriptions.subscribed));
+
+		store.addNodeItem(new NodeItemImpl(TEST_SERVER1_NODE1_ID, "123",
+				new Date(), "payload"));
+		store.addNodeItem(new NodeItemImpl(TEST_SERVER1_NODE2_ID, "123",
+				new Date(), "payload2"));
+
+		int count = store.getCountRecentItems(TEST_SERVER1_USER1_JID, since, 0,
+				null);
+		assertEquals(0, count);
+	}
+	
+	@Test
+	public void testGetRecentItemCount() throws Exception {
+
+		Date since = new Date();
+		dbTester.loadData("node_1");
+		store.addRemoteNode(TEST_SERVER1_NODE2_ID);
+		store.addUserSubscription(new NodeSubscriptionImpl(
+				TEST_SERVER1_NODE2_ID, TEST_SERVER1_USER1_JID,
+				Subscriptions.subscribed));
+        Thread.sleep(1);
+		store.addNodeItem(new NodeItemImpl(TEST_SERVER1_NODE1_ID, "123",
+				new Date(), "payload"));
+		store.addNodeItem(new NodeItemImpl(TEST_SERVER1_NODE2_ID, "123",
+				new Date(), "payload2"));
+
+		int count = store.getCountRecentItems(TEST_SERVER1_USER1_JID, since,
+				-1, null);
+		assertEquals(2, count);
+	}
 
 	@Test
 	public void testAddNodeItem() throws Exception {
@@ -1829,83 +1958,4 @@ public class JDBCNodeStoreTest {
 		assertEquals(actual.getNodeId(), expected.getNodeId());
 		assertEquals(actual.getPayload(), expected.getPayload());
 	}
-
-	//1277
-	@Test
-	public void testGetRecentItemCount() throws Exception {
-		
-		Date since = new Date();
-		dbTester.loadData("node_1");
-		store.addRemoteNode(TEST_SERVER1_NODE2_ID);
-		store.addUserSubscription(new NodeSubscriptionImpl(TEST_SERVER1_NODE2_ID, TEST_SERVER1_USER1_JID, Subscriptions.subscribed));
-		
-		store.addNodeItem(new NodeItemImpl(TEST_SERVER1_NODE1_ID, "123", new Date(), "payload"));
-		store.addNodeItem(new NodeItemImpl(TEST_SERVER1_NODE2_ID, "123", new Date(), "payload2"));
-		
-		int count = store.getCountRecentItems(TEST_SERVER1_USER1_JID, since, -1, null);
-        assertEquals(2, count);
-    }
-	
-	@Test
-	public void testGetRecentItemCountWithNoResultsPerNodeRequestedReturnsExpectedCount() throws Exception {
-		Date since = new Date();
-		dbTester.loadData("node_1");
-		store.addRemoteNode(TEST_SERVER1_NODE2_ID);
-		store.addUserSubscription(new NodeSubscriptionImpl(TEST_SERVER1_NODE2_ID, TEST_SERVER1_USER1_JID, Subscriptions.subscribed));
-		
-		store.addNodeItem(new NodeItemImpl(TEST_SERVER1_NODE1_ID, "123", new Date(), "payload"));
-		store.addNodeItem(new NodeItemImpl(TEST_SERVER1_NODE2_ID, "123", new Date(), "payload2"));
-		
-		int count = store.getCountRecentItems(TEST_SERVER1_USER1_JID, since, 0, null);
-        assertEquals(0, count);
-	}
-	
-	@Test
-	public void testGetRecentItems() throws Exception {
-		
-		Date since = new Date();
-		dbTester.loadData("node_1");
-		store.addRemoteNode(TEST_SERVER1_NODE2_ID);
-		store.addUserSubscription(new NodeSubscriptionImpl(TEST_SERVER1_NODE2_ID, TEST_SERVER1_USER1_JID, Subscriptions.subscribed));
-		
-		NodeItem nodeItem1 = new NodeItemImpl(TEST_SERVER1_NODE1_ID, "123", new Date(), "payload");
-		NodeItem nodeItem2 = new NodeItemImpl(TEST_SERVER1_NODE2_ID, "123", new Date(), "payload2");
-		store.addNodeItem(nodeItem1);
-		store.addNodeItem(nodeItem2);
-
-		CloseableIterator<NodeItem> items = store.getRecentItems(TEST_SERVER1_USER1_JID, since, -1, -1, null, null);
-
-		// 2 -> 1 on purpose results are most recent first!
-		assertSameNodeItem(items.next(), nodeItem2);
-		assertSameNodeItem(items.next(), nodeItem1);
-        assertEquals(false, items.hasNext());
-    }
-
-	@Test
-	public void testGetRecentItemsWithNoResultsPerNodeRequestedReturnsExpectedCount() throws Exception {
-		Date since = new Date();
-		dbTester.loadData("node_1");
-		store.addRemoteNode(TEST_SERVER1_NODE2_ID);
-		store.addUserSubscription(new NodeSubscriptionImpl(TEST_SERVER1_NODE2_ID, TEST_SERVER1_USER1_JID, Subscriptions.subscribed));
-		
-		NodeItem nodeItem1 = new NodeItemImpl(TEST_SERVER1_NODE1_ID, "123", new Date(), "payload");
-		NodeItem nodeItem2 = new NodeItemImpl(TEST_SERVER1_NODE2_ID, "123", new Date(), "payload2");
-		store.addNodeItem(nodeItem1);
-		store.addNodeItem(nodeItem2);
-
-		CloseableIterator<NodeItem> items = store.getRecentItems(TEST_SERVER1_USER1_JID, since, 0, -1, null, null);
-		
-		int count = 0;
-		while (items.hasNext()) {
-			items.next();
-			++count;
-		}
-		assertEquals(0, count);
-	}
-	
-	@Test
-	public void testCanPageGetRecentItemsUsingResultSetManagement() throws Exception {
-		assertTrue(false);
-	}
-	
 }

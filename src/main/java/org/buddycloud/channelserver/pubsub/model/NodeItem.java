@@ -27,4 +27,10 @@ public interface NodeItem extends Result {
 	 * Retrieves the datestamp when the record was published/updated
 	 */
 	Date getUpdated();
+
+	/**
+	 * Retrieves the item ID to which this item is a reply 
+	 * Not a reply == null
+	 */
+	String getInReplyTo();
 }

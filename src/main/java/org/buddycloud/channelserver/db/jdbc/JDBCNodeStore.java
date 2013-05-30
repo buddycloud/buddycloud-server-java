@@ -878,12 +878,15 @@ public class JDBCNodeStore implements NodeStore {
 			while (rs.next()) {
 				NodeSubscriptionImpl nodeSub = new NodeSubscriptionImpl(
 						rs.getString(2), new JID(rs.getString(1)),
-						Subscriptions.valueOf(rs.getString(3)));
+						Subscriptions.valueOf(rs.getString(3)), sdf.parse(rs.getString(4)));
 				result.add(nodeSub);
 			}
 
 			return new ResultSetImpl<NodeSubscription>(result);
 		} catch (SQLException e) {
+			throw new NodeStoreException(e);
+		} catch (ParseException e) {
+			logger.error(e);
 			throw new NodeStoreException(e);
 		} finally {
 			close(stmt); // Will implicitly close the resultset if required
@@ -1014,7 +1017,6 @@ public class JDBCNodeStore implements NodeStore {
 		PreparedStatement stmt = null;
 
 		try {
-			
 			if (null != afterItemId) {
 				NodeItem item = getNodeItemById(afterItemId);
 				if ((null != item) 
@@ -1061,7 +1063,6 @@ public class JDBCNodeStore implements NodeStore {
 				results.add(new NodeItemImpl(rs.getString(2), rs
 						.getString(1), sdf.parse(rs.getString(4)), rs.getString(3)));
 			}
-
 			return new ClosableIteratorImpl<NodeItem>(results.iterator());
 		} catch (SQLException e) {
 			throw new NodeStoreException(e);

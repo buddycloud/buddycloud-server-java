@@ -931,7 +931,7 @@ public class JDBCNodeStore implements NodeStore {
 									throws SQLException {
 								return new NodeItemImpl(rs.getString(1),
 										rs.getString(2), rs.getTimestamp(3),
-										rs.getString(4));
+										rs.getString(4), rs.getString(5));
 							}
 						});
 			} else {
@@ -950,7 +950,7 @@ public class JDBCNodeStore implements NodeStore {
 
 				while (rs.next()) {
 					results.push(new NodeItemImpl(rs.getString(1), rs
-							.getString(2), rs.getTimestamp(3), rs.getString(4)));
+							.getString(2), rs.getTimestamp(3), rs.getString(4), rs.getString(5)));
 				}
 
 				return new ClosableIteratorImpl<NodeItem>(results.iterator());
@@ -1061,7 +1061,7 @@ public class JDBCNodeStore implements NodeStore {
 			ArrayList<NodeItem> results = new ArrayList<NodeItem>();
 			while (rs.next()) {
 				results.add(new NodeItemImpl(rs.getString(2), rs
-						.getString(1), sdf.parse(rs.getString(4)), rs.getString(3)));
+						.getString(1), sdf.parse(rs.getString(4)), rs.getString(3), rs.getString(5)));
 			}
 			return new ClosableIteratorImpl<NodeItem>(results.iterator());
 		} catch (SQLException e) {
@@ -1085,7 +1085,7 @@ public class JDBCNodeStore implements NodeStore {
 
 			if (rs.next()) {
 				return new NodeItemImpl(rs.getString(1), rs.getString(2),
-						rs.getTimestamp(3), rs.getString(4));
+						rs.getTimestamp(3), rs.getString(4), rs.getString(5));
 			}
 			return null;
 		} catch (SQLException e) {
@@ -1120,7 +1120,7 @@ public class JDBCNodeStore implements NodeStore {
 
 			while (rs.next()) {
 				results.push(new NodeItemImpl(rs.getString(1), rs
-						.getString(2), rs.getTimestamp(3), rs.getString(4)));
+						.getString(2), rs.getTimestamp(3), rs.getString(4), rs.getString(5)));
 			}
 
 			return new ClosableIteratorImpl<NodeItem>(results.iterator());

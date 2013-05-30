@@ -350,4 +350,17 @@ public class ChannelManagerImpl implements ChannelManager {
 	public ArrayList<String> getNodeList() throws NodeStoreException {
 		return nodeStore.getNodeList();
 	}
+
+	@Override
+	public CloseableIterator<NodeItem> getRecentItems(JID user, Date since,
+			int maxPerNode, int limit, String afterItemId, String node)
+			throws NodeStoreException {
+		return nodeStore.getRecentItems(user, since, maxPerNode, limit, afterItemId, node);
+	}
+
+	@Override
+	public int getCountRecentItems(JID user, Date since, int maxPerNode,
+			String node) throws NodeStoreException {
+		return nodeStore.getCountRecentItems(user, since, maxPerNode, node);
+	}
 }

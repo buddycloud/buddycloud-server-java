@@ -7,6 +7,7 @@ import org.buddycloud.channelserver.channel.ChannelManager;
 import org.dom4j.Document;
 import org.dom4j.DocumentHelper;
 import org.dom4j.Element;
+import org.dom4j.dom.DOMElement;
 import org.xmpp.packet.IQ;
 import org.xmpp.packet.JID;
 import org.xmpp.packet.Packet;
@@ -89,6 +90,20 @@ public abstract class PubSubElementProcessorAbstract
 		response.setType(IQ.Type.error);
 		PacketError error = new PacketError(condition, type);
 		response.setError(error);
+	}
+	
+	protected void createExtendedErrorReply(Type type, Condition condition,
+			String additionalElement) {
+		response.setType(IQ.Type.error);
+		Element standardError = new DOMElement(condition.toString(),
+				new org.dom4j.Namespace("", JabberPubsub.NS_XMPP_STANZAS));
+		Element extraError = new DOMElement(additionalElement,
+				new org.dom4j.Namespace("", JabberPubsub.NS_PUBSUB_ERROR));
+		Element error = new DOMElement("error");
+		error.addAttribute("type", type.toString());
+		error.add(standardError);
+		error.add(extraError);
+		response.setChildElement(error);
 	}
 	
 	protected Document getDocumentHelper()

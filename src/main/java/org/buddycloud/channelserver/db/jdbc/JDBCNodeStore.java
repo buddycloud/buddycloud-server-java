@@ -1026,6 +1026,7 @@ public class JDBCNodeStore implements NodeStore {
 			
 			if (null == node) node = "/posts";
 			if (-1 == limit) limit = 50;
+			if (-1 == maxPerNode) maxPerNode = 50;
 			
 			ResultSet<NodeSubscription> subscriptions = this.getUserSubscriptions(user);
 
@@ -1042,29 +1043,30 @@ public class JDBCNodeStore implements NodeStore {
 				parameters.add(sdf.format(since));
 				parameters.add(String.valueOf(maxPerNode));
 			}
-			stmt = conn.prepareStatement(StringUtils.join(queryParts, " UNION ALL "));
-			int index = 0;
+			stmt = conn.prepareStatement(StringUtils.join(queryParts, " UNION ALL ") + " LIMIT ?;");
+			int index = 1;
 			for (String parameter : parameters) {
 				stmt.setString(index, parameter);
 				++index;
 			}
-
+			stmt.setInt(index, limit);
+			
 			java.sql.ResultSet rs = stmt.executeQuery();
 
+
 			stmt = null; // Prevent the finally block from closing the
-							// statement
-			
-			return new ResultSetIterator<NodeItem>(rs,
-					new ResultSetIterator.RowConverter<NodeItem>() {
-						@Override
-						public NodeItem convertRow(java.sql.ResultSet rs)
-								throws SQLException {
-							return new NodeItemImpl(rs.getString(1),
-									rs.getString(2), rs.getTimestamp(3),
-									rs.getString(4));
-						}
-					});
+						 // statement
+			ArrayList<NodeItem> results = new ArrayList<NodeItem>();
+			while (rs.next()) {
+				results.add(new NodeItemImpl(rs.getString(2), rs
+						.getString(1), sdf.parse(rs.getString(4)), rs.getString(3)));
+			}
+
+			return new ClosableIteratorImpl<NodeItem>(results.iterator());
 		} catch (SQLException e) {
+			throw new NodeStoreException(e);
+		} catch (ParseException e) {
+			logger.error(e);
 			throw new NodeStoreException(e);
 		} finally {
 			close(stmt); // Will implicitly close the resultset if required
@@ -1091,8 +1093,6 @@ public class JDBCNodeStore implements NodeStore {
 			close(stmt); // Will implicitly close the resultset if required
 		}
 	}
-
-
 
 	@Override
 	public CloseableIterator<NodeItem> getNodeItems(String nodeId)

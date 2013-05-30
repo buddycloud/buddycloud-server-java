@@ -3,7 +3,6 @@ package org.buddycloud.channelserver.pubsub.model.impl;
 import java.util.Date;
 
 import org.buddycloud.channelserver.pubsub.model.NodeItem;
-import org.xmpp.resultsetmanagement.Result;
 
 public class NodeItemImpl implements NodeItem {
 

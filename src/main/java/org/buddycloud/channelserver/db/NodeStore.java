@@ -369,7 +369,30 @@ public interface NodeStore {
 	 */
 	CloseableIterator<NodeItem> getNodeItems(String nodeId)
 			throws NodeStoreException;
+	
+    /**
+     * Retrieves node item replies
+     * 
+     * @param nodeId
+     * @param itemId
+     * @param afterItemId
+     * @param limit
+     * @return
+     * @throws NodeStoreException
+     */
+	ClosableIteratorImpl<NodeItem> getNodeItemReplies(String nodeId, String itemId,
+			String afterItemId, int limit) throws NodeStoreException;
 
+	/**
+	 * Get a count of the number of replies to an item 
+	 * 
+	 * @param nodeId
+	 * @param itemId
+	 * @throws NodeStoreException 
+	 */
+	int getCountNodeItemReplies(String nodeId, String itemId) throws NodeStoreException;
+	
+	
     /**
      * Get recent items for a user
      * 

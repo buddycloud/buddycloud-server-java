@@ -14,6 +14,7 @@ import java.io.IOException;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Timestamp;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -22,6 +23,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import org.apache.commons.collections.CollectionUtils;
+import org.buddycloud.channelserver.db.ClosableIteratorImpl;
 import org.buddycloud.channelserver.db.CloseableIterator;
 import org.buddycloud.channelserver.db.NodeStore;
 import org.buddycloud.channelserver.db.exception.ItemNotFoundException;
@@ -1082,7 +1084,7 @@ public class JDBCNodeStoreTest {
 		assertTrue("Incorrect node subscriptions returned",
 				CollectionUtils.isEqualCollection(expected, result));
 	}
-	
+
 	@Test
 	@Ignore("hsql doesn't like DISTINCT ON")
 	public void testGetNodeSubscriptionListeners() throws Exception {
@@ -1107,7 +1109,7 @@ public class JDBCNodeStoreTest {
 		assertTrue("Incorrect node subscriptions returned",
 				CollectionUtils.isEqualCollection(expected, result));
 	}
-	
+
 	@Test
 	public void testGetUserSubscriptionsForUnknownUserReturnsNone()
 			throws Exception {
@@ -1538,7 +1540,7 @@ public class JDBCNodeStoreTest {
 		assertSameNodeItem(items.next(), nodeItem1);
 		assertEquals(false, items.hasNext());
 	}
-
+	
 	@Test
 	public void testGetRecentItemsWithNoResultsPerNodeRequestedReturnsExpectedCount()
 			throws Exception {
@@ -1600,7 +1602,7 @@ public class JDBCNodeStoreTest {
 		}
 		assertEquals(15, count);
 	}
-	
+
 	@Test
 	public void testGetRecentItemCountWithNoResultsPerNodeRequestedReturnsExpectedCount()
 			throws Exception {
@@ -1620,7 +1622,7 @@ public class JDBCNodeStoreTest {
 				null);
 		assertEquals(0, count);
 	}
-	
+
 	@Test
 	public void testGetRecentItemCount() throws Exception {
 
@@ -1630,7 +1632,7 @@ public class JDBCNodeStoreTest {
 		store.addUserSubscription(new NodeSubscriptionImpl(
 				TEST_SERVER1_NODE2_ID, TEST_SERVER1_USER1_JID,
 				Subscriptions.subscribed));
-        Thread.sleep(1);
+		Thread.sleep(1);
 		store.addNodeItem(new NodeItemImpl(TEST_SERVER1_NODE1_ID, "123",
 				new Date(), "payload"));
 		store.addNodeItem(new NodeItemImpl(TEST_SERVER1_NODE2_ID, "123",
@@ -1641,6 +1643,69 @@ public class JDBCNodeStoreTest {
 		assertEquals(2, count);
 	}
 
+	@Test
+	public void testCanGetItemReplies() throws Exception {
+		dbTester.loadData("node_1");
+		NodeItem testItem = new NodeItemImpl(TEST_SERVER1_NODE1_ID, "a6",
+				new Date(), "<entry>payload</entry>", "a5");
+		store.addNodeItem(testItem);
+
+		ClosableIteratorImpl<NodeItem> items = store.getNodeItemReplies(
+				TEST_SERVER1_NODE1_ID, "a5", null, -1);
+
+		int count = 0;
+		NodeItem item = null;
+		while (items.hasNext()) {
+			++count;
+			item = items.next();
+
+		}
+		assertEquals(1, count);
+		assertSameNodeItem(item, testItem);
+	}
+
+	@Test
+	public void testCanGetItemRepliesWithResultSetManagement() throws Exception {
+		dbTester.loadData("node_1");
+		NodeItem testItem1 = new NodeItemImpl(TEST_SERVER1_NODE1_ID, "a6",
+				new Date(), "<entry>payload</entry>", "a5");
+		NodeItem testItem2 = new NodeItemImpl(TEST_SERVER1_NODE1_ID, "a7",
+				new Date(0), "<entry>payload</entry>", "a5");
+		NodeItem testItem3 = new NodeItemImpl(TEST_SERVER1_NODE1_ID, "a8",
+				new Date(100), "<entry>payload</entry>", "a5");
+		NodeItem testItem4 = new NodeItemImpl(TEST_SERVER1_NODE1_ID, "a9",
+				new Date(200), "<entry>payload</entry>", "a5");
+		store.addNodeItem(testItem1);
+		store.addNodeItem(testItem2);
+		store.addNodeItem(testItem3);
+		store.addNodeItem(testItem4);
+
+		ClosableIteratorImpl<NodeItem> items = store.getNodeItemReplies(
+				TEST_SERVER1_NODE1_ID, "a5", "a7", 2);
+
+		int count = 0;
+		ArrayList<NodeItem> itemsResult = new ArrayList<NodeItem>();
+		while (items.hasNext()) {
+			++count;
+			itemsResult.add(items.next());
+
+		}
+		assertEquals(2, count);
+		assertSameNodeItem(itemsResult.get(0), testItem4);
+		assertSameNodeItem(itemsResult.get(1), testItem1);
+	}
+
+	@Test
+	public void testCanGetCountOfItemReplies() throws Exception {
+		dbTester.loadData("node_1");
+		NodeItem testItem = new NodeItemImpl(TEST_SERVER1_NODE1_ID, "a6",
+				new Date(), "<entry>payload</entry>", "a5");
+		store.addNodeItem(testItem);
+
+		int items = store.getCountNodeItemReplies(TEST_SERVER1_NODE1_ID, "a5");
+		assertEquals(1, items);
+	}
+	
 	@Test
 	public void testAddNodeItem() throws Exception {
 		dbTester.loadData("node_1");
@@ -1660,6 +1725,31 @@ public class JDBCNodeStoreTest {
 						put("id", itemId);
 						put("updated", updated);
 						put("xml", testContent);
+					}
+				});
+	}
+
+	@Test
+	public void testAddNoteItemWithInReplyTo() throws Exception {
+		dbTester.loadData("node_1");
+
+		final String itemId = "test-item-id";
+		final Timestamp updated = new Timestamp(System.currentTimeMillis());
+		final String testContent = "<content>Hello World</content>";
+		final String inReplyTo = "a5";
+
+		NodeItem item = new NodeItemImpl(TEST_SERVER1_NODE1_ID, itemId,
+				updated, testContent, "a5");
+		store.addNodeItem(item);
+
+		dbTester.assertions().assertTableContains("items",
+				new HashMap<String, Object>() {
+					{
+						put("node", TEST_SERVER1_NODE1_ID);
+						put("id", itemId);
+						put("updated", updated);
+						put("xml", testContent);
+						put("in_reply_to", inReplyTo);
 					}
 				});
 	}
@@ -1957,5 +2047,6 @@ public class JDBCNodeStoreTest {
 		assertEquals(actual.getId(), expected.getId());
 		assertEquals(actual.getNodeId(), expected.getNodeId());
 		assertEquals(actual.getPayload(), expected.getPayload());
+		assertEquals(actual.getInReplyTo(), expected.getInReplyTo());
 	}
 }

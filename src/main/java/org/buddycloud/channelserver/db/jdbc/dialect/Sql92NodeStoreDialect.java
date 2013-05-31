@@ -139,7 +139,7 @@ public class Sql92NodeStoreDialect implements NodeStoreSQLDialect {
 	    + "(SELECT \"id\", \"node\", \"xml\", \"updated\", \"in_reply_to\" "
 		+ "FROM \"items\" "
 		+ "WHERE \"node\" = ? "
-        + "AND \"updated\" >= ? "
+        + "AND \"updated\" >= TIMESTAMP(?) "
         + "ORDER BY \"updated\" DESC "
         + "LIMIT ?)";
 
@@ -147,12 +147,21 @@ public class Sql92NodeStoreDialect implements NodeStoreSQLDialect {
 		    + "(SELECT COUNT(\"id\") "
 			+ "FROM \"items\" "
 			+ "WHERE \"node\" = ? "
-	        + "AND \"updated\" >= ? "
+	        + "AND \"updated\" >= TIMESTAMP(?) "
 	        + "LIMIT ?)";
 
 	private static final String COUNT_ITEMS_FOR_NODE = "SELECT COUNT(*)"
 			+ " FROM \"items\" WHERE \"node\" = ?";
 
+	private static final String SELECT_ITEM_REPLIES = ""
+			+ "SELECT \"id\", \"node\", \"xml\", \"updated\", \"in_reply_to\" "
+			+ "FROM \"items\" WHERE \"node\" = ? AND \"in_reply_to\" = ? "
+			+ "AND \"updated\" > TIMESTAMP(?) ORDER BY \"updated\" DESC";
+	
+	private static final String SELECT_COUNT_ITEM_REPLIES = ""
+			+ "SELECT COUNT(\"id\") "
+			+ "FROM \"items\" WHERE \"node\" = ? AND \"in_reply_to\" = ? ";
+			
 	private static final String COUNT_SUBSCRIPTIONS_FOR_NODE = "SELECT COUNT(*) "
 			+ "FROM \"subscriptions\" WHERE \"node\" = ?;";
 
@@ -343,6 +352,16 @@ public class Sql92NodeStoreDialect implements NodeStoreSQLDialect {
 	@Override
 	public String selectItemsForUsersNodesBetweenDates() {
 		return SELECT_ITEMS_FOR_USER_BETWEEN_DATES;
+	}
+
+	@Override
+	public String selectItemReplies() {
+		return SELECT_ITEM_REPLIES;
+	}
+	
+	@Override
+	public String selectCountItemReplies() {
+		return SELECT_COUNT_ITEM_REPLIES;
 	}
 
 	@Override

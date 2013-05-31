@@ -1101,6 +1101,71 @@ public class JDBCNodeStore implements NodeStore {
 		return getNodeItems(nodeId, null, -1);
 	}
 	
+    @Override
+	public ClosableIteratorImpl<NodeItem> getNodeItemReplies(String nodeId, String itemId,
+			String afterItemId, int limit) throws NodeStoreException {
+    	PreparedStatement stmt = null;
+    	
+		try {
+			Date since = new Date(0);
+	    	if (null != afterItemId)
+	    		since = getNodeItemById(afterItemId).getUpdated();
+
+	    	String query = dialect
+			        .selectItemReplies();
+	    	if (-1 != limit) {
+	    		query += " LIMIT ?";
+	    	}
+			stmt = conn.prepareStatement(query);
+            stmt.setString(1,  nodeId);
+			stmt.setString(2, itemId);
+			stmt.setString(3, sdf.format(since));
+			if (-1 != limit) stmt.setInt(4, limit);
+
+			java.sql.ResultSet rs = stmt.executeQuery();
+
+			LinkedList<NodeItem> results = new LinkedList<NodeItem>();
+
+			while (rs.next()) {
+				results.push(new NodeItemImpl(rs.getString(2), rs
+						.getString(1), sdf.parse(rs.getString(4)), rs.getString(3), rs.getString(5)));
+			}
+
+			return new ClosableIteratorImpl<NodeItem>(results.iterator());
+		} catch (SQLException e) {
+			throw new NodeStoreException(e);
+		} catch (ParseException e) {
+			logger.error(e);
+			throw new NodeStoreException(e);
+		} finally {
+			close(stmt); // Will implicitly close the resultset if required
+		}
+	}
+    
+    @Override
+    public int getCountNodeItemReplies(String nodeId, String itemId) throws NodeStoreException {
+        PreparedStatement stmt = null;
+    	
+		try {
+			stmt = conn.prepareStatement(dialect
+			        .selectCountItemReplies());
+            stmt.setString(1,  nodeId);
+			stmt.setString(2, itemId);
+
+			java.sql.ResultSet rs = stmt.executeQuery();
+
+			if (rs.next()) {
+				return rs.getInt(1);
+			} else {
+				return 0; // This really shouldn't happen!
+			}
+		} catch (SQLException e) {
+			throw new NodeStoreException(e);
+		} finally {
+			close(stmt); // Will implicitly close the resultset if required
+		}
+    }
+	
 	@Override
 	public CloseableIterator<NodeItem> getNewNodeItemsForUser(JID user, Date startDate, Date endDate) throws NodeStoreException {
 
@@ -1522,7 +1587,7 @@ public class JDBCNodeStore implements NodeStore {
 		String selectSingleItem();
 
 		String selectItemsForNode();
-
+		
 		String selectItemsForNodeAfterDate();
 
 		String selectItemsForNodeBeforeDate();
@@ -1530,6 +1595,10 @@ public class JDBCNodeStore implements NodeStore {
 		String selectItemsForUsersNodesBetweenDates();
 
 		String countItemsForNode();
+
+		String selectItemReplies();
+
+		String selectCountItemReplies();
 
 		String insertItem();
 

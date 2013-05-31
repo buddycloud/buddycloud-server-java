@@ -7,6 +7,7 @@ import java.util.Properties;
 
 import org.apache.log4j.Logger;
 import org.buddycloud.channelserver.Configuration;
+import org.buddycloud.channelserver.db.ClosableIteratorImpl;
 import org.buddycloud.channelserver.db.CloseableIterator;
 import org.buddycloud.channelserver.db.NodeStore;
 import org.buddycloud.channelserver.db.exception.NodeStoreException;
@@ -204,6 +205,19 @@ public class ChannelManagerImpl implements ChannelManager {
 	}
 	
 
+	@Override
+	public ClosableIteratorImpl<NodeItem> getNodeItemReplies(String nodeId,
+			String itemId, String afterItemId, int limit)
+			throws NodeStoreException {
+		return nodeStore.getNodeItemReplies(nodeId, itemId, afterItemId, limit);
+	}
+
+	@Override
+	public int getCountNodeItemReplies(String nodeId, String itemId)
+			throws NodeStoreException {
+		return nodeStore.getCountNodeItemReplies(nodeId, itemId);
+	}
+	
 	@Override
 	public CloseableIterator<NodeItem> getNewNodeItemsForUser(JID user,
 			Date startDate, Date endDate) throws NodeStoreException {

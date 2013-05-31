@@ -1,0 +1,5 @@
+<iq type="get" from="channeluser@example.com/ChannelCompatibleClient'" to="channelserver.example.com" id="ri1">
+  <pubsub xmlns="http://jabber.org/protocol/pubsub">
+    <replies xmlns="http://buddycloud.org/v1" node="/user/channeluser@example.com/posts" item_id="38efced3-5462-49af-ba83-9f1d0a753a93"/>
+  </pubsub>
+</iq>

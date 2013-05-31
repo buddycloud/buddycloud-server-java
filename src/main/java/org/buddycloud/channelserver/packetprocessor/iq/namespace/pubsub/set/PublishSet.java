@@ -268,8 +268,16 @@ public class PublishSet implements PubSubElementProcessor {
 			}
 		}
 
+		String inReplyTo = null;
+		Element reply;
+		if (null != (reply = entry.element("in-reply-to"))) {
+			inReplyTo = reply.attributeValue("ref");
+			// Check parent exists
+			
+			// Check parent isn't reply itself
+		}
 		NodeItemImpl nodeItem = new NodeItemImpl(node, id, updated,
-				entry.asXML());
+				entry.asXML(), inReplyTo);
 
 		// Let's store the new item.
 		channelManager.addNodeItem(nodeItem);

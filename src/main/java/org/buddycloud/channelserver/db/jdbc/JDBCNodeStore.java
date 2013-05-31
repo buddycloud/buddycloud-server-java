@@ -1020,7 +1020,7 @@ public class JDBCNodeStore implements NodeStore {
 			if (null != afterItemId) {
 				NodeItem item = getNodeItemById(afterItemId);
 				if ((null != item) 
-				    && (true == item.getUpdated().after(since))) {
+				    && (true == item.getUpdated().before(since))) {
 					
 					since = item.getUpdated();
 				}

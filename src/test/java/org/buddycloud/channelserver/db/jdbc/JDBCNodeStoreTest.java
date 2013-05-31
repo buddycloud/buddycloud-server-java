@@ -1514,7 +1514,6 @@ public class JDBCNodeStoreTest {
 				.contains(TEST_SERVER1_NODE1_ITEM1_CONTENT));
 	}
 	
-
 	@Test
 	public void testGetRecentItems() throws Exception {
 
@@ -1532,6 +1531,8 @@ public class JDBCNodeStoreTest {
 		store.addNodeItem(nodeItem1);
 		store.addNodeItem(nodeItem2);
 
+		Thread.sleep(20);
+		
 		CloseableIterator<NodeItem> items = store.getRecentItems(
 				TEST_SERVER1_USER1_JID, since, -1, -1, null, null);
 
@@ -1570,11 +1571,32 @@ public class JDBCNodeStoreTest {
 	}
 
 	@Test
+	public void testGetRecentItemCountWithNoResultsPerNodeRequestedReturnsExpectedCount()
+			throws Exception {
+		Date since = new Date();
+		dbTester.loadData("node_1");
+		store.addRemoteNode(TEST_SERVER1_NODE2_ID);
+		store.addUserSubscription(new NodeSubscriptionImpl(
+				TEST_SERVER1_NODE2_ID, TEST_SERVER1_USER1_JID,
+				Subscriptions.subscribed));
+
+		store.addNodeItem(new NodeItemImpl(TEST_SERVER1_NODE1_ID, "123",
+				new Date(), "payload"));
+		store.addNodeItem(new NodeItemImpl(TEST_SERVER1_NODE2_ID, "123",
+				new Date(), "payload2"));
+
+		int count = store.getCountRecentItems(TEST_SERVER1_USER1_JID, since, 0,
+				null);
+		assertEquals(0, count);
+	}
+
+	@Test
 	public void testCanPageGetRecentItemsUsingResultSetManagement()
 			throws Exception {
-		Date since = new Date(0);
-
 		dbTester.loadData("node_1");
+		
+		Date since = new Date();
+
 		store.addRemoteNode(TEST_SERVER1_NODE2_ID);
 		store.addUserSubscription(new NodeSubscriptionImpl(
 				TEST_SERVER1_NODE2_ID, TEST_SERVER1_USER1_JID,
@@ -1602,27 +1624,7 @@ public class JDBCNodeStoreTest {
 		}
 		assertEquals(15, count);
 	}
-
-	@Test
-	public void testGetRecentItemCountWithNoResultsPerNodeRequestedReturnsExpectedCount()
-			throws Exception {
-		Date since = new Date();
-		dbTester.loadData("node_1");
-		store.addRemoteNode(TEST_SERVER1_NODE2_ID);
-		store.addUserSubscription(new NodeSubscriptionImpl(
-				TEST_SERVER1_NODE2_ID, TEST_SERVER1_USER1_JID,
-				Subscriptions.subscribed));
-
-		store.addNodeItem(new NodeItemImpl(TEST_SERVER1_NODE1_ID, "123",
-				new Date(), "payload"));
-		store.addNodeItem(new NodeItemImpl(TEST_SERVER1_NODE2_ID, "123",
-				new Date(), "payload2"));
-
-		int count = store.getCountRecentItems(TEST_SERVER1_USER1_JID, since, 0,
-				null);
-		assertEquals(0, count);
-	}
-
+	
 	@Test
 	public void testGetRecentItemCount() throws Exception {
 

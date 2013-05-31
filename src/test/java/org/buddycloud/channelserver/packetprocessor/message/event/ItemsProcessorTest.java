@@ -65,11 +65,14 @@ public class ItemsProcessorTest extends IQTestHandler {
 		Element item = items.addElement("item");
 
 		entry = item.addElement("entry");
+		entry.addNamespace("thr", "http://purl.org/syndication/thread/1.0");
+		
 		Element updated = entry.addElement("updated");
 		updated.setText("2012-10-10T08:37:02.000Z");
 
 		items.addAttribute("node", "/users/romeo@shakespeare.lit/posts");
 		item.addAttribute("id", "publish:1");
+		entry.addElement("thr:in-reply-to", "http://purl.org/syndication/thread/1.0").addAttribute("ref", "123455");
 
 	}
 

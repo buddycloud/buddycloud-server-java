@@ -21,7 +21,7 @@ import org.xmpp.packet.Packet;
 import org.xmpp.resultsetmanagement.ResultSet;
 
 public class ItemsProcessor extends AbstractMessageProcessor {
-	
+
 	private static final Logger logger = Logger.getLogger(ItemsProcessor.class);
 	private static final String DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.S'Z'";
 	private SimpleDateFormat sdf = new SimpleDateFormat(DATE_FORMAT);
@@ -45,21 +45,21 @@ public class ItemsProcessor extends AbstractMessageProcessor {
 	}
 
 	private void handleItem() throws NodeStoreException {
-		
+
 		if (false == channelManager.nodeExists(node))
 			channelManager.addRemoteNode(node);
 		Element item = message.getElement().element("event").element("items")
 				.element("item");
 		Element entry = item.element("entry");
-        if (null != entry) {
-		    handleNewItem(entry);
-		    return;
-        }
+		if (null != entry) {
+			handleNewItem(entry);
+			return;
+		}
 	}
-	
+
 	private void deleteItem(String id) throws NodeStoreException {
 		try {
-		    channelManager.deleteNodeItemById(node, id);
+			channelManager.deleteNodeItemById(node, id);
 		} catch (ItemNotFoundException e) {
 			logger.debug("No item to delete, not a problem");
 		}
@@ -67,10 +67,15 @@ public class ItemsProcessor extends AbstractMessageProcessor {
 
 	private void handleNewItem(Element entry) throws NodeStoreException {
 		try {
+			String inReplyTo = null;
+			Element reply;
+			if (null != (reply = entry.element("in-reply-to")))
+				inReplyTo = reply.attributeValue("ref");
 			Date updatedDate = sdf.parse(entry.elementText("updated"));
 			deleteItem(entry.elementText("id"));
 			NodeItemImpl nodeItem = new NodeItemImpl(node,
-					entry.elementText("id"), updatedDate, entry.asXML());
+					entry.elementText("id"), updatedDate, entry.asXML(),
+					inReplyTo);
 			channelManager.addNodeItem(nodeItem);
 		} catch (ParseException e) {
 			logger.error(e);

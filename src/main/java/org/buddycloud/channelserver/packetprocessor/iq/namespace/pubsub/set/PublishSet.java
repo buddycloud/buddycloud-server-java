@@ -64,27 +64,9 @@ public class PublishSet implements PubSubElementProcessor {
 		node = elm.attributeValue("node");
 		requestIq = reqIQ;
 		response = IQ.createResultIQ(reqIQ);
-		
+		publishersJID = requestIq.getFrom();
 		if (false == checkNode()) return;
 
-		publishersJID = requestIq.getFrom();
-		boolean isLocalNode = false;
-		try {
-		    isLocalNode = channelManager.isLocalNode(node);
-		} catch (IllegalArgumentException e) {
-			response.setType(Type.error);
-			PacketError pe = new PacketError(
-					org.xmpp.packet.PacketError.Condition.bad_request,
-					org.xmpp.packet.PacketError.Type.modify);
-			response.setError(pe);
-			outQueue.put(response);
-			return;
-		}
-		
-		if (false == isLocalNode) {
-			makeRemoteRequest();
-			return;
-		}
 		boolean isLocalSubscriber = false;
 
 		if (actorJID != null) {
@@ -118,21 +100,21 @@ public class PublishSet implements PubSubElementProcessor {
 		
 		if (false == nodeExists()) return;
 		if (false == userCanPost()) return;
-
 		Element item = elm.element("item");
 		if (false == isRequestValid(item)) return;
 		if (false == extractItemDetails(item)) return;
-
-		
 		if (false == determineInReplyToDetails()) return;
-
-		// Let's store the new item.
-		channelManager.addNodeItem(new NodeItemImpl(node, id, updated,
-				entry.asXML(), inReplyTo));
-
+		
+		saveNodeItem();
 		sendResponseStanza();
 		sendNotifications();
 
+	}
+
+	private void saveNodeItem() throws NodeStoreException {
+		// Let's store the new item.
+		channelManager.addNodeItem(new NodeItemImpl(node, id, updated,
+				entry.asXML(), inReplyTo));
 	}
 
 	private boolean determineInReplyToDetails() throws NodeStoreException, InterruptedException {
@@ -307,26 +289,44 @@ public class PublishSet implements PubSubElementProcessor {
 		return false;
 	}
 
-	private boolean checkNode() throws InterruptedException {
-		if ((node != null) && (false == node.equals(""))) return true;
-
-		response.setType(Type.error);
-
-		Element badRequest = new DOMElement("bad-request",
-				new org.dom4j.Namespace("", JabberPubsub.NS_XMPP_STANZAS));
-
-		Element nodeIdRequired = new DOMElement("nodeid-required",
-				new org.dom4j.Namespace("", JabberPubsub.NS_PUBSUB_ERROR));
-
-		Element error = new DOMElement("error");
-		error.addAttribute("type", "modify");
-		error.add(badRequest);
-		error.add(nodeIdRequired);
-
-		response.setChildElement(error);
-
-		outQueue.put(response);
-		return false;
+	private boolean checkNode() throws InterruptedException, NodeStoreException {
+		if ((node == null) || (true == node.equals(""))) {
+			response.setType(Type.error);
+	
+			Element badRequest = new DOMElement("bad-request",
+					new org.dom4j.Namespace("", JabberPubsub.NS_XMPP_STANZAS));
+	
+			Element nodeIdRequired = new DOMElement("nodeid-required",
+					new org.dom4j.Namespace("", JabberPubsub.NS_PUBSUB_ERROR));
+	
+			Element error = new DOMElement("error");
+			error.addAttribute("type", "modify");
+			error.add(badRequest);
+			error.add(nodeIdRequired);
+	
+			response.setChildElement(error);
+	
+			outQueue.put(response);
+			return false;
+		}
+		boolean isLocalNode = false;
+		try {
+		    isLocalNode = channelManager.isLocalNode(node);
+		} catch (IllegalArgumentException e) {
+			response.setType(Type.error);
+			PacketError pe = new PacketError(
+					org.xmpp.packet.PacketError.Condition.bad_request,
+					org.xmpp.packet.PacketError.Type.modify);
+			response.setError(pe);
+			outQueue.put(response);
+			return false;
+		}
+		
+		if (false == isLocalNode) {
+			makeRemoteRequest();
+			return false;
+		}
+		return true;
 	}
 
 	private void sendNotifications()

@@ -152,7 +152,16 @@ public class PublishSet implements PubSubElementProcessor {
 			outQueue.put(response);
 			return false;
 		}
-        return true;
+		if (null != nodeItem.getInReplyTo()) {
+			response.setType(Type.error);
+			PacketError pe = new PacketError(
+					org.xmpp.packet.PacketError.Condition.bad_request,
+					org.xmpp.packet.PacketError.Type.modify);
+			response.setError(pe);
+			outQueue.put(response);
+			return false;
+        }
+		return true;
 	}
 
 	private boolean extractItemDetails(Element item) throws InterruptedException {

@@ -43,6 +43,12 @@ public class PublishSet implements PubSubElementProcessor {
 	private final ChannelManager channelManager;
 	private IQ requestIq;
 	private String node;
+	private Element entry;
+	private String id;
+	private IQ response;
+	private Date updated;
+	private JID publishersJID;
+	private String inReplyTo;
 
 	public PublishSet(BlockingQueue<Packet> outQueue,
 			ChannelManager channelManager) {
@@ -56,55 +62,25 @@ public class PublishSet implements PubSubElementProcessor {
 		
 		node = elm.attributeValue("node");
 		requestIq = reqIQ;
+		response = IQ.createResultIQ(reqIQ);
 		
-		if (node == null || node.equals("")) {
+		if (false == checkNode()) return;
 
-			/*
-			 * 7.2.3.3 NodeID Required
-			 * 
-			 * <iq type='error' from='pubsub.shakespeare.lit'
-			 * to='hamlet@denmark.lit/elsinore' id='retract1'> <error
-			 * type='modify'> <bad-request
-			 * xmlns='urn:ietf:params:xml:ns:xmpp-stanzas'/> <nodeid-required
-			 * xmlns='http://jabber.org/protocol/pubsub#errors'/> </error> </iq>
-			 */
-
-			IQ reply = IQ.createResultIQ(reqIQ);
-			reply.setType(Type.error);
-
-			Element badRequest = new DOMElement("bad-request",
-					new org.dom4j.Namespace("", JabberPubsub.NS_XMPP_STANZAS));
-
-			Element nodeIdRequired = new DOMElement("nodeid-required",
-					new org.dom4j.Namespace("", JabberPubsub.NS_PUBSUB_ERROR));
-
-			Element error = new DOMElement("error");
-			error.addAttribute("type", "modify");
-			error.add(badRequest);
-			error.add(nodeIdRequired);
-
-			reply.setChildElement(error);
-
-			outQueue.put(reply);
-			return;
-		}
-
-		JID publishersJID = reqIQ.getFrom();
+		publishersJID = requestIq.getFrom();
 		boolean isLocalNode = false;
 		try {
 		    isLocalNode = channelManager.isLocalNode(node);
 		} catch (IllegalArgumentException e) {
-			IQ reply = IQ.createResultIQ(reqIQ);
-			reply.setType(Type.error);
+			response.setType(Type.error);
 			PacketError pe = new PacketError(
 					org.xmpp.packet.PacketError.Condition.bad_request,
 					org.xmpp.packet.PacketError.Type.modify);
-			reply.setError(pe);
-			outQueue.put(reply);
+			response.setError(pe);
+			outQueue.put(response);
 			return;
 		}
 		
-		if (false == channelManager.isLocalNode(node)) {
+		if (false == isLocalNode) {
 			makeRemoteRequest();
 			return;
 		}
@@ -129,124 +105,62 @@ public class PublishSet implements PubSubElementProcessor {
 				 * type='auth'> <registration-required
 				 * xmlns='urn:ietf:params:xml:ns:xmpp-stanzas'/> </error> </iq>
 				 */
-
-				IQ reply = IQ.createResultIQ(reqIQ);
-				reply.setType(Type.error);
+				response.setType(Type.error);
 				PacketError pe = new PacketError(
 						org.xmpp.packet.PacketError.Condition.registration_required,
 						org.xmpp.packet.PacketError.Type.auth);
-				reply.setError(pe);
-				outQueue.put(reply);
+				response.setError(pe);
+				outQueue.put(response);
 				return;
 			}
 		}
-
-		if (false == channelManager.nodeExists(node)) {
-			IQ reply = IQ.createResultIQ(reqIQ);
-			reply.setType(Type.error);
-			PacketError error = new PacketError(
-					PacketError.Condition.item_not_found,
-					PacketError.Type.cancel);
-			reply.setError(error);
-			outQueue.put(reply);
-			return;
-		}
-
-		NodeSubscription nodeSubscription = channelManager.getUserSubscription(
-				node, publishersJID);
-		Subscriptions possibleExistingSubscription = nodeSubscription
-				.getSubscription();
-
-		NodeAffiliation nodeaffiliation = channelManager.getUserAffiliation(
-				node, publishersJID);
-		Affiliations possibleExistingAffiliation = nodeaffiliation
-				.getAffiliation();
-
-		if ((false == possibleExistingSubscription.equals(
-				Subscriptions.subscribed))
-				|| (false == possibleExistingAffiliation.in(Affiliations.moderator,
-						Affiliations.owner, Affiliations.publisher))) {
-			IQ reply = IQ.createResultIQ(reqIQ);
-			reply.setType(Type.error);
-			PacketError error = new PacketError(
-					PacketError.Condition.forbidden,
-					PacketError.Type.auth);
-			reply.setError(error);
-			outQueue.put(reply);
-			return;
-		}
+		
+		if (false == nodeExists()) return;
+		if (false == userCanPost()) return;
 
 		Element item = elm.element("item");
-		if (item == null) {
+		if (false == isRequestValid(item)) return;
+		if (false == extractItemDetails(item)) return;
 
-			/*
-			 * No item, let's reply something like this: <iq type='error'
-			 * from='pubsub.shakespeare.lit' to='hamlet@denmark.lit/elsinore'
-			 * id='publish1'> <error type='modify'> <bad-request
-			 * xmlns='urn:ietf:params:xml:ns:xmpp-stanzas'/> <item-required
-			 * xmlns='http://jabber.org/protocol/pubsub#errors'/> </error> </iq>
-			 */
+		
+		if (false == determineInReplyToDetails()) return;
 
-			IQ reply = IQ.createResultIQ(reqIQ);
-			reply.setType(Type.error);
+		// Let's store the new item.
+		channelManager.addNodeItem(new NodeItemImpl(node, id, updated,
+				entry.asXML(), inReplyTo));
 
-			Element badRequest = new DOMElement("bad-request",
-					new org.dom4j.Namespace("", JabberPubsub.NS_XMPP_STANZAS));
+		sendResponseStanza();
+		sendNotifications();
 
-			Element nodeIdRequired = new DOMElement("item-required",
-					new org.dom4j.Namespace("", JabberPubsub.NS_PUBSUB_ERROR));
+	}
 
-			Element error = new DOMElement("error");
-			error.addAttribute("type", "modify");
-			error.add(badRequest);
-			error.add(nodeIdRequired);
+	private boolean determineInReplyToDetails() {
+		inReplyTo = null;
+		Element reply;
+		if (null == (reply = entry.element("in-response-to"))) return true;
+		
+			
+		inReplyTo = reply.attributeValue("ref");
+		// Check parent exists
+		
+		// Check parent isn't response itself
 
-			reply.setChildElement(error);
+		return true;
+	}
 
-			outQueue.put(reply);
-			return;
-		}
-
+	private boolean extractItemDetails(Element item) throws InterruptedException {
 		ValidateEntry vEntry = new ValidateEntry(item.element("entry"));
 		if (!vEntry.isValid()) {
-			LOGGER.info("Entry is not valid: '" + vEntry.getErrorMsg() + "'.");
-
-			/*
-			 * <iq type='error' from='pubsub.shakespeare.lit'
-			 * to='hamlet@denmark.lit/elsinore' id='publish1'> <error
-			 * type='modify'> <bad-request
-			 * xmlns='urn:ietf:params:xml:ns:xmpp-stanzas'/> <invalid-payload
-			 * xmlns='http://jabber.org/protocol/pubsub#errors'/> </error> </iq>
-			 */
-
-			IQ reply = IQ.createResultIQ(reqIQ);
-			reply.setType(Type.error);
-
-			Element badRequest = new DOMElement("bad-request",
-					new org.dom4j.Namespace("", JabberPubsub.NS_XMPP_STANZAS));
-
-			Element nodeIdRequired = new DOMElement("invalid-payload",
-					new org.dom4j.Namespace("", JabberPubsub.NS_PUBSUB_ERROR));
-
-			Element error = new DOMElement("error");
-			error.addAttribute("type", "modify");
-			error.add(badRequest);
-			error.add(nodeIdRequired);
-
-			reply.setChildElement(error);
-
-			outQueue.put(reply);
-			return;
+			sendInvalidEntryResponse(vEntry);
+			return false;
 		}
 
-		Element entry = vEntry.createBcCompatible(publishersJID.toBareJID(),
-				reqIQ.getTo().toBareJID(), node);
+		entry = vEntry.createBcCompatible(publishersJID.toBareJID(),
+				requestIq.getTo().toBareJID(), node);
 
-		String id = entry.element("id").getText();
+		id = entry.element("id").getText();
 		String[] idParts = id.split(",");
 		id = idParts[2];
-
-		Date updated;
 
 		String updatedText = entry.elementText("updated");
 
@@ -267,23 +181,89 @@ public class PublishSet implements PubSubElementProcessor {
 				// Otherwise we will just let it pass
 			}
 		}
+		return true;
+	}
 
-		String inReplyTo = null;
-		Element reply;
-		if (null != (reply = entry.element("in-reply-to"))) {
-			inReplyTo = reply.attributeValue("ref");
-			// Check parent exists
-			
-			// Check parent isn't reply itself
-		}
-		NodeItemImpl nodeItem = new NodeItemImpl(node, id, updated,
-				entry.asXML(), inReplyTo);
-
-		// Let's store the new item.
-		channelManager.addNodeItem(nodeItem);
+	private void sendInvalidEntryResponse(ValidateEntry vEntry)
+			throws InterruptedException {
+		LOGGER.info("Entry is not valid: '" + vEntry.getErrorMsg() + "'.");
 
 		/*
-		 * Success, let's reply as defined in
+		 * <iq type='error' from='pubsub.shakespeare.lit'
+		 * to='hamlet@denmark.lit/elsinore' id='publish1'> <error
+		 * type='modify'> <bad-request
+		 * xmlns='urn:ietf:params:xml:ns:xmpp-stanzas'/> <invalid-payload
+		 * xmlns='http://jabber.org/protocol/pubsub#errors'/> </error> </iq>
+		 */
+		response.setType(Type.error);
+
+		Element badRequest = new DOMElement("bad-request",
+				new org.dom4j.Namespace("", JabberPubsub.NS_XMPP_STANZAS));
+
+		Element nodeIdRequired = new DOMElement("invalid-payload",
+				new org.dom4j.Namespace("", JabberPubsub.NS_PUBSUB_ERROR));
+
+		Element error = new DOMElement("error");
+		error.addAttribute("type", "modify");
+		error.add(badRequest);
+		error.add(nodeIdRequired);
+
+		response.setChildElement(error);
+
+		outQueue.put(response);
+	}
+
+	private boolean isRequestValid(Element item) throws InterruptedException {
+		if (item != null) return true;
+		
+		response.setType(Type.error);
+
+		Element badRequest = new DOMElement("bad-request",
+				new org.dom4j.Namespace("", JabberPubsub.NS_XMPP_STANZAS));
+
+		Element nodeIdRequired = new DOMElement("item-required",
+				new org.dom4j.Namespace("", JabberPubsub.NS_PUBSUB_ERROR));
+
+		Element error = new DOMElement("error");
+		error.addAttribute("type", "modify");
+		error.add(badRequest);
+		error.add(nodeIdRequired);
+
+		response.setChildElement(error);
+
+		outQueue.put(response);
+		return false;
+	}
+
+	private boolean userCanPost() throws NodeStoreException, InterruptedException {
+		NodeSubscription nodeSubscription = channelManager.getUserSubscription(
+				node, publishersJID);
+		Subscriptions possibleExistingSubscription = nodeSubscription
+				.getSubscription();
+
+		NodeAffiliation nodeaffiliation = channelManager.getUserAffiliation(
+				node, publishersJID);
+		Affiliations possibleExistingAffiliation = nodeaffiliation
+				.getAffiliation();
+
+		if ((false == possibleExistingSubscription.equals(
+				Subscriptions.subscribed))
+				|| (false == possibleExistingAffiliation.in(Affiliations.moderator,
+						Affiliations.owner, Affiliations.publisher))) {
+			response.setType(Type.error);
+			PacketError error = new PacketError(
+					PacketError.Condition.forbidden,
+					PacketError.Type.auth);
+			response.setError(error);
+			outQueue.put(response);
+			return false;
+		}
+		return true;
+	}
+	
+	private void sendResponseStanza() throws InterruptedException {
+		/*
+		 * Success, let's response as defined in
 		 * http://xmpp.org/extensions/xep-0060.html#publisher-publish - 7.1.2
 		 * Success Case
 		 */
@@ -296,11 +276,45 @@ public class PublishSet implements PubSubElementProcessor {
 		Element newItem = publish.addElement("item");
 		newItem.addAttribute("id", id);
 
-		IQ result = IQ.createResultIQ(reqIQ);
-		result.setChildElement(pubsub);
+		response.setChildElement(pubsub);
+		outQueue.put(response);
+	}
 
-		outQueue.put(result);
+	private boolean nodeExists() throws NodeStoreException, InterruptedException {
+		if (true == channelManager.nodeExists(node)) return true;
+		response.setType(Type.error);
+		PacketError error = new PacketError(
+				PacketError.Condition.item_not_found,
+				PacketError.Type.cancel);
+		response.setError(error);
+		outQueue.put(response);
+		return false;
+	}
 
+	private boolean checkNode() throws InterruptedException {
+		if ((node != null) && (false == node.equals(""))) return true;
+
+		response.setType(Type.error);
+
+		Element badRequest = new DOMElement("bad-request",
+				new org.dom4j.Namespace("", JabberPubsub.NS_XMPP_STANZAS));
+
+		Element nodeIdRequired = new DOMElement("nodeid-required",
+				new org.dom4j.Namespace("", JabberPubsub.NS_PUBSUB_ERROR));
+
+		Element error = new DOMElement("error");
+		error.addAttribute("type", "modify");
+		error.add(badRequest);
+		error.add(nodeIdRequired);
+
+		response.setChildElement(error);
+
+		outQueue.put(response);
+		return false;
+	}
+
+	private void sendNotifications()
+			throws NodeStoreException, InterruptedException {
 		// Let's send notifications as defined in 7.1.2.1 Notification With
 		// Payload
 		Message msg = new Message();
@@ -320,17 +334,7 @@ public class PublishSet implements PubSubElementProcessor {
 				.getNodeSubscriptionListeners(node);
 
 		for (NodeSubscription ns : cur) {
-
 			JID to = ns.getUser();
-
-			// TODO Federation!
-			/*
-			 * if(ns.getForeignChannelServer() != null) { if(
-			 * externalChannelServerReceivers
-			 * .contains(ns.getForeignChannelServer()) ) { continue; }
-			 * externalChannelServerReceivers.add(ns.getForeignChannelServer());
-			 * toBareJID = ns.getForeignChannelServer(); }
-			 */
 			if (ns.getSubscription().equals(Subscriptions.subscribed)) {
 			    LOGGER.debug("Sending post notification to " + to.toBareJID());
 			    msg.setTo(ns.getListener());
@@ -338,7 +342,6 @@ public class PublishSet implements PubSubElementProcessor {
 			    outQueue.put(msg.createCopy());
 			}
 		}
-
 	}
 
 	private void makeRemoteRequest() throws InterruptedException {
@@ -354,5 +357,4 @@ public class PublishSet implements PubSubElementProcessor {
 	public boolean accept(Element elm) {
 		return elm.getName().equals("publish");
 	}
-
 }

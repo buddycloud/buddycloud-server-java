@@ -17,6 +17,7 @@ import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.PubSubEl
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.PubSubSet;
 import org.buddycloud.channelserver.pubsub.affiliation.Affiliations;
 import org.buddycloud.channelserver.pubsub.model.NodeAffiliation;
+import org.buddycloud.channelserver.pubsub.model.NodeItem;
 import org.buddycloud.channelserver.pubsub.model.NodeSubscription;
 import org.buddycloud.channelserver.pubsub.model.impl.NodeItemImpl;
 import org.buddycloud.channelserver.pubsub.subscription.Subscriptions;
@@ -134,18 +135,24 @@ public class PublishSet implements PubSubElementProcessor {
 
 	}
 
-	private boolean determineInReplyToDetails() {
+	private boolean determineInReplyToDetails() throws NodeStoreException, InterruptedException {
 		inReplyTo = null;
 		Element reply;
+		NodeItem nodeItem = null;
+		
 		if (null == (reply = entry.element("in-response-to"))) return true;
-		
-			
-		inReplyTo = reply.attributeValue("ref");
-		// Check parent exists
-		
-		// Check parent isn't response itself
 
-		return true;
+		inReplyTo = reply.attributeValue("ref");
+		if (null == (nodeItem = channelManager.getNodeItem(node, inReplyTo))) {
+			response.setType(Type.error);
+			PacketError pe = new PacketError(
+					org.xmpp.packet.PacketError.Condition.item_not_found,
+					org.xmpp.packet.PacketError.Type.cancel);
+			response.setError(pe);
+			outQueue.put(response);
+			return false;
+		}
+        return true;
 	}
 
 	private boolean extractItemDetails(Element item) throws InterruptedException {

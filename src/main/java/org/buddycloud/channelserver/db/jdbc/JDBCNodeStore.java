@@ -1048,11 +1048,14 @@ public class JDBCNodeStore implements NodeStore {
 			stmt = conn.prepareStatement(StringUtils.join(queryParts, " UNION ALL ") + " LIMIT ?;");
 			int index = 1;
 			for (String parameter : parameters) {
-				stmt.setString(index, parameter);
+				if ((index >= 3) && (0 == (index % 3))) {
+					stmt.setInt(index, Integer.parseInt(parameter));
+				} else {
+				   stmt.setString(index, parameter);
+				}
 				++index;
 			}
 			stmt.setInt(index, limit);
-			
 			java.sql.ResultSet rs = stmt.executeQuery();
 
 

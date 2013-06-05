@@ -27,7 +27,7 @@ public class Sql92NodeStoreDialect implements NodeStoreSQLDialect {
 
 	private static final String SELECT_AFFILIATION_CHANGES = ""
 			+ "SELECT \"node\", \"user\", \"affiliation\", \"updated\" FROM \"affiliations\" "
-			+ "WHERE \"updated\" >= to_timestamp(?, 'YYYY-MM-DD HH24:MI:SS.MS') AND \"updated\" <= to_timestamp(?, 'YYYY-MM-DD HH24:MI:SS.MS') AND \"node\" IN "
+			+ "WHERE \"updated\" >= ? AND \"updated\" <= ? AND \"node\" IN "
 			+ "(SELECT \"subscriptions\".\"node\" FROM \"subscriptions\", \"affiliations\" "
 			+ "WHERE \"subscriptions\".\"user\" = ? AND "
 			+ "\"subscriptions\".\"subscription\" = 'subscribed' AND "
@@ -139,7 +139,7 @@ public class Sql92NodeStoreDialect implements NodeStoreSQLDialect {
 	    + "(SELECT \"id\", \"node\", \"xml\", \"updated\", \"in_reply_to\" "
 		+ "FROM \"items\" "
 		+ "WHERE \"node\" = ? "
-        + "AND \"updated\" >= to_timestamp(?, 'YYYY-MM-DD HH24:MI:SS.MS') "
+        + "AND \"updated\" >= ? "
         + "ORDER BY \"updated\" DESC "
         + "LIMIT ?)";
 
@@ -147,7 +147,7 @@ public class Sql92NodeStoreDialect implements NodeStoreSQLDialect {
 		    + "(SELECT COUNT(\"id\") "
 			+ "FROM \"items\" "
 			+ "WHERE \"node\" = ? "
-	        + "AND \"updated\" >= to_timestamp(?, 'YYYY-MM-DD HH24:MI:SS.MS') "
+	        + "AND \"updated\" >= ? "
 	        + "LIMIT ?)";
 
 	private static final String COUNT_ITEMS_FOR_NODE = "SELECT COUNT(*)"
@@ -156,7 +156,7 @@ public class Sql92NodeStoreDialect implements NodeStoreSQLDialect {
 	private static final String SELECT_ITEM_REPLIES = ""
 			+ "SELECT \"id\", \"node\", \"xml\", \"updated\", \"in_reply_to\" "
 			+ "FROM \"items\" WHERE \"node\" = ? AND \"in_reply_to\" = ? "
-			+ "AND \"updated\" > to_timestamp(?, 'YYYY-MM-DD HH24:MI:SS.MS') ORDER BY \"updated\" DESC";
+			+ "AND \"updated\" > ? ORDER BY \"updated\" DESC";
 	
 	private static final String SELECT_COUNT_ITEM_REPLIES = ""
 			+ "SELECT COUNT(\"id\") "

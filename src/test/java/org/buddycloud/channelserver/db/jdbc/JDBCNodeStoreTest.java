@@ -1132,7 +1132,7 @@ public class JDBCNodeStoreTest {
 		store.addUserSubscription(new NodeSubscriptionImpl(
 				TEST_SERVER1_NODE1_ID, TEST_SERVER1_USER3_JID,
 				Subscriptions.pending));
-
+		
 		ResultSet<NodeSubscription> changes = store.getSubscriptionChanges(
 				TEST_SERVER1_USER1_JID, new Date(0), new Date());
 		assertEquals(5, changes.size());
@@ -1150,7 +1150,7 @@ public class JDBCNodeStoreTest {
 				Subscriptions.pending));
 		store.setUserAffiliation(TEST_SERVER1_NODE1_ID, TEST_SERVER1_USER1_JID,
 				Affiliations.outcast);
-
+		
 		ResultSet<NodeSubscription> changes = store.getSubscriptionChanges(
 				TEST_SERVER1_USER1_JID, new Date(0), new Date());
 		assertEquals(0, changes.size());

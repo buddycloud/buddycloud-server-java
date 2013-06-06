@@ -772,9 +772,7 @@ public class JDBCNodeStore implements NodeStore {
 
 		String maxItems;
 		if (-1 == maxItemsToReturn) {
-			maxItems = "ALL";
-		} else {
-			maxItems = String.valueOf(maxItemsToReturn);
+			maxItemsToReturn = 50;
 		}
 		try {
 			String jid;
@@ -788,7 +786,7 @@ public class JDBCNodeStore implements NodeStore {
 			stmt.setString(1, nodeId);
 			stmt.setString(2, nodeId);
 			stmt.setString(3, jid);
-			stmt.setString(4, maxItems);
+			stmt.setInt(4, maxItemsToReturn);
 
 			java.sql.ResultSet rs = stmt.executeQuery();
 

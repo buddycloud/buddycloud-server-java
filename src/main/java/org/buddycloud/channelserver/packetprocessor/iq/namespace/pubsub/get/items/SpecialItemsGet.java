@@ -16,6 +16,7 @@ import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.JabberPu
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.PubSubElementProcessor;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.PubSubElementProcessorAbstract;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.PubSubGet;
+import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.get.items.special.FirehoseGet;
 import org.buddycloud.channelserver.pubsub.model.NodeAffiliation;
 import org.buddycloud.channelserver.pubsub.model.NodeItem;
 import org.buddycloud.channelserver.pubsub.model.NodeSubscription;
@@ -47,7 +48,7 @@ public class SpecialItemsGet extends PubSubElementProcessorAbstract {
 		request = reqIQ;
 		PubSubElementProcessor processor = null;
         if (FIREHOSE == node) {
-        	//processor = new FireHoseGet(outQueue, channelManager);
+        	processor = new FirehoseGet(outQueue, channelManager);
         } else {
         	featureNotImplementedError();
         	return;

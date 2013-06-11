@@ -23,7 +23,7 @@ public class ItemsGet extends PubSubElementProcessorAbstract {
 		userItems = new UserItemsGet(outQueue, channelManager);
 		specialItems = new SpecialItemsGet(outQueue, channelManager);
 	}
-	
+
 	@Override
 	public void process(Element elm, JID actorJID, IQ reqIQ, Element rsm)
 			throws Exception {

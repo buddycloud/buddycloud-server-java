@@ -1,4 +1,4 @@
-package org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.get;
+package org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.get.items;
 
 import java.io.StringReader;
 import java.util.Map;
@@ -34,8 +34,8 @@ import org.xmpp.packet.PacketError.Condition;
 import org.xmpp.packet.PacketError.Type;
 import org.xmpp.resultsetmanagement.ResultSet;
 
-public class ItemsGet implements PubSubElementProcessor {
-	private static final Logger logger = Logger.getLogger(ItemsGet.class);
+public class UserItemsGet implements PubSubElementProcessor {
+	private static final Logger logger = Logger.getLogger(UserItemsGet.class);
 
 	private final BlockingQueue<Packet> outQueue;
 
@@ -58,7 +58,7 @@ public class ItemsGet implements PubSubElementProcessor {
 
 	private int rsmEntriesCount;
 
-	public ItemsGet(BlockingQueue<Packet> outQueue,
+	public UserItemsGet(BlockingQueue<Packet> outQueue,
 			ChannelManager channelManager) {
 		this.outQueue = outQueue;
 		setChannelManager(channelManager);
@@ -91,12 +91,6 @@ public class ItemsGet implements PubSubElementProcessor {
 		if (false == channelManager.isLocalJID(requestIq.getFrom())) {
         	reply.getElement().addAttribute("remote-server-discover", "false");
         }
-		
-		if ((node == null) || (true == node.equals(""))) {
-			missingNodeIdRequest();
-			outQueue.put(reply);
-			return;
-		}
 
 		isSubscriptionsNode = node.substring(node.length() - 13).equals("subscriptions");
 		
@@ -377,11 +371,6 @@ public class ItemsGet implements PubSubElementProcessor {
 			item.addAttribute(subscriptionAttribute, subscription.getSubscription()
 					.toString());
 		}
-	}
-
-	private void missingNodeIdRequest() {
-		createExtendedErrorReply(PacketError.Type.modify,
-				PacketError.Condition.bad_request, "nodeid-required");
 	}
 
 	private void createExtendedErrorReply(Type type, Condition condition,

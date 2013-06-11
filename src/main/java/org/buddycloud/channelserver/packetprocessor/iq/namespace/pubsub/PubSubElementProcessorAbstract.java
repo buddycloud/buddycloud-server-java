@@ -31,6 +31,11 @@ public abstract class PubSubElementProcessorAbstract
     protected String                node = null;
     protected Helper                configurationHelper;
 
+	protected Element resultSetManagement;
+	protected String firstItem;
+	protected String lastItem;
+	protected int totalEntriesCount;
+
 	public void setOutQueue(BlockingQueue<Packet> outQueue)
 	{
 		this.outQueue = outQueue;
@@ -88,6 +93,7 @@ public abstract class PubSubElementProcessorAbstract
 	
 	protected void setErrorCondition(Type type, Condition condition)
 	{
+		if (null == response) response = IQ.createResultIQ(request);
 		response.setType(IQ.Type.error);
 		PacketError error = new PacketError(condition, type);
 		response.setError(error);
@@ -95,6 +101,7 @@ public abstract class PubSubElementProcessorAbstract
 	
 	protected void createExtendedErrorReply(Type type, Condition condition,
 			String additionalElement) {
+		if (null == response) response = IQ.createResultIQ(request);
 		response.setType(IQ.Type.error);
 		Element standardError = new DOMElement(condition.toString(),
 				new org.dom4j.Namespace("", JabberPubsub.NS_XMPP_STANZAS));

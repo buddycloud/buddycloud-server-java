@@ -31,11 +31,6 @@ import org.xmpp.resultsetmanagement.ResultSet;
 
 public class RecentItemsGet extends PubSubElementProcessorAbstract {
 
-	private Element resultSetManagement;
-	private String firstItem;
-	private String lastItem;
-	private int totalEntriesCount;
-
 	private SimpleDateFormat sdf;
 
 	private Date maxAge;

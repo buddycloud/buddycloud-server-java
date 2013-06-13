@@ -74,7 +74,7 @@ public class ChannelManagerImpl implements ChannelManager {
 			throws NodeStoreException {
 		nodeStore.deleteNodeConfiguration(nodeId);
 	}
-	
+
 	@Override
 	public Map<String, String> getNodeConf(String nodeId)
 			throws NodeStoreException {
@@ -103,7 +103,6 @@ public class ChannelManagerImpl implements ChannelManager {
 			throws NodeStoreException {
 		return nodeStore.getUserAffiliation(nodeId, user);
 	}
-	
 
 	@Override
 	public ResultSet<NodeAffiliation> getAffiliationChanges(JID user,
@@ -120,7 +119,8 @@ public class ChannelManagerImpl implements ChannelManager {
 	@Override
 	public ResultSet<NodeAffiliation> getUserAffiliations(JID user,
 			String afterItemId, int maxItemsToReturn) throws NodeStoreException {
-		return nodeStore.getUserAffiliations(user, afterItemId, maxItemsToReturn);
+		return nodeStore.getUserAffiliations(user, afterItemId,
+				maxItemsToReturn);
 	}
 
 	@Override
@@ -137,7 +137,8 @@ public class ChannelManagerImpl implements ChannelManager {
 	@Override
 	public ResultSet<NodeAffiliation> getNodeAffiliations(String nodeId,
 			String afterItemId, int maxItemsToReturn) throws NodeStoreException {
-		return nodeStore.getNodeAffiliations(nodeId, afterItemId, maxItemsToReturn);
+		return nodeStore.getNodeAffiliations(nodeId, afterItemId,
+				maxItemsToReturn);
 	}
 
 	@Override
@@ -160,9 +161,9 @@ public class ChannelManagerImpl implements ChannelManager {
 	@Override
 	public ResultSet<NodeSubscription> getUserSubscriptions(JID user,
 			String afterNodeId, int maxItemsToReturn) throws NodeStoreException {
-		return nodeStore.getUserSubscriptions(user, afterNodeId, maxItemsToReturn);
+		return nodeStore.getUserSubscriptions(user, afterNodeId,
+				maxItemsToReturn);
 	}
-	
 
 	@Override
 	public ResultSet<NodeSubscription> getSubscriptionChanges(JID user,
@@ -184,14 +185,15 @@ public class ChannelManagerImpl implements ChannelManager {
 	@Override
 	public ResultSet<NodeSubscription> getNodeSubscriptions(String nodeId,
 			JID afterItemId, int maxItemsToReturn) throws NodeStoreException {
-		return nodeStore.getNodeSubscriptions(nodeId, afterItemId, maxItemsToReturn);
+		return nodeStore.getNodeSubscriptions(nodeId, afterItemId,
+				maxItemsToReturn);
 	}
-	
+
 	@Override
 	public int countNodeSubscriptions(String nodeId) throws NodeStoreException {
 		return nodeStore.countNodeSubscriptions(nodeId);
 	}
-	
+
 	@Override
 	public CloseableIterator<NodeItem> getNodeItems(String nodeId,
 			String afterItemId, int count) throws NodeStoreException {
@@ -203,7 +205,6 @@ public class ChannelManagerImpl implements ChannelManager {
 			throws NodeStoreException {
 		return nodeStore.getNodeItems(nodeId);
 	}
-	
 
 	@Override
 	public ClosableIteratorImpl<NodeItem> getNodeItemReplies(String nodeId,
@@ -217,7 +218,7 @@ public class ChannelManagerImpl implements ChannelManager {
 			throws NodeStoreException {
 		return nodeStore.getCountNodeItemReplies(nodeId, itemId);
 	}
-	
+
 	@Override
 	public CloseableIterator<NodeItem> getNewNodeItemsForUser(JID user,
 			Date startDate, Date endDate) throws NodeStoreException {
@@ -228,16 +229,17 @@ public class ChannelManagerImpl implements ChannelManager {
 	public int countNodeItems(String nodeId) throws NodeStoreException {
 		return nodeStore.countNodeItems(nodeId);
 	}
-	
+
 	public boolean isCachedNode(String nodeId) throws NodeStoreException {
 		return nodeStore.isCachedNode(nodeId);
 	}
-	
+
 	@Override
-	public boolean nodeHasSubscriptions(String nodeId) throws NodeStoreException {
+	public boolean nodeHasSubscriptions(String nodeId)
+			throws NodeStoreException {
 		return (nodeStore.countNodeSubscriptions(nodeId) > 0);
 	}
-	
+
 	public boolean isCachedJID(JID jid) throws NodeStoreException {
 		return nodeStore.isCachedJID(jid);
 	}
@@ -340,7 +342,7 @@ public class ChannelManagerImpl implements ChannelManager {
 	@Override
 	public void deleteNode(String nodeId) throws NodeStoreException {
 		nodeStore.deleteNode(nodeId);
-		
+
 	}
 
 	@Override
@@ -348,7 +350,8 @@ public class ChannelManagerImpl implements ChannelManager {
 		ArrayList<String> nodes = this.getNodeList();
 		for (String node : nodes) {
 			try {
-			    if (false == this.isLocalNode(node)) nodeStore.purgeNodeItems(node);
+				if (false == this.isLocalNode(node))
+					nodeStore.purgeNodeItems(node);
 			} catch (IllegalArgumentException e) {
 				logger.error("Invalid remote node in datastore " + node, e);
 			}
@@ -369,7 +372,8 @@ public class ChannelManagerImpl implements ChannelManager {
 	public CloseableIterator<NodeItem> getRecentItems(JID user, Date since,
 			int maxPerNode, int limit, String afterItemId, String node)
 			throws NodeStoreException {
-		return nodeStore.getRecentItems(user, since, maxPerNode, limit, afterItemId, node);
+		return nodeStore.getRecentItems(user, since, maxPerNode, limit,
+				afterItemId, node);
 	}
 
 	@Override

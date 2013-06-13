@@ -40,6 +40,8 @@ public class SubscribeSet extends PubSubElementProcessorAbstract {
 	private IQ request;
 	private String node;
 	private JID subscribingJid;
+	
+	private Map<String, String> nodeConf;
 
 	private static final Logger logger = Logger.getLogger(SubscribeSet.class);
 
@@ -58,69 +60,16 @@ public class SubscribeSet extends PubSubElementProcessorAbstract {
 			missingNodeName();
 			return;
 		}
-        if (false == channelManager.isLocalNode(node)) {
-        	makeRemoteRequest();
-        	return;
-        }
-		subscribingJid = request.getFrom();
-		boolean isLocalNode = true;
-		boolean isLocalSubscriber = false;
-
-		if (actorJID != null) {
-			subscribingJid = actorJID;
-		} else {
-			isLocalSubscriber = channelManager.isLocalJID(subscribingJid);
-			// Check that user is registered.
-			if (!isLocalSubscriber) {
-				failAuthRequired();
-				return;
-			}
-		}
-
-		// 6.1.3.1 JIDs Do Not Match
-
-		// Covers where we have juliet@shakespeare.lit/the-balcony
-		String[] jidParts = elm.attributeValue("jid").split("/");
-		String jid = jidParts[0];
-		if (false == subscribingJid.toBareJID().equals(jid)) {
-
-			/*
-			 * // 6.1.3.1 JIDs Do Not Match <iq type='error'
-			 * from='pubsub.shakespeare.lit' to='francisco@denmark.lit/barracks'
-			 * id='sub1'> <error type='modify'> <bad-request
-			 * xmlns='urn:ietf:params:xml:ns:xmpp-stanzas'/> <invalid-jid
-			 * xmlns='http://jabber.org/protocol/pubsub#errors'/> </error> </iq>
-			 */
-
-			IQ reply = IQ.createResultIQ(request);
-			reply.setType(Type.error);
-
-			Element badRequest = new DOMElement("bad-request",
-					new org.dom4j.Namespace("", JabberPubsub.NS_XMPP_STANZAS));
-			Element nodeIdRequired = new DOMElement("invalid-jid",
-					new org.dom4j.Namespace("", JabberPubsub.NS_PUBSUB_ERROR));
-			Element error = new DOMElement("error");
-			error.addAttribute("type", PacketError.Type.modify.toXMPP());
-			error.add(badRequest);
-			error.add(nodeIdRequired);
-			reply.setChildElement(error);
-			outQueue.put(reply);
+		
+		if (true == node.equals("/firehose")) {
+			if (false == channelManager.nodeExists("/firehose"))
+	            channelManager.addRemoteNode("/firehose");
+			nodeConf = new HashMap<String, String>();
+			nodeConf.put(Conf.DEFAULT_AFFILIATION, "member");
+			nodeConf.put(Conf.ACCESS_MODEL, "open");
+		} else if (false == handleNodeSubscription(elm, actorJID)) {
 			return;
 		}
-
-		if (false == channelManager.nodeExists(node)) {
-			IQ reply = IQ.createResultIQ(request);
-			reply.setType(Type.error);
-			PacketError pe = new PacketError(
-					PacketError.Condition.item_not_found,
-					PacketError.Type.cancel);
-			reply.setError(pe);
-			outQueue.put(reply);
-			return;
-		}
-
-		// If node is whitelist
-		// 6.1.3.4 Not on Whitelist
 
 		// Subscribe to a node.
 
@@ -167,9 +116,6 @@ public class SubscribeSet extends PubSubElementProcessorAbstract {
 				defaultAffiliation = possibleExistingAffiliation;
 				defaultSubscription = possibleExistingSubscription;
 			} else {
-
-				// Finally subscribe to the node :-)
-				Map<String, String> nodeConf = channelManager.getNodeConf(node);
 				try {
 					defaultAffiliation = Affiliations.createFromString(nodeConf
 							.get(Conf.DEFAULT_AFFILIATION));
@@ -213,6 +159,73 @@ public class SubscribeSet extends PubSubElementProcessorAbstract {
 			if (t != null)
 				t.close();
 		}
+	}
+
+	private boolean handleNodeSubscription(Element elm, JID actorJID)
+			throws NodeStoreException, InterruptedException {
+		if ((false == channelManager.isLocalNode(node)) && (false == node.equals("/firehose"))) {
+        	makeRemoteRequest();
+        	return false;
+        }
+		subscribingJid = request.getFrom();
+		boolean isLocalNode = true;
+		boolean isLocalSubscriber = false;
+
+		if (actorJID != null) {
+			subscribingJid = actorJID;
+		} else {
+			isLocalSubscriber = channelManager.isLocalJID(subscribingJid);
+			// Check that user is registered.
+			if (!isLocalSubscriber) {
+				failAuthRequired();
+				return false;
+			}
+		}
+
+		// 6.1.3.1 JIDs Do Not Match
+
+		// Covers where we have juliet@shakespeare.lit/the-balcony
+		String[] jidParts = elm.attributeValue("jid").split("/");
+		String jid = jidParts[0];
+		if (false == subscribingJid.toBareJID().equals(jid)) {
+
+			/*
+			 * // 6.1.3.1 JIDs Do Not Match <iq type='error'
+			 * from='pubsub.shakespeare.lit' to='francisco@denmark.lit/barracks'
+			 * id='sub1'> <error type='modify'> <bad-request
+			 * xmlns='urn:ietf:params:xml:ns:xmpp-stanzas'/> <invalid-jid
+			 * xmlns='http://jabber.org/protocol/pubsub#errors'/> </error> </iq>
+			 */
+
+			IQ reply = IQ.createResultIQ(request);
+			reply.setType(Type.error);
+
+			Element badRequest = new DOMElement("bad-request",
+					new org.dom4j.Namespace("", JabberPubsub.NS_XMPP_STANZAS));
+			Element nodeIdRequired = new DOMElement("invalid-jid",
+					new org.dom4j.Namespace("", JabberPubsub.NS_PUBSUB_ERROR));
+			Element error = new DOMElement("error");
+			error.addAttribute("type", PacketError.Type.modify.toXMPP());
+			error.add(badRequest);
+			error.add(nodeIdRequired);
+			reply.setChildElement(error);
+			outQueue.put(reply);
+			return false;
+		}
+
+		if (false == channelManager.nodeExists(node)) {
+			IQ reply = IQ.createResultIQ(request);
+			reply.setType(Type.error);
+			PacketError pe = new PacketError(
+					PacketError.Condition.item_not_found,
+					PacketError.Type.cancel);
+			reply.setError(pe);
+			outQueue.put(reply);
+			return false;
+		}
+
+		nodeConf = channelManager.getNodeConf(node);
+		return true;
 	}
 
 	private void makeRemoteRequest() throws InterruptedException {

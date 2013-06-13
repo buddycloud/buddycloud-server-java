@@ -38,9 +38,7 @@ import org.xmpp.resultsetmanagement.ResultSet;
 import org.xmpp.resultsetmanagement.ResultSetImpl;
 
 public class JDBCNodeStore implements NodeStore {
-	
-	private static final String PUBSUB_ACCESS_MODEL_KEY = "pubsub#access_model";
-	
+		
 	private Logger logger = Logger.getLogger(JDBCNodeStore.class);
 	private final Connection conn;
 	private final NodeStoreSQLDialect dialect;
@@ -963,7 +961,7 @@ public class JDBCNodeStore implements NodeStore {
 			stmt = conn.prepareStatement(dialect
 					.selectItemsForLocalNodesBeforeDate());
 			stmt.setTimestamp(1, new java.sql.Timestamp(beforeDate.getTime()));
-			stmt.setString(2, PUBSUB_ACCESS_MODEL_KEY);
+			stmt.setString(2, Conf.ACCESS_MODEL);
 			stmt.setString(3, accessModel);
 			stmt.setString(
 					4,
@@ -1010,7 +1008,7 @@ public class JDBCNodeStore implements NodeStore {
 
 		try {
 			stmt = conn.prepareStatement(dialect.countItemsForLocalNodes());
-			stmt.setString(1, PUBSUB_ACCESS_MODEL_KEY);
+			stmt.setString(1, Conf.ACCESS_MODEL);
 			stmt.setString(2, accessModel);
 			stmt.setString(3, "%@"
 					+ Configuration

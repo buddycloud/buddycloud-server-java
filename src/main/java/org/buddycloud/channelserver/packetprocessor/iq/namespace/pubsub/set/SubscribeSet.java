@@ -1,6 +1,7 @@
 
 package org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.set;
 
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
@@ -41,6 +42,8 @@ public class SubscribeSet extends PubSubElementProcessorAbstract {
 	private String node;
 	private JID subscribingJid;
 	
+	private final String FIREHOSE = "/firehose";
+	
 	private Map<String, String> nodeConf;
 
 	private static final Logger logger = Logger.getLogger(SubscribeSet.class);
@@ -60,10 +63,10 @@ public class SubscribeSet extends PubSubElementProcessorAbstract {
 			missingNodeName();
 			return;
 		}
-		
-		if (true == node.equals("/firehose")) {
-			if (false == channelManager.nodeExists("/firehose"))
-	            channelManager.addRemoteNode("/firehose");
+
+		if (true == node.equals(FIREHOSE)) {
+			if (false == channelManager.nodeExists(FIREHOSE))
+	            channelManager.addRemoteNode(FIREHOSE);
 			nodeConf = new HashMap<String, String>();
 			nodeConf.put(Conf.DEFAULT_AFFILIATION, "member");
 			nodeConf.put(Conf.ACCESS_MODEL, "open");

@@ -350,6 +350,7 @@ public class ChannelManagerImpl implements ChannelManager {
 		ArrayList<String> nodes = this.getNodeList();
 		for (String node : nodes) {
 			try {
+				if (true == node.equals(("/firehose"))) return;
 				if (false == this.isLocalNode(node))
 					nodeStore.purgeNodeItems(node);
 			} catch (IllegalArgumentException e) {

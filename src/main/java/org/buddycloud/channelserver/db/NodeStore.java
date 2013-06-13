@@ -391,8 +391,7 @@ public interface NodeStore {
 	 * @throws NodeStoreException 
 	 */
 	int getCountNodeItemReplies(String nodeId, String itemId) throws NodeStoreException;
-	
-	
+		
     /**
      * Get recent items for a user
      * 

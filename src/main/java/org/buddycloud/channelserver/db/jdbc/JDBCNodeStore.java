@@ -393,8 +393,8 @@ public class JDBCNodeStore implements NodeStore {
 
 			if (rs.next()) {
 				affiliation = new NodeAffiliationImpl(nodeId, user,
-						Affiliations.valueOf(rs.getString(1)), rs
-								.getTimestamp(2));
+						Affiliations.valueOf(rs.getString(1)),
+						rs.getTimestamp(2));
 			} else {
 				affiliation = new NodeAffiliationImpl(nodeId, user,
 						Affiliations.none, new Date());
@@ -427,8 +427,8 @@ public class JDBCNodeStore implements NodeStore {
 			while (rs.next()) {
 				NodeAffiliationImpl nodeSub = new NodeAffiliationImpl(
 						rs.getString(1), new JID(rs.getString(2)),
-						Affiliations.valueOf(rs.getString(3)), rs
-								.getTimestamp(4));
+						Affiliations.valueOf(rs.getString(3)),
+						rs.getTimestamp(4));
 				result.add(nodeSub);
 			}
 
@@ -540,8 +540,8 @@ public class JDBCNodeStore implements NodeStore {
 			while (rs.next()) {
 				NodeAffiliationImpl nodeSub = new NodeAffiliationImpl(
 						rs.getString(1), new JID(rs.getString(2)),
-						Affiliations.valueOf(rs.getString(3)), rs
-								.getTimestamp(4));
+						Affiliations.valueOf(rs.getString(3)),
+						rs.getTimestamp(4));
 				result.add(nodeSub);
 			}
 
@@ -572,8 +572,8 @@ public class JDBCNodeStore implements NodeStore {
 			while (rs.next()) {
 				NodeAffiliationImpl nodeSub = new NodeAffiliationImpl(
 						rs.getString(1), new JID(rs.getString(2)),
-						Affiliations.valueOf(rs.getString(3)), rs
-								.getTimestamp(4));
+						Affiliations.valueOf(rs.getString(3)),
+						rs.getTimestamp(4));
 				result.add(nodeSub);
 			}
 
@@ -631,8 +631,8 @@ public class JDBCNodeStore implements NodeStore {
 			if (rs.next()) {
 				subscription = new NodeSubscriptionImpl(nodeId, new JID(
 						rs.getString(2)), new JID(rs.getString(3)),
-						Subscriptions.valueOf(rs.getString(4)), rs
-								.getTimestamp(5));
+						Subscriptions.valueOf(rs.getString(4)),
+						rs.getTimestamp(5));
 			} else {
 				subscription = new NodeSubscriptionImpl(nodeId, user, user,
 						Subscriptions.none);
@@ -683,7 +683,8 @@ public class JDBCNodeStore implements NodeStore {
 		PreparedStatement stmt = null;
 
 		try {
-			stmt = conn.prepareStatement(dialect.selectSubscriptionsForUserAfterNode());
+			stmt = conn.prepareStatement(dialect
+					.selectSubscriptionsForUserAfterNode());
 			stmt.setString(1, user.toBareJID());
 			stmt.setString(2, user.toString());
 			stmt.setString(3, afterNodeId);
@@ -853,7 +854,8 @@ public class JDBCNodeStore implements NodeStore {
 			while (rs.next()) {
 				NodeSubscriptionImpl nodeSub = new NodeSubscriptionImpl(
 						rs.getString(2), new JID(rs.getString(1)),
-						Subscriptions.valueOf(rs.getString(3)), rs.getTimestamp(4));
+						Subscriptions.valueOf(rs.getString(3)),
+						rs.getTimestamp(4));
 				result.add(nodeSub);
 			}
 
@@ -910,10 +912,10 @@ public class JDBCNodeStore implements NodeStore {
 				stmt = conn.prepareStatement(dialect
 						.selectItemsForNodeBeforeDate() + countSQL);
 				stmt.setString(1, nodeId);
-				stmt.setTimestamp(2, new java.sql.Timestamp(afterItem.getUpdated()
-						.getTime()));
-				stmt.setTimestamp(3, new java.sql.Timestamp(afterItem.getUpdated()
-						.getTime()));
+				stmt.setTimestamp(2, new java.sql.Timestamp(afterItem
+						.getUpdated().getTime()));
+				stmt.setTimestamp(3, new java.sql.Timestamp(afterItem
+						.getUpdated().getTime()));
 				stmt.setString(4, afterItemId);
 
 				java.sql.ResultSet rs = stmt.executeQuery();
@@ -922,7 +924,8 @@ public class JDBCNodeStore implements NodeStore {
 
 				while (rs.next()) {
 					results.push(new NodeItemImpl(rs.getString(1), rs
-							.getString(2), rs.getTimestamp(3), rs.getString(4), rs.getString(5)));
+							.getString(2), rs.getTimestamp(3), rs.getString(4),
+							rs.getString(5)));
 				}
 
 				return new ClosableIteratorImpl<NodeItem>(results.iterator());
@@ -933,32 +936,142 @@ public class JDBCNodeStore implements NodeStore {
 			close(stmt); // Will implicitly close the resultset if required
 		}
 	}
-	
-	@Override 
-	public int getCountRecentItems(JID user, Date since, int maxPerNode, String node) throws NodeStoreException {
 
-		if (null == node) node = "/posts";
-		if (-1 == maxPerNode) maxPerNode = 50;
+	@Override
+	public CloseableIterator<NodeItem> getFirehose(int limit,
+			String afterItemId, boolean isAdmin) throws NodeStoreException {
+
+		PreparedStatement stmt = null;
+		Date beforeDate = null;
+
+		if (afterItemId != null) {
+			beforeDate = getNodeItemById(afterItemId).getUpdated();
+		} else {
+			beforeDate = new Date();
+			afterItemId = "";
+		}
+
+		if (limit < 0) {
+			throw new IllegalArgumentException(
+					"Invalid value for parameter count: " + limit);
+		}
+
+		String accessModel = "open";
+		if (true == isAdmin)
+			accessModel = "%";
+		try {
+			stmt = conn.prepareStatement(dialect
+					.selectItemsForLocalNodesBeforeDate());
+			stmt.setTimestamp(1, new java.sql.Timestamp(beforeDate.getTime()));
+			stmt.setString(2, PUBSUB_ACCESS_MODEL_KEY);
+			stmt.setString(3, accessModel);
+			stmt.setString(
+					4,
+					"%@"
+							+ Configuration
+									.getInstance()
+									.getProperty(
+											Configuration.CONFIGURATION_SERVER_DOMAIN)
+							+ "%");
+			stmt.setString(
+					5,
+					"%@"
+							+ Configuration
+									.getInstance()
+									.getProperty(
+											Configuration.CONFIGURATION_SERVER_TOPICS_DOMAIN)
+							+ "%");
+			stmt.setInt(6, limit);
+
+			java.sql.ResultSet rs = stmt.executeQuery();
+
+			LinkedList<NodeItem> results = new LinkedList<NodeItem>();
+
+			while (rs.next()) {
+				results.push(new NodeItemImpl(rs.getString(1), rs.getString(2),
+						rs.getTimestamp(3), rs.getString(4), rs.getString(5)));
+			}
+
+			return new ClosableIteratorImpl<NodeItem>(results.iterator());
+		} catch (SQLException e) {
+			throw new NodeStoreException(e);
+		} finally {
+			close(stmt); // Will implicitly close the resultset if required
+		}
+	}
+
+	@Override
+	public int getFirehoseItemCount(boolean isAdmin) throws NodeStoreException {
+		PreparedStatement stmt = null;
+
+		String accessModel = "open";
+		if (true == isAdmin)
+			accessModel = "%";
+
+		try {
+			stmt = conn.prepareStatement(dialect.countItemsForLocalNodes());
+			stmt.setString(1, PUBSUB_ACCESS_MODEL_KEY);
+			stmt.setString(2, accessModel);
+			stmt.setString(3, "%@"
+					+ Configuration
+					.getInstance()
+					.getProperty(
+							Configuration.CONFIGURATION_SERVER_DOMAIN) + "%");
+			stmt.setString(4, "%@"
+					+ Configuration
+					.getInstance()
+					.getProperty(
+							Configuration.CONFIGURATION_SERVER_TOPICS_DOMAIN) + "%");
+			java.sql.ResultSet rs = stmt.executeQuery();
+
+			if (rs.next()) {
+				return rs.getInt(1);
+			} else {
+				return 0; // This really shouldn't happen!
+			}
+		} catch (SQLException e) {
+			throw new NodeStoreException(e);
+		} finally {
+			close(stmt); // Will implicitly close the resultset if
+							// required
+		}
+	}
+
+	@Override
+	public int getCountRecentItems(JID user, Date since, int maxPerNode,
+			String node) throws NodeStoreException {
+
+		if (null == node)
+			node = "/posts";
+		if (-1 == maxPerNode)
+			maxPerNode = 50;
 
 		PreparedStatement stmt = null;
 
 		try {
-			ResultSet<NodeSubscription> subscriptions = this.getUserSubscriptions(user);
+			ResultSet<NodeSubscription> subscriptions = this
+					.getUserSubscriptions(user);
 
 			ArrayList<String> queryParts = new ArrayList<String>();
 			ArrayList<Object> parameters = new ArrayList<Object>();
-			
+
 			for (NodeSubscription subscription : subscriptions) {
-				if (false == subscription.getSubscription().equals(Subscriptions.subscribed))
+				if (false == subscription.getSubscription().equals(
+						Subscriptions.subscribed))
 					continue;
-				if (false == subscription.getNodeId().substring(subscription.getNodeId().length() - node.length()).equals(node))
-				    continue;
+				if (false == subscription
+						.getNodeId()
+						.substring(
+								subscription.getNodeId().length()
+										- node.length()).equals(node))
+					continue;
 				queryParts.add(dialect.selectCountRecentItemParts());
 				parameters.add(subscription.getNodeId());
 				parameters.add(new java.sql.Timestamp(since.getTime()));
 				parameters.add(String.valueOf(maxPerNode));
 			}
-			stmt = conn.prepareStatement(StringUtils.join(queryParts, " UNION ALL "));
+			stmt = conn.prepareStatement(StringUtils.join(queryParts,
+					" UNION ALL "));
 			int index = 1;
 			for (Object parameter : parameters) {
 				stmt.setObject(index, parameter);
@@ -966,13 +1079,13 @@ public class JDBCNodeStore implements NodeStore {
 			}
 
 			java.sql.ResultSet rs = stmt.executeQuery();
-            int count = 0;
-            while (rs.next()) {
-            	count += rs.getInt(1);
-            }
+			int count = 0;
+			while (rs.next()) {
+				count += rs.getInt(1);
+			}
 			stmt = null; // Prevent the finally block from closing the
 							// statement
-			
+
 			return count;
 		} catch (SQLException e) {
 			logger.error(e);
@@ -981,58 +1094,67 @@ public class JDBCNodeStore implements NodeStore {
 			close(stmt); // Will implicitly close the resultset if required
 		}
 	}
-	
+
 	@Override
-	public CloseableIterator<NodeItem> getRecentItems(JID user,
-			Date since, int maxPerNode, int limit, String afterItemId, String node) throws NodeStoreException {
-		
+	public CloseableIterator<NodeItem> getRecentItems(JID user, Date since,
+			int maxPerNode, int limit, String afterItemId, String node)
+			throws NodeStoreException {
+
 		PreparedStatement stmt = null;
 
 		try {
 			if (null != afterItemId) {
 				NodeItem item = getNodeItemById(afterItemId);
-				if ((null != item) 
-				    && (true == item.getUpdated().before(since))) {
-					
+				if ((null != item) && (true == item.getUpdated().before(since))) {
+
 					since = item.getUpdated();
 				}
 			}
-			
-			if (null == node) node = "/posts";
-			if (-1 == limit) limit = 50;
-			if (-1 == maxPerNode) maxPerNode = 50;
-			
-			ResultSet<NodeSubscription> subscriptions = this.getUserSubscriptions(user);
+
+			if (null == node)
+				node = "/posts";
+			if (-1 == limit)
+				limit = 50;
+			if (-1 == maxPerNode)
+				maxPerNode = 50;
+
+			ResultSet<NodeSubscription> subscriptions = this
+					.getUserSubscriptions(user);
 
 			ArrayList<String> queryParts = new ArrayList<String>();
 			ArrayList<Object> parameters = new ArrayList<Object>();
-			
+
 			for (NodeSubscription subscription : subscriptions) {
-				if (false == subscription.getSubscription().equals(Subscriptions.subscribed))
+				if (false == subscription.getSubscription().equals(
+						Subscriptions.subscribed))
 					continue;
-				if (false == subscription.getNodeId().substring(subscription.getNodeId().length() - node.length()).equals(node))
-				    continue;
+				if (false == subscription
+						.getNodeId()
+						.substring(
+								subscription.getNodeId().length()
+										- node.length()).equals(node))
+					continue;
 				queryParts.add(dialect.selectRecentItemParts());
 				parameters.add(subscription.getNodeId());
 				parameters.add(new java.sql.Timestamp(since.getTime()));
 				parameters.add(maxPerNode);
 			}
-			stmt = conn.prepareStatement(StringUtils.join(queryParts, " UNION ALL ") + " LIMIT ?;");
+			stmt = conn.prepareStatement(StringUtils.join(queryParts,
+					" UNION ALL ") + " LIMIT ?;");
 			int index = 1;
 			for (Object parameter : parameters) {
-			    stmt.setObject(index, parameter);
+				stmt.setObject(index, parameter);
 				++index;
 			}
 			stmt.setInt(index, limit);
 			java.sql.ResultSet rs = stmt.executeQuery();
 
-
 			stmt = null; // Prevent the finally block from closing the
-						 // statement
+							// statement
 			ArrayList<NodeItem> results = new ArrayList<NodeItem>();
 			while (rs.next()) {
-				results.add(new NodeItemImpl(rs.getString(2), rs
-						.getString(1), rs.getTimestamp(4), rs.getString(3), rs.getString(5)));
+				results.add(new NodeItemImpl(rs.getString(2), rs.getString(1),
+						rs.getTimestamp(4), rs.getString(3), rs.getString(5)));
 			}
 			return new ClosableIteratorImpl<NodeItem>(results.iterator());
 		} catch (SQLException e) {
@@ -1041,8 +1163,9 @@ public class JDBCNodeStore implements NodeStore {
 			close(stmt); // Will implicitly close the resultset if required
 		}
 	}
-	
-	public NodeItem getNodeItemById(String nodeItemId) throws NodeStoreException {
+
+	public NodeItem getNodeItemById(String nodeItemId)
+			throws NodeStoreException {
 		PreparedStatement stmt = null;
 
 		try {
@@ -1068,35 +1191,36 @@ public class JDBCNodeStore implements NodeStore {
 			throws NodeStoreException {
 		return getNodeItems(nodeId, null, -1);
 	}
-	
-    @Override
-	public ClosableIteratorImpl<NodeItem> getNodeItemReplies(String nodeId, String itemId,
-			String afterItemId, int limit) throws NodeStoreException {
-    	PreparedStatement stmt = null;
-    	
+
+	@Override
+	public ClosableIteratorImpl<NodeItem> getNodeItemReplies(String nodeId,
+			String itemId, String afterItemId, int limit)
+			throws NodeStoreException {
+		PreparedStatement stmt = null;
+
 		try {
 			Date since = new Date(0);
-	    	if (null != afterItemId)
-	    		since = getNodeItemById(afterItemId).getUpdated();
+			if (null != afterItemId)
+				since = getNodeItemById(afterItemId).getUpdated();
 
-	    	String query = dialect
-			        .selectItemReplies();
-	    	if (-1 != limit) {
-	    		query += " LIMIT ?";
-	    	}
+			String query = dialect.selectItemReplies();
+			if (-1 != limit) {
+				query += " LIMIT ?";
+			}
 			stmt = conn.prepareStatement(query);
-            stmt.setString(1,  nodeId);
+			stmt.setString(1, nodeId);
 			stmt.setString(2, itemId);
 			stmt.setTimestamp(3, new java.sql.Timestamp(since.getTime()));
-			if (-1 != limit) stmt.setInt(4, limit);
+			if (-1 != limit)
+				stmt.setInt(4, limit);
 
 			java.sql.ResultSet rs = stmt.executeQuery();
 
 			LinkedList<NodeItem> results = new LinkedList<NodeItem>();
 
 			while (rs.next()) {
-				results.push(new NodeItemImpl(rs.getString(2), rs
-						.getString(1), rs.getTimestamp(4), rs.getString(3), rs.getString(5)));
+				results.push(new NodeItemImpl(rs.getString(2), rs.getString(1),
+						rs.getTimestamp(4), rs.getString(3), rs.getString(5)));
 			}
 
 			return new ClosableIteratorImpl<NodeItem>(results.iterator());
@@ -1106,15 +1230,15 @@ public class JDBCNodeStore implements NodeStore {
 			close(stmt); // Will implicitly close the resultset if required
 		}
 	}
-    
-    @Override
-    public int getCountNodeItemReplies(String nodeId, String itemId) throws NodeStoreException {
-        PreparedStatement stmt = null;
-    	
+
+	@Override
+	public int getCountNodeItemReplies(String nodeId, String itemId)
+			throws NodeStoreException {
+		PreparedStatement stmt = null;
+
 		try {
-			stmt = conn.prepareStatement(dialect
-			        .selectCountItemReplies());
-            stmt.setString(1,  nodeId);
+			stmt = conn.prepareStatement(dialect.selectCountItemReplies());
+			stmt.setString(1, nodeId);
 			stmt.setString(2, itemId);
 
 			java.sql.ResultSet rs = stmt.executeQuery();
@@ -1129,15 +1253,16 @@ public class JDBCNodeStore implements NodeStore {
 		} finally {
 			close(stmt); // Will implicitly close the resultset if required
 		}
-    }
-	
+	}
+
 	@Override
-	public CloseableIterator<NodeItem> getNewNodeItemsForUser(JID user, Date startDate, Date endDate) throws NodeStoreException {
+	public CloseableIterator<NodeItem> getNewNodeItemsForUser(JID user,
+			Date startDate, Date endDate) throws NodeStoreException {
 
 		PreparedStatement stmt = null;
 
 		try {
-			
+
 			stmt = conn.prepareStatement(dialect
 					.selectItemsForUsersNodesBetweenDates());
 			stmt.setString(3, user.toBareJID());
@@ -1149,8 +1274,8 @@ public class JDBCNodeStore implements NodeStore {
 			LinkedList<NodeItem> results = new LinkedList<NodeItem>();
 
 			while (rs.next()) {
-				results.push(new NodeItemImpl(rs.getString(1), rs
-						.getString(2), rs.getTimestamp(3), rs.getString(4), rs.getString(5)));
+				results.push(new NodeItemImpl(rs.getString(1), rs.getString(2),
+						rs.getTimestamp(3), rs.getString(4), rs.getString(5)));
 			}
 
 			return new ClosableIteratorImpl<NodeItem>(results.iterator());
@@ -1158,7 +1283,7 @@ public class JDBCNodeStore implements NodeStore {
 			throw new NodeStoreException(e);
 		} finally {
 			close(stmt); // Will implicitly close the resultset if required
-		}	
+		}
 	}
 
 	@Override
@@ -1190,7 +1315,8 @@ public class JDBCNodeStore implements NodeStore {
 			throws NodeStoreException {
 		NodeItem item = getNodeItemById(nodeItemId);
 		if (null != item) {
-			if (true == item.getNodeId().equals(nodeId)) return item;
+			if (true == item.getNodeId().equals(nodeId))
+				return item;
 		}
 		return item;
 	}

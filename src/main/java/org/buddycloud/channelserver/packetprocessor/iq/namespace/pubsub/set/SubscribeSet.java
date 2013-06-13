@@ -1,6 +1,7 @@
 
 package org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.set;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -289,6 +290,12 @@ public class SubscribeSet extends PubSubElementProcessorAbstract {
 				outQueue.put(getPendingSubscriptionNotification(subscriber
 						.getListener().toBareJID(), subscribingJid.toBareJID()));
 			}
+		}
+		ArrayList<JID> admins = getAdminUsers();
+		for (JID admin : admins) {
+			Message notification = rootElement.createCopy();
+			notification.setTo(admin);
+			outQueue.put(notification);
 		}
 	}
 

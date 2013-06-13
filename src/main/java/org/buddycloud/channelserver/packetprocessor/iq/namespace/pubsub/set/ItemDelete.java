@@ -1,6 +1,7 @@
 package org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.set;
 
 import java.io.StringReader;
+import java.util.ArrayList;
 import java.util.concurrent.BlockingQueue;
 
 import org.apache.log4j.Logger;
@@ -97,6 +98,12 @@ public class ItemDelete extends PubSubElementProcessorAbstract {
 					notification.setTo(subscription.getListener().toString());
 					outQueue.put(notification.createCopy());
 				}
+			}
+			
+			ArrayList<JID> admins = getAdminUsers();
+			for (JID admin : admins) {
+				notification.setTo(admin);
+				outQueue.put(notification.createCopy());
 			}
 		} catch (NullPointerException e) {
 			return;

@@ -1,5 +1,6 @@
 package org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.set;
 
+import java.util.ArrayList;
 import java.util.concurrent.BlockingQueue;
 
 import org.apache.log4j.Logger;
@@ -95,9 +96,7 @@ public class AffiliationEvent extends PubSubElementProcessorAbstract {
 	private void sendNotifications() throws Exception {
 		ResultSet<NodeSubscription> subscribers = channelManager
 				.getNodeSubscriptionListeners(node);
-		if (null == subscribers) {
-			return;
-		}
+		
 		Document document = getDocumentHelper();
 		Element message = document.addElement("message");
 		Element pubsub = message.addElement("event");
@@ -118,6 +117,13 @@ public class AffiliationEvent extends PubSubElementProcessorAbstract {
 		for (NodeSubscription subscriber : subscribers) {
 			Message notification = rootElement.createCopy();
 			notification.setTo(subscriber.getListener());
+			outQueue.put(notification);
+		}
+		
+		ArrayList<JID> admins = getAdminUsers();
+		for (JID admin : admins) {
+			Message notification = rootElement.createCopy();
+			notification.setTo(admin);
 			outQueue.put(notification);
 		}
 	}

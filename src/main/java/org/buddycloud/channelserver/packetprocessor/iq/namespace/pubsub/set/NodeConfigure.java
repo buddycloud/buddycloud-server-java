@@ -1,5 +1,6 @@
 package org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.set;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
@@ -136,6 +137,13 @@ public class NodeConfigure extends PubSubElementProcessorAbstract {
 		for (NodeSubscription subscriber : subscribers) {
 			Message notification = rootElement.createCopy();
 			notification.setTo(subscriber.getListener());
+			outQueue.put(notification);
+		}
+		
+		ArrayList<JID> admins = getAdminUsers();
+		for (JID admin : admins) {
+			Message notification = rootElement.createCopy();
+			notification.setTo(admin);
 			outQueue.put(notification);
 		}
 	}

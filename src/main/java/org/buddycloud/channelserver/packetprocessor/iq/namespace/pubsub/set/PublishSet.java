@@ -2,6 +2,7 @@ package org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.set;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
@@ -14,6 +15,7 @@ import org.buddycloud.channelserver.channel.ValidateEntry;
 import org.buddycloud.channelserver.db.exception.NodeStoreException;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.JabberPubsub;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.PubSubElementProcessor;
+import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.PubSubElementProcessorAbstract;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.PubSubSet;
 import org.buddycloud.channelserver.pubsub.affiliation.Affiliations;
 import org.buddycloud.channelserver.pubsub.model.NodeAffiliation;
@@ -31,7 +33,7 @@ import org.xmpp.packet.Packet;
 import org.xmpp.packet.PacketError;
 import org.xmpp.resultsetmanagement.ResultSet;
 
-public class PublishSet implements PubSubElementProcessor {
+public class PublishSet extends PubSubElementProcessorAbstract {
 
 	private static final Logger LOGGER = Logger.getLogger(PublishSet.class);
 
@@ -343,8 +345,6 @@ public class PublishSet implements PubSubElementProcessor {
 		Element i = items.addElement("item");
 		i.addAttribute("id", id);
 		i.add(entry.createCopy());
-        Element actor = event.addElement("actor");
-        actor.addNamespace("", JabberPubsub.NS_BUDDYCLOUD);
 
 		ResultSet<NodeSubscription> cur = channelManager
 				.getNodeSubscriptionListeners(node);
@@ -354,9 +354,15 @@ public class PublishSet implements PubSubElementProcessor {
 			if (ns.getSubscription().equals(Subscriptions.subscribed)) {
 			    LOGGER.debug("Sending post notification to " + to.toBareJID());
 			    msg.setTo(ns.getListener());
-			    actor.setText(to.toBareJID());
 			    outQueue.put(msg.createCopy());
 			}
+		}
+		
+		ArrayList<JID> admins = getAdminUsers();
+		for (JID admin : admins) {
+			msg.setTo(admin);
+			
+			outQueue.put(msg.createCopy());
 		}
 	}
 

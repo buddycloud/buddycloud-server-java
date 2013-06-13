@@ -381,4 +381,15 @@ public class ChannelManagerImpl implements ChannelManager {
 			String node) throws NodeStoreException {
 		return nodeStore.getCountRecentItems(user, since, maxPerNode, node);
 	}
+
+	@Override
+	public CloseableIterator<NodeItem> getFirehose(int limit,
+			String afterItemId, boolean isAdmin) throws NodeStoreException {
+		return nodeStore.getFirehose(limit, afterItemId, isAdmin);
+	}
+
+	@Override
+	public int getFirehoseItemCount(boolean isAdmin) throws NodeStoreException {
+		return nodeStore.getFirehoseItemCount(isAdmin);
+	}
 }

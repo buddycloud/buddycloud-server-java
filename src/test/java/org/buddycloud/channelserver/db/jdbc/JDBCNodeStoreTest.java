@@ -30,6 +30,7 @@ import org.buddycloud.channelserver.db.exception.ItemNotFoundException;
 import org.buddycloud.channelserver.db.exception.NodeStoreException;
 import org.buddycloud.channelserver.db.jdbc.JDBCNodeStore.NodeStoreSQLDialect;
 import org.buddycloud.channelserver.db.jdbc.dialect.Sql92NodeStoreDialect;
+import org.buddycloud.channelserver.packetHandler.iq.IQTestHandler;
 import org.buddycloud.channelserver.pubsub.affiliation.Affiliations;
 import org.buddycloud.channelserver.pubsub.model.NodeAffiliation;
 import org.buddycloud.channelserver.pubsub.model.NodeItem;
@@ -107,6 +108,7 @@ public class JDBCNodeStoreTest {
 	public JDBCNodeStoreTest() throws SQLException, IOException,
 			ClassNotFoundException {
 		dbTester = new DatabaseTester();
+		IQTestHandler.readConf();
 	}
 
 	@Before
@@ -1889,7 +1891,134 @@ public class JDBCNodeStoreTest {
 		boolean cached = store.nodeHasSubscriptions(TEST_SERVER1_NODE1_ID);
 		assertEquals(true, cached);
 	}
+	
+	@Test(expected=IllegalArgumentException.class)
+	public void testFirehoseItemsThrowsExceptionIfNegativeLimitRequested() throws Exception {
+		store.getFirehose(-1, null, false);
+	}
 
+	@Test
+	public void testCanGetFirehoseItems() throws Exception {
+        dbTester.loadData("node_1");
+        dbTester.loadData("node_2");
+        store.setNodeConfValue(TEST_SERVER1_NODE1_ID, "pubsub#access_model", "open");
+        store.setNodeConfValue(TEST_SERVER1_NODE2_ID, "pubsub#access_model", "open");
+        // Add a remote node - don't expect to see
+        HashMap<String, String> remoteNodeConf = new HashMap<String, String>();
+        remoteNodeConf.put("pubsub#access_model", "open");
+        store.addRemoteNode(TEST_SERVER2_NODE1_ID);
+        store.setNodeConf(TEST_SERVER2_NODE1_ID, remoteNodeConf);
+        // Add a private node - don't expect to see
+        HashMap<String, String> privateNodeConf = new HashMap<String, String>();
+        privateNodeConf.put("pubsub#access_model", "subscribe");
+        store.createNode(TEST_SERVER1_USER1_JID, TEST_SERVER1_NODE3_ID, privateNodeConf);
+        store.addNodeItem(new NodeItemImpl(TEST_SERVER1_NODE3_ID, "1111", new Date(), "<entry/>"));
+        Thread.sleep(4);
+        CloseableIterator<NodeItem> items = store.getFirehose(50, null, false);
+        NodeItem item = null;
+        int count = 0;
+        while (items.hasNext()) {
+        	item = items.next();
+        	++count;
+        }
+        assertEquals(6, count);
+	}
+	
+	@Test
+	public void testCanGetFirehoseItemsIncludingPrivateAsAdminUser() throws Exception {
+        dbTester.loadData("node_1");
+        dbTester.loadData("node_2");
+        store.setNodeConfValue(TEST_SERVER1_NODE1_ID, "pubsub#access_model", "open");
+        store.setNodeConfValue(TEST_SERVER1_NODE2_ID, "pubsub#access_model", "open");
+        // Add a private node - *do* expect to see
+        HashMap<String, String> privateNodeConf = new HashMap<String, String>();
+        privateNodeConf.put("pubsub#access_model", "subscribe");
+        store.createNode(TEST_SERVER1_USER1_JID, TEST_SERVER1_NODE3_ID, privateNodeConf);
+        store.addNodeItem(new NodeItemImpl(TEST_SERVER1_NODE3_ID, "1111", new Date(), "<entry/>"));
+        // Add a remote node - don't expect to see
+        HashMap<String, String> remoteNodeConf = new HashMap<String, String>();
+        remoteNodeConf.put("pubsub#access_model", "open");
+        store.addRemoteNode(TEST_SERVER2_NODE1_ID);
+        store.setNodeConf(TEST_SERVER2_NODE1_ID, remoteNodeConf);
+        
+        CloseableIterator<NodeItem> items = store.getFirehose(50, null, true);
+        NodeItem item = null;
+        int count = 0;
+        while (items.hasNext()) {
+        	item = items.next();
+        	System.out.println("***** " + item.getId() + " " + item.getNodeId() + " " + item.getUpdated());
+        	++count;
+        }
+        assertEquals(7, count);		
+	}
+	
+	@Test
+	@Ignore("Ordering by timestamp isn't happening here. Return to later")
+	public void testCanGetFirehoseItemsWithRsm() throws Exception {
+        dbTester.loadData("node_1");
+        dbTester.loadData("node_2");
+        store.setNodeConfValue(TEST_SERVER1_NODE1_ID, "pubsub#access_model", "open");
+        store.setNodeConfValue(TEST_SERVER1_NODE2_ID, "pubsub#access_model", "open");
+        // Add a private node - don't expect to see
+        HashMap<String, String> privateNodeConf = new HashMap<String, String>();
+        privateNodeConf.put("pubsub#access_model", "subscribe");
+        store.createNode(TEST_SERVER1_USER1_JID, TEST_SERVER1_NODE3_ID, privateNodeConf);
+        store.addNodeItem(new NodeItemImpl(TEST_SERVER1_NODE3_ID, "1111", new Date(), "<entry/>"));
+        
+        // Add a remote node - don't expect to see
+        HashMap<String, String> remoteNodeConf = new HashMap<String, String>();
+        remoteNodeConf.put("pubsub#access_model", "open");
+        store.addRemoteNode(TEST_SERVER2_NODE1_ID);
+        store.setNodeConf(TEST_SERVER2_NODE1_ID, remoteNodeConf);
+        
+        CloseableIterator<NodeItem> items = store.getFirehose(2, "a3", false);
+        NodeItem item1 = items.next();
+        NodeItem item2 = items.next();
+		assertFalse(items.hasNext());
+		assertEquals("a4", item1.getId());
+		assertEquals("node2:1", item2.getId());
+		assertEquals(TEST_SERVER1_NODE1_ID, item1.getNodeId());
+		assertEquals(TEST_SERVER1_NODE2_ID, item2.getNodeId());
+	}
+	
+	@Test
+	public void testCanGetFirehoseItemCount() throws Exception {
+        dbTester.loadData("node_1");
+        dbTester.loadData("node_2");
+        store.setNodeConfValue(TEST_SERVER1_NODE1_ID, "pubsub#access_model", "open");
+        store.setNodeConfValue(TEST_SERVER1_NODE2_ID, "pubsub#access_model", "open");
+        // Add a private node - *do* expect to see
+        HashMap<String, String> privateNodeConf = new HashMap<String, String>();
+        privateNodeConf.put("pubsub#access_model", "subscribe");
+        store.createNode(TEST_SERVER1_USER1_JID, TEST_SERVER1_NODE3_ID, privateNodeConf);
+        store.addNodeItem(new NodeItemImpl(TEST_SERVER1_NODE3_ID, "1111", new Date(), "<entry/>"));
+        // Add a remote node - don't expect to see
+        HashMap<String, String> remoteNodeConf = new HashMap<String, String>();
+        remoteNodeConf.put("pubsub#access_model", "open");
+        store.addRemoteNode(TEST_SERVER2_NODE1_ID);
+        store.setNodeConf(TEST_SERVER2_NODE1_ID, remoteNodeConf);
+        assertEquals(6, store.getFirehoseItemCount(false));
+	}
+	
+	@Test
+	public void testCanGetFirehostItemCountWithPrivateItemsAsAdmin() throws Exception {
+        dbTester.loadData("node_1");
+        dbTester.loadData("node_2");
+        store.setNodeConfValue(TEST_SERVER1_NODE1_ID, "pubsub#access_model", "open");
+        store.setNodeConfValue(TEST_SERVER1_NODE2_ID, "pubsub#access_model", "open");
+        // Add a private node - *do* expect to see
+        HashMap<String, String> privateNodeConf = new HashMap<String, String>();
+        privateNodeConf.put("pubsub#access_model", "subscribe");
+        store.createNode(TEST_SERVER1_USER1_JID, TEST_SERVER1_NODE3_ID, privateNodeConf);
+        store.addNodeItem(new NodeItemImpl(TEST_SERVER1_NODE3_ID, "1111", new Date(), "<entry/>"));
+        // Add a remote node - don't expect to see
+        HashMap<String, String> remoteNodeConf = new HashMap<String, String>();
+        remoteNodeConf.put("pubsub#access_model", "open");
+        store.addRemoteNode(TEST_SERVER2_NODE1_ID);
+        store.setNodeConf(TEST_SERVER2_NODE1_ID, remoteNodeConf);
+        assertEquals(7, store.getFirehoseItemCount(true));
+	}
+	
 	@Test
 	public void testBeginTransaction() throws Exception {
 		Connection conn = Mockito.mock(Connection.class);

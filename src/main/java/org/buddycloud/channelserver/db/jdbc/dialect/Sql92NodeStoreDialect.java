@@ -185,7 +185,19 @@ public class Sql92NodeStoreDialect implements NodeStoreSQLDialect {
 
 	private static final String DELETE_ITEMS = "DELETE FROM \"items\" WHERE \"node\" = ?;";
 
-	@Override
+	private static final String COUNT_ITEMS_FROM_LOCAL_NODES = ""
+        + "SELECT COUNT(\"id\") FROM \"items\" "
+		+ "WHERE \"node\" IN (SELECT \"node\" FROM \"node_config\" "
+        + "WHERE \"key\" = ? AND \"value\" LIKE ? "
+		+ "AND (\"node\" LIKE ? OR \"node\" LIKE ?))";
+
+	private static final String SELECT_ITEMS_FROM_LOCAL_NODES_BEFORE_DATE = ""
+		+ "SELECT \"node\", \"id\", \"updated\", \"xml\", \"in_reply_to\" "
+		+ "FROM \"items\" WHERE \"updated\" < ? "
+		+ "AND \"node\" IN (SELECT \"node\" FROM \"node_config\" WHERE \"key\" = ? AND \"value\" LIKE ? AND (\"node\" LIKE ? OR \"node\" LIKE ?)) "
+		+ "ORDER BY \"updated\" DESC, \"id\" ASC LIMIT ?";
+	
+    @Override
 	public String insertNode() {
 		return INSERT_NODE;
 	}
@@ -412,5 +424,15 @@ public class Sql92NodeStoreDialect implements NodeStoreSQLDialect {
 	@Override
 	public String selectCountRecentItemParts() {
 		return SELECT_COUNT_RECENT_ITEM_PARTS;
+	}
+
+	@Override
+	public String selectItemsForLocalNodesBeforeDate() {
+		return SELECT_ITEMS_FROM_LOCAL_NODES_BEFORE_DATE;
+	}
+
+	@Override
+	public String countItemsForLocalNodes() {
+		return COUNT_ITEMS_FROM_LOCAL_NODES;
 	}
 }

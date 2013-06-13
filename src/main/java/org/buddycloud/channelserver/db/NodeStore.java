@@ -519,6 +519,29 @@ public interface NodeStore {
 	ArrayList<String> getNodeList() throws NodeStoreException;
 	
 	/**
+	 * Retrieves a list of items from public channels "firehose"
+     * 
+     * @param limit
+     *            limit the number of results
+     * @param afterItemId
+     *            after item ID#
+     * @param isAdmin
+     *            show items from non-open nodes
+     * @return
+     * @throws NodeStoreException
+     */
+	CloseableIterator<NodeItem> getFirehose(int limit, String afterItemId, boolean isAdmin) throws NodeStoreException;
+	
+	/**
+	 * Get count of items from public channels "firehose"
+	 * 
+	 * @param isAdmin
+	 *           counts items from non-open nodes
+	 * @throws NodeStoreException 
+	 */
+	int getFirehoseItemCount(boolean isAdmin) throws NodeStoreException;
+	
+	/**
 	 * Closes this node store instance and releases any resources.
 	 */
 	void close() throws NodeStoreException;

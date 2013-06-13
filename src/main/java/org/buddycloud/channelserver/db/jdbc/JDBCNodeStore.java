@@ -18,6 +18,8 @@ import java.util.Map.Entry;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
+import org.buddycloud.channelserver.Configuration;
+import org.buddycloud.channelserver.channel.Conf;
 import org.buddycloud.channelserver.db.ClosableIteratorImpl;
 import org.buddycloud.channelserver.db.CloseableIterator;
 import org.buddycloud.channelserver.db.NodeStore;
@@ -36,6 +38,9 @@ import org.xmpp.resultsetmanagement.ResultSet;
 import org.xmpp.resultsetmanagement.ResultSetImpl;
 
 public class JDBCNodeStore implements NodeStore {
+	
+	private static final String PUBSUB_ACCESS_MODEL_KEY = "pubsub#access_model";
+	
 	private Logger logger = Logger.getLogger(JDBCNodeStore.class);
 	private final Connection conn;
 	private final NodeStoreSQLDialect dialect;
@@ -1478,6 +1483,10 @@ public class JDBCNodeStore implements NodeStore {
 	public interface NodeStoreSQLDialect {
 		String insertNode();
 
+		String selectItemsForLocalNodesBeforeDate();
+
+		String countItemsForLocalNodes();
+
 		String selectRecentItemParts();
 
 		String countNodeAffiliations();
@@ -1547,7 +1556,7 @@ public class JDBCNodeStore implements NodeStore {
 		String selectSingleItem();
 
 		String selectItemsForNode();
-		
+
 		String selectItemsForNodeAfterDate();
 
 		String selectItemsForNodeBeforeDate();

@@ -1,6 +1,7 @@
 INSERT INTO "nodes" ("node") VALUES ('users/node1@server1/posts');
 
 INSERT INTO "node_config" ("node", "key", "value", "updated") VALUES ('users/node1@server1/posts', 'config1', 'Value of config1', now());
+
 INSERT INTO "node_config" ("node", "key", "value", "updated") VALUES ('users/node1@server1/posts', 'config2', 'Value of config2', now());
 
 INSERT INTO "affiliations" ("node", "user", "affiliation", "updated") VALUES ('users/node1@server1/posts', 'user1@server1', 'owner', current_timestamp - interval '3' second);

@@ -46,6 +46,8 @@ public class FirehoseGet extends PubSubElementProcessorAbstract {
 	private String afterItemId = null;
 	private int maxResults = -1;
 
+	private boolean isAdmin = false;
+
 	private static final Logger logger = Logger.getLogger(FirehoseGet.class);
 
 	public FirehoseGet(BlockingQueue<Packet> outQueue,
@@ -71,21 +73,17 @@ public class FirehoseGet extends PubSubElementProcessorAbstract {
 		if (null == actor) {
 			actor = request.getFrom();
 		}
+		determineAdminUserStatus();
 
-		if (false == isValidStanza()) {
-			outQueue.put(response);
-			return;
-		}
-
-		if (false == channelManager.isLocalJID(request.getFrom())) {
+		if (false == channelManager.isLocalJID(request.getFrom()))
 			response.getElement().addAttribute("remote-server-discover",
 					"false");
-		}
+
 		pubsub = response.getElement().addElement("pubsub",
 				JabberPubsub.NAMESPACE_URI);
 		try {
 			parseRsmElement();
-			addRecentItems();
+			addItems();
 			addRsmElement();
 			outQueue.put(response);
 		} catch (NodeStoreException e) {
@@ -96,6 +94,15 @@ public class FirehoseGet extends PubSubElementProcessorAbstract {
 		}
 		outQueue.put(response);
 
+	}
+
+	private void determineAdminUserStatus() {
+		for (JID user : getAdminUsers()) {
+			if (true == user.toBareJID().equals(actor.toBareJID())) {
+				isAdmin = true;
+				return;
+			}
+		}
 	}
 
 	private void parseRsmElement() {
@@ -117,13 +124,11 @@ public class FirehoseGet extends PubSubElementProcessorAbstract {
 		rsm.addElement("first").setText(firstItemId);
 		rsm.addElement("last").setText(lastItemId);
 		rsm.addElement("count").setText(
-				String.valueOf(channelManager.getCountRecentItems(actor,
-						maxAge, maxItems, nodeEnding)));
+				String.valueOf(channelManager.getFirehoseItemCount(isAdmin)));
 	}
 
-	private void addRecentItems() throws NodeStoreException {
-		CloseableIterator<NodeItem> items = channelManager.getRecentItems(
-				actor, maxAge, maxItems, maxResults, afterItemId, nodeEnding);
+	private void addItems() throws NodeStoreException {
+		CloseableIterator<NodeItem> items = channelManager.getFirehose(maxResults, afterItemId, isAdmin);
 		String lastNode = "";
 		NodeItem item;
 		Element itemsElement = null;
@@ -153,42 +158,8 @@ public class FirehoseGet extends PubSubElementProcessorAbstract {
 		}
 	}
 
-	private boolean isValidStanza() {
-		Element recentItems = request.getChildElement().element("recent-items");
-		try {
-			String max = recentItems.attributeValue("max");
-			if (null == max) {
-				createExtendedErrorReply(PacketError.Type.modify,
-						PacketError.Condition.bad_request, "max-required");
-				return false;
-			}
-			maxItems = Integer.parseInt(max);
-			String since = recentItems.attributeValue("since");
-			if (null == since) {
-				createExtendedErrorReply(PacketError.Type.modify,
-						PacketError.Condition.bad_request, "since-required");
-				return false;
-			}
-			maxAge = sdf.parse(since);
-
-		} catch (NumberFormatException e) {
-			logger.error(e);
-			createExtendedErrorReply(PacketError.Type.modify,
-					PacketError.Condition.bad_request,
-					"invalid-max-value-provided");
-			return false;
-		} catch (ParseException e) {
-			createExtendedErrorReply(PacketError.Type.modify,
-					PacketError.Condition.bad_request,
-					"invalid-since-value-provided");
-			logger.error(e);
-			return false;
-		}
-		return true;
-	}
-
 	@Override
 	public boolean accept(Element elm) {
-		return elm.getName().equals("recent-items");
+		return elm.getName().equals("items");
 	}
 }

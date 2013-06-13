@@ -1946,7 +1946,6 @@ public class JDBCNodeStoreTest {
         int count = 0;
         while (items.hasNext()) {
         	item = items.next();
-        	System.out.println("***** " + item.getId() + " " + item.getNodeId() + " " + item.getUpdated());
         	++count;
         }
         assertEquals(7, count);		

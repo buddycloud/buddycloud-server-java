@@ -128,6 +128,7 @@ public class FirehoseGet extends PubSubElementProcessorAbstract {
 	}
 
 	private void addItems() throws NodeStoreException {
+		if (-1 == maxResults) maxResults = 50;
 		CloseableIterator<NodeItem> items = channelManager.getFirehose(maxResults, afterItemId, isAdmin);
 		String lastNode = "";
 		NodeItem item;

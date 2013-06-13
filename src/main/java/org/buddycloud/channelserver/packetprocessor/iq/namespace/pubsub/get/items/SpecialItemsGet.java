@@ -47,7 +47,8 @@ public class SpecialItemsGet extends PubSubElementProcessorAbstract {
 			throws Exception {
 		request = reqIQ;
 		PubSubElementProcessor processor = null;
-        if (FIREHOSE == node) {
+		node = elm.attributeValue("node");
+        if (true == FIREHOSE.equals(node)) {
         	processor = new FirehoseGet(outQueue, channelManager);
         } else {
         	featureNotImplementedError();

@@ -65,6 +65,21 @@ public class SubscribeSet extends PubSubElementProcessorAbstract {
 			return;
 		}
 
+		subscribingJid = request.getFrom();
+		boolean isLocalNode = true;
+		boolean isLocalSubscriber = false;
+
+		if (actorJID != null) {
+			subscribingJid = actorJID;
+		} else {
+			isLocalSubscriber = channelManager.isLocalJID(subscribingJid);
+			// Check that user is registered.
+			if (!isLocalSubscriber) {
+				failAuthRequired();
+				return;
+			}
+		}
+		
 		if (true == node.equals(FIREHOSE)) {
 			if (false == channelManager.nodeExists(FIREHOSE))
 	            channelManager.addRemoteNode(FIREHOSE);
@@ -171,20 +186,6 @@ public class SubscribeSet extends PubSubElementProcessorAbstract {
         	makeRemoteRequest();
         	return false;
         }
-		subscribingJid = request.getFrom();
-		boolean isLocalNode = true;
-		boolean isLocalSubscriber = false;
-
-		if (actorJID != null) {
-			subscribingJid = actorJID;
-		} else {
-			isLocalSubscriber = channelManager.isLocalJID(subscribingJid);
-			// Check that user is registered.
-			if (!isLocalSubscriber) {
-				failAuthRequired();
-				return false;
-			}
-		}
 
 		// 6.1.3.1 JIDs Do Not Match
 

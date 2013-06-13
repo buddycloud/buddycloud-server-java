@@ -54,23 +54,29 @@ public class UnsubscribeSet extends PubSubElementProcessorAbstract {
 			return;
 		}
 
-		unsubscribingJid = request.getFrom();
-		if (false == channelManager.isLocalNode(node)) {
+		JID from = request.getFrom();
+		if ((false == node.equals("/firehose")) && (false == channelManager.isLocalNode(node))) {
 			makeRemoteRequest();
 			return;
 		}
 		boolean isLocalSubscriber = false;
 
 		if (actorJID != null) {
-			unsubscribingJid = actorJID;
-		} else {
-			isLocalSubscriber = channelManager.isLocalJID(unsubscribingJid);
-			// Check that user is registered.
-			if (false == isLocalSubscriber) {
-				failAuthRequired();
-				return;
+			from = actorJID;
+		}
+		
+		unsubscribingJid = new JID(request.getChildElement().element("unsubscribe")
+				.attributeValue("jid"));
+		
+		if (false == unsubscribingJid.toBareJID().equals(from.toBareJID())) {
+			// Does user have permission to change the subscription
+			NodeAffiliation fromAffiliation = channelManager.getUserAffiliation(node, from);
+			if (false == fromAffiliation.getAffiliation().canAuthorize()) {
+			    failAuthRequired();
+			    return;
 			}
 		}
+
 
 		if (false == channelManager.nodeExists(node)) {
 			IQ reply = IQ.createResultIQ(request);
@@ -171,7 +177,7 @@ public class UnsubscribeSet extends PubSubElementProcessorAbstract {
 		IQ reply = IQ.createResultIQ(request);
 		reply.setType(Type.error);
 		PacketError pe = new PacketError(
-				org.xmpp.packet.PacketError.Condition.registration_required,
+				org.xmpp.packet.PacketError.Condition.not_authorized,
 				org.xmpp.packet.PacketError.Type.auth);
 		reply.setError(pe);
 		outQueue.put(reply);

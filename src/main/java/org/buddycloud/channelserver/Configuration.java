@@ -41,6 +41,7 @@ public class Configuration extends Properties
     
     private void setupAdminUsers() {
     	String[] jids = conf.getProperty(CONFIGURATION_ADMIN_USERS).split(";");
+    	adminUsers.clear();
     	for (String jid : jids) {
     		adminUsers.add(new JID(jid));
     	}
@@ -70,7 +71,6 @@ public class Configuration extends Properties
     
     public void load(InputStream inputStream) throws IOException
     {
-    	System.out.println("Loading new config");
         conf.load(inputStream);
         if (conf.containsKey(CONFIGURATION_ADMIN_USERS))
         	setupAdminUsers();

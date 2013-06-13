@@ -352,10 +352,10 @@ public class ItemDeleteTest extends IQTestHandler {
 
 		Assert.assertEquals(IQ.Type.result.toString(), response.getElement()
 				.attribute("type").getValue());
-		// Check that one notification is sent
-		Assert.assertEquals(1, queue.size());
+		// Check that one notification is sent (on subscriber + 2 admins)
+		Assert.assertEquals(3, queue.size());
 
-		Packet notification = queue.poll(100, TimeUnit.MILLISECONDS);
+		Packet notification = queue.poll();
 		Assert.assertNotNull(notification);
 		Assert.assertEquals("item-id",
 				notification.getElement().element("event").element("items")

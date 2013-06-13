@@ -1,10 +1,10 @@
-xmpp.host=lobstermonster.org
+xmpp.host=example.com
 xmpp.port=5275
-xmpp.subdomain=comptest
-xmpp.secretkey=2255998899442277
+xmpp.subdomain=channels
+xmpp.secretkey=tellnoone
 
-server.domain=xmpp.lobstermonster.org
-server.domain.topics=topics.lobstermonster.org
+server.domain=xmpp.example.com
+server.domain.topics=topics.example.com
 
 jdbc.proxool.driver-url=jdbc:hsqldb:.
 jdbc.proxool.driver-class=org.hsqldb.jdbcDriver
@@ -13,4 +13,6 @@ jdbc.password=password
 jdbc.proxool.maximum-connection-count=10
 jdbc.proxool.house-keeping-test-sql=select CURRENT_DATE
 
-cache=1
+# Admin users are sent all notiifcations as well as having access 
+# to all posts from the /firehose node (not just from public channels)
+users.admin = user1@example.com;crawler@searchengine.org

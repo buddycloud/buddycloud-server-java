@@ -23,7 +23,7 @@ public class TestHelper {
 	
 	public TestHelper() throws FileNotFoundException, IOException {
 		initialiseChannelManagerFactory();
-		
+
         outQueue = new LinkedBlockingQueue<Packet>();
         inQueue = new LinkedBlockingQueue<Packet>();
         consumer = new InQueueConsumer(outQueue, IQTestHandler.readConf(), inQueue, channelManagerFactory, null, null);

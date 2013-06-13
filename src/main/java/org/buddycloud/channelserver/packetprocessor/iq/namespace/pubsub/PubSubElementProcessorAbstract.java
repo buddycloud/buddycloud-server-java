@@ -1,5 +1,6 @@
 package org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub;
 
+import java.util.ArrayList;
 import java.util.concurrent.BlockingQueue;
 import org.buddycloud.channelserver.Configuration;
 import org.buddycloud.channelserver.channel.node.configuration.Helper;
@@ -36,6 +37,8 @@ public abstract class PubSubElementProcessorAbstract
 	protected String lastItem;
 	protected int totalEntriesCount;
 
+	private ArrayList<JID> adminUsers;
+
 	public void setOutQueue(BlockingQueue<Packet> outQueue)
 	{
 		this.outQueue = outQueue;
@@ -60,6 +63,13 @@ public abstract class PubSubElementProcessorAbstract
 		return serverDomain;
 	}
 
+	protected ArrayList<JID> getAdminUsers() {
+		if (null == adminUsers) {
+			adminUsers = Configuration.getInstance().getAdminUsers();
+		}
+		return adminUsers;
+	}
+	
 	public void setTopicsDomain(String domain)
 	{
 	    topicsDomain = domain;		

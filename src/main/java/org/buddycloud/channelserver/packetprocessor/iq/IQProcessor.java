@@ -56,6 +56,24 @@ public class IQProcessor implements PacketProcessor<IQ> {
 	@Override
 	public void process(IQ packet) throws Exception {
 
+		try {
+			processPacket(packet);
+		} catch (Exception e) {
+			IQ reply = IQ.createResultIQ(packet);
+			reply.setChildElement(packet.getChildElement().createCopy());
+			reply.setType(Type.error);
+			PacketError pe = new PacketError(
+					org.xmpp.packet.PacketError.Condition.internal_server_error,
+					org.xmpp.packet.PacketError.Type.wait);
+			reply.setError(pe);
+
+			this.outQueue.put(reply);
+		}
+		processPacket(packet);
+	}
+
+	private void processPacket(IQ packet) throws Exception,
+			InterruptedException {
 		if (null != packet.getChildElement()) {
 			logger.debug("Finding IQ processor for namespace "
 					+ packet.getChildElement().getNamespaceURI());

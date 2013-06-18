@@ -766,9 +766,9 @@ public class JDBCNodeStoreTest {
 		ResultSet<NodeAffiliation> result2 = store.getUserAffiliations(
 				TEST_SERVER1_USER1_JID, TEST_SERVER1_NODE3_ID, 50);
 
-		assertEquals(2, result.size());
+		assertEquals(0, result.size());
 		assertEquals(1, result1.size());
-		assertEquals(0, result2.size());
+		assertEquals(2, result2.size());
 	}
 
 	@Test
@@ -786,13 +786,13 @@ public class JDBCNodeStoreTest {
 		Thread.sleep(1);
 		store.setUserAffiliation(TEST_SERVER1_NODE2_ID, TEST_SERVER1_USER1_JID,
 				Affiliations.member);
-
-		store.setUserAffiliation(TEST_SERVER1_NODE1_ID, TEST_SERVER1_USER1_JID,
+		Thread.sleep(1);
+		store.setUserAffiliation(TEST_SERVER1_NODE3_ID, TEST_SERVER1_USER1_JID,
 				Affiliations.member);
 
 		ResultSet<NodeAffiliation> result = store.getUserAffiliations(
-				TEST_SERVER1_USER1_JID, TEST_SERVER1_NODE1_ID, 1);
-		assertEquals(1, result.size());
+				TEST_SERVER1_USER1_JID, TEST_SERVER1_NODE1_ID, 2);
+		assertEquals(2, result.size());
 	}
 
 	@Test
@@ -880,9 +880,9 @@ public class JDBCNodeStoreTest {
 		ResultSet<NodeAffiliation> result2 = store.getNodeAffiliations(
 				TEST_SERVER1_NODE1_ID, TEST_SERVER1_USER1_JID.toBareJID(), 50);
 
-		assertEquals(2, result.size());
+		assertEquals(0, result.size());
 		assertEquals(1, result1.size());
-		assertEquals(0, result2.size());
+		assertEquals(2, result2.size());
 	}
 
 	@Test
@@ -1186,9 +1186,9 @@ public class JDBCNodeStoreTest {
 		ResultSet<NodeSubscription> result2 = store.getNodeSubscriptions(
 				TEST_SERVER1_NODE1_ID, TEST_SERVER1_USER3_JID, 50);
 
-		assertEquals(3, result.size());
+		assertEquals(1, result.size());
 		assertEquals(2, result1.size());
-		assertEquals(1, result2.size());
+		assertEquals(3, result2.size());
 	}
 
 	@Test
@@ -1202,7 +1202,7 @@ public class JDBCNodeStoreTest {
 				Subscriptions.subscribed));
 
 		ResultSet<NodeSubscription> result = store.getNodeSubscriptions(
-				TEST_SERVER1_NODE1_ID, TEST_SERVER1_USER2_JID, 1);
+				TEST_SERVER1_NODE1_ID, TEST_SERVER1_USER1_JID, 1);
 		assertEquals(1, result.size());
 	}
 
@@ -1529,6 +1529,7 @@ public class JDBCNodeStoreTest {
 		NodeItem nodeItem1 = new NodeItemImpl(TEST_SERVER1_NODE1_ID, "123",
 				new Date(), "payload");
 		store.addNodeItem(nodeItem1);
+		Thread.sleep(1);
 		NodeItem nodeItem2 = new NodeItemImpl(TEST_SERVER1_NODE2_ID, "123",
 				new Date(), "payload2");
 		store.addNodeItem(nodeItem2);

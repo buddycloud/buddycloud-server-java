@@ -1515,7 +1515,7 @@ public class JDBCNodeStoreTest {
 		assertTrue("Unexpected Node content returned", result.getPayload()
 				.contains(TEST_SERVER1_NODE1_ITEM1_CONTENT));
 	}
-	
+
 	@Test
 	public void testGetRecentItems() throws Exception {
 
@@ -1528,9 +1528,9 @@ public class JDBCNodeStoreTest {
 
 		NodeItem nodeItem1 = new NodeItemImpl(TEST_SERVER1_NODE1_ID, "123",
 				new Date(), "payload");
+		store.addNodeItem(nodeItem1);
 		NodeItem nodeItem2 = new NodeItemImpl(TEST_SERVER1_NODE2_ID, "123",
 				new Date(), "payload2");
-		store.addNodeItem(nodeItem1);
 		store.addNodeItem(nodeItem2);
 
 		Thread.sleep(20);

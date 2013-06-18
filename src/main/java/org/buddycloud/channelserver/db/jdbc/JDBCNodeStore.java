@@ -1137,8 +1137,10 @@ public class JDBCNodeStore implements NodeStore {
 				parameters.add(new java.sql.Timestamp(since.getTime()));
 				parameters.add(maxPerNode);
 			}
-			stmt = conn.prepareStatement(StringUtils.join(queryParts,
-					" UNION ALL ") + " LIMIT ?;");
+			stmt = conn.prepareStatement(
+					"SELECT * FROM (" +
+					StringUtils.join(queryParts,
+					" UNION ALL ") + ") ORDER BY \"updated\" DESC " + " LIMIT ?;");
 			int index = 1;
 			for (Object parameter : parameters) {
 				stmt.setObject(index, parameter);

@@ -189,10 +189,11 @@ public class SubscriptionsGet implements PubSubElementProcessor {
 	
 	private void makeRemoteRequest(String to) throws InterruptedException {
 		requestIq.setTo(to);
-		Element actor = requestIq.getElement()
-		    .element("pubsub")
-		    .addElement("actor", JabberPubsub.NS_BUDDYCLOUD);
-		actor.addText(requestIq.getFrom().toBareJID());
+		if (null == requestIq.getElement().element("pubsub").element("actor")) {
+		    Element actor = requestIq.getElement().element("pubsub")
+				.addElement("actor", JabberPubsub.NS_BUDDYCLOUD);
+		    actor.addText(requestIq.getFrom().toBareJID());
+		}
 	    outQueue.put(requestIq);
 	}
 	

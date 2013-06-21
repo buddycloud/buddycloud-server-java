@@ -136,10 +136,11 @@ public class UserItemsGet implements PubSubElementProcessor {
 
 	private void makeRemoteRequest() throws InterruptedException {
 		requestIq.setTo(new JID(node.split("/")[2]).getDomain());
-		Element actor = requestIq.getElement()
-		    .element("pubsub")
-		    .addElement("actor", JabberPubsub.NS_BUDDYCLOUD);
-		actor.addText(requestIq.getFrom().toBareJID());
+		if (null == requestIq.getElement().element("pubsub").element("actor")) {
+		    Element actor = requestIq.getElement().element("pubsub")
+				.addElement("actor", JabberPubsub.NS_BUDDYCLOUD);
+		    actor.addText(requestIq.getFrom().toBareJID());
+		}
 	    outQueue.put(requestIq);
 	}
 

@@ -199,9 +199,11 @@ public class AffiliationsGet implements PubSubElementProcessor {
 
 	private void makeRemoteRequest(String node) throws InterruptedException {
 		requestIq.setTo(new JID(node).getDomain());
-		Element actor = requestIq.getElement().element("pubsub")
+		if (null == requestIq.getElement().element("pubsub").element("actor")) {
+		    Element actor = requestIq.getElement().element("pubsub")
 				.addElement("actor", JabberPubsub.NS_BUDDYCLOUD);
-		actor.addText(requestIq.getFrom().toBareJID());
+		    actor.addText(requestIq.getFrom().toBareJID());
+		}
 		outQueue.put(requestIq);
 	}
 

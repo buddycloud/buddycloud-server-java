@@ -30,13 +30,13 @@ public class ChannelsEngine implements Component {
 
 	private BlockingQueue<Packet> outQueue = new LinkedBlockingQueue<Packet>();
 	private BlockingQueue<Packet> inQueue = new LinkedBlockingQueue<Packet>();
-	
+
 	private ChannelManagerFactory channelManagerFactory;
 	private FederatedQueueManager federatedQueueManager;
-	
+
 	private ServerSync serverSync;
 	private OnlineResourceManager onlineUsers;
-	
+
 	private Properties conf;
 
 	public ChannelsEngine(Properties conf) {
@@ -63,7 +63,7 @@ public class ChannelsEngine implements Component {
 		setupManagers();
 		startQueueConsumers();
 
-        serverSync();
+		serverSync();
 		LOGGER.info("XMPP Component started. We are '" + jid.toString()
 				+ "' and ready to accept packages.");
 	}
@@ -76,11 +76,12 @@ public class ChannelsEngine implements Component {
 	private void startQueueConsumers() {
 		OutQueueConsumer outQueueConsumer = new OutQueueConsumer(this,
 				outQueue, federatedQueueManager,
-				conf.getProperty("server.domain"), onlineUsers);
+				conf.getProperty("server.domain.topics"), onlineUsers);
 
 		InQueueConsumer inQueueConsumer = new InQueueConsumer(outQueue, conf,
-				inQueue, channelManagerFactory, federatedQueueManager, onlineUsers);
-		
+				inQueue, channelManagerFactory, federatedQueueManager,
+				onlineUsers);
+
 		outQueueConsumer.start();
 		inQueueConsumer.start();
 	}
@@ -92,11 +93,11 @@ public class ChannelsEngine implements Component {
 		} catch (NodeStoreException e) {
 			throw new ComponentException(e);
 		}
-		
-		channelManagerFactory = new ChannelManagerFactoryImpl(
-				conf, nodeStoreFactory);
-		federatedQueueManager = new FederatedQueueManager(
-				this, conf.getProperty("server.domain.channels"));
+
+		channelManagerFactory = new ChannelManagerFactoryImpl(conf,
+				nodeStoreFactory);
+		federatedQueueManager = new FederatedQueueManager(this,
+				conf.getProperty("server.domain.channels"));
 		onlineUsers = new OnlineResourceManager(conf);
 	}
 

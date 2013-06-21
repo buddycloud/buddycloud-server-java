@@ -1122,6 +1122,7 @@ public class JDBCNodeStore implements NodeStore {
 			ArrayList<String> queryParts = new ArrayList<String>();
 			ArrayList<Object> parameters = new ArrayList<Object>();
 
+			int counter = 1;
 			for (NodeSubscription subscription : subscriptions) {
 				if (false == subscription.getSubscription().equals(
 						Subscriptions.subscribed))
@@ -1132,15 +1133,19 @@ public class JDBCNodeStore implements NodeStore {
 								subscription.getNodeId().length()
 										- node.length()).equals(node))
 					continue;
-				queryParts.add(dialect.selectRecentItemParts());
+				queryParts.add(
+				    dialect.selectRecentItemParts()
+				        .replace("%counter%", String.valueOf(counter))
+				);
 				parameters.add(subscription.getNodeId());
 				parameters.add(new java.sql.Timestamp(since.getTime()));
 				parameters.add(maxPerNode);
+				++counter;
 			}
 			stmt = conn.prepareStatement(
 					"SELECT * FROM (" +
 					StringUtils.join(queryParts,
-					" UNION ALL ") + ") ORDER BY \"updated\" DESC " + " LIMIT ?;");
+					" UNION ALL ") + ") AS recentItemsQuery ORDER BY \"updated\" DESC LIMIT ?;");
 			int index = 1;
 			for (Object parameter : parameters) {
 				stmt.setObject(index, parameter);
@@ -1158,6 +1163,7 @@ public class JDBCNodeStore implements NodeStore {
 			}
 			return new ClosableIteratorImpl<NodeItem>(results.iterator());
 		} catch (SQLException e) {
+			e.printStackTrace();
 			throw new NodeStoreException(e);
 		} finally {
 			close(stmt); // Will implicitly close the resultset if required

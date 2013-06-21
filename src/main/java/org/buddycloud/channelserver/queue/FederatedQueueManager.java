@@ -180,7 +180,6 @@ public class FederatedQueueManager {
 			}
 		}
 		if (remoteServerItemsToProcess.get(originatingServer) < 1) {
-			remoteServerItemsToProcess.remove(originatingServer);
 			if (false == discoveredServers.containsKey(originatingServer)) {
 				sendRemoteChannelServerNotFoundErrorResponses(originatingServer);
 				remoteChannelDiscoveryStatus.put(originatingServer,

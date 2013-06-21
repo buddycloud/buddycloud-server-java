@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingQueue;
 
 import org.apache.log4j.Logger;
@@ -35,13 +36,13 @@ public class FederatedQueueManager {
 	private int id = 1;
 
 	private final ChannelsEngine component;
-	private HashMap<String, String> discoveredServers = new HashMap<String, String>();
-	private HashMap<String, List<Packet>> waitingStanzas = new HashMap<String, List<Packet>>();
-	private HashMap<String, String> remoteChannelDiscoveryStatus = new HashMap<String, String>();
-	private HashMap<String, Integer> remoteServerItemsToProcess = new HashMap<String, Integer>();
-	private HashMap<String, String> remoteServerInfoRequestIds = new HashMap<String, String>();
-	private HashMap<String, JID> sentRemotePackets = new HashMap<String, JID>();
-	private HashMap<String, String> nodeMap = new HashMap<String, String>();
+	private ConcurrentHashMap<String, String> discoveredServers = new ConcurrentHashMap<String, String>();
+	private ConcurrentHashMap<String, List<Packet>> waitingStanzas = new ConcurrentHashMap<String, List<Packet>>();
+	private ConcurrentHashMap<String, String> remoteChannelDiscoveryStatus = new ConcurrentHashMap<String, String>();
+	private ConcurrentHashMap<String, Integer> remoteServerItemsToProcess = new ConcurrentHashMap<String, Integer>();
+	private ConcurrentHashMap<String, String> remoteServerInfoRequestIds = new ConcurrentHashMap<String, String>();
+	private ConcurrentHashMap<String, JID> sentRemotePackets = new ConcurrentHashMap<String, JID>();
+	private ConcurrentHashMap<String, String> nodeMap = new ConcurrentHashMap<String, String>();
 
 	private String localServer;
 

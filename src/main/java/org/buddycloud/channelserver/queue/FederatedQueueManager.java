@@ -114,7 +114,7 @@ public class FederatedQueueManager {
 	}
 
 	private void sendPacket(Packet packet) throws ComponentException {
-		logger.info("OUT-> " + packet.toXML());
+		logger.info("OUT:FQM-> " + packet.toXML());
 		component.sendPacket(packet.createCopy());
 	}
 
@@ -167,6 +167,7 @@ public class FederatedQueueManager {
 	public void processInfoResponses(JID from, String id,
 			List<Element> identities) throws ComponentException {
 		String originatingServer = remoteServerInfoRequestIds.get(id);
+		if (null == originatingServer) return;
 		remoteServerInfoRequestIds.remove(id);
 		remoteServerItemsToProcess.put(originatingServer,
 				remoteServerItemsToProcess.get(originatingServer) - 1);
@@ -254,7 +255,8 @@ public class FederatedQueueManager {
 	public String getRelatedNodeForRemotePacket(IQ packet) {
 		String id = null;
 		if (nodeMap.containsKey(packet.getID()))
-			id = nodeMap.remove(packet.getID());
+			id = nodeMap.get(packet.getID());
+			nodeMap.remove(packet.getID());
 		return id;
 	}
 
@@ -266,6 +268,7 @@ public class FederatedQueueManager {
 		} catch (ComponentException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
+			logger.error(e);
 		}
 	}
 }

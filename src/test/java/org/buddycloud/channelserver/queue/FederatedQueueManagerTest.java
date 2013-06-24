@@ -161,4 +161,25 @@ public class FederatedQueueManagerTest extends IQTestHandler {
 		Assert.assertEquals(expectedForwaredPacket.toXML(),
 				originalPacketRedirected.toXML());
 	}
+	
+	@Test
+	public void testOutgoingFederatedPacketsAreRoutedBackToOriginalSender() throws Exception {
+		IQ packet = new IQ();
+		packet.setID("1:some-request");
+		packet.setFrom(new JID("romeo@montague.lit/street"));
+		packet.setTo(new JID("topics.capulet.lit"));
+		packet.setType(IQ.Type.get);
+		packet.getElement().addAttribute("remote-server-discover", "false");
+
+		queueManager.process(packet);
+        channelsEngine.poll();
+		
+        IQ response = IQ.createResultIQ(packet);
+        queueManager.passResponseToRequester(response);
+        
+        Assert.assertEquals(1, channelsEngine.size());
+        Packet redirected = channelsEngine.poll();
+        
+        Assert.assertEquals(packet.getFrom(), redirected.getTo());
+	}
 }

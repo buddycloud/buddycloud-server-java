@@ -88,9 +88,9 @@ public class FederatedQueueManager {
 			if (false == waitingStanzas.containsKey(to)) {
 				waitingStanzas.put(to, new ArrayList<Packet>());
 			}
+			waitingStanzas.get(to).add(packet);
 			logger.debug("Adding packet to waiting stanza list for " + to
 					+ " (size " + waitingStanzas.get(to).size() + ")");
-			waitingStanzas.get(to).add(packet);
 		} catch (Exception e) {
 			logger.error(e);
 		}
@@ -114,7 +114,7 @@ public class FederatedQueueManager {
 	}
 
 	private void sendPacket(Packet packet) throws ComponentException {
-		logger.info("OUT:FQM-> " + packet.toXML());
+		packet.setFrom(localServer);
 		component.sendPacket(packet.createCopy());
 	}
 
@@ -202,7 +202,7 @@ public class FederatedQueueManager {
 		}
 		for (Packet packet : packetsToSend) {
 			packet.setTo(remoteServer);
-			sendPacket(packet);
+			sendPacket(packet.createCopy());
 		}
 		waitingStanzas.remove(originatingServer);
 	}

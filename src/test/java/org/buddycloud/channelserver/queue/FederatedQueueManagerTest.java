@@ -164,6 +164,9 @@ public class FederatedQueueManagerTest extends IQTestHandler {
 	
 	@Test
 	public void testOutgoingFederatedPacketsAreRoutedBackToOriginalSender() throws Exception {
+
+		channelsEngine.clear();
+		
 		IQ packet = new IQ();
 		packet.setID("1:some-request");
 		packet.setFrom(new JID("romeo@montague.lit/street"));
@@ -171,7 +174,7 @@ public class FederatedQueueManagerTest extends IQTestHandler {
 		packet.setType(IQ.Type.get);
 		packet.getElement().addAttribute("remote-server-discover", "false");
 
-		queueManager.process(packet);
+		queueManager.process(packet.createCopy());
         channelsEngine.poll();
 		
         IQ response = IQ.createResultIQ(packet);

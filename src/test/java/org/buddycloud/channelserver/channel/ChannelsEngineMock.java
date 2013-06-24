@@ -23,6 +23,10 @@ public class ChannelsEngineMock extends ChannelsEngine {
 		}
 	}
 	
+	public void clear() {
+	    queue.clear();	
+	}
+	
 	public Packet poll() {
 		return queue.poll();
 	}

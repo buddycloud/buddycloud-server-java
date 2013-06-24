@@ -192,18 +192,25 @@ public class AffiliationsGet implements PubSubElementProcessor {
 							aff.getAffiliation().toString())
 					.addAttribute("jid", aff.getUser().toString());
 		}
-		
-		totalEntriesCount = channelManager.countUserAffiliations(actorJid);
+		try {
+		    totalEntriesCount = channelManager.countUserAffiliations(actorJid);
+		} catch (NodeStoreException e) {
+			logger.error(e);
+			e.printStackTrace();
+			totalEntriesCount = 0;
+		}
 		return true;
 	}
 
 	private void makeRemoteRequest(String node) throws InterruptedException {
+		logger.info("Going federated for <affiliations />");
 		requestIq.setTo(new JID(node).getDomain());
 		if (null == requestIq.getElement().element("pubsub").element("actor")) {
 		    Element actor = requestIq.getElement().element("pubsub")
 				.addElement("actor", JabberPubsub.NS_BUDDYCLOUD);
 		    actor.addText(requestIq.getFrom().toBareJID());
 		}
+
 		outQueue.put(requestIq);
 	}
 

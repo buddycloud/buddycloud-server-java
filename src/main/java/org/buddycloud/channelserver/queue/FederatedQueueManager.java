@@ -62,7 +62,6 @@ public class FederatedQueueManager {
 	public void process(Packet packet) throws ComponentException {
 		String to = packet.getTo().toString();
 		sentRemotePackets.put(packet.getID(), packet.getFrom());
-		packet.setFrom(localServer);
 		try {
 			extractNodeDetails(packet);
 			// Do we have a map already?
@@ -241,10 +240,6 @@ public class FederatedQueueManager {
 					"Can not find original requesting packet! (ID:"
 							+ packet.getID() + ")");
 		}
-
-		logger.debug("Forwarding remote packet to "
-				+ sentRemotePackets.get(packet.getID()) + " from "
-				+ packet.getFrom());
 		packet.setTo(sentRemotePackets.get(packet.getID()));
 		packet.setFrom(localServer);
 		sentRemotePackets.remove(packet.getID());
@@ -266,7 +261,6 @@ public class FederatedQueueManager {
 		try {
 			sendFederatedRequests(server.getDomain());
 		} catch (ComponentException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 			logger.error(e);
 		}

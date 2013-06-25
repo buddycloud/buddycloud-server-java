@@ -112,6 +112,7 @@ public class NodeConfigure extends PubSubElementProcessorAbstract {
 				.getNodeSubscriptionListeners(node);
 		Document document = getDocumentHelper();
 		Element message = document.addElement("message");
+		message.addAttribute("remote-server-discover", "false");
 		Element event = message.addElement("event");
 		Element configurationElement = event.addElement("configuration");
 		configurationElement.addAttribute("node", node);

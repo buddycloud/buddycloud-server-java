@@ -336,8 +336,10 @@ public class PublishSet extends PubSubElementProcessorAbstract {
 		// Let's send notifications as defined in 7.1.2.1 Notification With
 		// Payload
 		Message msg = new Message();
+		msg.getElement().addAttribute("remote-server-discover", "false");
 		msg.setType(Message.Type.headline);
 		msg.setFrom(requestIq.getTo());
+		msg.getElement().addAttribute("remote-server-discover", "false");
 		Element event = msg.addChildElement("event",
 				JabberPubsub.NS_PUBSUB_EVENT);
 		Element items = event.addElement("items");
@@ -360,8 +362,7 @@ public class PublishSet extends PubSubElementProcessorAbstract {
 		
 		ArrayList<JID> admins = getAdminUsers();
 		for (JID admin : admins) {
-			msg.setTo(admin);
-			
+			msg.setTo(admin);	
 			outQueue.put(msg.createCopy());
 		}
 	}

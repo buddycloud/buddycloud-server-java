@@ -115,6 +115,7 @@ public class ItemDelete extends PubSubElementProcessorAbstract {
 	private Message getNotificationMessage() {
 		Message notification = new Message();
 		notification.setType(Message.Type.headline);
+		notification.getElement().addAttribute("remote-server-discover", "false");
 		Element event = notification.addChildElement("event",
 				JabberPubsub.NS_PUBSUB_EVENT);
 		Element items = event.addElement("items");

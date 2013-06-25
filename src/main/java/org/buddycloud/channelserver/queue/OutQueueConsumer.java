@@ -56,8 +56,8 @@ public class OutQueueConsumer extends QueueConsumer {
 			logger.debug("There are " + resources.size() + " online resources for " + p.getTo());
 			for (JID resource : resources) {
 		        p.setTo(resource);
-			    component.sendPacket(p.createCopy());
 			    logger.debug("OUT -> " + p.toXML());
+			    component.sendPacket(p.createCopy());
 			}
 		} catch (ComponentException e) {
 			logger.error("Sending packet caused error: " + p.toXML());

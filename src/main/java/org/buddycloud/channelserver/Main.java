@@ -14,6 +14,9 @@ public class Main
         PropertyConfigurator.configure("log4j.properties");
         Logger.getLogger(Main.class).setLevel(Level.DEBUG);
         
+        TopicsComponent topicsComponent;
+        XmppComponent xmppComponent;
+        
         LOGGER.info("Starting Buddycloud channel mockup version...");
 
     	Configuration conf = Configuration.getInstance(); 
@@ -24,13 +27,11 @@ public class Main
             + conf.getProperty("xmpp.subdomain") + "'.");
 
         try {
-            XmppComponent xmppComponent = new XmppComponent(conf, conf.getProperty("server.domain.channels"));
+            xmppComponent = new XmppComponent(conf, conf.getProperty("server.domain.channels"));
             xmppComponent.run();
-            
-            TopicsComponent topicsComponent = new TopicsComponent(conf, conf.getProperty("server.domain.topics"));
+            topicsComponent = new TopicsComponent(conf, conf.getProperty("server.domain.topics"));
             topicsComponent.run();
         } catch (ComponentException e1) {
-            // TODO Auto-generated catch block
             e1.printStackTrace();
         }
         run();

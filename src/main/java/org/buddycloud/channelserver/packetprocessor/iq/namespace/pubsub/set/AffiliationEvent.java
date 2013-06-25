@@ -100,6 +100,7 @@ public class AffiliationEvent extends PubSubElementProcessorAbstract {
 		Document document = getDocumentHelper();
 		Element message = document.addElement("message");
 		Element pubsub = message.addElement("event");
+		message.addAttribute("remote-server-discover", "false");
 		Element affiliations = pubsub.addElement("affiliations");
 		Element affiliation  = affiliations.addElement("affiliation");
 		

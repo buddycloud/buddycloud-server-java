@@ -88,6 +88,7 @@ public class SubscriptionEvent extends PubSubElementProcessorAbstract {
 
 		Document document = getDocumentHelper();
 		Element message = document.addElement("message");
+		message.addAttribute("remote-server-discover", "false");
 		Element event = message.addElement("event");
 		Element subscription = event.addElement("subscription");
 		event.addNamespace("", JabberPubsub.NS_PUBSUB_EVENT);

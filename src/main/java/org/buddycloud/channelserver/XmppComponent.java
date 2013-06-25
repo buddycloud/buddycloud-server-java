@@ -28,11 +28,9 @@ public class XmppComponent {
 		this.domain = domain;
 		password = configuration.getProperty("xmpp.secretkey");
 		channelsEngine = new ChannelsEngine(configuration);
-
 		try {
 			PropertyConfigurator.configure(DATABASE_CONFIGURATION_FILE);
 		} catch (ProxoolException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}

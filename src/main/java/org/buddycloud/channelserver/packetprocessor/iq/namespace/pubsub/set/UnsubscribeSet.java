@@ -132,6 +132,7 @@ public class UnsubscribeSet extends PubSubElementProcessorAbstract {
 
 		Document document = getDocumentHelper();
 		Element message = document.addElement("message");
+		message.addAttribute("remote-server-discover", "false");
 		Element event = message.addElement("event");
 		Element subscription = event.addElement("subscription");
 		Element affiliation = event.addElement("affiliation");

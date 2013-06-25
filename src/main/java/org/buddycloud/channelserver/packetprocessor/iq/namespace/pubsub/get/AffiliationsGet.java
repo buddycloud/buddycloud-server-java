@@ -210,7 +210,6 @@ public class AffiliationsGet implements PubSubElementProcessor {
 				.addElement("actor", JabberPubsub.NS_BUDDYCLOUD);
 		    actor.addText(requestIq.getFrom().toBareJID());
 		}
-
 		outQueue.put(requestIq);
 	}
 

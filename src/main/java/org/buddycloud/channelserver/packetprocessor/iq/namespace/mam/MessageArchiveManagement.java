@@ -118,13 +118,12 @@ public class MessageArchiveManagement implements PacketProcessor<IQ> {
 		try {
 			CloseableIterator<NodeItem> items = channelManager.getNewNodeItemsForUser(requestIq.getFrom(), startTimestamp, endTimestamp);
 			if (false == items.hasNext()) {
-				System.out.println("RESUEEGRGR");
 				return;
 			}
 			
 			Message notification = wrapper.createCopy();
 			Element forwarded = notification.getElement().element("forwarded");
-			
+			notification.getElement().addAttribute("remote-server-discover", "false");
 			Element event = forwarded.addElement("event");
 			event.addNamespace("", JabberPubsub.NS_PUBSUB_EVENT);
 			Element itemsElement = event.addElement("items");

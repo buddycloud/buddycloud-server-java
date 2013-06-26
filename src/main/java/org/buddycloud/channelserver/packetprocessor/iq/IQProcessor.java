@@ -70,7 +70,6 @@ public class IQProcessor implements PacketProcessor<IQ> {
 
 			this.outQueue.put(reply);
 		}
-		processPacket(packet);
 	}
 
 	private void processPacket(IQ packet) throws Exception,

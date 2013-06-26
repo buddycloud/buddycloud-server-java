@@ -37,12 +37,13 @@ public class FederatedQueueManager {
 
 	private final ChannelsEngine component;
 	private ConcurrentHashMap<String, String> discoveredServers = new ConcurrentHashMap<String, String>();
-	private ConcurrentHashMap<String, List<Packet>> waitingStanzas = new ConcurrentHashMap<String, List<Packet>>();
 	private ConcurrentHashMap<String, String> remoteChannelDiscoveryStatus = new ConcurrentHashMap<String, String>();
 	private ConcurrentHashMap<String, Integer> remoteServerItemsToProcess = new ConcurrentHashMap<String, Integer>();
 	private ConcurrentHashMap<String, String> remoteServerInfoRequestIds = new ConcurrentHashMap<String, String>();
-	private ConcurrentHashMap<String, JID> sentRemotePackets = new ConcurrentHashMap<String, JID>();
-	private ConcurrentHashMap<String, String> nodeMap = new ConcurrentHashMap<String, String>();
+	private ConcurrentHashMap<String, List<Packet>> waitingStanzas = new ConcurrentHashMap<String, List<Packet>>();
+	
+	private ExpiringPacketQueue sentRemotePackets = new ExpiringPacketQueue();
+	private ExpiringPacketQueue nodeMap = new ExpiringPacketQueue();
 
 	private String localServer;
 
@@ -60,6 +61,10 @@ public class FederatedQueueManager {
 	}
 
 	public void process(Packet packet) throws ComponentException {
+		
+		sentRemotePackets.expireEntries();
+		nodeMap.expireEntries();
+		
 		String to = packet.getTo().toString();
 		sentRemotePackets.put(packet.getID(), packet.getFrom());
 		try {
@@ -240,7 +245,7 @@ public class FederatedQueueManager {
 					"Can not find original requesting packet! (ID:"
 							+ packet.getID() + ")");
 		}
-		packet.setTo(sentRemotePackets.get(packet.getID()));
+		packet.setTo((JID) sentRemotePackets.get(packet.getID()));
 		packet.setFrom(localServer);
 		sentRemotePackets.remove(packet.getID());
 		
@@ -250,7 +255,7 @@ public class FederatedQueueManager {
 	public String getRelatedNodeForRemotePacket(IQ packet) {
 		String id = null;
 		if (nodeMap.containsKey(packet.getID()))
-			id = nodeMap.get(packet.getID());
+			id = (String) nodeMap.get(packet.getID());
 			nodeMap.remove(packet.getID());
 		return id;
 	}

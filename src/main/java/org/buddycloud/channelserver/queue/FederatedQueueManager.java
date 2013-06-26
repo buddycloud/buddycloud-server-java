@@ -52,6 +52,9 @@ public class FederatedQueueManager {
 	public FederatedQueueManager(ChannelsEngine component, String localServer) {
 		this.component = component;
 		this.localServer = localServer;
+		
+		nodeMap.start();
+		sentRemotePackets.start();
 	}
 
 	private int getId() {
@@ -61,9 +64,6 @@ public class FederatedQueueManager {
 	}
 
 	public void process(Packet packet) throws ComponentException {
-		
-		sentRemotePackets.expireEntries();
-		nodeMap.expireEntries();
 		
 		String to = packet.getTo().toString();
 		sentRemotePackets.put(packet.getID(), packet.getFrom());

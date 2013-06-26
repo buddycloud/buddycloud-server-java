@@ -35,28 +35,28 @@ public class ExpiringPacketQueueTest extends IQTestHandler {
 	@Test
 	public void testShortExpiryLeadsToPacketsExpiring() throws Exception {
 		queue.setTimeout(1);
+		queue.start();
 		queue.put("packet:1", new IQ());
-		Thread.sleep(2);
-		queue.expireEntries();
+		Thread.sleep(15);
 		Assert.assertEquals(0, queue.size());
 	}
 	
 	@Test
 	public void testLongExpiryLeadsToPacketsNotExpiring() throws Exception {
 		queue.setTimeout(100);
+		queue.start();
 		queue.put("packet:1", new IQ());
 		Thread.sleep(2);
-		queue.expireEntries();
 		Assert.assertEquals(1, queue.size());
 	}
 	
 	@Test
 	public void testDoesNotFailIfPacketRemovedEarly() throws Exception {
 		queue.setTimeout(100);
+		queue.start();
 		queue.put("packet:1", new IQ());
 		queue.put("packet:2", new IQ());
 		queue.remove("packet:1");
-		queue.expireEntries();
 		Assert.assertEquals(1, queue.size());	
 		Assert.assertNull(queue.get("packet:1"));
 		Assert.assertNotNull(queue.get("packet:2"));
@@ -65,6 +65,7 @@ public class ExpiringPacketQueueTest extends IQTestHandler {
 	@Test
 	public void testDoesNotFailOnExpireIfPacketRemovedEarly() throws Exception {
 		queue.setTimeout(1);
+		queue.start();
 		queue.put("packet:1", new IQ());
 		queue.put("packet:2", new IQ());
 		queue.remove("packet:1");

@@ -1066,7 +1066,7 @@ public class JDBCNodeStore implements NodeStore {
 				queryParts.add(dialect.selectCountRecentItemParts());
 				parameters.add(subscription.getNodeId());
 				parameters.add(new java.sql.Timestamp(since.getTime()));
-				parameters.add(String.valueOf(maxPerNode));
+				parameters.add(maxPerNode);
 			}
 			stmt = conn.prepareStatement(StringUtils.join(queryParts,
 					" UNION ALL "));

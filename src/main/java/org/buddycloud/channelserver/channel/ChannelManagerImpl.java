@@ -220,6 +220,19 @@ public class ChannelManagerImpl implements ChannelManager {
 	}
 
 	@Override
+	public ClosableIteratorImpl<NodeItem> getNodeItemThread(String nodeId,
+			String itemId, String afterItemId, int limit)
+			throws NodeStoreException {
+		return nodeStore.getNodeItemThread(nodeId, itemId, afterItemId, limit);
+	}
+
+	@Override
+	public int getCountNodeThread(String nodeId, String itemId)
+			throws NodeStoreException {
+		return nodeStore.getCountNodeThread(nodeId, itemId);
+	}
+
+	@Override
 	public CloseableIterator<NodeItem> getNewNodeItemsForUser(JID user,
 			Date startDate, Date endDate) throws NodeStoreException {
 		return nodeStore.getNewNodeItemsForUser(user, startDate, endDate);

@@ -391,7 +391,30 @@ public interface NodeStore {
 	 * @throws NodeStoreException 
 	 */
 	int getCountNodeItemReplies(String nodeId, String itemId) throws NodeStoreException;
-		
+	
+    /**
+     * Retrieves node item thread
+     * 
+     * @param nodeId
+     * @param itemId
+     * @param afterItemId
+     * @param limit
+     * @return
+     * @throws NodeStoreException
+     */
+	ClosableIteratorImpl<NodeItem> getNodeItemThread(String nodeId, String itemId,
+			String afterItemId, int limit) throws NodeStoreException;
+	
+	/**
+	 * Get a count of the number of items in a thread
+	 * 
+	 * @param nodeId
+	 * @param itemId
+	 * @throws NodeStoreException 
+	 */
+	int getCountNodeThread(String nodeId, String itemId)
+			throws NodeStoreException;
+	
     /**
      * Get recent items for a user
      * 

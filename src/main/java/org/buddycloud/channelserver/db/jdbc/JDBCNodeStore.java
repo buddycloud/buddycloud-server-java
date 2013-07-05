@@ -1262,6 +1262,71 @@ public class JDBCNodeStore implements NodeStore {
 	}
 
 	@Override
+	public ClosableIteratorImpl<NodeItem> getNodeItemThread(String nodeId,
+			String itemId, String afterItemId, int limit)
+			throws NodeStoreException {
+		PreparedStatement stmt = null;
+
+		try {
+			Date since = new Date(0);
+			if (null != afterItemId)
+				since = getNodeItemById(afterItemId).getUpdated();
+
+			String query = dialect.selectItemThread();
+			if (-1 != limit) {
+				query += " LIMIT ?";
+			}
+			stmt = conn.prepareStatement(query);
+			stmt.setString(1, nodeId);
+			stmt.setString(2, itemId);
+			stmt.setString(3, itemId);
+			stmt.setTimestamp(4, new java.sql.Timestamp(since.getTime()));
+			if (-1 != limit)
+				stmt.setInt(5, limit);
+
+			java.sql.ResultSet rs = stmt.executeQuery();
+
+			LinkedList<NodeItem> results = new LinkedList<NodeItem>();
+
+			while (rs.next()) {
+				results.push(new NodeItemImpl(rs.getString(2), rs.getString(1),
+						rs.getTimestamp(4), rs.getString(3), rs.getString(5)));
+			}
+
+			return new ClosableIteratorImpl<NodeItem>(results.iterator());
+		} catch (SQLException e) {
+			throw new NodeStoreException(e);
+		} finally {
+			close(stmt); // Will implicitly close the resultset if required
+		}
+	}
+	
+	@Override
+	public int getCountNodeThread(String nodeId, String itemId)
+			throws NodeStoreException {
+		PreparedStatement stmt = null;
+
+		try {
+			stmt = conn.prepareStatement(dialect.selectCountItemThread());
+			stmt.setString(1, nodeId);
+			stmt.setString(2, itemId);
+			stmt.setString(3, itemId);
+
+			java.sql.ResultSet rs = stmt.executeQuery();
+
+			if (rs.next()) {
+				return rs.getInt(1);
+			} else {
+				return 0; // This really shouldn't happen!
+			}
+		} catch (SQLException e) {
+			throw new NodeStoreException(e);
+		} finally {
+			close(stmt); // Will implicitly close the resultset if required
+		}
+	}
+	
+	@Override
 	public CloseableIterator<NodeItem> getNewNodeItemsForUser(JID user,
 			Date startDate, Date endDate) throws NodeStoreException {
 
@@ -1701,6 +1766,10 @@ public class JDBCNodeStore implements NodeStore {
 
 		String selectCountItemReplies();
 
+		String selectItemThread();
+
+		String selectCountItemThread();
+		
 		String insertItem();
 
 		String updateItem();

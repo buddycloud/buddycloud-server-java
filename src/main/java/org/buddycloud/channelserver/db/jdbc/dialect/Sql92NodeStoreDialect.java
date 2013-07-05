@@ -157,10 +157,21 @@ public class Sql92NodeStoreDialect implements NodeStoreSQLDialect {
 			+ "FROM \"items\" WHERE \"node\" = ? AND \"in_reply_to\" = ? "
 			+ "AND \"updated\" > ? ORDER BY \"updated\" DESC";
 	
+	private static final String SELECT_ITEM_THREAD = ""
+			+ "SELECT \"id\", \"node\", \"xml\", \"updated\", \"in_reply_to\" "
+			+ "FROM \"items\" WHERE \"node\" = ? "
+			+ "AND (\"in_reply_to\" = ? OR \"id\" = ?) "
+			+ "AND \"updated\" > ? ORDER BY \"updated\" DESC";
+	
 	private static final String SELECT_COUNT_ITEM_REPLIES = ""
 			+ "SELECT COUNT(\"id\") "
 			+ "FROM \"items\" WHERE \"node\" = ? AND \"in_reply_to\" = ? ";
-			
+	
+	private static final String SELECT_COUNT_ITEM_THREAD = ""
+			+ "SELECT COUNT(\"id\") "
+			+ "FROM \"items\" WHERE \"node\" = ? "
+			+ "AND (\"in_reply_to\" = ? OR \"id\" = ?) ";
+	
 	private static final String COUNT_SUBSCRIPTIONS_FOR_NODE = "SELECT COUNT(*) "
 			+ "FROM \"subscriptions\" WHERE \"node\" = ?;";
 
@@ -373,6 +384,16 @@ public class Sql92NodeStoreDialect implements NodeStoreSQLDialect {
 	@Override
 	public String selectCountItemReplies() {
 		return SELECT_COUNT_ITEM_REPLIES;
+	}
+	
+	@Override
+	public String selectItemThread() {
+		return SELECT_ITEM_THREAD;
+	}
+	
+	@Override
+	public String selectCountItemThread() {
+		return SELECT_COUNT_ITEM_THREAD;
 	}
 
 	@Override

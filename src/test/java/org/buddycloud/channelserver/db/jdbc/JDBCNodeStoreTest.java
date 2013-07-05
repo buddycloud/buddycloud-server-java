@@ -1134,7 +1134,7 @@ public class JDBCNodeStoreTest {
 		store.addUserSubscription(new NodeSubscriptionImpl(
 				TEST_SERVER1_NODE1_ID, TEST_SERVER1_USER3_JID,
 				Subscriptions.pending));
-		
+
 		ResultSet<NodeSubscription> changes = store.getSubscriptionChanges(
 				TEST_SERVER1_USER1_JID, new Date(0), new Date());
 		assertEquals(5, changes.size());
@@ -1152,7 +1152,7 @@ public class JDBCNodeStoreTest {
 				Subscriptions.pending));
 		store.setUserAffiliation(TEST_SERVER1_NODE1_ID, TEST_SERVER1_USER1_JID,
 				Affiliations.outcast);
-		
+
 		ResultSet<NodeSubscription> changes = store.getSubscriptionChanges(
 				TEST_SERVER1_USER1_JID, new Date(0), new Date());
 		assertEquals(0, changes.size());
@@ -1535,7 +1535,7 @@ public class JDBCNodeStoreTest {
 		store.addNodeItem(nodeItem2);
 
 		Thread.sleep(20);
-		
+
 		CloseableIterator<NodeItem> items = store.getRecentItems(
 				TEST_SERVER1_USER1_JID, since, -1, -1, null, null);
 
@@ -1544,7 +1544,7 @@ public class JDBCNodeStoreTest {
 		assertSameNodeItem(items.next(), nodeItem1);
 		assertEquals(false, items.hasNext());
 	}
-	
+
 	@Test
 	public void testGetRecentItemsWithNoResultsPerNodeRequestedReturnsExpectedCount()
 			throws Exception {
@@ -1597,7 +1597,7 @@ public class JDBCNodeStoreTest {
 	public void testCanPageGetRecentItemsUsingResultSetManagement()
 			throws Exception {
 		dbTester.loadData("node_1");
-		
+
 		Date since = new Date();
 
 		store.addRemoteNode(TEST_SERVER1_NODE2_ID);
@@ -1627,7 +1627,7 @@ public class JDBCNodeStoreTest {
 		}
 		assertEquals(15, count);
 	}
-	
+
 	@Test
 	public void testGetRecentItemCount() throws Exception {
 
@@ -1710,7 +1710,73 @@ public class JDBCNodeStoreTest {
 		int items = store.getCountNodeItemReplies(TEST_SERVER1_NODE1_ID, "a5");
 		assertEquals(1, items);
 	}
-	
+
+	@Test
+	public void testCanGetItemThread() throws Exception {
+		dbTester.loadData("node_1");
+		NodeItem testItem = new NodeItemImpl(TEST_SERVER1_NODE1_ID, "a6",
+				new Date(), "<entry>payload</entry>", "a5");
+		store.addNodeItem(testItem);
+
+		ClosableIteratorImpl<NodeItem> items = store.getNodeItemThread(
+				TEST_SERVER1_NODE1_ID, "a5", null, -1);
+
+		int count = 0;
+		NodeItem item = null;
+		while (items.hasNext()) {
+			++count;
+			item = items.next();
+
+		}
+		assertEquals(2, count);
+		assertSameNodeItem(item, testItem);
+	}
+
+	@Test
+	public void testCanGetItemThreadWithResultSetManagement() throws Exception {
+		dbTester.loadData("node_1");
+		NodeItem testItemParent = new NodeItemImpl(TEST_SERVER1_NODE1_ID, "a100",
+				new Date(100), "<entry>payload parent</entry>");
+		NodeItem testItem1 = new NodeItemImpl(TEST_SERVER1_NODE1_ID, "a6",
+				new Date(20), "<entry>payload</entry>", "a100");
+		NodeItem testItem2 = new NodeItemImpl(TEST_SERVER1_NODE1_ID, "a7",
+				new Date(40), "<entry>payload</entry>", "a100");
+		NodeItem testItem3 = new NodeItemImpl(TEST_SERVER1_NODE1_ID, "a8",
+				new Date(80), "<entry>payload</entry>", "a100");
+		NodeItem testItem4 = new NodeItemImpl(TEST_SERVER1_NODE1_ID, "a9",
+				new Date(160), "<entry>payload</entry>", "a100");
+		store.addNodeItem(testItemParent);
+		store.addNodeItem(testItem1);
+		store.addNodeItem(testItem2);
+		store.addNodeItem(testItem3);
+		store.addNodeItem(testItem4);
+
+		ClosableIteratorImpl<NodeItem> items = store.getNodeItemThread(
+				TEST_SERVER1_NODE1_ID, "a100", "a7", 2);
+
+		int count = 0;
+		ArrayList<NodeItem> itemsResult = new ArrayList<NodeItem>();
+		while (items.hasNext()) {
+			++count;
+			itemsResult.add(items.next());
+
+		}
+		assertEquals(2, count);
+		assertSameNodeItem(itemsResult.get(0), testItemParent);
+		assertSameNodeItem(itemsResult.get(1), testItem4);
+	}
+
+	@Test
+	public void testCanGetCountOfItemThread() throws Exception {
+		dbTester.loadData("node_1");
+		NodeItem testItem = new NodeItemImpl(TEST_SERVER1_NODE1_ID, "a6",
+				new Date(), "<entry>payload</entry>", "a5");
+		store.addNodeItem(testItem);
+
+		int items = store.getCountNodeThread(TEST_SERVER1_NODE1_ID, "a5");
+		assertEquals(2, items);
+	}
+
 	@Test
 	public void testAddNodeItem() throws Exception {
 		dbTester.loadData("node_1");
@@ -1892,133 +1958,156 @@ public class JDBCNodeStoreTest {
 		boolean cached = store.nodeHasSubscriptions(TEST_SERVER1_NODE1_ID);
 		assertEquals(true, cached);
 	}
-	
-	@Test(expected=IllegalArgumentException.class)
-	public void testFirehoseItemsThrowsExceptionIfNegativeLimitRequested() throws Exception {
+
+	@Test(expected = IllegalArgumentException.class)
+	public void testFirehoseItemsThrowsExceptionIfNegativeLimitRequested()
+			throws Exception {
 		store.getFirehose(-1, null, false);
 	}
 
 	@Test
 	public void testCanGetFirehoseItems() throws Exception {
-        dbTester.loadData("node_1");
-        dbTester.loadData("node_2");
-        store.setNodeConfValue(TEST_SERVER1_NODE1_ID, "pubsub#access_model", "open");
-        store.setNodeConfValue(TEST_SERVER1_NODE2_ID, "pubsub#access_model", "open");
-        // Add a remote node - don't expect to see
-        HashMap<String, String> remoteNodeConf = new HashMap<String, String>();
-        remoteNodeConf.put("pubsub#access_model", "open");
-        store.addRemoteNode(TEST_SERVER2_NODE1_ID);
-        store.setNodeConf(TEST_SERVER2_NODE1_ID, remoteNodeConf);
-        // Add a private node - don't expect to see
-        HashMap<String, String> privateNodeConf = new HashMap<String, String>();
-        privateNodeConf.put("pubsub#access_model", "subscribe");
-        store.createNode(TEST_SERVER1_USER1_JID, TEST_SERVER1_NODE3_ID, privateNodeConf);
-        store.addNodeItem(new NodeItemImpl(TEST_SERVER1_NODE3_ID, "1111", new Date(), "<entry/>"));
-        Thread.sleep(4);
-        CloseableIterator<NodeItem> items = store.getFirehose(50, null, false);
-        NodeItem item = null;
-        int count = 0;
-        while (items.hasNext()) {
-        	item = items.next();
-        	++count;
-        }
-        assertEquals(6, count);
+		dbTester.loadData("node_1");
+		dbTester.loadData("node_2");
+		store.setNodeConfValue(TEST_SERVER1_NODE1_ID, "pubsub#access_model",
+				"open");
+		store.setNodeConfValue(TEST_SERVER1_NODE2_ID, "pubsub#access_model",
+				"open");
+		// Add a remote node - don't expect to see
+		HashMap<String, String> remoteNodeConf = new HashMap<String, String>();
+		remoteNodeConf.put("pubsub#access_model", "open");
+		store.addRemoteNode(TEST_SERVER2_NODE1_ID);
+		store.setNodeConf(TEST_SERVER2_NODE1_ID, remoteNodeConf);
+		// Add a private node - don't expect to see
+		HashMap<String, String> privateNodeConf = new HashMap<String, String>();
+		privateNodeConf.put("pubsub#access_model", "subscribe");
+		store.createNode(TEST_SERVER1_USER1_JID, TEST_SERVER1_NODE3_ID,
+				privateNodeConf);
+		store.addNodeItem(new NodeItemImpl(TEST_SERVER1_NODE3_ID, "1111",
+				new Date(), "<entry/>"));
+		Thread.sleep(4);
+		CloseableIterator<NodeItem> items = store.getFirehose(50, null, false);
+		NodeItem item = null;
+		int count = 0;
+		while (items.hasNext()) {
+			item = items.next();
+			++count;
+		}
+		assertEquals(6, count);
 	}
-	
+
 	@Test
-	public void testCanGetFirehoseItemsIncludingPrivateAsAdminUser() throws Exception {
-        dbTester.loadData("node_1");
-        dbTester.loadData("node_2");
-        store.setNodeConfValue(TEST_SERVER1_NODE1_ID, "pubsub#access_model", "open");
-        store.setNodeConfValue(TEST_SERVER1_NODE2_ID, "pubsub#access_model", "open");
-        // Add a private node - *do* expect to see
-        HashMap<String, String> privateNodeConf = new HashMap<String, String>();
-        privateNodeConf.put("pubsub#access_model", "subscribe");
-        store.createNode(TEST_SERVER1_USER1_JID, TEST_SERVER1_NODE3_ID, privateNodeConf);
-        store.addNodeItem(new NodeItemImpl(TEST_SERVER1_NODE3_ID, "1111", new Date(), "<entry/>"));
-        // Add a remote node - don't expect to see
-        HashMap<String, String> remoteNodeConf = new HashMap<String, String>();
-        remoteNodeConf.put("pubsub#access_model", "open");
-        store.addRemoteNode(TEST_SERVER2_NODE1_ID);
-        store.setNodeConf(TEST_SERVER2_NODE1_ID, remoteNodeConf);
-        
-        CloseableIterator<NodeItem> items = store.getFirehose(50, null, true);
-        NodeItem item = null;
-        int count = 0;
-        while (items.hasNext()) {
-        	item = items.next();
-        	++count;
-        }
-        assertEquals(7, count);		
+	public void testCanGetFirehoseItemsIncludingPrivateAsAdminUser()
+			throws Exception {
+		dbTester.loadData("node_1");
+		dbTester.loadData("node_2");
+		store.setNodeConfValue(TEST_SERVER1_NODE1_ID, "pubsub#access_model",
+				"open");
+		store.setNodeConfValue(TEST_SERVER1_NODE2_ID, "pubsub#access_model",
+				"open");
+		// Add a private node - *do* expect to see
+		HashMap<String, String> privateNodeConf = new HashMap<String, String>();
+		privateNodeConf.put("pubsub#access_model", "subscribe");
+		store.createNode(TEST_SERVER1_USER1_JID, TEST_SERVER1_NODE3_ID,
+				privateNodeConf);
+		store.addNodeItem(new NodeItemImpl(TEST_SERVER1_NODE3_ID, "1111",
+				new Date(), "<entry/>"));
+		// Add a remote node - don't expect to see
+		HashMap<String, String> remoteNodeConf = new HashMap<String, String>();
+		remoteNodeConf.put("pubsub#access_model", "open");
+		store.addRemoteNode(TEST_SERVER2_NODE1_ID);
+		store.setNodeConf(TEST_SERVER2_NODE1_ID, remoteNodeConf);
+
+		CloseableIterator<NodeItem> items = store.getFirehose(50, null, true);
+		NodeItem item = null;
+		int count = 0;
+		while (items.hasNext()) {
+			item = items.next();
+			++count;
+		}
+		assertEquals(7, count);
 	}
-	
+
 	@Test
 	@Ignore("Ordering by timestamp isn't happening here. Return to later")
 	public void testCanGetFirehoseItemsWithRsm() throws Exception {
-        dbTester.loadData("node_1");
-        dbTester.loadData("node_2");
-        store.setNodeConfValue(TEST_SERVER1_NODE1_ID, "pubsub#access_model", "open");
-        store.setNodeConfValue(TEST_SERVER1_NODE2_ID, "pubsub#access_model", "open");
-        // Add a private node - don't expect to see
-        HashMap<String, String> privateNodeConf = new HashMap<String, String>();
-        privateNodeConf.put("pubsub#access_model", "subscribe");
-        store.createNode(TEST_SERVER1_USER1_JID, TEST_SERVER1_NODE3_ID, privateNodeConf);
-        store.addNodeItem(new NodeItemImpl(TEST_SERVER1_NODE3_ID, "1111", new Date(), "<entry/>"));
-        
-        // Add a remote node - don't expect to see
-        HashMap<String, String> remoteNodeConf = new HashMap<String, String>();
-        remoteNodeConf.put("pubsub#access_model", "open");
-        store.addRemoteNode(TEST_SERVER2_NODE1_ID);
-        store.setNodeConf(TEST_SERVER2_NODE1_ID, remoteNodeConf);
-        
-        CloseableIterator<NodeItem> items = store.getFirehose(2, "a3", false);
-        NodeItem item1 = items.next();
-        NodeItem item2 = items.next();
+		dbTester.loadData("node_1");
+		dbTester.loadData("node_2");
+		store.setNodeConfValue(TEST_SERVER1_NODE1_ID, "pubsub#access_model",
+				"open");
+		store.setNodeConfValue(TEST_SERVER1_NODE2_ID, "pubsub#access_model",
+				"open");
+		// Add a private node - don't expect to see
+		HashMap<String, String> privateNodeConf = new HashMap<String, String>();
+		privateNodeConf.put("pubsub#access_model", "subscribe");
+		store.createNode(TEST_SERVER1_USER1_JID, TEST_SERVER1_NODE3_ID,
+				privateNodeConf);
+		store.addNodeItem(new NodeItemImpl(TEST_SERVER1_NODE3_ID, "1111",
+				new Date(), "<entry/>"));
+
+		// Add a remote node - don't expect to see
+		HashMap<String, String> remoteNodeConf = new HashMap<String, String>();
+		remoteNodeConf.put("pubsub#access_model", "open");
+		store.addRemoteNode(TEST_SERVER2_NODE1_ID);
+		store.setNodeConf(TEST_SERVER2_NODE1_ID, remoteNodeConf);
+
+		CloseableIterator<NodeItem> items = store.getFirehose(2, "a3", false);
+		NodeItem item1 = items.next();
+		NodeItem item2 = items.next();
 		assertFalse(items.hasNext());
 		assertEquals("a4", item1.getId());
 		assertEquals("node2:1", item2.getId());
 		assertEquals(TEST_SERVER1_NODE1_ID, item1.getNodeId());
 		assertEquals(TEST_SERVER1_NODE2_ID, item2.getNodeId());
 	}
-	
+
 	@Test
 	public void testCanGetFirehoseItemCount() throws Exception {
-        dbTester.loadData("node_1");
-        dbTester.loadData("node_2");
-        store.setNodeConfValue(TEST_SERVER1_NODE1_ID, "pubsub#access_model", "open");
-        store.setNodeConfValue(TEST_SERVER1_NODE2_ID, "pubsub#access_model", "open");
-        // Add a private node - *do* expect to see
-        HashMap<String, String> privateNodeConf = new HashMap<String, String>();
-        privateNodeConf.put("pubsub#access_model", "subscribe");
-        store.createNode(TEST_SERVER1_USER1_JID, TEST_SERVER1_NODE3_ID, privateNodeConf);
-        store.addNodeItem(new NodeItemImpl(TEST_SERVER1_NODE3_ID, "1111", new Date(), "<entry/>"));
-        // Add a remote node - don't expect to see
-        HashMap<String, String> remoteNodeConf = new HashMap<String, String>();
-        remoteNodeConf.put("pubsub#access_model", "open");
-        store.addRemoteNode(TEST_SERVER2_NODE1_ID);
-        store.setNodeConf(TEST_SERVER2_NODE1_ID, remoteNodeConf);
-        assertEquals(6, store.getFirehoseItemCount(false));
+		dbTester.loadData("node_1");
+		dbTester.loadData("node_2");
+		store.setNodeConfValue(TEST_SERVER1_NODE1_ID, "pubsub#access_model",
+				"open");
+		store.setNodeConfValue(TEST_SERVER1_NODE2_ID, "pubsub#access_model",
+				"open");
+		// Add a private node - *do* expect to see
+		HashMap<String, String> privateNodeConf = new HashMap<String, String>();
+		privateNodeConf.put("pubsub#access_model", "subscribe");
+		store.createNode(TEST_SERVER1_USER1_JID, TEST_SERVER1_NODE3_ID,
+				privateNodeConf);
+		store.addNodeItem(new NodeItemImpl(TEST_SERVER1_NODE3_ID, "1111",
+				new Date(), "<entry/>"));
+		// Add a remote node - don't expect to see
+		HashMap<String, String> remoteNodeConf = new HashMap<String, String>();
+		remoteNodeConf.put("pubsub#access_model", "open");
+		store.addRemoteNode(TEST_SERVER2_NODE1_ID);
+		store.setNodeConf(TEST_SERVER2_NODE1_ID, remoteNodeConf);
+		assertEquals(6, store.getFirehoseItemCount(false));
 	}
-	
+
 	@Test
-	public void testCanGetFirehostItemCountWithPrivateItemsAsAdmin() throws Exception {
-        dbTester.loadData("node_1");
-        dbTester.loadData("node_2");
-        store.setNodeConfValue(TEST_SERVER1_NODE1_ID, "pubsub#access_model", "open");
-        store.setNodeConfValue(TEST_SERVER1_NODE2_ID, "pubsub#access_model", "open");
-        // Add a private node - *do* expect to see
-        HashMap<String, String> privateNodeConf = new HashMap<String, String>();
-        privateNodeConf.put("pubsub#access_model", "subscribe");
-        store.createNode(TEST_SERVER1_USER1_JID, TEST_SERVER1_NODE3_ID, privateNodeConf);
-        store.addNodeItem(new NodeItemImpl(TEST_SERVER1_NODE3_ID, "1111", new Date(), "<entry/>"));
-        // Add a remote node - don't expect to see
-        HashMap<String, String> remoteNodeConf = new HashMap<String, String>();
-        remoteNodeConf.put("pubsub#access_model", "open");
-        store.addRemoteNode(TEST_SERVER2_NODE1_ID);
-        store.setNodeConf(TEST_SERVER2_NODE1_ID, remoteNodeConf);
-        assertEquals(7, store.getFirehoseItemCount(true));
+	public void testCanGetFirehostItemCountWithPrivateItemsAsAdmin()
+			throws Exception {
+		dbTester.loadData("node_1");
+		dbTester.loadData("node_2");
+		store.setNodeConfValue(TEST_SERVER1_NODE1_ID, "pubsub#access_model",
+				"open");
+		store.setNodeConfValue(TEST_SERVER1_NODE2_ID, "pubsub#access_model",
+				"open");
+		// Add a private node - *do* expect to see
+		HashMap<String, String> privateNodeConf = new HashMap<String, String>();
+		privateNodeConf.put("pubsub#access_model", "subscribe");
+		store.createNode(TEST_SERVER1_USER1_JID, TEST_SERVER1_NODE3_ID,
+				privateNodeConf);
+		store.addNodeItem(new NodeItemImpl(TEST_SERVER1_NODE3_ID, "1111",
+				new Date(), "<entry/>"));
+		// Add a remote node - don't expect to see
+		HashMap<String, String> remoteNodeConf = new HashMap<String, String>();
+		remoteNodeConf.put("pubsub#access_model", "open");
+		store.addRemoteNode(TEST_SERVER2_NODE1_ID);
+		store.setNodeConf(TEST_SERVER2_NODE1_ID, remoteNodeConf);
+		assertEquals(7, store.getFirehoseItemCount(true));
 	}
-	
+
 	@Test
 	public void testBeginTransaction() throws Exception {
 		Connection conn = Mockito.mock(Connection.class);

@@ -99,7 +99,7 @@ public class PublishSet extends PubSubElementProcessorAbstract {
 				return;
 			}
 		}
-		
+
 		if (false == nodeExists()) return;
 		if (false == userCanPost()) return;
 		Element item = elm.element("item");
@@ -124,9 +124,11 @@ public class PublishSet extends PubSubElementProcessorAbstract {
 		Element reply;
 		NodeItem nodeItem = null;
 		
-		if (null == (reply = entry.element("in-response-to"))) return true;
+		if (null == (reply = entry.element("in-reply-to"))) return true;
 
-		inReplyTo = reply.attributeValue("ref");
+		String[] inReplyToParts = reply.attributeValue("ref").split(",");
+		inReplyTo = inReplyToParts[inReplyToParts.length - 1];
+		
 		if (null == (nodeItem = channelManager.getNodeItem(node, inReplyTo))) {
 			response.setType(Type.error);
 			PacketError pe = new PacketError(
@@ -137,6 +139,7 @@ public class PublishSet extends PubSubElementProcessorAbstract {
 			return false;
 		}
 		if (null != nodeItem.getInReplyTo()) {
+			LOGGER.error("User is attempting to reply to a reply");
 			response.setType(Type.error);
 			PacketError pe = new PacketError(
 					org.xmpp.packet.PacketError.Condition.bad_request,

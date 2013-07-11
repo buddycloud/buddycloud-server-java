@@ -1389,7 +1389,7 @@ public class JDBCNodeStore implements NodeStore {
 			if (true == item.getNodeId().equals(nodeId))
 				return item;
 		}
-		return item;
+		return null;
 	}
 
 	@Override

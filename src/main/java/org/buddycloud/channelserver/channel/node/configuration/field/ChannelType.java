@@ -23,8 +23,8 @@ public class ChannelType extends Field
 
 	public boolean isValid()
 	{
-		return (getValue().equals(ChannelType.models.PERSONAL)
-			|| getValue().equals(ChannelType.models.TOPIC)
+		return (getValue().equals(ChannelType.models.PERSONAL.toString())
+			|| getValue().equals(ChannelType.models.TOPIC.toString())
 		);
 	}
 }

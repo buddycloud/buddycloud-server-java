@@ -31,10 +31,12 @@ public class Helper
         try {
             parseConfiguration(getConfigurationValues(request));
         } catch (NullPointerException e) {
-        	LOGGER.debug(e.getStackTrace());
+        	e.printStackTrace();
+        	LOGGER.debug(e);
         	throw new NodeConfigurationException(ELEMENT_NOT_FOUND);
         } catch (ConfigurationFieldException e) {
-        	LOGGER.debug(e.getStackTrace());
+        	e.printStackTrace();
+        	LOGGER.debug(e);
         	throw new NodeConfigurationException();
         }
     }
@@ -43,10 +45,12 @@ public class Helper
         try {
             parseConfiguration(getConfigurationValuesFromEvent(request));
         } catch (NullPointerException e) {
-        	LOGGER.debug(e.getStackTrace());
+        	e.printStackTrace();
+        	LOGGER.debug(e);
         	throw new NodeConfigurationException(ELEMENT_NOT_FOUND);
         } catch (ConfigurationFieldException e) {
-        	LOGGER.debug(e.getStackTrace());
+        	e.printStackTrace();
+        	LOGGER.debug(e);
         	throw new NodeConfigurationException();
         }
     }
@@ -67,10 +71,12 @@ public class Helper
         try {
             parseConfiguration(getConfigurationValuesFromDisco(request));
         } catch (NullPointerException e) {
-        	LOGGER.debug(e.getStackTrace());
+        	e.printStackTrace();
+        	LOGGER.debug(e);
         	throw new NodeConfigurationException(ELEMENT_NOT_FOUND);
         } catch (ConfigurationFieldException e) {
-        	LOGGER.debug(e.getStackTrace());
+        	e.printStackTrace();
+        	LOGGER.debug(e);
         	throw new NodeConfigurationException();
         }
     }

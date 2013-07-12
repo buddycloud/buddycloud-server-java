@@ -1,6 +1,7 @@
 package org.buddycloud.channelserver.channel.node.configuration.field;
 
 import java.util.Date;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 
 public class CreationDate extends Field
@@ -19,6 +20,13 @@ public class CreationDate extends Field
 	public boolean isValid()
 	{
 		// @todo improve this validation later
-		return getValue().matches("/^[0-9]{4}-[0-9}{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}.?[0-9]{1,}Z$/");
+		try {
+			Date parsed = ISO8601FORMAT.parse(getValue());
+			setValue(ISO8601FORMAT.format(parsed));
+			return true;
+		} catch (ParseException e) {
+			e.printStackTrace();
+			return false;
+		}
 	}
 }

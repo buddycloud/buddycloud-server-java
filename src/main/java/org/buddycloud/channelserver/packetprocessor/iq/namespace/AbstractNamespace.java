@@ -21,7 +21,7 @@ public abstract class AbstractNamespace implements PacketProcessor<IQ> {
 
 	public AbstractNamespace(BlockingQueue<Packet> outQueue, Properties conf,
 			ChannelManager channelManager) {
-		LOGGER.trace("In " + this.getClass().getName());
+		logger.trace("In " + this.getClass().getName());
 		this.outQueue = outQueue;
 		this.conf = conf;
 		this.channelManager = channelManager;

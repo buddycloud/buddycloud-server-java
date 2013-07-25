@@ -118,8 +118,8 @@ public class ThreadGet extends PubSubElementProcessorAbstract {
 
 	private boolean itemExists() throws NodeStoreException {
 		if (null != (parentItem = channelManager.getNodeItem(node, parentId))) return true;
-		setErrorCondition(PacketError.Type.modify,
-				PacketError.Condition.bad_request);
+		createExtendedErrorReply(PacketError.Type.modify,
+				PacketError.Condition.bad_request, "parent-item-not-found");
 		return false;
 	}
 

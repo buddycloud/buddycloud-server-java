@@ -119,10 +119,16 @@ public class ItemsResult extends PubSubElementProcessorAbstract {
 				logger.debug("Entry has no 'updated' element, won't process");
 				return;
 			}
-
+			String inReplyTo = null;
+			Element reply;
+			
+			if (null != (reply = entry.element("in-reply-to"))) {
+				String[] inReplyToParts = reply.attributeValue("ref").split(",");
+				inReplyTo = inReplyToParts[inReplyToParts.length - 1];
+			}
 			Date updatedDate = sdf.parse(entry.elementText("updated"));
 			NodeItemImpl nodeItem = new NodeItemImpl(node,
-					entry.elementText("id"), updatedDate, entry.asXML());
+					entry.elementText("id"), updatedDate, entry.asXML(), inReplyTo);
 			try {
 				channelManager
 						.deleteNodeItemById(node, entry.elementText("id"));

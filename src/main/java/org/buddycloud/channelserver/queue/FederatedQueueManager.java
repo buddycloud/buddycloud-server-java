@@ -254,9 +254,10 @@ public class FederatedQueueManager {
 	
 	public String getRelatedNodeForRemotePacket(IQ packet) {
 		String id = null;
-		if (nodeMap.containsKey(packet.getID()))
+		if (nodeMap.containsKey(packet.getID())) {
 			id = (String) nodeMap.get(packet.getID());
 			nodeMap.remove(packet.getID());
+		}
 		return id;
 	}
 

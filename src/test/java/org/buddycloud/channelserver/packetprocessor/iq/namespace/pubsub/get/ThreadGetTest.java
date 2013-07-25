@@ -186,8 +186,8 @@ public class ThreadGetTest extends IQTestHandler {
 		PacketError error = response.getError();
 		Assert.assertNotNull(error);
 		Assert.assertEquals(PacketError.Type.modify, error.getType());
-		Assert.assertEquals(PacketError.Condition.bad_request,
-				error.getCondition());
+		Assert.assertEquals("parent-item-not-found",
+				error.getApplicationConditionName());
 	}
 
 	@Test

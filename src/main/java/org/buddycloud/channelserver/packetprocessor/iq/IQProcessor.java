@@ -59,7 +59,7 @@ public class IQProcessor implements PacketProcessor<IQ> {
 		try {
 			processPacket(packet);
 		} catch (Exception e) {
-			if (true == packet.getType().equals("result")) return;
+			if (true == packet.getType().toString().equals("result")) return;
 			IQ reply = IQ.createResultIQ(packet);
 			reply.setChildElement(packet.getChildElement().createCopy());
 			reply.setType(Type.error);

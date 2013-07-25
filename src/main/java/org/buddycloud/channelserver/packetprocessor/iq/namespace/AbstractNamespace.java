@@ -12,7 +12,7 @@ import org.xmpp.packet.PacketError;
 
 public abstract class AbstractNamespace implements PacketProcessor<IQ> {
 
-	private static final Logger LOGGER = Logger
+	private static final Logger logger = Logger
 			.getLogger(AbstractNamespace.class);
 
 	private BlockingQueue<Packet> outQueue;
@@ -40,21 +40,22 @@ public abstract class AbstractNamespace implements PacketProcessor<IQ> {
 
 		PacketProcessor<IQ> processor = null;
 
+		logger.info("Using processor for packet type: " + reqIQ.getType().toString());
 		switch (reqIQ.getType()) {
-		case get:
-			processor = get();
-			break;
-		case set:
-			processor = set();
-			break;
-		case result:
-			processor = result();
-			break;
-		case error:
-			processor = error();
-			break;
-		default:
-			break;
+			case get:
+				processor = get();
+				break;
+			case set:
+				processor = set();
+				break;
+			case result:
+				processor = result();
+				break;
+			case error:
+				processor = error();
+				break;
+			default:
+				break;
 		}
 
 		if (processor != null) {
@@ -62,8 +63,8 @@ public abstract class AbstractNamespace implements PacketProcessor<IQ> {
 			return;
 		}
 
-		if (reqIQ.getType() == IQ.Type.error
-				|| reqIQ.getType() == IQ.Type.result) {
+		if (reqIQ.getType().equals(IQ.Type.error)
+				|| reqIQ.getType().equals(IQ.Type.result)) {
 //			handleStateReply(reqIQ);
 		} else {
 			handleUnexpectedRequest(reqIQ);
@@ -91,7 +92,7 @@ public abstract class AbstractNamespace implements PacketProcessor<IQ> {
 					channelManager);
 			outQueue.put(sm.nextStep());
 		} else {
-			LOGGER.error("This result was not handled in any way: '"
+			logger.error("This result was not handled in any way: '"
 					+ reqIQ.toXML() + "'.");
 		}
 */

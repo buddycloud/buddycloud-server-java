@@ -35,14 +35,15 @@ public class ItemsResult extends PubSubElementProcessorAbstract {
 			throws Exception {
 
 		this.request = reqIQ;
-
+		
 		if (-1 != request.getFrom().toString().indexOf("@")) {
 			logger.debug("Ignoring result packet, only interested in stanzas "
 					+ "from other buddycloud servers");
 			return;
 		}
 
-		this.setNode(elm.attributeValue("node"));
+		if (null != elm.attributeValue("node")) 
+			this.setNode(elm.attributeValue("node"));
 
 		if ((null == node) || (true == node.equals(""))) {
 			throw new NullPointerException(MISSING_NODE);
@@ -114,8 +115,10 @@ public class ItemsResult extends PubSubElementProcessorAbstract {
 
 		try {
 			// Probably a tombstone'd item
-			if (null == entry.elementText("updated"))
+			if (null == entry.elementText("updated")) {
+				logger.debug("Entry has no 'updated' element, won't process");
 				return;
+			}
 
 			Date updatedDate = sdf.parse(entry.elementText("updated"));
 			NodeItemImpl nodeItem = new NodeItemImpl(node,
@@ -129,6 +132,7 @@ public class ItemsResult extends PubSubElementProcessorAbstract {
 			channelManager.addNodeItem(nodeItem);
 		} catch (ParseException e) {
 			logger.error(e);
+			e.printStackTrace();
 			return;
 		}
 	}

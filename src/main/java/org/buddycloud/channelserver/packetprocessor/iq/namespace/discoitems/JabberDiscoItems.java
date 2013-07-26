@@ -14,9 +14,10 @@ public class JabberDiscoItems extends AbstractNamespace {
 
 	public static final String NAMESPACE_URI = "http://jabber.org/protocol/disco#items";
 
-	private final PacketProcessor<IQ> resultProcessor;
-
 	private FederatedQueueManager federatedQueueManager;
+	
+	private DiscoItemsGet getProcessor;
+	private final PacketProcessor<IQ> resultProcessor;
 
 	public JabberDiscoItems(BlockingQueue<Packet> outQueue, Properties conf,
 			ChannelManager channelManager,
@@ -24,11 +25,12 @@ public class JabberDiscoItems extends AbstractNamespace {
 		super(outQueue, conf, channelManager);
 		this.federatedQueueManager = federatedQueueManager;
 		this.resultProcessor = new DiscoResult(outQueue, federatedQueueManager);
+		this.getProcessor = new DiscoItemsGet(outQueue, channelManager, federatedQueueManager);
 	}
 
 	@Override
 	protected PacketProcessor<IQ> get() {
-		return null;
+		return getProcessor;
 	}
 
 	@Override

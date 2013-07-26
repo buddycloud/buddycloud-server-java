@@ -48,5 +48,4 @@ public class ItemsGet extends PubSubElementProcessorAbstract {
 	public boolean accept(Element elm) {
 		return elm.getName().equals("items");
 	}
-
 }

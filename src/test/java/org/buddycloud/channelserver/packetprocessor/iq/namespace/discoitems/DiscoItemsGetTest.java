@@ -78,12 +78,15 @@ public class DiscoItemsGetTest extends IQTestHandler {
 		Assert.assertEquals(1, queue.size());
 		Packet iq = queue.poll();
 
+		String jid = Configuration.getInstance()
+		    .getProperty(Configuration.CONFIGURATION_SERVER_CHANNELS_DOMAIN);
+		
 		@SuppressWarnings("unchecked")
 		List<Element> items = iq.getElement().element("query").elements("item");
 		Assert.assertEquals(3, items.size());
-		Assert.assertEquals(Configuration.CONFIGURATION_SERVER_DOMAIN, items.get(0).attributeValue("jid"));
+		Assert.assertEquals(jid, items.get(0).attributeValue("jid"));
 		Assert.assertEquals("/user/user1@server1.com/posts", items.get(0).attributeValue("node"));
-		Assert.assertEquals(Configuration.CONFIGURATION_SERVER_DOMAIN, items.get(1).attributeValue("jid"));
+		Assert.assertEquals(jid, items.get(1).attributeValue("jid"));
 		Assert.assertEquals("/user/topic@topics.server1.com/posts", items.get(1).attributeValue("node"));
 	}
 	

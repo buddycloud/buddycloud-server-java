@@ -66,14 +66,24 @@ public class DiscoItemsGet implements PacketProcessor<IQ> {
 	private void addItems() throws NodeStoreException {
 		ArrayList<String> nodes = channelManager.getNodeList();
 
+		String jid = Configuration.getInstance()
+		    .getProperty(Configuration.CONFIGURATION_SERVER_CHANNELS_DOMAIN);
+		
 		Element query = response.getElement().addElement("query");
 		query.addNamespace("", JabberDiscoItems.NAMESPACE_URI);
 		for (String node : nodes) {
-			if (false == channelManager.isLocalNode(node))
-				continue;
+			if (false == isLocalNode(node)) continue;
 			Element item = query.addElement("item");
 			item.addAttribute("node", node);
-			item.addAttribute("jid", Configuration.CONFIGURATION_SERVER_DOMAIN);
+			item.addAttribute("jid", jid);
+		}
+	}
+
+	private boolean isLocalNode(String node) throws NodeStoreException {
+		try {
+			return channelManager.isLocalNode(node);
+		} catch (IllegalArgumentException e) {
+			return false;
 		}
 	}
 

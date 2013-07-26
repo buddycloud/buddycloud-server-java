@@ -56,6 +56,7 @@ public class DiscoItemsGet implements PacketProcessor<IQ> {
 						PacketError.Condition.feature_not_implemented);
 			}
 		} catch (NodeStoreException e) {
+			logger.error(e);
 			setErrorCondition(PacketError.Type.wait,
 					PacketError.Condition.internal_server_error);
 		}

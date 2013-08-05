@@ -17,7 +17,7 @@ Note this points to the main buddycloud repository for the java server.
 
 ## Database install
 
-The java server purposefully uses the same database schema as the buddycloud node.js server. See here for database installation instructions https://github.com/buddycloud/buddycloud-server/tree/develop/postgres.
+The java server purposefully uses the same database schema as the buddycloud node.js server. See here for database installation instructions https://github.com/buddycloud/buddycloud-server-java/tree/develop/postgres.
 
 ## Build and run
 

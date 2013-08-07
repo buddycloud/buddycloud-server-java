@@ -8,6 +8,7 @@ server.domain.topics=topics.example.com
 
 jdbc.proxool.driver-url=jdbc:hsqldb:.
 jdbc.proxool.driver-class=org.hsqldb.jdbcDriver
+jdbc.proxool.alias=buddycloud
 jdbc.user=username
 jdbc.password=password
 jdbc.proxool.maximum-connection-count=10

@@ -3,7 +3,6 @@ package org.buddycloud.channelserver;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.apache.log4j.PropertyConfigurator;
-import org.xmpp.component.ComponentException;
 
 public class Main
 {
@@ -31,8 +30,8 @@ public class Main
             xmppComponent.run();
             topicsComponent = new TopicsComponent(conf, conf.getProperty("server.domain.topics"));
             topicsComponent.run();
-        } catch (ComponentException e1) {
-            LOGGER.error(e1);
+        } catch (Exception e1) {
+            LOGGER.error("Failed during initialization.", e1);
         }
         run();
     }

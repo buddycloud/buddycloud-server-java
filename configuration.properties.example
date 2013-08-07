@@ -3,7 +3,7 @@ xmpp.port=5275
 xmpp.subdomain=channels
 xmpp.secretkey=tellnoone
 
-server.domain=xmpp.example.com
+server.domain.channels=xmpp.example.com
 server.domain.topics=topics.example.com
 
 jdbc.proxool.driver-url=jdbc:hsqldb:.

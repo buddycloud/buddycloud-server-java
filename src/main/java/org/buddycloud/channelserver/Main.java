@@ -32,7 +32,7 @@ public class Main
             topicsComponent = new TopicsComponent(conf, conf.getProperty("server.domain.topics"));
             topicsComponent.run();
         } catch (ComponentException e1) {
-            e1.printStackTrace();
+            LOGGER.error(e1);
         }
         run();
     }
@@ -43,7 +43,7 @@ public class Main
 		    try {
 		        Thread.sleep(5000);
 		    } catch (InterruptedException e) {
-		        e.printStackTrace();
+		    	LOGGER.error(e);
 		    }
 		}
 	}

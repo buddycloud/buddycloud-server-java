@@ -24,7 +24,7 @@ public class Main {
         LOGGER.info("Connecting to '" + conf.getProperty("xmpp.host") + ":" 
             + conf.getProperty("xmpp.port") 
             + "' and trying to claim address '" 
-            + conf.getProperty("xmpp.subdomain") + "'.");
+            + conf.getProperty("server.domain") + "'.");
 
         String channelDomain = conf.getProperty("server.domain.channels");
         String topicDomain = conf.getProperty("server.domain.topics");

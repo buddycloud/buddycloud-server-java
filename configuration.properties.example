@@ -1,9 +1,9 @@
-xmpp.host=example.com
+xmpp.host=localhost
 xmpp.port=5275
-xmpp.subdomain=channels
 xmpp.secretkey=tellnoone
 
-server.domain.channels=xmpp.example.com
+server.domain=example.com
+server.domain.channels=channels.example.com
 server.domain.topics=topics.example.com
 
 jdbc.proxool.driver-url=jdbc:hsqldb:.

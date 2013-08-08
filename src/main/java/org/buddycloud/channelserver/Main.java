@@ -34,7 +34,7 @@ public class Main {
         }
         new XmppComponent(conf, channelDomain).run();
         
-        if (topicDomain == null) {
+        if (topicDomain != null) {
             new TopicsComponent(conf, topicDomain).run();
         }	
         hang();

@@ -32,13 +32,11 @@ public class Main {
         if (channelDomain == null) {
         	throw new IllegalArgumentException("Property server.domain.channels is mandatory.");
         }
+        new XmppComponent(conf, channelDomain).run();
         
         if (topicDomain == null) {
-        	throw new IllegalArgumentException("Property server.domain.topics is mandatory.");
-        }
-        
-		new XmppComponent(conf, channelDomain).run();
-		new TopicsComponent(conf, topicDomain).run();
+            new TopicsComponent(conf, topicDomain).run();
+        }	
         hang();
 	}
 

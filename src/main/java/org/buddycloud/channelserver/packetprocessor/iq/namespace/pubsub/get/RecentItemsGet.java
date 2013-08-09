@@ -131,8 +131,7 @@ public class RecentItemsGet extends PubSubElementProcessorAbstract {
 		Element entry;
 		while (items.hasNext()) {
 			item = items.next();
-
-			if (false == item.getNodeId().equals(lastNode)) {
+            if (false == item.getNodeId().equals(lastNode)) {
 				itemsElement = pubsub.addElement("items");
 				itemsElement.addAttribute("node", item.getNodeId());
 				lastNode = item.getNodeId();

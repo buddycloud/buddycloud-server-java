@@ -94,6 +94,9 @@ public class AffiliationEvent extends PubSubElementProcessorAbstract {
 	}
 
 	private void sendNotifications() throws Exception {
+		
+		outQueue.put(response);
+		
 		ResultSet<NodeSubscription> subscribers = channelManager
 				.getNodeSubscriptionListeners(node);
 		

@@ -318,11 +318,17 @@ public class SubscriptionEventTest extends IQTestHandler {
 		event.setChannelManager(dataStore);
 		event.process(element, jid, request, null);
 
-		Assert.assertEquals(2, queue.size());
+		Assert.assertEquals(5, queue.size());
 		Packet notification = queue.poll(100, TimeUnit.MILLISECONDS);
+		Assert.assertEquals("francisco@denmark.lit/barracks", notification.getTo().toString());
+		notification = queue.poll(100, TimeUnit.MILLISECONDS);
 		Assert.assertEquals("romeo@shakespeare.lit", notification.getTo().toString());
 		notification = queue.poll(100, TimeUnit.MILLISECONDS);
 		Assert.assertEquals("hamlet@shakespeare.lit", notification.getTo().toString());
+		notification = queue.poll(100, TimeUnit.MILLISECONDS);
+		Assert.assertEquals("user1@server1", notification.getTo().toString());
+		notification = queue.poll(100, TimeUnit.MILLISECONDS);
+		Assert.assertEquals("user2@server1", notification.getTo().toString());
 
 		Assert.assertEquals(
 				node,

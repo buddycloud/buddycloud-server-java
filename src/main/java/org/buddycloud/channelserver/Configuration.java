@@ -1,15 +1,19 @@
 package org.buddycloud.channelserver;
 
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Properties;
 
+import org.apache.log4j.Logger;
 import org.xmpp.packet.JID;
 
 public class Configuration extends Properties
 {
+	private static final Logger LOGGER = Logger.getLogger(Configuration.class);
+	
 	private static final long serialVersionUID = 1L;
 
 	public static final String CONFIGURATION_SERVER_DOMAIN = "server.domain";
@@ -29,7 +33,16 @@ public class Configuration extends Properties
     {
     	try {
 	        conf = new Properties();
-	        load(new FileInputStream(CONFIGURATION_FILE));
+	        File f = new File(CONFIGURATION_FILE);
+	        
+	        if(f.exists()) {
+	        	LOGGER.info("Found " + CONFIGURATION_FILE + " in working directory.");
+	        	load(new FileInputStream(f));
+	        } else {
+	        	// Otherwise attempt to load it from the classpath
+	        	LOGGER.info("No " + CONFIGURATION_FILE + " found in working directory. Attempting to load from classpath.");
+	        	load(this.getClass().getClassLoader().getResourceAsStream(CONFIGURATION_FILE));
+	        }
 	        
 	        if (conf.containsKey(CONFIGURATION_ADMIN_USERS))
 	        	setupAdminUsers();

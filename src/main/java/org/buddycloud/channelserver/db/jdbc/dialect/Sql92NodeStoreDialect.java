@@ -140,7 +140,7 @@ public class Sql92NodeStoreDialect implements NodeStoreSQLDialect {
 		+ "FROM \"items\" "
 		+ "WHERE \"node\" = ? "
         + "AND \"updated\" >= ? "
-        + "LIMIT ?)";
+        + "ORDER BY \"updated\" DESC, \"id\" ASC LIMIT ?) ";
 
 	private static final String SELECT_COUNT_RECENT_ITEM_PARTS = ""
 		    + "(SELECT COUNT(\"id\") "

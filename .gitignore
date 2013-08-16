@@ -8,3 +8,7 @@ bin
 logs
 *.properties
 *.orig
+*.BACKUP.*
+*.BASE.*
+*.LOCAL.*
+*.REMOTE.*

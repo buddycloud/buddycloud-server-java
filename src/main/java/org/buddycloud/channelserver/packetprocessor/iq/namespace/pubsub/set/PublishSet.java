@@ -3,6 +3,7 @@ package org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.set;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
@@ -363,7 +364,7 @@ public class PublishSet extends PubSubElementProcessorAbstract {
 			}
 		}
 		
-		ArrayList<JID> admins = getAdminUsers();
+		Collection<JID> admins = getAdminUsers();
 		for (JID admin : admins) {
 			msg.setTo(admin);	
 			outQueue.put(msg.createCopy());

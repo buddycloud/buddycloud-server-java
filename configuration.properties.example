@@ -1,5 +1,5 @@
-xmpp.host=localhost
-xmpp.port=5275
+xmpp.host=127.0.0.1
+xmpp.port=5347
 xmpp.secretkey=tellnoone
 
 server.domain=example.com

@@ -47,20 +47,21 @@ public class OutQueueConsumer extends QueueConsumer {
 				}
 				federatedQueue.addChannelMap(p.getTo());
 			}
-			
+
 			// Clean federation marks from packet
 			if (p.getElement().attribute("remote-server-discover") != null) {
 				Attribute process = p.getElement().attribute(
 						"remote-server-discover");
 				p.getElement().remove(process);
 			}
-			
-			// If it's just a server request for the local server then just push it straight back into the inqueue
-			if(p.getTo().getNode() == null && !isRemoteServer(p.getTo())) {
+
+			// If it's just a request for the local server then just push it
+			// straight back into the inqueue
+			if (shouldRouteToLocalChannelServer(p.getTo())) {
 				inQueue.put(p);
 				return;
 			}
-			
+
 			// Get a list of 'online' resources for this JID
 			ArrayList<JID> resources = onlineUsers.getResources(p.getTo());
 			logger.debug("There are " + resources.size()
@@ -76,32 +77,58 @@ public class OutQueueConsumer extends QueueConsumer {
 			logger.error("Sending packet caused error: " + p.toXML(), e);
 		}
 	}
-	
+
 	/**
-	 * Returns true if the JID points to a server (with no node) and if it is not one of the
-	 * local domains.
+	 * Returns true if the JID points to a server (with no node) and if it is
+	 * not one of the local domains.
+	 * 
 	 * @param jid
 	 * @return
 	 */
 	private boolean isRemoteServer(JID jid) {
-		if(jid.getNode() != null) {
+		if (jid.getNode() != null) {
 			return false;
 		}
-		
+
 		String domain = jid.getDomain();
-		
-		if(domain.equals(conf.getServerDomain())) {
+
+		if (domain.equals(conf.getServerDomain())) {
 			return false;
 		}
-		
-		if(domain.equals(conf.getServerChannelsDomain())) {
+
+		if (domain.equals(conf.getServerChannelsDomain())) {
 			return false;
 		}
-		
-		if(domain.equals(conf.getServerTopicsDomain())) {
+
+		if (domain.equals(conf.getServerTopicsDomain())) {
 			return false;
 		}
-		
+
 		return true;
+	}
+
+	/**
+	 * Returns <code>true</code> if the jid should route through to this
+	 * component.
+	 * 
+	 * @param jid
+	 * @return
+	 */
+	private boolean shouldRouteToLocalChannelServer(JID jid) {
+		if (jid.getNode() != null) {
+			return false;
+		}
+
+		String domain = jid.getDomain();
+
+		if (domain.equals(conf.getServerChannelsDomain())) {
+			return true;
+		}
+
+		if (domain.equals(conf.getServerTopicsDomain())) {
+			return true;
+		}
+
+		return false;
 	}
 }

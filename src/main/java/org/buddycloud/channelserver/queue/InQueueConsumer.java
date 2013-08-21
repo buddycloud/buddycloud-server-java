@@ -1,9 +1,9 @@
 package org.buddycloud.channelserver.queue;
 
-import java.util.Properties;
 import java.util.concurrent.BlockingQueue;
 
 import org.apache.log4j.Logger;
+import org.buddycloud.channelserver.Configuration;
 import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.channel.ChannelManagerFactory;
 import org.buddycloud.channelserver.db.exception.NodeStoreException;
@@ -22,21 +22,19 @@ public class InQueueConsumer extends QueueConsumer {
 			.getLogger(InQueueConsumer.class);
 
 	private final BlockingQueue<Packet> outQueue;
-	private final Properties conf;
-	private final BlockingQueue<Packet> inQueue;
+	private final Configuration conf;
 	private final ChannelManagerFactory channelManagerFactory;
 	private final FederatedQueueManager federatedQueueManager;
 
 	private OnlineResourceManager onlineUsers;
 
-	public InQueueConsumer(BlockingQueue<Packet> outQueue, Properties conf,
+	public InQueueConsumer(BlockingQueue<Packet> outQueue, Configuration conf,
 			BlockingQueue<Packet> inQueue,
 			ChannelManagerFactory channelManagerFactory,
 			FederatedQueueManager federatedQueueManager, OnlineResourceManager onlineUsers) {
 		super(inQueue);
 		this.outQueue = outQueue;
 		this.conf = conf;
-		this.inQueue = inQueue;
 		this.channelManagerFactory = channelManagerFactory;
 		this.federatedQueueManager = federatedQueueManager;
 		this.onlineUsers = onlineUsers;

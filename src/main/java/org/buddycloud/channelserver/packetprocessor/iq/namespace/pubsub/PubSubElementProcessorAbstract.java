@@ -1,12 +1,12 @@
 package org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub;
 
-import java.util.ArrayList;
+import java.util.Collection;
 import java.util.concurrent.BlockingQueue;
 
 import org.apache.log4j.Logger;
 import org.buddycloud.channelserver.Configuration;
-import org.buddycloud.channelserver.channel.node.configuration.Helper;
 import org.buddycloud.channelserver.channel.ChannelManager;
+import org.buddycloud.channelserver.channel.node.configuration.Helper;
 import org.dom4j.Document;
 import org.dom4j.DocumentHelper;
 import org.dom4j.Element;
@@ -41,7 +41,7 @@ public abstract class PubSubElementProcessorAbstract
 	protected String lastItem;
 	protected int totalEntriesCount;
 
-	private ArrayList<JID> adminUsers;
+	private Collection<JID> adminUsers;
 
 	public void setOutQueue(BlockingQueue<Packet> outQueue)
 	{
@@ -67,7 +67,7 @@ public abstract class PubSubElementProcessorAbstract
 		return serverDomain;
 	}
 
-	protected ArrayList<JID> getAdminUsers() {
+	protected Collection<JID> getAdminUsers() {
 		if (null == adminUsers) {
 			adminUsers = Configuration.getInstance().getAdminUsers();
 		}

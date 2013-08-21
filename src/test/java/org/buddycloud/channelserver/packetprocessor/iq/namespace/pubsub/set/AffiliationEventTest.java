@@ -1,5 +1,7 @@
 package org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.set;
 
+import static org.junit.Assert.*;
+
 import java.util.ArrayList;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -340,21 +342,53 @@ public class AffiliationEventTest extends IQTestHandler {
 		event.setChannelManager(channelManager);
 		event.process(element, jid, request, null);
 
-		Assert.assertEquals(2, queue.size());
-		Packet notification = queue.poll(100, TimeUnit.MILLISECONDS);
-		Assert.assertEquals("romeo@shakespeare.lit", notification.getTo().toString());
-		notification = queue.poll(100, TimeUnit.MILLISECONDS);
-		Assert.assertEquals("hamlet@shakespeare.lit", notification.getTo().toString());
+		// One iq result, 2 user notifications and 2 admin notifications
+		Assert.assertEquals(5, queue.size());
+		
+		boolean hasIqResult = false;
+		boolean hasNotification1 = false;
+		boolean hasNotification2 = false;
+		
+		for(int i = 0; i < 3; ++i) {
+			Packet packet = queue.poll(100, TimeUnit.MILLISECONDS);
+			
+			if(packet.getElement().getName().equals("iq") && packet.getTo().equals(new JID("francisco@denmark.lit/barracks"))) {
+				hasIqResult = true;
+			}
+			
+			if(packet.getElement().getName().equals("message") && packet.getTo().equals(new JID("romeo@shakespeare.lit"))) {
+				hasNotification1 = true;
 
-		Assert.assertEquals(
-				node,
-				notification.getElement().element("event")
-						.element("affiliations").attributeValue("node"));
-		Assert.assertTrue(notification.toXML().contains(JabberPubsub.NS_PUBSUB_EVENT));
-		Assert.assertEquals(Affiliations.moderator.toString(), notification
-				.getElement().element("event").element("affiliations").element("affiliation")
-				.attributeValue("affiliation"));
-		Assert.assertEquals(subscriber, notification.getElement().element("event")
-				.element("affiliations").element("affiliation").attributeValue("jid"));
+				Assert.assertEquals(
+						node,
+						packet.getElement().element("event")
+								.element("affiliations").attributeValue("node"));
+				Assert.assertTrue(packet.toXML().contains(JabberPubsub.NS_PUBSUB_EVENT));
+				Assert.assertEquals(Affiliations.moderator.toString(), packet
+						.getElement().element("event").element("affiliations").element("affiliation")
+						.attributeValue("affiliation"));
+				Assert.assertEquals(subscriber, packet.getElement().element("event")
+						.element("affiliations").element("affiliation").attributeValue("jid"));
+			}
+			
+			if(packet.getElement().getName().equals("message") && packet.getTo().equals(new JID("hamlet@shakespeare.lit"))) {
+				hasNotification2 = true;
+
+				Assert.assertEquals(
+						node,
+						packet.getElement().element("event")
+								.element("affiliations").attributeValue("node"));
+				Assert.assertTrue(packet.toXML().contains(JabberPubsub.NS_PUBSUB_EVENT));
+				Assert.assertEquals(Affiliations.moderator.toString(), packet
+						.getElement().element("event").element("affiliations").element("affiliation")
+						.attributeValue("affiliation"));
+				Assert.assertEquals(subscriber, packet.getElement().element("event")
+						.element("affiliations").element("affiliation").attributeValue("jid"));
+			}
+		}
+		
+		assertTrue("IQ result not sent", hasIqResult);
+		assertTrue("Notification to romeo@shakespeare.lit not sent", hasNotification1);
+		assertTrue("Notification to hamlet@shakespeare.lit not sent", hasNotification2);
 	}
 }

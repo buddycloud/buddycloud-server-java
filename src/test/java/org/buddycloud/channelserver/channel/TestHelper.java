@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.sql.SQLException;
 import java.util.concurrent.LinkedBlockingQueue;
 
+import org.buddycloud.channelserver.Configuration;
 import org.buddycloud.channelserver.db.NodeStore;
 import org.buddycloud.channelserver.db.NodeStoreFactory;
 import org.buddycloud.channelserver.db.jdbc.DatabaseTester;
@@ -26,7 +27,7 @@ public class TestHelper {
 
         outQueue = new LinkedBlockingQueue<Packet>();
         inQueue = new LinkedBlockingQueue<Packet>();
-        consumer = new InQueueConsumer(outQueue, IQTestHandler.readConf(), inQueue, channelManagerFactory, null, null);
+        consumer = new InQueueConsumer(outQueue, Configuration.getInstance(), inQueue, channelManagerFactory, null, null);
         consumer.start();
 	}
 	

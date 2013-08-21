@@ -1289,11 +1289,11 @@ public class JDBCNodeStoreTest {
 		Iterator<NodeItem> result = store.getNodeItems(TEST_SERVER1_NODE1_ID,
 				TEST_SERVER1_NODE1_ITEM4_ID, 4);
 
-		String[] expectedNodeIds = { TEST_SERVER1_NODE1_ITEM1_ID,
-				TEST_SERVER1_NODE1_ITEM2_ID, TEST_SERVER1_NODE1_ITEM3_ID };
-		String[] expectedEntryContent = { TEST_SERVER1_NODE1_ITEM1_CONTENT,
+		String[] expectedNodeIds = { TEST_SERVER1_NODE1_ITEM3_ID,
+				TEST_SERVER1_NODE1_ITEM2_ID, TEST_SERVER1_NODE1_ITEM1_ID };
+		String[] expectedEntryContent = { TEST_SERVER1_NODE1_ITEM3_CONTENT,
 				TEST_SERVER1_NODE1_ITEM2_CONTENT,
-				TEST_SERVER1_NODE1_ITEM3_CONTENT };
+				TEST_SERVER1_NODE1_ITEM1_CONTENT };
 
 		int i = 0;
 
@@ -1313,6 +1313,27 @@ public class JDBCNodeStoreTest {
 		assertEquals("Too few items returned", expectedNodeIds.length, i);
 
 		assertFalse("Too many items were returned", result.hasNext());
+	}
+
+	@Test
+	public void testGetNodeItemsWithPaging() throws Exception {
+		dbTester.loadData("node_1");
+
+		long start = System.currentTimeMillis();
+		
+		NodeItem[] items = new NodeItem[20];
+		
+		for (int i = 0; i < 20; i++) {
+			items[i] = new NodeItemImpl(TEST_SERVER1_NODE1_ID, String
+					.valueOf(i), new Date(start + i * 10), "payload" + String.valueOf(i));
+			store.addNodeItem(items[i]);
+		}
+
+		CloseableIterator<NodeItem> result = store.getNodeItems(TEST_SERVER1_NODE1_ID, "15", 3);
+
+		assertEquals("Incorrect node item returned", items[14], result.next());
+		assertEquals("Incorrect node item returned", items[13], result.next());
+		assertEquals("Incorrect node item returned", items[12], result.next());
 	}
 
 	@Test

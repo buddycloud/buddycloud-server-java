@@ -17,7 +17,7 @@ import org.buddycloud.channelserver.db.CloseableIterator;
  * when the iterator returns the last item.
  * <p>
  * <b>NOTE: If the calling code does not reach the end of the iterator then
- * {@link #close()} should be called explicitly in order to free up database
+ * {@link #close()} MUST be called explicitly in order to free up database
  * resources</b>
  * 
  * @param <T>

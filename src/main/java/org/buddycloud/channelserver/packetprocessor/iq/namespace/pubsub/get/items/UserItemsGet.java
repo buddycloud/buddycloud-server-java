@@ -14,9 +14,11 @@ import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.PubSubEl
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.PubSubGet;
 import org.buddycloud.channelserver.pubsub.accessmodel.AccessModels;
 import org.buddycloud.channelserver.pubsub.affiliation.Affiliations;
+import org.buddycloud.channelserver.pubsub.model.GlobalItemID;
 import org.buddycloud.channelserver.pubsub.model.NodeAffiliation;
 import org.buddycloud.channelserver.pubsub.model.NodeItem;
 import org.buddycloud.channelserver.pubsub.model.NodeSubscription;
+import org.buddycloud.channelserver.pubsub.model.impl.GlobalItemIDImpl;
 import org.buddycloud.channelserver.pubsub.subscription.Subscriptions;
 import org.buddycloud.channelserver.utils.node.NodeAclRefuseReason;
 import org.buddycloud.channelserver.utils.node.NodeViewAcl;
@@ -180,7 +182,17 @@ public class UserItemsGet implements PubSubElementProcessor {
 			}
 			Element after = resultSetManagement.element("after");
 			if (after != null) {
-				afterItemId = after.getTextTrim();
+				try {
+					GlobalItemID afterGlobalItemID = GlobalItemIDImpl.fromString(after.getTextTrim());
+					afterItemId = afterGlobalItemID.getItemID();
+					
+					if(!afterGlobalItemID.getNodeID().equals(node)) {
+						createExtendedErrorReply(Type.modify, Condition.item_not_found, "RSM 'after' specifies an unexpected NodeID: " + afterGlobalItemID.getNodeID());
+					}
+				} catch(IllegalArgumentException e) {
+					createExtendedErrorReply(Type.modify, Condition.bad_request, "Could not parse the 'after' id: " + after);
+					return;
+				}
 			}
 		}
 

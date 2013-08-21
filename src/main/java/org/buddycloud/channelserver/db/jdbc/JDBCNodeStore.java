@@ -38,7 +38,7 @@ import org.xmpp.resultsetmanagement.ResultSet;
 import org.xmpp.resultsetmanagement.ResultSetImpl;
 
 public class JDBCNodeStore implements NodeStore {
-		
+
 	private Logger logger = Logger.getLogger(JDBCNodeStore.class);
 	private final Connection conn;
 	private final NodeStoreSQLDialect dialect;
@@ -918,20 +918,19 @@ public class JDBCNodeStore implements NodeStore {
 
 				java.sql.ResultSet rs = stmt.executeQuery();
 
-				LinkedList<NodeItem> results = new LinkedList<NodeItem>();
-
-				while (rs.next()) {
-					results.push(new NodeItemImpl(rs.getString(1), rs
-							.getString(2), rs.getTimestamp(3), rs.getString(4),
-							rs.getString(5)));
-				}
-
-				return new ClosableIteratorImpl<NodeItem>(results.iterator());
+				return new ResultSetIterator<NodeItem>(rs,
+						new ResultSetIterator.RowConverter<NodeItem>() {
+							@Override
+							public NodeItem convertRow(java.sql.ResultSet rs)
+									throws SQLException {
+								return new NodeItemImpl(rs.getString(1),
+										rs.getString(2), rs.getTimestamp(3),
+										rs.getString(4), rs.getString(5));
+							}
+						});
 			}
 		} catch (SQLException e) {
 			throw new NodeStoreException(e);
-		} finally {
-			close(stmt); // Will implicitly close the resultset if required
 		}
 	}
 
@@ -966,10 +965,8 @@ public class JDBCNodeStore implements NodeStore {
 			stmt.setString(
 					4,
 					"%@"
-							+ Configuration
-									.getInstance()
-									.getProperty(
-											Configuration.CONFIGURATION_SERVER_DOMAIN)
+							+ Configuration.getInstance().getProperty(
+									Configuration.CONFIGURATION_SERVER_DOMAIN)
 							+ "%");
 			stmt.setString(
 					5,
@@ -1010,16 +1007,20 @@ public class JDBCNodeStore implements NodeStore {
 			stmt = conn.prepareStatement(dialect.countItemsForLocalNodes());
 			stmt.setString(1, Conf.ACCESS_MODEL);
 			stmt.setString(2, accessModel);
-			stmt.setString(3, "%@"
-					+ Configuration
-					.getInstance()
-					.getProperty(
-							Configuration.CONFIGURATION_SERVER_DOMAIN) + "%");
-			stmt.setString(4, "%@"
-					+ Configuration
-					.getInstance()
-					.getProperty(
-							Configuration.CONFIGURATION_SERVER_TOPICS_DOMAIN) + "%");
+			stmt.setString(
+					3,
+					"%@"
+							+ Configuration.getInstance().getProperty(
+									Configuration.CONFIGURATION_SERVER_DOMAIN)
+							+ "%");
+			stmt.setString(
+					4,
+					"%@"
+							+ Configuration
+									.getInstance()
+									.getProperty(
+											Configuration.CONFIGURATION_SERVER_TOPICS_DOMAIN)
+							+ "%");
 			java.sql.ResultSet rs = stmt.executeQuery();
 
 			if (rs.next()) {
@@ -1133,19 +1134,17 @@ public class JDBCNodeStore implements NodeStore {
 								subscription.getNodeId().length()
 										- node.length()).equals(node))
 					continue;
-				queryParts.add(
-				    dialect.selectRecentItemParts()
-				        .replace("%counter%", String.valueOf(counter))
-				);
+				queryParts.add(dialect.selectRecentItemParts().replace(
+						"%counter%", String.valueOf(counter)));
 				parameters.add(subscription.getNodeId());
 				parameters.add(new java.sql.Timestamp(since.getTime()));
 				parameters.add(maxPerNode);
 				++counter;
 			}
-			stmt = conn.prepareStatement(
-					"SELECT * FROM (" +
-					StringUtils.join(queryParts,
-					" UNION ALL ") + ") AS recentItemsQuery ORDER BY \"updated\" DESC LIMIT ?;");
+			stmt = conn
+					.prepareStatement("SELECT * FROM ("
+							+ StringUtils.join(queryParts, " UNION ALL ")
+							+ ") AS recentItemsQuery ORDER BY \"updated\" DESC LIMIT ?;");
 			int index = 1;
 			for (Object parameter : parameters) {
 				stmt.setObject(index, parameter);
@@ -1300,7 +1299,7 @@ public class JDBCNodeStore implements NodeStore {
 			close(stmt); // Will implicitly close the resultset if required
 		}
 	}
-	
+
 	@Override
 	public int getCountNodeThread(String nodeId, String itemId)
 			throws NodeStoreException {
@@ -1325,7 +1324,7 @@ public class JDBCNodeStore implements NodeStore {
 			close(stmt); // Will implicitly close the resultset if required
 		}
 	}
-	
+
 	@Override
 	public CloseableIterator<NodeItem> getNewNodeItemsForUser(JID user,
 			Date startDate, Date endDate) throws NodeStoreException {
@@ -1769,7 +1768,7 @@ public class JDBCNodeStore implements NodeStore {
 		String selectItemThread();
 
 		String selectCountItemThread();
-		
+
 		String insertItem();
 
 		String updateItem();

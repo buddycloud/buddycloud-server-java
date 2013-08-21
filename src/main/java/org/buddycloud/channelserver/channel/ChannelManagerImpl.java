@@ -331,9 +331,15 @@ public class ChannelManagerImpl implements ChannelManager {
 
 	@Override
 	public boolean isLocalJID(JID jid) {
-		return configuration.getProperty(
-				Configuration.CONFIGURATION_SERVER_DOMAIN).equals(
-				jid.getDomain());
+		String domain = jid.getDomain();
+
+		return (domain.equals(configuration
+				.getProperty(Configuration.CONFIGURATION_SERVER_DOMAIN))
+				|| domain
+						.equals(configuration
+								.getProperty(Configuration.CONFIGURATION_SERVER_CHANNELS_DOMAIN)) || domain
+					.equals(configuration
+							.getProperty(Configuration.CONFIGURATION_SERVER_TOPICS_DOMAIN)));
 	}
 
 	@Override
@@ -363,7 +369,8 @@ public class ChannelManagerImpl implements ChannelManager {
 		ArrayList<String> nodes = this.getNodeList();
 		for (String node : nodes) {
 			try {
-				if (true == node.equals(("/firehose"))) return;
+				if (true == node.equals(("/firehose")))
+					return;
 				if (false == this.isLocalNode(node))
 					nodeStore.purgeNodeItems(node);
 			} catch (IllegalArgumentException e) {

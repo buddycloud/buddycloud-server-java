@@ -1,7 +1,5 @@
 package org.buddycloud.channelserver;
 
-import java.util.Properties;
-
 import org.jivesoftware.whack.ExternalComponentManager;
 import org.logicalcobwebs.proxool.ProxoolException;
 import org.logicalcobwebs.proxool.configuration.PropertyConfigurator;
@@ -16,7 +14,7 @@ public class XmppComponent {
 	private String password;
 	private ChannelsEngine channelsEngine;
 	
-	public XmppComponent(Properties configuration, String domain) throws ProxoolException {
+	public XmppComponent(Configuration configuration, String domain) throws ProxoolException {
 		hostname = configuration.getProperty("xmpp.host");
 		socket = Integer.valueOf(configuration.getProperty("xmpp.port"));
 		this.domain = domain;

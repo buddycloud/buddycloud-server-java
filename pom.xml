@@ -158,11 +158,12 @@
                     <version>2.5</version>
                     <configuration>
                         <skipTests>false</skipTests>
-                        <testFailureIgnore>true</testFailureIgnore>
+<!-- 					<testFailureIgnore>true</testFailureIgnore> -->
                         <forkMode>once</forkMode>
                         <includes>
                             <include>**/*Test.java</include>
                         </includes>
+                        <useFile>false</useFile>
                     </configuration>
                 </plugin>
                 <plugin>

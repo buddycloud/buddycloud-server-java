@@ -279,12 +279,16 @@ public class NodeConfigureTest extends IQTestHandler {
 		nodeConfigure.process(element, jid, request, null);
 
 		queue.poll(100, TimeUnit.MILLISECONDS);
-		Assert.assertEquals(3, queue.size());
+		Assert.assertEquals(5, queue.size());
 		Packet notification = queue.poll(100, TimeUnit.MILLISECONDS);
 		Assert.assertEquals("romeo@shakespeare.lit", notification.getTo().toString());
 		notification = queue.poll(100, TimeUnit.MILLISECONDS);
 		Assert.assertEquals("hamlet@shakespeare.lit", notification.getTo().toString());
 		notification = queue.poll(100, TimeUnit.MILLISECONDS);
 		Assert.assertEquals("bottom@shakespeare.lit", notification.getTo().toString());
+		notification = queue.poll(100, TimeUnit.MILLISECONDS);
+		Assert.assertEquals("user1@server1", notification.getTo().toString());
+		notification = queue.poll(100, TimeUnit.MILLISECONDS);
+		Assert.assertEquals("user2@server1", notification.getTo().toString());
 	}
 }

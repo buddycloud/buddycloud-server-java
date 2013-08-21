@@ -1599,6 +1599,8 @@ public class JDBCNodeStoreTest {
 		dbTester.loadData("node_1");
 
 		Date since = new Date();
+		
+		Thread.sleep(10);
 
 		store.addRemoteNode(TEST_SERVER1_NODE2_ID);
 		store.addUserSubscription(new NodeSubscriptionImpl(

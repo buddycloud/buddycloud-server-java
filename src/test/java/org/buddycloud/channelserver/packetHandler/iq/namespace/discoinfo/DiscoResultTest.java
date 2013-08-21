@@ -33,13 +33,13 @@ public class DiscoResultTest extends IQTestHandler {
 
 		discoResult = new DiscoResult(channelManager, federatedQueueManager);
 
-		result = readStanzaAsIq("/iq/discoinfo/node-reply.stanza");
+		result = readStanzaAsIq("/iq/discoInfo/node-reply.stanza");
 	}
 
 	@Test
 	public void testPassingThroughServerDiscoInfoResultStanzaHandsOffToDoServerDiscovery()
 			throws Exception {
-		result = toIq(readStanzaAsString("/iq/discoinfo/node-reply.stanza")
+		result = toIq(readStanzaAsString("/iq/discoInfo/node-reply.stanza")
 				.replace("node=\"/user/romeo@shakespeare.lit/posts\"", ""));
 		discoResult.process(result);
 

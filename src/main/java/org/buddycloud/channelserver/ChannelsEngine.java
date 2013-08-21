@@ -1,6 +1,5 @@
 package org.buddycloud.channelserver;
 
-import java.util.Properties;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
@@ -37,9 +36,9 @@ public class ChannelsEngine implements Component {
 	private ServerSync serverSync;
 	private OnlineResourceManager onlineUsers;
 
-	private Properties conf;
+	private Configuration conf;
 
-	public ChannelsEngine(Properties conf) {
+	public ChannelsEngine(Configuration conf) {
 		this.conf = conf;
 	}
 
@@ -76,7 +75,7 @@ public class ChannelsEngine implements Component {
 	private void startQueueConsumers() {
 		OutQueueConsumer outQueueConsumer = new OutQueueConsumer(this,
 				outQueue, federatedQueueManager,
-				conf.getProperty("server.domain.topics"), onlineUsers);
+				conf, onlineUsers, inQueue);
 
 		InQueueConsumer inQueueConsumer = new InQueueConsumer(outQueue, conf,
 				inQueue, channelManagerFactory, federatedQueueManager,

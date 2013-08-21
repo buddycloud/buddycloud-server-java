@@ -1,0 +1,3 @@
+<iq from="user1@server1/mobile" to="channels.server1" type='set'>
+  <query xmlns='jabber:iq:register'/>
+</iq>

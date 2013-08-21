@@ -1,6 +1,7 @@
 package org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.set;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.concurrent.BlockingQueue;
 
 import org.apache.log4j.Logger;
@@ -156,7 +157,7 @@ public class UnsubscribeSet extends PubSubElementProcessorAbstract {
 			outQueue.put(notification);
 		}
 		
-		ArrayList<JID> admins = getAdminUsers();
+		Collection<JID> admins = getAdminUsers();
 		for (JID admin : admins) {
 			Message notification = rootElement.createCopy();
 			notification.setTo(admin);

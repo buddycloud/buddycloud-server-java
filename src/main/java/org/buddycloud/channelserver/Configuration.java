@@ -1,27 +1,39 @@
 package org.buddycloud.channelserver;
 
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.Properties;
 
+import org.apache.log4j.Logger;
 import org.xmpp.packet.JID;
 
 public class Configuration extends Properties
 {
+	private static final Logger LOGGER = Logger.getLogger(Configuration.class);
+	
 	private static final long serialVersionUID = 1L;
+	
+	private static final String ARRAY_PROPERTY_SEPARATOR = ";";
 
 	public static final String CONFIGURATION_SERVER_DOMAIN = "server.domain";
 	public static final String CONFIGURATION_SERVER_CHANNELS_DOMAIN = "server.domain.channels";
 	public static final String CONFIGURATION_SERVER_TOPICS_DOMAIN = "server.domain.topics";
 	
 	public static final String CONFIGURATION_ADMIN_USERS = "users.admin";
+
+	public static final String CONFIGURATION_CHANNELS_AUTOSUBSCRIBE = "channels.autosubscribe";
 	
 	private static final String CONFIGURATION_FILE = "configuration.properties";
 	private static Configuration instance          = null;
 	
-	private ArrayList<JID> adminUsers = new ArrayList<JID>();
+	private Collection<JID> adminUsers = new ArrayList<JID>();
+	private Collection<JID> autosubscribeChannels = new ArrayList<JID>();
 	
 	private Properties conf;
 	
@@ -29,26 +41,33 @@ public class Configuration extends Properties
     {
     	try {
 	        conf = new Properties();
-	        load(new FileInputStream(CONFIGURATION_FILE));
+	        File f = new File(CONFIGURATION_FILE);
 	        
-	        if (conf.containsKey(CONFIGURATION_ADMIN_USERS))
-	        	setupAdminUsers();
+	        if(f.exists()) {
+	        	LOGGER.info("Found " + CONFIGURATION_FILE + " in working directory.");
+	        	load(new FileInputStream(f));
+	        } else {
+	        	// Otherwise attempt to load it from the classpath
+	        	LOGGER.info("No " + CONFIGURATION_FILE + " found in working directory. Attempting to load from classpath.");
+	        	load(this.getClass().getClassLoader().getResourceAsStream(CONFIGURATION_FILE));
+	        }
     	} catch (Exception e) {
             System.out.println(e.getMessage());
             System.exit(1);
     	}
     }
     
-    private void setupAdminUsers() {
-    	String[] jids = conf.getProperty(CONFIGURATION_ADMIN_USERS).split(";");
-    	adminUsers.clear();
-    	for (String jid : jids) {
-    		adminUsers.add(new JID(jid));
-    	}
+    private void setupCollections() {
+    	adminUsers = getJIDArrayProperty(CONFIGURATION_ADMIN_USERS);
+    	autosubscribeChannels = getJIDArrayProperty(CONFIGURATION_CHANNELS_AUTOSUBSCRIBE);    	
 	}
     
-    public ArrayList<JID> getAdminUsers() {
+    public Collection<JID> getAdminUsers() {
     	return adminUsers;
+    }
+
+    public Collection<JID> getAutosubscribeChannels() {
+    	return autosubscribeChannels;
     }
 
 	public static Configuration getInstance() 
@@ -72,7 +91,40 @@ public class Configuration extends Properties
     public void load(InputStream inputStream) throws IOException
     {
         conf.load(inputStream);
-        if (conf.containsKey(CONFIGURATION_ADMIN_USERS))
-        	setupAdminUsers();
+        setupCollections();
+    }
+    
+    private Collection<String> getStringArrayProperty(String key) {
+    	String prop = getProperty(key);
+    	
+    	if(null == prop) {
+    		return Collections.emptyList();
+    	}
+    	
+    	return Arrays.asList(prop.split(ARRAY_PROPERTY_SEPARATOR));
+    }
+    
+    private Collection<JID> getJIDArrayProperty(String key) {
+    	Collection<String> props = getStringArrayProperty(key);
+    	
+    	Collection<JID> jids = new ArrayList<JID>(props.size());
+    	
+    	for(String prop : props) {
+    		jids.add(new JID(prop));
+    	}
+    	
+    	return jids;
+    }
+    
+    public String getServerDomain() {
+    	return getProperty(CONFIGURATION_SERVER_DOMAIN);
+    }
+    
+    public String getServerChannelsDomain() {
+    	return getProperty(CONFIGURATION_SERVER_CHANNELS_DOMAIN);
+    }
+    
+    public String getServerTopicsDomain() {
+    	return getProperty(CONFIGURATION_SERVER_TOPICS_DOMAIN);
     }
 }

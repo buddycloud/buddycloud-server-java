@@ -37,7 +37,7 @@ public class ExpiringPacketQueueTest extends IQTestHandler {
 		queue.setTimeout(1);
 		queue.start();
 		queue.put("packet:1", new IQ());
-		Thread.sleep(15);
+		Thread.sleep(200);
 		Assert.assertEquals(0, queue.size());
 	}
 	

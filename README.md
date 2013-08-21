@@ -1,13 +1,6 @@
 # buddycloud Java Server implementation
 
-Note: This server is not as fully featured as the nodejs server https://github.com/buddycloud/buddycloud-server.
-
-Not yet implemented:
-
-- Special nodes
-- MAM/Sync (not caching so no need so far)
-
-Currently the server has enough features that it is usable. It federates with remote servers but may appear to be slow due to lack of caching.
+A buddycloud server written in Java, implementing the [buddycloud channels](http://buddycloud.org/) protocol.
 
 ## Build status
 

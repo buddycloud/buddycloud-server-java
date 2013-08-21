@@ -39,7 +39,7 @@ public class DiscoResultTest extends IQTestHandler {
 	@Test
 	public void testPassingThroughServerDiscoInfoResultStanzaHandsOffToDoServerDiscovery()
 			throws Exception {
-		result = toIq(readStanzaAsString("/iq/discoinfo/node-reply.stanza")
+		result = toIq(readStanzaAsString("/iq/discoInfo/node-reply.stanza")
 				.replace("node=\"/user/romeo@shakespeare.lit/posts\"", ""));
 		discoResult.process(result);
 

@@ -109,7 +109,7 @@ public class Sql92NodeStoreDialect implements NodeStoreSQLDialect {
 	private static final String NODE_EXISTS = "SELECT \"node\" FROM \"nodes\" WHERE \"node\" = ?";
 
 	private static final String SELECT_SINGLE_ITEM = "SELECT \"node\", \"id\", \"updated\", \"xml\", \"in_reply_to\""
-			+ " FROM \"items\" WHERE \"id\" = ?";
+			+ " FROM \"items\" WHERE \"node\" = ? AND \"id\" = ?";
 
 	private static final String SELECT_ITEMS_FOR_NODE = "SELECT \"node\", \"id\", \"updated\", \"xml\", \"in_reply_to\""
 			+ " FROM \"items\" WHERE \"node\" = ? ORDER BY \"updated\" DESC, \"id\" ASC";

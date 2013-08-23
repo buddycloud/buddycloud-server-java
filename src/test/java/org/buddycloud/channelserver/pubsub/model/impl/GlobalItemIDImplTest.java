@@ -40,6 +40,14 @@ public class GlobalItemIDImplTest {
 		GlobalItemIDImpl.fromString("pubsub.server.com,this/is/a/node,this-in-an-item");
 	}
 
+	@Test
+	public void checkEqualsABit() {
+		GlobalItemID itemID = new GlobalItemIDImpl(new JID("denmark.lit"), "node", "item-id");
+		GlobalItemID itemID2 = new GlobalItemIDImpl(new JID("denmark.lit"), "node", "item-id");
+		
+		assertEquals("Equals isn't working!", itemID, itemID2);
+	}
+
 	private void checkValid(String input, JID service, String nodeID,
 			String itemID) {
 		GlobalItemID result = GlobalItemIDImpl.fromString(input);
@@ -48,5 +56,4 @@ public class GlobalItemIDImplTest {
 		assertEquals("Incorrect service", nodeID, result.getNodeID());
 		assertEquals("Incorrect service", itemID, result.getItemID());
 	}
-
 }

@@ -13,13 +13,10 @@ import org.buddycloud.channelserver.channel.Conf;
 import org.buddycloud.channelserver.db.CloseableIterator;
 import org.buddycloud.channelserver.db.exception.NodeStoreException;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.JabberPubsub;
-import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.PubSubElementProcessor;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.PubSubElementProcessorAbstract;
-import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.PubSubGet;
-import org.buddycloud.channelserver.pubsub.model.NodeAffiliation;
+import org.buddycloud.channelserver.pubsub.model.GlobalItemID;
 import org.buddycloud.channelserver.pubsub.model.NodeItem;
-import org.buddycloud.channelserver.pubsub.model.NodeSubscription;
-import org.buddycloud.channelserver.queue.FederatedQueueManager;
+import org.buddycloud.channelserver.pubsub.model.impl.GlobalItemIDImpl;
 import org.dom4j.DocumentException;
 import org.dom4j.Element;
 import org.dom4j.io.SAXReader;
@@ -27,7 +24,8 @@ import org.xmpp.packet.IQ;
 import org.xmpp.packet.JID;
 import org.xmpp.packet.Packet;
 import org.xmpp.packet.PacketError;
-import org.xmpp.resultsetmanagement.ResultSet;
+import org.xmpp.packet.PacketError.Condition;
+import org.xmpp.packet.PacketError.Type;
 
 public class RecentItemsGet extends PubSubElementProcessorAbstract {
 
@@ -43,7 +41,7 @@ public class RecentItemsGet extends PubSubElementProcessorAbstract {
 	// RSM details
 	private String firstItemId = null;
 	private String lastItemId = null;
-	private String afterItemId = null;
+	private GlobalItemID afterItemId = null;
 	private int maxResults = -1;
 
 	private static final Logger logger = Logger.getLogger(RecentItemsGet.class);
@@ -99,15 +97,20 @@ public class RecentItemsGet extends PubSubElementProcessorAbstract {
 	}
 
 	private void parseRsmElement() {
-		Element rsmElement = pubsub.element("set");
-		if (null == rsmElement)
+		if (null == resultSetManagement)
 			return;
 		Element max;
 		Element after;
-		if (null != (max = rsmElement.element("max")))
+		if (null != (max = resultSetManagement.element("max")))
 			maxResults = Integer.parseInt(max.getTextTrim());
-		if (null != (after = rsmElement.element("after")))
-			afterItemId = after.getTextTrim();
+		if (null != (after = resultSetManagement.element("after"))) {
+			try {
+				afterItemId = GlobalItemIDImpl.fromString(after.getTextTrim());
+			} catch(IllegalArgumentException e) {
+				createExtendedErrorReply(Type.modify, Condition.bad_request, "Could not parse the 'after' id: " + after);
+				return;
+			}
+		}
 	}
 
 	private void addRsmElement() throws NodeStoreException {

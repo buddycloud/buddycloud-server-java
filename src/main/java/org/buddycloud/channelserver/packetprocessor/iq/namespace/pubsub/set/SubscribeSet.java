@@ -1,7 +1,6 @@
 
 package org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.set;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -67,7 +66,7 @@ public class SubscribeSet extends PubSubElementProcessorAbstract {
 		}
 
 		subscribingJid = request.getFrom();
-		boolean isLocalNode = true;
+
 		boolean isLocalSubscriber = false;
 
 		if (actorJID != null) {

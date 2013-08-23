@@ -12,6 +12,7 @@ import org.buddycloud.channelserver.db.CloseableIterator;
 import org.buddycloud.channelserver.db.NodeStore;
 import org.buddycloud.channelserver.db.exception.NodeStoreException;
 import org.buddycloud.channelserver.pubsub.affiliation.Affiliations;
+import org.buddycloud.channelserver.pubsub.model.GlobalItemID;
 import org.buddycloud.channelserver.pubsub.model.NodeAffiliation;
 import org.buddycloud.channelserver.pubsub.model.NodeItem;
 import org.buddycloud.channelserver.pubsub.model.NodeSubscription;
@@ -391,7 +392,7 @@ public class ChannelManagerImpl implements ChannelManager {
 
 	@Override
 	public CloseableIterator<NodeItem> getRecentItems(JID user, Date since,
-			int maxPerNode, int limit, String afterItemId, String node)
+			int maxPerNode, int limit, GlobalItemID afterItemId, String node)
 			throws NodeStoreException {
 		return nodeStore.getRecentItems(user, since, maxPerNode, limit,
 				afterItemId, node);

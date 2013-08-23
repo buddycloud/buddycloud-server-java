@@ -18,6 +18,7 @@ import org.buddycloud.channelserver.channel.Conf;
 import org.buddycloud.channelserver.packetHandler.iq.IQTestHandler;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.JabberPubsub;
 import org.buddycloud.channelserver.pubsub.accessmodel.AccessModels;
+import org.buddycloud.channelserver.pubsub.affiliation.Affiliations;
 import org.buddycloud.channelserver.pubsub.model.impl.NodeSubscriptionImpl;
 import org.buddycloud.channelserver.pubsub.subscription.Subscriptions;
 import org.dom4j.Element;
@@ -171,13 +172,10 @@ public class RegisterSetTest extends IQTestHandler {
 
 		final JID localPrivateChannel = new JID("channel1@server1");
 		final String localPrivateChannelNode = "/user/channel1@server1/posts";
-
+		
 		final JID localOpenChannel = new JID("channel2@server1");
-		final String localOpenChannelNode = "/user/channel2@server1/posts";
-
 		final JID remoteChannel = new JID("channel1@server2");
-		final String remoteChannelNode = "/user/channel1@server2/posts";
-
+		
 		when(channelManagerMock.nodeExists(anyString())).thenReturn(false);
 
 		when(configuration.getAutosubscribeChannels()).thenReturn(
@@ -201,6 +199,11 @@ public class RegisterSetTest extends IQTestHandler {
 						Conf.ACCESS_MODEL)).thenReturn(
 				AccessModels.authorize.toString());
 
+		when(
+				channelManagerMock
+						.getDefaultNodeAffiliation(localPrivateChannelNode))
+				.thenReturn(Affiliations.moderator);
+
 		when(channelManagerMock.isLocalJID(localPrivateChannel)).thenReturn(
 				true);
 		when(channelManagerMock.isLocalJID(localOpenChannel)).thenReturn(true);
@@ -213,12 +216,13 @@ public class RegisterSetTest extends IQTestHandler {
 		verify(channelManagerMock).addUserSubscription(
 				new NodeSubscriptionImpl(localPrivateChannelNode,
 						REGISTER_REQUEST_FROM, Subscriptions.subscribed));
+		verify(channelManagerMock).setUserAffiliation(localPrivateChannelNode,
+				REGISTER_REQUEST_FROM, Affiliations.moderator);
 	}
 
 	@SuppressWarnings("serial")
 	@Test
-	public void testRegisterNewUserDoesntAutoApprove()
-			throws Exception {
+	public void testRegisterNewUserDoesntAutoApprove() throws Exception {
 		IQ request = readStanzaAsIq(REGISTER_REQUEST_STANZA);
 
 		final JID localPrivateChannel = new JID("channel1@server1");
@@ -250,7 +254,8 @@ public class RegisterSetTest extends IQTestHandler {
 
 		registerSet.process(request);
 
-		// Check that a subscription has been added, but only for
+		// Check that a subscription and affiliation has been added, but only
+		// for
 		// localPrivateChannel.
 		verify(channelManagerMock, never()).addUserSubscription(
 				new NodeSubscriptionImpl(localPrivateChannelNode,

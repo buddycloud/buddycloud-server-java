@@ -78,6 +78,7 @@ public class RegisterSet implements PacketProcessor<IQ> {
 
 	// TODO: We should really be returning an error as per spec shouldn't we?
 	// It should be up to the client to ignore the error, not the server.
+	@SuppressWarnings("unused")
 	private void userAlreadyRegistered() throws InterruptedException {
 		// User is already registered.
 		IQ reply = IQ.createResultIQ(request);
@@ -158,9 +159,13 @@ public class RegisterSet implements PacketProcessor<IQ> {
 								channelManager.getNodeConfValue(channelNodeId,
 										Conf.ACCESS_MODEL))) {
 					channelManager
-							.addUserSubscription(new NodeSubscriptionImpl(Conf
-									.getPostChannelNodename(channel), from,
+							.addUserSubscription(new NodeSubscriptionImpl(
+									channelNodeId, from,
 									Subscriptions.subscribed));
+
+					channelManager.setUserAffiliation(channelNodeId, from,
+							channelManager
+									.getDefaultNodeAffiliation(channelNodeId));
 				}
 			} catch (InterruptedException e) {
 				LOGGER.error("Could not auto-subscribe " + from + " to "

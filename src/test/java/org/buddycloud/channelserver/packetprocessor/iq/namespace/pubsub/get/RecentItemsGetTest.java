@@ -56,9 +56,6 @@ public class RecentItemsGetTest extends IQTestHandler {
 	private String TEST_NODE_1 = "node1";
 	private String TEST_NODE_2 = "node2";
 
-	private JID TEST_JID_1 = new JID("user1@server1");
-	private JID TEST_JID_2 = new JID("user2@server1");
-
 	@Before
 	public void setUp() throws Exception {
 
@@ -316,13 +313,12 @@ public class RecentItemsGetTest extends IQTestHandler {
 		Assert.assertEquals("node1:2", rsmResult.element("last").getText());
 	}
 	
+	@SuppressWarnings("serial")
 	@Test
 	public void testPagingAfterItem() throws Exception {
 		Element rsm = new BaseElement(new QName("set", new Namespace("", "http://jabber.org/protocol/rsm")));
 		
 		GlobalItemID itemID = new GlobalItemIDImpl(new JID("capulet.lit"), "/user/juliet@capulet.lit/posts", "item1");
-		GlobalItemID itemID2 = new GlobalItemIDImpl(new JID("montague.lit"), "/user/romeo@capulet.lit/posts", "item1");
-		GlobalItemID itemID3 = new GlobalItemIDImpl(new JID("capulet.lit"), "/user/juliet@capulet.lit/posts", "item2");
 			
 		rsm.addElement("after").setText(itemID.toString());
 		rsm.addElement("max").setText("5");
@@ -337,8 +333,8 @@ public class RecentItemsGetTest extends IQTestHandler {
 				new NodeAffiliationImpl(node, jid, Affiliations.member, new Date()));
 		
 		ArrayList<NodeItem> results = new ArrayList<NodeItem>() {{
-			add(new NodeItemImpl(TEST_NODE_1, "1", new Date(), "payload1"));
-			add(new NodeItemImpl(TEST_NODE_2, "1", new Date(), "payload2"));
+			add(new NodeItemImpl(TEST_NODE_1, "1", new Date(System.currentTimeMillis()), "<entry><id>entry1</id></entry>"));
+			add(new NodeItemImpl(TEST_NODE_2, "1", new Date(System.currentTimeMillis() - 100), "<entry><id>entry2</id></entry>"));
 		}};
 		
 		Mockito.when(
@@ -346,11 +342,11 @@ public class RecentItemsGetTest extends IQTestHandler {
 						Mockito.any(Date.class), Mockito.anyInt(),
 						Mockito.anyInt(), Mockito.any(GlobalItemID.class),
 						Mockito.anyString())).thenReturn(
-				new ClosableIteratorImpl<NodeItem>(new ArrayList<NodeItem>().iterator()));
+				new ClosableIteratorImpl<NodeItem>(results.iterator()));
 		Mockito.when(
 				channelManager.getCountRecentItems(Mockito.any(JID.class),
 						Mockito.any(Date.class), Mockito.anyInt(),
-						Mockito.anyString())).thenReturn(0);
+						Mockito.anyString())).thenReturn(100);
 		
 		recentItemsGet.process(element, jid, request, rsm);
 		
@@ -361,9 +357,9 @@ public class RecentItemsGetTest extends IQTestHandler {
 		// Check the response has a valid rsm element
 		Element rsmOut = p.getElement().element("pubsub").element("set");
 		
-		assertEquals("Unexpected count returned", rsmOut.element("count").getText(), "2");
-		assertEquals("Unexpected first returned", rsmOut.element("first").getText(), new GlobalItemIDImpl(new JID(""), nodeID, itemID));
-		assertEquals("Unexpected last returned", rsmOut.element("last").getText(), "2");
+		assertEquals("Unexpected count returned", "100", rsmOut.element("count").getText());
+		assertEquals("Unexpected first returned", "entry1", rsmOut.element("first").getText());
+		assertEquals("Unexpected last returned", "entry2", rsmOut.element("last").getText());
 	}
 	
 	@Test

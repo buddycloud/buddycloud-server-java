@@ -142,11 +142,21 @@ public class RecentItemsGet extends PubSubElementProcessorAbstract {
 			try {
 				entry = xmlReader.read(new StringReader(item.getPayload()))
 						.getRootElement();
+				
+				Element entryIdEl = entry.element("id");
+				
+				String itemId = item.getId();
+				
+				if(entryIdEl != null) {
+					itemId = entryIdEl.getTextTrim();
+				}
+				
 				itemElement = itemsElement.addElement("item");
-				itemElement.addAttribute("id", item.getId());
+				itemElement.addAttribute("id", itemId);
+				
 				if (null == firstItemId)
-					firstItemId = item.getId();
-				lastItemId = item.getId();
+					firstItemId = itemId;
+				lastItemId = itemId;
 				itemElement.add(entry);
 			} catch (DocumentException e) {
 				logger.error("Error parsing a node entry, ignoring. "

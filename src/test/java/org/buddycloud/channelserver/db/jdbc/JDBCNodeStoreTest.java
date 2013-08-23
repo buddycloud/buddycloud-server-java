@@ -1565,24 +1565,24 @@ public class JDBCNodeStoreTest {
 		store.addUserSubscription(new NodeSubscriptionImpl(
 				TEST_SERVER1_NODE2_ID, TEST_SERVER1_USER1_JID,
 				Subscriptions.subscribed));
+		
+		long now = System.currentTimeMillis();
 
 		NodeItem nodeItem1 = new NodeItemImpl(TEST_SERVER1_NODE1_ID, "123",
-				new Date(System.currentTimeMillis() - 400), "payload");
+				new Date(now - 400), "<entry><id>123</id></entry>");
 		store.addNodeItem(nodeItem1);
 
 		NodeItem nodeItem2 = new NodeItemImpl(TEST_SERVER1_NODE2_ID, "123",
-				new Date(System.currentTimeMillis() - 400), "payload2");
+				new Date(now - 400), "<entry><id>123</id></entry>");
 		store.addNodeItem(nodeItem2);
 
 		NodeItem nodeItem3 = new NodeItemImpl(TEST_SERVER1_NODE2_ID, "124",
-				new Date(System.currentTimeMillis() - 300), "payload3");
+				new Date(now - 300), "<entry><id>124</id></entry>");
 		store.addNodeItem(nodeItem3);
 
 		NodeItem nodeItem4 = new NodeItemImpl(TEST_SERVER1_NODE1_ID, "124",
-				new Date(System.currentTimeMillis() - 200), "payload3");
+				new Date(now - 200), "<entry><id>124</id></entry>");
 		store.addNodeItem(nodeItem4);
-
-		Thread.sleep(20);
 
 		CloseableIterator<NodeItem> items = store.getRecentItems(
 				TEST_SERVER1_USER1_JID, since, -1, 2, new GlobalItemIDImpl(TEST_SERVER1_CHANNELS_JID, TEST_SERVER1_NODE1_ID, "124"), null);

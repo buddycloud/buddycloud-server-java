@@ -152,7 +152,7 @@ public class RecentItemsGet extends PubSubElementProcessorAbstract {
 				}
 				
 				itemElement = itemsElement.addElement("item");
-				itemElement.addAttribute("id", itemId);
+				itemElement.addAttribute("id", item.getId());
 				
 				if (null == firstItemId)
 					firstItemId = itemId;

@@ -414,4 +414,21 @@ public class ChannelManagerImpl implements ChannelManager {
 	public int getFirehoseItemCount(boolean isAdmin) throws NodeStoreException {
 		return nodeStore.getFirehoseItemCount(isAdmin);
 	}
+
+	@Override
+	public Affiliations getDefaultNodeAffiliation(String nodeId)
+			throws NodeStoreException {
+		String affiliationString = getNodeConfValue(nodeId, Conf.DEFAULT_AFFILIATION);
+		
+		if(affiliationString != null) {
+			try {
+				return Affiliations.valueOf(affiliationString);
+			}
+			catch(IllegalArgumentException e) {
+				logger.error("Invalid default affiliation stored for node " + nodeId + ": " + affiliationString, e);
+			}
+		}
+		
+		return Affiliations.member;
+	}
 }

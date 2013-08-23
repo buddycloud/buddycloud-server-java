@@ -1,5 +1,6 @@
 package org.buddycloud.channelserver.channel;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.never;
@@ -10,6 +11,7 @@ import java.util.ArrayList;
 
 import org.buddycloud.channelserver.Configuration;
 import org.buddycloud.channelserver.db.NodeStore;
+import org.buddycloud.channelserver.pubsub.affiliation.Affiliations;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -149,5 +151,23 @@ public class ChannelManagerImplTest {
 		
 		verify(nodeStore).getNodeList();
 		verify(nodeStore, Mockito.times(2)).purgeNodeItems(Mockito.anyString());
+	}
+	
+	@Test
+	public void testGetNodeDefaultAffiliationForNodeWithConf() throws Exception {
+		when(nodeStore.getNodeConfValue(user1, Conf.DEFAULT_AFFILIATION)).thenReturn("moderator");
+		
+		Affiliations affiliation = channelManager.getDefaultNodeAffiliation(user1);
+		
+		assertEquals("Incorrect default affiliation", Affiliations.moderator, affiliation);
+	}
+	
+	
+	@Test
+	public void testGetNodeDefaultAffiliationForNodeWithoutConf() throws Exception {
+		Affiliations affiliation = channelManager.getDefaultNodeAffiliation(user1);
+		
+		// If nothing is specified, the default affiliation is "member"
+		assertEquals("Incorrect default affiliation", Affiliations.member, affiliation);
 	}
 }

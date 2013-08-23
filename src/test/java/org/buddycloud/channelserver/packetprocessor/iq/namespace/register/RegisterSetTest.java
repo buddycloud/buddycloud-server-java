@@ -1,7 +1,11 @@
 package org.buddycloud.channelserver.packetprocessor.iq.namespace.register;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.fail;
+import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
@@ -13,6 +17,10 @@ import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.channel.Conf;
 import org.buddycloud.channelserver.packetHandler.iq.IQTestHandler;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.JabberPubsub;
+import org.buddycloud.channelserver.pubsub.accessmodel.AccessModels;
+import org.buddycloud.channelserver.pubsub.affiliation.Affiliations;
+import org.buddycloud.channelserver.pubsub.model.impl.NodeSubscriptionImpl;
+import org.buddycloud.channelserver.pubsub.subscription.Subscriptions;
 import org.dom4j.Element;
 import org.dom4j.QName;
 import org.junit.Before;
@@ -29,6 +37,8 @@ public class RegisterSetTest extends IQTestHandler {
 	private static final String REGISTER_REQUEST_STANZA = "/iq/pubsub/register/register.stanza";
 	private static final String REGISTER_REQUEST_CHANNELS_DOMAIN = "channels.server1";
 	private static final String REGISTER_REQUEST_DOMAIN = "server1";
+	private static final JID REGISTER_REQUEST_FROM = new JID(
+			"user1@server1/mobile");
 
 	/*
 	 * Class under test
@@ -154,6 +164,104 @@ public class RegisterSetTest extends IQTestHandler {
 				"/user/channel2@server1/posts");
 	}
 
+	@SuppressWarnings("serial")
+	@Test
+	public void testRegisterNewUserAutoApprovesOnlyLocalPrivateChannels()
+			throws Exception {
+		IQ request = readStanzaAsIq(REGISTER_REQUEST_STANZA);
+
+		final JID localPrivateChannel = new JID("channel1@server1");
+		final String localPrivateChannelNode = "/user/channel1@server1/posts";
+		
+		final JID localOpenChannel = new JID("channel2@server1");
+		final JID remoteChannel = new JID("channel1@server2");
+		
+		when(channelManagerMock.nodeExists(anyString())).thenReturn(false);
+
+		when(configuration.getAutosubscribeChannels()).thenReturn(
+				new ArrayList<JID>() {
+					{
+						add(localPrivateChannel);
+						add(localOpenChannel);
+						add(remoteChannel);
+					}
+				});
+
+		when(
+				configuration
+						.getBooleanProperty(
+								eq(Configuration.CONFIGURATION_CHANNELS_AUTOSUBSCRIBE_AUTOAPPROVE),
+								anyBoolean())).thenReturn(true);
+
+		// localPrivateChannel is private
+		when(
+				channelManagerMock.getNodeConfValue(localPrivateChannelNode,
+						Conf.ACCESS_MODEL)).thenReturn(
+				AccessModels.authorize.toString());
+
+		when(
+				channelManagerMock
+						.getDefaultNodeAffiliation(localPrivateChannelNode))
+				.thenReturn(Affiliations.moderator);
+
+		when(channelManagerMock.isLocalJID(localPrivateChannel)).thenReturn(
+				true);
+		when(channelManagerMock.isLocalJID(localOpenChannel)).thenReturn(true);
+		when(channelManagerMock.isLocalJID(remoteChannel)).thenReturn(false);
+
+		registerSet.process(request);
+
+		// Check that a subscription has been added, but only for
+		// localPrivateChannel.
+		verify(channelManagerMock).addUserSubscription(
+				new NodeSubscriptionImpl(localPrivateChannelNode,
+						REGISTER_REQUEST_FROM, Subscriptions.subscribed));
+		verify(channelManagerMock).setUserAffiliation(localPrivateChannelNode,
+				REGISTER_REQUEST_FROM, Affiliations.moderator);
+	}
+
+	@SuppressWarnings("serial")
+	@Test
+	public void testRegisterNewUserDoesntAutoApprove() throws Exception {
+		IQ request = readStanzaAsIq(REGISTER_REQUEST_STANZA);
+
+		final JID localPrivateChannel = new JID("channel1@server1");
+		final String localPrivateChannelNode = "/user/channel1@server1/posts";
+
+		when(channelManagerMock.nodeExists(anyString())).thenReturn(false);
+
+		when(configuration.getAutosubscribeChannels()).thenReturn(
+				new ArrayList<JID>() {
+					{
+						add(localPrivateChannel);
+					}
+				});
+
+		when(
+				configuration
+						.getBooleanProperty(
+								eq(Configuration.CONFIGURATION_CHANNELS_AUTOSUBSCRIBE_AUTOAPPROVE),
+								anyBoolean())).thenReturn(false);
+
+		// localPrivateChannel is private
+		when(
+				channelManagerMock.getNodeConfValue(localPrivateChannelNode,
+						Conf.ACCESS_MODEL)).thenReturn(
+				AccessModels.authorize.toString());
+
+		when(channelManagerMock.isLocalJID(localPrivateChannel)).thenReturn(
+				true);
+
+		registerSet.process(request);
+
+		// Check that a subscription and affiliation has been added, but only
+		// for
+		// localPrivateChannel.
+		verify(channelManagerMock, never()).addUserSubscription(
+				new NodeSubscriptionImpl(localPrivateChannelNode,
+						REGISTER_REQUEST_FROM, Subscriptions.subscribed));
+	}
+
 	private void assertPacketsContainsSubscribe(
 			final Collection<Packet> packets, final JID jid, final String nodeId) {
 		assertPacketsContainsSubscribe(packets, jid, nodeId, null);
@@ -224,8 +332,8 @@ public class RegisterSetTest extends IQTestHandler {
 					if (actor == null) {
 						if (subscribeEl.attributeValue("jid").equals(
 								jid.toBareJID().toString())) {
-							fail("Subscribe to node " + nodeId + " from jid " + jid
-									+ " was found but not expected");
+							fail("Subscribe to node " + nodeId + " from jid "
+									+ jid + " was found but not expected");
 						}
 					} else {
 
@@ -234,8 +342,8 @@ public class RegisterSetTest extends IQTestHandler {
 						if (actorEl.getText().equals(actor)
 								&& subscribeEl.attributeValue("jid").equals(
 										actor)) {
-							fail("Subscribe to node " + nodeId + " from jid " + jid
-									+ " with actor " + actor
+							fail("Subscribe to node " + nodeId + " from jid "
+									+ jid + " with actor " + actor
 									+ " was found but not expected");
 						}
 					}

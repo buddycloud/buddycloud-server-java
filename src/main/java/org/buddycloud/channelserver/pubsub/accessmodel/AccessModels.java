@@ -17,7 +17,7 @@ public enum AccessModels {
 		} else if ("whitelist".equals(asString)) {
 			return whitelist;
 		}
-		return whitelist;
+		return authorize;
 	}
 
 }

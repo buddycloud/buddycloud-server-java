@@ -35,11 +35,18 @@ public class NodeViewAcl {
 			return openChannelAcl(node, subscription, affilliation);
 		} else if (accessModel.toString().equals(AccessModels.authorize.toString())) {
 			return privateChannelAcl(node, subscription, affilliation);
-		}
+		} else if (accessModel.toString().equals(AccessModels.whitelist.toString())) {
+            return whitelistAcl(node, subscription, affilliation);
+        }
 		throw new InvalidParameterException(INVALID_ACCESS_MODEL);
 	}
 
-	private boolean privateChannelAcl(String node, Subscriptions subscription,
+    private boolean whitelistAcl(String node, Subscriptions subscription, Affiliations affilliation) {
+        LOGGER.trace("Whitelist not implemented, returning equivalent of authorized");
+        return privateChannelAcl(node, subscription, affilliation);
+    }
+
+    private boolean privateChannelAcl(String node, Subscriptions subscription,
 			Affiliations affilliation) {
 		if (Subscriptions.none.toString().equals(subscription.toString())) {
 			reasonForRefusal = new NodeAclRefuseReason(PacketError.Type.auth,

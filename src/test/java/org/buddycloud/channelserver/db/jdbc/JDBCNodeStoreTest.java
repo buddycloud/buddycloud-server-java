@@ -1,6 +1,6 @@
 package org.buddycloud.channelserver.db.jdbc;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
@@ -32,9 +32,11 @@ import org.buddycloud.channelserver.db.jdbc.JDBCNodeStore.NodeStoreSQLDialect;
 import org.buddycloud.channelserver.db.jdbc.dialect.Sql92NodeStoreDialect;
 import org.buddycloud.channelserver.packetHandler.iq.IQTestHandler;
 import org.buddycloud.channelserver.pubsub.affiliation.Affiliations;
+import org.buddycloud.channelserver.pubsub.model.GlobalItemID;
 import org.buddycloud.channelserver.pubsub.model.NodeAffiliation;
 import org.buddycloud.channelserver.pubsub.model.NodeItem;
 import org.buddycloud.channelserver.pubsub.model.NodeSubscription;
+import org.buddycloud.channelserver.pubsub.model.impl.GlobalItemIDImpl;
 import org.buddycloud.channelserver.pubsub.model.impl.NodeAffiliationImpl;
 import org.buddycloud.channelserver.pubsub.model.impl.NodeItemImpl;
 import org.buddycloud.channelserver.pubsub.model.impl.NodeSubscriptionImpl;
@@ -1526,18 +1528,6 @@ public class JDBCNodeStoreTest {
 	}
 
 	@Test
-	public void testGetNodeItemById() throws Exception {
-		dbTester.loadData("node_1");
-
-		NodeItem result = store.getNodeItemById(TEST_SERVER1_NODE1_ITEM1_ID);
-
-		assertEquals("Unexpected Node ID returned",
-				TEST_SERVER1_NODE1_ITEM1_ID, result.getId());
-		assertTrue("Unexpected Node content returned", result.getPayload()
-				.contains(TEST_SERVER1_NODE1_ITEM1_CONTENT));
-	}
-
-	@Test
 	public void testGetRecentItems() throws Exception {
 
 		Date since = new Date();
@@ -1564,6 +1554,42 @@ public class JDBCNodeStoreTest {
 		assertSameNodeItem(items.next(), nodeItem2);
 		assertSameNodeItem(items.next(), nodeItem1);
 		assertEquals(false, items.hasNext());
+	}
+
+	@Test
+	public void testGetRecentItemsCanBePaged() throws Exception {
+
+		Date since = new Date(0);
+		dbTester.loadData("node_1");
+		store.addRemoteNode(TEST_SERVER1_NODE2_ID);
+		store.addUserSubscription(new NodeSubscriptionImpl(
+				TEST_SERVER1_NODE2_ID, TEST_SERVER1_USER1_JID,
+				Subscriptions.subscribed));
+		
+		long now = System.currentTimeMillis();
+
+		NodeItem nodeItem1 = new NodeItemImpl(TEST_SERVER1_NODE1_ID, "123",
+				new Date(now - 400), "<entry><id>123</id></entry>");
+		store.addNodeItem(nodeItem1);
+
+		NodeItem nodeItem2 = new NodeItemImpl(TEST_SERVER1_NODE2_ID, "123",
+				new Date(now - 400), "<entry><id>123</id></entry>");
+		store.addNodeItem(nodeItem2);
+
+		NodeItem nodeItem3 = new NodeItemImpl(TEST_SERVER1_NODE2_ID, "124",
+				new Date(now - 300), "<entry><id>124</id></entry>");
+		store.addNodeItem(nodeItem3);
+
+		NodeItem nodeItem4 = new NodeItemImpl(TEST_SERVER1_NODE1_ID, "124",
+				new Date(now - 200), "<entry><id>124</id></entry>");
+		store.addNodeItem(nodeItem4);
+
+		CloseableIterator<NodeItem> items = store.getRecentItems(
+				TEST_SERVER1_USER1_JID, since, -1, 2, new GlobalItemIDImpl(TEST_SERVER1_CHANNELS_JID, TEST_SERVER1_NODE1_ID, "124"), null);
+
+		assertSameNodeItem(items.next(), nodeItem3);
+		assertSameNodeItem(items.next(), nodeItem1);
+		assertFalse(items.hasNext());
 	}
 
 	@Test
@@ -1629,18 +1655,19 @@ public class JDBCNodeStoreTest {
 				Subscriptions.subscribed));
 
 		for (int i = 1; i < 20; i++) {
-			Thread.sleep(1);
+			Thread.sleep(10);
 			store.addNodeItem(new NodeItemImpl(TEST_SERVER1_NODE1_ID, String
 					.valueOf(i), new Date(), "payload" + String.valueOf(i)));
 		}
+		
+		GlobalItemID itemID = new GlobalItemIDImpl(TEST_SERVER1_CHANNELS_JID, TEST_SERVER1_NODE1_ID, "15");
 
 		CloseableIterator<NodeItem> items = store.getRecentItems(
-				TEST_SERVER1_USER1_JID, since, -1, -1, "5", null);
+				TEST_SERVER1_USER1_JID, since, -1, 10, itemID, null);
 
 		int count = 0;
-		int i = 19;
+		int i = 14;
 
-		NodeItem item;
 		while (items.hasNext()) {
 			assertSameNodeItem(items.next(), new NodeItemImpl(
 					TEST_SERVER1_NODE1_ID, String.valueOf(i), new Date(),
@@ -1648,7 +1675,7 @@ public class JDBCNodeStoreTest {
 			--i;
 			++count;
 		}
-		assertEquals(15, count);
+		assertEquals(10, count);
 	}
 
 	@Test
@@ -2287,9 +2314,9 @@ public class JDBCNodeStoreTest {
 	}
 
 	private void assertSameNodeItem(NodeItem actual, NodeItem expected) {
-		assertEquals(actual.getId(), expected.getId());
-		assertEquals(actual.getNodeId(), expected.getNodeId());
-		assertEquals(actual.getPayload(), expected.getPayload());
-		assertEquals(actual.getInReplyTo(), expected.getInReplyTo());
+		assertEquals(expected.getId(), actual.getId());
+		assertEquals(expected.getNodeId(), actual.getNodeId());
+		assertEquals(expected.getPayload(), actual.getPayload());
+		assertEquals(expected.getInReplyTo(), actual.getInReplyTo());
 	}
 }

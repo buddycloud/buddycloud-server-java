@@ -7,6 +7,7 @@ import java.util.Map;
 
 import org.buddycloud.channelserver.db.exception.NodeStoreException;
 import org.buddycloud.channelserver.pubsub.affiliation.Affiliations;
+import org.buddycloud.channelserver.pubsub.model.GlobalItemID;
 import org.buddycloud.channelserver.pubsub.model.NodeAffiliation;
 import org.buddycloud.channelserver.pubsub.model.NodeItem;
 import org.buddycloud.channelserver.pubsub.model.NodeSubscription;
@@ -423,7 +424,7 @@ public interface NodeStore {
      * @throws NodeStoreException
      */
 	CloseableIterator<NodeItem> getRecentItems(JID user, Date since,
-			int maxPerNode, int limit, String afterItemId, String node) throws NodeStoreException;
+			int maxPerNode, int limit, GlobalItemID afterItemId, String node) throws NodeStoreException;
 	
 	/**
 	 * Get count of recent items for a user

@@ -600,10 +600,30 @@ public class UserItemsGetTest extends IQTestHandler {
 	}
 	
 	@Test
+	public void testPagingAfterItemWithPlainNodeID() throws Exception {
+		Element rsm = new BaseElement(new QName("set", new Namespace("", "http://jabber.org/protocol/rsm")));
+		
+		rsm.addElement("after").setText("item-id");
+		
+		element.addAttribute("node", node);
+		
+		Mockito.when(channelManager.nodeExists(anyString())).thenReturn(true);
+		
+		Mockito.when(channelManager.getUserSubscription(node, jid)).thenReturn(
+				new NodeSubscriptionImpl(node, jid, Subscriptions.subscribed));
+		Mockito.when(channelManager.getUserAffiliation(node, jid)).thenReturn(
+				new NodeAffiliationImpl(node, jid, Affiliations.member, new Date()));
+		
+		itemsGet.process(element, jid, request, rsm);
+		
+		verify(channelManager).getNodeItems(anyString(), eq("item-id"), anyInt());
+	}
+	
+	@Test
 	public void testPagingAfterItemWithInvalidAfterId() throws Exception {
 		Element rsm = new BaseElement(new QName("set", new Namespace("", "http://jabber.org/protocol/rsm")));
 		
-		rsm.addElement("after").setText("this is invalid");
+		rsm.addElement("after").setText("tag:this is invalid");
 		
 		element.addAttribute("node", "/user/francisco@denmark.lit/posts");
 		

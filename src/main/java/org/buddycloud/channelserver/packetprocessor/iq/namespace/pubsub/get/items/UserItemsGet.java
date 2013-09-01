@@ -183,15 +183,17 @@ public class UserItemsGet implements PubSubElementProcessor {
 			Element after = resultSetManagement.element("after");
 			if (after != null) {
 				try {
+					// Try and parse it as a global item id
 					GlobalItemID afterGlobalItemID = GlobalItemIDImpl.fromString(after.getTextTrim());
 					afterItemId = afterGlobalItemID.getItemID();
 					
+					// Check it's for the correct node
 					if(!afterGlobalItemID.getNodeID().equals(node)) {
 						createExtendedErrorReply(Type.modify, Condition.item_not_found, "RSM 'after' specifies an unexpected NodeID: " + afterGlobalItemID.getNodeID());
 					}
 				} catch(IllegalArgumentException e) {
-					createExtendedErrorReply(Type.modify, Condition.bad_request, "Could not parse the 'after' id: " + after);
-					return;
+					// If the after isn't a valid 'tag:...' then it might just be a straight ItemID
+					afterItemId = after.getTextTrim();
 				}
 			}
 		}

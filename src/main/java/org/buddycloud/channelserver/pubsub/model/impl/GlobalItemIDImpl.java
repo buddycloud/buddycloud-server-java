@@ -80,4 +80,48 @@ public class GlobalItemIDImpl implements GlobalItemID {
 		
 		return new GlobalItemIDImpl(service, matcher.group(2), matcher.group(3));
 	}
+	
+	/**
+	 * 
+	 */
+	public static GlobalItemID fromBuddycloudNode(final String bcNodeId, final String itemId) {
+		return null;
+	}
+
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + ((itemID == null) ? 0 : itemID.hashCode());
+		result = prime * result + ((nodeID == null) ? 0 : nodeID.hashCode());
+		result = prime * result + ((service == null) ? 0 : service.hashCode());
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (!(obj instanceof GlobalItemID))
+			return false;
+		GlobalItemID other = (GlobalItemID) obj;
+		if (itemID == null) {
+			if (other.getItemID() != null)
+				return false;
+		} else if (!itemID.equals(other.getItemID()))
+			return false;
+		if (nodeID == null) {
+			if (other.getNodeID() != null)
+				return false;
+		} else if (!nodeID.equals(other.getNodeID()))
+			return false;
+		if (service == null) {
+			if (other.getService() != null)
+				return false;
+		} else if (!service.equals(other.getService()))
+			return false;
+		return true;
+	}
 }

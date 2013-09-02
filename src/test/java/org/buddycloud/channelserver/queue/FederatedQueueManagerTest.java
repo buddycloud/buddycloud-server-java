@@ -161,7 +161,7 @@ public class FederatedQueueManagerTest extends IQTestHandler {
 		Assert.assertEquals(expectedForwaredPacket.toXML(),
 				originalPacketRedirected.toXML());
 	}
-	
+
 	@Test
 	public void testOutgoingFederatedPacketsAreRoutedBackToOriginalSender() throws Exception {
 
@@ -175,14 +175,58 @@ public class FederatedQueueManagerTest extends IQTestHandler {
 		packet.getElement().addAttribute("remote-server-discover", "false");
 
 		queueManager.process(packet.createCopy());
-        channelsEngine.poll();
-		
-        IQ response = IQ.createResultIQ(packet);
+		IQ originalPacketRedirected = (IQ) channelsEngine.poll();
+
+        IQ response = IQ.createResultIQ(originalPacketRedirected);
         queueManager.passResponseToRequester(response);
-        
+
         Assert.assertEquals(1, channelsEngine.size());
         Packet redirected = channelsEngine.poll();
-        
+
+        System.out.println(packet);
+        System.out.println(redirected);
+
         Assert.assertEquals(packet.getFrom(), redirected.getTo());
+	}
+
+	@Test
+	public void testOutgoingFederatedPacketsFromDifferentClientsUsingSameIdAreRoutedBackToOriginalSender() throws Exception {
+
+        channelsEngine.clear();
+
+        IQ clientOnePacket = new IQ();
+        clientOnePacket.setID("1:some-request");
+        clientOnePacket.setFrom(new JID("romeo@montague.lit/street"));
+        clientOnePacket.setTo(new JID("topics.capulet.lit"));
+        clientOnePacket.setType(IQ.Type.get);
+        clientOnePacket.getElement().addAttribute("remote-server-discover", "false");
+
+        IQ clientTwoPacket = new IQ();
+        clientTwoPacket.setID("1:some-request");
+        clientTwoPacket.setFrom(new JID("juliet@montague.lit/street"));
+        clientTwoPacket.setTo(new JID("topics.capulet.lit"));
+        clientTwoPacket.setType(IQ.Type.get);
+        clientTwoPacket.getElement().addAttribute("remote-server-discover", "false");
+
+        queueManager.addChannelMap(new JID("topics.capulet.lit"));
+
+        queueManager.process(clientOnePacket.createCopy());
+        queueManager.process(clientTwoPacket.createCopy());
+
+        IQ clientOneOriginalPacketRedirected = (IQ) channelsEngine.poll();
+        IQ clientTwoOriginalPacketRedirected = (IQ) channelsEngine.poll();
+
+        IQ clientOneResponse = IQ.createResultIQ(clientOneOriginalPacketRedirected);
+        queueManager.passResponseToRequester(clientOneResponse);
+
+        IQ clientTwoResponse = IQ.createResultIQ(clientTwoOriginalPacketRedirected);
+        queueManager.passResponseToRequester(clientTwoResponse);
+
+        Assert.assertEquals(2, channelsEngine.size());
+        Packet clientOneRedirected = channelsEngine.poll();
+        Packet clientTwoRedirected = channelsEngine.poll();
+
+        Assert.assertEquals(clientOnePacket.getFrom(), clientOneRedirected.getTo());
+        Assert.assertEquals(clientTwoPacket.getFrom(), clientTwoRedirected.getTo());
 	}
 }

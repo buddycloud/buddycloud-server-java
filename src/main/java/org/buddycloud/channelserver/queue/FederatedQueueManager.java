@@ -1,11 +1,12 @@
 package org.buddycloud.channelserver.queue;
 
+import java.io.UnsupportedEncodingException;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.LinkedBlockingQueue;
 
 import org.apache.log4j.Logger;
 import org.buddycloud.channelserver.ChannelsEngine;
@@ -14,7 +15,6 @@ import org.dom4j.Attribute;
 import org.dom4j.Element;
 import org.dom4j.Namespace;
 import org.dom4j.dom.DOMElement;
-import org.hsqldb.Server;
 import org.xmpp.component.ComponentException;
 import org.xmpp.packet.IQ;
 import org.xmpp.packet.JID;
@@ -41,13 +41,13 @@ public class FederatedQueueManager {
 	private ConcurrentHashMap<String, Integer> remoteServerItemsToProcess = new ConcurrentHashMap<String, Integer>();
 	private ConcurrentHashMap<String, String> remoteServerInfoRequestIds = new ConcurrentHashMap<String, String>();
 	private ConcurrentHashMap<String, List<Packet>> waitingStanzas = new ConcurrentHashMap<String, List<Packet>>();
-	
+
+	private ConcurrentHashMap<String, String> idMap = new ConcurrentHashMap<String, String>();
+
 	private ExpiringPacketQueue sentRemotePackets = new ExpiringPacketQueue();
 	private ExpiringPacketQueue nodeMap = new ExpiringPacketQueue();
 
 	private String localServer;
-
-	private BlockingQueue<Packet> federatedResponseQueue;
 
 	public FederatedQueueManager(ChannelsEngine component, String localServer) {
 		this.component = component;
@@ -66,7 +66,12 @@ public class FederatedQueueManager {
 	public void process(Packet packet) throws ComponentException {
 		
 		String to = packet.getTo().toString();
-		sentRemotePackets.put(packet.getID(), packet.getFrom());
+
+		String uniqueId = generateUniqueId(packet);
+		idMap.put(uniqueId, packet.getID());
+		packet.setID(uniqueId);
+
+		sentRemotePackets.put(uniqueId, packet.getFrom());
 		try {
 			extractNodeDetails(packet);
 			// Do we have a map already?
@@ -245,10 +250,14 @@ public class FederatedQueueManager {
 					"Can not find original requesting packet! (ID:"
 							+ packet.getID() + ")");
 		}
-		packet.setTo((JID) sentRemotePackets.get(packet.getID()));
+
+		String uniqueId = packet.getID();
+		packet.setID(idMap.get(uniqueId));
+		packet.setTo((JID) sentRemotePackets.get(uniqueId));
 		packet.setFrom(localServer);
 		sentRemotePackets.remove(packet.getID());
-		
+		idMap.remove(uniqueId);
+
 		component.sendPacket(packet);
 	}
 	
@@ -271,4 +280,46 @@ public class FederatedQueueManager {
 			logger.error(e);
 		}
 	}
+
+	/**
+	 * Generate a unique ID for a packet
+	 *
+	 * Supplied packet IDs might not be unique so we use the ID and the FROM
+	 * values to create a hash which we map back to the original packet ID.
+	 *
+	 * @param packet
+	 * @return unique ID for the packet
+	 */
+	private String generateUniqueId(Packet packet) {
+		return generateMd5(packet.getID() + packet.getFrom());
+	}
+
+	/**
+	 * Generates an MD5 hash of a supplied String
+	 *
+	 * @param message to encode
+	 * @return MD5 Hash of supplied string
+	 */
+    private String generateMd5(String message) {
+        String digest = null;
+        try {
+            MessageDigest md = MessageDigest.getInstance("MD5");
+            byte[] hash = md.digest(message.getBytes("UTF-8"));
+
+            //converting byte array to Hexadecimal String
+            StringBuilder sb = new StringBuilder(2*hash.length);
+            for(byte b : hash) {
+               sb.append(String.format("%02x", b&0xff));
+            }
+
+            digest = sb.toString();
+        } catch (UnsupportedEncodingException e) {
+			logger.info("Error generating unique packet ID");
+			logger.error(e);
+        } catch (NoSuchAlgorithmException e) {
+			logger.info("Error generating unique packet ID");
+			logger.error(e);
+        }
+        return digest;
+    }
 }

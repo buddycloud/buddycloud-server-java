@@ -2,6 +2,7 @@ package org.buddycloud.channelserver;
 
 import static org.junit.Assert.*;
 
+import java.io.FileInputStream;
 import java.util.Collection;
 
 import org.junit.After;
@@ -11,11 +12,14 @@ import org.xmpp.packet.JID;
 
 public class ConfigurationTest {
 
+	private static final String CONFIGURATION_PROPERTIES = "src/test/resources/configuration.properties";
+
 	Configuration configuration;
-	
+
 	@Before
 	public void setUp() throws Exception {
 		configuration = Configuration.getInstance();
+		configuration.load(new FileInputStream(CONFIGURATION_PROPERTIES));
 	}
 
 	@After

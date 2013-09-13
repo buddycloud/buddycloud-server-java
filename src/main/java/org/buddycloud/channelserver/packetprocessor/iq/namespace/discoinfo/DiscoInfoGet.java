@@ -132,6 +132,9 @@ public class DiscoInfoGet implements PacketProcessor<IQ> {
 		
 		query.addElement("feature").addAttribute("var",
 				"http://jabber.org/protocol/disco#items");
+		
+		query.addElement("feature").addAttribute("var",
+				"jabber:iq:search");
 
 		outQueue.put(result);
 	}

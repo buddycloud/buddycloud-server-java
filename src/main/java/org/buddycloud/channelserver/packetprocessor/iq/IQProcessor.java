@@ -13,6 +13,7 @@ import org.buddycloud.channelserver.packetprocessor.iq.namespace.discoitems.Jabb
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.mam.MessageArchiveManagement;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.JabberPubsub;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.register.JabberRegister;
+import org.buddycloud.channelserver.packetprocessor.iq.namespace.search.Search;
 import org.buddycloud.channelserver.queue.FederatedQueueManager;
 import org.buddycloud.channelserver.queue.UnknownFederatedPacketException;
 import org.xmpp.packet.IQ;
@@ -49,6 +50,8 @@ public class IQProcessor implements PacketProcessor<IQ> {
 		processorsPerNamespace.put(JabberPubsub.NS_PUBSUB_OWNER, ps);
 		processorsPerNamespace.put(MessageArchiveManagement.NAMESPACE_MAM,
 				new MessageArchiveManagement(outQueue, channelManager));
+		processorsPerNamespace.put(Search.NAMESPACE_URI,
+		        new Search(outQueue, channelManager));
 	}
 
 	@Override

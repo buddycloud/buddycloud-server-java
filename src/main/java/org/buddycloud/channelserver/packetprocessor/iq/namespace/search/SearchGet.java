@@ -12,6 +12,8 @@ import org.xmpp.packet.PacketError.Type;
 
 public class SearchGet implements PacketProcessor<IQ> {
 
+	public static final String INSTRUCTIONS = "Search for content/hashtags/mentions";
+	
 	private ChannelManager channelManager;
 	private BlockingQueue<Packet> outQueue;
 	private IQ response;
@@ -34,6 +36,7 @@ public class SearchGet implements PacketProcessor<IQ> {
 		
 		Element query = response.getElement().addElement("query");
 		query.addNamespace("", Search.NAMESPACE_URI);
+		query.addElement("instructions").addText(INSTRUCTIONS);
 		
 		outQueue.put(response);
 	}

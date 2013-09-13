@@ -108,14 +108,31 @@ public class SearchGetTest extends IQTestHandler {
 		Assert.assertNotNull(query);
 
 		Assert.assertEquals(
-            "<query xmlns=\"jabber:iq:search\"></query>", query.asXML()
+            "<query xmlns=\"jabber:iq:search\">", query.asXML().substring(0, 32)
         );
 	}
 
-//	@Test
-//	public void testReturnsInstructionsElement() throws Exception {
-//    
-//	}
+	@Test
+	public void testReturnsInstructionsElement() throws Exception {
+		
+		search.process(request);
+		
+		Assert.assertEquals(1, queue.size());
+		
+		IQ response = (IQ) queue.poll();
+		Assert.assertNull(response.getError());
+
+		Assert.assertEquals(receiver, response.getTo());
+		Assert.assertEquals(sender, response.getFrom());
+		Assert.assertEquals(IQ.Type.result, response.getType());
+
+		Element instructions = response.getElement()
+				.element("query")
+				.element("instructions");
+		Assert.assertEquals(
+            SearchGet.INSTRUCTIONS, instructions.getTextTrim()
+        );
+	}
 	
 	 /* 
 	 * @Test public void testReturnsDataFormElement() throws Exception {

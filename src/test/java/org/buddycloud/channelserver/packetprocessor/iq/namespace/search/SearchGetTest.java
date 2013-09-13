@@ -50,6 +50,8 @@ public class SearchGetTest extends IQTestHandler {
 	private ChannelManager channelManager;
 
 	private SearchGet search;
+	private JID sender;
+	private JID receiver;
 
 	@Before
 	public void setUp() throws Exception {
@@ -59,16 +61,18 @@ public class SearchGetTest extends IQTestHandler {
 
 		search = new SearchGet(queue, channelManager);
 
+		sender = new JID("channels.shakespeare.lit");
+		receiver = new JID("romeo@shakespeare.lit/home");
+		
 		request = new IQ();
-		request.setFrom("romeo@shakespeare.lit/home");
+		request.setFrom(receiver);
 		request.setType(IQ.Type.get);
-		request.setTo(new JID("channels.shakespeare.lit"));
+		request.setTo(sender);
 		Element query = request.getElement().addElement("query");
 		query.addNamespace("", Search.NAMESPACE_URI);
 
 		Mockito.when(channelManager.isLocalJID(Mockito.any(JID.class)))
 				.thenReturn(true);
-
 	}
 
 	@Test
@@ -85,12 +89,35 @@ public class SearchGetTest extends IQTestHandler {
 		Assert.assertEquals(PacketError.Condition.not_allowed,
 				error.getCondition());
 	}
-	/*
-	 * @Test public void testReturnsInstructionsElement() throws Exception {
-	 * 
-	 * 
-	 * }
-	 * 
+	
+	@Test
+	public void testReturnsQueryChildElement() throws Exception {
+		
+		search.process(request);
+		
+		Assert.assertEquals(1, queue.size());
+		
+		IQ response = (IQ) queue.poll();
+		Assert.assertNull(response.getError());
+
+		Assert.assertEquals(receiver, response.getTo());
+		Assert.assertEquals(sender, response.getFrom());
+		Assert.assertEquals(IQ.Type.result, response.getType());
+
+		Element query = response.getElement().element("query");
+		Assert.assertNotNull(query);
+
+		Assert.assertEquals(
+            "<query xmlns=\"jabber:iq:search\"></query>", query.asXML()
+        );
+	}
+
+//	@Test
+//	public void testReturnsInstructionsElement() throws Exception {
+//    
+//	}
+	
+	 /* 
 	 * @Test public void testReturnsDataFormElement() throws Exception {
 	 * 
 	 * 

@@ -4,6 +4,7 @@ import java.util.concurrent.BlockingQueue;
 
 import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.packetprocessor.PacketProcessor;
+import org.dom4j.Element;
 import org.xmpp.packet.IQ;
 import org.xmpp.packet.Packet;
 import org.xmpp.packet.PacketError;
@@ -30,6 +31,11 @@ public class SearchGet implements PacketProcessor<IQ> {
 					PacketError.Condition.not_allowed);
 			return;
 		}
+		
+		Element query = response.getElement().addElement("query");
+		query.addNamespace("", Search.NAMESPACE_URI);
+		
+		outQueue.put(response);
 	}
 
 	private void sendErrorResponse(PacketError.Type type,

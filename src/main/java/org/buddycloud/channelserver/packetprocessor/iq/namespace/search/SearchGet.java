@@ -5,6 +5,7 @@ import java.util.concurrent.BlockingQueue;
 import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.packetprocessor.PacketProcessor;
 import org.dom4j.Element;
+import org.xmpp.forms.DataForm;
 import org.xmpp.packet.IQ;
 import org.xmpp.packet.Packet;
 import org.xmpp.packet.PacketError;
@@ -35,9 +36,11 @@ public class SearchGet implements PacketProcessor<IQ> {
 		}
 		
 		Element query = response.getElement().addElement("query");
-		query.addNamespace("", Search.NAMESPACE_URI);
+		query.addAttribute("xmlns", Search.NAMESPACE_URI);
 		query.addElement("instructions").addText(INSTRUCTIONS);
-		
+		Element x = query.addElement("x");
+		x.addAttribute("xmlns", DataForm.NAMESPACE);
+		//addNamespace(null, DataForm.NAMESPACE);
 		outQueue.put(response);
 	}
 

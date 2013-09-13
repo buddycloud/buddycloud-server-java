@@ -35,6 +35,7 @@ import org.dom4j.tree.BaseElement;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
+import org.xmpp.forms.DataForm;
 import org.xmpp.packet.IQ;
 import org.xmpp.packet.JID;
 import org.xmpp.packet.Packet;
@@ -107,9 +108,7 @@ public class SearchGetTest extends IQTestHandler {
 		Element query = response.getElement().element("query");
 		Assert.assertNotNull(query);
 
-		Assert.assertEquals(
-            "<query xmlns=\"jabber:iq:search\">", query.asXML().substring(0, 32)
-        );
+		Assert.assertEquals(Search.NAMESPACE_URI, query.attributeValue("xmlns"));
 	}
 
 	@Test
@@ -126,20 +125,33 @@ public class SearchGetTest extends IQTestHandler {
 		Assert.assertEquals(sender, response.getFrom());
 		Assert.assertEquals(IQ.Type.result, response.getType());
 
-		Element instructions = response.getElement()
+		String instructions = response.getElement()
 				.element("query")
-				.element("instructions");
-		Assert.assertEquals(
-            SearchGet.INSTRUCTIONS, instructions.getTextTrim()
-        );
+				.elementText("instructions");
+		Assert.assertEquals(SearchGet.INSTRUCTIONS, instructions);
 	}
 	
+	  
+	@Test public void testReturnsDataFormElement() throws Exception {
+		
+		search.process(request);
+		
+		Assert.assertEquals(1, queue.size());
+		
+		IQ response = (IQ) queue.poll();
+		Assert.assertNull(response.getError());
+
+		Assert.assertEquals(receiver, response.getTo());
+		Assert.assertEquals(sender, response.getFrom());
+		Assert.assertEquals(IQ.Type.result, response.getType());
+
+		Element x = response.getElement()
+				.element("query")
+				.element("x");
+	    Assert.assertNotNull(x);
+	    Assert.assertEquals(DataForm.NAMESPACE, x.attributeValue("xmlns"));
+	}
 	 /* 
-	 * @Test public void testReturnsDataFormElement() throws Exception {
-	 * 
-	 * 
-	 * }
-	 * 
 	 * @Test public void testReturnsDataFormTitleElement() throws Exception {
 	 * 
 	 * 

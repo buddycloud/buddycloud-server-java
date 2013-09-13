@@ -175,18 +175,52 @@ public class SearchGetTest extends IQTestHandler {
 	    Assert.assertEquals(SearchGet.TITLE, title);
 	}
 
-	/* @Test public void testReturnsDataFormInstructionsElement() throws
-	 * Exception {
-	 * 
-	 * 
-	 * }
-	 * 
-	 * @Test public void testReturnsDataFormTypeElement() throws Exception {
-	 * 
-	 * 
-	 * }
-	 * 
-	 * @Test public void testReturnsDataFormContentElement() throws Exception {
+    @Test 
+    public void testReturnsDataFormInstructionsElement() throws Exception {
+		
+		search.process(request);
+		
+		Assert.assertEquals(1, queue.size());
+		
+		IQ response = (IQ) queue.poll();
+		Assert.assertNull(response.getError());
+
+		Assert.assertEquals(receiver, response.getTo());
+		Assert.assertEquals(sender, response.getFrom());
+		Assert.assertEquals(IQ.Type.result, response.getType());
+
+	    String instructions = response.getElement()
+				.element("query")
+				.element("x")
+				.elementText("instructions");
+	    Assert.assertNotNull(instructions);
+	    Assert.assertEquals(SearchGet.INSTRUCTIONS, instructions);
+	}
+
+	@Test
+	public void testReturnsDataFormTypeElement() throws Exception {
+		
+		search.process(request);
+		
+		Assert.assertEquals(1, queue.size());
+		
+		IQ response = (IQ) queue.poll();
+		Assert.assertNull(response.getError());
+
+		Assert.assertEquals(receiver, response.getTo());
+		Assert.assertEquals(sender, response.getFrom());
+		Assert.assertEquals(IQ.Type.result, response.getType());
+
+	    Element formType = (Element) response.getElement()
+				.element("query")
+				.element("x")
+				.elements("field").get(0);
+	    Assert.assertEquals(Search.NAMESPACE_URI, formType.elementText("value"));
+	    Assert.assertEquals("hidden", formType.attributeValue("type"));
+	    Assert.assertEquals("FORM_TYPE", formType.attributeValue("var"));
+	}
+	 
+	 /* @Test public void testReturnsDataFormContentElement() throws Exception {
 	 * 
 	 * 
 	 * }

@@ -21,6 +21,8 @@ public class SearchGet implements PacketProcessor<IQ> {
 	private BlockingQueue<Packet> outQueue;
 	private IQ response;
 
+	private Element x;
+
 	public SearchGet(BlockingQueue<Packet> outQueue,
 			ChannelManager channelManager) {
 		this.channelManager = channelManager;
@@ -40,10 +42,20 @@ public class SearchGet implements PacketProcessor<IQ> {
 		Element query = response.getElement().addElement("query");
 		query.addAttribute("xmlns", Search.NAMESPACE_URI);
 		query.addElement("instructions").addText(INSTRUCTIONS);
-		Element x = query.addElement("x");
+		x = query.addElement("x");
+		addFields();
+		outQueue.put(response);
+	}
+
+	private void addFields() {
 		x.addAttribute("xmlns", DataForm.NAMESPACE);
 		x.addElement("title").addText(TITLE);
-		outQueue.put(response);
+		x.addElement("instructions").addText(INSTRUCTIONS);
+		
+		Element formType = x.addElement("field");
+		formType.addAttribute("type", "hidden");
+		formType.addAttribute("var", "FORM_TYPE");
+		formType.addElement("value").addText(Search.NAMESPACE_URI);
 	}
 
 	private void sendErrorResponse(PacketError.Type type,

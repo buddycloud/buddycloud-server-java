@@ -49,8 +49,6 @@ public class SearchGetTest extends IQTestHandler {
 
 	private ChannelManager channelManager;
 
-	private String TEST_NODE = "node1";
-	private NodeViewAcl nodeViewAclMock;
 	private SearchGet search;
 
 	@Before
@@ -60,11 +58,79 @@ public class SearchGetTest extends IQTestHandler {
 		channelManager = Mockito.mock(ChannelManager.class);
 
 		search = new SearchGet(queue, channelManager);
+
+		request = new IQ();
+		request.setFrom("romeo@shakespeare.lit/home");
+		request.setType(IQ.Type.get);
+		request.setTo(new JID("channels.shakespeare.lit"));
+		Element query = request.getElement().addElement("query");
+		query.addNamespace("", Search.NAMESPACE_URI);
+
+		Mockito.when(channelManager.isLocalJID(Mockito.any(JID.class)))
+				.thenReturn(true);
+
 	}
 
 	@Test
-	public void testTrueIsTrue() {
-		Assert.assertTrue(true);
-	}
+	public void testOnlyAcceptsPacketsFromLocalUsers() throws Exception {
 
+		Mockito.when(channelManager.isLocalJID(Mockito.any(JID.class)))
+				.thenReturn(false);
+
+		search.process(request);
+		Packet response = queue.poll();
+		PacketError error = response.getError();
+		Assert.assertNotNull(error);
+		Assert.assertEquals(PacketError.Type.cancel, error.getType());
+		Assert.assertEquals(PacketError.Condition.not_allowed,
+				error.getCondition());
+	}
+	/*
+	 * @Test public void testReturnsInstructionsElement() throws Exception {
+	 * 
+	 * 
+	 * }
+	 * 
+	 * @Test public void testReturnsDataFormElement() throws Exception {
+	 * 
+	 * 
+	 * }
+	 * 
+	 * @Test public void testReturnsDataFormTitleElement() throws Exception {
+	 * 
+	 * 
+	 * }
+	 * 
+	 * @Test public void testReturnsDataFormInstructionsElement() throws
+	 * Exception {
+	 * 
+	 * 
+	 * }
+	 * 
+	 * @Test public void testReturnsDataFormTypeElement() throws Exception {
+	 * 
+	 * 
+	 * }
+	 * 
+	 * @Test public void testReturnsDataFormContentElement() throws Exception {
+	 * 
+	 * 
+	 * }
+	 * 
+	 * @Test public void testReturnsDataFormAuthorElement() throws Exception {
+	 * 
+	 * 
+	 * }
+	 * 
+	 * @Test public void testReturnsDataFormResultsPerPageElement() throws
+	 * Exception {
+	 * 
+	 * 
+	 * }
+	 * 
+	 * @Test public void testReturnsDataFormPageElement() throws Exception {
+	 * 
+	 * 
+	 * }
+	 */
 }

@@ -14,6 +14,8 @@ import org.xmpp.packet.PacketError.Type;
 public class SearchGet implements PacketProcessor<IQ> {
 
 	public static final String INSTRUCTIONS = "Search for content/hashtags/mentions";
+
+	public static final String TITLE = "Please populate one or more of the following fields";
 	
 	private ChannelManager channelManager;
 	private BlockingQueue<Packet> outQueue;
@@ -40,7 +42,7 @@ public class SearchGet implements PacketProcessor<IQ> {
 		query.addElement("instructions").addText(INSTRUCTIONS);
 		Element x = query.addElement("x");
 		x.addAttribute("xmlns", DataForm.NAMESPACE);
-		//addNamespace(null, DataForm.NAMESPACE);
+		x.addElement("title").addText(TITLE);
 		outQueue.put(response);
 	}
 

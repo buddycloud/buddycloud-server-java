@@ -132,7 +132,8 @@ public class SearchGetTest extends IQTestHandler {
 	}
 	
 	  
-	@Test public void testReturnsDataFormElement() throws Exception {
+	@Test
+	public void testReturnsDataFormElement() throws Exception {
 		
 		search.process(request);
 		
@@ -151,13 +152,30 @@ public class SearchGetTest extends IQTestHandler {
 	    Assert.assertNotNull(x);
 	    Assert.assertEquals(DataForm.NAMESPACE, x.attributeValue("xmlns"));
 	}
-	 /* 
-	 * @Test public void testReturnsDataFormTitleElement() throws Exception {
-	 * 
-	 * 
-	 * }
-	 * 
-	 * @Test public void testReturnsDataFormInstructionsElement() throws
+ 
+	@Test
+	public void testReturnsDataFormTitleElement() throws Exception {
+		
+		search.process(request);
+		
+		Assert.assertEquals(1, queue.size());
+		
+		IQ response = (IQ) queue.poll();
+		Assert.assertNull(response.getError());
+
+		Assert.assertEquals(receiver, response.getTo());
+		Assert.assertEquals(sender, response.getFrom());
+		Assert.assertEquals(IQ.Type.result, response.getType());
+
+	    String title = response.getElement()
+				.element("query")
+				.element("x")
+				.elementText("title");
+	    Assert.assertNotNull(title);
+	    Assert.assertEquals(SearchGet.TITLE, title);
+	}
+
+	/* @Test public void testReturnsDataFormInstructionsElement() throws
 	 * Exception {
 	 * 
 	 * 

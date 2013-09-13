@@ -49,9 +49,9 @@ public class Search implements PacketProcessor<IQ> {
 		request = reqIQ;
        
 		if (request.getType().equals("get")) {
-			
+			this.searchGet.process(request);
 		} else if (request.getType().equals("set")) {
-			
+			this.searchSet.process(request);
 		}
 		IQ response = IQ.createResultIQ(request);
 		response.setType(IQ.Type.error);

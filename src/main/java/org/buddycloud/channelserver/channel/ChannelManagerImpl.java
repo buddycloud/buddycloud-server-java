@@ -2,6 +2,7 @@ package org.buddycloud.channelserver.channel;
 
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
@@ -430,5 +431,12 @@ public class ChannelManagerImpl implements ChannelManager {
 		}
 		
 		return Affiliations.member;
+	}
+
+	@Override
+	public CloseableIterator<NodeItem> performSearch(JID searcher,
+			List content, String author, int page, int rpp)  throws NodeStoreException {
+		// TODO Auto-generated method stub
+		return null;
 	}
 }

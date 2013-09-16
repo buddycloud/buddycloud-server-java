@@ -162,7 +162,8 @@ public class SearchSet implements PacketProcessor<IQ> {
 	}
 
 	private void runSearch() throws NodeStoreException {
-		CloseableIterator<NodeItem> results = channelManager.performSearch(searcher, content, author, page, rpp);
+		CloseableIterator<NodeItem> results = channelManager.performSearch(
+				searcher, content, author, page, rpp);
 
 		Element query = responseIq.getElement().addElement("query");
 		query.addAttribute("xmlns", Search.NAMESPACE_URI);
@@ -173,74 +174,62 @@ public class SearchSet implements PacketProcessor<IQ> {
 		Element entry;
 
 		SAXReader xmlReader = new SAXReader();
-		while ( results.hasNext() ) {
-			if ( 0 == resultCounter ) {
+		while (results.hasNext()) {
+			if (0 == resultCounter) {
 				addFormField(x);
 				addReportedFields(x);
 			}
-			
+
 			nodeItem = results.next();
 
 			try {
-				entry = xmlReader.read(
-						new StringReader(nodeItem.getPayload()))
+				entry = xmlReader.read(new StringReader(nodeItem.getPayload()))
 						.getRootElement();
-				
-				Element item = x.addElement("item");
-				
-				item.addElement("field")
-					.addAttribute("var", "node")
-						.addElement("value")
-						.setText(nodeItem.getNodeId());
-				
-				item.addElement("field")
-				.addAttribute("var", "id")
-					.addElement("value")
-					.setText(nodeItem.getId());
 
-				item.addElement("field")
-					.addAttribute("var", "entry")
-						.addElement("value")
-						.add(entry);
+				Element item = x.addElement("item");
+
+				item.addElement("field").addAttribute("var", "node")
+						.addElement("value").setText(nodeItem.getNodeId());
+
+				item.addElement("field").addAttribute("var", "id")
+						.addElement("value").setText(nodeItem.getId());
+
+				item.addElement("field").addAttribute("var", "entry")
+						.addElement("value").add(entry);
 			} catch (DocumentException e) {
-//				logger.error("Error parsing a node entry, ignoring. "
-//						+ nodeItem);
+				// logger.error("Error parsing a node entry, ignoring. "
+				// + nodeItem);
 			}
-			
+
 			resultCounter++;
 		}
-		
-		if ( resultCounter > 0 ) {
+
+		if (resultCounter > 0) {
 			query.add(x);
 		}
 
 	}
-	
-	private void addFormField( Element x ) {
-		x.addElement("field")
-			.addAttribute("type", "hidden")
-			.addAttribute("var", "FORM_TYPE")
-			.addElement("value")
+
+	private void addFormField(Element x) {
+		x.addElement("field").addAttribute("type", "hidden")
+				.addAttribute("var", "FORM_TYPE").addElement("value")
 				.setText(Search.NAMESPACE_URI);
 	}
-	
-	private void addReportedFields( Element x ) {
-		Element reported = x.addElement("reported");
-		
-		reported.addElement("field")
-			.addAttribute("var", "node")
-			.addAttribute("label", "Node")
-			.addAttribute("type", "text-single");
-		
-		reported.addElement("field")
-			.addAttribute("var", "id")
-			.addAttribute("label", "Item ID")
-			.addAttribute("type", "text-single");
 
-		reported.addElement("field")
-			.addAttribute("var", "entry")
-			.addAttribute("label", "Item")
-			.addAttribute("type", "http://www.w3.org/2005/Atom");
+	private void addReportedFields(Element x) {
+		Element reported = x.addElement("reported");
+
+		reported.addElement("field").addAttribute("var", "node")
+				.addAttribute("label", "Node")
+				.addAttribute("type", "text-single");
+
+		reported.addElement("field").addAttribute("var", "id")
+				.addAttribute("label", "Item ID")
+				.addAttribute("type", "text-single");
+
+		reported.addElement("field").addAttribute("var", "entry")
+				.addAttribute("label", "Item")
+				.addAttribute("type", "http://www.w3.org/2005/Atom");
 	}
 
 	private void extractFieldValues() {
@@ -293,11 +282,11 @@ public class SearchSet implements PacketProcessor<IQ> {
 
 	private void sendErrorResponse(PacketError.Type type,
 			PacketError.Condition condition) throws InterruptedException {
-//		try {
-//			throw new Exception();
-//		} catch ( Exception e ) {
-//			e.printStackTrace();
-//		}
+		// try {
+		// throw new Exception();
+		// } catch ( Exception e ) {
+		// e.printStackTrace();
+		// }
 		responseIq.setType(IQ.Type.error);
 		PacketError error = new PacketError(condition, type);
 		responseIq.setError(error);

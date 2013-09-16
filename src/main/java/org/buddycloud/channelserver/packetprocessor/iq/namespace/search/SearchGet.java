@@ -18,6 +18,7 @@ public class SearchGet implements PacketProcessor<IQ> {
 	public static final String TITLE = "Please populate one or more of the following fields";
 	public static final String CONTENT_FIELD_LABEL = "Content search";
 	public static final String AUTHOR_FIELD_LABEL = "Author";
+	public static final String RPP_FIELD_LABEL = "Results per page";
 	
 	private ChannelManager channelManager;
 	private BlockingQueue<Packet> outQueue;
@@ -68,6 +69,11 @@ public class SearchGet implements PacketProcessor<IQ> {
 		author.addAttribute("type", "jid-single");
 		author.addAttribute("var", "author");
 		author.addAttribute("label", AUTHOR_FIELD_LABEL);
+		
+		Element rpp = x.addElement("field");
+		rpp.addAttribute("type", "fixed-single");
+		rpp.addAttribute("var", "rpp");
+		rpp.addAttribute("label", RPP_FIELD_LABEL);
 	}
 
 	private void sendErrorResponse(PacketError.Type type,

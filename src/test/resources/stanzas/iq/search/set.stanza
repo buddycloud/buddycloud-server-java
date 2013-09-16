@@ -1,0 +1,20 @@
+<iq type="set"
+    from="juliet@capulet.com/balcony"
+    to="characters.shakespeare.lit"
+    id="search4"
+    xml:lang="en">
+  <query xmlns="jabber:iq:search">
+    <x xmlns="jabber:x:data" type="submit">
+      <field type="hidden" var="FORM_TYPE">
+        <value>jabber:iq:search</value>
+      </field>
+      <field var="author">
+        <value>juliet@capulet.lt</value>
+      </field>
+      <field var="content">
+          <value>dagger</value>
+          <value>poison</value>
+      </field>
+    </x>
+  </query>
+</iq>

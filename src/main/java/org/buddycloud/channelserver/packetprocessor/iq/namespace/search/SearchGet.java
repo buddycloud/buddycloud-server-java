@@ -16,6 +16,7 @@ public class SearchGet implements PacketProcessor<IQ> {
 	public static final String INSTRUCTIONS = "Search for content/hashtags/mentions";
 
 	public static final String TITLE = "Please populate one or more of the following fields";
+	public static final String CONTENT_FIELD_LABEL = "Content search";
 	
 	private ChannelManager channelManager;
 	private BlockingQueue<Packet> outQueue;
@@ -56,6 +57,11 @@ public class SearchGet implements PacketProcessor<IQ> {
 		formType.addAttribute("type", "hidden");
 		formType.addAttribute("var", "FORM_TYPE");
 		formType.addElement("value").addText(Search.NAMESPACE_URI);
+		
+		Element content = x.addElement("field");
+		content.addAttribute("type", "text-multi");
+		content.addAttribute("var", "content");
+		content.addAttribute("label", CONTENT_FIELD_LABEL);
 	}
 
 	private void sendErrorResponse(PacketError.Type type,

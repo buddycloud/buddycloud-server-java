@@ -435,7 +435,7 @@ public class ChannelManagerImpl implements ChannelManager {
 
 	@Override
 	public CloseableIterator<NodeItem> performSearch(JID searcher,
-			List content, String author, int page, int rpp)  throws NodeStoreException {
+			List content, JID author, int page, int rpp)  throws NodeStoreException {
 		return nodeStore.performSearch(searcher, content, author, page, rpp);
 	}
 }

@@ -70,6 +70,6 @@ public interface ChannelManager extends NodeStore {
 	 * @param rpp
 	 * @return
 	 */
-	CloseableIterator<NodeItem> performSearch(JID searcher, List content, String author, int page,
+	CloseableIterator<NodeItem> performSearch(JID searcher, List content, JID author, int page,
 			int rpp) throws NodeStoreException;
 }

@@ -1484,7 +1484,7 @@ public class JDBCNodeStore implements NodeStore {
 	
 	@Override
 	public CloseableIterator<NodeItem> performSearch(JID searcher,
-			List content, String author, int page, int rpp) {
+			List content, JID author, int page, int rpp) {
 		// TODO Auto-generated method stub
 		return null;
 	}

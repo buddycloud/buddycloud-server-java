@@ -549,9 +549,10 @@ public interface NodeStore {
      * @param page      Page number of results (>= 1)
      * @param rpp       Results per page (>= 1)
      * @return
+     * @throws NodeStoreException 
      */
 	CloseableIterator<NodeItem> performSearch(JID searcher, List content,
-			String author, int page, int rpp);
+			JID author, int page, int rpp) throws NodeStoreException;
 	
 	/**
 	 * Retrieves a list of items from public channels "firehose"

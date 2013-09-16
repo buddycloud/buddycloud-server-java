@@ -6,9 +6,12 @@ import java.util.List;
 import java.util.concurrent.BlockingQueue;
 
 import org.buddycloud.channelserver.channel.ChannelManager;
+import org.buddycloud.channelserver.db.CloseableIterator;
 import org.buddycloud.channelserver.db.exception.NodeStoreException;
 import org.buddycloud.channelserver.packetprocessor.PacketProcessor;
+import org.buddycloud.channelserver.pubsub.model.NodeItem;
 import org.dom4j.Element;
+import org.dom4j.tree.DefaultElement;
 import org.xmpp.forms.DataForm;
 import org.xmpp.forms.FormField;
 import org.xmpp.packet.IQ;
@@ -57,9 +60,6 @@ public class SearchSet implements PacketProcessor<IQ> {
 					PacketError.Condition.internal_server_error);
 			return;
 		}
-
-		query = responseIq.getElement().addElement("query");
-		query.addAttribute("xmlns", Search.NAMESPACE_URI);
 
 		outQueue.put(responseIq);
 	}
@@ -159,7 +159,28 @@ public class SearchSet implements PacketProcessor<IQ> {
 	}
 
 	private void runSearch() throws NodeStoreException {
-		channelManager.performSearch(searcher, content, author, page, rpp);
+		CloseableIterator<NodeItem> results = channelManager.performSearch(searcher, content, author, page, rpp);
+
+		Element x = new DefaultElement("x");
+		int resultCounter = 0;
+		while ( results.hasNext() ) {
+			if ( 0 == resultCounter ) {
+				addFormField(x);
+				addReportedFields(x);
+			}
+		}
+
+		query = responseIq.getElement().addElement("query");
+		System.out.println(query.getClass().getName());
+		query.addAttribute("xmlns", Search.NAMESPACE_URI);
+	}
+	
+	private void addFormField( Element x ) {
+		//
+	}
+	
+	private void addReportedFields( Element x ) {
+		//
 	}
 
 	private void extractFieldValues() {

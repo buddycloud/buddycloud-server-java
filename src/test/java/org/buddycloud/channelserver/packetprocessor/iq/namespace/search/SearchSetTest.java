@@ -1,5 +1,6 @@
 package org.buddycloud.channelserver.packetprocessor.iq.namespace.search;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -7,8 +8,11 @@ import java.util.concurrent.LinkedBlockingQueue;
 import junit.framework.Assert;
 
 import org.buddycloud.channelserver.channel.ChannelManager;
+import org.buddycloud.channelserver.db.ClosableIteratorImpl;
+import org.buddycloud.channelserver.db.CloseableIterator;
 import org.buddycloud.channelserver.db.exception.NodeStoreException;
 import org.buddycloud.channelserver.packetHandler.iq.IQTestHandler;
+import org.buddycloud.channelserver.pubsub.model.NodeItem;
 import org.dom4j.Element;
 import org.junit.Before;
 import org.junit.Test;
@@ -30,6 +34,7 @@ public class SearchSetTest extends IQTestHandler {
 	private SearchSet search;
 	private JID sender;
 	private JID receiver;
+	private IQ setStanza;
 
 	@Before
 	public void setUp() throws Exception {
@@ -51,6 +56,8 @@ public class SearchSetTest extends IQTestHandler {
 
 		Mockito.when(channelManager.isLocalJID(Mockito.any(JID.class)))
 				.thenReturn(true);
+		
+		setStanza = readStanzaAsIq("/iq/search/set.stanza");
 	}
 
 	@Test
@@ -278,8 +285,7 @@ public class SearchSetTest extends IQTestHandler {
 						Mockito.anyInt(), Mockito.anyInt())).thenThrow(
 				new NodeStoreException());
 		
-		IQ stanza = readStanzaAsIq("/iq/search/set.stanza");
-		search.process(stanza);
+		search.process(setStanza);
 		
 		Packet response = queue.poll();
 		PacketError error = response.getError();
@@ -287,5 +293,25 @@ public class SearchSetTest extends IQTestHandler {
 		Assert.assertEquals(PacketError.Type.wait, error.getType());
 		Assert.assertEquals(PacketError.Condition.internal_server_error,
 				error.getCondition());
+	}
+	
+	@Test
+	public void testNoResultsReturnsExpectedStanza() throws Exception {
+		NodeItem[] items = new NodeItem[0];
+		CloseableIterator<NodeItem> itemList = new ClosableIteratorImpl<NodeItem>(
+				Arrays.asList(items).iterator());
+		
+		Mockito.doReturn(itemList)
+				.when(channelManager).performSearch(Mockito.any(JID.class),
+						Mockito.any(List.class), Mockito.anyString(),
+						Mockito.anyInt(), Mockito.anyInt());
+
+		search.process(setStanza);
+		
+		Packet response = queue.poll();
+		Element query = response.getElement().element("query");
+		Assert.assertNotNull(query);
+		Assert.assertEquals(Search.NAMESPACE_URI, query.getNamespaceURI());
+		Assert.assertEquals(0, query.elements().size());
 	}
 }

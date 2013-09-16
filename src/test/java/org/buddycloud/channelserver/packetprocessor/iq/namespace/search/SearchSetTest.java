@@ -1,6 +1,7 @@
 package org.buddycloud.channelserver.packetprocessor.iq.namespace.search;
 
 import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -13,6 +14,7 @@ import org.buddycloud.channelserver.db.CloseableIterator;
 import org.buddycloud.channelserver.db.exception.NodeStoreException;
 import org.buddycloud.channelserver.packetHandler.iq.IQTestHandler;
 import org.buddycloud.channelserver.pubsub.model.NodeItem;
+import org.buddycloud.channelserver.pubsub.model.impl.NodeItemImpl;
 import org.dom4j.Element;
 import org.junit.Before;
 import org.junit.Test;
@@ -35,6 +37,11 @@ public class SearchSetTest extends IQTestHandler {
 	private JID sender;
 	private JID receiver;
 	private IQ setStanza;
+	
+	private String nodeItemNodeId1 = "/users/romeo@montague.lit/home";
+	private String nodeItemNodeId2 = "/users/julet@capulet.lit/home";
+	private String nodeItemId1 = "5w382609806986536982502859083409";
+	private String nodeItemId2 = "fg455g542hg4hhtfgh4554hg5g5g54h4F";
 
 	@Before
 	public void setUp() throws Exception {
@@ -311,7 +318,87 @@ public class SearchSetTest extends IQTestHandler {
 		Packet response = queue.poll();
 		Element query = response.getElement().element("query");
 		Assert.assertNotNull(query);
-		Assert.assertEquals(Search.NAMESPACE_URI, query.getNamespaceURI());
+		Assert.assertEquals(Search.NAMESPACE_URI, query.attributeValue("xmlns"));
 		Assert.assertEquals(0, query.elements().size());
+	}
+	
+	@Test
+	public void testReturnsDataInExpectedFormat() throws Exception {
+		NodeItemImpl item1 = new NodeItemImpl(nodeItemNodeId1, nodeItemId1, new Date(), "<entry/>");
+		NodeItemImpl item2 = new NodeItemImpl(nodeItemNodeId2, nodeItemId2, new Date(), "<entry2/>");
+		
+		NodeItem[] itemArray = new NodeItem[2];
+		itemArray[0] = item1;
+		itemArray[1] = item2;
+		
+		CloseableIterator<NodeItem> itemList = new ClosableIteratorImpl<NodeItem>(
+				Arrays.asList(itemArray).iterator());
+		
+		Mockito.doReturn(itemList)
+				.when(channelManager).performSearch(Mockito.any(JID.class),
+						Mockito.any(List.class), Mockito.anyString(),
+						Mockito.anyInt(), Mockito.anyInt());
+
+		search.process(setStanza);
+		
+		Packet response = queue.poll();
+		Element query = response.getElement().element("query");
+		Assert.assertNotNull(query);
+		
+		Element x = query.element("x");
+		Assert.assertNotNull(x);
+		
+		Element field = x.element("field");
+		Assert.assertNotNull(field);
+		Assert.assertEquals("FORM_TYPE", field.attributeValue("var"));
+		Assert.assertEquals(Search.NAMESPACE_URI, field.element("value").getText());
+		
+		Element reported = x.element("reported");
+		Assert.assertNotNull(reported);
+		
+		List<Element> fields = reported.elements("field");
+		Assert.assertEquals(3, fields.size());
+		
+		Assert.assertEquals("node", fields.get(0).attributeValue("var"));
+		Assert.assertEquals("Node", fields.get(0).attributeValue("label"));
+		Assert.assertEquals("text-single", fields.get(0).attributeValue("type"));
+		
+		Assert.assertEquals("id", fields.get(1).attributeValue("var"));
+		Assert.assertEquals("Item ID", fields.get(1).attributeValue("label"));
+		Assert.assertEquals("text-single", fields.get(1).attributeValue("type"));
+
+		Assert.assertEquals("entry", fields.get(2).attributeValue("var"));
+		Assert.assertEquals("Item", fields.get(2).attributeValue("label"));
+		Assert.assertEquals("http://www.w3.org/2005/Atom", fields.get(2).attributeValue("type"));
+		
+		List<Element> items = x.elements("item");
+		Assert.assertEquals(2, items.size());
+		
+		List<Element> itemFields = items.get(0).elements("field");
+		Assert.assertEquals(3, itemFields.size());
+		Assert.assertEquals("node", itemFields.get(0).attributeValue("var"));
+		Assert.assertEquals(nodeItemNodeId1, itemFields.get(0).element("value").getText());
+
+		Assert.assertEquals("id", itemFields.get(1).attributeValue("var"));
+		Assert.assertEquals(nodeItemId1, itemFields.get(1).element("value").getText());
+
+		Assert.assertEquals("entry", itemFields.get(2).attributeValue("var"));
+		Assert.assertEquals(1, itemFields.get(2).element("value").elements("entry").size());
+
+		itemFields = items.get(1).elements("field");
+		Assert.assertEquals(3, itemFields.size());
+		Assert.assertEquals("node", itemFields.get(0).attributeValue("var"));
+		Assert.assertEquals(nodeItemNodeId2, itemFields.get(0).element("value").getText());
+
+		Assert.assertEquals("id", itemFields.get(1).attributeValue("var"));
+		Assert.assertEquals(nodeItemId2, itemFields.get(1).element("value").getText());
+
+		Assert.assertEquals("entry", itemFields.get(2).attributeValue("var"));
+		Assert.assertEquals(1, itemFields.get(2).element("value").elements("entry2").size());
+	}
+	
+	@Test
+	public void testBadlyFormedSourceDataIsIgnored() throws Exception {
+		
 	}
 }

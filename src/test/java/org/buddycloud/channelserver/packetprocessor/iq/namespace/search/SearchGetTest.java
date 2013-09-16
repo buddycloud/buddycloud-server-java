@@ -243,12 +243,31 @@ public class SearchGetTest extends IQTestHandler {
 	    Assert.assertEquals(SearchGet.CONTENT_FIELD_LABEL, formType.attributeValue("label"));
 		
 	}
+	
+	@Test
+	public void testReturnsDataFormAuthorElement() throws Exception {
+		
+		search.process(request);
+		
+		Assert.assertEquals(1, queue.size());
+		
+		IQ response = (IQ) queue.poll();
+		Assert.assertNull(response.getError());
+
+		Assert.assertEquals(receiver, response.getTo());
+		Assert.assertEquals(sender, response.getFrom());
+		Assert.assertEquals(IQ.Type.result, response.getType());
+
+	    Element formType = (Element) response.getElement()
+				.element("query")
+				.element("x")
+				.elements("field").get(2);
+	    Assert.assertEquals("jid-single", formType.attributeValue("type"));
+	    Assert.assertEquals("author", formType.attributeValue("var"));
+	    Assert.assertEquals(SearchGet.AUTHOR_FIELD_LABEL, formType.attributeValue("label"));
+	}
+	
 	 /* 
-	 * @Test public void testReturnsDataFormAuthorElement() throws Exception {
-	 * 
-	 * 
-	 * }
-	 * 
 	 * @Test public void testReturnsDataFormResultsPerPageElement() throws
 	 * Exception {
 	 * 

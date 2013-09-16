@@ -14,6 +14,7 @@ import java.util.Date;
 import java.util.Deque;
 import java.util.HashMap;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
@@ -1479,6 +1480,13 @@ public class JDBCNodeStore implements NodeStore {
 		} finally {
 			close(stmt); // Will implicitly close the resultset if required
 		}
+	}
+	
+	@Override
+	public CloseableIterator<NodeItem> performSearch(JID searcher,
+			List content, String author, int page, int rpp) {
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 	@Override

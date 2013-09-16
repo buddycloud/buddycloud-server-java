@@ -436,7 +436,6 @@ public class ChannelManagerImpl implements ChannelManager {
 	@Override
 	public CloseableIterator<NodeItem> performSearch(JID searcher,
 			List content, String author, int page, int rpp)  throws NodeStoreException {
-		// TODO Auto-generated method stub
-		return null;
+		return nodeStore.performSearch(searcher, content, author, page, rpp);
 	}
 }

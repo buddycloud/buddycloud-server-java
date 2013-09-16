@@ -3,6 +3,7 @@ package org.buddycloud.channelserver.db;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
 import org.buddycloud.channelserver.db.exception.NodeStoreException;
@@ -538,6 +539,19 @@ public interface NodeStore {
 	 * @throws NodeStoreException 
 	 */
 	ArrayList<String> getNodeList() throws NodeStoreException;
+	
+    /**
+     * Search subscribed nodes for content
+     * 
+     * @param searcher  JID of user performing the search
+     * @param content   Keywords upon which to search
+     * @param author    JID of the content author
+     * @param page      Page number of results (>= 1)
+     * @param rpp       Results per page (>= 1)
+     * @return
+     */
+	CloseableIterator<NodeItem> performSearch(JID searcher, List content,
+			String author, int page, int rpp);
 	
 	/**
 	 * Retrieves a list of items from public channels "firehose"

@@ -31,9 +31,9 @@ public class SearchSet implements PacketProcessor<IQ> {
 	private Element query;
 	private IQ requestIq;
 	private ArrayList<String> content;
-	private String author;
 	private int page = 1;
 	private int rpp = 25;
+	private JID author;
 	private JID searcher;
 
 	public SearchSet(BlockingQueue<Packet> outQueue,
@@ -240,7 +240,10 @@ public class SearchSet implements PacketProcessor<IQ> {
 			if ("content".equals(var)) {
 				content = getValuesAsList(field);
 			} else if ("author".equals(var)) {
-				author = field.elementText("value");
+				String authorStr = field.elementText("value");
+				if ( authorStr.length() > 0 ) {
+					author = new JID(authorStr);
+				}
 			} else if ("page".equals(var)) {
 				page = getValueAsNumber(field);
 			} else if ("rpp".equals(var)) {
@@ -250,8 +253,8 @@ public class SearchSet implements PacketProcessor<IQ> {
 	}
 
 	private boolean checkFieldValues() throws Exception {
-		if (((null != content && content.size() > 0) || (null != author && author
-				.length() > 0)) && (page > 0 && rpp > 0)) {
+		if (((null != content && content.size() > 0) || (null != author && 
+				author.toFullJID().length() > 0)) && (page > 0 && rpp > 0)) {
 			return true;
 		}
 

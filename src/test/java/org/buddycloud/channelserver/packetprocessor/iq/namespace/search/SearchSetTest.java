@@ -237,6 +237,30 @@ public class SearchSetTest extends IQTestHandler {
 	}
 
 	@Test
+	public void testReturnsErrorIfAuthorValueInvalid() throws Exception {
+		Element query = request.getElement().element("query");
+		Element x = query.addElement("x");
+		x.addAttribute("xmlns", DataForm.NAMESPACE);
+		x.addAttribute("type", "submit");
+
+		Element field = x.addElement("field");
+		field.addAttribute("var", "FORM_TYPE");
+		field.addElement("value").addText(Search.NAMESPACE_URI);
+
+		Element singleField = x.addElement("field");
+		singleField.addAttribute("var", "author");
+		singleField.addElement("value").setText("user@broken@jid.com");
+
+		search.process(request);
+		Packet response = queue.poll();
+		PacketError error = response.getError();
+		Assert.assertNotNull(error);
+		Assert.assertEquals(PacketError.Type.modify, error.getType());
+		Assert.assertEquals(PacketError.Condition.bad_request,
+				error.getCondition());
+	}
+
+	@Test
 	public void testReturnsErrorIfPageValueIncorrect() throws Exception {
 		Element query = request.getElement().element("query");
 		Element x = query.addElement("x");
@@ -288,7 +312,7 @@ public class SearchSetTest extends IQTestHandler {
 	public void testReturnsErrorOnChannelManagerException() throws Exception {
 		Mockito.when(
 				channelManager.performSearch(Mockito.any(JID.class),
-						Mockito.any(List.class), Mockito.anyString(),
+						Mockito.any(List.class), Mockito.any(JID.class),
 						Mockito.anyInt(), Mockito.anyInt())).thenThrow(
 				new NodeStoreException());
 
@@ -311,7 +335,7 @@ public class SearchSetTest extends IQTestHandler {
 		Mockito.doReturn(itemList)
 				.when(channelManager)
 				.performSearch(Mockito.any(JID.class), Mockito.any(List.class),
-						Mockito.anyString(), Mockito.anyInt(), Mockito.anyInt());
+						Mockito.any(JID.class), Mockito.anyInt(), Mockito.anyInt());
 
 		search.process(setStanza);
 
@@ -339,7 +363,7 @@ public class SearchSetTest extends IQTestHandler {
 		Mockito.doReturn(itemList)
 				.when(channelManager)
 				.performSearch(Mockito.any(JID.class), Mockito.any(List.class),
-						Mockito.anyString(), Mockito.anyInt(), Mockito.anyInt());
+						Mockito.any(JID.class), Mockito.anyInt(), Mockito.anyInt());
 
 		search.process(setStanza);
 
@@ -424,7 +448,7 @@ public class SearchSetTest extends IQTestHandler {
 		Mockito.doReturn(itemList)
 				.when(channelManager)
 				.performSearch(Mockito.any(JID.class), Mockito.any(List.class),
-						Mockito.anyString(), Mockito.anyInt(), Mockito.anyInt());
+						Mockito.any(JID.class), Mockito.anyInt(), Mockito.anyInt());
 
 		search.process(setStanza);
 

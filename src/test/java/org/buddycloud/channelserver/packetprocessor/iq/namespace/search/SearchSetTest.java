@@ -399,6 +399,44 @@ public class SearchSetTest extends IQTestHandler {
 	
 	@Test
 	public void testBadlyFormedSourceDataIsIgnored() throws Exception {
+		NodeItemImpl item1 = new NodeItemImpl(nodeItemNodeId1, nodeItemId1, new Date(), "<entry><open>");
+		NodeItemImpl item2 = new NodeItemImpl(nodeItemNodeId2, nodeItemId2, new Date(), "<entry2/>");
+		
+		NodeItem[] itemArray = new NodeItem[2];
+		itemArray[0] = item1;
+		itemArray[1] = item2;
+		
+		CloseableIterator<NodeItem> itemList = new ClosableIteratorImpl<NodeItem>(
+				Arrays.asList(itemArray).iterator());
+		
+		Mockito.doReturn(itemList)
+				.when(channelManager).performSearch(Mockito.any(JID.class),
+						Mockito.any(List.class), Mockito.anyString(),
+						Mockito.anyInt(), Mockito.anyInt());
+
+		search.process(setStanza);
+		
+		Packet response = queue.poll();
+		Element query = response.getElement().element("query");
+		
+		Assert.assertNotNull(query);
+		
+		Element x = query.element("x");
+		Assert.assertNotNull(x);
+
+		List<Element> items = x.elements("item");
+		Assert.assertEquals(1, items.size());
+		
+		List<Element> itemFields = items.get(0).elements("field");
+		Assert.assertEquals(3, itemFields.size());
+		Assert.assertEquals("node", itemFields.get(0).attributeValue("var"));
+		Assert.assertEquals(nodeItemNodeId2, itemFields.get(0).element("value").getText());
+
+		Assert.assertEquals("id", itemFields.get(1).attributeValue("var"));
+		Assert.assertEquals(nodeItemId2, itemFields.get(1).element("value").getText());
+
+		Assert.assertEquals("entry", itemFields.get(2).attributeValue("var"));
+		Assert.assertEquals(1, itemFields.get(2).element("value").elements("entry2").size());
 		
 	}
 }

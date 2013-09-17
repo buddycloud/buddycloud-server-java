@@ -128,12 +128,33 @@ public class UserItemsGet implements PubSubElementProcessor {
 				outQueue.put(reply);
 				return;
 			}
-			getItems();
+			if (null == element.element("item")) {
+			    getItems();
+			} else {
+			    if (false == getItem()) return;
+			}
 		} catch (NodeStoreException e) {
 			setErrorCondition(PacketError.Type.wait,
 					PacketError.Condition.internal_server_error);
 		}
 		outQueue.put(reply);
+	}
+
+	private boolean getItem() throws Exception {
+		NodeItem nodeItem = channelManager.getNodeItem(node, element.element("item").attributeValue("id"));
+		if (null == nodeItem) { 
+			if (false == channelManager.isLocalNode(node)) {
+		        makeRemoteRequest();
+			    return false;
+			}
+			setErrorCondition(PacketError.Type.cancel, PacketError.Condition.item_not_found);
+			return true;
+		}
+		Element pubsub = reply.getElement().addElement("pubsub");
+		pubsub.addNamespace("", JabberPubsub.NAMESPACE_URI);
+		Element items = pubsub.addElement("items").addAttribute("node", node);
+		addItemToResponse(nodeItem, items);
+		return true;
 	}
 
 	private void makeRemoteRequest() throws InterruptedException {
@@ -300,19 +321,8 @@ public class UserItemsGet implements PubSubElementProcessor {
 				if (firstItem == null) {
 					firstItem = nodeItem.getId();
 				}
-				try {
-					entry = xmlReader.read(
-							new StringReader(nodeItem.getPayload()))
-							.getRootElement();
-					Element item = items.addElement("item");
-					item.addAttribute("id", nodeItem.getId());
-					item.add(entry);
-					lastItem = nodeItem.getId();
-				} catch (DocumentException e) {
-					logger.error("Error parsing a node entry, ignoring. "
-							+ nodeItem);
-				}
-
+				addItemToResponse(nodeItem, items);
+				lastItem = nodeItem.getId();
 			}
 			logger.debug("Including RSM there are " + rsmEntriesCount 
 			    + " items for node " + node);
@@ -320,6 +330,20 @@ public class UserItemsGet implements PubSubElementProcessor {
 		} finally {
 			if (itemIt != null)
 				itemIt.close();
+		}
+	}
+
+	private void addItemToResponse(NodeItem nodeItem, Element parent) {
+		try {
+			entry = xmlReader.read(
+					new StringReader(nodeItem.getPayload()))
+					.getRootElement();
+			Element item = parent.addElement("item");
+			item.addAttribute("id", nodeItem.getId());
+			item.add(entry);
+		} catch (DocumentException e) {
+			logger.error("Error parsing a node entry, ignoring. "
+					+ nodeItem);
 		}
 	}
 

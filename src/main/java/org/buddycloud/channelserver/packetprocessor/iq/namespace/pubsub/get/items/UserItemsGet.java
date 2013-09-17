@@ -84,32 +84,33 @@ public class UserItemsGet implements PubSubElementProcessor {
 	@Override
 	public void process(Element elm, JID actorJID, IQ reqIQ, Element rsm)
 			throws Exception {
-		node                = elm.attributeValue("node");
-		requestIq           = reqIQ;
-		reply               = IQ.createResultIQ(reqIQ);
-		element             = elm;
+		node = elm.attributeValue("node");
+		requestIq = reqIQ;
+		reply = IQ.createResultIQ(reqIQ);
+		element = elm;
 		resultSetManagement = rsm;
 
 		if (false == channelManager.isLocalJID(requestIq.getFrom())) {
-        	reply.getElement().addAttribute("remote-server-discover", "false");
-        }
+			reply.getElement().addAttribute("remote-server-discover", "false");
+		}
 
-		isSubscriptionsNode = node.substring(node.length() - 13).equals("subscriptions");
-		
+		isSubscriptionsNode = node.substring(node.length() - 13).equals(
+				"subscriptions");
+
 		boolean isCached = false;
 		if (true == isSubscriptionsNode) {
 			isCached = channelManager.nodeHasSubscriptions(node);
 		} else {
 			isCached = channelManager.isCachedNode(node);
 		}
-		
+
 		fetchersJid = requestIq.getFrom();
 
-		if (false == channelManager.isLocalNode(node) 
-			&& (false == isCached)) {
-			logger.debug("Node " + node + " is remote and not cached, off to get some data");
+		if (false == channelManager.isLocalNode(node) && (false == isCached)) {
+			logger.debug("Node " + node
+					+ " is remote and not cached, off to get some data");
 			makeRemoteRequest();
-		    return;
+			return;
 		}
 
 		try {
@@ -119,7 +120,7 @@ public class UserItemsGet implements PubSubElementProcessor {
 				outQueue.put(reply);
 				return;
 			}
-			
+
 			if (actorJID != null) {
 				fetchersJid = actorJID;
 			}
@@ -130,9 +131,10 @@ public class UserItemsGet implements PubSubElementProcessor {
 			}
 			xmlReader = new SAXReader();
 			if (null == element.element("item")) {
-			    getItems();
+				getItems();
 			} else {
-			    if (false == getItem()) return;
+				if (false == getItem())
+					return;
 			}
 		} catch (NodeStoreException e) {
 			setErrorCondition(PacketError.Type.wait,
@@ -142,13 +144,15 @@ public class UserItemsGet implements PubSubElementProcessor {
 	}
 
 	private boolean getItem() throws Exception {
-		NodeItem nodeItem = channelManager.getNodeItem(node, element.element("item").attributeValue("id"));
-		if (null == nodeItem) { 
+		NodeItem nodeItem = channelManager.getNodeItem(node,
+				element.element("item").attributeValue("id"));
+		if (null == nodeItem) {
 			if (false == channelManager.isLocalNode(node)) {
-		        makeRemoteRequest();
-			    return false;
+				makeRemoteRequest();
+				return false;
 			}
-			setErrorCondition(PacketError.Type.cancel, PacketError.Condition.item_not_found);
+			setErrorCondition(PacketError.Type.cancel,
+					PacketError.Condition.item_not_found);
 			return true;
 		}
 		Element pubsub = reply.getElement().addElement("pubsub");
@@ -161,11 +165,11 @@ public class UserItemsGet implements PubSubElementProcessor {
 	private void makeRemoteRequest() throws InterruptedException {
 		requestIq.setTo(new JID(node.split("/")[2]).getDomain());
 		if (null == requestIq.getElement().element("pubsub").element("actor")) {
-		    Element actor = requestIq.getElement().element("pubsub")
-				.addElement("actor", JabberPubsub.NS_BUDDYCLOUD);
-		    actor.addText(requestIq.getFrom().toBareJID());
+			Element actor = requestIq.getElement().element("pubsub")
+					.addElement("actor", JabberPubsub.NS_BUDDYCLOUD);
+			actor.addText(requestIq.getFrom().toBareJID());
 		}
-	    outQueue.put(requestIq);
+		outQueue.put(requestIq);
 	}
 
 	private boolean nodeExists() throws NodeStoreException {
@@ -206,15 +210,20 @@ public class UserItemsGet implements PubSubElementProcessor {
 			if (after != null) {
 				try {
 					// Try and parse it as a global item id
-					GlobalItemID afterGlobalItemID = GlobalItemIDImpl.fromString(after.getTextTrim());
+					GlobalItemID afterGlobalItemID = GlobalItemIDImpl
+							.fromString(after.getTextTrim());
 					afterItemId = afterGlobalItemID.getItemID();
-					
+
 					// Check it's for the correct node
-					if(!afterGlobalItemID.getNodeID().equals(node)) {
-						createExtendedErrorReply(Type.modify, Condition.item_not_found, "RSM 'after' specifies an unexpected NodeID: " + afterGlobalItemID.getNodeID());
+					if (!afterGlobalItemID.getNodeID().equals(node)) {
+						createExtendedErrorReply(Type.modify,
+								Condition.item_not_found,
+								"RSM 'after' specifies an unexpected NodeID: "
+										+ afterGlobalItemID.getNodeID());
 					}
-				} catch(IllegalArgumentException e) {
-					// If the after isn't a valid 'tag:...' then it might just be a straight ItemID
+				} catch (IllegalArgumentException e) {
+					// If the after isn't a valid 'tag:...' then it might just
+					// be a straight ItemID
 					afterItemId = after.getTextTrim();
 				}
 			}
@@ -235,12 +244,12 @@ public class UserItemsGet implements PubSubElementProcessor {
 		}
 
 		if ((false == channelManager.isLocalNode(node))
-	        && (0 == rsmEntriesCount)) {
+				&& (0 == rsmEntriesCount)) {
 			logger.debug("No results in cache for remote node, so "
-			    + "we're going federated to get more");
-        	makeRemoteRequest();
-        	return;
-        }
+					+ "we're going federated to get more");
+			makeRemoteRequest();
+			return;
+		}
 
 		if ((resultSetManagement != null)
 				|| (totalEntriesCount > maxItemsToReturn)) {
@@ -317,15 +326,15 @@ public class UserItemsGet implements PubSubElementProcessor {
 			while (itemIt.hasNext()) {
 				++rsmEntriesCount;
 				NodeItem nodeItem = itemIt.next();
-    
+
 				if (firstItem == null) {
 					firstItem = nodeItem.getId();
 				}
 				addItemToResponse(nodeItem, items);
 				lastItem = nodeItem.getId();
 			}
-			logger.debug("Including RSM there are " + rsmEntriesCount 
-			    + " items for node " + node);
+			logger.debug("Including RSM there are " + rsmEntriesCount
+					+ " items for node " + node);
 			return channelManager.countNodeItems(node);
 		} finally {
 			if (itemIt != null)
@@ -335,15 +344,13 @@ public class UserItemsGet implements PubSubElementProcessor {
 
 	private void addItemToResponse(NodeItem nodeItem, Element parent) {
 		try {
-			entry = xmlReader.read(
-					new StringReader(nodeItem.getPayload()))
+			entry = xmlReader.read(new StringReader(nodeItem.getPayload()))
 					.getRootElement();
 			Element item = parent.addElement("item");
 			item.addAttribute("id", nodeItem.getId());
 			item.add(entry);
 		} catch (DocumentException e) {
-			logger.error("Error parsing a node entry, ignoring. "
-					+ nodeItem);
+			logger.error("Error parsing a node entry, ignoring. " + nodeItem);
 		}
 	}
 
@@ -363,12 +370,12 @@ public class UserItemsGet implements PubSubElementProcessor {
 		Element query;
 
 		for (NodeSubscription subscriber : subscribers) {
-    
+
 			jidItem = items.addElement("item");
 			jidItem.addAttribute("id", subscriber.getUser().toString());
 			query = jidItem.addElement("query");
 			query.addNamespace("", JabberPubsub.NS_DISCO_ITEMS);
-			
+
 			if (firstItem == null) {
 				firstItem = subscriber.getUser().toString();
 			}
@@ -384,18 +391,19 @@ public class UserItemsGet implements PubSubElementProcessor {
 
 		ResultSet<NodeSubscription> subscriptions = channelManager
 				.getUserSubscriptions(subscriber);
-		
+
 		if ((null == subscriptions) || (0 == subscriptions.size())) {
 			return;
 		}
 		Element item;
 		Namespace ns1 = new Namespace("ns1", JabberPubsub.NAMESPACE_URI);
 		Namespace ns2 = new Namespace("ns2", JabberPubsub.NAMESPACE_URI);
-        // TODO: This whole section of code is very inefficient
+		// TODO: This whole section of code is very inefficient
 		for (NodeSubscription subscription : subscriptions) {
-			////if (false == subscription.getNodeId().contains(fetchersJid.toBareJID())) {
-			//	continue;
-			//}			
+			// //if (false ==
+			// subscription.getNodeId().contains(fetchersJid.toBareJID())) {
+			// continue;
+			// }
 			NodeAffiliation affiliation = channelManager.getUserAffiliation(
 					subscription.getNodeId(), subscription.getUser());
 			item = query.addElement("item");
@@ -405,10 +413,10 @@ public class UserItemsGet implements PubSubElementProcessor {
 			item.addAttribute("node", subscription.getNodeId());
 			QName affiliationAttribute = new QName("affiliation", ns1);
 			QName subscriptionAttribute = new QName("subscription", ns2);
-			item.addAttribute(affiliationAttribute, affiliation.getAffiliation()
-					.toString());
-			item.addAttribute(subscriptionAttribute, subscription.getSubscription()
-					.toString());
+			item.addAttribute(affiliationAttribute, affiliation
+					.getAffiliation().toString());
+			item.addAttribute(subscriptionAttribute, subscription
+					.getSubscription().toString());
 		}
 	}
 

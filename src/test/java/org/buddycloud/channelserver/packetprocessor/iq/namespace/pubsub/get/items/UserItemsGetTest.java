@@ -24,6 +24,7 @@ import org.buddycloud.channelserver.pubsub.affiliation.Affiliations;
 import org.buddycloud.channelserver.pubsub.model.NodeItem;
 import org.buddycloud.channelserver.pubsub.model.NodeSubscription;
 import org.buddycloud.channelserver.pubsub.model.impl.NodeAffiliationImpl;
+import org.buddycloud.channelserver.pubsub.model.impl.NodeItemImpl;
 import org.buddycloud.channelserver.pubsub.model.impl.NodeSubscriptionImpl;
 import org.buddycloud.channelserver.pubsub.subscription.Subscriptions;
 import org.buddycloud.channelserver.utils.node.NodeAclRefuseReason;
@@ -64,7 +65,7 @@ public class UserItemsGetTest extends IQTestHandler {
 		Mockito.when(channelManager.isLocalNode(Mockito.anyString()))
 				.thenReturn(true);
 		Mockito.when(channelManager.isLocalJID(Mockito.any(JID.class)))
-		.thenReturn(true);
+				.thenReturn(true);
 		itemsGet.setChannelManager(channelManager);
 	}
 
@@ -523,7 +524,8 @@ public class UserItemsGetTest extends IQTestHandler {
 				Subscriptions.subscribed);
 		ArrayList<NodeSubscription> childItems = new ArrayList<NodeSubscription>();
 		childItems.add(childItemSubscription);
-		Mockito.doReturn(new ResultSetImpl<NodeSubscription>(childItems)).when(channelManager)
+		Mockito.doReturn(new ResultSetImpl<NodeSubscription>(childItems))
+				.when(channelManager)
 				.getUserSubscriptions(new JID("juliet@shakespeare.lit"));
 
 		Mockito.when(channelManager.nodeExists(node)).thenReturn(true);
@@ -578,88 +580,171 @@ public class UserItemsGetTest extends IQTestHandler {
 								new QName("subscription", new Namespace("ns2",
 										JabberPubsub.NAMESPACE_URI))));
 	}
-	
+
 	@Test
 	public void testPagingAfterItem() throws Exception {
-		Element rsm = new BaseElement(new QName("set", new Namespace("", "http://jabber.org/protocol/rsm")));
-		
-		rsm.addElement("after").setText("tag:denmark.lit,/user/" + node + "/posts,item-id");
-		
+		Element rsm = new BaseElement(new QName("set", new Namespace("",
+				"http://jabber.org/protocol/rsm")));
+
+		rsm.addElement("after").setText(
+				"tag:denmark.lit,/user/" + node + "/posts,item-id");
+
 		element.addAttribute("node", node);
-		
+
 		Mockito.when(channelManager.nodeExists(anyString())).thenReturn(true);
-		
+
 		Mockito.when(channelManager.getUserSubscription(node, jid)).thenReturn(
 				new NodeSubscriptionImpl(node, jid, Subscriptions.subscribed));
 		Mockito.when(channelManager.getUserAffiliation(node, jid)).thenReturn(
-				new NodeAffiliationImpl(node, jid, Affiliations.member, new Date()));
-		
+				new NodeAffiliationImpl(node, jid, Affiliations.member,
+						new Date()));
+
 		itemsGet.process(element, jid, request, rsm);
-		
-		verify(channelManager).getNodeItems(anyString(), eq("item-id"), anyInt());
+
+		verify(channelManager).getNodeItems(anyString(), eq("item-id"),
+				anyInt());
 	}
-	
+
 	@Test
 	public void testPagingAfterItemWithPlainNodeID() throws Exception {
-		Element rsm = new BaseElement(new QName("set", new Namespace("", "http://jabber.org/protocol/rsm")));
-		
+		Element rsm = new BaseElement(new QName("set", new Namespace("",
+				"http://jabber.org/protocol/rsm")));
+
 		rsm.addElement("after").setText("item-id");
-		
+
 		element.addAttribute("node", node);
-		
+
 		Mockito.when(channelManager.nodeExists(anyString())).thenReturn(true);
-		
+
 		Mockito.when(channelManager.getUserSubscription(node, jid)).thenReturn(
 				new NodeSubscriptionImpl(node, jid, Subscriptions.subscribed));
 		Mockito.when(channelManager.getUserAffiliation(node, jid)).thenReturn(
-				new NodeAffiliationImpl(node, jid, Affiliations.member, new Date()));
-		
+				new NodeAffiliationImpl(node, jid, Affiliations.member,
+						new Date()));
+
 		itemsGet.process(element, jid, request, rsm);
-		
-		verify(channelManager).getNodeItems(anyString(), eq("item-id"), anyInt());
+
+		verify(channelManager).getNodeItems(anyString(), eq("item-id"),
+				anyInt());
 	}
-	
+
 	@Test
 	public void testPagingAfterItemWithInvalidAfterId() throws Exception {
-		Element rsm = new BaseElement(new QName("set", new Namespace("", "http://jabber.org/protocol/rsm")));
-		
+		Element rsm = new BaseElement(new QName("set", new Namespace("",
+				"http://jabber.org/protocol/rsm")));
+
 		rsm.addElement("after").setText("tag:this is invalid");
-		
+
 		element.addAttribute("node", "/user/francisco@denmark.lit/posts");
-		
+
 		Mockito.when(channelManager.nodeExists(anyString())).thenReturn(true);
-		
+
 		Mockito.when(channelManager.getUserSubscription(node, jid)).thenReturn(
 				new NodeSubscriptionImpl(node, jid, Subscriptions.subscribed));
 		Mockito.when(channelManager.getUserAffiliation(node, jid)).thenReturn(
-				new NodeAffiliationImpl(node, jid, Affiliations.member, new Date()));
-		
+				new NodeAffiliationImpl(node, jid, Affiliations.member,
+						new Date()));
+
 		itemsGet.process(element, jid, request, rsm);
-		
+
 		Packet p = queue.poll(100, TimeUnit.MILLISECONDS);
-		
-		assertEquals("Error expected", "error", p.getElement().attributeValue("type"));
+
+		assertEquals("Error expected", "error",
+				p.getElement().attributeValue("type"));
 	}
-	
+
 	@Test
 	public void testPagingAfterItemWithInvalidNode() throws Exception {
-		Element rsm = new BaseElement(new QName("set", new Namespace("", "http://jabber.org/protocol/rsm")));
-		
-		rsm.addElement("after").setText("tag:denmark.lit,/user/juliet@capulet.lit/posts,item-id");
-		
+		Element rsm = new BaseElement(new QName("set", new Namespace("",
+				"http://jabber.org/protocol/rsm")));
+
+		rsm.addElement("after").setText(
+				"tag:denmark.lit,/user/juliet@capulet.lit/posts,item-id");
+
 		element.addAttribute("node", "/user/francisco@denmark.lit/posts");
-		
+
 		Mockito.when(channelManager.nodeExists(anyString())).thenReturn(true);
-		
+
 		Mockito.when(channelManager.getUserSubscription(node, jid)).thenReturn(
 				new NodeSubscriptionImpl(node, jid, Subscriptions.subscribed));
 		Mockito.when(channelManager.getUserAffiliation(node, jid)).thenReturn(
-				new NodeAffiliationImpl(node, jid, Affiliations.member, new Date()));
-		
+				new NodeAffiliationImpl(node, jid, Affiliations.member,
+						new Date()));
+
 		itemsGet.process(element, jid, request, rsm);
-		
+
 		Packet p = queue.poll(100, TimeUnit.MILLISECONDS);
-		
-		assertEquals("Error expected", "error", p.getElement().attributeValue("type"));
+
+		assertEquals("Error expected", "error",
+				p.getElement().attributeValue("type"));
+	}
+
+	@Test
+	public void testGetItemNotFoundIfSingleItemNotFound() throws Exception {
+		element.addAttribute("node", "/user/francisco@denmark.lit/posts");
+		element.addElement("item").addAttribute("id", "12345");
+
+		Mockito.when(channelManager.getNodeItem(eq(node), Mockito.anyString()))
+				.thenReturn(null);
+		Mockito.when(channelManager.getUserSubscription(node, jid)).thenReturn(
+				new NodeSubscriptionImpl(node, jid, Subscriptions.subscribed));
+		Mockito.when(channelManager.getUserAffiliation(node, jid)).thenReturn(
+				new NodeAffiliationImpl(node, jid, Affiliations.member,
+						new Date()));
+
+		itemsGet.process(element, jid, request, null);
+
+		Packet p = queue.poll();
+		assertEquals("Error expected", "error",
+				p.getElement().attributeValue("type"));
+		assertEquals("Expected 'cancel'", "cancel",
+				p.getElement().element("error").attributeValue("type"));
+		assertNotNull(p.getElement().element("error").element("item-not-found"));
+	}
+
+	@Test
+	public void testCanRetrieveSingleItem() throws Exception {
+
+		String id = "12345";
+		String payload = "<entry>entry text</entry>";
+
+		element.addAttribute("node", node);
+		element.addElement("item").addAttribute("id", id);
+
+		NodeItem item = new NodeItemImpl(node, id, new Date(), payload);
+
+		Mockito.when(channelManager.isLocalNode(Mockito.anyString()))
+				.thenReturn(true);
+		Mockito.when(channelManager.nodeExists(Mockito.anyString()))
+				.thenReturn(true);
+		Mockito.when(
+				channelManager.getNodeItem(Mockito.anyString(),
+						Mockito.anyString())).thenReturn(item);
+		Mockito.when(channelManager.getUserSubscription(node, jid)).thenReturn(
+				new NodeSubscriptionImpl(node, jid, Subscriptions.subscribed));
+		Mockito.when(channelManager.getUserAffiliation(node, jid)).thenReturn(
+				new NodeAffiliationImpl(node, jid, Affiliations.member,
+						new Date()));
+
+		itemsGet.process(element, jid, request, null);
+
+		Packet response = queue.poll();
+
+		Element element = response.getElement();
+
+		Assert.assertEquals(IQ.Type.result.toString(),
+				element.attributeValue("type"));
+		Assert.assertEquals(node, element.element("pubsub").element("items")
+				.attributeValue("node"));
+
+		Assert.assertEquals(1, element.element("pubsub").element("items")
+				.nodeCount());
+		Assert.assertEquals(node, element.element("pubsub").element("items")
+				.attributeValue("node"));
+		Assert.assertEquals(id, element.element("pubsub").element("items")
+				.element("item").attributeValue("id"));
+		Assert.assertEquals("entry text",
+				element.element("pubsub").element("items").element("item")
+						.elementText("entry"));
 	}
 }

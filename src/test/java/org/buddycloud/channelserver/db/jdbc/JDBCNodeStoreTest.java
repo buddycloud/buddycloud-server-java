@@ -23,6 +23,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import junit.framework.Assert;
+
 import org.apache.commons.collections.CollectionUtils;
 import org.buddycloud.channelserver.db.ClosableIteratorImpl;
 import org.buddycloud.channelserver.db.CloseableIterator;
@@ -2157,6 +2159,22 @@ public class JDBCNodeStoreTest {
 		store.addRemoteNode(TEST_SERVER2_NODE1_ID);
 		store.setNodeConf(TEST_SERVER2_NODE1_ID, remoteNodeConf);
 		assertEquals(7, store.getFirehoseItemCount(true));
+	}
+	
+	@Test
+	public void testOnlySeeSearchResultsFromSubscribedPostsNodes() throws Exception {
+	    dbTester.loadData("search-test-1");
+	    CloseableIterator<NodeItem> items = store.performSearch(
+	        new JID("user1@server1"), new ArrayList<String>(), new JID("author@server1"), 1, 25
+	    );
+	    int counter = 0;
+	    while (items.hasNext()) {
+	    	++counter;
+	    	NodeItem item = items.next();
+	        assertEquals("a1", item.getId());
+	        assertEquals("/users/subscribed@server1/posts", item.getNodeId());
+	    }
+	    assertEquals(1, counter);
 	}
 
 	@Test

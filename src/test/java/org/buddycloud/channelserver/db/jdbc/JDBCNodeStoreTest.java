@@ -2176,6 +2176,82 @@ public class JDBCNodeStoreTest {
 	    }
 	    assertEquals(1, counter);
 	}
+	
+	@Test
+	public void testOnlySeeSearchResultsFromRequestedAuthor() throws Exception {
+	    dbTester.loadData("search-test-2");
+	    CloseableIterator<NodeItem> items = store.performSearch(
+	        new JID("user1@server1"), new ArrayList<String>(), new JID("author@server1"), 1, 25
+	    );
+	    int counter = 0;
+	    NodeItem item;
+	    while (items.hasNext()) {
+	    	++counter;
+	    	item = items.next();
+	    	if (1 == counter) {
+	    		assertEquals("b1", item.getId());
+	            assertEquals("/users/another-subscribed@server1/posts", item.getNodeId());
+	    	} else if (2 == counter) {
+		        assertEquals("a1", item.getId());
+		        assertEquals("/users/subscribed@server1/posts", item.getNodeId());
+	    	}
+	    }
+	    assertEquals(2, counter);
+	}
+	
+	@Test
+	public void testOnlySeeSearchResultsWithSpecificContent() throws Exception {
+	    dbTester.loadData("search-test-3");
+	    
+	    ArrayList<String> searchTerms = new ArrayList<String>();
+	    searchTerms.add("keyword");
+	    searchTerms.add("post");
+	    
+	    CloseableIterator<NodeItem> items = store.performSearch(
+	        new JID("user1@server1"), searchTerms, new JID("author@server1"), 1, 25
+	    );
+	    int counter = 0;
+	    NodeItem item;
+	    while (items.hasNext()) {
+	    	++counter;
+	    	item = items.next();
+	    	if (1 == counter) {
+	    		assertEquals("a3", item.getId());
+	            assertEquals("/users/subscribed@server1/posts", item.getNodeId());
+	    	} else if (2 == counter) {
+		        assertEquals("a1", item.getId());
+		        assertEquals("/users/subscribed@server1/posts", item.getNodeId());
+	    	}
+	    }
+	    assertEquals(2, counter);
+	}
+	
+	@Test
+	public void testOnlySeeSearchResultsWithSpecificContentAndAuthor() throws Exception {
+	    dbTester.loadData("search-test-4");
+	    
+	    ArrayList<String> searchTerms = new ArrayList<String>();
+	    searchTerms.add("keyword");
+	    searchTerms.add("post");
+	    
+	    CloseableIterator<NodeItem> items = store.performSearch(
+	        new JID("user1@server1"), searchTerms, new JID("author@server1"), 1, 25
+	    );
+	    int counter = 0;
+	    NodeItem item;
+	    while (items.hasNext()) {
+	    	++counter;
+	    	item = items.next();
+	    	if (1 == counter) {
+	    		assertEquals("a3", item.getId());
+	            assertEquals("/users/subscribed@server1/posts", item.getNodeId());
+	    	} else if (2 == counter) {
+		        assertEquals("a1", item.getId());
+		        assertEquals("/users/subscribed@server1/posts", item.getNodeId());
+	    	}
+	    }
+	    assertEquals(2, counter);
+	}
 
 	@Test
 	public void testBeginTransaction() throws Exception {

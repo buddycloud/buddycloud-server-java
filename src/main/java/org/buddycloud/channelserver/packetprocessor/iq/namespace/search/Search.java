@@ -47,11 +47,14 @@ public class Search implements PacketProcessor<IQ> {
 	@Override
 	public void process(IQ reqIQ) throws Exception {
 		request = reqIQ;
-       
-		if (request.getType().equals("get")) {
+		if (request.getType().equals(Type.get)) {
+			logger.trace("Using search processor: SearchGet");
 			this.searchGet.process(request);
-		} else if (request.getType().equals("set")) {
+			return;
+		} else if (request.getType().equals(Type.set)) {
+			logger.trace("Using search processor: SearchSet");
 			this.searchSet.process(request);
+			return;
 		}
 		IQ response = IQ.createResultIQ(request);
 		response.setType(IQ.Type.error);

@@ -691,25 +691,28 @@ public class UserItemsGetTest extends IQTestHandler {
 	
 	@Test
 	public void testCanRetrieveSingleItem() throws Exception {
-		
+
 		String id = "12345";
 		String payload = "<entry>entry text</entry>";
 		
         element.addAttribute("node", node);
         element.addElement("item").addAttribute("id", id);
         		
-        NodeItem nodeItem = new NodeItemImpl(node, id, new Date(), payload);
-		Mockito.when(channelManager.getNodeItem(eq(node), Mockito.anyString()))
-				.thenReturn(nodeItem);
+        NodeItem item = new NodeItemImpl(node, id, new Date(), payload);
+		
+        Mockito.when(channelManager.isLocalNode(Mockito.anyString())).thenReturn(true);
+        Mockito.when(channelManager.nodeExists(Mockito.anyString())).thenReturn(true);
+		Mockito.when(channelManager.getNodeItem(Mockito.anyString(), Mockito.anyString()))
+				.thenReturn(item);
 		Mockito.when(channelManager.getUserSubscription(node, jid)).thenReturn(
 				new NodeSubscriptionImpl(node, jid, Subscriptions.subscribed));
 		Mockito.when(channelManager.getUserAffiliation(node, jid)).thenReturn(
 				new NodeAffiliationImpl(node, jid, Affiliations.member, new Date()));
 		
 		itemsGet.process(element, jid, request, null);
-		
-		Packet p = queue.poll();
+	
 		Packet response = queue.poll();
+
 		Element element = response.getElement();
 
 		Assert.assertEquals(IQ.Type.result.toString(),

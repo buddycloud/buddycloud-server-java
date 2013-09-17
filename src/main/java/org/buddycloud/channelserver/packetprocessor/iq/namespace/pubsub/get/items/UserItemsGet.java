@@ -111,7 +111,7 @@ public class UserItemsGet implements PubSubElementProcessor {
 			makeRemoteRequest();
 		    return;
 		}
-		
+
 		try {
 			if (false == nodeExists()) {
 				setErrorCondition(PacketError.Type.cancel,
@@ -128,6 +128,7 @@ public class UserItemsGet implements PubSubElementProcessor {
 				outQueue.put(reply);
 				return;
 			}
+			xmlReader = new SAXReader();
 			if (null == element.element("item")) {
 			    getItems();
 			} else {
@@ -222,7 +223,6 @@ public class UserItemsGet implements PubSubElementProcessor {
 		Element items = pubsub.addElement("items");
 		items.addAttribute("node", node);
 
-		xmlReader = new SAXReader();
 		entry = null;
 		int totalEntriesCount = 0;
 

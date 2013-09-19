@@ -197,8 +197,8 @@ public class SearchSet implements PacketProcessor<IQ> {
 				item.addElement("field").addAttribute("var", "entry")
 						.addElement("value").add(entry);
 			} catch (DocumentException e) {
-				// logger.error("Error parsing a node entry, ignoring. "
-				// + nodeItem);
+				logger.error("Error parsing a node entry, ignoring. "
+				 + nodeItem);
 			}
 
 			resultCounter++;
@@ -228,8 +228,7 @@ public class SearchSet implements PacketProcessor<IQ> {
 				.addAttribute("type", "text-single");
 
 		reported.addElement("field").addAttribute("var", "entry")
-				.addAttribute("label", "Item")
-				.addAttribute("type", "xml");
+				.addAttribute("label", "Item").addAttribute("type", "xml");
 	}
 
 	private void extractFieldValues() {
@@ -241,7 +240,7 @@ public class SearchSet implements PacketProcessor<IQ> {
 				content = getValuesAsList(field);
 			} else if ("author".equals(var)) {
 				String authorStr = field.elementText("value");
-				if ( authorStr.length() > 0 ) {
+				if (authorStr.length() > 0) {
 					author = new JID(authorStr);
 				}
 			} else if ("page".equals(var)) {
@@ -253,8 +252,8 @@ public class SearchSet implements PacketProcessor<IQ> {
 	}
 
 	private boolean checkFieldValues() throws Exception {
-		if (((null != content && content.size() > 0) || (null != author && 
-				author.toBareJID().length() > 0)) && (page > 0 && rpp > 0)) {
+		if (((null != content && content.size() > 0) || (null != author && author
+				.toBareJID().length() > 0)) && (page > 0 && rpp > 0)) {
 			return true;
 		}
 

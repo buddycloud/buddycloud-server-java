@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
 
+import org.apache.log4j.Logger;
 import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.db.CloseableIterator;
 import org.buddycloud.channelserver.db.exception.NodeStoreException;
@@ -35,6 +36,8 @@ public class SearchSet implements PacketProcessor<IQ> {
 	private int rpp = 25;
 	private JID author;
 	private JID searcher;
+	
+	public static Logger logger = Logger.getLogger(SearchSet.class);
 
 	public SearchSet(BlockingQueue<Packet> outQueue,
 			ChannelManager channelManager) {

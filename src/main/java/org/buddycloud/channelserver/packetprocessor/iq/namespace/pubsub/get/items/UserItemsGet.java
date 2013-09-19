@@ -137,6 +137,7 @@ public class UserItemsGet implements PubSubElementProcessor {
 					return;
 			}
 		} catch (NodeStoreException e) {
+			logger.error(e);
 			setErrorCondition(PacketError.Type.wait,
 					PacketError.Condition.internal_server_error);
 		}
@@ -225,6 +226,7 @@ public class UserItemsGet implements PubSubElementProcessor {
 					// If the after isn't a valid 'tag:...' then it might just
 					// be a straight ItemID
 					afterItemId = after.getTextTrim();
+					logger.error(e);
 				}
 			}
 		}

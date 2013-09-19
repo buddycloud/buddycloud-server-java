@@ -67,7 +67,7 @@ public class InQueueConsumer extends QueueConsumer {
 					+ "' milliseconds.");
 
 		} catch (Exception e) {
-			logger.debug("Exception: " + e.getMessage(), e);
+			logger.error("Exception: " + e.getMessage(), e);
 		} finally {
 			try {
 				channelManager.close();

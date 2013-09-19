@@ -107,6 +107,7 @@ public class RecentItemsGet extends PubSubElementProcessorAbstract {
 			try {
 				afterItemId = GlobalItemIDImpl.fromString(after.getTextTrim());
 			} catch(IllegalArgumentException e) {
+				logger.error((e);
 				createExtendedErrorReply(Type.modify, Condition.bad_request, "Could not parse the 'after' id: " + after);
 				return;
 			}

@@ -140,6 +140,7 @@ public class SubscribeSet extends PubSubElementProcessorAbstract {
 							.get(Conf.DEFAULT_AFFILIATION));
 				} catch (NullPointerException e) {
 					e.printStackTrace();
+					logger.error(e);
 					defaultAffiliation = Affiliations.member;
 				}
 				defaultSubscription = Subscriptions.subscribed;

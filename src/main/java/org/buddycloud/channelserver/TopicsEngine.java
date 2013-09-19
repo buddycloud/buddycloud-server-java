@@ -67,9 +67,11 @@ public class TopicsEngine implements Component {
 		} catch (NullPointerException e) {
 			// Catch and ignore
 			e.printStackTrace();
+			logger.error(e);
 		} catch (ComponentException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
+			logger.error(e);
 		}
 		logger.info("Topic component does not handle these packets: '" + p.toXML()
 				+ "'.");

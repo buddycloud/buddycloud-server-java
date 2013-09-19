@@ -26,6 +26,7 @@ public class CreationDate extends Field
 			return true;
 		} catch (ParseException e) {
 			e.printStackTrace();
+			logger.error(e);
 			return false;
 		}
 	}

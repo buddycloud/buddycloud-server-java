@@ -75,7 +75,7 @@ public class SubscriptionEvent extends PubSubElementProcessorAbstract {
 			saveUpdatedSubscription();
 			sendNotifications();
 		} catch (NodeStoreException e) {
-			LOGGER.debug(e);
+			LOGGER.error(e);
 			setErrorCondition(PacketError.Type.wait,
 					PacketError.Condition.internal_server_error);
 			outQueue.put(response);
@@ -156,7 +156,7 @@ public class SubscriptionEvent extends PubSubElementProcessorAbstract {
 				return false;
 			}
 		} catch (NullPointerException e) {
-			LOGGER.debug(e);
+			LOGGER.error(e);
 			setErrorCondition(PacketError.Type.modify,
 					PacketError.Condition.bad_request);
 			return false;

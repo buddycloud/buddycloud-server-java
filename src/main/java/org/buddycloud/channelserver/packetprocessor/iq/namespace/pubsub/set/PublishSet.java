@@ -179,7 +179,7 @@ public class PublishSet extends PubSubElementProcessorAbstract {
 				updated = new SimpleDateFormat(DATE_FORMAT).parse(updatedText);
 			} catch (ParseException e) {
 				updated = new Date();
-
+				logger.error(e);
 				LOGGER.error("Invalid date encountered in atom entry: "
 						+ updatedText);
 				// Otherwise we will just let it pass
@@ -324,6 +324,7 @@ public class PublishSet extends PubSubElementProcessorAbstract {
 					org.xmpp.packet.PacketError.Condition.bad_request,
 					org.xmpp.packet.PacketError.Type.modify);
 			response.setError(pe);
+			logger.error(e);
 			outQueue.put(response);
 			return false;
 		}

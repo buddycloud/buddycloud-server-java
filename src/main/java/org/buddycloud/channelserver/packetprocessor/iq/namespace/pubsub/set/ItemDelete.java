@@ -69,12 +69,15 @@ public class ItemDelete extends PubSubElementProcessorAbstract {
 			sendNotifications();
 			return;
 		} catch (NodeStoreException e) {
+			logger.error(e);
 			setErrorCondition(PacketError.Type.wait,
 					PacketError.Condition.internal_server_error);
 		} catch (NullPointerException e) {
+			logger.error(e);
 			setErrorCondition(PacketError.Type.modify,
 					PacketError.Condition.bad_request);
 		} catch (IllegalArgumentException e) {
+			logger.error(e);
 			setErrorCondition(PacketError.Type.modify, PacketError.Condition.bad_request);
 		}
 		outQueue.put(response);
@@ -107,8 +110,10 @@ public class ItemDelete extends PubSubElementProcessorAbstract {
 				outQueue.put(notification.createCopy());
 			}
 		} catch (NullPointerException e) {
+			logger.error(e);
 			return;
 		} catch (InterruptedException e) {
+			logger.error(e);
 			return;
 		}
 	}

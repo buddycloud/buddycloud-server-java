@@ -58,11 +58,13 @@ public class NodeCreate extends PubSubElementProcessorAbstract {
 		try {
 			channelManager.createNode(actor, node, getNodeConfiguration());
 		} catch (NodeStoreException e) {
+			logger.error(e);
 			setErrorCondition(PacketError.Type.wait,
 					PacketError.Condition.internal_server_error);
 			outQueue.put(response);
 			return;
 		} catch (NodeConfigurationException e) {
+			logger.error(e);
 			setErrorCondition(PacketError.Type.modify,
 					PacketError.Condition.bad_request);
 			outQueue.put(response);

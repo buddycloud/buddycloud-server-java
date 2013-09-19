@@ -61,7 +61,7 @@ public class ItemsProcessor extends AbstractMessageProcessor {
 		try {
 			channelManager.deleteNodeItemById(node, id);
 		} catch (ItemNotFoundException e) {
-			logger.debug("No item to delete, not a problem");
+			logger.error("No item to delete, not a problem");
 		}
 	}
 

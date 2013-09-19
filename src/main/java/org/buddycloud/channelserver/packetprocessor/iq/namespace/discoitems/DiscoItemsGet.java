@@ -83,6 +83,7 @@ public class DiscoItemsGet implements PacketProcessor<IQ> {
 		try {
 			return channelManager.isLocalNode(node);
 		} catch (IllegalArgumentException e) {
+			logger.error(e);
 			return false;
 		}
 	}

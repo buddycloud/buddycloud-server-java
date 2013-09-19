@@ -62,6 +62,7 @@ public class NodeConfigure extends PubSubElementProcessorAbstract {
 				return;
 			}
 		} catch (NodeStoreException e) {
+			LOGGER.error(e);
 			setErrorCondition(PacketError.Type.cancel,
 					PacketError.Condition.internal_server_error);
 			outQueue.put(response);

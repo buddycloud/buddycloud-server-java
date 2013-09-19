@@ -30,7 +30,7 @@ public class SearchSet implements PacketProcessor<IQ> {
 	private Element x;
 	private Element query;
 	private IQ requestIq;
-	private ArrayList<String> content;
+	private ArrayList<String> content = new ArrayList<String>();
 	private int page = 1;
 	private int rpp = 25;
 	private JID author;

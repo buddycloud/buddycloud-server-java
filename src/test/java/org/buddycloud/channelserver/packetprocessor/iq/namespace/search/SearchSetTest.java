@@ -396,7 +396,7 @@ public class SearchSetTest extends IQTestHandler {
 
 		Assert.assertEquals("entry", fields.get(2).attributeValue("var"));
 		Assert.assertEquals("Item", fields.get(2).attributeValue("label"));
-		Assert.assertEquals("http://www.w3.org/2005/Atom", fields.get(2)
+		Assert.assertEquals("xml", fields.get(2)
 				.attributeValue("type"));
 
 		List<Element> items = x.elements("item");

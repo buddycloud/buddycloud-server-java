@@ -285,7 +285,7 @@ public class SearchGetTest extends IQTestHandler {
 				.element("query")
 				.element("x")
 				.elements("field").get(3);
-	    Assert.assertEquals("fixed-single", formType.attributeValue("type"));
+	    Assert.assertEquals("fixed", formType.attributeValue("type"));
 	    Assert.assertEquals("rpp", formType.attributeValue("var"));
 	    Assert.assertEquals(SearchGet.RPP_FIELD_LABEL, formType.attributeValue("label"));
 		
@@ -309,7 +309,7 @@ public class SearchGetTest extends IQTestHandler {
 				.element("query")
 				.element("x")
 				.elements("field").get(4);
-	    Assert.assertEquals("fixed-single", formType.attributeValue("type"));
+	    Assert.assertEquals("fixed", formType.attributeValue("type"));
 	    Assert.assertEquals("page", formType.attributeValue("var"));
 	    Assert.assertEquals(SearchGet.PAGE_FIELD_LABEL, formType.attributeValue("label"));
 	}

@@ -72,12 +72,12 @@ public class SearchGet implements PacketProcessor<IQ> {
 		author.addAttribute("label", AUTHOR_FIELD_LABEL);
 		
 		Element rpp = x.addElement("field");
-		rpp.addAttribute("type", "fixed-single");
+		rpp.addAttribute("type", "fixed");
 		rpp.addAttribute("var", "rpp");
 		rpp.addAttribute("label", RPP_FIELD_LABEL);
 		
 		Element page = x.addElement("field");
-		page.addAttribute("type", "fixed-single");
+		page.addAttribute("type", "fixed");
 		page.addAttribute("var", "page");
 		page.addAttribute("label", PAGE_FIELD_LABEL);
 	}

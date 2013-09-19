@@ -229,7 +229,7 @@ public class SearchSet implements PacketProcessor<IQ> {
 
 		reported.addElement("field").addAttribute("var", "entry")
 				.addAttribute("label", "Item")
-				.addAttribute("type", "http://www.w3.org/2005/Atom");
+				.addAttribute("type", "xml");
 	}
 
 	private void extractFieldValues() {
@@ -285,11 +285,6 @@ public class SearchSet implements PacketProcessor<IQ> {
 
 	private void sendErrorResponse(PacketError.Type type,
 			PacketError.Condition condition) throws InterruptedException {
-		// try {
-		// throw new Exception();
-		// } catch ( Exception e ) {
-		// e.printStackTrace();
-		// }
 		responseIq.setType(IQ.Type.error);
 		PacketError error = new PacketError(condition, type);
 		responseIq.setError(error);

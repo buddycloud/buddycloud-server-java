@@ -254,7 +254,7 @@ public class SearchSet implements PacketProcessor<IQ> {
 
 	private boolean checkFieldValues() throws Exception {
 		if (((null != content && content.size() > 0) || (null != author && 
-				author.toFullJID().length() > 0)) && (page > 0 && rpp > 0)) {
+				author.toBareJID().length() > 0)) && (page > 0 && rpp > 0)) {
 			return true;
 		}
 

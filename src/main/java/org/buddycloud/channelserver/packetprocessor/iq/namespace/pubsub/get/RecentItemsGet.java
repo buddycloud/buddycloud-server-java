@@ -29,14 +29,18 @@ import org.xmpp.packet.PacketError.Type;
 
 public class RecentItemsGet extends PubSubElementProcessorAbstract {
 
-	private SimpleDateFormat sdf;
+	private static final Logger LOGGER = Logger.getLogger(RecentItemsGet.class);
+	private static final String NODE_SUFIX = "/posts";
+	private static final SimpleDateFormat SDF = new SimpleDateFormat(Conf.DATE_FORMAT);
+	static {
+		SDF.setTimeZone(TimeZone.getTimeZone("UTC"));
+	}
 
 	private Date maxAge;
 	private Integer maxItems;
 
 	private Element pubsub;
 	private SAXReader xmlReader;
-	private String nodeEnding = "/posts";
 
 	// RSM details
 	private String firstItemId = null;
@@ -44,17 +48,11 @@ public class RecentItemsGet extends PubSubElementProcessorAbstract {
 	private GlobalItemID afterItemId = null;
 	private int maxResults = -1;
 
-	private static final Logger logger = Logger.getLogger(RecentItemsGet.class);
-
 	public RecentItemsGet(BlockingQueue<Packet> outQueue,
 			ChannelManager channelManager) {
 		setChannelManager(channelManager);
 		setOutQueue(outQueue);
-
 		xmlReader = new SAXReader();
-
-		sdf = new SimpleDateFormat(Conf.DATE_FORMAT);
-		sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
 	}
 
 	@Override
@@ -70,12 +68,12 @@ public class RecentItemsGet extends PubSubElementProcessorAbstract {
 			actor = request.getFrom();
 		}
 
-		if (false == isValidStanza()) {
+		if (!isValidStanza()) {
 			outQueue.put(response);
 			return;
 		}
 
-		if (false == channelManager.isLocalJID(request.getFrom())) {
+		if (!channelManager.isLocalJID(request.getFrom())) {
 			response.getElement().addAttribute("remote-server-discover",
 					"false");
 		}
@@ -87,7 +85,7 @@ public class RecentItemsGet extends PubSubElementProcessorAbstract {
 			addRsmElement();
 			outQueue.put(response);
 		} catch (NodeStoreException e) {
-			logger.error(e);
+			LOGGER.error(e);
 			response.getElement().remove(pubsub);
 			setErrorCondition(PacketError.Type.wait,
 					PacketError.Condition.internal_server_error);
@@ -97,17 +95,21 @@ public class RecentItemsGet extends PubSubElementProcessorAbstract {
 	}
 
 	private void parseRsmElement() {
-		if (null == resultSetManagement)
+		if (null == resultSetManagement) {
 			return;
-		Element max;
-		Element after;
-		if (null != (max = resultSetManagement.element("max")))
+		}
+		
+		Element max = null;
+		Element after = null;
+		if (null != (max = resultSetManagement.element("max"))) {
 			maxResults = Integer.parseInt(max.getTextTrim());
+		}
+		
 		if (null != (after = resultSetManagement.element("after"))) {
 			try {
 				afterItemId = GlobalItemIDImpl.fromString(after.getTextTrim());
 			} catch(IllegalArgumentException e) {
-				logger.error(e);
+				LOGGER.error(e);
 				createExtendedErrorReply(Type.modify, Condition.bad_request, "Could not parse the 'after' id: " + after);
 				return;
 			}
@@ -115,52 +117,49 @@ public class RecentItemsGet extends PubSubElementProcessorAbstract {
 	}
 
 	private void addRsmElement() throws NodeStoreException {
-		if (null == firstItemId) return;
+		if (null == firstItemId) {
+			return;
+		}
 		Element rsm = pubsub.addElement("set");
 		rsm.addNamespace("", NS_RSM);
 		rsm.addElement("first").setText(firstItemId);
 		rsm.addElement("last").setText(lastItemId);
 		rsm.addElement("count").setText(
 				String.valueOf(channelManager.getCountRecentItems(actor,
-						maxAge, maxItems, nodeEnding)));
+						maxAge, maxItems, NODE_SUFIX)));
 	}
 
 	private void addRecentItems() throws NodeStoreException {
 		CloseableIterator<NodeItem> items = channelManager.getRecentItems(
-				actor, maxAge, maxItems, maxResults, afterItemId, nodeEnding);
-		String lastNode = "";
-		NodeItem item;
+				actor, maxAge, maxItems, maxResults, afterItemId, NODE_SUFIX);
+		String lastNodeId = "";
 		Element itemsElement = null;
-		Element itemElement;
-		Element entry;
 		while (items.hasNext()) {
-			item = items.next();
-            if (false == item.getNodeId().equals(lastNode)) {
+			NodeItem item = items.next();
+            if (!item.getNodeId().equals(lastNodeId)) {
 				itemsElement = pubsub.addElement("items");
 				itemsElement.addAttribute("node", item.getNodeId());
-				lastNode = item.getNodeId();
+				lastNodeId = item.getNodeId();
 			}
 			try {
-				entry = xmlReader.read(new StringReader(item.getPayload()))
+				Element entry = xmlReader.read(new StringReader(item.getPayload()))
 						.getRootElement();
-				
 				Element entryIdEl = entry.element("id");
-				
 				String itemId = item.getId();
-				
 				if(entryIdEl != null) {
 					itemId = entryIdEl.getTextTrim();
 				}
 				
-				itemElement = itemsElement.addElement("item");
+				Element itemElement = itemsElement.addElement("item");
 				itemElement.addAttribute("id", item.getId());
 				
-				if (null == firstItemId)
+				if (null == firstItemId) {
 					firstItemId = itemId;
+				}
 				lastItemId = itemId;
 				itemElement.add(entry);
 			} catch (DocumentException e) {
-				logger.error("Error parsing a node entry, ignoring. "
+				LOGGER.error("Error parsing a node entry, ignoring. "
 						+ item.getId());
 			}
 		}
@@ -182,10 +181,10 @@ public class RecentItemsGet extends PubSubElementProcessorAbstract {
 						PacketError.Condition.bad_request, "since-required");
 				return false;
 			}
-			maxAge = sdf.parse(since);
+			maxAge = SDF.parse(since);
 
 		} catch (NumberFormatException e) {
-			logger.error(e);
+			LOGGER.error(e);
 			createExtendedErrorReply(PacketError.Type.modify,
 					PacketError.Condition.bad_request,
 					"invalid-max-value-provided");
@@ -194,7 +193,7 @@ public class RecentItemsGet extends PubSubElementProcessorAbstract {
 			createExtendedErrorReply(PacketError.Type.modify,
 					PacketError.Condition.bad_request,
 					"invalid-since-value-provided");
-			logger.error(e);
+			LOGGER.error(e);
 			return false;
 		}
 		return true;

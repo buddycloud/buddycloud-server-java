@@ -127,7 +127,7 @@ public class NodeSubscriptionImpl implements NodeSubscription {
 
 	@Override
 	public String getUID() {
-		return String.valueOf(hashCode());
+		return toString();
 	}
 
 	@Override

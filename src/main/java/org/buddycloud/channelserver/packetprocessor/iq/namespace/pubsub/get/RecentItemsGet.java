@@ -120,11 +120,10 @@ public class RecentItemsGet extends PubSubElementProcessorAbstract {
 		if (null == firstItemId) {
 			return;
 		}
-		Element rsm = pubsub.addElement("set");
-		rsm.addNamespace("", NS_RSM);
-		rsm.addElement("first").setText(firstItemId);
-		rsm.addElement("last").setText(lastItemId);
-		rsm.addElement("count").setText(
+		Element rsm = pubsub.addElement("set", NS_RSM);
+		rsm.addElement("first", NS_RSM).setText(firstItemId);
+		rsm.addElement("last", NS_RSM).setText(lastItemId);
+		rsm.addElement("count", NS_RSM).setText(
 				String.valueOf(channelManager.getCountRecentItems(actor,
 						maxAge, maxItems, NODE_SUFIX)));
 	}

@@ -43,8 +43,8 @@ public class RecentItemsGet extends PubSubElementProcessorAbstract {
 	private SAXReader xmlReader;
 
 	// RSM details
-	private String firstItemId = null;
-	private String lastItemId = null;
+	private GlobalItemID firstItemId = null;
+	private GlobalItemID lastItemId = null;
 	private GlobalItemID afterItemId = null;
 	private int maxResults = -1;
 
@@ -107,7 +107,7 @@ public class RecentItemsGet extends PubSubElementProcessorAbstract {
 		
 		if (null != (after = resultSetManagement.element("after"))) {
 			try {
-				afterItemId = GlobalItemIDImpl.fromString(after.getTextTrim());
+				afterItemId = GlobalItemIDImpl.fromBuddycloudString(after.getTextTrim());
 			} catch(IllegalArgumentException e) {
 				LOGGER.error(e);
 				createExtendedErrorReply(Type.modify, Condition.bad_request, "Could not parse the 'after' id: " + after);
@@ -121,8 +121,8 @@ public class RecentItemsGet extends PubSubElementProcessorAbstract {
 			return;
 		}
 		Element rsm = pubsub.addElement("set", NS_RSM);
-		rsm.addElement("first", NS_RSM).setText(firstItemId);
-		rsm.addElement("last", NS_RSM).setText(lastItemId);
+		rsm.addElement("first", NS_RSM).setText(firstItemId.toString());
+		rsm.addElement("last", NS_RSM).setText(lastItemId.toString());
 		rsm.addElement("count", NS_RSM).setText(
 				String.valueOf(channelManager.getCountRecentItems(actor,
 						maxAge, maxItems, NODE_SUFIX)));
@@ -153,9 +153,9 @@ public class RecentItemsGet extends PubSubElementProcessorAbstract {
 				itemElement.addAttribute("id", item.getId());
 				
 				if (null == firstItemId) {
-					firstItemId = itemId;
+					firstItemId = new GlobalItemIDImpl(null, item.getNodeId(), itemId);
 				}
-				lastItemId = itemId;
+				lastItemId = new GlobalItemIDImpl(null, item.getNodeId(), itemId);
 				itemElement.add(entry);
 			} catch (DocumentException e) {
 				LOGGER.error("Error parsing a node entry, ignoring. "
@@ -163,7 +163,7 @@ public class RecentItemsGet extends PubSubElementProcessorAbstract {
 			}
 		}
 	}
-
+	
 	private boolean isValidStanza() {
 		Element recentItems = request.getChildElement().element("recent-items");
 		try {

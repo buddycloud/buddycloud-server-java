@@ -88,8 +88,11 @@ public class GlobalItemIDImpl implements GlobalItemID {
 	 */
 	public static GlobalItemID fromBuddycloudString(String itemId) {
 		String[] splittedItemId = itemId.split(",");
-		if (splittedItemId.length != 2) {
+		if (splittedItemId.length < 2) {
 			throw new IllegalArgumentException("Illegal format for buddycloud global id");
+		}
+		if (splittedItemId.length == 3) {
+			return fromString(itemId);
 		}
 		return new GlobalItemIDImpl(null, splittedItemId[0], splittedItemId[1]);
 	}

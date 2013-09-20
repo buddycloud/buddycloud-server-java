@@ -358,8 +358,8 @@ public class RecentItemsGetTest extends IQTestHandler {
 		Element rsmOut = p.getElement().element("pubsub").element("set");
 		
 		assertEquals("Unexpected count returned", "100", rsmOut.element("count").getText());
-		assertEquals("Unexpected first returned", "entry1", rsmOut.element("first").getText());
-		assertEquals("Unexpected last returned", "entry2", rsmOut.element("last").getText());
+		assertEquals("Unexpected first returned", TEST_NODE_1 + ",entry1", rsmOut.element("first").getText());
+		assertEquals("Unexpected last returned", TEST_NODE_2 + ",entry2", rsmOut.element("last").getText());
 	}
 	
 	@Test

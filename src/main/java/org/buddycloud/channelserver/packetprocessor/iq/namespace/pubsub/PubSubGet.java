@@ -7,6 +7,7 @@ import java.util.concurrent.BlockingQueue;
 import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.packetprocessor.PacketProcessor;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.get.AffiliationsGet;
+import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.get.NodeConfigureGet;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.get.RecentItemsGet;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.get.SubscriptionsGet;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.get.ThreadGet;
@@ -39,6 +40,7 @@ public class PubSubGet implements PacketProcessor<IQ> {
         elementProcessors.add(new ItemsGet(outQueue, channelManager));
         elementProcessors.add(new ThreadGet(outQueue, channelManager));
         elementProcessors.add(new RecentItemsGet(outQueue, channelManager));
+        elementProcessors.add(new NodeConfigureGet(outQueue, channelManager));
     }
 
     @Override

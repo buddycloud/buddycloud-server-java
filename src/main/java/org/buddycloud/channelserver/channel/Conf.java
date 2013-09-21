@@ -1,12 +1,12 @@
 package org.buddycloud.channelserver.channel;
 
-import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.TimeZone;
-import org.buddycloud.channelserver.pubsub.affiliation.Affiliations;
-import org.buddycloud.channelserver.pubsub.publishmodel.PublishModels;
+
 import org.buddycloud.channelserver.pubsub.accessmodel.AccessModels;
+import org.buddycloud.channelserver.pubsub.affiliation.Affiliations;
+import org.joda.time.format.DateTimeFormatter;
+import org.joda.time.format.ISODateTimeFormat;
 import org.xmpp.packet.JID;
 
 //TODO! Refactor this!
@@ -27,8 +27,9 @@ public class Conf {
     
 	private static final String PUBLISHERS = "publishers";
 	
-	public static final String DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.S'Z'";
-
+//	public static final String DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.S'Z'";
+	public static final DateTimeFormatter ISO_8601_PARSER = ISODateTimeFormat.dateTimeParser();
+	
     
     // Most of these are copied from here
     // https://github.com/buddycloud/buddycloud-server/blob/master/src/local/operations.coffee#L14
@@ -36,11 +37,23 @@ public class Conf {
     public static String getPostChannelNodename(JID channelJID) {
         return "/user/" + channelJID.toBareJID() + "/posts";
     }
+    
+    /**
+     * Parses a ISO 8601 to a string
+     * 
+     * @param iso8601Str
+     * @return
+     * @throws IllegalArgumentException if the provided string is not ISO 8601
+     */
+    public static Date parseDate(String iso8601Str) throws IllegalArgumentException {
+    	return ISO_8601_PARSER.parseDateTime(iso8601Str).toDate();
+    }
+    
+    public static String formatDate(Date date) {
+    	return ISO_8601_PARSER.print(date.getTime());
+    }
 
     public static HashMap<String, String> getDefaultPostChannelConf(JID channelJID) {
-    	SimpleDateFormat sdf = new SimpleDateFormat(DATE_FORMAT);
-        sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
-        
         HashMap<String, String> conf = new HashMap<String, String>();
         
         conf.put(TYPE, "http://www.w3.org/2005/Atom");
@@ -48,7 +61,7 @@ public class Conf {
         conf.put(DESCRIPTION, "This channel belongs to " + channelJID.toBareJID() + ". To nobody else!");
         conf.put(PUBLISH_MODEL, PUBLISHERS);
         conf.put(ACCESS_MODEL, AccessModels.open.toString());
-        conf.put(CREATION_DATE, sdf.format(new Date()));
+        conf.put(CREATION_DATE, formatDate(new Date()));
         conf.put(OWNER, channelJID.toBareJID());
         conf.put(DEFAULT_AFFILIATION, Affiliations.member.toString());
         conf.put(NUM_SUBSCRIBERS, "1");
@@ -63,9 +76,6 @@ public class Conf {
     }
     
     public static HashMap<String, String> getDefaultStatusChannelConf(JID channelJID) {
-    	SimpleDateFormat sdf = new SimpleDateFormat(DATE_FORMAT);
-        sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
-        
         HashMap<String, String> conf = new HashMap<String, String>();
         
         conf.put(TYPE, "http://www.w3.org/2005/Atom");
@@ -73,7 +83,7 @@ public class Conf {
         conf.put(DESCRIPTION, "This is " + channelJID.toBareJID() + "'s mood a.k.a status -channel. Depends how geek you are.");
         conf.put(PUBLISH_MODEL, PUBLISHERS);
         conf.put(ACCESS_MODEL, AccessModels.open.toString());
-        conf.put(CREATION_DATE, sdf.format(new Date()));
+        conf.put(CREATION_DATE, formatDate(new Date()));
         conf.put(OWNER, channelJID.toBareJID());
         conf.put(DEFAULT_AFFILIATION, Affiliations.member.toString());
         conf.put(NUM_SUBSCRIBERS, "1");
@@ -87,9 +97,6 @@ public class Conf {
     }
     
     public static HashMap<String, String> getDefaultGeoPreviousChannelConf(JID channelJID) {
-    	SimpleDateFormat sdf = new SimpleDateFormat(DATE_FORMAT);
-        sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
-        
         HashMap<String, String> conf = new HashMap<String, String>();
         
         conf.put(TYPE, "http://www.w3.org/2005/Atom");
@@ -97,7 +104,7 @@ public class Conf {
         conf.put(DESCRIPTION, "Where " + channelJID.toBareJID() + " has been before.");
         conf.put(PUBLISH_MODEL, PUBLISHERS);
         conf.put(ACCESS_MODEL, AccessModels.open.toString());
-        conf.put(CREATION_DATE, sdf.format(new Date()));
+        conf.put(CREATION_DATE, formatDate(new Date()));
         conf.put(OWNER, channelJID.toBareJID());
         conf.put(DEFAULT_AFFILIATION, Affiliations.member.toString());
         conf.put(NUM_SUBSCRIBERS, "1");
@@ -111,9 +118,6 @@ public class Conf {
     }
     
     public static HashMap<String, String> getDefaultGeoCurrentChannelConf(JID channelJID) {
-    	SimpleDateFormat sdf = new SimpleDateFormat(DATE_FORMAT);
-        sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
-        
         HashMap<String, String> conf = new HashMap<String, String>();
         
         conf.put(TYPE, "http://www.w3.org/2005/Atom");
@@ -121,7 +125,7 @@ public class Conf {
         conf.put(DESCRIPTION, "Where " + channelJID.toBareJID() + " is now.");
         conf.put(PUBLISH_MODEL, PUBLISHERS);
         conf.put(ACCESS_MODEL, AccessModels.open.toString());
-        conf.put(CREATION_DATE, sdf.format(new Date()));
+        conf.put(CREATION_DATE, formatDate(new Date()));
         conf.put(OWNER, channelJID.toBareJID());
         conf.put(DEFAULT_AFFILIATION, Affiliations.member.toString());
         conf.put(NUM_SUBSCRIBERS, "1");
@@ -135,9 +139,6 @@ public class Conf {
     }
     
     public static HashMap<String, String> getDefaultGeoNextChannelConf(JID channelJID) {
-    	SimpleDateFormat sdf = new SimpleDateFormat(DATE_FORMAT);
-        sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
-        
         HashMap<String, String> conf = new HashMap<String, String>();
         
         conf.put(TYPE, "http://www.w3.org/2005/Atom");
@@ -145,7 +146,7 @@ public class Conf {
         conf.put(DESCRIPTION, "Where " + channelJID.toBareJID() + " is going to go.");
         conf.put(PUBLISH_MODEL, PUBLISHERS);
         conf.put(ACCESS_MODEL, AccessModels.open.toString());
-        conf.put(CREATION_DATE, sdf.format(new Date()));
+        conf.put(CREATION_DATE, formatDate(new Date()));
         conf.put(OWNER, channelJID.toBareJID());
         conf.put(DEFAULT_AFFILIATION, Affiliations.member.toString());
         conf.put(NUM_SUBSCRIBERS, "1");
@@ -159,9 +160,6 @@ public class Conf {
     }
     
     public static HashMap<String, String> getDefaultSubscriptionsChannelConf(JID channelJID) {
-    	SimpleDateFormat sdf = new SimpleDateFormat(DATE_FORMAT);
-        sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
-        
         HashMap<String, String> conf = new HashMap<String, String>();
         
         conf.put(TYPE, "http://www.w3.org/2005/Atom");
@@ -169,7 +167,7 @@ public class Conf {
         conf.put(DESCRIPTION, channelJID.toBareJID() + "'s subscriptions. ");
         conf.put(PUBLISH_MODEL, PUBLISHERS);
         conf.put(ACCESS_MODEL, AccessModels.open.toString());
-        conf.put(CREATION_DATE, sdf.format(new Date()));
+        conf.put(CREATION_DATE, formatDate(new Date()));
         conf.put(OWNER, channelJID.toBareJID());
         conf.put(DEFAULT_AFFILIATION, Affiliations.member.toString());
         conf.put(NUM_SUBSCRIBERS, "1");

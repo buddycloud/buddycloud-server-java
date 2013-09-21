@@ -1,10 +1,7 @@
 package org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.get;
 
 import java.io.StringReader;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.TimeZone;
 import java.util.concurrent.BlockingQueue;
 
 import org.apache.log4j.Logger;
@@ -31,10 +28,6 @@ public class RecentItemsGet extends PubSubElementProcessorAbstract {
 
 	private static final Logger LOGGER = Logger.getLogger(RecentItemsGet.class);
 	private static final String NODE_SUFIX = "/posts";
-	private static final SimpleDateFormat SDF = new SimpleDateFormat(Conf.DATE_FORMAT);
-	static {
-		SDF.setTimeZone(TimeZone.getTimeZone("UTC"));
-	}
 
 	private Date maxAge;
 	private Integer maxItems;
@@ -180,7 +173,7 @@ public class RecentItemsGet extends PubSubElementProcessorAbstract {
 						PacketError.Condition.bad_request, "since-required");
 				return false;
 			}
-			maxAge = SDF.parse(since);
+			maxAge = Conf.parseDate(since);
 
 		} catch (NumberFormatException e) {
 			LOGGER.error(e);
@@ -188,7 +181,7 @@ public class RecentItemsGet extends PubSubElementProcessorAbstract {
 					PacketError.Condition.bad_request,
 					"invalid-max-value-provided");
 			return false;
-		} catch (ParseException e) {
+		} catch (IllegalArgumentException e) {
 			createExtendedErrorReply(PacketError.Type.modify,
 					PacketError.Condition.bad_request,
 					"invalid-since-value-provided");

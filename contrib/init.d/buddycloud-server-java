@@ -7,7 +7,7 @@ DESC="buddycloud java server"
 NAME="buddycloud-server-java"
 RUNFROM=/usr/share/buddycloud-server-java
 DAEMON=/usr/bin/java
-DAEMON_ARGS="-jar channelserver-*-jar-with-dependencies.jar"
+DAEMON_ARGS="-XX:-OmitStackTraceInFastThrow -jar channelserver-*-jar-with-dependencies.jar"
 PIDFILE=/var/run/$NAME.pid
 SCRIPTNAME=/etc/init.d/buddycloud-server-java
 

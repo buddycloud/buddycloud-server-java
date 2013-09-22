@@ -65,7 +65,7 @@ public class IQProcessor implements PacketProcessor<IQ> {
 					org.xmpp.packet.PacketError.Condition.internal_server_error,
 					org.xmpp.packet.PacketError.Type.wait);
 			reply.setError(pe);
-			logger.error(e);
+			logger.error("Error while processing packet.", e);
             e.printStackTrace();
 			this.outQueue.put(reply);
 		}

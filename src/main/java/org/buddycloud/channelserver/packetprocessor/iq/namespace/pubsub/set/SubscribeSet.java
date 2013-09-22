@@ -36,18 +36,12 @@ import org.xmpp.packet.PacketError;
 import org.xmpp.resultsetmanagement.ResultSet;
 
 public class SubscribeSet extends PubSubElementProcessorAbstract {
+	
+	private static final String FIREHOSE = "/firehose";
+	private static final Logger LOGGER = Logger.getLogger(SubscribeSet.class);
+	
 	private final BlockingQueue<Packet> outQueue;
 	private final ChannelManager channelManager;
-
-	private IQ request;
-	private String node;
-	private JID subscribingJid;
-	
-	private final String FIREHOSE = "/firehose";
-	
-	private Map<String, String> nodeConf;
-
-	private static final Logger logger = Logger.getLogger(SubscribeSet.class);
 
 	public SubscribeSet(BlockingQueue<Packet> outQueue,
 			ChannelManager channelManager) {
@@ -58,14 +52,16 @@ public class SubscribeSet extends PubSubElementProcessorAbstract {
 	@Override
 	public void process(Element elm, JID actorJID, IQ reqIQ, Element rsm)
 			throws Exception {
+		
 		node = elm.attributeValue("node");
 		request = reqIQ;
-		if ((node == null) || (true == node.equals(""))) {
+		
+		if ((node == null) || (node.equals(""))) {
 			missingNodeName();
 			return;
 		}
 
-		subscribingJid = request.getFrom();
+		JID subscribingJid = request.getFrom();
 
 		boolean isLocalSubscriber = false;
 
@@ -80,14 +76,20 @@ public class SubscribeSet extends PubSubElementProcessorAbstract {
 			}
 		}
 		
-		if (true == node.equals(FIREHOSE)) {
-			if (false == channelManager.nodeExists(FIREHOSE))
-	            channelManager.addRemoteNode(FIREHOSE);
+		Map<String, String> nodeConf = null;
+		
+		if (node.equals(FIREHOSE)) {
+			if (!channelManager.nodeExists(FIREHOSE)) {
+				channelManager.addRemoteNode(FIREHOSE);
+			}
 			nodeConf = new HashMap<String, String>();
 			nodeConf.put(Conf.DEFAULT_AFFILIATION, "member");
 			nodeConf.put(Conf.ACCESS_MODEL, "open");
-		} else if (false == handleNodeSubscription(elm, actorJID)) {
-			return;
+		} else {
+			if (!handleNodeSubscription(elm, actorJID, subscribingJid)) {
+				return;
+			}
+			nodeConf = channelManager.getNodeConf(node);
 		}
 
 		// Subscribe to a node.
@@ -128,8 +130,8 @@ public class SubscribeSet extends PubSubElementProcessorAbstract {
 			Affiliations defaultAffiliation = null;
 			Subscriptions defaultSubscription = null;
 			
-			if (false == possibleExistingSubscription.in(Subscriptions.none)) {
-				logger.debug("User already has a '"
+			if (!possibleExistingSubscription.in(Subscriptions.none)) {
+				LOGGER.debug("User already has a '"
 						+ possibleExistingSubscription.toString()
 						+ "' subscription");
 				defaultAffiliation = possibleExistingAffiliation;
@@ -139,14 +141,13 @@ public class SubscribeSet extends PubSubElementProcessorAbstract {
 					defaultAffiliation = Affiliations.createFromString(nodeConf
 							.get(Conf.DEFAULT_AFFILIATION));
 				} catch (NullPointerException e) {
-					e.printStackTrace();
-					logger.error(e);
+					LOGGER.error("Could not create affiliation.", e);
 					defaultAffiliation = Affiliations.member;
 				}
 				defaultSubscription = Subscriptions.subscribed;
 				String accessModel = nodeConf.get(Conf.ACCESS_MODEL);
 				if ((null == accessModel) 
-				    || (true == accessModel.equals(AccessModels.authorize.toString()))) {
+				    || (accessModel.equals(AccessModels.authorize.toString()))) {
 					defaultSubscription = Subscriptions.pending;
 				}
 	
@@ -172,18 +173,19 @@ public class SubscribeSet extends PubSubElementProcessorAbstract {
 
 			outQueue.put(reply);
 
-			notifySubscribers(defaultSubscription, defaultAffiliation);
+			notifySubscribers(defaultSubscription, defaultAffiliation, subscribingJid);
 
 			t.commit();
 		} finally {
-			if (t != null)
+			if (t != null) {
 				t.close();
+			}
 		}
 	}
 
-	private boolean handleNodeSubscription(Element elm, JID actorJID)
+	private boolean handleNodeSubscription(Element elm, JID actorJID, JID subscribingJid)
 			throws NodeStoreException, InterruptedException {
-		if ((false == channelManager.isLocalNode(node)) && (false == node.equals("/firehose"))) {
+		if ((!channelManager.isLocalNode(node)) && (!node.equals("/firehose"))) {
         	makeRemoteRequest();
         	return false;
         }
@@ -193,7 +195,7 @@ public class SubscribeSet extends PubSubElementProcessorAbstract {
 		// Covers where we have juliet@shakespeare.lit/the-balcony
 		String[] jidParts = elm.attributeValue("jid").split("/");
 		String jid = jidParts[0];
-		if (false == subscribingJid.toBareJID().equals(jid)) {
+		if (!subscribingJid.toBareJID().equals(jid)) {
 
 			/*
 			 * // 6.1.3.1 JIDs Do Not Match <iq type='error'
@@ -219,7 +221,7 @@ public class SubscribeSet extends PubSubElementProcessorAbstract {
 			return false;
 		}
 
-		if (false == channelManager.nodeExists(node)) {
+		if (!channelManager.nodeExists(node)) {
 			IQ reply = IQ.createResultIQ(request);
 			reply.setType(Type.error);
 			PacketError pe = new PacketError(
@@ -229,8 +231,6 @@ public class SubscribeSet extends PubSubElementProcessorAbstract {
 			outQueue.put(reply);
 			return false;
 		}
-
-		nodeConf = channelManager.getNodeConf(node);
 		return true;
 	}
 
@@ -244,7 +244,7 @@ public class SubscribeSet extends PubSubElementProcessorAbstract {
 	}
 
 	private void notifySubscribers(Subscriptions subscriptionStatus,
-			Affiliations affiliationType) throws NodeStoreException,
+			Affiliations affiliationType, JID subscribingJid) throws NodeStoreException,
 			InterruptedException {
 
 		ResultSet<NodeSubscription> subscribers = channelManager

@@ -27,8 +27,9 @@ public class Conf {
     
 	private static final String PUBLISHERS = "publishers";
 	
-	public static final DateTimeFormatter ISO_8601_PARSER = ISODateTimeFormat.dateTime();
-    
+	public static final DateTimeFormatter ISO_8601_PARSER = ISODateTimeFormat.dateTimeParser();
+	public static final DateTimeFormatter ISO_8601_FORMATTER = ISODateTimeFormat.dateTime();
+	
     // Most of these are copied from here
     // https://github.com/buddycloud/buddycloud-server/blob/master/src/local/operations.coffee#L14
     
@@ -48,7 +49,7 @@ public class Conf {
     }
     
     public static String formatDate(Date date) {
-    	return ISO_8601_PARSER.print(date.getTime());
+    	return ISO_8601_FORMATTER.print(date.getTime());
     }
 
     public static HashMap<String, String> getDefaultPostChannelConf(JID channelJID) {

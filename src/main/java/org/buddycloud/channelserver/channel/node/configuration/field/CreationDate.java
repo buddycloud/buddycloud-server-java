@@ -1,10 +1,9 @@
 package org.buddycloud.channelserver.channel.node.configuration.field;
 
 import java.util.Date;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 
 import org.apache.log4j.Logger;
+import org.buddycloud.channelserver.channel.Conf;
 
 public class CreationDate extends Field
 {
@@ -13,11 +12,9 @@ public class CreationDate extends Field
 	
 	public static Logger logger = Logger.getLogger(CreationDate.class);
 
-	public static SimpleDateFormat ISO8601FORMAT = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.S'Z'");
-	
 	public CreationDate()
 	{
-		setValue(ISO8601FORMAT.format(new Date()));
+		setValue(Conf.formatDate(new Date()));
 		name = FIELD_NAME;
 	}
 
@@ -25,11 +22,10 @@ public class CreationDate extends Field
 	{
 		// @todo improve this validation later
 		try {
-			Date parsed = ISO8601FORMAT.parse(getValue());
-			setValue(ISO8601FORMAT.format(parsed));
+			Date parsed = Conf.parseDate(getValue());
+			setValue(Conf.formatDate(parsed));
 			return true;
-		} catch (ParseException e) {
-			e.printStackTrace();
+		} catch (IllegalArgumentException e) {
 			logger.error(e);
 			return false;
 		}

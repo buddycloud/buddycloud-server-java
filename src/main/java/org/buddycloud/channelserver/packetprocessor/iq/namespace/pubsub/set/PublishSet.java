@@ -1,21 +1,15 @@
 package org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.set;
 
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
-import java.util.HashSet;
-import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 
-import org.apache.commons.lang.time.DateFormatUtils;
 import org.apache.log4j.Logger;
 import org.buddycloud.channelserver.channel.ChannelManager;
+import org.buddycloud.channelserver.channel.Conf;
 import org.buddycloud.channelserver.channel.ValidateEntry;
 import org.buddycloud.channelserver.db.exception.NodeStoreException;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.JabberPubsub;
-import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.PubSubElementProcessor;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.PubSubElementProcessorAbstract;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.PubSubSet;
 import org.buddycloud.channelserver.pubsub.affiliation.Affiliations;
@@ -37,11 +31,6 @@ import org.xmpp.resultsetmanagement.ResultSet;
 public class PublishSet extends PubSubElementProcessorAbstract {
 
 	private static final Logger LOGGER = Logger.getLogger(PublishSet.class);
-
-	private static final SimpleDateFormat ISO_DATE_FORMAT = new SimpleDateFormat(
-			DateFormatUtils.ISO_DATETIME_TIME_ZONE_FORMAT.getPattern());
-
-	private static final String DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SZZ";
 
 	private final BlockingQueue<Packet> outQueue;
 	private final ChannelManager channelManager;
@@ -176,8 +165,8 @@ public class PublishSet extends PubSubElementProcessorAbstract {
 			updated = new Date(); // Default to now
 		} else {
 			try {
-				updated = new SimpleDateFormat(DATE_FORMAT).parse(updatedText);
-			} catch (ParseException e) {
+				updated = Conf.parseDate(updatedText);
+			} catch (IllegalArgumentException e) {
 				updated = new Date();
 				logger.error(e);
 				LOGGER.error("Invalid date encountered in atom entry: "

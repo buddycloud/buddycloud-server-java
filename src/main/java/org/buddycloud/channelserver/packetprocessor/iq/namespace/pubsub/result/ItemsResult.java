@@ -1,12 +1,11 @@
 package org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.result;
 
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 
 import org.apache.log4j.Logger;
 import org.buddycloud.channelserver.channel.ChannelManager;
+import org.buddycloud.channelserver.channel.Conf;
 import org.buddycloud.channelserver.db.exception.NodeStoreException;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.PubSubElementProcessorAbstract;
 import org.buddycloud.channelserver.pubsub.affiliation.Affiliations;
@@ -21,10 +20,7 @@ import org.xmpp.packet.JID;
 public class ItemsResult extends PubSubElementProcessorAbstract {
 
 	private static final String MISSING_NODE = "Missing node";
-	private static final String DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.S'Z'";
-
 	private static final Logger logger = Logger.getLogger(ItemsResult.class);
-	private SimpleDateFormat sdf = new SimpleDateFormat(DATE_FORMAT);
 	private boolean subscriptionNode = false;
 
 	public ItemsResult(ChannelManager channelManager) {
@@ -69,6 +65,7 @@ public class ItemsResult extends PubSubElementProcessorAbstract {
 		}
 	}
 
+	@SuppressWarnings("unchecked")
 	private void processSubscriptionItem(Element item)
 			throws NodeStoreException {
 		JID user = new JID(item.attributeValue("id"));
@@ -108,8 +105,7 @@ public class ItemsResult extends PubSubElementProcessorAbstract {
 		channelManager.setUserAffiliation(node, user, aff);
 	}
 
-	private void processPublishedItem(Element item) throws ParseException,
-			NodeStoreException {
+	private void processPublishedItem(Element item) throws NodeStoreException {
 
 		Element entry = item.element("entry");
 
@@ -126,7 +122,7 @@ public class ItemsResult extends PubSubElementProcessorAbstract {
 				String[] inReplyToParts = reply.attributeValue("ref").split(",");
 				inReplyTo = inReplyToParts[inReplyToParts.length - 1];
 			}
-			Date updatedDate = sdf.parse(entry.elementText("updated"));
+			Date updatedDate = Conf.parseDate(entry.elementText("updated"));
 			NodeItemImpl nodeItem = new NodeItemImpl(node,
 					entry.elementText("id"), updatedDate, entry.asXML(), inReplyTo);
 			try {
@@ -136,7 +132,7 @@ public class ItemsResult extends PubSubElementProcessorAbstract {
 				logger.error("Attempt to delete an item which didn't exist... its ok");
 			}
 			channelManager.addNodeItem(nodeItem);
-		} catch (ParseException e) {
+		} catch (IllegalArgumentException e) {
 			logger.error(e);
 			e.printStackTrace();
 			return;

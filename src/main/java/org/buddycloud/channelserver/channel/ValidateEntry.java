@@ -1,10 +1,8 @@
 package org.buddycloud.channelserver.channel;
 
-import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.TimeZone;
 import java.util.UUID;
 
 import org.apache.log4j.Logger;
@@ -78,11 +76,8 @@ public class ValidateEntry {
 		
 		Element updated = this.entry.element("updated");
 		if(updated == null) {
-			String DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ss'Z'";
-			SimpleDateFormat sdf = new SimpleDateFormat(DATE_FORMAT);
-			sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
 			
-			String updateTime = sdf.format(new Date());
+			String updateTime = Conf.formatDate(new Date());
 			
 			LOGGER.debug("Update of the entry was missing. We add a default one to it: '" + updateTime + "'.");
 			this.entry.addElement("updated").setText(updateTime);
@@ -144,11 +139,7 @@ public class ValidateEntry {
 		entry.addElement("content")
 		     .setText(this.params.get("content"));
 		
-		String DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ss'Z'";
-		SimpleDateFormat sdf = new SimpleDateFormat(DATE_FORMAT);
-		sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
-		
-		String leData = sdf.format(new Date());
+		String leData = Conf.formatDate(new Date());
 		
 		entry.addElement("published")
 		     .setText(leData);

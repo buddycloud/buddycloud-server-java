@@ -28,7 +28,7 @@ public class Conf {
 	private static final String PUBLISHERS = "publishers";
 	
 //	public static final String DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.S'Z'";
-	public static final DateTimeFormatter ISO_8601_PARSER = ISODateTimeFormat.dateTimeParser();
+	public static final DateTimeFormatter ISO_8601_PARSER = ISODateTimeFormat.dateTime();
 	
     
     // Most of these are copied from here

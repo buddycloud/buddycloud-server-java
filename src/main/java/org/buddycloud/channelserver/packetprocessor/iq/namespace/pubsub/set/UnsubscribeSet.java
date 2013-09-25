@@ -133,14 +133,13 @@ public class UnsubscribeSet extends PubSubElementProcessorAbstract {
 		Document document = getDocumentHelper();
 		Element message = document.addElement("message");
 		message.addAttribute("remote-server-discover", "false");
-		Element event = message.addElement("event");
+		Element event = message.addElement("event", Event.NAMESPACE);
 		Element subscription = event.addElement("subscription");
 		Element affiliation = event.addElement("affiliation");
 		subscription.addAttribute("node", node);
 		subscription.addAttribute("jid", unsubscribingJid.toBareJID());
 		subscription
 				.addAttribute("subscription", Subscriptions.none.toString());
-		event.addNamespace("", Event.NAMESPACE);
 		message.addAttribute("from", request.getTo().toString());
 		message.addAttribute("type", "headline");
 		// "None" because we don't glorify the bad

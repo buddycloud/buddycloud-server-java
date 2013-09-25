@@ -265,9 +265,8 @@ public class SubscribeSet extends PubSubElementProcessorAbstract {
 		Document document = getDocumentHelper();
 		Element message = document.addElement("message");
 		message.addAttribute("remote-server-discover", "false");
-		Element event = message.addElement("event");
+		Element event = message.addElement("event", Event.NAMESPACE);
 		Element subscription = event.addElement("subscription");
-		event.addNamespace("", Event.NAMESPACE);
 		message.addAttribute("from", request.getTo().toString());
 		message.addAttribute("type", "headline");
 		subscription

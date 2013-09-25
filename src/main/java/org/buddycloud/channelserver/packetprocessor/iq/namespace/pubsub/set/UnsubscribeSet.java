@@ -135,7 +135,6 @@ public class UnsubscribeSet extends PubSubElementProcessorAbstract {
 		message.addAttribute("remote-server-discover", "false");
 		Element event = message.addElement("event", Event.NAMESPACE);
 		Element subscription = event.addElement("subscription");
-		Element affiliation = event.addElement("affiliation");
 		subscription.addAttribute("node", node);
 		subscription.addAttribute("jid", unsubscribingJid.toBareJID());
 		subscription
@@ -143,7 +142,8 @@ public class UnsubscribeSet extends PubSubElementProcessorAbstract {
 		message.addAttribute("from", request.getTo().toString());
 		message.addAttribute("type", "headline");
 		// "None" because we don't glorify the bad
-		affiliation.addAttribute("affiliation", Affiliations.none.toString());
+		Element affiliations = event.addElement("affiliations");
+		Element affiliation = affiliations.addElement("affiliation");
 		affiliation.addAttribute("jid", unsubscribingJid.toBareJID());
 		affiliation.addAttribute("node", node);
 

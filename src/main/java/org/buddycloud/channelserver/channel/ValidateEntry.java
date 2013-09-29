@@ -18,11 +18,12 @@ public class ValidateEntry {
 	private String errorMsg = "";
 	private String inReplyTo;
 	private Element meta;
+	private Element media;
 	
 	Map<String, String>params = new HashMap<String, String>();
 	
 	private Element geoloc;
-	
+
 	public ValidateEntry(Element entry) {
 		this.entry = entry;
 	}
@@ -97,6 +98,12 @@ public class ValidateEntry {
 		if (null != meta) {
 			this.meta = meta;
 		}
+		
+		Element media = this.entry.element("media");
+		if (null != media) {
+			this.media = media;
+		}
+		
 		return true;
 	}
 	
@@ -125,6 +132,9 @@ public class ValidateEntry {
              <meta>
                 ... additional meta ...
              </meta>
+             <media>
+                <item id="mediaId" channel="channel@example.com"/>
+             </media>
           </entry>
 		 */
 		String id       = UUID.randomUUID().toString();
@@ -180,6 +190,11 @@ public class ValidateEntry {
 		if (null != meta) {
 			entry.add(meta.createCopy());
 		}
+		
+		if (null != media) {
+			entry.add(media.createCopy());
+		}
+		
 		return entry;
 	}
 	

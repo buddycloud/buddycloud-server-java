@@ -2,7 +2,6 @@ package org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.get;
 
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.TimeUnit;
 
 import junit.framework.Assert;
 

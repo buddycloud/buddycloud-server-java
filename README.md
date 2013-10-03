@@ -30,28 +30,23 @@ sudo su - postgres
 ~~~~
 
 Create a database user and assign it a password (it will not work with a blank password);
-
 ~~~~ {.bash}
 createuser buddycloud_server --pwprompt --no-superuser --no-createdb --no-createrole
 ~~~~
 
 Then just proceed as follows, entering the password you picked whenever asked.
-
 ~~~~ {.bash}
 # create the database
 createdb --owner buddycloud_server --encoding UTF8 buddycloud_server
 
 # install the schema file (and all upgrade files)
-psql -h 127.0.0.1 -U buddycloud_server -d buddycloud_server < install.sql
-psql -h 127.0.0.1 -U buddycloud_server -d buddycloud_server < upgrade-1.sql
-psql -h 127.0.0.1 -U buddycloud_server -d buddycloud_server < upgrade-2.sql
+psql -h 127.0.0.1 -U buddycloud_server -d buddycloud_server < postgres/install.sql
+psql -h 127.0.0.1 -U buddycloud_server -d buddycloud_server < postgres/upgrade-1.sql
+psql -h 127.0.0.1 -U buddycloud_server -d buddycloud_server < postgres/upgrade-2.sql
 ~~~~
 
 Now we're done, but we must test that we can connect to the database and that the schema was installed appropriately.
-
 ~~~~ {.bash}
-# Test the database is installed
 psql -h 127.0.0.1 --username buddycloud_server -d buddycloud_server -c "select * from nodes;"
 ~~~~
-
 If you got an output similar to (or exactly like) this, you're good to go.

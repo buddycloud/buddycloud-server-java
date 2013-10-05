@@ -52,6 +52,23 @@ public class Conf {
     	return ISO_8601_FORMATTER.print(date.getTime());
     }
 
+    public static HashMap<String, String> getDefaultChannelConf(JID channelJID, JID ownerJID) {
+        HashMap<String, String> conf = new HashMap<String, String>();
+        
+        conf.put(TYPE, "http://www.w3.org/2005/Atom");
+        conf.put(TITLE, channelJID.toBareJID() + "'s title");
+        conf.put(DESCRIPTION, channelJID.toBareJID()  + "'s description");
+        conf.put(PUBLISH_MODEL, PUBLISHERS);
+        conf.put(ACCESS_MODEL, AccessModels.open.toString());
+        conf.put(CREATION_DATE, formatDate(new Date()));
+        conf.put(OWNER, ownerJID.toBareJID());
+        conf.put(DEFAULT_AFFILIATION, Affiliations.member.toString());
+        conf.put(NUM_SUBSCRIBERS, "1");
+        conf.put(NOTIFY_CONFIG, "1");
+        
+        return conf;
+    }
+    
     public static HashMap<String, String> getDefaultPostChannelConf(JID channelJID) {
         HashMap<String, String> conf = new HashMap<String, String>();
         

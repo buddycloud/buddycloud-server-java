@@ -2,13 +2,13 @@ package org.buddycloud.channelserver.packetprocessor.message;
 
 import java.util.Properties;
 import java.util.concurrent.BlockingQueue;
+
 import org.apache.log4j.Logger;
 import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.packetprocessor.PacketProcessor;
 import org.buddycloud.channelserver.packetprocessor.message.event.AbstractMessageProcessor;
 import org.buddycloud.channelserver.packetprocessor.message.event.AffiliationProcessor;
 import org.buddycloud.channelserver.packetprocessor.message.event.ConfigurationProcessor;
-import org.buddycloud.channelserver.packetprocessor.message.event.DeleteProcessor;
 import org.buddycloud.channelserver.packetprocessor.message.event.ItemsProcessor;
 import org.buddycloud.channelserver.packetprocessor.message.event.RetractItemProcessor;
 import org.buddycloud.channelserver.packetprocessor.message.event.SubscriptionProcessor;
@@ -32,7 +32,6 @@ public class MessageProcessor implements PacketProcessor<Message> {
 	public static final String SUBSCRIPTION = "subscription";
 	private static final String AFFILIATIONS = "affiliations";
 	private static final String CONFIGURATION = "configuration";
-	private static final String DELETE = "delete";
 
 	public MessageProcessor(BlockingQueue<Packet> outQueue, Properties conf,
 			ChannelManager channelManager) {
@@ -72,8 +71,6 @@ public class MessageProcessor implements PacketProcessor<Message> {
 		} else if (true == name.equals(CONFIGURATION)) {
 			handler = new ConfigurationProcessor(outQueue, configuration,
 					channelManager);
-		} else if (true == name.equals(DELETE)) {
-			handler = new DeleteProcessor(outQueue, configuration, channelManager);
 		}
 		if (null == handler) {
 			throw new UnknownEventContentException("Unknown event content '"

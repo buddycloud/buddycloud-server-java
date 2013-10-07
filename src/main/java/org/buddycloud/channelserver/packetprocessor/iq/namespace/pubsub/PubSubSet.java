@@ -11,6 +11,7 @@ import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.set.Affi
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.set.ItemDelete;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.set.NodeConfigure;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.set.NodeCreate;
+import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.set.NodeDelete;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.set.PublishSet;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.set.SubscribeSet;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.set.SubscriptionEvent;
@@ -47,6 +48,7 @@ public class PubSubSet implements PacketProcessor<IQ> {
         elementProcessors.add(new SubscriptionEvent(outQueue, channelManager));
         elementProcessors.add(new AffiliationEvent(outQueue, channelManager));
         elementProcessors.add(new ItemDelete(outQueue, channelManager));
+        elementProcessors.add(new NodeDelete(outQueue, channelManager));
     }
     
     @Override

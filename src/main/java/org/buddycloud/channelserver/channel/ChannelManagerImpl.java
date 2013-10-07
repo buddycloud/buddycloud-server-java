@@ -362,7 +362,6 @@ public class ChannelManagerImpl implements ChannelManager {
 	@Override
 	public void deleteNode(String nodeId) throws NodeStoreException {
 		nodeStore.deleteNode(nodeId);
-
 	}
 
 	@Override

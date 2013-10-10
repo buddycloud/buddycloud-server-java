@@ -5,11 +5,8 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Date;
 import java.util.Deque;
 import java.util.HashMap;
@@ -1562,6 +1559,70 @@ public class JDBCNodeStore implements NodeStore {
 	}
 
 	@Override
+	public ResultSet<NodeItem> getUserItems(JID userJid) throws NodeStoreException {
+		PreparedStatement stmt = null;
+		try {
+			stmt = conn.prepareStatement(dialect.getUserItems());
+			stmt.setString(1, userJid.toBareJID());
+			java.sql.ResultSet rs = stmt.executeQuery();
+			ArrayList<NodeItem> result = new ArrayList<NodeItem>();
+			while (rs.next()) {
+				NodeItem nodeItem = new NodeItemImpl(rs.getString(1),
+						rs.getString(2), rs.getTimestamp(3),
+						rs.getString(4), rs.getString(5));
+				result.add(nodeItem);
+			}
+			return new ResultSetImpl<NodeItem>(result);
+		} catch (SQLException e) {
+			throw new NodeStoreException(e);
+		} finally {
+			close(stmt); // Will implicitly close the resultset if required
+		}
+	}
+
+	@Override
+	public void deleteUserItems(JID userJid) throws NodeStoreException {
+		PreparedStatement stmt = null;
+		try {
+			stmt = conn.prepareStatement(dialect.deleteUserItems());
+			stmt.setString(1, userJid.toBareJID());
+			stmt.executeUpdate();
+		} catch (SQLException e) {
+			throw new NodeStoreException(e);
+		} finally {
+			close(stmt); // Will implicitly close the resultset if required
+		}
+	}
+
+	@Override
+	public void deleteUserAffiliations(JID userJid) throws NodeStoreException {
+		PreparedStatement stmt = null;
+		try {
+			stmt = conn.prepareStatement(dialect.deleteUserAffiliations());
+			stmt.setString(1, userJid.toBareJID());
+			stmt.executeUpdate();
+		} catch (SQLException e) {
+			throw new NodeStoreException(e);
+		} finally {
+			close(stmt); // Will implicitly close the resultset if required
+		}
+	}
+
+	@Override
+	public void deleteUserSubscriptions(JID userJid) throws NodeStoreException {
+		PreparedStatement stmt = null;
+		try {
+			stmt = conn.prepareStatement(dialect.deleteUserSubscriptions());
+			stmt.setString(1, userJid.toBareJID());
+			stmt.executeUpdate();
+		} catch (SQLException e) {
+			throw new NodeStoreException(e);
+		} finally {
+			close(stmt); // Will implicitly close the resultset if required
+		}
+	}
+	
+	@Override
 	public Transaction beginTransaction() throws NodeStoreException {
 		if (transactionHasBeenRolledBack) {
 			throw new IllegalStateException(
@@ -1684,6 +1745,8 @@ public class JDBCNodeStore implements NodeStore {
 	public interface NodeStoreSQLDialect {
 		String insertNode();
 
+		String getUserItems();
+
 		String selectItemsForLocalNodesBeforeDate();
 
 		String countItemsForLocalNodes();
@@ -1781,5 +1844,13 @@ public class JDBCNodeStore implements NodeStore {
 		String deleteItem();
 
 		String selectCountRecentItemParts();
+		
+		String deleteUserItems();
+		
+		String deleteUserAffiliations();
+		
+		String deleteUserSubscriptions();
+	
 	}
+
 }

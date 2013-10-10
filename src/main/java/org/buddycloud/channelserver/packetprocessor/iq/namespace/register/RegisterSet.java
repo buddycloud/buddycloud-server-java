@@ -25,55 +25,64 @@ public class RegisterSet implements PacketProcessor<IQ> {
 	public static final String ELEMENT_NAME = "query";
 	private static final Logger LOGGER = Logger.getLogger(RegisterSet.class);
 
-	private final Configuration conf;
 	private final BlockingQueue<Packet> outQueue;
 	private final ChannelManager channelManager;
 	private IQ request;
+	private IQ response;
+	private final Configuration configuration;
 
-	public RegisterSet(Configuration conf, BlockingQueue<Packet> outQueue,
-			ChannelManager channelManager) {
-		this.conf = conf;
+	public RegisterSet(BlockingQueue<Packet> outQueue, ChannelManager channelManager) {
+		this(Configuration.getInstance(), outQueue, channelManager);
+	}
+	
+	public RegisterSet(Configuration configuration, BlockingQueue<Packet> outQueue, ChannelManager channelManager) {
+		this.configuration = configuration;
 		this.outQueue = outQueue;
 		this.channelManager = channelManager;
 	}
 
 	@Override
 	public void process(IQ reqIQ) throws Exception {
-		request = reqIQ;
+		this.request = reqIQ;
+		this.response = IQ.createResultIQ(reqIQ);
+		
+		LOGGER.debug("Processing register request from " + request.getFrom());
 
-		String domain = request.getFrom().getDomain();
-		if (!domain.equals(conf.getProperty("server.domain"))) {
-			notThisDomain();
+		String domain = reqIQ.getFrom().getDomain();
+		if (!domain.equals(Configuration.getInstance().getServerDomain())) {
+			notThisDomain(reqIQ);
 			return;
 		}
-		if (LOGGER.isDebugEnabled()) {
-			LOGGER.debug("Processing register request from "
-					+ request.getFrom());
-		}
-
-		if (true == channelManager.nodeExists("/user/"
-				+ request.getFrom().toBareJID() + "/posts")) {
-			// userAlreadyRegistered();
-			if (LOGGER.isDebugEnabled()) {
-				LOGGER.debug("User " + request.getFrom().toBareJID()
-						+ " is already registered");
-			}
-
-			IQ reply = IQ.createResultIQ(request);
-			outQueue.put(reply);
-
+		
+		if (userRegistered()) {
+			LOGGER.debug("User " + request.getFrom().toBareJID() + " is already registered");
+			outQueue.put(response);
 			return;
 		}
 
-		if (LOGGER.isDebugEnabled()) {
-			LOGGER.trace("Registering new user " + request.getFrom());
-		}
-
-		channelManager.createPersonalChannel(reqIQ.getFrom());
-		IQ result = IQ.createResultIQ(reqIQ);
-		outQueue.put(result);
-
+		LOGGER.debug("Registering new user " + request.getFrom());
+		
+		channelManager.createPersonalChannel(request.getFrom());
+		outQueue.put(response);
 		autosubscribeToChannels(request.getFrom());
+	}
+
+	private void notThisDomain(IQ reqIQ) throws InterruptedException {
+		// Request is coming from different domain than the
+		// component is using. We will not allow this because
+		// "buddycloud federation" cannot work for that.
+		IQ reply = IQ.createResultIQ(reqIQ);
+		reply.setType(Type.error);
+		reply.setChildElement(reqIQ.getChildElement().createCopy());
+		PacketError pe = new PacketError(
+				org.xmpp.packet.PacketError.Condition.not_allowed,
+				org.xmpp.packet.PacketError.Type.cancel);
+		reply.setError(pe);
+		outQueue.put(reply);
+	}
+	
+	private boolean userRegistered() throws Exception {
+		return channelManager.nodeExists("/user/" + request.getFrom().toBareJID() + "/posts");
 	}
 
 	// TODO: We should really be returning an error as per spec shouldn't we?
@@ -91,23 +100,8 @@ public class RegisterSet implements PacketProcessor<IQ> {
 		outQueue.put(reply);
 	}
 
-	private void notThisDomain() throws InterruptedException {
-		// Request is coming from different domain than the
-		// component is using. We will not allow this because
-		// "buddycloud federation" cannot work for that.
-
-		IQ reply = IQ.createResultIQ(request);
-		reply.setType(Type.error);
-		reply.setChildElement(request.getChildElement().createCopy());
-		PacketError pe = new PacketError(
-				org.xmpp.packet.PacketError.Condition.not_allowed,
-				org.xmpp.packet.PacketError.Type.cancel);
-		reply.setError(pe);
-		outQueue.put(reply);
-	}
-
 	private void autosubscribeToChannels(final JID from) {
-		Collection<JID> channels = conf.getAutosubscribeChannels();
+		Collection<JID> channels = configuration.getAutosubscribeChannels();
 
 		if (LOGGER.isDebugEnabled()) {
 			LOGGER.debug("Auto-subscribing " + from + " to " + channels.size()
@@ -136,9 +130,9 @@ public class RegisterSet implements PacketProcessor<IQ> {
 			try {
 				if (channelManager.isLocalJID(channel)) {
 					subscribe.setFrom(from);
-					subscribe.setTo(conf.getServerChannelsDomain());
+					subscribe.setTo(configuration.getServerChannelsDomain());
 				} else {
-					subscribe.setFrom(conf.getServerChannelsDomain());
+					subscribe.setFrom(configuration.getServerChannelsDomain());
 					subscribe.setTo(channel.getDomain());
 
 					Element actorEl = pubsubEl.addElement(QName.get("actor",
@@ -151,7 +145,7 @@ public class RegisterSet implements PacketProcessor<IQ> {
 
 				// If auto-approve is set, and this is a local private channel
 				// then set the user to subscribed
-				if (conf.getBooleanProperty(
+				if (configuration.getBooleanProperty(
 						Configuration.CONFIGURATION_CHANNELS_AUTOSUBSCRIBE_AUTOAPPROVE,
 						false)
 						&& channelManager.isLocalJID(channel)

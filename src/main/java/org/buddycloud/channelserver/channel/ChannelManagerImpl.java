@@ -430,4 +430,24 @@ public class ChannelManagerImpl implements ChannelManager {
 		
 		return Affiliations.member;
 	}
+
+	@Override
+	public ResultSet<NodeItem> getUserItems(JID userJid) throws NodeStoreException {
+		return nodeStore.getUserItems(userJid);
+	}
+
+	@Override
+	public void deleteUserItems(JID userJid) throws NodeStoreException {
+		nodeStore.deleteUserItems(userJid);
+	}
+
+	@Override
+	public void deleteUserAffiliations(JID userJid) throws NodeStoreException {
+		nodeStore.deleteUserAffiliations(userJid);
+	}
+
+	@Override
+	public void deleteUserSubscriptions(JID userJid) throws NodeStoreException {
+		nodeStore.deleteUserSubscriptions(userJid);
+	}
 }

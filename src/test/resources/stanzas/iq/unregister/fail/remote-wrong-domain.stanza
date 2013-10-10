@@ -1,0 +1,7 @@
+<iq type='set' from='shakespeare.lit' id='unreg1'>
+  <query xmlns='jabber:iq:register'>
+    <remove>
+      <actor xmlns='http://buddycloud.org/v1'>lil@barracks.lit</actor>
+    </remove>
+  </query>
+</iq>

@@ -562,6 +562,14 @@ public interface NodeStore {
 	 */
 	int getFirehoseItemCount(boolean isAdmin) throws NodeStoreException;
 	
+	ResultSet<NodeItem> getUserItems(JID userJid) throws NodeStoreException;
+	
+	void deleteUserItems(JID userJid) throws NodeStoreException;
+	
+	void deleteUserAffiliations(JID userJid) throws NodeStoreException;
+	
+	void deleteUserSubscriptions(JID userJid) throws NodeStoreException;
+	
 	/**
 	 * Closes this node store instance and releases any resources.
 	 */

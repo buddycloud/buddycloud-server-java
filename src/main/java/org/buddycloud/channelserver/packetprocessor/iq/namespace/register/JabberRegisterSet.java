@@ -4,6 +4,7 @@ import java.util.concurrent.BlockingQueue;
 
 import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.packetprocessor.PacketProcessor;
+import org.dom4j.Element;
 import org.xmpp.packet.IQ;
 import org.xmpp.packet.Packet;
 
@@ -19,7 +20,8 @@ public class JabberRegisterSet implements PacketProcessor<IQ> {
 	
 	@Override
 	public void process(IQ reqIQ) throws Exception {
-		if (reqIQ.getElement().element("remove") == null) {
+		Element removeEl = reqIQ.getElement().element("query").element("remove");
+		if (removeEl == null) {
 			registerSet.process(reqIQ);
 		} else {
 			unregisterSet.process(reqIQ);

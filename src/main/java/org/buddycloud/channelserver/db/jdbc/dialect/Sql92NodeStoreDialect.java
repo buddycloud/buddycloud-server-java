@@ -208,11 +208,11 @@ public class Sql92NodeStoreDialect implements NodeStoreSQLDialect {
 		+ "ORDER BY \"updated\" DESC, \"id\" ASC LIMIT ?";
 
 	private static final String SELECT_USER_ITEMS = "SELECT \"node\", \"id\", \"updated\", \"xml\", \"in_reply_to\"" +
-			" FROM items WHERE (CAST(xpath('//atom:author/atom:name/text()', xmlparse(document \"xml\")," +
+			" FROM \"items\" WHERE (CAST(xpath('//atom:author/atom:name/text()', xmlparse(document \"xml\")," +
 			" ARRAY[ARRAY['atom', 'http://www.w3.org/2005/Atom']]) AS TEXT[]))[1] = ?";
 
 	private static final String DELETE_USER_ITEMS = "DELETE" +
-			" FROM items WHERE (CAST(xpath('//atom:author/atom:name/text()', xmlparse(document \"xml\")," +
+			" FROM \"items\" WHERE (CAST(xpath('//atom:author/atom:name/text()', xmlparse(document \"xml\")," +
 			" ARRAY[ARRAY['atom', 'http://www.w3.org/2005/Atom']]) AS TEXT[]))[1] = ?";
 
 	private static final String DELETE_USER_AFFILIATIONS = "DELETE FROM \"affiliations\" WHERE \"user\" = ?";

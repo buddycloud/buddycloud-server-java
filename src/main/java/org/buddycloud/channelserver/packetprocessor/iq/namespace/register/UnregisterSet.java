@@ -158,8 +158,12 @@ public class UnregisterSet implements PacketProcessor<IQ> {
 		ArrayList<String> nodeList = channelManager.getNodeList();
 		Set<String> remoteDomains = new HashSet<String>();
 		for (String node : nodeList) {
-			if (!channelManager.isLocalNode(node)) {
-				remoteDomains.add(new JID(node.split("/")[2]).getDomain());
+			try {
+				if (!channelManager.isLocalNode(node)) {
+					remoteDomains.add(new JID(node.split("/")[2]).getDomain());
+				}
+			} catch (IllegalArgumentException e) {
+				// Ignore bad formatted nodes
 			}
 		}
 		return remoteDomains;

@@ -319,6 +319,7 @@ public class ChannelManagerImpl implements ChannelManager {
 	@Override
 	public boolean isLocalNode(String nodeId) {
 		if (false == nodeId.matches("/user/.+@.+/.+")) {
+			logger.debug("Node " + nodeId + " has an invalid format");
 			throw new IllegalArgumentException(INVALID_NODE);
 		}
 		return ((true == nodeId

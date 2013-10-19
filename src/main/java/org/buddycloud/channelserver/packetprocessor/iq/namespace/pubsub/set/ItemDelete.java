@@ -49,17 +49,16 @@ public class ItemDelete extends PubSubElementProcessorAbstract {
 		element = elm;
 		request = reqIQ;
 		response = IQ.createResultIQ(request);
-		node    = element.attributeValue("node");
+		node = element.attributeValue("node");
 		
-		if (false == channelManager.isLocalNode(node)) {
+		if (!channelManager.isLocalNode(node)) {
 			makeRemoteRequest();
 			return;
 		}
 
 		try {
-			if ((false == validNodeProvided()) || (false == nodeExists())
-					|| (false == itemIdProvided()) || (false == itemExists())
-					|| (false == validPayload()) || (false == canDelete())) {
+			if (!validNodeProvided() || !nodeExists() || !itemIdProvided() 
+					|| !itemExists() || !validPayload() || !canDelete()) {
 				outQueue.put(response);
 				return;
 			}
@@ -87,8 +86,7 @@ public class ItemDelete extends PubSubElementProcessorAbstract {
 			String notify = request.getElement().element("pubsub")
 					.element("retract").attributeValue("notify");
 
-			if ((null == notify) || ((false == notify.equals("true"))
-					&& (false == notify.equals("1")))) {
+			if (notify == null || (!notify.equals("true") && !notify.equals("1"))) {
 				return;
 			}
 			ResultSet<NodeSubscription> subscriptions = channelManager
@@ -135,7 +133,7 @@ public class ItemDelete extends PubSubElementProcessorAbstract {
 	}
 
 	private boolean canDelete() throws NodeStoreException {
-		if ((false == userOwnsItem()) && (false == userManagesNode())) {
+		if (!userOwnsItem() && !userManagesNode()) {
 			setErrorCondition(PacketError.Type.auth,
 					PacketError.Condition.forbidden);
 			return false;
@@ -155,7 +153,7 @@ public class ItemDelete extends PubSubElementProcessorAbstract {
 	private boolean userManagesNode() throws NodeStoreException {
 		NodeAffiliation affiliation = channelManager.getUserAffiliation(node,
 				new JID(request.getFrom().toBareJID()));
-		if (null == affiliation) {
+		if (affiliation == null) {
 			return false;
 		}
 		return affiliation.getAffiliation().in(Affiliations.owner,
@@ -182,7 +180,7 @@ public class ItemDelete extends PubSubElementProcessorAbstract {
 
 	private boolean itemExists() throws NodeStoreException {
 		nodeItem = channelManager.getNodeItem(node, itemId);
-		if (null != nodeItem) {
+		if (nodeItem != null) {
 			return true;
 		}
 		setErrorCondition(PacketError.Type.cancel,
@@ -193,7 +191,7 @@ public class ItemDelete extends PubSubElementProcessorAbstract {
 	private boolean itemIdProvided() {
 		itemId = request.getElement().element("pubsub").element("retract")
 				.element("item").attributeValue("id");
-		if ((null != itemId) && (false == itemId.equals(""))) {
+		if (itemId != null && !itemId.equals("")) {
 			return true;
 		}
 		response.setType(IQ.Type.error);
@@ -221,7 +219,7 @@ public class ItemDelete extends PubSubElementProcessorAbstract {
 	}
 
 	private boolean validNodeProvided() {
-		if ((null != node) && (false == node.equals(""))) {
+		if (node != null && !node.equals("")) {
 			return true;
 		}
 		response.setType(IQ.Type.error);

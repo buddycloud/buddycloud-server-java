@@ -57,10 +57,12 @@ public class DiscoResult implements PacketProcessor<IQ> {
 	}
 
 	private void processConfigurationSettings() throws NodeStoreException {
-
-		if (false == channelManager.nodeExists(node)) 
-		    channelManager.addRemoteNode(node);
-
+		if (node == null) {
+			return;
+		}
+		if (!channelManager.nodeExists(node)) {
+			channelManager.addRemoteNode(node);
+		}
 		this.helper.parseDiscoInfo(requestIq);
 		HashMap<String, String> configuration = this.helper.getValues();
 		channelManager.setNodeConf(node, configuration);

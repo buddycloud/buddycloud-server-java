@@ -110,6 +110,7 @@ public class ChannelsEngine implements Component {
 	}
 
 	public void sendPacket(Packet p) throws ComponentException {
+		LOGGER.debug("OUT -> " + p.toXML());
 		manager.sendPacket(this, p);
 	}
 

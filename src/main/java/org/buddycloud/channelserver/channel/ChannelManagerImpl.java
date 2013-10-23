@@ -359,6 +359,12 @@ public class ChannelManagerImpl implements ChannelManager {
 			String nodeId) throws NodeStoreException {
 		return nodeStore.getNodeSubscriptionListeners(nodeId);
 	}
+	
+	@Override
+	public ResultSet<NodeSubscription> getNodeSubscriptionListeners()
+			throws NodeStoreException {
+		return nodeStore.getNodeSubscriptionListeners();
+	}
 
 	@Override
 	public void deleteNode(String nodeId) throws NodeStoreException {
@@ -451,4 +457,5 @@ public class ChannelManagerImpl implements ChannelManager {
 	public void deleteUserSubscriptions(JID userJid) throws NodeStoreException {
 		nodeStore.deleteUserSubscriptions(userJid);
 	}
+	
 }

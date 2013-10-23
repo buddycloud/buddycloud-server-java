@@ -4,14 +4,27 @@ import static org.junit.Assert.assertEquals;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.Properties;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 
 import org.buddycloud.channelserver.Configuration;
+import org.buddycloud.channelserver.channel.ChannelManager;
+import org.buddycloud.channelserver.channel.ChannelManagerFactory;
+import org.buddycloud.channelserver.channel.ChannelManagerFactoryImpl;
 import org.buddycloud.channelserver.packetHandler.iq.IQTestHandler;
+import org.buddycloud.channelserver.pubsub.model.NodeSubscription;
+import org.buddycloud.channelserver.pubsub.model.impl.NodeSubscriptionImpl;
+import org.buddycloud.channelserver.pubsub.subscription.Subscriptions;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.xmpp.packet.JID;
+import org.xmpp.packet.Packet;
+import org.xmpp.packet.Presence;
+import org.xmpp.resultsetmanagement.ResultSetImpl;
 
 public class OnlineResourceManagerTest extends IQTestHandler {
 
@@ -119,5 +132,42 @@ public class OnlineResourceManagerTest extends IQTestHandler {
 		ArrayList<JID> users = onlineUser.getResources(localUserNoResource);
 		assertEquals(1, users.size());
 		assertEquals(new JID(localUserDesktop.toFullJID()), users.get(0));
+	}
+	
+	@Test
+	public void testAutoSubscribeToNoListeners() throws Exception {
+		ChannelManagerFactory factory = Mockito.mock(ChannelManagerFactory.class);
+		ChannelManager channelManager = Mockito.mock(ChannelManager.class);
+		Mockito.when(factory.create()).thenReturn(channelManager);
+		
+		Mockito.when(channelManager.getNodeSubscriptionListeners()).thenReturn(
+				new ResultSetImpl<NodeSubscription>(new LinkedList<NodeSubscription>()));
+		
+		BlockingQueue<Packet> outQueue = new LinkedBlockingQueue<Packet>();
+		onlineUser.subscribeToNodeListeners(factory, outQueue);
+		
+		Assert.assertTrue(outQueue.isEmpty());
+	}
+	
+	@Test
+	public void testAutoSubscribeToListeners() throws Exception {
+		ChannelManagerFactory factory = Mockito.mock(ChannelManagerFactory.class);
+		ChannelManager channelManager = Mockito.mock(ChannelManager.class);
+		Mockito.when(factory.create()).thenReturn(channelManager);
+		
+		JID jid = new JID("user@server.com");
+		LinkedList<NodeSubscription> subscriptions = new LinkedList<NodeSubscription>();
+		subscriptions.add(new NodeSubscriptionImpl("nodeId", jid, 
+				Subscriptions.subscribed));
+		Mockito.when(channelManager.getNodeSubscriptionListeners()).thenReturn(
+				new ResultSetImpl<NodeSubscription>(subscriptions));
+		
+		BlockingQueue<Packet> outQueue = new LinkedBlockingQueue<Packet>();
+		onlineUser.subscribeToNodeListeners(factory, outQueue);
+		
+		Assert.assertFalse(outQueue.isEmpty());
+		Presence presence = (Presence) outQueue.poll();
+		Assert.assertEquals(jid, presence.getTo());
+		Assert.assertEquals(Presence.Type.subscribe, presence.getType());
 	}
 }

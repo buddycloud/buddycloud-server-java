@@ -189,6 +189,9 @@ public class Sql92NodeStoreDialect implements NodeStoreSQLDialect {
 	private static final String SELECT_SUBSCRIPTION_LISTENERS_FOR_NODE = "SELECT DISTINCT ON (\"listener\") \"listener\", \"node\", \"subscription\", \"updated\""
 			+ " FROM \"subscriptions\" WHERE \"node\" = ? ORDER BY \"listener\", \"updated\"";
 
+	private static final String SELECT_SUBSCRIPTION_LISTENERS = "SELECT DISTINCT ON (\"listener\") \"listener\", \"node\", \"subscription\", \"updated\""
+			+ " FROM \"subscriptions\" ORDER BY \"listener\", \"updated\"";
+	
 	private static final String DELETE_NODE = "DELETE FROM \"nodes\" WHERE \"node\" = ?;";
 
 	private static final String SELECT_NODE_LIST = "SELECT \"node\" FROM \"nodes\";";
@@ -218,7 +221,7 @@ public class Sql92NodeStoreDialect implements NodeStoreSQLDialect {
 	private static final String DELETE_USER_AFFILIATIONS = "DELETE FROM \"affiliations\" WHERE \"user\" = ?";
 
 	private static final String DELETE_USER_SUBSCRIPTIONS = "DELETE FROM \"subscriptions\" WHERE \"user\" = ?";
-	
+
     @Override
 	public String insertNode() {
 		return INSERT_NODE;
@@ -431,6 +434,11 @@ public class Sql92NodeStoreDialect implements NodeStoreSQLDialect {
 	@Override
 	public String selectSubscriptionListenersForNode() {
 		return SELECT_SUBSCRIPTION_LISTENERS_FOR_NODE;
+	}
+	
+	@Override
+	public String selectSubscriptionListeners() {
+		return SELECT_SUBSCRIPTION_LISTENERS;
 	}
 
 	@Override

@@ -94,9 +94,11 @@ public class ItemDelete extends PubSubElementProcessorAbstract {
 			Message notification = getNotificationMessage();
 
 			for (NodeSubscription subscription : subscriptions) {
+				logger.debug("Subscription [node: " + subscription.getNodeId() + ", listener: " 
+						+ subscription.getListener() + ", subscription: " + subscription.getSubscription() + "]");
 				if (subscription.getSubscription().equals(
 						Subscriptions.subscribed)) {
-					notification.setTo(subscription.getListener().toString());
+					notification.setTo(subscription.getListener());
 					outQueue.put(notification.createCopy());
 				}
 			}

@@ -308,6 +308,16 @@ public interface NodeStore {
 			throws NodeStoreException;
 
 	/**
+	 * Gets the set of listeners to all nodes.
+	 * 
+	 * @param nodeId
+	 *            the node reference.
+	 * @return
+	 */
+	ResultSet<NodeSubscription> getNodeSubscriptionListeners()
+			throws NodeStoreException;
+	
+	/**
 	 * Gets the user's subscription to a certain node.
 	 * 
 	 * @param nodeId

@@ -31,7 +31,7 @@ public class PresenceProcessor implements PacketProcessor<Presence> {
         	return;
         }
         
-        LOGGER.debug("Processing presence from " + from.toFullJID());
+        LOGGER.debug("Processing presence from " + from.toString());
         
         String type = packet.getElement().attributeValue("type");
         onlineUsers.updateStatus(packet.getFrom(), type);

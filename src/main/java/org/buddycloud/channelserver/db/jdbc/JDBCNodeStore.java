@@ -865,6 +865,35 @@ public class JDBCNodeStore implements NodeStore {
 	}
 
 	@Override
+	public ResultSet<NodeSubscription> getNodeSubscriptionListeners()
+			throws NodeStoreException {
+		PreparedStatement stmt = null;
+
+		try {
+			stmt = conn.prepareStatement(dialect
+					.selectSubscriptionListeners());
+			
+			java.sql.ResultSet rs = stmt.executeQuery();
+
+			ArrayList<NodeSubscription> result = new ArrayList<NodeSubscription>();
+
+			while (rs.next()) {
+				NodeSubscriptionImpl nodeSub = new NodeSubscriptionImpl(
+						rs.getString(2), new JID(rs.getString(1)),
+						Subscriptions.valueOf(rs.getString(3)),
+						rs.getTimestamp(4));
+				result.add(nodeSub);
+			}
+
+			return new ResultSetImpl<NodeSubscription>(result);
+		} catch (SQLException e) {
+			throw new NodeStoreException(e);
+		} finally {
+			close(stmt); // Will implicitly close the resultset if required
+		}
+	}
+	
+	@Override
 	public CloseableIterator<NodeItem> getNodeItems(String nodeId,
 			String afterItemId, int count) throws NodeStoreException {
 		NodeItem afterItem = null;
@@ -1806,6 +1835,8 @@ public class JDBCNodeStore implements NodeStore {
 		String selectSubscriptionsForNode();
 
 		String selectSubscriptionsForNodeAfterJid();
+		
+		String selectSubscriptionListeners();
 
 		String selectSubscriptionListenersForNode();
 

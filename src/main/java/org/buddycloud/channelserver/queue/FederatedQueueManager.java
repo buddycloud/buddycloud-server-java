@@ -93,7 +93,7 @@ public class FederatedQueueManager {
 				return;
 			}
 			// Add packet to list
-			if (false == waitingStanzas.containsKey(to)) {
+			if (!waitingStanzas.containsKey(to)) {
 				waitingStanzas.put(to, new ArrayList<Packet>());
 			}
 			waitingStanzas.get(to).add(packet);
@@ -145,8 +145,8 @@ public class FederatedQueueManager {
 
 		for (Element item : items) {
 			Attribute name = item.attribute("name");
-			if ((null != name)
-					&& (true == name.getStringValue().equals(BUDDYCLOUD_SERVER))) {
+			if (name != null
+					&& name.getStringValue().equals(BUDDYCLOUD_SERVER)) {
 				remoteChannelDiscoveryStatus.put(from.toString(), DISCOVERED);
 				setDiscoveredServer(from.toString(), item.attributeValue("jid"));
 				sendFederatedRequests(from.toString());
@@ -249,7 +249,7 @@ public class FederatedQueueManager {
 	}
 
 	public void passResponseToRequester(IQ packet) throws Exception {
-		if (false == sentRemotePackets.containsKey(packet.getID())) {
+		if (!sentRemotePackets.containsKey(packet.getID())) {
 			throw new UnknownFederatedPacketException(
 					"Can not find original requesting packet! (ID:"
 							+ packet.getID() + ")");

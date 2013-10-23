@@ -33,6 +33,6 @@ public class DiscoResult implements PacketProcessor<IQ> {
 	public void process(IQ reqIQ) throws Exception {
 	    this.requestIq = reqIQ;
 	    List<Element> items = requestIq.getChildElement().elements("item");
-	    federatedQueueManager.sendInfoRequests(requestIq.getFrom(), items);
+	    federatedQueueManager.processDiscoItemsResponse(requestIq.getFrom(), items);
 	}
 }

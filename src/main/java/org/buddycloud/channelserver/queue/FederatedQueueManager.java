@@ -64,6 +64,8 @@ public class FederatedQueueManager {
 
 	public void process(Packet packet) throws ComponentException {
 		
+		logger.debug("Packet payload " + packet.toXML() + " going to federation.");
+		
 		String to = packet.getTo().toString();
 
 		String uniqueId = generateUniqueId(packet);
@@ -140,7 +142,7 @@ public class FederatedQueueManager {
 		remoteChannelDiscoveryStatus.put(remoteDomain, DISCO_ITEMS);
 	}
 
-	public void sendInfoRequests(JID from, List<Element> items)
+	public void processDiscoItemsResponse(JID from, List<Element> items)
 			throws ComponentException {
 
 		for (Element item : items) {
@@ -170,11 +172,15 @@ public class FederatedQueueManager {
 		remoteChannelDiscoveryStatus.put(from.toString(), DISCO_INFO);
 	}
 
+	public boolean isFederatedDiscoInfoRequest(String packetId) {
+		return remoteServerInfoRequestIds.containsKey(packetId);
+	}
+	
 	private void setDiscoveredServer(String server, String handler) {
 		discoveredServers.put(server, handler);
 	}
 
-	public void processInfoResponses(JID from, String id,
+	public void processDiscoInfoResponse(JID from, String id,
 			List<Element> identities) throws ComponentException {
 		String originatingServer = remoteServerInfoRequestIds.get(id);
 		if (originatingServer == null) {

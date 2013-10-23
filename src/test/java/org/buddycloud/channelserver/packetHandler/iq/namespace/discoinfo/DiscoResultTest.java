@@ -44,7 +44,7 @@ public class DiscoResultTest extends IQTestHandler {
 		discoResult.process(result);
 
 		Mockito.verify(federatedQueueManager, Mockito.times(1))
-				.processInfoResponses(Mockito.any(JID.class),
+				.processDiscoInfoResponse(Mockito.any(JID.class),
 						Mockito.anyString(), Mockito.anyList());
 	}
 }

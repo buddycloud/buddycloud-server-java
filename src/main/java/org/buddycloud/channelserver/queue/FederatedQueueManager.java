@@ -5,7 +5,6 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.log4j.Logger;
@@ -81,7 +80,7 @@ public class FederatedQueueManager {
 				return;
 			}
 			// Are we already discovering a remote server?
-			if (false == remoteChannelDiscoveryStatus.containsKey(to)) {
+			if (!remoteChannelDiscoveryStatus.containsKey(to)) {
 				discoverRemoteChannelServer(to, packet.getID());
 			} else if (remoteChannelDiscoveryStatus.get(to).equals(
 					NO_CHANNEL_SERVER)) {
@@ -108,7 +107,9 @@ public class FederatedQueueManager {
 	private void extractNodeDetails(Packet packet) {
 		try {
 			String packetXml = packet.toXML();
-			if (false == packetXml.contains("node=")) return;
+			if (!packetXml.contains("node=")) {
+				return;
+			}
 			nodeMap.put(
 			    packet.getID(),
 			    packetXml.split("node=\"")[1].split("\"")[0]
@@ -176,7 +177,9 @@ public class FederatedQueueManager {
 	public void processInfoResponses(JID from, String id,
 			List<Element> identities) throws ComponentException {
 		String originatingServer = remoteServerInfoRequestIds.get(id);
-		if (null == originatingServer) return;
+		if (originatingServer == null) {
+			return;
+		}
 		remoteServerInfoRequestIds.remove(id);
 		remoteServerItemsToProcess.put(originatingServer,
 				remoteServerItemsToProcess.get(originatingServer) - 1);
@@ -184,14 +187,15 @@ public class FederatedQueueManager {
 		String identityType;
 		for (Element identity : identities) {
 			identityType = identity.attributeValue("type");
-			if ((identityType != null)
-					&& (true == identityType.equals(IDENTITY_TYPE_CHANNELS))) {
+			if (identityType != null
+					&& identityType.equals(IDENTITY_TYPE_CHANNELS)) {
 				setDiscoveredServer(originatingServer, from.toString());
 				sendFederatedRequests(originatingServer);
 			}
 		}
+		
 		if (remoteServerItemsToProcess.get(originatingServer) < 1) {
-			if (false == discoveredServers.containsKey(originatingServer)) {
+			if (!discoveredServers.containsKey(originatingServer)) {
 				sendRemoteChannelServerNotFoundErrorResponses(originatingServer);
 				remoteChannelDiscoveryStatus.put(originatingServer,
 						NO_CHANNEL_SERVER);
@@ -206,7 +210,7 @@ public class FederatedQueueManager {
 			throws ComponentException {
 		String remoteServer = discoveredServers.get(originatingServer);
 		List<Packet> packetsToSend = waitingStanzas.get(originatingServer);
-		if (null == packetsToSend) {
+		if (packetsToSend == null) {
 			return;
 		}
 		for (Packet packet : packetsToSend) {
@@ -220,7 +224,7 @@ public class FederatedQueueManager {
 			throws ComponentException {
 
 		List<Packet> queued = waitingStanzas.get(server);
-		if (null == queued) {
+		if (queued == null) {
 			return;
 		}
 		Element noRemoteServer = new DOMElement("text", new Namespace("",

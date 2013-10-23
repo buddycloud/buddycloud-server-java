@@ -41,6 +41,9 @@ public class DiscoResultTest extends IQTestHandler {
 			throws Exception {
 		result = toIq(readStanzaAsString("/iq/discoInfo/node-reply.stanza")
 				.replace("node=\"/user/romeo@shakespeare.lit/posts\"", ""));
+		Mockito.when(federatedQueueManager.isFederatedDiscoInfoRequest(
+				Mockito.anyString())).thenReturn(true);
+		
 		discoResult.process(result);
 
 		Mockito.verify(federatedQueueManager, Mockito.times(1))

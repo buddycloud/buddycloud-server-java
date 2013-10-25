@@ -11,6 +11,7 @@ import org.buddycloud.channelserver.pubsub.model.GlobalItemID;
 import org.buddycloud.channelserver.pubsub.model.NodeAffiliation;
 import org.buddycloud.channelserver.pubsub.model.NodeItem;
 import org.buddycloud.channelserver.pubsub.model.NodeSubscription;
+import org.buddycloud.channelserver.pubsub.model.NodeThread;
 import org.xmpp.packet.JID;
 import org.xmpp.resultsetmanagement.ResultSet;
 
@@ -579,6 +580,10 @@ public interface NodeStore {
 	void deleteUserAffiliations(JID userJid) throws NodeStoreException;
 	
 	void deleteUserSubscriptions(JID userJid) throws NodeStoreException;
+	
+	ResultSet<NodeThread> getNodeThreads(String node, String afterId, int limit) throws NodeStoreException;
+	
+	int countNodeThreads(String node) throws NodeStoreException;
 	
 	/**
 	 * Closes this node store instance and releases any resources.

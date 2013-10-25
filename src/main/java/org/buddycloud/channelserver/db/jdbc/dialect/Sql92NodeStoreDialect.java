@@ -221,6 +221,22 @@ public class Sql92NodeStoreDialect implements NodeStoreSQLDialect {
 	private static final String DELETE_USER_AFFILIATIONS = "DELETE FROM \"affiliations\" WHERE \"user\" = ?";
 
 	private static final String DELETE_USER_SUBSCRIPTIONS = "DELETE FROM \"subscriptions\" WHERE \"user\" = ?";
+	
+	private static final String SELECT_NODE_THREADS = 
+			"SELECT \"items.node\", \"items.id\", \"items.updated\", \"items.xml\", \"items.in_reply_to\", " +
+			"\"threads.thread_id\", \"threads.thread_updated\" FROM items," +
+			  "(SELECT MAX(updated) AS thread_updated, thread_id FROM " +
+			  "(SELECT node, updated, (CASE WHEN (in_reply_to IS NULL) THEN id ELSE in_reply_to END) AS thread_id FROM items) AS _items" +
+			  "WHERE node = ? " +
+			  "GROUP BY thread_id " +
+			  "HAVING MAX(updated) < ? " +
+			  "ORDER BY thread_updated DESC LIMIT ?) AS threads " +
+			"WHERE items.in_reply_to = threads.thread_id OR items.id = threads.thread_id " +
+			"ORDER BY threads.thread_updated DESC, items.updated;";
+
+	private static final String COUNT_NODE_THREADS = "SELECT COUNT(DISTINCT _items.thread_id) " +
+			"FROM (SELECT node, (CASE WHEN (in_reply_to IS NULL) THEN id ELSE in_reply_to END) AS thread_id " +
+			      "FROM items WHERE node = ?) AS _items;";
 
     @Override
 	public String insertNode() {
@@ -494,5 +510,15 @@ public class Sql92NodeStoreDialect implements NodeStoreSQLDialect {
 	@Override
 	public String deleteUserSubscriptions() {
 		return DELETE_USER_SUBSCRIPTIONS;
+	}
+	
+	@Override
+	public String selectNodeThreads() {
+		return SELECT_NODE_THREADS;
+	}
+
+	@Override
+	public String countNodeThreads() {
+		return COUNT_NODE_THREADS;
 	}
 }

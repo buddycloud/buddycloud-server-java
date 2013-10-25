@@ -28,9 +28,11 @@ import org.buddycloud.channelserver.pubsub.model.GlobalItemID;
 import org.buddycloud.channelserver.pubsub.model.NodeAffiliation;
 import org.buddycloud.channelserver.pubsub.model.NodeItem;
 import org.buddycloud.channelserver.pubsub.model.NodeSubscription;
+import org.buddycloud.channelserver.pubsub.model.NodeThread;
 import org.buddycloud.channelserver.pubsub.model.impl.NodeAffiliationImpl;
 import org.buddycloud.channelserver.pubsub.model.impl.NodeItemImpl;
 import org.buddycloud.channelserver.pubsub.model.impl.NodeSubscriptionImpl;
+import org.buddycloud.channelserver.pubsub.model.impl.NodeThreadImpl;
 import org.buddycloud.channelserver.pubsub.subscription.Subscriptions;
 import org.xmpp.packet.JID;
 import org.xmpp.resultsetmanagement.ResultSet;
@@ -1652,6 +1654,70 @@ public class JDBCNodeStore implements NodeStore {
 	}
 	
 	@Override
+	public ResultSet<NodeThread> getNodeThreads(String node, String afterId,
+			int limit) throws NodeStoreException {
+		
+		Date after = new Date();
+		if (afterId != null) {
+			NodeItem afterItem = getNodeItem(node, afterId);
+			if (afterItem != null) {
+				after = afterItem.getUpdated();
+			}
+		}
+		
+		PreparedStatement stmt = null;
+		try {
+			stmt = conn.prepareStatement(dialect.selectNodeThreads());
+			stmt.setString(1, node);
+			stmt.setTimestamp(2, new java.sql.Timestamp(after.getTime()));
+			stmt.setInt(3, limit);
+			
+			java.sql.ResultSet rs = stmt.executeQuery();
+			ArrayList<NodeThread> nodeThreads = new ArrayList<NodeThread>();
+			
+			NodeThreadImpl currentThread = null;
+			while (rs.next()) {
+				NodeItem nodeItem = new NodeItemImpl(rs.getString(1),
+						rs.getString(2), rs.getTimestamp(3),
+						rs.getString(4), rs.getString(5));
+				String threadId = rs.getString(6);
+				Date threadUpdated = rs.getTimestamp(7);
+				if (currentThread == null || !threadId.equals(currentThread.getId())) {
+					NodeThreadImpl newThread = new NodeThreadImpl(threadId, threadUpdated);
+					nodeThreads.add(newThread);
+					currentThread = newThread;
+				}
+				currentThread.addItem(nodeItem);
+			}
+			return new ResultSetImpl<NodeThread>(nodeThreads);
+		} catch (SQLException e) {
+			throw new NodeStoreException(e);
+		} finally {
+			close(stmt); // Will implicitly close the resultset if required
+		}
+	}
+	
+	@Override
+	public int countNodeThreads(String node) throws NodeStoreException {
+		PreparedStatement selectStatement = null;
+		try {
+			selectStatement = conn
+					.prepareStatement(dialect.countNodeThreads());
+			selectStatement.setString(1, node);
+			java.sql.ResultSet rs = selectStatement.executeQuery();
+			if (rs.next()) {
+				return rs.getInt(1);
+			} else {
+				return 0; // This really shouldn't happen!
+			}
+		} catch (SQLException e) {
+			throw new NodeStoreException(e);
+		} finally {
+			close(selectStatement);
+		}
+	}
+	
+	@Override
 	public Transaction beginTransaction() throws NodeStoreException {
 		if (transactionHasBeenRolledBack) {
 			throw new IllegalStateException(
@@ -1881,7 +1947,10 @@ public class JDBCNodeStore implements NodeStore {
 		String deleteUserAffiliations();
 		
 		String deleteUserSubscriptions();
+
+		String selectNodeThreads();
+		
+		String countNodeThreads();
 	
 	}
-
 }

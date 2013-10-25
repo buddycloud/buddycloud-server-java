@@ -16,6 +16,7 @@ import org.buddycloud.channelserver.pubsub.model.GlobalItemID;
 import org.buddycloud.channelserver.pubsub.model.NodeAffiliation;
 import org.buddycloud.channelserver.pubsub.model.NodeItem;
 import org.buddycloud.channelserver.pubsub.model.NodeSubscription;
+import org.buddycloud.channelserver.pubsub.model.NodeThread;
 import org.xmpp.packet.JID;
 import org.xmpp.resultsetmanagement.ResultSet;
 
@@ -456,6 +457,17 @@ public class ChannelManagerImpl implements ChannelManager {
 	@Override
 	public void deleteUserSubscriptions(JID userJid) throws NodeStoreException {
 		nodeStore.deleteUserSubscriptions(userJid);
+	}
+
+	@Override
+	public ResultSet<NodeThread> getNodeThreads(String node, String afterId,
+			int limit) throws NodeStoreException {
+		return nodeStore.getNodeThreads(node, afterId, limit);
+	}
+
+	@Override
+	public int countNodeThreads(String node) throws NodeStoreException {
+		return nodeStore.countNodeThreads(node);
 	}
 	
 }

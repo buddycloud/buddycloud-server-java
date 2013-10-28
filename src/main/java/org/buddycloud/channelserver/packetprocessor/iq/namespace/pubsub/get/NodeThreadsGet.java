@@ -62,6 +62,7 @@ public class NodeThreadsGet extends PubSubElementProcessorAbstract {
 		}
 		if (!parseRsmElement()) {
 			outQueue.put(response);
+			return;
 		}
 		getNodeThreads();
 		addRsmElement();
@@ -158,7 +159,7 @@ public class NodeThreadsGet extends PubSubElementProcessorAbstract {
 	}
 	
 	private boolean parseRsmElement() throws NodeStoreException {
-		if (null == resultSetManagement) {
+		if (resultSetManagement == null) {
 			return true;
 		}
 		Element maxEl = resultSetManagement.element("max");

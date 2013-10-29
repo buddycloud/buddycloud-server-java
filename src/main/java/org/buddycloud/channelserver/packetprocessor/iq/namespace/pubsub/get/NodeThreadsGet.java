@@ -73,8 +73,7 @@ public class NodeThreadsGet extends PubSubElementProcessorAbstract {
 		if (firstItem == null) {
 			return;
 		}
-		Element pubsubEl = response.getElement().addElement("pubsub",
-				JabberPubsub.NAMESPACE_URI);
+		Element pubsubEl = response.getElement().element("pubsub");
 		Element rsm = pubsubEl.addElement("set", NS_RSM);
 		rsm.addElement("first", NS_RSM).setText(firstItem);
 		rsm.addElement("last", NS_RSM).setText(lastItem);

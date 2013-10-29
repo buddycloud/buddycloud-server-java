@@ -3,6 +3,7 @@ package org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.get;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -16,7 +17,9 @@ import org.buddycloud.channelserver.pubsub.accessmodel.AccessModels;
 import org.buddycloud.channelserver.pubsub.affiliation.Affiliations;
 import org.buddycloud.channelserver.pubsub.model.NodeThread;
 import org.buddycloud.channelserver.pubsub.model.impl.NodeAffiliationImpl;
+import org.buddycloud.channelserver.pubsub.model.impl.NodeItemImpl;
 import org.buddycloud.channelserver.pubsub.model.impl.NodeSubscriptionImpl;
+import org.buddycloud.channelserver.pubsub.model.impl.NodeThreadImpl;
 import org.buddycloud.channelserver.pubsub.subscription.Subscriptions;
 import org.dom4j.Element;
 import org.dom4j.tree.BaseElement;
@@ -170,6 +173,51 @@ public class NodeThreadsGetTest extends IQTestHandler {
 		Packet response = queue.poll();
 		
 		Assert.assertNull(response.getError());
-		Assert.assertNull(response.getElement().element("pubsub").element("threads"));
+		Assert.assertNull(response.getElement().element("pubsub").element("thread"));
+	}
+	
+	@SuppressWarnings("unchecked")
+	@Test
+	public void testSucessfulNonEmptyResponse() throws Exception {
+		IQ request = readStanzaAsIq("/iq/pubsub/threads/request-with-node.stanza");
+		Element threadsEl = request.getChildElement().element("threads");
+		
+		String node = threadsEl.attributeValue("node");
+		Mockito.when(channelManager.nodeExists(node)).thenReturn(true);
+		
+		Map<String, String> conf = new HashMap<String, String>();
+		conf.put(AccessModel.FIELD_NAME, AccessModels.open.toString());
+		Mockito.when(channelManager.getNodeConf(node)).thenReturn(conf);
+
+		LinkedList<NodeThread> threads = new LinkedList<NodeThread>();
+		NodeThreadImpl threadA = new NodeThreadImpl("itemA", new Date());
+		threadA.addItem(new NodeItemImpl(node, "itemA", new Date(), "<payload/>"));
+		threadA.addItem(new NodeItemImpl(node, "itemB", new Date(), "<payload/>", "itemA"));
+		threads.add(threadA);
+		
+		NodeThreadImpl threadB = new NodeThreadImpl("itemC", new Date());
+		threadB.addItem(new NodeItemImpl(node, "itemC", new Date(), "<payload/>"));
+		threadB.addItem(new NodeItemImpl(node, "itemD", new Date(), "<payload/>", "itemC"));
+		threads.add(threadB);
+		
+		Mockito.when(channelManager.getNodeThreads(Mockito.eq(node), Mockito.anyString(), 
+				Mockito.anyInt())).thenReturn(new ResultSetImpl<NodeThread>(
+						threads));
+		Mockito.when(channelManager.countNodeThreads(node)).thenReturn(threads.size());
+		
+		threadsGet.process(threadsEl, request.getFrom(), request, null);
+		Packet response = queue.poll();
+		
+		Assert.assertNull(response.getError());
+		Element responsePubsubEl = response.getElement().element("pubsub");
+		
+		List<Element> responseThreadsEl = responsePubsubEl.elements("thread");
+		Assert.assertNotNull(responseThreadsEl);
+		Assert.assertEquals(2, responseThreadsEl.size());
+		
+		Element responseRsmEl = responsePubsubEl.element("set");
+		Assert.assertEquals("itemA", responseRsmEl.elementText("first"));
+		Assert.assertEquals("itemC", responseRsmEl.elementText("last"));
+		Assert.assertEquals("2", responseRsmEl.elementText("count"));
 	}
 }

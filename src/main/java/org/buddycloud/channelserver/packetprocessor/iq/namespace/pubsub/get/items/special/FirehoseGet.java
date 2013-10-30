@@ -31,8 +31,6 @@ import org.xmpp.resultsetmanagement.ResultSet;
 
 public class FirehoseGet extends PubSubElementProcessorAbstract {
 
-	private SimpleDateFormat sdf;
-
 	private Date maxAge;
 	private Integer maxItems;
 
@@ -56,9 +54,6 @@ public class FirehoseGet extends PubSubElementProcessorAbstract {
 		setOutQueue(outQueue);
 
 		xmlReader = new SAXReader();
-
-		sdf = new SimpleDateFormat(Conf.DATE_FORMAT);
-		sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
 	}
 
 	@Override

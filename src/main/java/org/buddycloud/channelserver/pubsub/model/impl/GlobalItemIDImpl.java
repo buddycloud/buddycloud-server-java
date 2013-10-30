@@ -48,9 +48,11 @@ public class GlobalItemIDImpl implements GlobalItemID {
 	public String toString() {
 		StringBuilder builder = new StringBuilder();
 		
-		builder.append("tag:");
-		builder.append(service.toString());
-		builder.append(",");
+		if (service != null) {
+			builder.append("tag:");
+			builder.append(service.toString());
+			builder.append(",");
+		}
 		builder.append(nodeID);
 		builder.append(",");
 		builder.append(itemID);
@@ -84,8 +86,15 @@ public class GlobalItemIDImpl implements GlobalItemID {
 	/**
 	 * 
 	 */
-	public static GlobalItemID fromBuddycloudNode(final String bcNodeId, final String itemId) {
-		return null;
+	public static GlobalItemID fromBuddycloudString(String itemId) {
+		String[] splittedItemId = itemId.split(",");
+		if (splittedItemId.length < 2) {
+			throw new IllegalArgumentException("Illegal format for buddycloud global id");
+		}
+		if (splittedItemId.length == 3) {
+			return fromString(itemId);
+		}
+		return new GlobalItemIDImpl(null, splittedItemId[0], splittedItemId[1]);
 	}
 
 	@Override

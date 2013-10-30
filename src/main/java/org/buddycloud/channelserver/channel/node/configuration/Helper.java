@@ -14,28 +14,22 @@ import org.xmpp.forms.FormField;
 import org.xmpp.packet.IQ;
 import org.xmpp.packet.Message;
 
-public class Helper
-{
-	protected HashMap<String, Field> elements;
-	
-	HashMap<String, Field> config;
-	private Factory        fieldFactory;
+public class Helper {
+	private HashMap<String, Field> elements;
+	private Factory fieldFactory;
 
-	public  static final String FORM_TYPE         = "http://jabber.org/protocol/pubsub#node_config";
+	public  static final String FORM_TYPE = "http://jabber.org/protocol/pubsub#node_config";
 	private static final String ELEMENT_NOT_FOUND = "Required XMPP element not found";
 
 	private static final Logger LOGGER = Logger.getLogger(Helper.class);
 	
-    public void parse(IQ request) throws NodeConfigurationException
-    {
+    public void parse(IQ request) throws NodeConfigurationException {
         try {
             parseConfiguration(getConfigurationValues(request));
         } catch (NullPointerException e) {
-        	e.printStackTrace();
         	LOGGER.debug(e);
         	throw new NodeConfigurationException(ELEMENT_NOT_FOUND);
         } catch (ConfigurationFieldException e) {
-        	e.printStackTrace();
         	LOGGER.debug(e);
         	throw new NodeConfigurationException();
         }
@@ -61,83 +55,70 @@ public class Helper
             	.element("event")
                 .element("configuration")
                 .element("x");
-        DataForm dataForm      = new DataForm(element);
+        DataForm dataForm = new DataForm(element);
         List<FormField> fields = dataForm.getFields();
         return fields;
 	}
 
-	public void parseDiscoInfo(IQ request) throws NodeConfigurationException
-    {
+	public void parseDiscoInfo(IQ request) throws NodeConfigurationException {
         try {
             parseConfiguration(getConfigurationValuesFromDisco(request));
         } catch (NullPointerException e) {
-        	e.printStackTrace();
         	LOGGER.debug(e);
         	throw new NodeConfigurationException(ELEMENT_NOT_FOUND);
         } catch (ConfigurationFieldException e) {
-        	e.printStackTrace();
         	LOGGER.debug(e);
         	throw new NodeConfigurationException();
         }
     }
 
-    private List<FormField> getConfigurationValuesFromDisco(IQ request)
-    {
+    private List<FormField> getConfigurationValuesFromDisco(IQ request) {
         Element element = request
         	.getElement()
         	.element("query")
             .element("x");
-        DataForm dataForm      = new DataForm(element);
+        DataForm dataForm = new DataForm(element);
         List<FormField> fields = dataForm.getFields();
         return fields;
     }
     
-    private List<FormField> getConfigurationValues(IQ request)
-    {
+    private List<FormField> getConfigurationValues(IQ request) {
         Element element = request
         	.getElement()
         	.element("pubsub")
             .element("configure")
             .element("x");
-        DataForm dataForm      = new DataForm(element);
+        DataForm dataForm = new DataForm(element);
         List<FormField> fields = dataForm.getFields();
         return fields;
     }
 
-	private void parseConfiguration(List<FormField> configurationValues)
-	{
+	private void parseConfiguration(List<FormField> configurationValues) {
         elements = new HashMap<String, Field>();
-		if (0 == configurationValues.size()) {
+		if (configurationValues.isEmpty()) {
 			return;
 		}
-		Field field;
 		for (FormField configurationValue : configurationValues) {
-			field = getFieldFactory()
-			    .create(configurationValue.getVariable(), configurationValue.getFirstValue());
-			elements.put(
-				field.getName(),
-				field
-		    );
+			Field field = getFieldFactory().create(configurationValue.getVariable(), 
+					configurationValue.getFirstValue());
+			elements.put(field.getName(), field);
 		}
 	}
 
-	private Factory getFieldFactory()
-	{
-		if (null == fieldFactory) {
+	private Factory getFieldFactory() {
+		if (fieldFactory == null) {
 			fieldFactory = new Factory();
 		}
 		return fieldFactory;
 	}
 	
-	public void setFieldFactory(Factory factory)
-	{
+	public void setFieldFactory(Factory factory) {
 		fieldFactory = factory;
 	}
 
-	public boolean isValid() 
-	{
+	public boolean isValid() {
 		for (Entry<String, Field> element : elements.entrySet()) {
-			if (false == element.getValue().isValid()) {
+			if (!element.getValue().isValid()) {
 				LOGGER.debug(
 				    "Configuration field " + element.getValue().getName() 
 				    + " is not valid with value " + element.getValue().getValue()
@@ -148,8 +129,7 @@ public class Helper
 		return true;
 	}
 	
-	public HashMap<String, String> getValues()
-	{
+	public HashMap<String, String> getValues() {
 		HashMap<String, String> data = new HashMap<String, String>();
 		for (Entry<String, Field> element : elements.entrySet()) {
 			String value = element.getValue().getValue();

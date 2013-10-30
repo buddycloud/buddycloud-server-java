@@ -90,7 +90,7 @@ public class UserItemsGet implements PubSubElementProcessor {
 		element = elm;
 		resultSetManagement = rsm;
 
-		if (false == channelManager.isLocalJID(requestIq.getFrom())) {
+		if (!channelManager.isLocalJID(requestIq.getFrom())) {
 			reply.getElement().addAttribute("remote-server-discover", "false");
 		}
 
@@ -98,7 +98,7 @@ public class UserItemsGet implements PubSubElementProcessor {
 				"subscriptions");
 
 		boolean isCached = false;
-		if (true == isSubscriptionsNode) {
+		if (isSubscriptionsNode) {
 			isCached = channelManager.nodeHasSubscriptions(node);
 		} else {
 			isCached = channelManager.isCachedNode(node);
@@ -106,7 +106,7 @@ public class UserItemsGet implements PubSubElementProcessor {
 
 		fetchersJid = requestIq.getFrom();
 
-		if (false == channelManager.isLocalNode(node) && (false == isCached)) {
+		if (!channelManager.isLocalNode(node) && !isCached) {
 			logger.debug("Node " + node
 					+ " is remote and not cached, off to get some data");
 			makeRemoteRequest();
@@ -114,7 +114,7 @@ public class UserItemsGet implements PubSubElementProcessor {
 		}
 
 		try {
-			if (false == nodeExists()) {
+			if (!nodeExists()) {
 				setErrorCondition(PacketError.Type.cancel,
 						PacketError.Condition.item_not_found);
 				outQueue.put(reply);
@@ -125,18 +125,20 @@ public class UserItemsGet implements PubSubElementProcessor {
 				fetchersJid = actorJID;
 			}
 
-			if (false == userCanViewNode()) {
+			if (!userCanViewNode()) {
 				outQueue.put(reply);
 				return;
 			}
 			xmlReader = new SAXReader();
-			if (null == element.element("item")) {
+			if (element.element("item") == null) {
 				getItems();
 			} else {
-				if (false == getItem())
+				if (!getItem()) {
 					return;
+				}
 			}
 		} catch (NodeStoreException e) {
+			logger.error(e);
 			setErrorCondition(PacketError.Type.wait,
 					PacketError.Condition.internal_server_error);
 		}
@@ -146,8 +148,8 @@ public class UserItemsGet implements PubSubElementProcessor {
 	private boolean getItem() throws Exception {
 		NodeItem nodeItem = channelManager.getNodeItem(node,
 				element.element("item").attributeValue("id"));
-		if (null == nodeItem) {
-			if (false == channelManager.isLocalNode(node)) {
+		if (nodeItem == null) {
+			if (!channelManager.isLocalNode(node)) {
 				makeRemoteRequest();
 				return false;
 			}
@@ -155,8 +157,7 @@ public class UserItemsGet implements PubSubElementProcessor {
 					PacketError.Condition.item_not_found);
 			return true;
 		}
-		Element pubsub = reply.getElement().addElement("pubsub");
-		pubsub.addNamespace("", JabberPubsub.NAMESPACE_URI);
+		Element pubsub = reply.getElement().addElement("pubsub", JabberPubsub.NAMESPACE_URI);
 		Element items = pubsub.addElement("items").addAttribute("node", node);
 		addItemToResponse(nodeItem, items);
 		return true;
@@ -174,7 +175,7 @@ public class UserItemsGet implements PubSubElementProcessor {
 
 	private boolean nodeExists() throws NodeStoreException {
 
-		if (true == channelManager.nodeExists(node)) {
+		if (channelManager.nodeExists(node)) {
 			nodeDetails = channelManager.getNodeConf(node);
 			return true;
 		}
@@ -225,6 +226,7 @@ public class UserItemsGet implements PubSubElementProcessor {
 					// If the after isn't a valid 'tag:...' then it might just
 					// be a straight ItemID
 					afterItemId = after.getTextTrim();
+					logger.error(e);
 				}
 			}
 		}
@@ -282,16 +284,16 @@ public class UserItemsGet implements PubSubElementProcessor {
 
 		Affiliations possibleExistingAffiliation = Affiliations.none;
 		Subscriptions possibleExistingSubscription = Subscriptions.none;
-		if (null != nodeSubscription) {
-			if (null != nodeAffiliation.getAffiliation()) {
+		if (nodeSubscription != null) {
+			if (nodeAffiliation.getAffiliation() != null) {
 				possibleExistingAffiliation = nodeAffiliation.getAffiliation();
 			}
-			if (null != nodeSubscription.getSubscription()) {
+			if (nodeSubscription.getSubscription() != null) {
 				possibleExistingSubscription = nodeSubscription
 						.getSubscription();
 			}
 		}
-		if (true == getNodeViewAcl().canViewNode(node,
+		if (getNodeViewAcl().canViewNode(node,
 				possibleExistingAffiliation, possibleExistingSubscription,
 				getNodeAccessModel())) {
 			return true;
@@ -303,7 +305,7 @@ public class UserItemsGet implements PubSubElementProcessor {
 	}
 
 	private AccessModels getNodeAccessModel() {
-		if (false == nodeDetails.containsKey(AccessModel.FIELD_NAME)) {
+		if (!nodeDetails.containsKey(AccessModel.FIELD_NAME)) {
 			return AccessModels.authorize;
 		}
 		return AccessModels.createFromString(nodeDetails
@@ -319,7 +321,7 @@ public class UserItemsGet implements PubSubElementProcessor {
 		CloseableIterator<NodeItem> itemIt = channelManager.getNodeItems(node,
 				afterItemId, maxItemsToReturn);
 		rsmEntriesCount = 0;
-		if (null == itemIt) {
+		if (itemIt == null) {
 			return 0;
 		}
 		try {

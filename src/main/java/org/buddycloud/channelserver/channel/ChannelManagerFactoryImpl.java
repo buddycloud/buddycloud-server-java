@@ -2,7 +2,6 @@ package org.buddycloud.channelserver.channel;
 
 import java.util.Properties;
 
-import org.buddycloud.channelserver.Configuration;
 import org.buddycloud.channelserver.db.NodeStoreFactory;
 
 public class ChannelManagerFactoryImpl implements ChannelManagerFactory {

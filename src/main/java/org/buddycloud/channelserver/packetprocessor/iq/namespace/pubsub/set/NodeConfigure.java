@@ -1,6 +1,5 @@
 package org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.set;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -13,8 +12,9 @@ import org.buddycloud.channelserver.channel.node.configuration.field.Owner;
 import org.buddycloud.channelserver.db.exception.NodeStoreException;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.JabberPubsub;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.PubSubElementProcessorAbstract;
-import org.buddycloud.channelserver.pubsub.affiliation.Affiliation;
+import org.buddycloud.channelserver.pubsub.affiliation.Affiliations;
 import org.buddycloud.channelserver.pubsub.event.Event;
+import org.buddycloud.channelserver.pubsub.model.NodeAffiliation;
 import org.buddycloud.channelserver.pubsub.model.NodeSubscription;
 import org.dom4j.Document;
 import org.dom4j.Element;
@@ -30,7 +30,6 @@ import org.xmpp.packet.PacketError;
 import org.xmpp.resultsetmanagement.ResultSet;
 
 public class NodeConfigure extends PubSubElementProcessorAbstract {
-	protected String node;
 
 	private static final Logger LOGGER = Logger.getLogger(NodeConfigure.class);
 
@@ -51,17 +50,17 @@ public class NodeConfigure extends PubSubElementProcessorAbstract {
 		if (null == actor) {
 			actor = request.getFrom();
 		}
-		if (false == channelManager.isLocalNode(node)) {
+		if (!channelManager.isLocalNode(node)) {
 			makeRemoteRequest();
 			return;
 		}
 		try {
-			if ((false == nodeProvided()) || (false == nodeExists())
-					|| (false == userCanModify())) {
+			if (!nodeProvided() || !nodeExists() || !actorCanModify()) {
 				outQueue.put(response);
 				return;
 			}
 		} catch (NodeStoreException e) {
+			LOGGER.error(e);
 			setErrorCondition(PacketError.Type.cancel,
 					PacketError.Condition.internal_server_error);
 			outQueue.put(response);
@@ -73,7 +72,7 @@ public class NodeConfigure extends PubSubElementProcessorAbstract {
 	private void setNodeConfiguration() throws Exception {
 		try {
 			getNodeConfigurationHelper().parse(request);
-			if (true == getNodeConfigurationHelper().isValid()) {
+			if (getNodeConfigurationHelper().isValid()) {
 				HashMap<String, String> configuration = getNodeConfigurationHelper()
 						.getValues();
 				configuration
@@ -150,11 +149,17 @@ public class NodeConfigure extends PubSubElementProcessorAbstract {
 		}
 	}
 
-	private boolean userCanModify() throws NodeStoreException {
-		String owner = channelManager.getNodeConfValue(node,
-				Affiliation.OWNER.toString());
-
-		if ((null != owner) && (true == owner.equals(actor.toBareJID()))) {
+	private boolean isActorOwner() throws NodeStoreException {
+		NodeAffiliation affiliation = channelManager.getUserAffiliation(node,
+				new JID(actor.toBareJID()));
+		if (null == affiliation) {
+			return false;
+		}
+		return affiliation.getAffiliation().equals(Affiliations.owner);
+	}
+	
+	private boolean actorCanModify() throws NodeStoreException {
+		if (isActorOwner()) {
 			return true;
 		}
 		setErrorCondition(PacketError.Type.auth,
@@ -163,7 +168,7 @@ public class NodeConfigure extends PubSubElementProcessorAbstract {
 	}
 
 	private boolean nodeExists() throws NodeStoreException {
-		if (true == channelManager.nodeExists(node)) {
+		if (channelManager.nodeExists(node)) {
 			return true;
 		}
 		setErrorCondition(PacketError.Type.cancel,

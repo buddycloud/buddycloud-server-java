@@ -1,6 +1,5 @@
 package org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.set;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.concurrent.BlockingQueue;
 
@@ -75,7 +74,7 @@ public class SubscriptionEvent extends PubSubElementProcessorAbstract {
 			saveUpdatedSubscription();
 			sendNotifications();
 		} catch (NodeStoreException e) {
-			LOGGER.debug(e);
+			LOGGER.error(e);
 			setErrorCondition(PacketError.Type.wait,
 					PacketError.Condition.internal_server_error);
 			outQueue.put(response);
@@ -93,9 +92,8 @@ public class SubscriptionEvent extends PubSubElementProcessorAbstract {
 		Document document = getDocumentHelper();
 		Element message = document.addElement("message");
 		message.addAttribute("remote-server-discover", "false");
-		Element event = message.addElement("event");
+		Element event = message.addElement("event", JabberPubsub.NS_PUBSUB_EVENT);
 		Element subscription = event.addElement("subscription");
-		event.addNamespace("", JabberPubsub.NS_PUBSUB_EVENT);
 		message.addAttribute("from", request.getTo().toString());
 		subscription.addAttribute("node", node);
 		subscription.addAttribute("jid",
@@ -156,7 +154,7 @@ public class SubscriptionEvent extends PubSubElementProcessorAbstract {
 				return false;
 			}
 		} catch (NullPointerException e) {
-			LOGGER.debug(e);
+			LOGGER.error(e);
 			setErrorCondition(PacketError.Type.modify,
 					PacketError.Condition.bad_request);
 			return false;

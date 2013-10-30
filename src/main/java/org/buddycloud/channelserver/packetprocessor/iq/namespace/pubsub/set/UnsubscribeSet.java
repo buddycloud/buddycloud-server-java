@@ -1,6 +1,5 @@
 package org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.set;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.concurrent.BlockingQueue;
 
@@ -134,18 +133,17 @@ public class UnsubscribeSet extends PubSubElementProcessorAbstract {
 		Document document = getDocumentHelper();
 		Element message = document.addElement("message");
 		message.addAttribute("remote-server-discover", "false");
-		Element event = message.addElement("event");
+		Element event = message.addElement("event", Event.NAMESPACE);
 		Element subscription = event.addElement("subscription");
-		Element affiliation = event.addElement("affiliation");
 		subscription.addAttribute("node", node);
 		subscription.addAttribute("jid", unsubscribingJid.toBareJID());
 		subscription
 				.addAttribute("subscription", Subscriptions.none.toString());
-		event.addNamespace("", Event.NAMESPACE);
 		message.addAttribute("from", request.getTo().toString());
 		message.addAttribute("type", "headline");
 		// "None" because we don't glorify the bad
-		affiliation.addAttribute("affiliation", Affiliations.none.toString());
+		Element affiliations = event.addElement("affiliations");
+		Element affiliation = affiliations.addElement("affiliation");
 		affiliation.addAttribute("jid", unsubscribingJid.toBareJID());
 		affiliation.addAttribute("node", node);
 

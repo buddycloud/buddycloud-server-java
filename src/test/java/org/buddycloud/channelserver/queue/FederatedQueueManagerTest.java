@@ -76,7 +76,7 @@ public class FederatedQueueManagerTest extends IQTestHandler {
 		ArrayList<Element> items = new ArrayList<Element>();
 		items.add(item);
 
-		queueManager.sendInfoRequests(new JID("capulet.lit"), items);
+		queueManager.processDiscoItemsResponse(new JID("capulet.lit"), items);
 
 		Assert.assertEquals(1, channelsEngine.size());
 		Packet discoInfoRequest = channelsEngine.poll();
@@ -107,11 +107,11 @@ public class FederatedQueueManagerTest extends IQTestHandler {
 		item.addAttribute("jid", "channels.capulet.lit");
 		ArrayList<Element> items = new ArrayList<Element>();
 		items.add(item);
-		queueManager.sendInfoRequests(new JID("capulet.lit"), items);
+		queueManager.processDiscoItemsResponse(new JID("capulet.lit"), items);
 		channelsEngine.poll();
 
 		// Response to disco#info with no identities
-		queueManager.processInfoResponses(new JID("channels.capulter.lit"),
+		queueManager.processDiscoInfoResponse(new JID("channels.capulter.lit"),
 				channelsEngine.poll().getID(), new ArrayList<Element>());
 
 		// Expect error response to original packet
@@ -150,7 +150,7 @@ public class FederatedQueueManagerTest extends IQTestHandler {
 		item.addAttribute("name", "buddycloud-server");
 		ArrayList<Element> items = new ArrayList<Element>();
 		items.add(item);
-		queueManager.sendInfoRequests(new JID("topics.capulet.lit"), items);
+		queueManager.processDiscoItemsResponse(new JID("topics.capulet.lit"), items);
 
 		// Note original packet now sent with remote channel server tag
 		Packet originalPacketRedirected = channelsEngine.poll();

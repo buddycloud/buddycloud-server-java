@@ -12,6 +12,7 @@ import org.buddycloud.channelserver.pubsub.model.GlobalItemID;
 import org.buddycloud.channelserver.pubsub.model.NodeAffiliation;
 import org.buddycloud.channelserver.pubsub.model.NodeItem;
 import org.buddycloud.channelserver.pubsub.model.NodeSubscription;
+import org.buddycloud.channelserver.pubsub.model.NodeThread;
 import org.xmpp.packet.JID;
 import org.xmpp.resultsetmanagement.ResultSet;
 
@@ -309,6 +310,16 @@ public interface NodeStore {
 			throws NodeStoreException;
 
 	/**
+	 * Gets the set of listeners to all nodes.
+	 * 
+	 * @param nodeId
+	 *            the node reference.
+	 * @return
+	 */
+	ResultSet<NodeSubscription> getNodeSubscriptionListeners()
+			throws NodeStoreException;
+	
+	/**
 	 * Gets the user's subscription to a certain node.
 	 * 
 	 * @param nodeId
@@ -576,6 +587,18 @@ public interface NodeStore {
 	 * @throws NodeStoreException 
 	 */
 	int getFirehoseItemCount(boolean isAdmin) throws NodeStoreException;
+	
+	ResultSet<NodeItem> getUserItems(JID userJid) throws NodeStoreException;
+	
+	void deleteUserItems(JID userJid) throws NodeStoreException;
+	
+	void deleteUserAffiliations(JID userJid) throws NodeStoreException;
+	
+	void deleteUserSubscriptions(JID userJid) throws NodeStoreException;
+	
+	ResultSet<NodeThread> getNodeThreads(String node, String afterId, int limit) throws NodeStoreException;
+	
+	int countNodeThreads(String node) throws NodeStoreException;
 	
 	/**
 	 * Closes this node store instance and releases any resources.

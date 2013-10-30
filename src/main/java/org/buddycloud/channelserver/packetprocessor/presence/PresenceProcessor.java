@@ -6,15 +6,14 @@ import org.apache.log4j.Logger;
 import org.buddycloud.channelserver.Configuration;
 import org.buddycloud.channelserver.packetprocessor.PacketProcessor;
 import org.buddycloud.channelserver.utils.users.OnlineResourceManager;
-import org.dom4j.Element;
 import org.xmpp.packet.JID;
 import org.xmpp.packet.Presence;
 
 public class PresenceProcessor implements PacketProcessor<Presence> {
+	
+	private static final Logger LOGGER = Logger.getLogger(PresenceProcessor.class);
 
 	private OnlineResourceManager onlineUsers;
-	
-	private Logger logger = Logger.getLogger(PresenceProcessor.class);
 	private String domain;
 
 	public PresenceProcessor(Properties configuration, OnlineResourceManager onlineUsers) {
@@ -28,9 +27,13 @@ public class PresenceProcessor implements PacketProcessor<Presence> {
 	@Override
 	public void process(Presence packet) throws Exception {
 		JID from = packet.getFrom();
-        if ((null == from) || (false == from.getDomain().equals(domain))) return;
-        Element show = packet.getElement().element("show");
-        if (null == show) return;
-        onlineUsers.updateStatus(packet.getFrom(), show.getText());
+        if (from == null || !from.getDomain().equals(domain)) {
+        	return;
+        }
+        
+        LOGGER.debug("Processing presence from " + from.toString());
+        
+        String type = packet.getElement().attributeValue("type");
+        onlineUsers.updateStatus(packet.getFrom(), type);
 	}
 }

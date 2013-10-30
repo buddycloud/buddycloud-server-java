@@ -2,10 +2,10 @@ package org.buddycloud.channelserver.packetprocessor.iq.namespace.discoinfo;
 
 import java.util.HashMap;
 import java.util.List;
-import java.util.concurrent.BlockingQueue;
-import org.buddycloud.channelserver.channel.node.configuration.Helper;
+
 import org.apache.log4j.Logger;
 import org.buddycloud.channelserver.channel.ChannelManager;
+import org.buddycloud.channelserver.channel.node.configuration.Helper;
 import org.buddycloud.channelserver.db.exception.NodeStoreException;
 import org.buddycloud.channelserver.packetprocessor.PacketProcessor;
 import org.buddycloud.channelserver.queue.FederatedQueueManager;
@@ -13,7 +13,6 @@ import org.buddycloud.channelserver.queue.UnknownFederatedPacketException;
 import org.dom4j.Element;
 import org.xmpp.component.ComponentException;
 import org.xmpp.packet.IQ;
-import org.xmpp.packet.Packet;
 
 public class DiscoResult implements PacketProcessor<IQ> {
 
@@ -36,7 +35,8 @@ public class DiscoResult implements PacketProcessor<IQ> {
 		requestIq = reqIQ;
 		node = requestIq.getElement().element("query")
 				.attributeValue("node");
-		if (null == node) {
+		if (federatedQueueManager.isFederatedDiscoInfoRequest(
+				reqIQ.getID())) {
 			federatedRequest();
 			return;
 		}
@@ -48,18 +48,21 @@ public class DiscoResult implements PacketProcessor<IQ> {
 		}
 	}
 
+	@SuppressWarnings("unchecked")
 	private void federatedRequest() throws ComponentException {
 		List<Element> identities = requestIq.getChildElement().elements(
 				"identity");
-		federatedQueueManager.processInfoResponses(requestIq.getFrom(),
+		federatedQueueManager.processDiscoInfoResponse(requestIq.getFrom(),
 				requestIq.getID(), identities);
 	}
 
 	private void processConfigurationSettings() throws NodeStoreException {
-
-		if (false == channelManager.nodeExists(node)) 
-		    channelManager.addRemoteNode(node);
-
+		if (node == null) {
+			return;
+		}
+		if (!channelManager.nodeExists(node)) {
+			channelManager.addRemoteNode(node);
+		}
 		this.helper.parseDiscoInfo(requestIq);
 		HashMap<String, String> configuration = this.helper.getValues();
 		channelManager.setNodeConf(node, configuration);

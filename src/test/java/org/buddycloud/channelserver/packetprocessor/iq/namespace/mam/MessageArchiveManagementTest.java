@@ -15,6 +15,7 @@ import junit.framework.Assert;
 
 import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.channel.ChannelManagerImpl;
+import org.buddycloud.channelserver.channel.Conf;
 import org.buddycloud.channelserver.db.ClosableIteratorImpl;
 import org.buddycloud.channelserver.db.CloseableIterator;
 import org.buddycloud.channelserver.packetHandler.iq.IQTestHandler;
@@ -58,8 +59,6 @@ public class MessageArchiveManagementTest extends IQTestHandler {
 	private JID jid1 = new JID("user@server1.com");
 	private JID jid2 = new JID("user@server2.com");
 
-	private SimpleDateFormat sdf;
-
 	@Before
 	public void setUp() throws Exception {
 		channelManager = Mockito.mock(ChannelManagerImpl.class);
@@ -78,11 +77,9 @@ public class MessageArchiveManagementTest extends IQTestHandler {
 		noItems = new ClosableIteratorImpl<NodeItem>(
 				new LinkedList<NodeItem>().iterator());
 
-		sdf = new SimpleDateFormat(MessageArchiveManagement.DATE_FORMAT);
-		sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
-		date1 = sdf.parse("1995-10-26T10:00:00Z");
-		date2 = sdf.parse("2015-10-21T16:29:00Z");
-		date3 = sdf.parse("1985-10-27T09:59:00Z");
+		date1 = Conf.parseDate("1995-10-26T10:00:00Z");
+		date2 = Conf.parseDate("2015-10-21T16:29:00Z");
+		date3 = Conf.parseDate("1985-10-27T09:59:00Z");
 		
 		Mockito.when(
 				channelManager.getAffiliationChanges(Mockito.any(JID.class),
@@ -204,7 +201,7 @@ public class MessageArchiveManagementTest extends IQTestHandler {
 		Assert.assertTrue(outgoingMessage.contains("event"));
 		Assert.assertTrue(outgoingMessage.contains("affiliations"));
 		Assert.assertTrue(outgoingMessage.contains(jid.toBareJID()));
-		Assert.assertEquals(date, sdf.parse(delay.attributeValue("stamp")));
+		Assert.assertEquals(date, Conf.parseDate(delay.attributeValue("stamp")));
 		Assert.assertTrue(outgoingMessage.contains(node));
 		Assert.assertTrue(outgoingMessage.contains(affiliation.toString()));
 	}
@@ -251,7 +248,7 @@ public class MessageArchiveManagementTest extends IQTestHandler {
 		Assert.assertEquals(jid.toBareJID(), sub.attributeValue("jid"));
 		Assert.assertEquals(subscription, Subscriptions.valueOf(sub.attributeValue("subscription")));
 
-		Assert.assertEquals(date, sdf.parse(delay.attributeValue("stamp")));
+		Assert.assertEquals(date, Conf.parseDate(delay.attributeValue("stamp")));
 	}
 	
 	@Test
@@ -300,6 +297,6 @@ public class MessageArchiveManagementTest extends IQTestHandler {
 		// Hack to make up for SMACK
 		Assert.assertTrue(item.asXML().replace(" xmlns=\"\"", "").contains(entry));
 
-		Assert.assertEquals(date, sdf.parse(delay.attributeValue("stamp")));
+		Assert.assertEquals(date, Conf.parseDate(delay.attributeValue("stamp")));
 	}
 }

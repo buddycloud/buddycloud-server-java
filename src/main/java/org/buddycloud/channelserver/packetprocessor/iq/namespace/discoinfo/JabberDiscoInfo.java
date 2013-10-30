@@ -44,6 +44,6 @@ public class JabberDiscoInfo extends AbstractNamespace {
 
 	@Override
 	protected PacketProcessor<IQ> error() {
-		return null;
+		return resultProcessor;
 	}
 }

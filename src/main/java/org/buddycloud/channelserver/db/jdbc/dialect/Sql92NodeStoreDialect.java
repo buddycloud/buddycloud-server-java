@@ -189,6 +189,9 @@ public class Sql92NodeStoreDialect implements NodeStoreSQLDialect {
 	private static final String SELECT_SUBSCRIPTION_LISTENERS_FOR_NODE = "SELECT DISTINCT ON (\"listener\") \"listener\", \"node\", \"subscription\", \"updated\""
 			+ " FROM \"subscriptions\" WHERE \"node\" = ? ORDER BY \"listener\", \"updated\"";
 
+	private static final String SELECT_SUBSCRIPTION_LISTENERS = "SELECT DISTINCT ON (\"listener\") \"listener\", \"node\", \"subscription\", \"updated\""
+			+ " FROM \"subscriptions\" ORDER BY \"listener\", \"updated\"";
+	
 	private static final String DELETE_NODE = "DELETE FROM \"nodes\" WHERE \"node\" = ?;";
 
 	private static final String SELECT_NODE_LIST = "SELECT \"node\" FROM \"nodes\";";
@@ -206,7 +209,36 @@ public class Sql92NodeStoreDialect implements NodeStoreSQLDialect {
 		+ "FROM \"items\" WHERE \"updated\" < ? "
 		+ "AND \"node\" IN (SELECT \"node\" FROM \"node_config\" WHERE \"key\" = ? AND \"value\" LIKE ? AND (\"node\" LIKE ? OR \"node\" LIKE ?)) "
 		+ "ORDER BY \"updated\" DESC, \"id\" ASC LIMIT ?";
+
+	private static final String SELECT_USER_ITEMS = "SELECT \"node\", \"id\", \"updated\", \"xml\", \"in_reply_to\"" +
+			" FROM \"items\" WHERE (CAST(xpath('//atom:author/atom:name/text()', xmlparse(document \"xml\")," +
+			" ARRAY[ARRAY['atom', 'http://www.w3.org/2005/Atom']]) AS TEXT[]))[1] = ?";
+
+	private static final String DELETE_USER_ITEMS = "DELETE" +
+			" FROM \"items\" WHERE (CAST(xpath('//atom:author/atom:name/text()', xmlparse(document \"xml\")," +
+			" ARRAY[ARRAY['atom', 'http://www.w3.org/2005/Atom']]) AS TEXT[]))[1] = ?";
+
+	private static final String DELETE_USER_AFFILIATIONS = "DELETE FROM \"affiliations\" WHERE \"user\" = ?";
+
+	private static final String DELETE_USER_SUBSCRIPTIONS = "DELETE FROM \"subscriptions\" WHERE \"user\" = ?";
 	
+	private static final String SELECT_NODE_THREADS = 
+			"SELECT \"node\", \"id\", \"updated\", \"xml\", \"in_reply_to\", " +
+			"\"thread_id\", \"thread_updated\" FROM \"items\"," +
+			  "(SELECT MAX(\"updated\") AS \"thread_updated\", \"thread_id\" FROM " +
+			  "(SELECT \"updated\", " +
+			    "(CASE WHEN (\"in_reply_to\" IS NULL) THEN \"id\" ELSE \"in_reply_to\" END) AS \"thread_id\" " +
+			    "FROM \"items\" WHERE \"node\" = ?) AS \"_items\" " +
+			  "GROUP BY \"thread_id\" " +
+			  "HAVING MAX(\"updated\") < ? " +
+			  "ORDER BY \"thread_updated\" DESC LIMIT ?) AS \"threads\" " +
+			"WHERE \"in_reply_to\" = \"thread_id\" OR \"id\" = \"thread_id\" " +
+			"ORDER BY \"thread_updated\" DESC, \"updated\"";
+
+	private static final String COUNT_NODE_THREADS = "SELECT COUNT(DISTINCT \"thread_id\") " +
+			"FROM (SELECT \"node\", (CASE WHEN (\"in_reply_to\" IS NULL) THEN \"id\" ELSE \"in_reply_to\" END) AS \"thread_id\" " +
+			      "FROM \"items\" WHERE \"node\" = ?) AS \"_items\"";
+
     @Override
 	public String insertNode() {
 		return INSERT_NODE;
@@ -420,6 +452,11 @@ public class Sql92NodeStoreDialect implements NodeStoreSQLDialect {
 	public String selectSubscriptionListenersForNode() {
 		return SELECT_SUBSCRIPTION_LISTENERS_FOR_NODE;
 	}
+	
+	@Override
+	public String selectSubscriptionListeners() {
+		return SELECT_SUBSCRIPTION_LISTENERS;
+	}
 
 	@Override
 	public String deleteNode() {
@@ -454,5 +491,35 @@ public class Sql92NodeStoreDialect implements NodeStoreSQLDialect {
 	@Override
 	public String countItemsForLocalNodes() {
 		return COUNT_ITEMS_FROM_LOCAL_NODES;
+	}
+
+	@Override
+	public String getUserItems() {
+		return SELECT_USER_ITEMS;
+	}
+
+	@Override
+	public String deleteUserItems() {
+		return DELETE_USER_ITEMS;
+	}
+
+	@Override
+	public String deleteUserAffiliations() {
+		return DELETE_USER_AFFILIATIONS;
+	}
+
+	@Override
+	public String deleteUserSubscriptions() {
+		return DELETE_USER_SUBSCRIPTIONS;
+	}
+	
+	@Override
+	public String selectNodeThreads() {
+		return SELECT_NODE_THREADS;
+	}
+
+	@Override
+	public String countNodeThreads() {
+		return COUNT_NODE_THREADS;
 	}
 }

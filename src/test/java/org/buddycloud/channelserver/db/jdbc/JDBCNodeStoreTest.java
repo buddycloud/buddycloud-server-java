@@ -1,6 +1,6 @@
 package org.buddycloud.channelserver.db.jdbc;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
@@ -46,8 +46,8 @@ import org.buddycloud.channelserver.pubsub.model.impl.NodeSubscriptionImpl;
 import org.buddycloud.channelserver.pubsub.subscription.Subscriptions;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Test;
 import org.junit.Ignore;
+import org.junit.Test;
 import org.mockito.InOrder;
 import org.mockito.Mockito;
 import org.xmpp.packet.JID;
@@ -2413,5 +2413,17 @@ public class JDBCNodeStoreTest {
 		assertEquals(expected.getNodeId(), actual.getNodeId());
 		assertEquals(expected.getPayload(), actual.getPayload());
 		assertEquals(expected.getInReplyTo(), actual.getInReplyTo());
+	}
+	
+	@Test
+	public void testSelectNodeThreads() throws Exception {
+		dbTester.loadData("node_1");
+		assertEquals(5, store.getNodeThreads(TEST_SERVER1_NODE1_ID, null, 10).size());
+	}
+	
+	@Test
+	public void testCountNodeThreads() throws Exception {
+		dbTester.loadData("node_1");
+		assertEquals(5, store.countNodeThreads(TEST_SERVER1_NODE1_ID));
 	}
 }

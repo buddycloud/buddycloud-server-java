@@ -2,6 +2,7 @@ package org.buddycloud.channelserver.packetprocessor.message;
 
 import java.util.Properties;
 import java.util.concurrent.BlockingQueue;
+
 import org.apache.log4j.Logger;
 import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.packetprocessor.PacketProcessor;
@@ -73,7 +74,8 @@ public class MessageProcessor implements PacketProcessor<Message> {
 			handler = new ConfigurationProcessor(outQueue, configuration,
 					channelManager);
 		} else if (true == name.equals(DELETE)) {
-			handler = new DeleteProcessor(outQueue, configuration, channelManager);
+			handler = new DeleteProcessor(outQueue, configuration, 
+					channelManager);
 		}
 		if (null == handler) {
 			throw new UnknownEventContentException("Unknown event content '"

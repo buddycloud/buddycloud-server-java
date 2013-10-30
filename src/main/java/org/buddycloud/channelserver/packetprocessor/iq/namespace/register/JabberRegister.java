@@ -17,7 +17,7 @@ public final class JabberRegister extends AbstractNamespace {
 	
 	public JabberRegister(BlockingQueue<Packet> outQueue, Configuration conf, ChannelManager channelManager) {
 		super(outQueue, conf, channelManager);
-		this.setProcessor = new RegisterSet(conf, outQueue, channelManager);
+		this.setProcessor = new JabberRegisterSet(outQueue, channelManager);
 	}
 
     @Override

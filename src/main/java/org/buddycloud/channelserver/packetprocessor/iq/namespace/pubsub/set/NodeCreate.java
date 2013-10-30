@@ -3,8 +3,10 @@ package org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.set;
 import java.util.HashMap;
 import java.util.concurrent.BlockingQueue;
 
+import org.apache.bcel.generic.ACONST_NULL;
 import org.apache.log4j.Logger;
 import org.buddycloud.channelserver.channel.ChannelManager;
+import org.buddycloud.channelserver.channel.Conf;
 import org.buddycloud.channelserver.channel.node.configuration.NodeConfigurationException;
 import org.buddycloud.channelserver.channel.node.configuration.field.Owner;
 import org.buddycloud.channelserver.db.exception.NodeStoreException;
@@ -58,11 +60,13 @@ public class NodeCreate extends PubSubElementProcessorAbstract {
 		try {
 			channelManager.createNode(actor, node, getNodeConfiguration());
 		} catch (NodeStoreException e) {
+			logger.error(e);
 			setErrorCondition(PacketError.Type.wait,
 					PacketError.Condition.internal_server_error);
 			outQueue.put(response);
 			return;
 		} catch (NodeConfigurationException e) {
+			logger.error(e);
 			setErrorCondition(PacketError.Type.modify,
 					PacketError.Condition.bad_request);
 			outQueue.put(response);
@@ -81,10 +85,15 @@ public class NodeCreate extends PubSubElementProcessorAbstract {
 		if (false == getNodeConfigurationHelper().isValid()) {
 			throw new NodeConfigurationException(INVALID_NODE_CONFIGURATION);
 		}
+		HashMap<String, String> defConfiguration = Conf.getDefaultChannelConf(
+				new JID(node.split("/")[2]), actor);
 		HashMap<String, String> configuration = getNodeConfigurationHelper()
 				.getValues();
 		configuration.put(Owner.FIELD_NAME, actor.toBareJID());
-		return configuration;
+		
+		defConfiguration.putAll(configuration);
+		
+		return defConfiguration;
 	}
 
 	private boolean validateNode() {

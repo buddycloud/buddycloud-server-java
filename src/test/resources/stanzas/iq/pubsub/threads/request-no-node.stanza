@@ -1,0 +1,8 @@
+<iq type="get"
+    from="juliet@shakespeare.lit/barracks"
+    to="channels.shakespeare.lit"
+    id="configure1">
+   <pubsub xmlns='http://jabber.org/protocol/pubsub'>
+       <threads/>
+    </pubsub>
+</iq>

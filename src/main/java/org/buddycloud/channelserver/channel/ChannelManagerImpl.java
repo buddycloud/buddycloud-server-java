@@ -17,6 +17,7 @@ import org.buddycloud.channelserver.pubsub.model.GlobalItemID;
 import org.buddycloud.channelserver.pubsub.model.NodeAffiliation;
 import org.buddycloud.channelserver.pubsub.model.NodeItem;
 import org.buddycloud.channelserver.pubsub.model.NodeSubscription;
+import org.buddycloud.channelserver.pubsub.model.NodeThread;
 import org.xmpp.packet.JID;
 import org.xmpp.resultsetmanagement.ResultSet;
 
@@ -320,6 +321,7 @@ public class ChannelManagerImpl implements ChannelManager {
 	@Override
 	public boolean isLocalNode(String nodeId) {
 		if (false == nodeId.matches("/user/.+@.+/.+")) {
+			logger.debug("Node " + nodeId + " has an invalid format");
 			throw new IllegalArgumentException(INVALID_NODE);
 		}
 		return ((true == nodeId
@@ -359,11 +361,16 @@ public class ChannelManagerImpl implements ChannelManager {
 			String nodeId) throws NodeStoreException {
 		return nodeStore.getNodeSubscriptionListeners(nodeId);
 	}
+	
+	@Override
+	public ResultSet<NodeSubscription> getNodeSubscriptionListeners()
+			throws NodeStoreException {
+		return nodeStore.getNodeSubscriptionListeners();
+	}
 
 	@Override
 	public void deleteNode(String nodeId) throws NodeStoreException {
 		nodeStore.deleteNode(nodeId);
-
 	}
 
 	@Override
@@ -438,4 +445,36 @@ public class ChannelManagerImpl implements ChannelManager {
 			List content, JID author, int page, int rpp)  throws NodeStoreException {
 		return nodeStore.performSearch(searcher, content, author, page, rpp);
 	}
+
+	@Override
+	public ResultSet<NodeItem> getUserItems(JID userJid) throws NodeStoreException {
+		return nodeStore.getUserItems(userJid);
+	}
+
+	@Override
+	public void deleteUserItems(JID userJid) throws NodeStoreException {
+		nodeStore.deleteUserItems(userJid);
+	}
+
+	@Override
+	public void deleteUserAffiliations(JID userJid) throws NodeStoreException {
+		nodeStore.deleteUserAffiliations(userJid);
+	}
+
+	@Override
+	public void deleteUserSubscriptions(JID userJid) throws NodeStoreException {
+		nodeStore.deleteUserSubscriptions(userJid);
+	}
+
+	@Override
+	public ResultSet<NodeThread> getNodeThreads(String node, String afterId,
+			int limit) throws NodeStoreException {
+		return nodeStore.getNodeThreads(node, afterId, limit);
+	}
+
+	@Override
+	public int countNodeThreads(String node) throws NodeStoreException {
+		return nodeStore.countNodeThreads(node);
+	}
+
 }

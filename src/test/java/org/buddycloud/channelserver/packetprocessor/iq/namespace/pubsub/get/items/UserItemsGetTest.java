@@ -543,7 +543,7 @@ public class UserItemsGetTest extends IQTestHandler {
 
 		Packet response = queue.poll(100, TimeUnit.MILLISECONDS);
 		Element element = response.getElement();
-
+		
 		Assert.assertEquals(IQ.Type.result.toString(),
 				element.attributeValue("type"));
 		Assert.assertEquals(node, element.element("pubsub").element("items")

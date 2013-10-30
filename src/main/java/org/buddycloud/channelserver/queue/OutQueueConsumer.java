@@ -11,6 +11,7 @@ import org.dom4j.Attribute;
 import org.xmpp.component.ComponentException;
 import org.xmpp.packet.JID;
 import org.xmpp.packet.Packet;
+import org.xmpp.packet.Presence;
 
 public class OutQueueConsumer extends QueueConsumer {
 
@@ -61,6 +62,11 @@ public class OutQueueConsumer extends QueueConsumer {
 				inQueue.put(p);
 				return;
 			}
+			
+			if (p instanceof Presence) {
+				component.sendPacket(p.createCopy());
+				return;
+			}
 
 			// Get a list of 'online' resources for this JID
 			ArrayList<JID> resources = onlineUsers.getResources(p.getTo());
@@ -68,7 +74,6 @@ public class OutQueueConsumer extends QueueConsumer {
 					+ " online resources for " + p.getTo());
 			for (JID resource : resources) {
 				p.setTo(resource);
-				logger.debug("OUT -> " + p.toXML());
 				component.sendPacket(p.createCopy());
 			}
 		} catch (ComponentException e) {

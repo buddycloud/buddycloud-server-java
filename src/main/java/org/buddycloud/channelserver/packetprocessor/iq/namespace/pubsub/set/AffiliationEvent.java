@@ -1,6 +1,5 @@
 package org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.set;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.concurrent.BlockingQueue;
 
@@ -76,7 +75,7 @@ public class AffiliationEvent extends PubSubElementProcessorAbstract {
 			saveUpdatedAffiliation();
 			sendNotifications();
 		} catch (NodeStoreException e) {
-			LOGGER.debug(e);
+			LOGGER.error(e);
 			setErrorCondition(PacketError.Type.wait,
 					PacketError.Condition.internal_server_error);
 			outQueue.put(response);
@@ -170,7 +169,7 @@ public class AffiliationEvent extends PubSubElementProcessorAbstract {
 				return false;
 			}
 		} catch (NullPointerException e) {
-			LOGGER.debug(e);
+			LOGGER.error(e);
 			setErrorCondition(PacketError.Type.modify,
 					PacketError.Condition.bad_request);
 			return false;

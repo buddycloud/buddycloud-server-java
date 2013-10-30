@@ -5,7 +5,6 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.log4j.Logger;
@@ -65,6 +64,8 @@ public class FederatedQueueManager {
 
 	public void process(Packet packet) throws ComponentException {
 		
+		logger.debug("Packet payload " + packet.toXML() + " going to federation.");
+		
 		String to = packet.getTo().toString();
 
 		String uniqueId = generateUniqueId(packet);
@@ -81,7 +82,7 @@ public class FederatedQueueManager {
 				return;
 			}
 			// Are we already discovering a remote server?
-			if (false == remoteChannelDiscoveryStatus.containsKey(to)) {
+			if (!remoteChannelDiscoveryStatus.containsKey(to)) {
 				discoverRemoteChannelServer(to, packet.getID());
 			} else if (remoteChannelDiscoveryStatus.get(to).equals(
 					NO_CHANNEL_SERVER)) {
@@ -94,7 +95,7 @@ public class FederatedQueueManager {
 				return;
 			}
 			// Add packet to list
-			if (false == waitingStanzas.containsKey(to)) {
+			if (!waitingStanzas.containsKey(to)) {
 				waitingStanzas.put(to, new ArrayList<Packet>());
 			}
 			waitingStanzas.get(to).add(packet);
@@ -108,7 +109,9 @@ public class FederatedQueueManager {
 	private void extractNodeDetails(Packet packet) {
 		try {
 			String packetXml = packet.toXML();
-			if (false == packetXml.contains("node=")) return;
+			if (!packetXml.contains("node=")) {
+				return;
+			}
 			nodeMap.put(
 			    packet.getID(),
 			    packetXml.split("node=\"")[1].split("\"")[0]
@@ -139,13 +142,13 @@ public class FederatedQueueManager {
 		remoteChannelDiscoveryStatus.put(remoteDomain, DISCO_ITEMS);
 	}
 
-	public void sendInfoRequests(JID from, List<Element> items)
+	public void processDiscoItemsResponse(JID from, List<Element> items)
 			throws ComponentException {
 
 		for (Element item : items) {
 			Attribute name = item.attribute("name");
-			if ((null != name)
-					&& (true == name.getStringValue().equals(BUDDYCLOUD_SERVER))) {
+			if (name != null
+					&& name.getStringValue().equals(BUDDYCLOUD_SERVER)) {
 				remoteChannelDiscoveryStatus.put(from.toString(), DISCOVERED);
 				setDiscoveredServer(from.toString(), item.attributeValue("jid"));
 				sendFederatedRequests(from.toString());
@@ -169,14 +172,20 @@ public class FederatedQueueManager {
 		remoteChannelDiscoveryStatus.put(from.toString(), DISCO_INFO);
 	}
 
+	public boolean isFederatedDiscoInfoRequest(String packetId) {
+		return remoteServerInfoRequestIds.containsKey(packetId);
+	}
+	
 	private void setDiscoveredServer(String server, String handler) {
 		discoveredServers.put(server, handler);
 	}
 
-	public void processInfoResponses(JID from, String id,
+	public void processDiscoInfoResponse(JID from, String id,
 			List<Element> identities) throws ComponentException {
 		String originatingServer = remoteServerInfoRequestIds.get(id);
-		if (null == originatingServer) return;
+		if (originatingServer == null) {
+			return;
+		}
 		remoteServerInfoRequestIds.remove(id);
 		remoteServerItemsToProcess.put(originatingServer,
 				remoteServerItemsToProcess.get(originatingServer) - 1);
@@ -184,14 +193,15 @@ public class FederatedQueueManager {
 		String identityType;
 		for (Element identity : identities) {
 			identityType = identity.attributeValue("type");
-			if ((identityType != null)
-					&& (true == identityType.equals(IDENTITY_TYPE_CHANNELS))) {
+			if (identityType != null
+					&& identityType.equals(IDENTITY_TYPE_CHANNELS)) {
 				setDiscoveredServer(originatingServer, from.toString());
 				sendFederatedRequests(originatingServer);
 			}
 		}
+		
 		if (remoteServerItemsToProcess.get(originatingServer) < 1) {
-			if (false == discoveredServers.containsKey(originatingServer)) {
+			if (!discoveredServers.containsKey(originatingServer)) {
 				sendRemoteChannelServerNotFoundErrorResponses(originatingServer);
 				remoteChannelDiscoveryStatus.put(originatingServer,
 						NO_CHANNEL_SERVER);
@@ -206,7 +216,7 @@ public class FederatedQueueManager {
 			throws ComponentException {
 		String remoteServer = discoveredServers.get(originatingServer);
 		List<Packet> packetsToSend = waitingStanzas.get(originatingServer);
-		if (null == packetsToSend) {
+		if (packetsToSend == null) {
 			return;
 		}
 		for (Packet packet : packetsToSend) {
@@ -220,7 +230,7 @@ public class FederatedQueueManager {
 			throws ComponentException {
 
 		List<Packet> queued = waitingStanzas.get(server);
-		if (null == queued) {
+		if (queued == null) {
 			return;
 		}
 		Element noRemoteServer = new DOMElement("text", new Namespace("",
@@ -245,7 +255,7 @@ public class FederatedQueueManager {
 	}
 
 	public void passResponseToRequester(IQ packet) throws Exception {
-		if (false == sentRemotePackets.containsKey(packet.getID())) {
+		if (!sentRemotePackets.containsKey(packet.getID())) {
 			throw new UnknownFederatedPacketException(
 					"Can not find original requesting packet! (ID:"
 							+ packet.getID() + ")");

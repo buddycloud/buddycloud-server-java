@@ -1,13 +1,12 @@
 package org.buddycloud.channelserver.packetprocessor.iq.namespace.mam;
 
 import java.io.StringReader;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.TimeZone;
 import java.util.concurrent.BlockingQueue;
+
 import org.apache.log4j.Logger;
 import org.buddycloud.channelserver.channel.ChannelManager;
+import org.buddycloud.channelserver.channel.Conf;
 import org.buddycloud.channelserver.db.CloseableIterator;
 import org.buddycloud.channelserver.db.exception.NodeStoreException;
 import org.buddycloud.channelserver.packetprocessor.PacketProcessor;
@@ -15,7 +14,6 @@ import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.JabberPu
 import org.buddycloud.channelserver.pubsub.model.NodeAffiliation;
 import org.buddycloud.channelserver.pubsub.model.NodeItem;
 import org.buddycloud.channelserver.pubsub.model.NodeSubscription;
-import org.buddycloud.channelserver.pubsub.model.impl.NodeSubscriptionImpl;
 import org.dom4j.DocumentException;
 import org.dom4j.Element;
 import org.dom4j.io.SAXReader;
@@ -42,10 +40,6 @@ public class MessageArchiveManagement implements PacketProcessor<IQ> {
 	private SAXReader xmlReader = new SAXReader();
 	private Message wrapper;
 
-	public static final String DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ss'Z'";
-
-	SimpleDateFormat sdf;
-    
 	private Date startTimestamp;
 	private Date endTimestamp = new Date();
 
@@ -56,10 +50,6 @@ public class MessageArchiveManagement implements PacketProcessor<IQ> {
 			ChannelManager channelManager) {
 		this.outQueue = outQueue;
 		this.channelManager = channelManager;
-		
-		sdf = new SimpleDateFormat(DATE_FORMAT);
-	    sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
-	    sdf.setLenient(true);
 	}
 
 	@Override
@@ -91,7 +81,7 @@ public class MessageArchiveManagement implements PacketProcessor<IQ> {
 		result.addAttribute("id", requestIq.getID());
 		Element forwarded = wrapper.addChildElement("forwarded", NAMESPACE_FORWARDED);
 		Element delay = forwarded.addElement("delay", NAMESPACE_DELAY);
-		delay.addAttribute("stamp", sdf.format(new Date()));
+		delay.addAttribute("stamp", Conf.formatDate(new Date()));
 		Element message = forwarded.addElement("msg");
 		message.addAttribute("type", Message.Type.headline.toString());
 		message.addAttribute("to", requestIq.getFrom().toFullJID());
@@ -101,13 +91,13 @@ public class MessageArchiveManagement implements PacketProcessor<IQ> {
 	private boolean isValidRequest() throws InterruptedException {
 		try {
 			Element query = requestIq.getChildElement();
-			startTimestamp = sdf.parse("1970-01-01T00:00:00Z");
+			startTimestamp = Conf.parseDate("1970-01-01T00:00:00Z");
 			if (query.element("start") != null)
-				startTimestamp = sdf.parse(query.elementText("start"));
+				startTimestamp = Conf.parseDate(query.elementText("start"));
 			if (query.element("end") != null)
-				endTimestamp = sdf.parse(query.elementText("end"));
+				endTimestamp = Conf.parseDate(query.elementText("end"));
 			return true;
-		} catch (ParseException e) {
+		} catch (IllegalArgumentException e) {
 			logger.error(e);
 			sendErrorPacket(PacketError.Type.modify, PacketError.Condition.bad_request);
 			return false;
@@ -140,7 +130,7 @@ public class MessageArchiveManagement implements PacketProcessor<IQ> {
 						new StringReader(item.getPayload()))
 						.getRootElement());
 				
-				forwarded.element("delay").addAttribute("stamp", sdf.format(item.getUpdated()));
+				forwarded.element("delay").addAttribute("stamp", Conf.formatDate(item.getUpdated()));
 				outQueue.put(notification.createCopy());
 			}
 		} catch (NodeStoreException e) {
@@ -168,7 +158,7 @@ public class MessageArchiveManagement implements PacketProcessor<IQ> {
 				affiliations.addAttribute("node", change.getNodeId());
 				affiliation.addAttribute("jid", change.getUser().toBareJID());
 				affiliation.addAttribute("affiliation", change.getAffiliation().toString());
-				forwarded.element("delay").addAttribute("stamp", sdf.format(change.getLastUpdated()));
+				forwarded.element("delay").addAttribute("stamp", Conf.formatDate(change.getLastUpdated()));
 				outQueue.put(notification.createCopy());
 			}
 		} catch (NodeStoreException e) {
@@ -193,7 +183,7 @@ public class MessageArchiveManagement implements PacketProcessor<IQ> {
 				subscription.addAttribute("node", change.getNodeId());
 				subscription.addAttribute("jid", change.getUser().toBareJID());
 				subscription.addAttribute("subscription", change.getSubscription().toString());
-				forwarded.element("delay").addAttribute("stamp", sdf.format(change.getLastUpdated()));
+				forwarded.element("delay").addAttribute("stamp", Conf.formatDate(change.getLastUpdated()));
 				outQueue.put(notification.createCopy());
 			}
 		} catch (NodeStoreException e) {

@@ -5,11 +5,8 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Date;
 import java.util.Deque;
 import java.util.HashMap;
@@ -32,9 +29,11 @@ import org.buddycloud.channelserver.pubsub.model.GlobalItemID;
 import org.buddycloud.channelserver.pubsub.model.NodeAffiliation;
 import org.buddycloud.channelserver.pubsub.model.NodeItem;
 import org.buddycloud.channelserver.pubsub.model.NodeSubscription;
+import org.buddycloud.channelserver.pubsub.model.NodeThread;
 import org.buddycloud.channelserver.pubsub.model.impl.NodeAffiliationImpl;
 import org.buddycloud.channelserver.pubsub.model.impl.NodeItemImpl;
 import org.buddycloud.channelserver.pubsub.model.impl.NodeSubscriptionImpl;
+import org.buddycloud.channelserver.pubsub.model.impl.NodeThreadImpl;
 import org.buddycloud.channelserver.pubsub.subscription.Subscriptions;
 import org.xmpp.packet.JID;
 import org.xmpp.resultsetmanagement.ResultSet;
@@ -869,6 +868,35 @@ public class JDBCNodeStore implements NodeStore {
 	}
 
 	@Override
+	public ResultSet<NodeSubscription> getNodeSubscriptionListeners()
+			throws NodeStoreException {
+		PreparedStatement stmt = null;
+
+		try {
+			stmt = conn.prepareStatement(dialect
+					.selectSubscriptionListeners());
+			
+			java.sql.ResultSet rs = stmt.executeQuery();
+
+			ArrayList<NodeSubscription> result = new ArrayList<NodeSubscription>();
+
+			while (rs.next()) {
+				NodeSubscriptionImpl nodeSub = new NodeSubscriptionImpl(
+						rs.getString(2), new JID(rs.getString(1)),
+						Subscriptions.valueOf(rs.getString(3)),
+						rs.getTimestamp(4));
+				result.add(nodeSub);
+			}
+
+			return new ResultSetImpl<NodeSubscription>(result);
+		} catch (SQLException e) {
+			throw new NodeStoreException(e);
+		} finally {
+			close(stmt); // Will implicitly close the resultset if required
+		}
+	}
+	
+	@Override
 	public CloseableIterator<NodeItem> getNodeItems(String nodeId,
 			String afterItemId, int count) throws NodeStoreException {
 		NodeItem afterItem = null;
@@ -1623,6 +1651,134 @@ public class JDBCNodeStore implements NodeStore {
 	}
 
 	@Override
+	public ResultSet<NodeItem> getUserItems(JID userJid) throws NodeStoreException {
+		PreparedStatement stmt = null;
+		try {
+			stmt = conn.prepareStatement(dialect.getUserItems());
+			stmt.setString(1, userJid.toBareJID());
+			java.sql.ResultSet rs = stmt.executeQuery();
+			ArrayList<NodeItem> result = new ArrayList<NodeItem>();
+			while (rs.next()) {
+				NodeItem nodeItem = new NodeItemImpl(rs.getString(1),
+						rs.getString(2), rs.getTimestamp(3),
+						rs.getString(4), rs.getString(5));
+				result.add(nodeItem);
+			}
+			return new ResultSetImpl<NodeItem>(result);
+		} catch (SQLException e) {
+			throw new NodeStoreException(e);
+		} finally {
+			close(stmt); // Will implicitly close the resultset if required
+		}
+	}
+
+	@Override
+	public void deleteUserItems(JID userJid) throws NodeStoreException {
+		PreparedStatement stmt = null;
+		try {
+			stmt = conn.prepareStatement(dialect.deleteUserItems());
+			stmt.setString(1, userJid.toBareJID());
+			stmt.executeUpdate();
+		} catch (SQLException e) {
+			throw new NodeStoreException(e);
+		} finally {
+			close(stmt); // Will implicitly close the resultset if required
+		}
+	}
+
+	@Override
+	public void deleteUserAffiliations(JID userJid) throws NodeStoreException {
+		PreparedStatement stmt = null;
+		try {
+			stmt = conn.prepareStatement(dialect.deleteUserAffiliations());
+			stmt.setString(1, userJid.toBareJID());
+			stmt.executeUpdate();
+		} catch (SQLException e) {
+			throw new NodeStoreException(e);
+		} finally {
+			close(stmt); // Will implicitly close the resultset if required
+		}
+	}
+
+	@Override
+	public void deleteUserSubscriptions(JID userJid) throws NodeStoreException {
+		PreparedStatement stmt = null;
+		try {
+			stmt = conn.prepareStatement(dialect.deleteUserSubscriptions());
+			stmt.setString(1, userJid.toBareJID());
+			stmt.executeUpdate();
+		} catch (SQLException e) {
+			throw new NodeStoreException(e);
+		} finally {
+			close(stmt); // Will implicitly close the resultset if required
+		}
+	}
+	
+	@Override
+	public ResultSet<NodeThread> getNodeThreads(String node, String afterId,
+			int limit) throws NodeStoreException {
+		
+		Date after = new Date();
+		if (afterId != null) {
+			NodeItem afterItem = getNodeItem(node, afterId);
+			if (afterItem != null) {
+				after = afterItem.getUpdated();
+			}
+		}
+		
+		PreparedStatement stmt = null;
+		try {
+			stmt = conn.prepareStatement(dialect.selectNodeThreads());
+			stmt.setString(1, node);
+			stmt.setTimestamp(2, new java.sql.Timestamp(after.getTime()));
+			stmt.setInt(3, limit);
+			
+			java.sql.ResultSet rs = stmt.executeQuery();
+			ArrayList<NodeThread> nodeThreads = new ArrayList<NodeThread>();
+			
+			NodeThreadImpl currentThread = null;
+			while (rs.next()) {
+				NodeItem nodeItem = new NodeItemImpl(rs.getString(1),
+						rs.getString(2), rs.getTimestamp(3),
+						rs.getString(4), rs.getString(5));
+				String threadId = rs.getString(6);
+				Date threadUpdated = rs.getTimestamp(7);
+				if (currentThread == null || !threadId.equals(currentThread.getId())) {
+					NodeThreadImpl newThread = new NodeThreadImpl(threadId, threadUpdated);
+					nodeThreads.add(newThread);
+					currentThread = newThread;
+				}
+				currentThread.addItem(nodeItem);
+			}
+			return new ResultSetImpl<NodeThread>(nodeThreads);
+		} catch (SQLException e) {
+			throw new NodeStoreException(e);
+		} finally {
+			close(stmt); // Will implicitly close the resultset if required
+		}
+	}
+	
+	@Override
+	public int countNodeThreads(String node) throws NodeStoreException {
+		PreparedStatement selectStatement = null;
+		try {
+			selectStatement = conn
+					.prepareStatement(dialect.countNodeThreads());
+			selectStatement.setString(1, node);
+			java.sql.ResultSet rs = selectStatement.executeQuery();
+			if (rs.next()) {
+				return rs.getInt(1);
+			} else {
+				return 0; // This really shouldn't happen!
+			}
+		} catch (SQLException e) {
+			throw new NodeStoreException(e);
+		} finally {
+			close(selectStatement);
+		}
+	}
+	
+	@Override
 	public Transaction beginTransaction() throws NodeStoreException {
 		if (transactionHasBeenRolledBack) {
 			throw new IllegalStateException(
@@ -1745,6 +1901,8 @@ public class JDBCNodeStore implements NodeStore {
 	public interface NodeStoreSQLDialect {
 		String insertNode();
 
+		String getUserItems();
+
 		String selectItemsForLocalNodesBeforeDate();
 
 		String countItemsForLocalNodes();
@@ -1804,6 +1962,8 @@ public class JDBCNodeStore implements NodeStore {
 		String selectSubscriptionsForNode();
 
 		String selectSubscriptionsForNodeAfterJid();
+		
+		String selectSubscriptionListeners();
 
 		String selectSubscriptionListenersForNode();
 
@@ -1842,5 +2002,16 @@ public class JDBCNodeStore implements NodeStore {
 		String deleteItem();
 
 		String selectCountRecentItemParts();
+		
+		String deleteUserItems();
+		
+		String deleteUserAffiliations();
+		
+		String deleteUserSubscriptions();
+
+		String selectNodeThreads();
+		
+		String countNodeThreads();
+	
 	}
 }

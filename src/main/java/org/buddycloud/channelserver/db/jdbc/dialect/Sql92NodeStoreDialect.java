@@ -25,6 +25,8 @@ public class Sql92NodeStoreDialect implements NodeStoreSQLDialect {
 	private static final String SELECT_AFFILIATIONS_FOR_USER = "SELECT \"node\", \"user\", \"affiliation\", \"updated\""
 			+ " FROM \"affiliations\" WHERE \"user\" = ? ORDER BY \"updated\" ASC";
 
+	private static final String SELECT_NODE_OWNERS = "SELECT \"user\" FROM \"affiliations\" WHERE \"node\" = ? AND \"affiliation\" = 'owner';";
+	
 	private static final String SELECT_AFFILIATION_CHANGES = ""
 			+ "SELECT \"node\", \"user\", \"affiliation\", \"updated\" FROM \"affiliations\" "
 			+ "WHERE \"updated\" >= ? AND \"updated\" <= ? AND \"node\" IN "
@@ -277,6 +279,11 @@ public class Sql92NodeStoreDialect implements NodeStoreSQLDialect {
 	@Override
 	public String selectAffiliationsForUser() {
 		return SELECT_AFFILIATIONS_FOR_USER;
+	}
+	
+	@Override
+	public String selectNodeOwners() {
+		return SELECT_NODE_OWNERS;
 	}
 
 	@Override

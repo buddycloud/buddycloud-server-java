@@ -235,8 +235,9 @@ public interface NodeStore {
 	 * Get a list of node owners
 	 * 
 	 * @param node
+	 * @throws NodeStoreException 
 	 */
-	ArrayList<JID> getNodeOwners(String node);
+	ArrayList<JID> getNodeOwners(String node) throws NodeStoreException;
 	
 	/**
 	 * Count the number of affiliations for a node

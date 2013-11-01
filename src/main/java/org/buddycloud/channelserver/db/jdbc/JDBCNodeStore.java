@@ -585,6 +585,30 @@ public class JDBCNodeStore implements NodeStore {
 	}
 
 	@Override
+	public ArrayList<JID> getNodeOwners(String node) throws NodeStoreException {
+		PreparedStatement stmt = null;
+
+		try {
+			stmt = conn.prepareStatement(dialect
+					.selectNodeOwners());
+			stmt.setString(1, node);
+
+			java.sql.ResultSet rs = stmt.executeQuery();
+			ArrayList<JID> result = new ArrayList<JID>();
+
+			while (rs.next()) {
+				result.add(new JID(rs.getString(1)));
+			}
+
+			return result;
+		} catch (SQLException e) {
+			throw new NodeStoreException(e);
+		} finally {
+			close(stmt); // Will implicitly close the resultset if required
+		}
+	}
+	
+	@Override
 	public int countUserAffiliations(JID actorJid) throws NodeStoreException {
 		PreparedStatement selectStatement = null;
 
@@ -1839,6 +1863,8 @@ public class JDBCNodeStore implements NodeStore {
 
 	public interface NodeStoreSQLDialect {
 		String insertNode();
+
+		String selectNodeOwners();
 
 		String getUserItems();
 

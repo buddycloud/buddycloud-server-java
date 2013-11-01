@@ -1,5 +1,6 @@
 package src.test.java.org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.set;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -66,12 +67,17 @@ public class UnsubscribeSetTest extends IQTestHandler {
 	@Test
 	public void testCanNotUnsubscribeAsOnlyNodeOwner() throws Exception {
 
+		ArrayList<JID> owners = new ArrayList<JID>();
+		owners.add(jid);
+
 		Mockito.when(
 				channelManager.getUserSubscription(Mockito.anyString(),
 						Mockito.any(JID.class))).thenReturn(subscription);
 		Mockito.when(
 				channelManager.getUserAffiliation(Mockito.anyString(),
 						Mockito.any(JID.class))).thenReturn(affiliation);
+		Mockito.when(channelManager.getNodeOwners(Mockito.anyString()))
+				.thenReturn(owners);
 
 		unsubscribe.process(element, jid, request, null);
 
@@ -83,9 +89,10 @@ public class UnsubscribeSetTest extends IQTestHandler {
 
 		PacketError error = response.getError();
 		Assert.assertNotNull(error);
-		
+
 		Assert.assertEquals(PacketError.Type.cancel, error.getType());
-		Assert.assertEquals(PacketError.Condition.not_allowed, error.getCondition());
+		Assert.assertEquals(PacketError.Condition.not_allowed,
+				error.getCondition());
 
 	}
 

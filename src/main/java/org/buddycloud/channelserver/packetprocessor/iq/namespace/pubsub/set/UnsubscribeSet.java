@@ -108,7 +108,9 @@ public class UnsubscribeSet extends PubSubElementProcessorAbstract {
 			return;
 		}
 		
-		if (Affiliations.owner == existingAffiliation.getAffiliation()) {
+		if ((Affiliations.owner == existingAffiliation.getAffiliation()) &&
+			(channelManager.getNodeOwners(node).size() < 2)) {
+			
 			response.setType(Type.error);
 			PacketError pe = new PacketError(
 					org.xmpp.packet.PacketError.Condition.not_allowed,

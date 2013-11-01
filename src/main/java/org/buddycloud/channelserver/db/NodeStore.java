@@ -232,6 +232,13 @@ public interface NodeStore {
 			, String afterItemId, int maxItemsToReturn) throws NodeStoreException;
 	
 	/**
+	 * Get a list of node owners
+	 * 
+	 * @param node
+	 */
+	ArrayList<JID> getNodeOwners(String node);
+	
+	/**
 	 * Count the number of affiliations for a node
 	 * 
 	 * @param nodeId

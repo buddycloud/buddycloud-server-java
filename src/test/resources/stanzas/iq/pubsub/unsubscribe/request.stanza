@@ -1,8 +1,8 @@
 <iq type='set'
-    from='francisco@denmark.lit/barracks'
+    from='juliet@shakespeare.lit/balcony'
     to='pubsub.shakespeare.lit'
     id='unsub1'>
    <pubsub xmlns='http://jabber.org/protocol/pubsub'>
-      <unsubscribe node='/user/pamela@denmark.lit/posts' jid='francisco@denmark.lit'/>
+      <unsubscribe node='/user/pamela@denmark.lit/posts' jid='juliet@shakespeare.lit'/>
    </pubsub>
 </iq>

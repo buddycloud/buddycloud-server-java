@@ -34,6 +34,7 @@ public class UnsubscribeSet extends PubSubElementProcessorAbstract {
 
 	private String node;
 	private IQ request;
+	private IQ reply;
 	private JID unsubscribingJid;
 
 	public UnsubscribeSet(BlockingQueue<Packet> outQueue,
@@ -48,6 +49,7 @@ public class UnsubscribeSet extends PubSubElementProcessorAbstract {
 
 		node = elm.attributeValue("node");
 		request = reqIQ;
+		reply = IQ.createResultIQ(request);
 
 		if ((node == null) || (node.equals(""))) {
 			missingNodeName();
@@ -79,7 +81,6 @@ public class UnsubscribeSet extends PubSubElementProcessorAbstract {
 
 
 		if (false == channelManager.nodeExists(node)) {
-			IQ reply = IQ.createResultIQ(request);
 			reply.setType(Type.error);
 			PacketError pe = new PacketError(
 					org.xmpp.packet.PacketError.Condition.item_not_found,
@@ -98,7 +99,16 @@ public class UnsubscribeSet extends PubSubElementProcessorAbstract {
 		// Check that the requesting user is allowed to unsubscribe according to
 		// XEP-0060 section 6.2.3.3		
 		if (false == unsubscribingJid.equals(existingSubscription.getUser())) {
-			IQ reply = IQ.createResultIQ(request);
+			reply.setType(Type.error);
+			PacketError pe = new PacketError(
+					org.xmpp.packet.PacketError.Condition.forbidden,
+					org.xmpp.packet.PacketError.Type.auth);
+			reply.setError(pe);
+			outQueue.put(reply);
+			return;
+		}
+		
+		if (Affiliations.owner == existingAffiliation.getAffiliation()) {
 			reply.setType(Type.error);
 			PacketError pe = new PacketError(
 					org.xmpp.packet.PacketError.Condition.forbidden,
@@ -120,7 +130,6 @@ public class UnsubscribeSet extends PubSubElementProcessorAbstract {
 					Affiliations.none);
 		}
 
-		IQ reply = IQ.createResultIQ(request);
 		outQueue.put(reply);
 		notifySubscribers();
 	}
@@ -174,7 +183,6 @@ public class UnsubscribeSet extends PubSubElementProcessorAbstract {
 		 * <registration-required xmlns='urn:ietf:params:xml:ns:xmpp-stanzas'/>
 		 * </error> </iq>
 		 */
-		IQ reply = IQ.createResultIQ(request);
 		reply.setType(Type.error);
 		PacketError pe = new PacketError(
 				org.xmpp.packet.PacketError.Condition.not_authorized,
@@ -194,7 +202,6 @@ public class UnsubscribeSet extends PubSubElementProcessorAbstract {
 		 * </error> </iq>
 		 */
 
-		IQ reply = IQ.createResultIQ(request);
 		reply.setType(Type.error);
 
 		Element badRequest = new DOMElement("bad-request",

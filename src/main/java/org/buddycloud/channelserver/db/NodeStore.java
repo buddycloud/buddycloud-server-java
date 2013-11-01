@@ -573,16 +573,57 @@ public interface NodeStore {
 	 */
 	int getFirehoseItemCount(boolean isAdmin) throws NodeStoreException;
 	
+	/**
+	 * Get a list of posts for a user
+	 * 
+	 * @param userJid
+	 * @return
+	 * @throws NodeStoreException
+	 */
 	ResultSet<NodeItem> getUserItems(JID userJid) throws NodeStoreException;
 	
+	/**
+	 * Delete user posts
+	 * 
+	 * @param userJid
+	 * @throws NodeStoreException
+	 */
 	void deleteUserItems(JID userJid) throws NodeStoreException;
 	
+	/**
+	 * Delete affiliations for a user
+	 * 
+	 * @param userJid
+	 * @throws NodeStoreException
+	 */
 	void deleteUserAffiliations(JID userJid) throws NodeStoreException;
 	
+	/**
+	 * Delete user subscriptions
+	 * 
+	 * @param userJid
+	 * @throws NodeStoreException
+	 */
 	void deleteUserSubscriptions(JID userJid) throws NodeStoreException;
 	
+	/**
+	 * Get node threads
+	 * 
+	 * @param node
+	 * @param afterId
+	 * @param limit
+	 * @return
+	 * @throws NodeStoreException
+	 */
 	ResultSet<NodeThread> getNodeThreads(String node, String afterId, int limit) throws NodeStoreException;
 	
+	/**
+	 * Count node threads
+	 * 
+	 * @param node
+	 * @return
+	 * @throws NodeStoreException
+	 */
 	int countNodeThreads(String node) throws NodeStoreException;
 	
 	/**

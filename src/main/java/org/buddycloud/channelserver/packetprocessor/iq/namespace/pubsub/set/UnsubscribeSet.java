@@ -111,8 +111,8 @@ public class UnsubscribeSet extends PubSubElementProcessorAbstract {
 		if (Affiliations.owner == existingAffiliation.getAffiliation()) {
 			response.setType(Type.error);
 			PacketError pe = new PacketError(
-					org.xmpp.packet.PacketError.Condition.forbidden,
-					org.xmpp.packet.PacketError.Type.auth);
+					org.xmpp.packet.PacketError.Condition.not_allowed,
+					org.xmpp.packet.PacketError.Type.cancel);
 			response.setError(pe);
 			outQueue.put(response);
 			return;

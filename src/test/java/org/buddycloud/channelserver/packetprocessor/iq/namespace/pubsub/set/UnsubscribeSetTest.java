@@ -82,8 +82,10 @@ public class UnsubscribeSetTest extends IQTestHandler {
 		Assert.assertEquals(IQ.Type.error, response.getType());
 
 		PacketError error = response.getError();
-		System.out.println(response.toXML());
 		Assert.assertNotNull(error);
+		
+		Assert.assertEquals(PacketError.Type.cancel, error.getType());
+		Assert.assertEquals(PacketError.Condition.not_allowed, error.getCondition());
 
 	}
 

@@ -77,6 +77,8 @@ public class JDBCNodeStoreTest {
 	private static final String TEST_SERVER1_HOSTNAME = "server1";
 	private static final String TEST_SERVER2_HOSTNAME = "server2";
 
+	private static final String UNKNOWN_NODE = "/user/unknown@example.com/posts";
+
 	private static final HashMap<String, String> TEST_SERVER1_NODE1_CONF = new HashMap<String, String>() {
 		{
 			put("config1", "Value of config1");
@@ -1322,16 +1324,18 @@ public class JDBCNodeStoreTest {
 		dbTester.loadData("node_1");
 
 		long start = System.currentTimeMillis();
-		
+
 		NodeItem[] items = new NodeItem[20];
-		
+
 		for (int i = 0; i < 20; i++) {
-			items[i] = new NodeItemImpl(TEST_SERVER1_NODE1_ID, String
-					.valueOf(i), new Date(start + i * 10), "payload" + String.valueOf(i));
+			items[i] = new NodeItemImpl(TEST_SERVER1_NODE1_ID,
+					String.valueOf(i), new Date(start + i * 10), "payload"
+							+ String.valueOf(i));
 			store.addNodeItem(items[i]);
 		}
 
-		CloseableIterator<NodeItem> result = store.getNodeItems(TEST_SERVER1_NODE1_ID, "15", 3);
+		CloseableIterator<NodeItem> result = store.getNodeItems(
+				TEST_SERVER1_NODE1_ID, "15", 3);
 
 		assertEquals("Incorrect node item returned", items[14], result.next());
 		assertEquals("Incorrect node item returned", items[13], result.next());
@@ -1565,7 +1569,7 @@ public class JDBCNodeStoreTest {
 		store.addUserSubscription(new NodeSubscriptionImpl(
 				TEST_SERVER1_NODE2_ID, TEST_SERVER1_USER1_JID,
 				Subscriptions.subscribed));
-		
+
 		long now = System.currentTimeMillis();
 
 		NodeItem nodeItem1 = new NodeItemImpl(TEST_SERVER1_NODE1_ID, "123",
@@ -1585,7 +1589,9 @@ public class JDBCNodeStoreTest {
 		store.addNodeItem(nodeItem4);
 
 		CloseableIterator<NodeItem> items = store.getRecentItems(
-				TEST_SERVER1_USER1_JID, since, -1, 2, new GlobalItemIDImpl(TEST_SERVER1_CHANNELS_JID, TEST_SERVER1_NODE1_ID, "124"), null);
+				TEST_SERVER1_USER1_JID, since, -1, 2,
+				new GlobalItemIDImpl(TEST_SERVER1_CHANNELS_JID,
+						TEST_SERVER1_NODE1_ID, "124"), null);
 
 		assertSameNodeItem(items.next(), nodeItem3);
 		assertSameNodeItem(items.next(), nodeItem1);
@@ -1646,7 +1652,7 @@ public class JDBCNodeStoreTest {
 		dbTester.loadData("node_1");
 
 		Date since = new Date();
-		
+
 		Thread.sleep(10);
 
 		store.addRemoteNode(TEST_SERVER1_NODE2_ID);
@@ -1659,8 +1665,9 @@ public class JDBCNodeStoreTest {
 			store.addNodeItem(new NodeItemImpl(TEST_SERVER1_NODE1_ID, String
 					.valueOf(i), new Date(), "payload" + String.valueOf(i)));
 		}
-		
-		GlobalItemID itemID = new GlobalItemIDImpl(TEST_SERVER1_CHANNELS_JID, TEST_SERVER1_NODE1_ID, "15");
+
+		GlobalItemID itemID = new GlobalItemIDImpl(TEST_SERVER1_CHANNELS_JID,
+				TEST_SERVER1_NODE1_ID, "15");
 
 		CloseableIterator<NodeItem> items = store.getRecentItems(
 				TEST_SERVER1_USER1_JID, since, -1, 10, itemID, null);
@@ -1785,8 +1792,8 @@ public class JDBCNodeStoreTest {
 	@Test
 	public void testCanGetItemThreadWithResultSetManagement() throws Exception {
 		dbTester.loadData("node_1");
-		NodeItem testItemParent = new NodeItemImpl(TEST_SERVER1_NODE1_ID, "a100",
-				new Date(100), "<entry>payload parent</entry>");
+		NodeItem testItemParent = new NodeItemImpl(TEST_SERVER1_NODE1_ID,
+				"a100", new Date(100), "<entry>payload parent</entry>");
 		NodeItem testItem1 = new NodeItemImpl(TEST_SERVER1_NODE1_ID, "a6",
 				new Date(20), "<entry>payload</entry>", "a100");
 		NodeItem testItem2 = new NodeItemImpl(TEST_SERVER1_NODE1_ID, "a7",
@@ -2319,16 +2326,35 @@ public class JDBCNodeStoreTest {
 		assertEquals(expected.getPayload(), actual.getPayload());
 		assertEquals(expected.getInReplyTo(), actual.getInReplyTo());
 	}
-	
+
 	@Test
 	public void testSelectNodeThreads() throws Exception {
 		dbTester.loadData("node_1");
-		assertEquals(5, store.getNodeThreads(TEST_SERVER1_NODE1_ID, null, 10).size());
+		assertEquals(5, store.getNodeThreads(TEST_SERVER1_NODE1_ID, null, 10)
+				.size());
 	}
-	
+
 	@Test
 	public void testCountNodeThreads() throws Exception {
 		dbTester.loadData("node_1");
 		assertEquals(5, store.countNodeThreads(TEST_SERVER1_NODE1_ID));
+	}
+
+	@Test
+	public void testNoNodeOwnersReturnsEmptyList() throws Exception {
+		dbTester.loadData("node_1");
+		assertEquals(0, store.getNodeOwners(UNKNOWN_NODE).size());
+	}
+
+	@Test
+	public void testNodeOwnersReturnsExpectedList() throws Exception {
+		dbTester.loadData("node_1");
+		
+		store.addUserSubscription(new NodeSubscriptionImpl(TEST_SERVER1_NODE1_ID, TEST_SERVER1_USER2_JID, Subscriptions.subscribed));
+		store.setUserAffiliation(TEST_SERVER1_NODE1_ID, TEST_SERVER1_USER2_JID, Affiliations.owner);
+		
+		assertEquals(2, store.getNodeOwners(TEST_SERVER1_NODE1_ID).size());
+		assertEquals(TEST_SERVER1_USER1_JID, store.getNodeOwners(TEST_SERVER1_NODE1_ID).get(0));
+		assertEquals(TEST_SERVER1_USER2_JID, store.getNodeOwners(TEST_SERVER1_NODE1_ID).get(1));
 	}
 }

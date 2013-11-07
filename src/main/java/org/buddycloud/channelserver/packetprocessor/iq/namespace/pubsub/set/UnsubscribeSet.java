@@ -34,6 +34,7 @@ public class UnsubscribeSet extends PubSubElementProcessorAbstract {
 
 	private String node;
 	private IQ request;
+	private IQ response;
 	private JID unsubscribingJid;
 
 	public UnsubscribeSet(BlockingQueue<Packet> outQueue,
@@ -48,6 +49,7 @@ public class UnsubscribeSet extends PubSubElementProcessorAbstract {
 
 		node = elm.attributeValue("node");
 		request = reqIQ;
+		response = IQ.createResultIQ(request);
 
 		if ((node == null) || (node.equals(""))) {
 			missingNodeName();
@@ -79,13 +81,12 @@ public class UnsubscribeSet extends PubSubElementProcessorAbstract {
 
 
 		if (false == channelManager.nodeExists(node)) {
-			IQ reply = IQ.createResultIQ(request);
-			reply.setType(Type.error);
+			response.setType(Type.error);
 			PacketError pe = new PacketError(
 					org.xmpp.packet.PacketError.Condition.item_not_found,
 					org.xmpp.packet.PacketError.Type.cancel);
-			reply.setError(pe);
-			outQueue.put(reply);
+			response.setError(pe);
+			outQueue.put(response);
 			return;
 		}
 
@@ -98,13 +99,24 @@ public class UnsubscribeSet extends PubSubElementProcessorAbstract {
 		// Check that the requesting user is allowed to unsubscribe according to
 		// XEP-0060 section 6.2.3.3		
 		if (false == unsubscribingJid.equals(existingSubscription.getUser())) {
-			IQ reply = IQ.createResultIQ(request);
-			reply.setType(Type.error);
+			response.setType(Type.error);
 			PacketError pe = new PacketError(
 					org.xmpp.packet.PacketError.Condition.forbidden,
 					org.xmpp.packet.PacketError.Type.auth);
-			reply.setError(pe);
-			outQueue.put(reply);
+			response.setError(pe);
+			outQueue.put(response);
+			return;
+		}
+		
+		if ((Affiliations.owner == existingAffiliation.getAffiliation()) &&
+			(channelManager.getNodeOwners(node).size() < 2)) {
+			
+			response.setType(Type.error);
+			PacketError pe = new PacketError(
+					org.xmpp.packet.PacketError.Condition.not_allowed,
+					org.xmpp.packet.PacketError.Type.cancel);
+			response.setError(pe);
+			outQueue.put(response);
 			return;
 		}
 
@@ -120,8 +132,7 @@ public class UnsubscribeSet extends PubSubElementProcessorAbstract {
 					Affiliations.none);
 		}
 
-		IQ reply = IQ.createResultIQ(request);
-		outQueue.put(reply);
+		outQueue.put(response);
 		notifySubscribers();
 	}
 
@@ -174,13 +185,12 @@ public class UnsubscribeSet extends PubSubElementProcessorAbstract {
 		 * <registration-required xmlns='urn:ietf:params:xml:ns:xmpp-stanzas'/>
 		 * </error> </iq>
 		 */
-		IQ reply = IQ.createResultIQ(request);
-		reply.setType(Type.error);
+		response.setType(Type.error);
 		PacketError pe = new PacketError(
 				org.xmpp.packet.PacketError.Condition.not_authorized,
 				org.xmpp.packet.PacketError.Type.auth);
-		reply.setError(pe);
-		outQueue.put(reply);
+		response.setError(pe);
+		outQueue.put(response);
 	}
 
 	private void missingNodeName() throws InterruptedException {
@@ -194,8 +204,7 @@ public class UnsubscribeSet extends PubSubElementProcessorAbstract {
 		 * </error> </iq>
 		 */
 
-		IQ reply = IQ.createResultIQ(request);
-		reply.setType(Type.error);
+		response.setType(Type.error);
 
 		Element badRequest = new DOMElement("bad-request",
 				new org.dom4j.Namespace("", JabberPubsub.NS_XMPP_STANZAS));
@@ -208,9 +217,9 @@ public class UnsubscribeSet extends PubSubElementProcessorAbstract {
 		error.add(badRequest);
 		error.add(nodeIdRequired);
 
-		reply.setChildElement(error);
+		response.setChildElement(error);
 
-		outQueue.put(reply);
+		outQueue.put(response);
 	}
 
 	private void makeRemoteRequest() throws InterruptedException {

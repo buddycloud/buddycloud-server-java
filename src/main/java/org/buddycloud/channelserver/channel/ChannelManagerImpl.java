@@ -144,6 +144,11 @@ public class ChannelManagerImpl implements ChannelManager {
 	}
 
 	@Override
+	public ArrayList<JID> getNodeOwners(String node) throws NodeStoreException {
+		return nodeStore.getNodeOwners(node);
+	}
+
+	@Override
 	public int countNodeAffiliations(String nodeId) throws NodeStoreException {
 		return nodeStore.countNodeAffiliations(nodeId);
 	}
@@ -468,6 +473,5 @@ public class ChannelManagerImpl implements ChannelManager {
 	@Override
 	public int countNodeThreads(String node) throws NodeStoreException {
 		return nodeStore.countNodeThreads(node);
-	}
-	
+	}	
 }

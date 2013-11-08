@@ -43,13 +43,15 @@ public class ItemDelete extends PubSubElementProcessorAbstract {
 	}
 
 	@Override
-	public void process(Element elm, JID actorJID, IQ reqIQ, Element rsm)
+	public void process(Element elm, JID actor, IQ reqIQ, Element rsm)
 			throws InterruptedException, NodeStoreException {
 
 		element = elm;
 		request = reqIQ;
 		response = IQ.createResultIQ(request);
 		node = element.attributeValue("node");
+		this.actor = actor;
+		if (null == this.actor) this.actor = request.getFrom();
 		
 		if (!channelManager.isLocalNode(node)) {
 			makeRemoteRequest();
@@ -146,7 +148,7 @@ public class ItemDelete extends PubSubElementProcessorAbstract {
 	private boolean userOwnsItem() {
 		try {
 			return parsedPayload.element("author").elementText("name")
-					.equals(request.getFrom().toBareJID());
+					.equals(actor.toBareJID());
 		} catch (NullPointerException e) {
 			return false;
 		}
@@ -154,7 +156,7 @@ public class ItemDelete extends PubSubElementProcessorAbstract {
 
 	private boolean userManagesNode() throws NodeStoreException {
 		NodeAffiliation affiliation = channelManager.getUserAffiliation(node,
-				new JID(request.getFrom().toBareJID()));
+				actor);
 		if (affiliation == null) {
 			return false;
 		}
@@ -240,10 +242,10 @@ public class ItemDelete extends PubSubElementProcessorAbstract {
 	
 	private void makeRemoteRequest() throws InterruptedException {
 		request.setTo(new JID(node.split("/")[2]).getDomain());
-		Element actor = request.getElement()
+		request.getElement()
 		    .element("pubsub")
-		    .addElement("actor", JabberPubsub.NS_BUDDYCLOUD);
-		actor.addText(request.getFrom().toBareJID());
+		    .addElement("actor", JabberPubsub.NS_BUDDYCLOUD)
+            .addText(actor.toBareJID());
 	    outQueue.put(request);
 	}
 

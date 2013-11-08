@@ -50,11 +50,11 @@ public class SubscriptionEventTest extends IQTestHandler {
 
 		element = new BaseElement("subscriptions");
 		element.addAttribute("node", node);
-		
+
 		dataStore = Mockito.mock(ChannelManager.class);
-		Mockito.when(dataStore.isLocalNode(Mockito.anyString()))
-		    .thenReturn(true);
-		
+		Mockito.when(dataStore.isLocalNode(Mockito.anyString())).thenReturn(
+				true);
+
 		event.setChannelManager(dataStore);
 	}
 
@@ -139,7 +139,8 @@ public class SubscriptionEventTest extends IQTestHandler {
 		PacketError error = response.getError();
 		Assert.assertNotNull(error);
 		Assert.assertEquals(PacketError.Type.modify, error.getType());
-		Assert.assertEquals(PacketError.Condition.bad_request, error.getCondition());
+		Assert.assertEquals(PacketError.Condition.bad_request,
+				error.getCondition());
 	}
 
 	@Test
@@ -170,7 +171,8 @@ public class SubscriptionEventTest extends IQTestHandler {
 		PacketError error = response.getError();
 		Assert.assertNotNull(error);
 		Assert.assertEquals(PacketError.Type.cancel, error.getType());
-		Assert.assertEquals(PacketError.Condition.item_not_found, error.getCondition());
+		Assert.assertEquals(PacketError.Condition.item_not_found,
+				error.getCondition());
 	}
 
 	@Test
@@ -178,8 +180,7 @@ public class SubscriptionEventTest extends IQTestHandler {
 			throws Exception {
 
 		Mockito.when(dataStore.nodeExists(node)).thenReturn(true);
-		Mockito.when(dataStore.getUserSubscription(node, jid))
-				.thenReturn(null);
+		Mockito.when(dataStore.getUserSubscription(node, jid)).thenReturn(null);
 		event.setChannelManager(dataStore);
 
 		event.process(element, jid, request, null);
@@ -188,7 +189,8 @@ public class SubscriptionEventTest extends IQTestHandler {
 		PacketError error = response.getError();
 		Assert.assertNotNull(error);
 		Assert.assertEquals(PacketError.Type.auth, error.getType());
-		Assert.assertEquals(PacketError.Condition.not_authorized, error.getCondition());
+		Assert.assertEquals(PacketError.Condition.not_authorized,
+				error.getCondition());
 	}
 
 	@Test
@@ -198,10 +200,9 @@ public class SubscriptionEventTest extends IQTestHandler {
 		Mockito.when(subscriptionMock.getAffiliation()).thenReturn(
 				Affiliations.member);
 
-
 		Mockito.when(dataStore.nodeExists(node)).thenReturn(true);
-		Mockito.when(dataStore.getUserAffiliation(node, jid))
-				.thenReturn(subscriptionMock);
+		Mockito.when(dataStore.getUserAffiliation(node, jid)).thenReturn(
+				subscriptionMock);
 		event.setChannelManager(dataStore);
 
 		event.process(element, jid, request, null);
@@ -210,7 +211,8 @@ public class SubscriptionEventTest extends IQTestHandler {
 		PacketError error = response.getError();
 		Assert.assertNotNull(error);
 		Assert.assertEquals(PacketError.Type.auth, error.getType());
-		Assert.assertEquals(PacketError.Condition.not_authorized, error.getCondition());
+		Assert.assertEquals(PacketError.Condition.not_authorized,
+				error.getCondition());
 	}
 
 	@Test
@@ -221,13 +223,11 @@ public class SubscriptionEventTest extends IQTestHandler {
 		Mockito.when(subscriptionMockActor.getAffiliation()).thenReturn(
 				Affiliations.owner);
 
-
 		Mockito.when(dataStore.nodeExists(node)).thenReturn(true);
-		Mockito.when(dataStore.getUserAffiliation(node, jid))
-				.thenReturn(subscriptionMockActor);
-		Mockito.when(
-				dataStore.getUserSubscription(node,
-						new JID(subscriber))).thenReturn(null);
+		Mockito.when(dataStore.getUserAffiliation(node, jid)).thenReturn(
+				subscriptionMockActor);
+		Mockito.when(dataStore.getUserSubscription(node, new JID(subscriber)))
+				.thenReturn(null);
 		event.setChannelManager(dataStore);
 
 		event.process(element, jid, request, null);
@@ -302,15 +302,12 @@ public class SubscriptionEventTest extends IQTestHandler {
 		Mockito.when(subscriptionMockSubscriber.getSubscription()).thenReturn(
 				Subscriptions.subscribed);
 
-
 		Mockito.when(dataStore.nodeExists(node)).thenReturn(true);
-		Mockito.when(dataStore.getUserAffiliation(node, jid))
-				.thenReturn(subscriptionMockActor);
+		Mockito.when(dataStore.getUserAffiliation(node, jid)).thenReturn(
+				subscriptionMockActor);
 
-		Mockito.when(
-				dataStore.getUserSubscription(node,
-						new JID(subscriber))).thenReturn(
-				subscriptionMockSubscriber);
+		Mockito.when(dataStore.getUserSubscription(node, new JID(subscriber)))
+				.thenReturn(subscriptionMockSubscriber);
 
 		event.setChannelManager(dataStore);
 
@@ -320,7 +317,8 @@ public class SubscriptionEventTest extends IQTestHandler {
 		subscribers.add(new NodeSubscriptionMock(new JID(
 				"hamlet@shakespeare.lit")));
 
-		Mockito.doReturn(new ResultSetImpl<NodeSubscription>(subscribers)).when(dataStore)
+		Mockito.doReturn(new ResultSetImpl<NodeSubscription>(subscribers))
+				.when(dataStore)
 				.getNodeSubscriptionListeners(Mockito.anyString());
 
 		event.setChannelManager(dataStore);
@@ -328,24 +326,30 @@ public class SubscriptionEventTest extends IQTestHandler {
 
 		Assert.assertEquals(5, queue.size());
 		Packet notification = queue.poll(100, TimeUnit.MILLISECONDS);
-		Assert.assertEquals("francisco@denmark.lit/barracks", notification.getTo().toString());
+		Assert.assertEquals("francisco@denmark.lit/barracks", notification
+				.getTo().toString());
 		notification = queue.poll(100, TimeUnit.MILLISECONDS);
-		Assert.assertEquals("romeo@shakespeare.lit", notification.getTo().toString());
+		Assert.assertEquals("romeo@shakespeare.lit", notification.getTo()
+				.toString());
 		notification = queue.poll(100, TimeUnit.MILLISECONDS);
-		Assert.assertEquals("hamlet@shakespeare.lit", notification.getTo().toString());
+		Assert.assertEquals("hamlet@shakespeare.lit", notification.getTo()
+				.toString());
 		notification = queue.poll(100, TimeUnit.MILLISECONDS);
 		Assert.assertEquals("user1@server1", notification.getTo().toString());
 		notification = queue.poll(100, TimeUnit.MILLISECONDS);
 		Assert.assertEquals("user2@server1", notification.getTo().toString());
 
+		Assert.assertEquals(node, notification.getElement().element("event")
+				.element("subscription").attributeValue("node"));
+		Assert.assertTrue(notification.toXML().contains(
+				JabberPubsub.NS_PUBSUB_EVENT));
 		Assert.assertEquals(
-				node,
+				"subscribed",
 				notification.getElement().element("event")
-						.element("subscription").attributeValue("node"));
-		Assert.assertTrue(notification.toXML().contains(JabberPubsub.NS_PUBSUB_EVENT));
-		Assert.assertEquals("subscribed", notification.getElement().element("event")
-				.element("subscription").attributeValue("subscription"));
-		Assert.assertEquals(subscriber, notification.getElement().element("event")
-				.element("subscription").attributeValue("jid"));
+						.element("subscription").attributeValue("subscription"));
+		Assert.assertEquals(
+				subscriber,
+				notification.getElement().element("event")
+						.element("subscription").attributeValue("jid"));
 	}
 }

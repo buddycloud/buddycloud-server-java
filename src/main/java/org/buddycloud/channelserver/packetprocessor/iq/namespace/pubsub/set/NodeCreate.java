@@ -97,7 +97,7 @@ public class NodeCreate extends PubSubElementProcessorAbstract {
 	}
 
 	private boolean validateNode() {
-		if (node != null && !node.trim().equals("")) {
+		if ((node != null) && !node.trim().equals("")) {
 			return true;
 		}
 		response.setType(IQ.Type.error);

@@ -87,11 +87,12 @@ public class SubscriptionEventTest extends IQTestHandler {
 	public void testNotProvidingSubscriptionChildNodeReturnsErrorStanza()
 			throws Exception {
 
-		IQ request = toIq(readStanzaAsString(
-				"/iq/pubsub/subscribe/authorizationPendingGrantReply.stanza")
-				.replaceFirst(
-						"<subscription jid='francisco@denmark.lit' subscription='subscribed'/>",
-						""));
+		IQ request = readStanzaAsIq(
+				"/iq/pubsub/subscribe/authorizationPendingGrantReply.stanza");
+		request.getChildElement()
+				.element("subscriptions")
+				.element("subscription")
+				.detach();
 
 		event.process(element, jid, request, null);
 		Packet response = queue.poll(100, TimeUnit.MILLISECONDS);

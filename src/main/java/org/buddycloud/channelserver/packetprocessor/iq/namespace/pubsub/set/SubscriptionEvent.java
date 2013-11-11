@@ -95,15 +95,15 @@ public class SubscriptionEvent extends PubSubElementProcessorAbstract {
 		Element subscription = event.addElement("subscription");
 		message.addAttribute("from", request.getTo().toString());
 		subscription.addAttribute("node", node);
-		subscription.addAttribute("JID",
-				requestedSubscription.attributeValue("JID"));
+		subscription.addAttribute("jid",
+				requestedSubscription.attributeValue("jid"));
 		subscription.addAttribute("subscription",
 				requestedSubscription.attributeValue("subscription"));
 		Message rootElement = new Message(message);
 
 		for (NodeSubscription subscriber : subscribers) {
 			Message notification = rootElement.createCopy();
-			notification.setTo(subscriber.getUser());
+			notification.setTo(subscriber.getListener());
 			outQueue.put(notification);
 		}
 		Collection<JID> admins = getAdminUsers();
@@ -116,7 +116,7 @@ public class SubscriptionEvent extends PubSubElementProcessorAbstract {
 
 	private void saveUpdatedSubscription() throws NodeStoreException {
 		NodeSubscription newSubscription = new NodeSubscriptionImpl(node,
-				new JID(requestedSubscription.attributeValue("JID")), currentSubscription.getListener(),
+				new JID(requestedSubscription.attributeValue("jid")), currentSubscription.getListener(),
 				Subscriptions.valueOf(requestedSubscription
 						.attributeValue("subscription")));
 
@@ -146,7 +146,7 @@ public class SubscriptionEvent extends PubSubElementProcessorAbstract {
 			requestedSubscription = request.getElement().element("pubsub")
 					.element("subscriptions").element("subscription");
 			if ((null == requestedSubscription)
-					|| (null == requestedSubscription.attribute("JID"))
+					|| (null == requestedSubscription.attribute("jid"))
 					|| (null == requestedSubscription.attribute("subscription"))) {
 				setErrorCondition(PacketError.Type.modify,
 						PacketError.Condition.bad_request);
@@ -168,7 +168,7 @@ public class SubscriptionEvent extends PubSubElementProcessorAbstract {
 
 	private boolean subscriberHasCurrentAffiliation() throws NodeStoreException {
 		currentSubscription = channelManager.getUserSubscription(node, new JID(
-				requestedSubscription.attributeValue("JID")));
+				requestedSubscription.attributeValue("jid")));
 
 		if (null == currentSubscription) {
 			setErrorCondition(PacketError.Type.modify,

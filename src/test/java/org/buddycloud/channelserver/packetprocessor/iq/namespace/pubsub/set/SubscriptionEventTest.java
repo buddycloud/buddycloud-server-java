@@ -325,19 +325,19 @@ public class SubscriptionEventTest extends IQTestHandler {
 		event.process(element, jid, request, null);
 
 		Assert.assertEquals(5, queue.size());
-		Packet notification = queue.poll(100, TimeUnit.MILLISECONDS);
+		Packet notification = queue.poll();
 		Assert.assertEquals("francisco@denmark.lit/barracks", notification
 				.getTo().toString());
-		notification = queue.poll(100, TimeUnit.MILLISECONDS);
+		notification = queue.poll();
 		Assert.assertEquals("romeo@shakespeare.lit", notification.getTo()
 				.toString());
-		notification = queue.poll(100, TimeUnit.MILLISECONDS);
+		notification = queue.poll();
 		Assert.assertEquals("hamlet@shakespeare.lit", notification.getTo()
 				.toString());
 		notification = queue.poll(100, TimeUnit.MILLISECONDS);
-		Assert.assertEquals("user1@server1", notification.getTo().toString());
+		Assert.assertEquals("user1@server1", notification.getTo().toBareJID());
 		notification = queue.poll(100, TimeUnit.MILLISECONDS);
-		Assert.assertEquals("user2@server1", notification.getTo().toString());
+		Assert.assertEquals("user2@server1", notification.getTo().toBareJID());
 
 		Assert.assertEquals(node, notification.getElement().element("event")
 				.element("subscription").attributeValue("node"));

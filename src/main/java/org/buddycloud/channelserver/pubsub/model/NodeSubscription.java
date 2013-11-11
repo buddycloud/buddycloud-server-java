@@ -40,4 +40,16 @@ public interface NodeSubscription extends Result {
      * @return
      */
     Date getLastUpdated();
+    
+    /**
+     * Get inviter
+     * @return
+     */
+    public JID getInviter();
+    
+    /**
+     * Get temporary subscription
+     * @return
+     */
+    public boolean isTemporary();
 }

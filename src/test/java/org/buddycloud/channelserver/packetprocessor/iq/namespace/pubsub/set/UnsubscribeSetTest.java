@@ -1,4 +1,4 @@
-package src.test.java.org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.set;
+package org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.set;
 
 import java.util.ArrayList;
 import java.util.Date;

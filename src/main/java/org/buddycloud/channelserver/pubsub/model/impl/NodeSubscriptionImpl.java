@@ -5,6 +5,7 @@ import java.util.Date;
 import org.buddycloud.channelserver.pubsub.affiliation.Affiliations;
 import org.buddycloud.channelserver.pubsub.model.NodeSubscription;
 import org.buddycloud.channelserver.pubsub.subscription.Subscriptions;
+import org.buddycloud.channelserver.utils.NullJid;
 import org.xmpp.packet.JID;
 import org.xmpp.resultsetmanagement.Result;
 
@@ -15,25 +16,32 @@ public class NodeSubscriptionImpl implements NodeSubscription {
 	private JID listener; // If different from user
 	private final String nodeId;
 	private Date lastUpdated;
+	private JID inviter = new NullJid();
+	private boolean isTemporary = false;
 
 
 	public NodeSubscriptionImpl(final String nodeId, final JID user,
 			final Subscriptions subscription) {
-		this(nodeId, user, user, subscription, new Date());
+		this(nodeId, user, user, subscription, new Date(), null);
+	}
+	
+	public NodeSubscriptionImpl(final String nodeId, final JID user,
+			JID listener, final Subscriptions subscription) {
+		this(nodeId, user, listener, subscription, new Date(), null);
 	}
 	
 	public NodeSubscriptionImpl(final String nodeId, final JID user,
 			final Subscriptions subscription, Date lastUpdated) {
-		this(nodeId, user, user, subscription, lastUpdated);
+		this(nodeId, user, user, subscription, lastUpdated, null);
 	}
-
-	public NodeSubscriptionImpl(final String nodeId, final JID user,
-			JID listener, final Subscriptions subscription) {
-		this(nodeId, user, listener, subscription, new Date());
+	
+	public NodeSubscriptionImpl(final String nodeId, final JID user, JID listener, final Subscriptions subscription, String inviter) {
+		this(nodeId, user,
+				listener, subscription, new Date(), inviter);
 	}
 	
 	public NodeSubscriptionImpl(final String nodeId, final JID user,
-			JID listener, final Subscriptions subscription, Date lastUpdated) {
+			JID listener, final Subscriptions subscription, Date lastUpdated, String inviter) {
 		this.nodeId = nodeId;
 		if (user.getResource() == null) {
 			this.user = user;
@@ -43,6 +51,8 @@ public class NodeSubscriptionImpl implements NodeSubscription {
 		this.lastUpdated = lastUpdated;
 		setListener(listener);
 		this.subscription = subscription;
+		this.isTemporary = isTemporary;
+		if (null != inviter) this.inviter = new JID(inviter);
 	}
 
 	private void setListener(JID listener) {
@@ -134,4 +144,15 @@ public class NodeSubscriptionImpl implements NodeSubscription {
 	public Date getLastUpdated() {
 		return lastUpdated;
 	}
+
+	@Override
+	public boolean isTemporary() {
+		throw new NullPointerException("Temporary subscriptions not yet supported");
+	}
+
+	@Override
+	public JID getInviter() {
+		return inviter;
+	}
+
 }

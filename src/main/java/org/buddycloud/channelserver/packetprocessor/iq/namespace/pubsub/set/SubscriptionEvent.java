@@ -56,9 +56,8 @@ public class SubscriptionEvent extends PubSubElementProcessorAbstract {
 		actor = actorJID;
 		node = element.attributeValue("node");
 
-		if (actor == null) {
-			actor = request.getFrom();
-		}
+		if (null == actor) actor = request.getFrom();
+
 		if (false == channelManager.isLocalNode(node)) {
 			makeRemoteRequest();
 			return;
@@ -96,8 +95,8 @@ public class SubscriptionEvent extends PubSubElementProcessorAbstract {
 		Element subscription = event.addElement("subscription");
 		message.addAttribute("from", request.getTo().toString());
 		subscription.addAttribute("node", node);
-		subscription.addAttribute("jid",
-				requestedSubscription.attributeValue("jid"));
+		subscription.addAttribute("JID",
+				requestedSubscription.attributeValue("JID"));
 		subscription.addAttribute("subscription",
 				requestedSubscription.attributeValue("subscription"));
 		Message rootElement = new Message(message);
@@ -117,7 +116,7 @@ public class SubscriptionEvent extends PubSubElementProcessorAbstract {
 
 	private void saveUpdatedSubscription() throws NodeStoreException {
 		NodeSubscription newSubscription = new NodeSubscriptionImpl(node,
-				new JID(requestedSubscription.attributeValue("jid")), currentSubscription.getListener(),
+				new JID(requestedSubscription.attributeValue("JID")), currentSubscription.getListener(),
 				Subscriptions.valueOf(requestedSubscription
 						.attributeValue("subscription")));
 
@@ -147,7 +146,7 @@ public class SubscriptionEvent extends PubSubElementProcessorAbstract {
 			requestedSubscription = request.getElement().element("pubsub")
 					.element("subscriptions").element("subscription");
 			if ((null == requestedSubscription)
-					|| (null == requestedSubscription.attribute("jid"))
+					|| (null == requestedSubscription.attribute("JID"))
 					|| (null == requestedSubscription.attribute("subscription"))) {
 				setErrorCondition(PacketError.Type.modify,
 						PacketError.Condition.bad_request);
@@ -169,7 +168,7 @@ public class SubscriptionEvent extends PubSubElementProcessorAbstract {
 
 	private boolean subscriberHasCurrentAffiliation() throws NodeStoreException {
 		currentSubscription = channelManager.getUserSubscription(node, new JID(
-				requestedSubscription.attributeValue("jid")));
+				requestedSubscription.attributeValue("JID")));
 
 		if (null == currentSubscription) {
 			setErrorCondition(PacketError.Type.modify,

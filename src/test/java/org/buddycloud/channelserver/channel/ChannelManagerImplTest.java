@@ -111,12 +111,12 @@ public class ChannelManagerImplTest {
 	}
 
 	@Test
-	public void testIsLocalJidForLocaJid() throws Exception {
+	public void testIsLocalJIDForLocaJID() throws Exception {
 		assertTrue(channelManager.isLocalJID(new JID("user@" + TEST_DOMAIN)));
 	}
 	
 	@Test
-	public void testIsLocalJidForNonLocaJid() throws Exception {
+	public void testIsLocalJIDForNonLocaJID() throws Exception {
 		assertFalse(channelManager.isLocalJID(new JID("user@server1.com")));
 	}
 	

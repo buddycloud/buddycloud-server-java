@@ -13,7 +13,7 @@ INSERT INTO "items" ("node", "id", "updated", "xml") VALUES ('users/node2@server
                 <published>2010-01-08T11:45:12Z</published> 
                 <author> 
                    <name>user2@server1</name> 
-                   <jid xmlns="http://buddycloud.com/atom-elements-0">user2@server1</jid> 
+                   <JID xmlns="http://buddycloud.com/atom-elements-0">user2@server1</JID> 
                 </author> 
                 <content type="text">Test 5</content> 
                 <geoloc xmlns="http://jabber.org/protocol/geoloc"> 

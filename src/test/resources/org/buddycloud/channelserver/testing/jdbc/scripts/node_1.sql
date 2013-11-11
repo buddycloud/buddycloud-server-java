@@ -18,7 +18,7 @@ INSERT INTO "items" ("node", "id", "updated", "xml") VALUES ('users/node1@server
                 <published>2010-01-08T11:45:12Z</published> 
                 <author> 
                    <name>user2@server1</name> 
-                   <jid xmlns="http://buddycloud.com/atom-elements-0">user2@server1</jid> 
+                   <JID xmlns="http://buddycloud.com/atom-elements-0">user2@server1</JID> 
                 </author> 
                 <content type="text">Test 5</content> 
                 <geoloc xmlns="http://jabber.org/protocol/geoloc"> 
@@ -37,7 +37,7 @@ INSERT INTO "items" ("node", "id", "updated", "xml") VALUES ('users/node1@server
                 <published>2010-01-06T22:32:12Z</published> 
                 <author> 
                    <name>user1@server1</name> 
-                   <jid xmlns="http://buddycloud.com/atom-elements-0">user1@server1</jid> 
+                   <JID xmlns="http://buddycloud.com/atom-elements-0">user1@server1</JID> 
                 </author> 
                 <content type="text">Test 2</content> 
                 <geoloc xmlns="http://jabber.org/protocol/geoloc"> 
@@ -56,7 +56,7 @@ INSERT INTO "items" ("node", "id", "updated", "xml") VALUES ('users/node1@server
                 <published>2010-01-08T10:14:54Z</published> 
                 <author> 
                    <name>user1@server1</name> 
-                   <jid xmlns="http://buddycloud.com/atom-elements-0">user1@server1</jid> 
+                   <JID xmlns="http://buddycloud.com/atom-elements-0">user1@server1</JID> 
                 </author> 
                 <content type="text">Test 4</content> 
                 <geoloc xmlns="http://jabber.org/protocol/geoloc"> 
@@ -75,7 +75,7 @@ INSERT INTO "items" ("node", "id", "updated", "xml") VALUES ('users/node1@server
                 <published>2010-01-07T13:33:34Z</published> 
                 <author> 
                    <name>user2@server1</name> 
-                   <jid xmlns="http://buddycloud.com/atom-elements-0">user2@server1</jid> 
+                   <JID xmlns="http://buddycloud.com/atom-elements-0">user2@server1</JID> 
                 </author> 
                 <content type="text">Test 3</content> 
                 <geoloc xmlns="http://jabber.org/protocol/geoloc"> 
@@ -94,7 +94,7 @@ INSERT INTO "items" ("node", "id", "updated", "xml") VALUES ('users/node1@server
                 <published>2010-01-06T21:41:32Z</published> 
                 <author> 
                    <name>user1@server1</name> 
-                   <jid xmlns="http://buddycloud.com/atom-elements-0">user1@server1</jid> 
+                   <JID xmlns="http://buddycloud.com/atom-elements-0">user1@server1</JID> 
                 </author> 
                 <content type="text">Test 1</content> 
                 <geoloc xmlns="http://jabber.org/protocol/geoloc"> 

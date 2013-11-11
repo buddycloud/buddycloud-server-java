@@ -25,21 +25,15 @@ public class NodeSubscriptionImpl implements NodeSubscription {
 		this(nodeId, user, user, subscription, new Date(), null);
 	}
 	
+	public NodeSubscriptionImpl(final String nodeId, final JID user, final Subscriptions subscription, String inviter) {
+		this(nodeId, user, user, subscription, new Date(), inviter);
+	}
+	
 	public NodeSubscriptionImpl(final String nodeId, final JID user,
 			JID listener, final Subscriptions subscription) {
 		this(nodeId, user, listener, subscription, new Date(), null);
 	}
-	
-	public NodeSubscriptionImpl(final String nodeId, final JID user,
-			final Subscriptions subscription, Date lastUpdated) {
-		this(nodeId, user, user, subscription, lastUpdated, null);
-	}
-	
-	public NodeSubscriptionImpl(final String nodeId, final JID user, JID listener, final Subscriptions subscription, String inviter) {
-		this(nodeId, user,
-				listener, subscription, new Date(), inviter);
-	}
-	
+
 	public NodeSubscriptionImpl(final String nodeId, final JID user,
 			JID listener, final Subscriptions subscription, Date lastUpdated, String inviter) {
 		this.nodeId = nodeId;

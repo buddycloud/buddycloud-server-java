@@ -2452,4 +2452,32 @@ public class JDBCNodeStoreTest {
 		assertEquals(TEST_SERVER1_USER1_JID, store.getNodeOwners(TEST_SERVER1_NODE1_ID).get(0));
 		assertEquals(TEST_SERVER1_USER2_JID, store.getNodeOwners(TEST_SERVER1_NODE1_ID).get(1));
 	}
+	
+	@Test
+	public void testCanAddNodeSubscriptionWithInviter() throws Exception {
+		dbTester.loadData("node_1");
+		store.deleteUserSubscriptions(TEST_SERVER1_USER1_JID);
+		
+		NodeSubscription subscription = new NodeSubscriptionImpl(TEST_SERVER1_NODE1_ID, TEST_SERVER1_USER1_JID, Subscriptions.invited, "user@example.com");
+	    
+	    store.addUserSubscription(subscription);
+	    
+	    NodeSubscription storedSubscription = store.getUserSubscription(TEST_SERVER1_NODE1_ID, TEST_SERVER1_USER1_JID);
+	    
+	    Assert.assertEquals(subscription.getInviter(), storedSubscription.getInviter());
+	}
+	
+	@Test
+	public void testNotSettingAnInviterReturnsNullJidObject() throws Exception {
+		dbTester.loadData("node_1");
+		store.deleteUserSubscriptions(TEST_SERVER1_USER1_JID);
+		
+		NodeSubscription subscription = new NodeSubscriptionImpl(TEST_SERVER1_NODE1_ID, TEST_SERVER1_USER1_JID, Subscriptions.invited, null);
+	    
+	    store.addUserSubscription(subscription);
+	    
+	    NodeSubscription storedSubscription = store.getUserSubscription(TEST_SERVER1_NODE1_ID, TEST_SERVER1_USER1_JID);
+	    
+	    Assert.assertEquals(null, storedSubscription.getInviter().toBareJID());
+	}
 }

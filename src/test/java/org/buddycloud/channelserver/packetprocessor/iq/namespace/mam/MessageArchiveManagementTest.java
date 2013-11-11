@@ -210,10 +210,10 @@ public class MessageArchiveManagementTest extends IQTestHandler {
 	public void testTwoSubscriptionChangesReportAsExpected() throws Exception {
 
 		ArrayList<NodeSubscription> subscriptions = new ArrayList<NodeSubscription>();
-		subscriptions.add(new NodeSubscriptionImpl(node1, jid1,
-				Subscriptions.subscribed, date1));
-		subscriptions.add(new NodeSubscriptionImpl(node2, jid2,
-				Subscriptions.pending, date2));
+		subscriptions.add(new NodeSubscriptionImpl(node1, jid1, jid1, 
+				Subscriptions.subscribed, date1, null));
+		subscriptions.add(new NodeSubscriptionImpl(node2, jid2, jid2, 
+				Subscriptions.pending, date2, null));
 
 		Mockito.when(
 				channelManager.getSubscriptionChanges(Mockito.any(JID.class),

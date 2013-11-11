@@ -878,9 +878,9 @@ public class JDBCNodeStore implements NodeStore {
 
 			while (rs.next()) {
 				NodeSubscriptionImpl nodeSub = new NodeSubscriptionImpl(
-						rs.getString(2), new JID(rs.getString(1)),
-						Subscriptions.valueOf(rs.getString(3)),
-						rs.getTimestamp(4));
+						rs.getString(1), new JID(rs.getString(2)), new JID(
+								rs.getString(3)), Subscriptions.valueOf(rs
+								.getString(4)), rs.getTimestamp(5), rs.getString(6));
 				result.add(nodeSub);
 			}
 
@@ -907,9 +907,9 @@ public class JDBCNodeStore implements NodeStore {
 
 			while (rs.next()) {
 				NodeSubscriptionImpl nodeSub = new NodeSubscriptionImpl(
-						rs.getString(2), new JID(rs.getString(1)),
-						Subscriptions.valueOf(rs.getString(3)),
-						rs.getTimestamp(4));
+						rs.getString(1), new JID(rs.getString(2)), new JID(
+								rs.getString(3)), Subscriptions.valueOf(rs
+								.getString(4)), rs.getTimestamp(5), rs.getString(6));
 				result.add(nodeSub);
 			}
 

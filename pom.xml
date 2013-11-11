@@ -181,7 +181,7 @@
                     <version>2.6</version>
                     <configuration>
                         <skipTests>false</skipTests>
-<!-- 					<testFailureIgnore>true</testFailureIgnore> -->
+    					<testFailureIgnore>true</testFailureIgnore> 
                         <forkMode>once</forkMode>
                         <includes>
                             <include>**/*Test.java</include>

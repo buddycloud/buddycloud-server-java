@@ -67,19 +67,19 @@ public class Sql92NodeStoreDialect implements NodeStoreSQLDialect {
 
 	private static final String DELETE_AFFILIATION = "DELETE FROM \"affiliations\" WHERE \"node\" = ? AND \"user\" = ?;";
 
-	private static final String SELECT_SUBSCRIPTION = "SELECT \"node\", \"user\", \"listener\", \"subscription\", \"updated\""
+	private static final String SELECT_SUBSCRIPTION = "SELECT \"node\", \"user\", \"listener\", \"subscription\", \"updated\", \"invited-by\""
 			+ " FROM \"subscriptions\" WHERE \"node\" = ? AND (\"user\" = ? OR \"listener\" = ? ) ORDER BY \"updated\" ASC";
 
-	private static final String SELECT_SUBSCRIPTIONS_FOR_USER = "SELECT \"node\", \"user\", \"listener\", \"subscription\", \"updated\""
+	private static final String SELECT_SUBSCRIPTIONS_FOR_USER = "SELECT \"node\", \"user\", \"listener\", \"subscription\", \"updated\", \"invited-by\""
 			+ " FROM \"subscriptions\" WHERE \"user\" = ? OR \"listener\" = ? ORDER BY \"updated\" ASC";
 
-	private static final String SELECT_SUBSCRIPTIONS_FOR_USER_AFTER_NODE = "SELECT \"node\", \"user\", \"listener\", \"subscription\", \"updated\""
+	private static final String SELECT_SUBSCRIPTIONS_FOR_USER_AFTER_NODE = "SELECT \"node\", \"user\", \"listener\", \"subscription\", \"updated\", \"invited-by\""
 			+ " FROM \"subscriptions\" WHERE (\"user\" = ? OR \"listener\" = ?) AND "
 			+ "\"updated\" > (SELECT \"updated\" FROM \"affiliations\" WHERE \"node\" = ? AND \"user\" = ?) "
 			+ "ORDER BY \"updated\" ASC LIMIT ?";
 
 	private static final String SELECT_SUBSCRIPTION_CHANGES = ""
-			+ "SELECT \"node\", \"user\", \"listener\", \"subscription\", \"updated\" "
+			+ "SELECT \"node\", \"user\", \"listener\", \"subscription\", \"updated\", \"invited-by\" "
 			+ "FROM \"subscriptions\" "
 			+ "WHERE \"updated\" >= ? AND \"updated\" <= ? AND \"node\" IN "
 			+ "(SELECT \"subscriptions\".\"node\" FROM \"subscriptions\", \"affiliations\" "
@@ -91,16 +91,16 @@ public class Sql92NodeStoreDialect implements NodeStoreSQLDialect {
 			+ "AND \"affiliations\".\"affiliation\" != 'outcast') "
 			+ "ORDER BY \"updated\" ASC;";
 
-	private static final String SELECT_SUBSCRIPTIONS_FOR_NODE = "SELECT \"node\", \"user\", \"listener\", \"subscription\", \"updated\""
+	private static final String SELECT_SUBSCRIPTIONS_FOR_NODE = "SELECT \"node\", \"user\", \"listener\", \"subscription\", \"updated\", \"invited-by\""
 			+ " FROM \"subscriptions\" WHERE \"node\" = ? ORDER BY \"updated\" ASC";
 
-	private static final String SELECT_SUBSCRIPTIONS_FOR_NODE_AFTER_JID = "SELECT \"node\", \"user\", \"listener\", \"subscription\", \"updated\""
+	private static final String SELECT_SUBSCRIPTIONS_FOR_NODE_AFTER_JID = "SELECT \"node\", \"user\", \"listener\", \"subscription\", \"updated\", \"invited-by\""
 			+ " FROM \"subscriptions\" WHERE \"node\" = ? AND "
 			+ "\"updated\" > (SELECT \"updated\" FROM \"subscriptions\" WHERE \"node\" = ? AND \"user\" = ?) "
 			+ "ORDER BY \"updated\" ASC LIMIT ?";
 
-	private static final String INSERT_SUBSCRIPTION = "INSERT INTO \"subscriptions\" ( \"node\", \"user\", \"listener\", \"subscription\", \"updated\" )"
-			+ " VALUES ( ?, ?, ?, ?, now() )";
+	private static final String INSERT_SUBSCRIPTION = "INSERT INTO \"subscriptions\" ( \"node\", \"user\", \"listener\", \"subscription\", \"updated\", \"temporary\", \"invited-by\" )"
+			+ " VALUES ( ?, ?, ?, ?, now(), false, ? )";
 
 	private static final String UPDATE_SUBSCRIPTION = "UPDATE \"subscriptions\""
 			+ " SET \"subscription\" = ?, \"updated\" = now(), \"listener\" = ?"
@@ -307,7 +307,7 @@ public class Sql92NodeStoreDialect implements NodeStoreSQLDialect {
 	}
 
 	@Override
-	public String selectAffiliationsForNodeAfterJid() {
+	public String selectAffiliationsForNodeAfterJID() {
 		return SELECT_AFFILIATIONS_FOR_NODE_AFTER_JID;
 	}
 
@@ -357,11 +357,11 @@ public class Sql92NodeStoreDialect implements NodeStoreSQLDialect {
 	}
 
 	@Override
-	public String selectSubscriptionsForNodeAfterJid() {
+	public String selectSubscriptionsForNodeAfterJID() {
 		return SELECT_SUBSCRIPTIONS_FOR_NODE_AFTER_JID;
 	}
 
-	public String countSubscriptionsForJid() {
+	public String countSubscriptionsForJID() {
 		return COUNT_ITEMS_FOR_JID;
 	}
 

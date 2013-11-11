@@ -126,8 +126,8 @@ public class ChannelManagerImpl implements ChannelManager {
 	}
 
 	@Override
-	public int countUserAffiliations(JID jid) throws NodeStoreException {
-		return nodeStore.countUserAffiliations(jid);
+	public int countUserAffiliations(JID JID) throws NodeStoreException {
+		return nodeStore.countUserAffiliations(JID);
 	}
 
 	@Override
@@ -260,8 +260,8 @@ public class ChannelManagerImpl implements ChannelManager {
 		return (nodeStore.countNodeSubscriptions(nodeId) > 0);
 	}
 
-	public boolean isCachedJID(JID jid) throws NodeStoreException {
-		return nodeStore.isCachedJID(jid);
+	public boolean isCachedJID(JID JID) throws NodeStoreException {
+		return nodeStore.isCachedJID(JID);
 	}
 
 	@Override
@@ -338,8 +338,8 @@ public class ChannelManagerImpl implements ChannelManager {
 	}
 
 	@Override
-	public boolean isLocalJID(JID jid) {
-		String domain = jid.getDomain();
+	public boolean isLocalJID(JID JID) {
+		String domain = JID.getDomain();
 
 		return (domain.equals(configuration
 				.getProperty(Configuration.CONFIGURATION_SERVER_DOMAIN))
@@ -445,23 +445,23 @@ public class ChannelManagerImpl implements ChannelManager {
 	}
 
 	@Override
-	public ResultSet<NodeItem> getUserItems(JID userJid) throws NodeStoreException {
-		return nodeStore.getUserItems(userJid);
+	public ResultSet<NodeItem> getUserItems(JID userJID) throws NodeStoreException {
+		return nodeStore.getUserItems(userJID);
 	}
 
 	@Override
-	public void deleteUserItems(JID userJid) throws NodeStoreException {
-		nodeStore.deleteUserItems(userJid);
+	public void deleteUserItems(JID userJID) throws NodeStoreException {
+		nodeStore.deleteUserItems(userJID);
 	}
 
 	@Override
-	public void deleteUserAffiliations(JID userJid) throws NodeStoreException {
-		nodeStore.deleteUserAffiliations(userJid);
+	public void deleteUserAffiliations(JID userJID) throws NodeStoreException {
+		nodeStore.deleteUserAffiliations(userJID);
 	}
 
 	@Override
-	public void deleteUserSubscriptions(JID userJid) throws NodeStoreException {
-		nodeStore.deleteUserSubscriptions(userJid);
+	public void deleteUserSubscriptions(JID userJID) throws NodeStoreException {
+		nodeStore.deleteUserSubscriptions(userJID);
 	}
 
 	@Override

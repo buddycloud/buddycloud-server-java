@@ -11,6 +11,7 @@ import java.util.Date;
 import java.util.Deque;
 import java.util.HashMap;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
@@ -1527,6 +1528,66 @@ public class JDBCNodeStore implements NodeStore {
 			stmt.setString(1, nodeId);
 			stmt.executeUpdate();
 		} catch (SQLException e) {
+			throw new NodeStoreException(e);
+		} finally {
+			close(stmt); // Will implicitly close the resultset if required
+		}
+	}
+	
+	@Override
+	public CloseableIterator<NodeItem> performSearch(JID searcher,
+			List content, JID author, int page, int rpp) throws NodeStoreException {
+		PreparedStatement stmt = null;
+		try {
+			String sql = "SELECT * FROM \"items\"  " +
+	            "LEFT JOIN \"subscriptions\" ON \"items\".\"node\" = \"subscriptions\".\"node\" " +
+				"WHERE " +
+	            "\"subscriptions\".\"user\" = ?  " +
+				"AND \"subscriptions\".\"subscription\" = 'subscribed' " +
+	            "AND RIGHT(\"items\".\"node\", 6) = '/posts' " +
+	            " $searchParameters " +
+	            "ORDER BY \"items\".\"updated\" DESC " +
+	            "LIMIT ? OFFSET ?;";
+			ArrayList<String> parameterValues = new ArrayList<String>();
+			parameterValues.add(searcher.toBareJID());
+			String searchParameters = "";
+			
+			for (String term : (List<String>) content) {
+				searchParameters += "AND (\"items\".\"xml\" LIKE ?)  ";
+				parameterValues.add("%<content%>%" + term + "%</content>%");
+			}
+
+			if (null != author) {
+				searchParameters += "AND (\"items\".\"xml\" LIKE ?)";
+				parameterValues.add("%<name>" + author.toBareJID() + "</name>%");
+			}
+			stmt = conn.prepareStatement(sql.replace("$searchParameters", searchParameters));
+		
+			int counter = 0;
+			for (String value : parameterValues) {
+				++counter;
+				stmt.setString(counter, value);
+			}
+			stmt.setInt(parameterValues.size() + 1, rpp);
+			stmt.setInt(parameterValues.size() + 2, (page - 1) * rpp);
+			
+			java.sql.ResultSet rs = stmt.executeQuery();
+
+			stmt = null; // Prevent the finally block from closing the
+							// statement
+
+			return new ResultSetIterator<NodeItem>(rs,
+					new ResultSetIterator.RowConverter<NodeItem>() {
+						@Override
+						public NodeItem convertRow(java.sql.ResultSet rs)
+								throws SQLException {
+							return new NodeItemImpl(rs.getString(1),
+									rs.getString(2), rs.getTimestamp(3),
+									rs.getString(4), rs.getString(5));
+						}
+					});
+		} catch (SQLException e) {
+			e.printStackTrace();
 			throw new NodeStoreException(e);
 		} finally {
 			close(stmt); // Will implicitly close the resultset if required

@@ -22,7 +22,7 @@ CREATE TABLE "subscriptions" ("node" TEXT REFERENCES "nodes" ("node") ON DELETE 
 			    "subscription" TEXT,
  			    "updated" TIMESTAMP,
  			    "temporary" BOOLEAN DEFAULT FALSE,
- 			    "invited-by" TEXT,
+ 			    "invited_by" TEXT,
 			    PRIMARY KEY ("node", "user"));
 CREATE INDEX "subscriptions_updated" ON "subscriptions" ("updated");
 

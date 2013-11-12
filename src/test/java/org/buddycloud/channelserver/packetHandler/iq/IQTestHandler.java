@@ -13,11 +13,14 @@ import junit.framework.TestCase;
 import org.apache.commons.io.IOUtils;
 import org.buddycloud.channelserver.Configuration;
 import org.buddycloud.channelserver.channel.TestHelper;
+import org.buddycloud.channelserver.utils.matcher.BareJidMatcher;
 import org.dom4j.DocumentException;
 import org.dom4j.Element;
 import org.dom4j.io.SAXReader;
+import org.mockito.ArgumentMatcher;
 import org.xmpp.packet.IQ;
 import org.xmpp.packet.IQ.Type;
+import org.xmpp.packet.JID;
 
 public class IQTestHandler
 {
@@ -83,4 +86,8 @@ public class IQTestHandler
         Assert.assertNotNull(replyIQ);
         Assert.assertEquals(expectedReply, replyIQ.toXML());
     }
+	
+	public ArgumentMatcher getBareJidMatcher(JID jid) {
+		return new BareJidMatcher(jid);
+	}
 }

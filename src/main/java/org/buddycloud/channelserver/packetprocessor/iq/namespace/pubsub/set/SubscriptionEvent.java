@@ -8,6 +8,7 @@ import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.db.exception.NodeStoreException;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.JabberPubsub;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.PubSubElementProcessorAbstract;
+import org.buddycloud.channelserver.pubsub.affiliation.Affiliations;
 import org.buddycloud.channelserver.pubsub.model.NodeAffiliation;
 import org.buddycloud.channelserver.pubsub.model.NodeSubscription;
 import org.buddycloud.channelserver.pubsub.model.impl.NodeSubscriptionImpl;
@@ -56,7 +57,8 @@ public class SubscriptionEvent extends PubSubElementProcessorAbstract {
 		actor = actorJID;
 		node = element.attributeValue("node");
 
-		if (null == actor) actor = request.getFrom();
+		if (null == actor)
+			actor = request.getFrom();
 
 		if (false == channelManager.isLocalNode(node)) {
 			makeRemoteRequest();
@@ -82,16 +84,17 @@ public class SubscriptionEvent extends PubSubElementProcessorAbstract {
 	}
 
 	private void sendNotifications() throws Exception {
-		
+
 		outQueue.put(response);
-		
+
 		ResultSet<NodeSubscription> subscribers = channelManager
 				.getNodeSubscriptionListeners(node);
 
 		Document document = getDocumentHelper();
 		Element message = document.addElement("message");
 		message.addAttribute("remote-server-discover", "false");
-		Element event = message.addElement("event", JabberPubsub.NS_PUBSUB_EVENT);
+		Element event = message.addElement("event",
+				JabberPubsub.NS_PUBSUB_EVENT);
 		Element subscription = event.addElement("subscription");
 		message.addAttribute("from", request.getTo().toString());
 		subscription.addAttribute("node", node);
@@ -116,7 +119,8 @@ public class SubscriptionEvent extends PubSubElementProcessorAbstract {
 
 	private void saveUpdatedSubscription() throws NodeStoreException {
 		NodeSubscription newSubscription = new NodeSubscriptionImpl(node,
-				new JID(requestedSubscription.attributeValue("jid")), currentSubscription.getListener(),
+				new JID(requestedSubscription.attributeValue("jid")),
+				currentSubscription.getListener(),
 				Subscriptions.valueOf(requestedSubscription
 						.attributeValue("subscription")));
 
@@ -167,10 +171,12 @@ public class SubscriptionEvent extends PubSubElementProcessorAbstract {
 	}
 
 	private boolean subscriberHasCurrentAffiliation() throws NodeStoreException {
+
 		currentSubscription = channelManager.getUserSubscription(node, new JID(
 				requestedSubscription.attributeValue("jid")));
-
-		if (null == currentSubscription) {
+		if ((null == currentSubscription) && isInvite()) {
+			return true;
+		} else if (null == currentSubscription) {
 			setErrorCondition(PacketError.Type.modify,
 					PacketError.Condition.unexpected_request);
 			return false;
@@ -178,11 +184,24 @@ public class SubscriptionEvent extends PubSubElementProcessorAbstract {
 		return true;
 	}
 
+	private boolean isInvite() {
+		return Subscriptions.invited.equals(requestedSubscription
+				.attributeValue("subscription"));
+	}
+
 	private boolean actorHasPermissionToAuthorize() throws NodeStoreException {
+		NodeSubscription subscription = channelManager.getUserSubscription(
+				node, actor);
 		NodeAffiliation affiliation = channelManager.getUserAffiliation(node,
 				actor);
 
-		if (null == affiliation) {
+		if (isInvite()
+			&& (true == Subscriptions.subscribed.equals(subscription.getSubscription()))
+			&& (false == Affiliations.outcast.equals(affiliation.getAffiliation()))) {
+            return true;
+		}
+
+		if ((null == subscription) || (null == affiliation)) {
 			setErrorCondition(PacketError.Type.auth,
 					PacketError.Condition.not_authorized);
 			return false;
@@ -208,11 +227,10 @@ public class SubscriptionEvent extends PubSubElementProcessorAbstract {
 
 	private void makeRemoteRequest() throws InterruptedException {
 		request.setTo(new JID(node.split("/")[2]).getDomain());
-		Element actor = request.getElement()
-		    .element("pubsub")
-		    .addElement("actor", JabberPubsub.NS_BUDDYCLOUD);
+		Element actor = request.getElement().element("pubsub")
+				.addElement("actor", JabberPubsub.NS_BUDDYCLOUD);
 		actor.addText(request.getFrom().toBareJID());
-	    outQueue.put(request);
+		outQueue.put(request);
 	}
 
 	/**

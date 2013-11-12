@@ -1,6 +1,7 @@
 package org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.set;
 
 import java.util.Collection;
+import java.util.Date;
 import java.util.concurrent.BlockingQueue;
 
 import org.apache.log4j.Logger;
@@ -13,6 +14,7 @@ import org.buddycloud.channelserver.pubsub.model.NodeAffiliation;
 import org.buddycloud.channelserver.pubsub.model.NodeSubscription;
 import org.buddycloud.channelserver.pubsub.model.impl.NodeSubscriptionImpl;
 import org.buddycloud.channelserver.pubsub.subscription.Subscriptions;
+import org.buddycloud.channelserver.utils.NullJid;
 import org.dom4j.Document;
 import org.dom4j.Element;
 import org.dom4j.Namespace;
@@ -118,11 +120,18 @@ public class SubscriptionEvent extends PubSubElementProcessorAbstract {
 	}
 
 	private void saveUpdatedSubscription() throws NodeStoreException {
+		
+		String inviter = null;
+		if (null != currentSubscription.getInviter())
+			inviter = currentSubscription.getInviter().toBareJID();
+		
 		NodeSubscription newSubscription = new NodeSubscriptionImpl(node,
 				new JID(requestedSubscription.attributeValue("jid")),
 				currentSubscription.getListener(),
 				Subscriptions.valueOf(requestedSubscription
-						.attributeValue("subscription")));
+						.attributeValue("subscription")),
+				currentSubscription.getLastUpdated(),
+				inviter);
 
 		channelManager.addUserSubscription(newSubscription);
 	}
@@ -171,10 +180,14 @@ public class SubscriptionEvent extends PubSubElementProcessorAbstract {
 	}
 
 	private boolean subscriberHasCurrentAffiliation() throws NodeStoreException {
+		JID subscriber = new JID(requestedSubscription.attributeValue("jid"));
+		currentSubscription = channelManager.getUserSubscription(node,
+				subscriber);
 
-		currentSubscription = channelManager.getUserSubscription(node, new JID(
-				requestedSubscription.attributeValue("jid")));
 		if ((null == currentSubscription) && isInvite()) {
+			currentSubscription = new NodeSubscriptionImpl(node, subscriber,
+					subscriber, Subscriptions.invited, new Date(),
+					actor.toBareJID());
 			return true;
 		} else if (null == currentSubscription) {
 			setErrorCondition(PacketError.Type.modify,
@@ -185,8 +198,8 @@ public class SubscriptionEvent extends PubSubElementProcessorAbstract {
 	}
 
 	private boolean isInvite() {
-		return Subscriptions.invited.equals(requestedSubscription
-				.attributeValue("subscription"));
+		return Subscriptions.invited.toString().equals(
+				requestedSubscription.attributeValue("subscription"));
 	}
 
 	private boolean actorHasPermissionToAuthorize() throws NodeStoreException {
@@ -196,9 +209,13 @@ public class SubscriptionEvent extends PubSubElementProcessorAbstract {
 				actor);
 
 		if (isInvite()
-			&& (true == Subscriptions.subscribed.equals(subscription.getSubscription()))
-			&& (false == Affiliations.outcast.equals(affiliation.getAffiliation()))) {
-            return true;
+				&& (null != subscription)
+				&& (null != affiliation)
+				&& (true == Subscriptions.subscribed.equals(subscription
+						.getSubscription()))
+				&& (false == Affiliations.outcast.equals(affiliation
+						.getAffiliation()))) {
+			return true;
 		}
 
 		if ((null == subscription) || (null == affiliation)) {

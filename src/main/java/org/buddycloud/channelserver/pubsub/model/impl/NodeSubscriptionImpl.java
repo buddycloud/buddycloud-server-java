@@ -46,7 +46,10 @@ public class NodeSubscriptionImpl implements NodeSubscription {
 		setListener(listener);
 		this.subscription = subscription;
 		this.isTemporary = isTemporary;
-		if (null != inviter) this.inviter = new JID(inviter);
+
+		if ((null != inviter) && (0 != inviter.length())) {
+			this.inviter = new JID(inviter);
+		}
 	}
 
 	private void setListener(JID listener) {
@@ -126,7 +129,8 @@ public class NodeSubscriptionImpl implements NodeSubscription {
 	@Override
 	public String toString() {
 		return "NodeSubscriptionImpl [subscription=" + subscription + ", user="
-				+ user + ", listener=" + listener + ", nodeId=" + nodeId + "]";
+				+ user + ", listener=" + listener + ", nodeId=" + nodeId 
+				+ ", inviter=" + inviter + "]";
 	}
 
 	@Override

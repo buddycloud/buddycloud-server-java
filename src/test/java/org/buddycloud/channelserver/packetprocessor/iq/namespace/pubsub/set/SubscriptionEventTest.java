@@ -59,16 +59,51 @@ public class SubscriptionEventTest extends IQTestHandler {
 		channelManager = Mockito.mock(ChannelManager.class);
 
 		event.setChannelManager(channelManager);
-		
+
 		NodeSubscription subscription = new NodeSubscriptionImpl(node, jid,
 				Subscriptions.subscribed);
+
 		Mockito.when(
 				channelManager.getUserSubscription(Mockito.anyString(),
-						(JID) Mockito.argThat(getBareJidMatcher(new JID("juliet@shakespeare.lit/barracks")))))
+						(JID) Mockito.argThat(getBareJidMatcher(new JID(
+								"juliet@shakespeare.lit/barracks")))))
 				.thenReturn(subscription);
 		Mockito.when(channelManager.isLocalNode(Mockito.anyString()))
-		.thenReturn(true);
-		Mockito.when(channelManager.nodeExists(Mockito.anyString())).thenReturn(true);
+				.thenReturn(true);
+		Mockito.when(channelManager.nodeExists(Mockito.anyString()))
+				.thenReturn(true);
+	}
+	
+	private void setUpListeners() throws NodeStoreException {
+		NodeAffiliation subscriptionMockActor = Mockito
+				.mock(NodeAffiliation.class);
+		Mockito.when(subscriptionMockActor.getAffiliation()).thenReturn(
+				Affiliations.owner);
+
+		NodeSubscription subscriptionMockSubscriber = Mockito
+				.mock(NodeSubscription.class);
+		Mockito.when(subscriptionMockSubscriber.getSubscription()).thenReturn(
+				Subscriptions.subscribed);
+
+		Mockito.when(channelManager.nodeExists(node)).thenReturn(true);
+		Mockito.when(channelManager.getUserAffiliation(node, jid)).thenReturn(
+				subscriptionMockActor);
+
+		Mockito.when(
+				channelManager.getUserSubscription(node, new JID(subscriber)))
+				.thenReturn(subscriptionMockSubscriber);
+
+		event.setChannelManager(channelManager);
+
+		ArrayList<NodeSubscription> subscribers = new ArrayList<NodeSubscription>();
+		subscribers.add(new NodeSubscriptionMock(new JID(
+				"romeo@shakespeare.lit")));
+		subscribers.add(new NodeSubscriptionMock(new JID(
+				"hamlet@shakespeare.lit")));
+
+		Mockito.doReturn(new ResultSetImpl<NodeSubscription>(subscribers))
+				.when(channelManager)
+				.getNodeSubscriptionListeners(Mockito.anyString());
 	}
 
 	@Test
@@ -295,38 +330,8 @@ public class SubscriptionEventTest extends IQTestHandler {
 	public void testPassingValidSubscriptionSendsOutExpectedNotifications()
 			throws Exception {
 
-		IQ request = readStanzaAsIq("/iq/pubsub/subscribe/authorizationPendingGrantReply.stanza");
-
-		NodeAffiliation subscriptionMockActor = Mockito
-				.mock(NodeAffiliation.class);
-		Mockito.when(subscriptionMockActor.getAffiliation()).thenReturn(
-				Affiliations.owner);
-
-		NodeSubscription subscriptionMockSubscriber = Mockito
-				.mock(NodeSubscription.class);
-		Mockito.when(subscriptionMockSubscriber.getSubscription()).thenReturn(
-				Subscriptions.subscribed);
-
-		Mockito.when(channelManager.nodeExists(node)).thenReturn(true);
-		Mockito.when(channelManager.getUserAffiliation(node, jid)).thenReturn(
-				subscriptionMockActor);
-
-		Mockito.when(
-				channelManager.getUserSubscription(node, new JID(subscriber)))
-				.thenReturn(subscriptionMockSubscriber);
-
-		event.setChannelManager(channelManager);
-
-		ArrayList<NodeSubscription> subscribers = new ArrayList<NodeSubscription>();
-		subscribers.add(new NodeSubscriptionMock(new JID(
-				"romeo@shakespeare.lit")));
-		subscribers.add(new NodeSubscriptionMock(new JID(
-				"hamlet@shakespeare.lit")));
-
-		Mockito.doReturn(new ResultSetImpl<NodeSubscription>(subscribers))
-				.when(channelManager)
-				.getNodeSubscriptionListeners(Mockito.anyString());
-
+		setUpListeners();
+		
 		event.setChannelManager(channelManager);
 		event.process(element, jid, request, null);
 
@@ -364,17 +369,19 @@ public class SubscriptionEventTest extends IQTestHandler {
 			throws Exception {
 		Mockito.when(
 				channelManager.getUserSubscription(Mockito.anyString(),
-						(JID) Mockito.argThat(getBareJidMatcher(new JID("juliet@shakespeare.lit/barracks")))))
+						(JID) Mockito.argThat(getBareJidMatcher(new JID(
+								"juliet@shakespeare.lit/barracks")))))
 				.thenReturn(null);
 		Mockito.when(
 				channelManager.getUserSubscription(Mockito.anyString(),
-						(JID) Mockito.argThat(getBareJidMatcher(new JID("francisco@denmark.lit")))))
-				.thenReturn(null);
+						(JID) Mockito.argThat(getBareJidMatcher(new JID(
+								"francisco@denmark.lit"))))).thenReturn(null);
 		Mockito.when(
 				channelManager.getUserAffiliation(Mockito.anyString(),
-						(JID) Mockito.argThat(getBareJidMatcher(new JID("francisco@denmark.lit"))))).thenReturn(null);
+						(JID) Mockito.argThat(getBareJidMatcher(new JID(
+								"francisco@denmark.lit"))))).thenReturn(null);
 
-		event.process(element, jid, request, null);
+		event.process(element, jid, invitationRequest, null);
 
 		IQ response = (IQ) queue.poll();
 
@@ -406,7 +413,7 @@ public class SubscriptionEventTest extends IQTestHandler {
 				channelManager.getUserAffiliation(Mockito.anyString(),
 						Mockito.any(JID.class))).thenReturn(null);
 
-		event.process(element, jid, request, null);
+		event.process(element, jid, invitationRequest, null);
 
 		IQ response = (IQ) queue.poll();
 
@@ -420,19 +427,50 @@ public class SubscriptionEventTest extends IQTestHandler {
 	@Test
 	public void testSubscribedUserCanInviteAnotherUser() throws Exception {
 
-		//Assert.assertTrue(false);
+        setUpListeners();
+        
+		JID invited = new JID("francisco@denmark.lit");
+
+		Mockito.when(
+				channelManager.getUserSubscription(Mockito.anyString(),
+						Mockito.eq(invited))).thenReturn(null);
+
+		NodeSubscription subscription = new NodeSubscriptionImpl(node, jid,
+				Subscriptions.subscribed);
+		Mockito.when(
+				channelManager.getUserSubscription(Mockito.anyString(),
+						Mockito.eq(jid)))
+				.thenReturn(subscription);
+
+		NodeAffiliation affiliation = new NodeAffiliationImpl(node, jid,
+				Affiliations.moderator, new Date());
+		Mockito.when(
+				channelManager.getUserAffiliation(Mockito.anyString(),
+						Mockito.any(JID.class))).thenReturn(affiliation);
+
+		event.process(element, jid, invitationRequest, null);
+		
+		IQ response = (IQ) queue.poll();
+
+		Assert.assertNull(response.getError());
+
+		Assert.assertEquals(IQ.Type.result, response.getType());
+
+		Mockito.verify(channelManager, Mockito.times(1)).addUserSubscription(
+				(NodeSubscription) Mockito.argThat(getNodeSubscriptionMatcher(
+						node, Subscriptions.invited, invited, invited, null, jid)));
 	}
 
 	@Test
 	public void testAlreadySubscribedUserReturnsErrorToSender()
 			throws Exception {
 
-		//Assert.assertTrue(false);
+		 Assert.assertTrue(false);
 	}
 
 	@Test
 	public void testInviteSendsOutExpectedNotifications() throws Exception {
 
-		//Assert.assertTrue(false);
+		 Assert.assertTrue(false);
 	}
 }

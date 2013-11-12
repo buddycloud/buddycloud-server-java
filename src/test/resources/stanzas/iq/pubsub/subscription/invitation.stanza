@@ -1,0 +1,8 @@
+<iq from='juliet@shakespeare.lit/barracks' 
+    to='channels.denmark.lit' type='set' id='7475:pubsubsubscriptions' xmlns='jabber:client'>
+    <pubsub xmlns='http://jabber.org/protocol/pubsub#owner'>
+        <subscriptions node='/user/pamela@denmark.lit/posts'>
+            <subscription jid='francisco@denmark.lit' subscription='invited'/>
+        </subscriptions>
+    </pubsub>
+</iq>

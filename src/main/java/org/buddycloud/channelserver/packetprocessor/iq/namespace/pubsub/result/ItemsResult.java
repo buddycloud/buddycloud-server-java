@@ -10,6 +10,7 @@ import org.buddycloud.channelserver.db.exception.NodeStoreException;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.PubSubElementProcessorAbstract;
 import org.buddycloud.channelserver.pubsub.affiliation.Affiliations;
 import org.buddycloud.channelserver.pubsub.model.NodeSubscription;
+import org.buddycloud.channelserver.pubsub.model.impl.GlobalItemIDImpl;
 import org.buddycloud.channelserver.pubsub.model.impl.NodeItemImpl;
 import org.buddycloud.channelserver.pubsub.model.impl.NodeSubscriptionImpl;
 import org.buddycloud.channelserver.pubsub.subscription.Subscriptions;
@@ -124,7 +125,8 @@ public class ItemsResult extends PubSubElementProcessorAbstract {
 			}
 			Date updatedDate = Conf.parseDate(entry.elementText("updated"));
 			NodeItemImpl nodeItem = new NodeItemImpl(node,
-					entry.elementText("id"), updatedDate, entry.asXML(), inReplyTo);
+					GlobalItemIDImpl.toLocalId(entry.elementText("id")), 
+					updatedDate, entry.asXML(), inReplyTo);
 			try {
 				channelManager
 						.deleteNodeItemById(node, entry.elementText("id"));

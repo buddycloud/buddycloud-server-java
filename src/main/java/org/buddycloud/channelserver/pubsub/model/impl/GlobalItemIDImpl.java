@@ -97,6 +97,18 @@ public class GlobalItemIDImpl implements GlobalItemID {
 		return new GlobalItemIDImpl(null, splittedItemId[0], splittedItemId[1]);
 	}
 
+	public static String toLocalId(String itemId) {
+		if (itemId == null) {
+			return null;
+		}
+		String[] splittedItemId = itemId.split(",");
+		if (splittedItemId.length == 1) {
+			// Already a local id
+			return itemId;
+		}
+		return fromBuddycloudString(itemId).getItemID();
+	}
+	
 	@Override
 	public int hashCode() {
 		final int prime = 31;

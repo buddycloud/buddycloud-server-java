@@ -9,6 +9,7 @@ import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.channel.Conf;
 import org.buddycloud.channelserver.db.exception.ItemNotFoundException;
 import org.buddycloud.channelserver.db.exception.NodeStoreException;
+import org.buddycloud.channelserver.pubsub.model.impl.GlobalItemIDImpl;
 import org.buddycloud.channelserver.pubsub.model.impl.NodeItemImpl;
 import org.dom4j.Element;
 import org.xmpp.packet.Message;
@@ -66,8 +67,8 @@ public class ItemsProcessor extends AbstractMessageProcessor {
 			Date updatedDate = Conf.parseDate(entry.elementText("updated"));
 			deleteItem(entry.elementText("id"));
 			NodeItemImpl nodeItem = new NodeItemImpl(node,
-					entry.elementText("id"), updatedDate, entry.asXML(),
-					inReplyTo);
+					GlobalItemIDImpl.toLocalId(entry.elementText("id")), 
+					updatedDate, entry.asXML(), inReplyTo);
 			channelManager.addNodeItem(nodeItem);
 		} catch (IllegalArgumentException e) {
 			logger.error(e);

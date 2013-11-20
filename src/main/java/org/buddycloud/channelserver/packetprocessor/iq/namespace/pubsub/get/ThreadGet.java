@@ -220,7 +220,7 @@ public class ThreadGet extends PubSubElementProcessorAbstract {
 		}
 		if (true == getNodeViewAcl().canViewNode(node,
 				possibleExistingAffiliation, possibleExistingSubscription,
-				getNodeAccessModel())) {
+				getNodeAccessModel(), channelManager.isLocalJID(actor))) {
 			return true;
 		}
 		NodeAclRefuseReason reason = getNodeViewAcl().getReason();

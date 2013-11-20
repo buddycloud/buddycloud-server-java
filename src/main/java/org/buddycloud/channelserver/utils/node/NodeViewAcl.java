@@ -20,9 +20,9 @@ public class NodeViewAcl {
 	private NodeAclRefuseReason reasonForRefusal;
 
 	public boolean canViewNode(String node, Affiliations affilliation,
-			Subscriptions subscription, AccessModels accessModel) {
+			Subscriptions subscription, AccessModels accessModel, boolean isLocalUser) {
 		LOGGER.trace("Being asked for access to " + node + " with properties "
-				+ affilliation + " :: " + subscription + " :: " + accessModel);
+				+ affilliation + " :: " + subscription + " :: " + accessModel + " :: local user (" + String.valueOf(isLocalUser) + ")");
 		reasonForRefusal = null;
 
 		if (Affiliations.outcast.toString().equals(affilliation.toString())) {
@@ -37,6 +37,11 @@ public class NodeViewAcl {
 			return privateChannelAcl(node, subscription, affilliation);
 		} else if (accessModel.toString().equals(AccessModels.whitelist.toString())) {
             return whitelistAcl(node, subscription, affilliation);
+        } else if (accessModel.toString().equals(AccessModels.local.toString())) {
+        	if (true == isLocalUser) {
+        		return openChannelAcl(node, subscription, affilliation); 
+        	}
+        	return privateChannelAcl(node, subscription, affilliation);
         }
 		throw new InvalidParameterException(INVALID_ACCESS_MODEL);
 	}

@@ -24,8 +24,10 @@ public class NodeViewAclTest extends TestCase {
 	public void testPassingInvalidAccessModelThrowsException() {
 
 		try {
-			/*acl.canViewNode(node, Affiliations.member,
-					Subscriptions.none, "invalid-access-model");*/
+			/*
+			 * acl.canViewNode(node, Affiliations.member, Subscriptions.none,
+			 * "invalid-access-model");
+			 */
 		} catch (Exception e) {
 			assertSame(InvalidParameterException.class, e.getClass());
 			return;
@@ -198,11 +200,32 @@ public class NodeViewAclTest extends TestCase {
 				PacketError.Type.auth, PacketError.Condition.not_authorized);
 	}
 
+	@Test
+	public void testLocalUserCanViewNodeWithLocalAccessModel() {
+		checkForAllowedAccess(Affiliations.none, Subscriptions.none,
+				AccessModels.local, true);
+	}
+
+	@Test
+	public void testRemoteUserCantViewNodeWithLocalAccessModel() {
+		checkForBlockedAccess(Affiliations.none, Subscriptions.none,
+				AccessModels.local, false, NodeViewAcl.CLOSED_NODE,
+				PacketError.Type.auth, PacketError.Condition.forbidden);
+	}
+
 	private void checkForBlockedAccess(Affiliations affiliation,
 			Subscriptions subscription, AccessModels accessModel,
 			String additionalError, Type type, Condition condition) {
-		assertFalse(acl.canViewNode(node, affiliation,
-				subscription, accessModel));
+		checkForBlockedAccess(affiliation, subscription, accessModel, true,
+				additionalError, type, condition);
+	}
+
+	private void checkForBlockedAccess(Affiliations affiliation,
+			Subscriptions subscription, AccessModels accessModel,
+			boolean isLocalUser, String additionalError, Type type,
+			Condition condition) {
+		assertFalse(acl.canViewNode(node, affiliation, subscription,
+				accessModel, isLocalUser));
 		assertEquals(type, acl.getReason().getType());
 		assertEquals(condition, acl.getReason().getCondition());
 		assertEquals(additionalError, acl.getReason()
@@ -211,8 +234,14 @@ public class NodeViewAclTest extends TestCase {
 
 	private void checkForAllowedAccess(Affiliations affiliation,
 			Subscriptions subscription, AccessModels accessModel) {
-		assertTrue(acl.canViewNode(node, affiliation,
-				subscription, accessModel));
+		checkForAllowedAccess(affiliation, subscription, accessModel, true);
+	}
+
+	private void checkForAllowedAccess(Affiliations affiliation,
+			Subscriptions subscription, AccessModels accessModel,
+			boolean isLocalUser) {
+		assertTrue(acl.canViewNode(node, affiliation, subscription,
+				accessModel, isLocalUser));
 		assertNull(acl.getReason());
 	}
 }

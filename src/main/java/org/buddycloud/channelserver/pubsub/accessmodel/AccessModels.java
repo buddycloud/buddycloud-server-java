@@ -2,7 +2,7 @@ package org.buddycloud.channelserver.pubsub.accessmodel;
 
 public enum AccessModels {
 
-	authorize, open, presence, roster, whitelist;
+	authorize, open, presence, roster, whitelist, local;
 
 	public static AccessModels createFromString(String asString) {
 
@@ -16,6 +16,8 @@ public enum AccessModels {
 			return roster;
 		} else if ("whitelist".equals(asString)) {
 			return whitelist;
+		} else if ("local".equals(asString)) {
+			return local;
 		}
 		return authorize;
 	}

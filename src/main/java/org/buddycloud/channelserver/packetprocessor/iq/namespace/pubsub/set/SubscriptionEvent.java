@@ -14,7 +14,6 @@ import org.buddycloud.channelserver.pubsub.model.NodeAffiliation;
 import org.buddycloud.channelserver.pubsub.model.NodeSubscription;
 import org.buddycloud.channelserver.pubsub.model.impl.NodeSubscriptionImpl;
 import org.buddycloud.channelserver.pubsub.subscription.Subscriptions;
-import org.buddycloud.channelserver.utils.NullJid;
 import org.dom4j.Document;
 import org.dom4j.Element;
 import org.dom4j.Namespace;
@@ -33,6 +32,7 @@ public class SubscriptionEvent extends PubSubElementProcessorAbstract {
 
 	private static final Logger LOGGER = Logger
 			.getLogger(SubscriptionEvent.class);
+	public static final String INVITE_IN_PROGRESS = "invite-in-progress";
 
 	/**
 	 * Constructor
@@ -120,18 +120,17 @@ public class SubscriptionEvent extends PubSubElementProcessorAbstract {
 	}
 
 	private void saveUpdatedSubscription() throws NodeStoreException {
-		
+
 		String inviter = null;
 		if (null != currentSubscription.getInviter())
 			inviter = currentSubscription.getInviter().toBareJID();
-		
+
 		NodeSubscription newSubscription = new NodeSubscriptionImpl(node,
 				new JID(requestedSubscription.attributeValue("jid")),
 				currentSubscription.getListener(),
 				Subscriptions.valueOf(requestedSubscription
 						.attributeValue("subscription")),
-				currentSubscription.getLastUpdated(),
-				inviter);
+				currentSubscription.getLastUpdated(), inviter);
 
 		channelManager.addUserSubscription(newSubscription);
 	}
@@ -189,6 +188,11 @@ public class SubscriptionEvent extends PubSubElementProcessorAbstract {
 					subscriber, Subscriptions.invited, new Date(),
 					actor.toBareJID());
 			return true;
+		} else if (isInvite()
+				&& (true == currentSubscription.getSubscription().equals(
+						Subscriptions.invited))) {
+			createExtendedErrorReply(PacketError.Type.cancel, PacketError.Condition.conflict, INVITE_IN_PROGRESS);
+			return false;
 		} else if (null == currentSubscription) {
 			setErrorCondition(PacketError.Type.modify,
 					PacketError.Condition.unexpected_request);

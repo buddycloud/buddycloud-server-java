@@ -102,6 +102,7 @@ public class JDBCNodeStoreTest {
 			"user1@server1/resource");
 	private static final JID TEST_SERVER1_USER2_JID = new JID("user2@server1");
 	private static final JID TEST_SERVER1_USER3_JID = new JID("user3@server1");
+	private static final JID TEST_SERVER1_OUTCAST_JID = new JID("outcast@server1");
 
 	private static final JID TEST_SERVER2_USER1_JID = new JID("user1@server2");
 	private static final JID TEST_SERVER2_USER2_JID = new JID("user2@server2");
@@ -873,6 +874,38 @@ public class JDBCNodeStoreTest {
 		assertTrue("Incorrect node affiliations returned",
 				CollectionUtils.isEqualCollection(expected, result));
 	}
+	
+	@Test
+	public void testGetNodeAffiliationsByOwnerModerator() throws Exception {
+		dbTester.loadData("node_1");
+
+		ResultSet<NodeAffiliation> result = store
+				.getNodeAffiliations(TEST_SERVER1_NODE1_ID, true);
+
+		HashSet<NodeAffiliation> expected = new HashSet<NodeAffiliation>() {
+			{
+				add(new NodeAffiliationImpl(TEST_SERVER1_NODE1_ID,
+						TEST_SERVER1_USER1_JID, Affiliations.owner, new Date()));
+				add(new NodeAffiliationImpl(TEST_SERVER1_NODE1_ID,
+						TEST_SERVER1_USER2_JID, Affiliations.publisher,
+						new Date()));
+				add(new NodeAffiliationImpl(TEST_SERVER1_NODE1_ID,
+						TEST_SERVER2_USER1_JID, Affiliations.publisher,
+						new Date()));
+				add(new NodeAffiliationImpl(TEST_SERVER1_NODE1_ID,
+						TEST_SERVER2_USER3_JID, Affiliations.member,
+						new Date()));
+				add(new NodeAffiliationImpl(TEST_SERVER1_NODE1_ID,
+						TEST_SERVER1_OUTCAST_JID, Affiliations.outcast,
+						new Date()));
+			}
+		};
+
+		assertEquals("Incorrect number of node affiliations returned",
+				expected.size(), result.size());
+		assertTrue("Incorrect node affiliations returned",
+				CollectionUtils.isEqualCollection(expected, result));
+	}
 
 	@Test
 	public void testCanGetNodeAffiliationsWithRsm() throws Exception {
@@ -897,6 +930,30 @@ public class JDBCNodeStoreTest {
 		assertEquals(1, result1.size());
 		assertEquals(4, result2.size());
 	}
+	
+	@Test
+	public void testCanGetNodeAffiliationsForOwnerModeratorWithRsm() throws Exception {
+		dbTester.loadData("node_1");
+
+		store.setUserAffiliation(TEST_SERVER1_NODE1_ID, TEST_SERVER1_USER2_JID,
+				Affiliations.member);
+		Thread.sleep(1);
+		store.setUserAffiliation(TEST_SERVER1_NODE1_ID, TEST_SERVER1_USER3_JID,
+				Affiliations.member);
+
+		ResultSet<NodeAffiliation> result = store.getNodeAffiliations(
+				TEST_SERVER1_NODE1_ID, true, TEST_SERVER1_USER3_JID.toBareJID(), 50);
+
+		ResultSet<NodeAffiliation> result1 = store.getNodeAffiliations(
+				TEST_SERVER1_NODE1_ID, true, TEST_SERVER1_USER2_JID.toBareJID(), 50);
+
+		ResultSet<NodeAffiliation> result2 = store.getNodeAffiliations(
+				TEST_SERVER1_NODE1_ID, true, TEST_SERVER1_USER1_JID.toBareJID(), 50);
+
+		assertEquals(0, result.size());
+		assertEquals(1, result1.size());
+		assertEquals(5, result2.size());
+	}
 
 	@Test
 	public void testCanRetrictNodeAffiliationCountWithRsm() throws Exception {
@@ -912,10 +969,32 @@ public class JDBCNodeStoreTest {
 				TEST_SERVER1_NODE1_ID, false, TEST_SERVER1_USER3_JID.toBareJID(), 1);
 		assertEquals(1, result.size());
 	}
+	
+	@Test
+	public void testCanRetrictNodeAffiliationForOwnerModeratorCountWithRsm() throws Exception {
+		dbTester.loadData("node_1");
+
+		store.setUserAffiliation(TEST_SERVER1_NODE1_ID, TEST_SERVER1_USER3_JID,
+				Affiliations.member);
+		Thread.sleep(1);
+		store.setUserAffiliation(TEST_SERVER1_NODE1_ID, TEST_SERVER1_USER2_JID,
+				Affiliations.member);
+
+		ResultSet<NodeAffiliation> result = store.getNodeAffiliations(
+				TEST_SERVER1_NODE1_ID, true, TEST_SERVER1_USER3_JID.toBareJID(), 1);
+		assertEquals(1, result.size());
+	}
 
 	@Test
 	public void testCanGetCountOfNodeAffiliations() throws Exception {
 		int affiliations = store.countNodeAffiliations(TEST_SERVER1_NODE1_ID, false);
+		assertEquals(0, affiliations);
+	}
+	
+
+	@Test
+	public void testCanGetCountOfNodeAffiliationsForOwnerModerator() throws Exception {
+		int affiliations = store.countNodeAffiliations(TEST_SERVER1_NODE1_ID, true);
 		assertEquals(0, affiliations);
 	}
 
@@ -926,6 +1005,13 @@ public class JDBCNodeStoreTest {
 		assertEquals(4, affiliations);
 	}
 
+	@Test
+	public void testCanGetCountOfNodeAffiliationForOwnerModeratorWithResults() throws Exception {
+		dbTester.loadData("node_1");
+		int affiliations = store.countNodeAffiliations(TEST_SERVER1_NODE1_ID, true);
+		assertEquals(5, affiliations);
+	}
+	
 	@Test
 	public void testGetUserSubscription() throws Exception {
 		dbTester.loadData("node_1");

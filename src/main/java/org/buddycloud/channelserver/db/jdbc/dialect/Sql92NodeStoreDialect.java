@@ -48,14 +48,25 @@ public class Sql92NodeStoreDialect implements NodeStoreSQLDialect {
 			+ " FROM \"affiliations\" WHERE \"user\" = ?";
 
 	private static final String SELECT_AFFILIATIONS_FOR_NODE = "SELECT \"node\", \"user\", \"affiliation\", \"updated\""
-			+ " FROM \"affiliations\" WHERE \"node\" = ? ORDER BY \"updated\" ASC";
+			+ " FROM \"affiliations\" WHERE \"node\" = ? AND \"affiliation\" != 'outcast' ORDER BY \"updated\" ASC";
 
+	private static final String SELECT_AFFILIATIONS_TO_NODE_FOR_OWNER = "SELECT \"node\", \"user\", \"affiliation\", \"updated\""
+			+ " FROM \"affiliations\" WHERE \"node\" = ? ORDER BY \"updated\" ASC";
+	
 	private static final String SELECT_AFFILIATIONS_FOR_NODE_AFTER_JID = "SELECT \"node\", \"user\", \"affiliation\", \"updated\""
+			+ " FROM \"affiliations\" WHERE \"node\" = ? AND \"affiliation\" != 'outcast' AND "
+			+ "\"updated\" > (SELECT \"updated\" FROM \"affiliations\" WHERE \"node\" = ? AND \"user\" = ?) "
+			+ "ORDER BY \"updated\" ASC LIMIT ?";
+	
+	private static final String SELECT_AFFILIATIONS_TO_NODE_FOR_OWNER_AFTER_JID = "SELECT \"node\", \"user\", \"affiliation\", \"updated\""
 			+ " FROM \"affiliations\" WHERE \"node\" = ? AND "
 			+ "\"updated\" > (SELECT \"updated\" FROM \"affiliations\" WHERE \"node\" = ? AND \"user\" = ?) "
 			+ "ORDER BY \"updated\" ASC LIMIT ?";
 
 	private static final String COUNT_AFFILIATIONS_FOR_NODE = "SELECT COUNT(*)"
+			+ " FROM \"affiliations\" WHERE \"node\" = ? AND \"affiliation\" != 'outcast';";
+	
+	private static final String COUNT_AFFILIATIONS_TO_NODE_FOR_OWNER = "SELECT COUNT(*)"
 			+ " FROM \"affiliations\" WHERE \"node\" = ?";
 
 	private static final String INSERT_AFFILIATION = "INSERT INTO \"affiliations\" ( \"node\", \"user\", \"affiliation\", \"updated\" )"
@@ -91,9 +102,15 @@ public class Sql92NodeStoreDialect implements NodeStoreSQLDialect {
 			+ "AND \"affiliations\".\"affiliation\" != 'outcast') "
 			+ "ORDER BY \"updated\" ASC;";
 
-	private static final String SELECT_SUBSCRIPTIONS_FOR_NODE = "SELECT \"node\", \"user\", \"listener\", \"subscription\", \"updated\""
-			+ " FROM \"subscriptions\" WHERE \"node\" = ? ORDER BY \"updated\" ASC";
+	private static final String SELECT_SUBSCRIPTIONS_FOR_NODE = "SELECT \"s\".\"node\", \"s\".\"user\", \"s\".\"listener\", \"s\".\"subscription\", \"s\".\"updated\""
+			+ " FROM \"subscriptions\" AS \"s\", \"affiliations\" AS \"a\" "
+			+ "WHERE \"s\".\"node\" = ? AND \"s\".\"node\" = \"a\".\"node\" "
+			+ "AND \"s\".\"user\" = \"a\".\"user\" AND \"a\".\"affiliation\" != 'outcast' "
+			+ "ORDER BY \"s\".\"updated\" ASC";
 
+	private static final String SELECT_SUBSCRIPTIONS_TO_NODE_FOR_OWNER = "SELECT \"node\", \"user\", \"listener\", \"subscription\", \"updated\""
+			+ " FROM \"subscriptions\" WHERE \"node\" = ? ORDER BY \"updated\" ASC";
+	
 	private static final String SELECT_SUBSCRIPTIONS_FOR_NODE_AFTER_JID = "SELECT \"node\", \"user\", \"listener\", \"subscription\", \"updated\""
 			+ " FROM \"subscriptions\" WHERE \"node\" = ? AND "
 			+ "\"updated\" > (SELECT \"updated\" FROM \"subscriptions\" WHERE \"node\" = ? AND \"user\" = ?) "
@@ -175,7 +192,14 @@ public class Sql92NodeStoreDialect implements NodeStoreSQLDialect {
 			+ "AND (\"in_reply_to\" = ? OR \"id\" = ?) ";
 	
 	private static final String COUNT_SUBSCRIPTIONS_FOR_NODE = "SELECT COUNT(*) "
-			+ "FROM \"subscriptions\" WHERE \"node\" = ?;";
+			+ "FROM \"subscriptions\", \"affiliations\" WHERE "
+			+ "\"subscriptions\".\"node\" = ? AND \"affiliations\".\"node\" = \"subscriptions\".\"node\" "
+			+ "AND \"affiliations\".\"user\" = \"subscriptions\".\"user\" "
+			+ "AND \"affiliations\".\"affiliation\" != 'outcast';";
+	
+	private static final String COUNT_SUBSCRIPTIONS_TO_NODE_FOR_OWNER  = "SELECT COUNT(*) "
+			+ "FROM \"subscriptions\" WHERE "
+			+ "\"subscriptions\".\"node\" = ?;";
 
 	private static final String COUNT_ITEMS_FOR_JID = "SELECT COUNT(*)"
 			+ " FROM \"subscriptions\" WHERE \"user\" = ?";
@@ -305,15 +329,30 @@ public class Sql92NodeStoreDialect implements NodeStoreSQLDialect {
 	public String selectAffiliationsForNode() {
 		return SELECT_AFFILIATIONS_FOR_NODE;
 	}
+	
+	@Override
+	public String selectAffiliationsToNodeForOwner() {
+		return SELECT_AFFILIATIONS_TO_NODE_FOR_OWNER;
+	}
 
 	@Override
 	public String selectAffiliationsForNodeAfterJid() {
 		return SELECT_AFFILIATIONS_FOR_NODE_AFTER_JID;
 	}
+	
+	@Override
+	public String selectAffiliationsToNodeForOwnerAfterJid() {
+		return SELECT_AFFILIATIONS_TO_NODE_FOR_OWNER_AFTER_JID;
+	}
 
 	@Override
 	public String countNodeAffiliations() {
 		return COUNT_AFFILIATIONS_FOR_NODE;
+	}
+	
+	@Override
+	public String countNodeAffiliationsForOwner() {
+		return COUNT_AFFILIATIONS_TO_NODE_FOR_OWNER;
 	}
 
 	@Override
@@ -355,6 +394,11 @@ public class Sql92NodeStoreDialect implements NodeStoreSQLDialect {
 	public String selectSubscriptionsForNode() {
 		return SELECT_SUBSCRIPTIONS_FOR_NODE;
 	}
+	
+	@Override
+	public String selectSubscriptionsToNodeForOwner() {
+		return SELECT_SUBSCRIPTIONS_TO_NODE_FOR_OWNER;
+	}
 
 	@Override
 	public String selectSubscriptionsForNodeAfterJid() {
@@ -368,6 +412,11 @@ public class Sql92NodeStoreDialect implements NodeStoreSQLDialect {
 	@Override
 	public String countSubscriptionsForNode() {
 		return COUNT_SUBSCRIPTIONS_FOR_NODE;
+	}
+	
+	@Override
+	public String countSubscriptionsToNodeForOwner() {
+		return COUNT_SUBSCRIPTIONS_TO_NODE_FOR_OWNER;
 	}
 
 	@Override

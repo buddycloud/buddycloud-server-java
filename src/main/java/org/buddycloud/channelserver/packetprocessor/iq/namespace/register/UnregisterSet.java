@@ -272,7 +272,7 @@ public class UnregisterSet implements PacketProcessor<IQ> {
 	
 	
 	private boolean isSingleOwner(String nodeId, JID userJid) throws NodeStoreException {
-		ResultSet<NodeAffiliation> nodeAffiliations = channelManager.getNodeAffiliations(nodeId);
+		ResultSet<NodeAffiliation> nodeAffiliations = channelManager.getNodeAffiliations(nodeId, false);
 		int ownerCount = 0;
 		boolean isOwner = false;
 		for (NodeAffiliation nodeAffiliation : nodeAffiliations) {

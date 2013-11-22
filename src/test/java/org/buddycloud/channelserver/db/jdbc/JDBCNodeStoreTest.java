@@ -826,7 +826,7 @@ public class JDBCNodeStoreTest {
 
 		ResultSet<NodeAffiliation> changes = store.getAffiliationChanges(
 				TEST_SERVER1_USER1_JID, new Date(0), new Date());
-		assertEquals(4, changes.size());
+		assertEquals(6, changes.size());
 	}
 
 	@Test
@@ -850,7 +850,7 @@ public class JDBCNodeStoreTest {
 		dbTester.loadData("node_1");
 
 		ResultSet<NodeAffiliation> result = store
-				.getNodeAffiliations(TEST_SERVER1_NODE1_ID);
+				.getNodeAffiliations(TEST_SERVER1_NODE1_ID, false);
 
 		HashSet<NodeAffiliation> expected = new HashSet<NodeAffiliation>() {
 			{
@@ -858,6 +858,12 @@ public class JDBCNodeStoreTest {
 						TEST_SERVER1_USER1_JID, Affiliations.owner, new Date()));
 				add(new NodeAffiliationImpl(TEST_SERVER1_NODE1_ID,
 						TEST_SERVER1_USER2_JID, Affiliations.publisher,
+						new Date()));
+				add(new NodeAffiliationImpl(TEST_SERVER1_NODE1_ID,
+						TEST_SERVER2_USER1_JID, Affiliations.publisher,
+						new Date()));
+				add(new NodeAffiliationImpl(TEST_SERVER1_NODE1_ID,
+						TEST_SERVER2_USER3_JID, Affiliations.member,
 						new Date()));
 			}
 		};
@@ -879,17 +885,17 @@ public class JDBCNodeStoreTest {
 				Affiliations.member);
 
 		ResultSet<NodeAffiliation> result = store.getNodeAffiliations(
-				TEST_SERVER1_NODE1_ID, TEST_SERVER1_USER3_JID.toBareJID(), 50);
+				TEST_SERVER1_NODE1_ID, false, TEST_SERVER1_USER3_JID.toBareJID(), 50);
 
 		ResultSet<NodeAffiliation> result1 = store.getNodeAffiliations(
-				TEST_SERVER1_NODE1_ID, TEST_SERVER1_USER2_JID.toBareJID(), 50);
+				TEST_SERVER1_NODE1_ID, false, TEST_SERVER1_USER2_JID.toBareJID(), 50);
 
 		ResultSet<NodeAffiliation> result2 = store.getNodeAffiliations(
-				TEST_SERVER1_NODE1_ID, TEST_SERVER1_USER1_JID.toBareJID(), 50);
+				TEST_SERVER1_NODE1_ID, false, TEST_SERVER1_USER1_JID.toBareJID(), 50);
 
 		assertEquals(0, result.size());
 		assertEquals(1, result1.size());
-		assertEquals(2, result2.size());
+		assertEquals(4, result2.size());
 	}
 
 	@Test
@@ -903,21 +909,21 @@ public class JDBCNodeStoreTest {
 				Affiliations.member);
 
 		ResultSet<NodeAffiliation> result = store.getNodeAffiliations(
-				TEST_SERVER1_NODE1_ID, TEST_SERVER1_USER3_JID.toBareJID(), 1);
+				TEST_SERVER1_NODE1_ID, false, TEST_SERVER1_USER3_JID.toBareJID(), 1);
 		assertEquals(1, result.size());
 	}
 
 	@Test
 	public void testCanGetCountOfNodeAffiliations() throws Exception {
-		int affiliations = store.countNodeAffiliations(TEST_SERVER1_NODE1_ID);
+		int affiliations = store.countNodeAffiliations(TEST_SERVER1_NODE1_ID, false);
 		assertEquals(0, affiliations);
 	}
 
 	@Test
 	public void testCanGetCountOfNodeAffiliationWithResults() throws Exception {
 		dbTester.loadData("node_1");
-		int affiliations = store.countNodeAffiliations(TEST_SERVER1_NODE1_ID);
-		assertEquals(2, affiliations);
+		int affiliations = store.countNodeAffiliations(TEST_SERVER1_NODE1_ID, false);
+		assertEquals(4, affiliations);
 	}
 
 	@Test
@@ -1069,7 +1075,7 @@ public class JDBCNodeStoreTest {
 		dbTester.loadData("node_1");
 
 		ResultSet<NodeSubscription> result = store
-				.getNodeSubscriptions(TEST_SERVER1_NODE1_ID);
+				.getNodeSubscriptions(TEST_SERVER1_NODE1_ID, false);
 
 		HashSet<NodeSubscription> expected = new HashSet<NodeSubscription>() {
 			{
@@ -1144,7 +1150,7 @@ public class JDBCNodeStoreTest {
 
 		ResultSet<NodeSubscription> changes = store.getSubscriptionChanges(
 				TEST_SERVER1_USER1_JID, new Date(0), new Date());
-		assertEquals(5, changes.size());
+		assertEquals(6, changes.size());
 	}
 
 	@Test
@@ -1186,12 +1192,12 @@ public class JDBCNodeStoreTest {
 				Subscriptions.subscribed));
 
 		ResultSet<NodeSubscription> result = store.getNodeSubscriptions(
-				TEST_SERVER1_NODE1_ID, TEST_SERVER1_USER1_JID, 50);
+				TEST_SERVER1_NODE1_ID, false, TEST_SERVER1_USER1_JID, 50);
 		ResultSet<NodeSubscription> result1 = store.getNodeSubscriptions(
-				TEST_SERVER1_NODE1_ID, TEST_SERVER1_USER2_JID, 50);
+				TEST_SERVER1_NODE1_ID, false, TEST_SERVER1_USER2_JID, 50);
 
 		ResultSet<NodeSubscription> result2 = store.getNodeSubscriptions(
-				TEST_SERVER1_NODE1_ID, TEST_SERVER1_USER3_JID, 50);
+				TEST_SERVER1_NODE1_ID, false, TEST_SERVER1_USER3_JID, 50);
 
 		assertEquals(1, result.size());
 		assertEquals(2, result1.size());
@@ -1209,13 +1215,13 @@ public class JDBCNodeStoreTest {
 				Subscriptions.subscribed));
 
 		ResultSet<NodeSubscription> result = store.getNodeSubscriptions(
-				TEST_SERVER1_NODE1_ID, TEST_SERVER1_USER1_JID, 1);
+				TEST_SERVER1_NODE1_ID, false, TEST_SERVER1_USER1_JID, 1);
 		assertEquals(1, result.size());
 	}
 
 	@Test
 	public void testCanGetCountOfNodeSubscriptions() throws Exception {
-		int affiliations = store.countNodeSubscriptions(TEST_SERVER1_NODE1_ID);
+		int affiliations = store.countNodeSubscriptions(TEST_SERVER1_NODE1_ID, false);
 		assertEquals(0, affiliations);
 	}
 
@@ -1223,7 +1229,7 @@ public class JDBCNodeStoreTest {
 	public void testCanGetCountOfNodeSubscriptionsWithResults()
 			throws Exception {
 		dbTester.loadData("node_1");
-		int affiliations = store.countNodeSubscriptions(TEST_SERVER1_NODE1_ID);
+		int affiliations = store.countNodeSubscriptions(TEST_SERVER1_NODE1_ID, false);
 		assertEquals(4, affiliations);
 	}
 
@@ -1989,7 +1995,7 @@ public class JDBCNodeStoreTest {
 	public void testGetNodeSubscriptionCountReturnsZeroWhereThereAreNone()
 			throws Exception {
 		int subscriptionCount = store
-				.countNodeSubscriptions(TEST_SERVER1_NODE1_ID);
+				.countNodeSubscriptions(TEST_SERVER1_NODE1_ID, false);
 		assertEquals(0, subscriptionCount);
 	}
 
@@ -1998,7 +2004,7 @@ public class JDBCNodeStoreTest {
 			throws Exception {
 		dbTester.loadData("node_1");
 		int subscriptionCount = store
-				.countNodeSubscriptions(TEST_SERVER1_NODE1_ID);
+				.countNodeSubscriptions(TEST_SERVER1_NODE1_ID, false);
 		assertEquals(4, subscriptionCount);
 	}
 
@@ -2014,7 +2020,7 @@ public class JDBCNodeStoreTest {
 			throws Exception {
 		dbTester.loadData("node_1");
 		int subscriptionCount = store
-				.countNodeSubscriptions(TEST_SERVER1_NODE1_ID);
+				.countNodeSubscriptions(TEST_SERVER1_NODE1_ID, false);
 		boolean cached = store.nodeHasSubscriptions(TEST_SERVER1_NODE1_ID);
 		assertEquals(true, cached);
 	}

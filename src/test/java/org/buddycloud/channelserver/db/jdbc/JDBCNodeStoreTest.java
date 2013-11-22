@@ -1186,6 +1186,40 @@ public class JDBCNodeStoreTest {
 				CollectionUtils.isEqualCollection(expected, result));
 	}
 
+
+	@Test
+	public void testGetNodeSubscriptionsForOwnerModerator() throws Exception {
+		dbTester.loadData("node_1");
+
+		ResultSet<NodeSubscription> result = store
+				.getNodeSubscriptions(TEST_SERVER1_NODE1_ID, true);
+
+		HashSet<NodeSubscription> expected = new HashSet<NodeSubscription>() {
+			{
+				add(new NodeSubscriptionImpl(TEST_SERVER1_NODE1_ID,
+						TEST_SERVER1_USER1_JID, TEST_SERVER1_USER1_JID,
+						Subscriptions.subscribed));
+				add(new NodeSubscriptionImpl(TEST_SERVER1_NODE1_ID,
+						TEST_SERVER1_USER2_JID, TEST_SERVER1_USER2_JID,
+						Subscriptions.subscribed));
+				add(new NodeSubscriptionImpl(TEST_SERVER1_NODE1_ID,
+						TEST_SERVER2_USER1_JID, TEST_SERVER2_CHANNELS_JID,
+						Subscriptions.subscribed));
+				add(new NodeSubscriptionImpl(TEST_SERVER1_NODE1_ID,
+						TEST_SERVER2_USER3_JID, TEST_SERVER2_CHANNELS_JID,
+						Subscriptions.subscribed));
+				add(new NodeSubscriptionImpl(TEST_SERVER1_NODE1_ID,
+						TEST_SERVER1_OUTCAST_JID, TEST_SERVER1_OUTCAST_JID,
+						Subscriptions.subscribed));
+			}
+		};
+
+		assertEquals("Incorrect number of node subscriptions returned",
+				expected.size(), result.size());
+		assertTrue("Incorrect node subscriptions returned",
+				CollectionUtils.isEqualCollection(expected, result));
+	}
+	
 	@Test
 	@Ignore("hsql doesn't like DISTINCT ON")
 	public void testGetNodeSubscriptionListeners() throws Exception {

@@ -11,6 +11,7 @@ import org.buddycloud.channelserver.db.CloseableIterator;
 import org.buddycloud.channelserver.db.exception.NodeStoreException;
 import org.buddycloud.channelserver.packetprocessor.PacketProcessor;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.JabberPubsub;
+import org.buddycloud.channelserver.pubsub.affiliation.Affiliations;
 import org.buddycloud.channelserver.pubsub.model.NodeAffiliation;
 import org.buddycloud.channelserver.pubsub.model.NodeItem;
 import org.buddycloud.channelserver.pubsub.model.NodeSubscription;
@@ -36,7 +37,7 @@ public class MessageArchiveManagement implements PacketProcessor<IQ> {
 			.getLogger(MessageArchiveManagement.class);
 	private final BlockingQueue<Packet> outQueue;
 	private ChannelManager channelManager;
-	
+
 	private SAXReader xmlReader = new SAXReader();
 	private Message wrapper;
 
@@ -76,10 +77,10 @@ public class MessageArchiveManagement implements PacketProcessor<IQ> {
 		wrapper = new Message();
 		wrapper.setFrom(requestIq.getTo());
 		wrapper.setTo(requestIq.getFrom());
-		Element result = wrapper.addChildElement("result",
-				NAMESPACE_MAM);
+		Element result = wrapper.addChildElement("result", NAMESPACE_MAM);
 		result.addAttribute("id", requestIq.getID());
-		Element forwarded = wrapper.addChildElement("forwarded", NAMESPACE_FORWARDED);
+		Element forwarded = wrapper.addChildElement("forwarded",
+				NAMESPACE_FORWARDED);
 		Element delay = forwarded.addElement("delay", NAMESPACE_DELAY);
 		delay.addAttribute("stamp", Conf.formatDate(new Date()));
 		Element message = forwarded.addElement("msg");
@@ -99,38 +100,43 @@ public class MessageArchiveManagement implements PacketProcessor<IQ> {
 			return true;
 		} catch (IllegalArgumentException e) {
 			logger.error(e);
-			sendErrorPacket(PacketError.Type.modify, PacketError.Condition.bad_request);
+			sendErrorPacket(PacketError.Type.modify,
+					PacketError.Condition.bad_request);
 			return false;
 		}
 	}
 
 	private void sendItemUpdates() {
 		try {
-			CloseableIterator<NodeItem> items = channelManager.getNewNodeItemsForUser(requestIq.getFrom(), startTimestamp, endTimestamp);
+			CloseableIterator<NodeItem> items = channelManager
+					.getNewNodeItemsForUser(requestIq.getFrom(),
+							startTimestamp, endTimestamp);
 			if (false == items.hasNext()) {
 				return;
 			}
-			
+
 			Message notification = wrapper.createCopy();
 			Element forwarded = notification.getElement().element("forwarded");
-			notification.getElement().addAttribute("remote-server-discover", "false");
+			notification.getElement().addAttribute("remote-server-discover",
+					"false");
 			Element event = forwarded.addElement("event");
 			event.addNamespace("", JabberPubsub.NS_PUBSUB_EVENT);
 			Element itemsElement = event.addElement("items");
 			Element i = itemsElement.addElement("item");
-			
+
 			NodeItem item;
 			while (items.hasNext()) {
 				item = items.next();
 				itemsElement.addAttribute("node", item.getNodeId());
 				i.addAttribute("id", item.getId());
-				
-				if (null != i.element("entry")) i.remove(i.element("entry"));
-				i.add(xmlReader.read(
-						new StringReader(item.getPayload()))
+
+				if (null != i.element("entry"))
+					i.remove(i.element("entry"));
+				i.add(xmlReader.read(new StringReader(item.getPayload()))
 						.getRootElement());
-				
-				forwarded.element("delay").addAttribute("stamp", Conf.formatDate(item.getUpdated()));
+
+				forwarded.element("delay").addAttribute("stamp",
+						Conf.formatDate(item.getUpdated()));
 				outQueue.put(notification.createCopy());
 			}
 		} catch (NodeStoreException e) {
@@ -144,21 +150,33 @@ public class MessageArchiveManagement implements PacketProcessor<IQ> {
 
 	private void sendAffiliationUpdated() {
 		try {
-			ResultSet<NodeAffiliation> changes = channelManager.getAffiliationChanges(requestIq.getFrom(), startTimestamp, endTimestamp);
-			if (0 == changes.size()) return;
+			ResultSet<NodeAffiliation> changes = channelManager
+					.getAffiliationChanges(requestIq.getFrom(), startTimestamp,
+							endTimestamp);
+			if (0 == changes.size())
+				return;
 			Message notification = wrapper.createCopy();
 			Element forwarded = notification.getElement().element("forwarded");
-			
+
 			Element event = forwarded.addElement("event");
 			Element affiliations = event.addElement("affiliations");
-			Element affiliation  = affiliations.addElement("affiliation");
+			Element affiliationElement = affiliations.addElement("affiliation");
 			event.addNamespace("", JabberPubsub.NS_PUBSUB_EVENT);
-			
+			Affiliations affiliation;
 			for (NodeAffiliation change : changes) {
+				affiliation = change.getAffiliation();
+				if ((true == isOwnerModerator(change.getNodeId()))
+						&& (true == Affiliations.outcast.equals(change
+								.getAffiliation()))) {
+					affiliation = Affiliations.none;
+				}
 				affiliations.addAttribute("node", change.getNodeId());
-				affiliation.addAttribute("jid", change.getUser().toBareJID());
-				affiliation.addAttribute("affiliation", change.getAffiliation().toString());
-				forwarded.element("delay").addAttribute("stamp", Conf.formatDate(change.getLastUpdated()));
+				affiliationElement.addAttribute("jid", change.getUser()
+						.toBareJID());
+				affiliationElement.addAttribute("affiliation",
+						affiliation.toString());
+				forwarded.element("delay").addAttribute("stamp",
+						Conf.formatDate(change.getLastUpdated()));
 				outQueue.put(notification.createCopy());
 			}
 		} catch (NodeStoreException e) {
@@ -170,20 +188,25 @@ public class MessageArchiveManagement implements PacketProcessor<IQ> {
 
 	private void sendSubscriptionUpdates() {
 		try {
-			ResultSet<NodeSubscription> changes = channelManager.getSubscriptionChanges(requestIq.getFrom(), endTimestamp, endTimestamp);
-			if (0 == changes.size()) return;
+			ResultSet<NodeSubscription> changes = channelManager
+					.getSubscriptionChanges(requestIq.getFrom(), endTimestamp,
+							endTimestamp);
+			if (0 == changes.size())
+				return;
 			Message notification = wrapper.createCopy();
 			Element forwarded = notification.getElement().element("forwarded");
-			
+
 			Element event = forwarded.addElement("event");
 			event.addNamespace("", JabberPubsub.NS_PUBSUB_EVENT);
 			Element subscription = event.addElement("subscription");
-			
+
 			for (NodeSubscription change : changes) {
 				subscription.addAttribute("node", change.getNodeId());
 				subscription.addAttribute("jid", change.getUser().toBareJID());
-				subscription.addAttribute("subscription", change.getSubscription().toString());
-				forwarded.element("delay").addAttribute("stamp", Conf.formatDate(change.getLastUpdated()));
+				subscription.addAttribute("subscription", change
+						.getSubscription().toString());
+				forwarded.element("delay").addAttribute("stamp",
+						Conf.formatDate(change.getLastUpdated()));
 				outQueue.put(notification.createCopy());
 			}
 		} catch (NodeStoreException e) {
@@ -194,15 +217,23 @@ public class MessageArchiveManagement implements PacketProcessor<IQ> {
 	}
 
 	private void _sendNotHandledStanza() throws InterruptedException {
-		sendErrorPacket(PacketError.Type.cancel, PacketError.Condition.service_unavailable);
+		sendErrorPacket(PacketError.Type.cancel,
+				PacketError.Condition.service_unavailable);
 	}
 
-
-	private void sendErrorPacket(PacketError.Type type,
-			Condition condition) throws InterruptedException {
+	private void sendErrorPacket(PacketError.Type type, Condition condition)
+			throws InterruptedException {
 		reply.setChildElement(requestIq.getChildElement().createCopy());
 		reply.setType(Type.error);
 		PacketError pe = new PacketError(condition, type);
 		reply.setError(pe);
 		outQueue.put(reply);
-	}}
+	}
+
+	private boolean isOwnerModerator(String node) throws NodeStoreException {
+		NodeAffiliation affiliation = channelManager.getUserAffiliation(node,
+				requestIq.getFrom());
+		return affiliation.getAffiliation().in(Affiliations.moderator,
+				Affiliations.owner);
+	}
+}

@@ -1371,10 +1371,31 @@ public class JDBCNodeStoreTest {
 				TEST_SERVER1_NODE1_ID, false, TEST_SERVER1_USER1_JID, 1);
 		assertEquals(1, result.size());
 	}
+	
+	@Test
+	public void testCanRetrictNodeSubscriptionsCountForOwnerModeratorWithRsm() throws Exception {
 
+		dbTester.loadData("node_1");
+		// dbTester.loadData("node_2");
+
+		store.addUserSubscription(new NodeSubscriptionImpl(
+				TEST_SERVER1_NODE1_ID, TEST_SERVER1_USER2_JID,
+				Subscriptions.subscribed));
+
+		ResultSet<NodeSubscription> result = store.getNodeSubscriptions(
+				TEST_SERVER1_NODE1_ID, true, TEST_SERVER1_USER1_JID, 1);
+		assertEquals(1, result.size());
+	}
+	
 	@Test
 	public void testCanGetCountOfNodeSubscriptions() throws Exception {
 		int affiliations = store.countNodeSubscriptions(TEST_SERVER1_NODE1_ID, false);
+		assertEquals(0, affiliations);
+	}
+	
+	@Test
+	public void testCanGetCountOfNodeSubscriptionsForOwnerModerator() throws Exception {
+		int affiliations = store.countNodeSubscriptions(TEST_SERVER1_NODE1_ID, true);
 		assertEquals(0, affiliations);
 	}
 
@@ -1382,10 +1403,18 @@ public class JDBCNodeStoreTest {
 	public void testCanGetCountOfNodeSubscriptionsWithResults()
 			throws Exception {
 		dbTester.loadData("node_1");
-		int affiliations = store.countNodeSubscriptions(TEST_SERVER1_NODE1_ID, false);
-		assertEquals(4, affiliations);
+		int subscriptions = store.countNodeSubscriptions(TEST_SERVER1_NODE1_ID, false);
+		assertEquals(4, subscriptions);
 	}
 
+	@Test
+	public void testCanGetCountOfNodeSubscriptionsForOwnerModeratorWithResults()
+			throws Exception {
+		dbTester.loadData("node_1");
+		int subscriptions = store.countNodeSubscriptions(TEST_SERVER1_NODE1_ID, true);
+		assertEquals(5, subscriptions);
+	}
+	
 	@Test
 	public void testIsCachedJidForCachedJid() throws Exception {
 		dbTester.loadData("node_1");

@@ -2224,6 +2224,16 @@ public class JDBCNodeStoreTest {
 		assertEquals(true, cached);
 	}
 
+	@Test
+	public void testGetIsCachedSubscriptionNodeForOwnerModeratorReturnsTrueWhereThereAreSubscriptions()
+			throws Exception {
+		dbTester.loadData("node_1");
+		int subscriptionCount = store
+				.countNodeSubscriptions(TEST_SERVER1_NODE1_ID, true);
+		boolean cached = store.nodeHasSubscriptions(TEST_SERVER1_NODE1_ID);
+		assertEquals(true, cached);
+	}
+	
 	@Test(expected = IllegalArgumentException.class)
 	public void testFirehoseItemsThrowsExceptionIfNegativeLimitRequested()
 			throws Exception {

@@ -2197,7 +2197,16 @@ public class JDBCNodeStoreTest {
 				.countNodeSubscriptions(TEST_SERVER1_NODE1_ID, false);
 		assertEquals(4, subscriptionCount);
 	}
-
+	
+	@Test
+	public void testGetNodeSubscriptionCountForOwnerModeratorReturnsResultWhereThereAreSome()
+			throws Exception {
+		dbTester.loadData("node_1");
+		int subscriptionCount = store
+				.countNodeSubscriptions(TEST_SERVER1_NODE1_ID, true);
+		assertEquals(5, subscriptionCount);
+	}
+	
 	@Test
 	public void testGetIsCachedSubscriptionNodeReturnsFalseWhereThereAreNoSubscriptions()
 			throws Exception {

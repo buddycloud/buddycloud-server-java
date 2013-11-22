@@ -1325,6 +1325,39 @@ public class JDBCNodeStoreTest {
 	}
 
 	@Test
+	public void testCanGetNodeSubscriptionsForOwnerModeratorWithRsm() throws Exception {
+		dbTester.loadData("node_1");
+
+		store.addUserSubscription(new NodeSubscriptionImpl(
+				TEST_SERVER1_NODE1_ID, TEST_SERVER1_USER3_JID,
+				Subscriptions.subscribed));
+		Thread.sleep(1);
+		store.addUserSubscription(new NodeSubscriptionImpl(
+				TEST_SERVER1_NODE1_ID, TEST_SERVER1_USER2_JID,
+				Subscriptions.subscribed));
+		Thread.sleep(1);
+		store.addUserSubscription(new NodeSubscriptionImpl(
+				TEST_SERVER1_NODE1_ID, TEST_SERVER1_USER1_JID,
+				Subscriptions.subscribed));
+		Thread.sleep(1);
+		store.addUserSubscription(new NodeSubscriptionImpl(
+				TEST_SERVER1_NODE1_ID, TEST_SERVER2_USER1_JID,
+				Subscriptions.subscribed));
+
+		ResultSet<NodeSubscription> result = store.getNodeSubscriptions(
+				TEST_SERVER1_NODE1_ID, true, TEST_SERVER1_USER1_JID, 50);
+		ResultSet<NodeSubscription> result1 = store.getNodeSubscriptions(
+				TEST_SERVER1_NODE1_ID, true, TEST_SERVER1_USER2_JID, 50);
+
+		ResultSet<NodeSubscription> result2 = store.getNodeSubscriptions(
+				TEST_SERVER1_NODE1_ID, true, TEST_SERVER1_USER3_JID, 50);
+
+		assertEquals(1, result.size());
+		assertEquals(2, result1.size());
+		assertEquals(3, result2.size());
+	}
+	
+	@Test
 	public void testCanRetrictNodeSubscriptionsCountWithRsm() throws Exception {
 
 		dbTester.loadData("node_1");

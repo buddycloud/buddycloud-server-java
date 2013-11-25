@@ -60,6 +60,8 @@ public class UserItemsGet implements PubSubElementProcessor {
 
 	private int rsmEntriesCount;
 
+	private Boolean isOwnerModerator;
+
 	public UserItemsGet(BlockingQueue<Packet> outQueue,
 			ChannelManager channelManager) {
 		this.outQueue = outQueue;
@@ -105,6 +107,9 @@ public class UserItemsGet implements PubSubElementProcessor {
 		}
 
 		fetchersJid = requestIq.getFrom();
+		if (null != actorJID) {
+			fetchersJid = actorJID;
+		}
 
 		if (!channelManager.isLocalNode(node) && !isCached) {
 			logger.debug("Node " + node
@@ -157,7 +162,8 @@ public class UserItemsGet implements PubSubElementProcessor {
 					PacketError.Condition.item_not_found);
 			return true;
 		}
-		Element pubsub = reply.getElement().addElement("pubsub", JabberPubsub.NAMESPACE_URI);
+		Element pubsub = reply.getElement().addElement("pubsub",
+				JabberPubsub.NAMESPACE_URI);
 		Element items = pubsub.addElement("items").addAttribute("node", node);
 		addItemToResponse(nodeItem, items);
 		return true;
@@ -293,9 +299,8 @@ public class UserItemsGet implements PubSubElementProcessor {
 						.getSubscription();
 			}
 		}
-		if (getNodeViewAcl().canViewNode(node,
-				possibleExistingAffiliation, possibleExistingSubscription,
-				getNodeAccessModel())) {
+		if (getNodeViewAcl().canViewNode(node, possibleExistingAffiliation,
+				possibleExistingSubscription, getNodeAccessModel())) {
 			return true;
 		}
 		NodeAclRefuseReason reason = getNodeViewAcl().getReason();
@@ -363,7 +368,7 @@ public class UserItemsGet implements PubSubElementProcessor {
 			String afterItemId) throws NodeStoreException {
 
 		ResultSet<NodeSubscription> subscribers = channelManager
-				.getNodeSubscriptions(node);
+				.getNodeSubscriptions(node, isOwnerModerator());
 		int entries = 0;
 		if (null == subscribers) {
 			return entries;
@@ -386,6 +391,15 @@ public class UserItemsGet implements PubSubElementProcessor {
 			entries++;
 		}
 		return entries;
+	}
+
+	private boolean isOwnerModerator() throws NodeStoreException {
+		if (null == isOwnerModerator) {
+			isOwnerModerator = channelManager.getUserAffiliation(node, fetchersJid)
+			    .getAffiliation()
+			    .in(Affiliations.moderator, Affiliations.owner);
+		}
+		return isOwnerModerator;
 	}
 
 	private void addSubscriptionItems(Element query, JID subscriber)

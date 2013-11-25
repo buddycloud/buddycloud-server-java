@@ -89,9 +89,6 @@ public class SubscriptionEvent extends PubSubElementProcessorAbstract {
 
 		outQueue.put(response);
 
-		ResultSet<NodeSubscription> subscribers = channelManager
-				.getNodeSubscriptionListeners(node);
-
 		Document document = getDocumentHelper();
 		Element message = document.addElement("message");
 		message.addAttribute("remote-server-discover", "false");
@@ -106,11 +103,18 @@ public class SubscriptionEvent extends PubSubElementProcessorAbstract {
 				requestedSubscription.attributeValue("subscription"));
 		Message rootElement = new Message(message);
 
-		for (NodeSubscription subscriber : subscribers) {
-			Message notification = rootElement.createCopy();
-			notification.setTo(subscriber.getListener());
-			outQueue.put(notification);
+		if (!isInvite()) {
+			ResultSet<NodeSubscription> subscribers = channelManager
+					.getNodeSubscriptionListeners(node);
+			for (NodeSubscription subscriber : subscribers) {
+				Message notification = rootElement.createCopy();
+				notification.setTo(subscriber.getListener());
+				outQueue.put(notification);
+			}
+		} else {
+			subscription.addAttribute("invited-by", actor.toBareJID());
 		}
+		
 		Collection<JID> admins = getAdminUsers();
 		for (JID admin : admins) {
 			Message notification = rootElement.createCopy();

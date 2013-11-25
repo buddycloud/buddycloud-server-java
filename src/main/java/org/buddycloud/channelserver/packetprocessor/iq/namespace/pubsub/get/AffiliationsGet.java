@@ -8,6 +8,7 @@ import org.buddycloud.channelserver.db.exception.NodeStoreException;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.JabberPubsub;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.PubSubElementProcessor;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.PubSubGet;
+import org.buddycloud.channelserver.pubsub.affiliation.Affiliations;
 import org.buddycloud.channelserver.pubsub.model.NodeAffiliation;
 import org.buddycloud.channelserver.queue.FederatedQueueManager;
 import org.dom4j.Element;
@@ -29,6 +30,7 @@ public class AffiliationsGet implements PubSubElementProcessor {
 	private String firstItem;
 	private String lastItem;
 	private int totalEntriesCount;
+	private Boolean isOwnerModerator;
 
 	private static final Logger logger = Logger
 			.getLogger(AffiliationsGet.class);
@@ -122,10 +124,10 @@ public class AffiliationsGet implements PubSubElementProcessor {
 		}
 		ResultSet<NodeAffiliation> nodeAffiliations;
 		if (null == afterItemId) {
-			nodeAffiliations = channelManager.getNodeAffiliations(node);
+			nodeAffiliations = channelManager.getNodeAffiliations(node, isOwnerModerator());
 		} else {
 			nodeAffiliations = channelManager
-				.getNodeAffiliations(node, afterItemId, maxItemsToReturn);
+				.getNodeAffiliations(node, isOwnerModerator(), afterItemId, maxItemsToReturn);
 		}
 
 		if ((0 == nodeAffiliations.size())
@@ -149,8 +151,17 @@ public class AffiliationsGet implements PubSubElementProcessor {
 							nodeAffiliation.getAffiliation().toString())
 					.addAttribute("jid", nodeAffiliation.getUser().toString());
 		}
-		totalEntriesCount = channelManager.countNodeAffiliations(node);
+		totalEntriesCount = channelManager.countNodeAffiliations(node, isOwnerModerator());
 		return true;
+	}
+	
+	private boolean isOwnerModerator() throws NodeStoreException {
+		if (null == isOwnerModerator) {
+			isOwnerModerator = channelManager.getUserAffiliation(node, actorJid)
+			    .getAffiliation()
+			    .in(Affiliations.moderator, Affiliations.owner);
+		}
+		return isOwnerModerator;
 	}
 
 	private boolean getUserAffiliations(Element affiliations, int maxItemsToReturn, String afterItemId)

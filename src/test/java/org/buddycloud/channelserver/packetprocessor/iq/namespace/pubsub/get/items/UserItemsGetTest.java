@@ -447,7 +447,7 @@ public class UserItemsGetTest extends IQTestHandler {
 		items.add(itemSubscription2);
 		items.add(itemSubscription3);
 		Mockito.doReturn(new ResultSetImpl<NodeSubscription>(items))
-				.when(channelManager).getNodeSubscriptions(node);
+				.when(channelManager).getNodeSubscriptions(Mockito.eq(node), Mockito.anyBoolean());
 
 		Mockito.doReturn(null).when(channelManager)
 				.getUserAffiliation(node, new JID("pamela@denmark.lit"));
@@ -513,7 +513,7 @@ public class UserItemsGetTest extends IQTestHandler {
 		ArrayList items = new ArrayList<NodeSubscriptionImpl>();
 		items.add(itemSubscription);
 		Mockito.doReturn(new ResultSetImpl<NodeSubscription>(items))
-				.when(channelManager).getNodeSubscriptions(node);
+				.when(channelManager).getNodeSubscriptions(Mockito.eq(node), Mockito.anyBoolean());
 
 		NodeSubscriptionImpl childItemSubscription = Mockito
 				.mock(NodeSubscriptionImpl.class);

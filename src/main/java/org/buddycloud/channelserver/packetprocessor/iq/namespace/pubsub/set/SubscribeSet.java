@@ -266,8 +266,9 @@ public class SubscribeSet extends PubSubElementProcessorAbstract {
 				.getNodeSubscriptionListeners(node);
 
 		// Get all the affiliated users (so we can work out moderators)
+		// isOwnerModerator == false as we don't let outcast's know
 		ResultSet<NodeAffiliation> nodeAffiliations = channelManager
-				.getNodeAffiliations(node);
+				.getNodeAffiliations(node, false);
 		HashSet<JID> moderatorOwners = new HashSet<JID>();
 
 		for (NodeAffiliation nodeAffiliation : nodeAffiliations) {

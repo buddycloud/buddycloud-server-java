@@ -219,7 +219,7 @@ public interface NodeStore {
 	 *            the node id
 	 * @return
 	 */
-	ResultSet<NodeAffiliation> getNodeAffiliations(String nodeId)
+	ResultSet<NodeAffiliation> getNodeAffiliations(String nodeId, boolean isOwnerModerator)
 			throws NodeStoreException;
 
     /**
@@ -229,8 +229,8 @@ public interface NodeStore {
      * @param afterItemId
      * @return
      */
-	ResultSet<NodeAffiliation> getNodeAffiliations(String node
-			, String afterItemId, int maxItemsToReturn) throws NodeStoreException;
+	ResultSet<NodeAffiliation> getNodeAffiliations(String node, boolean isOwnerModerator,
+			String afterItemId, int maxItemsToReturn) throws NodeStoreException;
 	
 	/**
 	 * Get a list of node owners
@@ -246,7 +246,7 @@ public interface NodeStore {
 	 * @param nodeId
 	 * @return
 	 */  
-	int countNodeAffiliations(String nodeId) throws NodeStoreException;
+	int countNodeAffiliations(String nodeId, boolean isOwnerModerator) throws NodeStoreException;
 	
 	/**
 	 * Gets the set of nodes to which the user is subscribed.
@@ -289,9 +289,10 @@ public interface NodeStore {
 	 * 
 	 * @param nodeId
 	 *            the node reference.
+	 * @param isOwnerModerator 
 	 * @return
 	 */
-	ResultSet<NodeSubscription> getNodeSubscriptions(String nodeId)
+	ResultSet<NodeSubscription> getNodeSubscriptions(String nodeId, boolean isOwnerModerator)
 			throws NodeStoreException;
 	
 
@@ -304,7 +305,7 @@ public interface NodeStore {
 	 *            after this JID
 	 * @return
 	 */
-	ResultSet<NodeSubscription> getNodeSubscriptions(String nodeId, JID afterItemId,
+	ResultSet<NodeSubscription> getNodeSubscriptions(String nodeId, boolean isOwnerModerator, JID afterItemId,
 			int maxItemsToReturn) throws NodeStoreException;
 	
 	/**
@@ -467,10 +468,11 @@ public interface NodeStore {
 	 * 
 	 * @param nodeId
 	 *            the node id from which to retrieve the item count.
+	 * @param isOwnerModerator 
 	 * @return the entries count.
 	 * @throws NodeStoreException
 	 */
-	int countNodeSubscriptions(String nodeId) throws NodeStoreException;
+	int countNodeSubscriptions(String nodeId, boolean isOwnerModerator) throws NodeStoreException;
 	
 	/**
 	 * Retrieves a single node item by the node item id.

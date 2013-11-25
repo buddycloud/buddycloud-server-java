@@ -8,6 +8,8 @@ import org.buddycloud.channelserver.db.exception.NodeStoreException;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.JabberPubsub;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.PubSubElementProcessor;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.PubSubGet;
+import org.buddycloud.channelserver.pubsub.affiliation.Affiliations;
+import org.buddycloud.channelserver.pubsub.model.NodeAffiliation;
 import org.buddycloud.channelserver.pubsub.model.NodeSubscription;
 import org.dom4j.Element;
 import org.xmpp.packet.IQ;
@@ -29,6 +31,7 @@ public class SubscriptionsGet implements PubSubElementProcessor {
 	private String firstItem;
 	private String lastItem;
 	private int totalEntriesCount;
+	private Boolean isOwnerModerator;;
 
 	private static final Logger logger = Logger
 			.getLogger(SubscriptionsGet.class);
@@ -60,7 +63,7 @@ public class SubscriptionsGet implements PubSubElementProcessor {
 
 		node = elm.attributeValue("node");
 
-		if (actorJid == null) {
+		if (null == actorJid) {
 			actorJid = reqIQ.getFrom();
 		}
 		
@@ -121,10 +124,11 @@ public class SubscriptionsGet implements PubSubElementProcessor {
 		    return false;
 		}
 		ResultSet<NodeSubscription> cur;
+		
 		if (null == afterItemId) {
-		     cur = channelManager.getNodeSubscriptions(node);
+		     cur = channelManager.getNodeSubscriptions(node, isOwnerModerator());
 		} else {
-			cur = channelManager.getNodeSubscriptions(node, new JID(afterItemId), maxItemsToReturn);
+			cur = channelManager.getNodeSubscriptions(node, isOwnerModerator(), new JID(afterItemId), maxItemsToReturn);
 		}
 		subscriptions.addAttribute("node", node);
 
@@ -146,8 +150,16 @@ public class SubscriptionsGet implements PubSubElementProcessor {
 							ns.getSubscription().toString())
 					.addAttribute("jid", ns.getUser().toBareJID());
 		}
-		totalEntriesCount = channelManager.countNodeSubscriptions(node);
+		totalEntriesCount = channelManager.countNodeSubscriptions(node, isOwnerModerator());
 		return true;
+	}
+
+	private boolean isOwnerModerator() throws NodeStoreException {
+		if (null == isOwnerModerator) {
+			NodeAffiliation affiliation = channelManager.getUserAffiliation(node, actorJid);
+			isOwnerModerator = affiliation.getAffiliation().in(Affiliations.moderator, Affiliations.owner);
+		}
+		return isOwnerModerator;
 	}
 
 	private boolean getUserSubscriptions(Element subscriptions, int maxItemsToReturn, String afterItemId)

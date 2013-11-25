@@ -86,7 +86,7 @@ public class SubscribeSetTest extends IQTestHandler {
 				Affiliations.member, new Date()));
 
 		Mockito.doReturn(new ResultSetImpl<NodeAffiliation>(affiliations))
-				.when(channelManager).getNodeAffiliations(Mockito.anyString());
+				.when(channelManager).getNodeAffiliations(Mockito.anyString(), Mockito.anyBoolean());
 
 		ArrayList<NodeSubscription> subscribers = new ArrayList<NodeSubscription>();
 		subscribers.add(new NodeSubscriptionImpl(node, jid,

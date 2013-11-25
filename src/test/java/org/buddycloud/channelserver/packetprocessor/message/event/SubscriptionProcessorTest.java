@@ -53,7 +53,7 @@ public class SubscriptionProcessorTest extends IQTestHandler {
 				"/users/romeo@shakespeare.lit/posts", jid,
 				Subscriptions.subscribed));
 		Mockito.doReturn(new ResultSetImpl<NodeSubscription>(subscribers)).when(channelManager)
-				.getNodeSubscriptions(Mockito.anyString());
+				.getNodeSubscriptions(Mockito.anyString(), Mockito.anyBoolean());
 
 		subscriptionProcessor = new SubscriptionProcessor(queue, configuration,
 				channelManager);

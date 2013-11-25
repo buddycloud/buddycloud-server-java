@@ -60,6 +60,7 @@ public class UserItemsGet implements PubSubElementProcessor {
 	private int rsmEntriesCount;
 
 	private JID actor;
+	private Boolean isOwnerModerator;
 
 	public UserItemsGet(BlockingQueue<Packet> outQueue,
 			ChannelManager channelManager) {
@@ -157,7 +158,8 @@ public class UserItemsGet implements PubSubElementProcessor {
 					PacketError.Condition.item_not_found);
 			return true;
 		}
-		Element pubsub = reply.getElement().addElement("pubsub", JabberPubsub.NAMESPACE_URI);
+		Element pubsub = reply.getElement().addElement("pubsub",
+				JabberPubsub.NAMESPACE_URI);
 		Element items = pubsub.addElement("items").addAttribute("node", node);
 		addItemToResponse(nodeItem, items);
 		return true;
@@ -293,6 +295,7 @@ public class UserItemsGet implements PubSubElementProcessor {
 						.getSubscription();
 			}
 		}
+
 		if (getNodeViewAcl().canViewNode(node,
 				possibleExistingAffiliation, possibleExistingSubscription,
 				getNodeAccessModel(), channelManager.isLocalJID(actor))) {
@@ -363,7 +366,7 @@ public class UserItemsGet implements PubSubElementProcessor {
 			String afterItemId) throws NodeStoreException {
 
 		ResultSet<NodeSubscription> subscribers = channelManager
-				.getNodeSubscriptions(node);
+				.getNodeSubscriptions(node, isOwnerModerator());
 		int entries = 0;
 		if (null == subscribers) {
 			return entries;
@@ -386,6 +389,15 @@ public class UserItemsGet implements PubSubElementProcessor {
 			entries++;
 		}
 		return entries;
+	}
+
+	private boolean isOwnerModerator() throws NodeStoreException {
+		if (null == isOwnerModerator) {
+			isOwnerModerator = channelManager.getUserAffiliation(node, actor)
+			    .getAffiliation()
+			    .in(Affiliations.moderator, Affiliations.owner);
+		}
+		return isOwnerModerator;
 	}
 
 	private void addSubscriptionItems(Element query, JID subscriber)

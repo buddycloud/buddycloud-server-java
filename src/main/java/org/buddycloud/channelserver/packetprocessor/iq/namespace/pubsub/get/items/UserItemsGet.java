@@ -48,7 +48,6 @@ public class UserItemsGet implements PubSubElementProcessor {
 	private SAXReader xmlReader;
 	private Element entry;
 	private IQ requestIq;
-	private JID fetchersJid;
 	private IQ reply;
 	private Element resultSetManagement;
 	private Element element;
@@ -60,6 +59,7 @@ public class UserItemsGet implements PubSubElementProcessor {
 
 	private int rsmEntriesCount;
 
+	private JID actor;
 	private Boolean isOwnerModerator;
 
 	public UserItemsGet(BlockingQueue<Packet> outQueue,
@@ -106,9 +106,9 @@ public class UserItemsGet implements PubSubElementProcessor {
 			isCached = channelManager.isCachedNode(node);
 		}
 
-		fetchersJid = requestIq.getFrom();
-		if (null != actorJID) {
-			fetchersJid = actorJID;
+		this.actor = actorJID;
+		if (null == this.actor) {
+			this.actor = requestIq.getFrom();
 		}
 
 		if (!channelManager.isLocalNode(node) && !isCached) {
@@ -124,10 +124,6 @@ public class UserItemsGet implements PubSubElementProcessor {
 						PacketError.Condition.item_not_found);
 				outQueue.put(reply);
 				return;
-			}
-
-			if (actorJID != null) {
-				fetchersJid = actorJID;
 			}
 
 			if (!userCanViewNode()) {
@@ -284,9 +280,9 @@ public class UserItemsGet implements PubSubElementProcessor {
 
 	private boolean userCanViewNode() throws NodeStoreException {
 		NodeSubscription nodeSubscription = channelManager.getUserSubscription(
-				node, fetchersJid);
+				node, actor);
 		NodeAffiliation nodeAffiliation = channelManager.getUserAffiliation(
-				node, fetchersJid);
+				node, actor);
 
 		Affiliations possibleExistingAffiliation = Affiliations.none;
 		Subscriptions possibleExistingSubscription = Subscriptions.none;
@@ -299,8 +295,10 @@ public class UserItemsGet implements PubSubElementProcessor {
 						.getSubscription();
 			}
 		}
-		if (getNodeViewAcl().canViewNode(node, possibleExistingAffiliation,
-				possibleExistingSubscription, getNodeAccessModel())) {
+
+		if (getNodeViewAcl().canViewNode(node,
+				possibleExistingAffiliation, possibleExistingSubscription,
+				getNodeAccessModel(), channelManager.isLocalJID(actor))) {
 			return true;
 		}
 		NodeAclRefuseReason reason = getNodeViewAcl().getReason();
@@ -395,7 +393,7 @@ public class UserItemsGet implements PubSubElementProcessor {
 
 	private boolean isOwnerModerator() throws NodeStoreException {
 		if (null == isOwnerModerator) {
-			isOwnerModerator = channelManager.getUserAffiliation(node, fetchersJid)
+			isOwnerModerator = channelManager.getUserAffiliation(node, actor)
 			    .getAffiliation()
 			    .in(Affiliations.moderator, Affiliations.owner);
 		}

@@ -10,7 +10,6 @@ import junit.framework.Assert;
 
 import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.channel.node.configuration.Helper;
-import org.buddycloud.channelserver.channel.node.configuration.HelperMock;
 import org.buddycloud.channelserver.channel.node.configuration.NodeConfigurationException;
 import org.buddycloud.channelserver.channel.node.configuration.field.ChannelTitle;
 import org.buddycloud.channelserver.db.exception.NodeStoreException;
@@ -34,16 +33,14 @@ public class NodeCreateTest extends IQTestHandler {
 	private BlockingQueue<Packet> queue = new LinkedBlockingQueue<Packet>();
 	private String node = "/user/capulet@shakespeare.lit/posts";
 
-	private ChannelManager channelManagerMock;
-
 	@Before
 	public void setUp() throws Exception {
-		channelManagerMock = Mockito.mock(ChannelManager.class);
-		Mockito.when(channelManagerMock.isLocalNode(Mockito.anyString()))
+		channelManager = Mockito.mock(ChannelManager.class);
+		Mockito.when(channelManager.isLocalNode(Mockito.anyString()))
 				.thenReturn(true);
 		
 		queue = new LinkedBlockingQueue<Packet>();
-		nodeCreate = new NodeCreate(queue, channelManagerMock);
+		nodeCreate = new NodeCreate(queue, channelManager);
 		jid = new JID("juliet@shakespeare.lit");
 		request = readStanzaAsIq("/iq/pubsub/channel/create/request.stanza");
 
@@ -51,8 +48,6 @@ public class NodeCreateTest extends IQTestHandler {
 
 		element = new BaseElement("create");
 		element.addAttribute("node", node);
-
-
 	}
 
 	@Test
@@ -85,10 +80,10 @@ public class NodeCreateTest extends IQTestHandler {
 			throws Exception {
 
 		Mockito.when(
-				channelManagerMock
+				channelManager
 						.nodeExists("/user/capulet@shakespeare.lit/posts"))
 				.thenReturn(true);
-		nodeCreate.setChannelManager(channelManagerMock);
+		nodeCreate.setChannelManager(channelManager);
 
 		nodeCreate.process(element, jid, request, null);
 
@@ -166,13 +161,13 @@ public class NodeCreateTest extends IQTestHandler {
 	public void testchannelManagerFailureReturnsInternalServerErrorResponse()
 			throws Exception {
 		Mockito.doThrow(new NodeStoreException())
-				.when(channelManagerMock)
+				.when(channelManager)
 				.createNode(Mockito.any(JID.class), Mockito.anyString(),
 						Mockito.anyMapOf(String.class, String.class));
-		nodeCreate.setChannelManager(channelManagerMock);
-		Helper helperMock = Mockito.mock(Helper.class);
-		Mockito.doReturn(true).when(helperMock).isValid();
-		nodeCreate.setConfigurationHelper(helperMock);
+		nodeCreate.setChannelManager(channelManager);
+		Helper helper = Mockito.mock(Helper.class);
+		Mockito.doReturn(true).when(helper).isValid();
+		nodeCreate.setConfigurationHelper(helper);
 
 		nodeCreate.process(element, jid, request, null);
 		Packet response = queue.poll(100, TimeUnit.MILLISECONDS);
@@ -192,9 +187,9 @@ public class NodeCreateTest extends IQTestHandler {
 	@Test
 	public void testValidCreateNodeRequestReturnsConfirmationStanza()
 			throws Exception {
-		HelperMock helperMock = Mockito.mock(HelperMock.class);
-		Mockito.doReturn(true).when(helperMock).isValid();
-		nodeCreate.setConfigurationHelper(helperMock);
+		Helper helper = Mockito.mock(Helper.class);
+		Mockito.doReturn(true).when(helper).isValid();
+		nodeCreate.setConfigurationHelper(helper);
 
 		nodeCreate.process(element, jid, request, null);
 		Packet response = queue.poll(100, TimeUnit.MILLISECONDS);
@@ -217,19 +212,19 @@ public class NodeCreateTest extends IQTestHandler {
 		HashMap<String, String> configurationProperties = new HashMap<String, String>();
 		configurationProperties.put(ChannelTitle.FIELD_NAME, channelTitle);
 
-		HelperMock helperMock = Mockito.mock(HelperMock.class);
-		Mockito.when(helperMock.getValues())
+		Helper helper = Mockito.mock(Helper.class);
+		Mockito.when(helper.getValues())
 				.thenReturn(configurationProperties);
-		Mockito.doReturn(true).when(helperMock).isValid();
+		Mockito.doReturn(true).when(helper).isValid();
 
-		ChannelManager channelManagerMock = Mockito.mock(ChannelManager.class);
+		ChannelManager channelManager = Mockito.mock(ChannelManager.class);
 		
 		HashMap<String, String> conf = new HashMap<String, String>();
 		conf.put(ChannelTitle.FIELD_NAME, channelTitle);
 		
-		Mockito.when(channelManagerMock.getNodeConf(Mockito.anyString())).thenReturn(conf);
-		nodeCreate.setChannelManager(channelManagerMock);
-		nodeCreate.setConfigurationHelper(helperMock);
+		Mockito.when(channelManager.getNodeConf(Mockito.anyString())).thenReturn(conf);
+		nodeCreate.setChannelManager(channelManager);
+		nodeCreate.setConfigurationHelper(helper);
 
 		nodeCreate.process(element, jid, request, null);
 
@@ -241,7 +236,7 @@ public class NodeCreateTest extends IQTestHandler {
 		} catch (NullPointerException e) {
 			Assert.assertNull(error);
 		}
-		Map<String, String> nodeConfiguration = channelManagerMock
+		Map<String, String> nodeConfiguration = channelManager
 				.getNodeConf(node);
 		Assert.assertEquals(channelTitle,
 				nodeConfiguration.get(ChannelTitle.FIELD_NAME));
@@ -255,10 +250,10 @@ public class NodeCreateTest extends IQTestHandler {
 		HashMap<String, String> configurationProperties = new HashMap<String, String>();
 		configurationProperties.put(ChannelTitle.FIELD_NAME, channelTitle);
 
-		HelperMock helperMock = Mockito.mock(HelperMock.class);
-		Mockito.doThrow(new NodeConfigurationException()).when(helperMock)
+		Helper helper = Mockito.mock(Helper.class);
+		Mockito.doThrow(new NodeConfigurationException()).when(helper)
 				.parse(request);
-		nodeCreate.setConfigurationHelper(helperMock);
+		nodeCreate.setConfigurationHelper(helper);
 
 		nodeCreate.process(element, jid, request, null);
 

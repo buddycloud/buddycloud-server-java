@@ -1,4 +1,3 @@
-
 package org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.set;
 
 import java.util.Collection;
@@ -36,10 +35,13 @@ import org.xmpp.packet.PacketError;
 import org.xmpp.resultsetmanagement.ResultSet;
 
 public class SubscribeSet extends PubSubElementProcessorAbstract {
-	
+
 	private static final String FIREHOSE = "/firehose";
 	private static final Logger LOGGER = Logger.getLogger(SubscribeSet.class);
-	
+
+	public static final String MISSING_NODE_ID = "nodeid-required";
+	public static final String INVALID_JID = "invalid-jid";
+
 	private final BlockingQueue<Packet> outQueue;
 	private final ChannelManager channelManager;
 
@@ -52,10 +54,11 @@ public class SubscribeSet extends PubSubElementProcessorAbstract {
 	@Override
 	public void process(Element elm, JID actorJID, IQ reqIQ, Element rsm)
 			throws Exception {
-		
-		node = elm.attributeValue("node");
+
+		node = reqIQ.getChildElement().element("subscribe")
+				.attributeValue("node");
 		request = reqIQ;
-		
+
 		if ((node == null) || (node.equals(""))) {
 			missingNodeName();
 			return;
@@ -75,9 +78,9 @@ public class SubscribeSet extends PubSubElementProcessorAbstract {
 				return;
 			}
 		}
-		
+
 		Map<String, String> nodeConf = null;
-		
+
 		if (node.equals(FIREHOSE)) {
 			if (!channelManager.nodeExists(FIREHOSE)) {
 				channelManager.addRemoteNode(FIREHOSE);
@@ -93,10 +96,7 @@ public class SubscribeSet extends PubSubElementProcessorAbstract {
 		}
 
 		// Subscribe to a node.
-
-		Transaction t = null;
 		try {
-			t = channelManager.beginTransaction();
 
 			NodeSubscription nodeSubscription = channelManager
 					.getUserSubscription(node, subscribingJid);
@@ -129,7 +129,7 @@ public class SubscribeSet extends PubSubElementProcessorAbstract {
 
 			Affiliations defaultAffiliation = null;
 			Subscriptions defaultSubscription = null;
-			
+
 			if (!possibleExistingSubscription.in(Subscriptions.none)) {
 				LOGGER.debug("User already has a '"
 						+ possibleExistingSubscription.toString()
@@ -146,15 +146,24 @@ public class SubscribeSet extends PubSubElementProcessorAbstract {
 				}
 				defaultSubscription = Subscriptions.subscribed;
 				String accessModel = nodeConf.get(Conf.ACCESS_MODEL);
-				if ((null == accessModel) 
-				    || (accessModel.equals(AccessModels.authorize.toString()))) {
+
+				if ((null == accessModel)
+						|| (true == accessModel.equals(AccessModels.authorize
+								.toString()))
+						|| (true == accessModel.equals(AccessModels.whitelist
+								.toString()))) {
+					defaultSubscription = Subscriptions.pending;
+				} else if ((true == accessModel.equals(AccessModels.local
+						.toString()) && (false == channelManager
+						.isLocalJID(subscribingJid)))) {
 					defaultSubscription = Subscriptions.pending;
 				}
-	
-				NodeSubscription newSubscription = new NodeSubscriptionImpl(node,
-						subscribingJid, request.getFrom(), defaultSubscription);
+
+				NodeSubscription newSubscription = new NodeSubscriptionImpl(
+						node, subscribingJid, request.getFrom(),
+						defaultSubscription);
 				channelManager.addUserSubscription(newSubscription);
-	
+
 				if (null != possibleExistingAffiliation) {
 					defaultAffiliation = possibleExistingAffiliation;
 				}
@@ -176,29 +185,33 @@ public class SubscribeSet extends PubSubElementProcessorAbstract {
 
 			outQueue.put(reply);
 
-			notifySubscribers(defaultSubscription, defaultAffiliation, subscribingJid);
+			notifySubscribers(defaultSubscription, defaultAffiliation,
+					subscribingJid);
 
-			t.commit();
-		} finally {
-			if (t != null) {
-				t.close();
-			}
+		} catch (NodeStoreException e) {
+			IQ reply = IQ.createResultIQ(request);
+			reply.setType(Type.error);
+			PacketError pe = new PacketError(
+					PacketError.Condition.internal_server_error,
+					PacketError.Type.wait);
+			reply.setError(pe);
+			outQueue.put(reply);
 		}
 	}
 
-	private boolean handleNodeSubscription(Element elm, JID actorJID, JID subscribingJid)
-			throws NodeStoreException, InterruptedException {
+	private boolean handleNodeSubscription(Element elm, JID actorJID,
+			JID subscribingJid) throws NodeStoreException, InterruptedException {
 		if ((!channelManager.isLocalNode(node)) && (!node.equals("/firehose"))) {
-        	makeRemoteRequest();
-        	return false;
-        }
+			makeRemoteRequest();
+			return false;
+		}
 
 		// 6.1.3.1 JIDs Do Not Match
 
 		// Covers where we have juliet@shakespeare.lit/the-balcony
-		String[] jidParts = elm.attributeValue("jid").split("/");
-		String jid = jidParts[0];
-		if (!subscribingJid.toBareJID().equals(jid)) {
+		JID jid = new JID(request.getChildElement().element("subscribe")
+				.attributeValue("jid"));
+		if (!subscribingJid.toBareJID().equals(jid.toBareJID())) {
 
 			/*
 			 * // 6.1.3.1 JIDs Do Not Match <iq type='error'
@@ -213,7 +226,7 @@ public class SubscribeSet extends PubSubElementProcessorAbstract {
 
 			Element badRequest = new DOMElement("bad-request",
 					new org.dom4j.Namespace("", JabberPubsub.NS_XMPP_STANZAS));
-			Element nodeIdRequired = new DOMElement("invalid-jid",
+			Element nodeIdRequired = new DOMElement(INVALID_JID,
 					new org.dom4j.Namespace("", JabberPubsub.NS_PUBSUB_ERROR));
 			Element error = new DOMElement("error");
 			error.addAttribute("type", PacketError.Type.modify.toXMPP());
@@ -239,16 +252,15 @@ public class SubscribeSet extends PubSubElementProcessorAbstract {
 
 	private void makeRemoteRequest() throws InterruptedException {
 		request.setTo(new JID(node.split("/")[2]).getDomain());
-		Element actor = request.getElement()
-		    .element("pubsub")
-		    .addElement("actor", JabberPubsub.NS_BUDDYCLOUD);
+		Element actor = request.getElement().element("pubsub")
+				.addElement("actor", JabberPubsub.NS_BUDDYCLOUD);
 		actor.addText(request.getFrom().toBareJID());
-	    outQueue.put(request);
+		outQueue.put(request);
 	}
 
 	private void notifySubscribers(Subscriptions subscriptionStatus,
-			Affiliations affiliationType, JID subscribingJid) throws NodeStoreException,
-			InterruptedException {
+			Affiliations affiliationType, JID subscribingJid)
+			throws NodeStoreException, InterruptedException {
 
 		ResultSet<NodeSubscription> subscribers = channelManager
 				.getNodeSubscriptionListeners(node);
@@ -285,9 +297,9 @@ public class SubscribeSet extends PubSubElementProcessorAbstract {
 		affiliation.addAttribute("affiliation", affiliationType.toString());
 
 		Message rootElement = new Message(message);
-        
+
 		for (NodeSubscription subscriber : subscribers) {
-			
+
 			Message notification = rootElement.createCopy();
 			notification.setTo(subscriber.getListener());
 			outQueue.put(notification);
@@ -305,13 +317,14 @@ public class SubscribeSet extends PubSubElementProcessorAbstract {
 		}
 	}
 
-	private Message getPendingSubscriptionNotification(String receiver, String subscriber) {
+	private Message getPendingSubscriptionNotification(String receiver,
+			String subscriber) {
 
 		Document document = getDocumentHelper();
 		Element message = document.addElement("message");
 		message.addAttribute("from", request.getTo().toString());
 		message.addAttribute("type", "headline");
-		message.addAttribute("to",  receiver);
+		message.addAttribute("to", receiver);
 		DataForm dataForm = new DataForm(DataForm.Type.form);
 		dataForm.addInstruction("Allow " + subscriber
 				+ " to subscribe to node " + node + "?");
@@ -331,7 +344,8 @@ public class SubscribeSet extends PubSubElementProcessorAbstract {
 		jid.setLabel("Subscriber Address");
 		jid.setVariable(JabberPubsub.VAR_SUBSCRIBER_JID);
 		FormField allow = dataForm.addField();
-		allow.setLabel("Allow " + subscriber + " to subscribe to posts of " + node + "?");
+		allow.setLabel("Allow " + subscriber + " to subscribe to posts of "
+				+ node + "?");
 		allow.setVariable(JabberPubsub.VAR_ALLOW);
 		allow.addValue("false");
 		allow.setType(FormField.Type.boolean_type);
@@ -375,7 +389,7 @@ public class SubscribeSet extends PubSubElementProcessorAbstract {
 		Element badRequest = new DOMElement("bad-request",
 				new org.dom4j.Namespace("", JabberPubsub.NS_XMPP_STANZAS));
 
-		Element nodeIdRequired = new DOMElement("nodeid-required",
+		Element nodeIdRequired = new DOMElement(MISSING_NODE_ID,
 				new org.dom4j.Namespace("", JabberPubsub.NS_PUBSUB_ERROR));
 
 		Element error = new DOMElement("error");

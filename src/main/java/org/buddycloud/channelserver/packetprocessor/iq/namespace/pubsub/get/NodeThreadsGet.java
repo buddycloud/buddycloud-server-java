@@ -39,7 +39,7 @@ public class NodeThreadsGet extends PubSubElementProcessorAbstract {
 		setChannelManager(channelManager);
 		setOutQueue(outQueue);
 	}
-	
+
 	@Override
 	public void process(Element elm, JID actorJID, IQ reqIQ, Element rsm)
 			throws Exception {
@@ -48,7 +48,7 @@ public class NodeThreadsGet extends PubSubElementProcessorAbstract {
 		this.actor = actorJID;
 		this.resultSetManagement = rsm;
 		this.max = MAX_THREADS_TO_RETURN;
-		
+
 		if (actor == null) {
 			actor = request.getFrom();
 		}
@@ -77,13 +77,14 @@ public class NodeThreadsGet extends PubSubElementProcessorAbstract {
 		Element rsm = pubsubEl.addElement("set", NS_RSM);
 		rsm.addElement("first", NS_RSM).setText(firstItem);
 		rsm.addElement("last", NS_RSM).setText(lastItem);
-		
+
 		Integer nodeThreadCount = channelManager.countNodeThreads(node);
 		rsm.addElement("count", NS_RSM).setText(nodeThreadCount.toString());
 	}
 
 	private void getNodeThreads() throws NodeStoreException, DocumentException {
-		ResultSet<NodeThread> nodeThreads = channelManager.getNodeThreads(node, afterId, max);
+		ResultSet<NodeThread> nodeThreads = channelManager.getNodeThreads(node,
+				afterId, max);
 		this.response = IQ.createResultIQ(request);
 		Element pubsubEl = response.getElement().addElement("pubsub",
 				JabberPubsub.NAMESPACE_URI);
@@ -92,8 +93,8 @@ public class NodeThreadsGet extends PubSubElementProcessorAbstract {
 			Element threadEl = pubsubEl.addElement("thread");
 			threadEl.addAttribute("node", node);
 			threadEl.addAttribute("id", nodeThread.getId());
-			threadEl.addAttribute("updated", Conf.formatDate(
-					nodeThread.getUpdated()));
+			threadEl.addAttribute("updated",
+					Conf.formatDate(nodeThread.getUpdated()));
 			ResultSet<NodeItem> items = nodeThread.getItems();
 			for (NodeItem item : items) {
 				Element entry = xmlReader.read(
@@ -122,15 +123,16 @@ public class NodeThreadsGet extends PubSubElementProcessorAbstract {
 		}
 		return true;
 	}
-	
-	private AccessModels getNodeAccessModel(Map<String, String> nodeConfiguration) {
+
+	private AccessModels getNodeAccessModel(
+			Map<String, String> nodeConfiguration) {
 		if (!nodeConfiguration.containsKey(AccessModel.FIELD_NAME)) {
 			return AccessModels.authorize;
 		}
 		return AccessModels.createFromString(nodeConfiguration
 				.get(AccessModel.FIELD_NAME));
 	}
-	
+
 	private boolean userCanViewNode() throws NodeStoreException {
 		NodeSubscription nodeSubscription = channelManager.getUserSubscription(
 				node, actor);
@@ -144,19 +146,21 @@ public class NodeThreadsGet extends PubSubElementProcessorAbstract {
 			subscription = nodeSubscription.getSubscription();
 		}
 		NodeViewAcl nodeViewAcl = new NodeViewAcl();
-		Map<String, String> nodeConfiguration = channelManager.getNodeConf(node);
-		
-		if (nodeViewAcl.canViewNode(node, affiliation, subscription, 
-				getNodeAccessModel(nodeConfiguration))) {
+		Map<String, String> nodeConfiguration = channelManager
+				.getNodeConf(node);
+
+		if (nodeViewAcl.canViewNode(node, affiliation, subscription,
+				getNodeAccessModel(nodeConfiguration),
+				channelManager.isLocalJID(actor))) {
 			return true;
 		}
-		
+
 		NodeAclRefuseReason reason = nodeViewAcl.getReason();
 		createExtendedErrorReply(reason.getType(), reason.getCondition(),
 				reason.getAdditionalErrorElement());
 		return false;
 	}
-	
+
 	private boolean parseRsmElement() throws NodeStoreException {
 		if (resultSetManagement == null) {
 			return true;
@@ -176,7 +180,7 @@ public class NodeThreadsGet extends PubSubElementProcessorAbstract {
 		}
 		return true;
 	}
-	
+
 	@Override
 	public boolean accept(Element elm) {
 		return elm.getName().equals("threads");

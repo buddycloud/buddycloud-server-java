@@ -9,7 +9,6 @@ import java.util.concurrent.BlockingQueue;
 import org.apache.log4j.Logger;
 import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.channel.Conf;
-import org.buddycloud.channelserver.db.NodeStore.Transaction;
 import org.buddycloud.channelserver.db.exception.NodeStoreException;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.JabberPubsub;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.PubSubElementProcessorAbstract;
@@ -130,7 +129,8 @@ public class SubscribeSet extends PubSubElementProcessorAbstract {
 			Affiliations defaultAffiliation = null;
 			Subscriptions defaultSubscription = null;
 
-			if (!possibleExistingSubscription.in(Subscriptions.none)) {
+			if (!possibleExistingSubscription.in(Subscriptions.none) && 
+					!possibleExistingAffiliation.in(Affiliations.none)) {
 				LOGGER.debug("User already has a '"
 						+ possibleExistingSubscription.toString()
 						+ "' subscription");
@@ -138,8 +138,9 @@ public class SubscribeSet extends PubSubElementProcessorAbstract {
 				defaultSubscription = possibleExistingSubscription;
 			} else {
 				try {
-					defaultAffiliation = Affiliations.createFromString(nodeConf
-							.get(Conf.DEFAULT_AFFILIATION));
+					String nodeDefAffiliation = nodeConf.get(Conf.DEFAULT_AFFILIATION);
+					LOGGER.debug("Node default affiliation: '" + nodeDefAffiliation + "'");
+					defaultAffiliation = Affiliations.createFromString(nodeDefAffiliation);
 				} catch (NullPointerException e) {
 					LOGGER.error("Could not create affiliation.", e);
 					defaultAffiliation = Affiliations.member;

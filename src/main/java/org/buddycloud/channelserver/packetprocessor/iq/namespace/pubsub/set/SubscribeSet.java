@@ -165,7 +165,8 @@ public class SubscribeSet extends PubSubElementProcessorAbstract {
 						defaultSubscription);
 				channelManager.addUserSubscription(newSubscription);
 
-				if (null != possibleExistingAffiliation) {
+				if (possibleExistingAffiliation != null && 
+						!possibleExistingAffiliation.in(Affiliations.none)) {
 					defaultAffiliation = possibleExistingAffiliation;
 				}
 				channelManager.setUserAffiliation(node, subscribingJid,

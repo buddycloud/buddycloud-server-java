@@ -50,4 +50,47 @@ public class ConfigurationTest extends IQTestHandler {
 		Element element = new BaseElement("not-configure");
 		Assert.assertFalse(confResult.accept(element));
 	}
+	
+	@Test(expected = NullPointerException.class)
+	public void testInvalidStanzaThrowsException() throws Exception {
+
+		IQ result = toIq("<iq type=\"result\" id=\"subscriptions1\" "
+				+ "from=\"channels.shakespeare.lit\" "
+				+ "to=\"channels.denmark.lit\">"
+				+ "<pubsub xmlns=\"http://jabber.org/protocol/pubsub#owner\" />"
+				+ "</iq>");
+
+		confResult.process(element, jid, result, null);
+	}
+	
+	@Test
+	public void testEmptyNodeValueCausesNoAction() throws Exception {
+		IQ result = toIq("<iq type=\"result\" id=\"subscriptions1\" "
+				+ "from=\"channels.shakespeare.lit\" "
+				+ "to=\"channels.denmark.lit\">"
+				+ "<pubsub xmlns=\"http://jabber.org/protocol/pubsub#owner\">"
+				+ "<configure node=\"\" />" + "</pubsub>" + "</iq>");
+
+		confResult.process(element, jid, result, null);
+
+		Mockito.verify(channelManager, Mockito.times(0)).nodeExists(
+				Mockito.anyString());
+	}
+	
+	@Test
+	public void testIfNodeIsUnknownThenItIsAddedToDatabase() throws Exception {
+		IQ result = toIq("<iq type=\"result\" id=\"subscriptions1\" "
+				+ "from=\"channels.shakespeare.lit\" "
+				+ "to=\"channels.denmark.lit\">"
+				+ "<pubsub xmlns=\"http://jabber.org/protocol/pubsub#owner\">"
+				+ "<configure node=\"some-node\" />" + "</pubsub>" + "</iq>");
+
+		confResult.process(element, jid, result, null);
+
+		Mockito.when(channelManager.nodeExists(Mockito.anyString())).thenReturn(false);
+		Mockito.verify(channelManager, Mockito.times(1)).nodeExists(
+				Mockito.anyString());
+		Mockito.verify(channelManager, Mockito.times(1)).addRemoteNode(
+				Mockito.anyString());
+	}
 }

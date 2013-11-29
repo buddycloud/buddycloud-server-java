@@ -173,23 +173,23 @@ public class Sql92NodeStoreDialect implements NodeStoreSQLDialect {
 
 	private static final String SELECT_ITEM_REPLIES = ""
 			+ "SELECT \"id\", \"node\", \"xml\", \"updated\", \"in_reply_to\" "
-			+ "FROM \"items\" WHERE \"node\" = ? AND \"in_reply_to\" = ? "
+			+ "FROM \"items\" WHERE \"node\" = ? AND \"in_reply_to\" LIKE ? "
 			+ "AND \"updated\" > ? ORDER BY \"updated\" DESC";
 	
 	private static final String SELECT_ITEM_THREAD = ""
 			+ "SELECT \"id\", \"node\", \"xml\", \"updated\", \"in_reply_to\" "
 			+ "FROM \"items\" WHERE \"node\" = ? "
-			+ "AND (\"in_reply_to\" = ? OR \"id\" = ?) "
+			+ "AND (\"in_reply_to\" LIKE ? OR \"id\" = ?) "
 			+ "AND \"updated\" > ? ORDER BY \"updated\" DESC";
 	
 	private static final String SELECT_COUNT_ITEM_REPLIES = ""
 			+ "SELECT COUNT(\"id\") "
-			+ "FROM \"items\" WHERE \"node\" = ? AND \"in_reply_to\" = ? ";
+			+ "FROM \"items\" WHERE \"node\" = ? AND \"in_reply_to\" LIKE ? ";
 	
 	private static final String SELECT_COUNT_ITEM_THREAD = ""
 			+ "SELECT COUNT(\"id\") "
 			+ "FROM \"items\" WHERE \"node\" = ? "
-			+ "AND (\"in_reply_to\" = ? OR \"id\" = ?) ";
+			+ "AND (\"in_reply_to\" LIKE ? OR \"id\" = ?) ";
 	
 	private static final String COUNT_SUBSCRIPTIONS_FOR_NODE = "SELECT COUNT(*) "
 			+ "FROM \"subscriptions\", \"affiliations\" WHERE "

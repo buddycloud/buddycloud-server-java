@@ -7,6 +7,7 @@ import org.apache.log4j.Logger;
 import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.packetprocessor.PacketProcessor;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.result.AffiliationsResult;
+import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.result.Configuration;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.result.ItemsResult;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.result.SubscriptionsResult;
 import org.buddycloud.channelserver.queue.FederatedQueueManager;
@@ -42,6 +43,7 @@ public class PubSubResult implements PacketProcessor<IQ> {
 	    elementProcessors.add(new SubscriptionsResult(channelManager));
 	    elementProcessors.add(new AffiliationsResult(channelManager));
 	    elementProcessors.add(new ItemsResult(channelManager));
+	    elementProcessors.add(new Configuration(channelManager));
 	}
 
 	@Override

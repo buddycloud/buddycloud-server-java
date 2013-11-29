@@ -489,6 +489,17 @@ public class JDBCNodeStoreTest {
 					entry.getValue(), result.get(entry.getKey()));
 		}
 	}
+	
+	@Test
+	public void testNodeWithConfigSaysConfigIsCached() throws Exception {
+		dbTester.loadData("node_1");
+		Assert.assertTrue(store.isCachedNodeConfig(TEST_SERVER1_NODE1_ID));
+	}
+	
+	@Test
+	public void testNodeWithoutConfigSaysConfigNotCached() throws Exception {
+		Assert.assertFalse(store.isCachedNodeConfig(TEST_SERVER1_NODE1_ID));
+	}
 
 	@Test
 	public void testAddUserSubscriptionNewSubscription() throws Exception {

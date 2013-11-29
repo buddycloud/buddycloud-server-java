@@ -60,8 +60,14 @@ public class SubscriptionsResult extends PubSubElementProcessorAbstract {
 			channelManager.addRemoteNode(node);
 
 		JID jid = new JID(subscription.attributeValue("jid"));
+		
+		JID listener = request.getFrom();
+		if (channelManager.isLocalJID(jid)) {
+			listener = jid;
+		}
+		
 		NodeSubscription nodeSubscription = new NodeSubscriptionImpl(node, jid,
-				request.getFrom(), Subscriptions.createFromString(subscription
+				listener, Subscriptions.createFromString(subscription
 						.attributeValue("subscription")));
 		channelManager.addUserSubscription(nodeSubscription);
 		lastNode = node;

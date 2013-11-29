@@ -536,6 +536,14 @@ public interface NodeStore {
 	 */
 	boolean isCachedJID(JID jid) throws NodeStoreException;
 	
+    /**
+     * Return whether node config is cached locally
+     * 
+     * @param nodeId
+     * @return
+     * @throws NodeStoreException
+     */
+	boolean isCachedNodeConfig(String nodeId) throws NodeStoreException;
 	
 	/**
 	 * Allows the server to determine if the requested (subscriptions) node 

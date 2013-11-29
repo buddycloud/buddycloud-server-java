@@ -1643,6 +1643,11 @@ public class JDBCNodeStore implements NodeStore {
 	public boolean isCachedNode(String nodeId) throws NodeStoreException {
 		return (this.countNodeItems(nodeId) > 0);
 	}
+	
+	@Override
+	public boolean isCachedNodeConfig(String nodeId) throws NodeStoreException {
+		return (this.getNodeConf(nodeId).size() > 0);
+	}
 
 	@Override
 	public boolean isCachedJID(JID jid) throws NodeStoreException {

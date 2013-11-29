@@ -83,6 +83,12 @@ public class ChannelManagerImpl implements ChannelManager {
 			throws NodeStoreException {
 		return nodeStore.getNodeConf(nodeId);
 	}
+	
+
+	@Override
+	public boolean isCachedNodeConfig(String nodeId) throws NodeStoreException {
+		return nodeStore.isCachedNodeConfig(nodeId);
+	}
 
 	@Override
 	public boolean nodeExists(String nodeId) throws NodeStoreException {

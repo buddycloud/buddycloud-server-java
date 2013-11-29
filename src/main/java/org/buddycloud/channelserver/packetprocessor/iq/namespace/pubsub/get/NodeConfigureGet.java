@@ -51,7 +51,7 @@ public class NodeConfigureGet extends PubSubElementProcessorAbstract {
 			return;
 		}
 
-		if (!channelManager.isLocalNode(node)) {
+		if (!channelManager.isLocalNode(node) && !channelManager.isCachedNodeConfig(node)) {
 			makeRemoteRequest();
 			return;
 		}

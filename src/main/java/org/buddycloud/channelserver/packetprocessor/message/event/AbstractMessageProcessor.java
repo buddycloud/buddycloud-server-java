@@ -33,7 +33,7 @@ abstract public class AbstractMessageProcessor implements PacketProcessor<Messag
 	
 	void sendLocalNotifications() throws Exception {
 		ResultSet<NodeSubscription> subscribers = channelManager
-				.getNodeSubscriptions(node);
+				.getNodeSubscriptions(node, false);
 		for (NodeSubscription subscriber : subscribers) {
 			if (false == channelManager.isLocalJID(subscriber.getUser())) continue;
 			message.setTo(subscriber.getUser());

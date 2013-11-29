@@ -152,7 +152,8 @@ public class UserItemsGetTest extends IQTestHandler {
 				.canViewNode(Mockito.anyString(),
 						Mockito.any(Affiliations.class),
 						Mockito.any(Subscriptions.class),
-						Mockito.any(AccessModels.class));
+						Mockito.any(AccessModels.class),
+						Mockito.anyBoolean());
 		NodeAclRefuseReason refusalReason = new NodeAclRefuseReason(
 				PacketError.Type.auth, PacketError.Condition.forbidden,
 				"pending-subscription");
@@ -203,7 +204,8 @@ public class UserItemsGetTest extends IQTestHandler {
 				.canViewNode(Mockito.anyString(),
 						Mockito.any(Affiliations.class),
 						Mockito.any(Subscriptions.class),
-						Mockito.any(AccessModels.class));
+						Mockito.any(AccessModels.class),
+						Mockito.anyBoolean());
 		itemsGet.setNodeViewAcl(nodeViewAclMock);
 
 		itemsGet.process(element, jid, request, null);
@@ -250,7 +252,8 @@ public class UserItemsGetTest extends IQTestHandler {
 				.canViewNode(Mockito.anyString(),
 						Mockito.any(Affiliations.class),
 						Mockito.any(Subscriptions.class),
-						Mockito.any(AccessModels.class));
+						Mockito.any(AccessModels.class),
+						Mockito.anyBoolean());
 		itemsGet.setNodeViewAcl(nodeViewAclMock);
 
 		itemsGet.process(element, jid, request, null);
@@ -308,7 +311,8 @@ public class UserItemsGetTest extends IQTestHandler {
 				.canViewNode(Mockito.anyString(),
 						Mockito.any(Affiliations.class),
 						Mockito.any(Subscriptions.class),
-						Mockito.any(AccessModels.class));
+						Mockito.any(AccessModels.class),
+						Mockito.anyBoolean());
 		itemsGet.setNodeViewAcl(nodeViewAclMock);
 
 		itemsGet.process(element, jid, request, null);
@@ -364,7 +368,8 @@ public class UserItemsGetTest extends IQTestHandler {
 				.canViewNode(Mockito.anyString(),
 						Mockito.any(Affiliations.class),
 						Mockito.any(Subscriptions.class),
-						Mockito.any(AccessModels.class));
+						Mockito.any(AccessModels.class),
+						Mockito.anyBoolean());
 		itemsGet.setNodeViewAcl(nodeViewAclMock);
 
 		itemsGet.process(element, jid, request, null);
@@ -442,7 +447,7 @@ public class UserItemsGetTest extends IQTestHandler {
 		items.add(itemSubscription2);
 		items.add(itemSubscription3);
 		Mockito.doReturn(new ResultSetImpl<NodeSubscription>(items))
-				.when(channelManager).getNodeSubscriptions(node);
+				.when(channelManager).getNodeSubscriptions(Mockito.eq(node), Mockito.anyBoolean());
 
 		Mockito.doReturn(null).when(channelManager)
 				.getUserAffiliation(node, new JID("pamela@denmark.lit"));
@@ -455,7 +460,8 @@ public class UserItemsGetTest extends IQTestHandler {
 				.canViewNode(Mockito.anyString(),
 						Mockito.any(Affiliations.class),
 						Mockito.any(Subscriptions.class),
-						Mockito.any(AccessModels.class));
+						Mockito.any(AccessModels.class),
+						Mockito.anyBoolean());
 		itemsGet.setNodeViewAcl(nodeViewAclMock);
 
 		itemsGet.process(element, jid, request, null);
@@ -507,7 +513,7 @@ public class UserItemsGetTest extends IQTestHandler {
 		ArrayList items = new ArrayList<NodeSubscriptionImpl>();
 		items.add(itemSubscription);
 		Mockito.doReturn(new ResultSetImpl<NodeSubscription>(items))
-				.when(channelManager).getNodeSubscriptions(node);
+				.when(channelManager).getNodeSubscriptions(Mockito.eq(node), Mockito.anyBoolean());
 
 		NodeSubscriptionImpl childItemSubscription = Mockito
 				.mock(NodeSubscriptionImpl.class);
@@ -536,7 +542,8 @@ public class UserItemsGetTest extends IQTestHandler {
 				.canViewNode(Mockito.anyString(),
 						Mockito.any(Affiliations.class),
 						Mockito.any(Subscriptions.class),
-						Mockito.any(AccessModels.class));
+						Mockito.any(AccessModels.class),
+						Mockito.anyBoolean());
 		itemsGet.setNodeViewAcl(nodeViewAclMock);
 
 		itemsGet.process(element, jid, request, null);

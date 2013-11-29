@@ -5,6 +5,7 @@ import java.util.concurrent.BlockingQueue;
 
 import org.apache.log4j.Logger;
 import org.buddycloud.channelserver.channel.ChannelManager;
+import org.buddycloud.channelserver.channel.node.configuration.field.AccessModel;
 import org.buddycloud.channelserver.db.exception.NodeStoreException;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.JabberPubsub;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.PubSubElementProcessorAbstract;
@@ -22,7 +23,10 @@ import org.xmpp.packet.PacketError;
 public class NodeConfigureGet extends PubSubElementProcessorAbstract {
 	protected String node;
 
-	private static final Logger LOGGER = Logger.getLogger(NodeConfigureGet.class);
+	public static final String NS_CONFIGURE = "http://jabber.org/protocol/pubsub#node_config";
+
+	private static final Logger LOGGER = Logger
+			.getLogger(NodeConfigureGet.class);
 
 	public NodeConfigureGet(BlockingQueue<Packet> outQueue,
 			ChannelManager channelManager) {
@@ -41,17 +45,17 @@ public class NodeConfigureGet extends PubSubElementProcessorAbstract {
 		if (null == actor) {
 			actor = request.getFrom();
 		}
-		
+
 		if (!nodeProvided()) {
 			outQueue.put(response);
 			return;
 		}
-		
-		if (!channelManager.isLocalNode(node)) {
+
+		if (!channelManager.isLocalNode(node) && !channelManager.isCachedNodeConfig(node)) {
 			makeRemoteRequest();
 			return;
 		}
-		
+
 		try {
 			if (!nodeExists()) {
 				outQueue.put(response);
@@ -69,24 +73,35 @@ public class NodeConfigureGet extends PubSubElementProcessorAbstract {
 
 	private void getNodeConfiguration() throws Exception {
 		Map<String, String> nodeConf = channelManager.getNodeConf(node);
-		
+
 		DataForm x = new DataForm(DataForm.Type.result);
 
 		FormField formType = x.addField();
 		formType.setType(FormField.Type.hidden);
 		formType.setVariable("FORM_TYPE");
-		formType.addValue("http://jabber.org/protocol/pubsub#node_config");
+		formType.addValue(NS_CONFIGURE);
+
+		String value;
 
 		for (String key : nodeConf.keySet()) {
-			x.addField(key, null, null).addValue(nodeConf.get(key));
+			// If access model is 'local' and its not a local user return
+			// 'authorize'
+			value = nodeConf.get(key);
+			if ((true == key.equals(AccessModel.FIELD_NAME))
+					&& (value.equals(AccessModel.local.toString()))
+					&& (false == channelManager.isLocalJID(actor))) {
+				value = AccessModel.authorize.toString();
+			}
+			x.addField(key, null, null).addValue(value);
 		}
-		Element pubsub = response.setChildElement(PubSubGet.ELEMENT_NAME, JabberPubsub.NS_PUBSUB_OWNER);
+		Element pubsub = response.setChildElement(PubSubGet.ELEMENT_NAME,
+				JabberPubsub.NS_PUBSUB_OWNER);
 		Element configure = pubsub.addElement("configure");
 		configure.addAttribute("node", node);
 		configure.add(x.getElement());
 		outQueue.put(response);
 	}
-	
+
 	private boolean nodeExists() throws NodeStoreException {
 		if (channelManager.nodeExists(node)) {
 			return true;
@@ -113,14 +128,13 @@ public class NodeConfigureGet extends PubSubElementProcessorAbstract {
 		response.setChildElement(error);
 		return false;
 	}
-	
+
 	private void makeRemoteRequest() throws InterruptedException {
 		request.setTo(new JID(node.split("/")[2]).getDomain());
-		Element actor = request.getElement()
-		    .element("pubsub")
-		    .addElement("actor", JabberPubsub.NS_BUDDYCLOUD);
+		Element actor = request.getElement().element("pubsub")
+				.addElement("actor", JabberPubsub.NS_BUDDYCLOUD);
 		actor.addText(request.getFrom().toBareJID());
-	    outQueue.put(request);
+		outQueue.put(request);
 	}
 
 	public boolean accept(Element elm) {

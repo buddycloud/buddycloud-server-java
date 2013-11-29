@@ -57,7 +57,7 @@ public class ConfigurationProcessorTest extends IQTestHandler {
 				"/users/romeo@shakespeare.lit/posts", jid,
 				Subscriptions.subscribed));
 		Mockito.doReturn(new ResultSetImpl<NodeSubscription>(subscribers))
-				.when(channelManager).getNodeSubscriptions(Mockito.anyString());
+				.when(channelManager).getNodeSubscriptions(Mockito.anyString(), Mockito.anyBoolean());
 
 		configurationProcessor = new ConfigurationProcessor(queue,
 				configuration, channelManager);

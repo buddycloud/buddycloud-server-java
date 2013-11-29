@@ -5,6 +5,8 @@ import java.util.TreeMap;
 import java.util.concurrent.BlockingQueue;
 import org.apache.log4j.Logger;
 import org.buddycloud.channelserver.channel.ChannelManager;
+import org.buddycloud.channelserver.channel.node.configuration.field.AccessModel;
+import org.buddycloud.channelserver.db.exception.NodeStoreException;
 import org.buddycloud.channelserver.packetprocessor.PacketProcessor;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.JabberPubsub;
 import org.dom4j.Element;
@@ -15,6 +17,7 @@ import org.xmpp.packet.IQ.Type;
 import org.xmpp.packet.JID;
 import org.xmpp.packet.Packet;
 import org.xmpp.packet.PacketError;
+import org.xmpp.packet.PacketError.Condition;
 
 public class DiscoInfoGet implements PacketProcessor<IQ> {
 
@@ -27,8 +30,9 @@ public class DiscoInfoGet implements PacketProcessor<IQ> {
 	private IQ requestIq;
 	private Element query;
 	private Map<String, String> conf;
-	
-	public DiscoInfoGet(BlockingQueue<Packet> outQueue, ChannelManager channelManager) {
+
+	public DiscoInfoGet(BlockingQueue<Packet> outQueue,
+			ChannelManager channelManager) {
 		this.outQueue = outQueue;
 		this.channelManager = channelManager;
 	}
@@ -36,37 +40,43 @@ public class DiscoInfoGet implements PacketProcessor<IQ> {
 	@Override
 	public void process(IQ reqIQ) throws Exception {
 
-		requestIq     = reqIQ;
-		result     = IQ.createResultIQ(reqIQ);
-		Element elm   = reqIQ.getChildElement();
-		node          = elm.attributeValue("node");
-		query        = result.setChildElement(ELEMENT_NAME,
+		requestIq = reqIQ;
+		result = IQ.createResultIQ(reqIQ);
+		Element elm = reqIQ.getChildElement();
+		node = elm.attributeValue("node");
+		query = result.setChildElement(ELEMENT_NAME,
 				JabberDiscoInfo.NAMESPACE_URI);
-        if (false == channelManager.isLocalJID(requestIq.getFrom())) {
-        	result.getElement().addAttribute("remote-server-discover", "false");
-        }
+		if (false == channelManager.isLocalJID(requestIq.getFrom())) {
+			result.getElement().addAttribute("remote-server-discover", "false");
+		}
 		if ((node == null) || (true == node.equals(""))) {
 			sendServerDiscoInfo();
 			return;
 		}
 		if (false == channelManager.isLocalNode(node)
-	        && (false == channelManager.isCachedNode(node))) {
+				&& (false == channelManager.isCachedNode(node))) {
 			logger.info("Node " + node + " is remote and not cached so "
-			    + "we're going off to get disco#info");
+					+ "we're going off to get disco#info");
 			makeRemoteRequest();
-		    return;
+			return;
 		}
 		conf = channelManager.getNodeConf(node);
 		if (conf.isEmpty()) {
 			nodeDoesntExistResponse();
 			return;
 		}
-		sendNodeConfigurationInformation();
+		try {
+			sendNodeConfigurationInformation();
+		} catch (NodeStoreException e) {
+			logger.error(e);
+			setErrorResponse(PacketError.Type.wait,
+					PacketError.Condition.internal_server_error);
+		}
 	}
 
-	private void sendNodeConfigurationInformation() throws InterruptedException {
-		
-		TreeMap<String, String> sorted_conf = new TreeMap<String, String>();
+	private void sendNodeConfigurationInformation() throws Exception {
+
+		TreeMap<String, String> configuration = new TreeMap<String, String>();
 
 		DataForm x = new DataForm(DataForm.Type.result);
 
@@ -75,11 +85,19 @@ public class DiscoInfoGet implements PacketProcessor<IQ> {
 		formType.setVariable("FORM_TYPE");
 		formType.addValue("http://jabber.org/protocol/pubsub#meta-data");
 
-		sorted_conf.putAll(conf);
-		for (String key : sorted_conf.keySet()) {
-			x.addField(key, null, null).addValue(sorted_conf.get(key));
+		String value;
+
+		configuration.putAll(conf);
+		for (String key : configuration.keySet()) {
+			value = configuration.get(key);
+			if ((true == key.equals(AccessModel.FIELD_NAME))
+					&& (value.equals(AccessModel.local.toString()))
+					&& (false == channelManager.isLocalJID(requestIq.getFrom()))) {
+				value = AccessModel.authorize.toString();
+			}
+			x.addField(key, null, null).addValue(value);
 		}
-		
+
 		query.addAttribute("node", node);
 		query.addElement("identity").addAttribute("category", "pubsub")
 				.addAttribute("type", "leaf");
@@ -87,13 +105,14 @@ public class DiscoInfoGet implements PacketProcessor<IQ> {
 				"http://jabber.org/protocol/pubsub");
 
 		query.add(x.getElement());
-		
-		query.addElement("feature").addAttribute("var", JabberPubsub.NAMESPACE_URI);
+
+		query.addElement("feature").addAttribute("var",
+				JabberPubsub.NAMESPACE_URI);
 		Element identity = query.addElement("identity");
 		identity.addAttribute("category", "pubsub");
-		identity.addAttribute("type",  "leaf");
-		
-        logger.trace("Returning DISCO info for node: " + node);
+		identity.addAttribute("type", "leaf");
+
+		logger.trace("Returning DISCO info for node: " + node);
 		outQueue.put(result);
 	}
 
@@ -106,41 +125,41 @@ public class DiscoInfoGet implements PacketProcessor<IQ> {
 		 * <item-not-found xmlns='urn:ietf:params:xml:ns:xmpp-stanzas'/>
 		 * </error> </iq>
 		 */
+		setErrorResponse(PacketError.Type.cancel,
+				PacketError.Condition.item_not_found);
+	}
 
+	private void setErrorResponse(PacketError.Type type, Condition condition)
+			throws InterruptedException {
 		result.setChildElement(result.getChildElement().createCopy());
 		result.setType(Type.error);
-		PacketError pe = new PacketError(
-				org.xmpp.packet.PacketError.Condition.item_not_found,
-				org.xmpp.packet.PacketError.Type.cancel);
+		PacketError pe = new PacketError(condition, type);
 		result.setError(pe);
 		outQueue.put(result);
 	}
 
-	private void sendServerDiscoInfo()
-			throws InterruptedException {
+	private void sendServerDiscoInfo() throws InterruptedException {
 		query.addElement("identity").addAttribute("category", "pubsub")
 				.addAttribute("type", "channels");
 
 		query.addElement("identity").addAttribute("category", "pubsub")
 				.addAttribute("type", "inbox");
 
-		query.addElement("feature").addAttribute("var",
-				"jabber:iq:register");
+		query.addElement("feature").addAttribute("var", "jabber:iq:register");
 
 		query.addElement("feature").addAttribute("var",
 				"http://jabber.org/protocol/disco#info");
-		
+
 		query.addElement("feature").addAttribute("var",
 				"http://jabber.org/protocol/disco#items");
-		
-		query.addElement("feature").addAttribute("var",
-				"jabber:iq:search");
+
+		query.addElement("feature").addAttribute("var", "jabber:iq:search");
 
 		outQueue.put(result);
 	}
 
 	private void makeRemoteRequest() throws InterruptedException {
 		requestIq.setTo(new JID(node.split("/")[2]).getDomain());
-	    outQueue.put(requestIq);
+		outQueue.put(requestIq);
 	}
 }

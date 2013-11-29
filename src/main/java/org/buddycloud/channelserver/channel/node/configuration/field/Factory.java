@@ -13,8 +13,12 @@ public class Factory
     	if ((null == type) || (null == value)) {
     		throw new ConfigurationFieldException();
     	}
-    	if (type.equals("pubsub#owner") && (false == this.allowOwner)) {
+    	if (type.equals(Owner.FIELD_NAME) && (false == this.allowOwner)) {
     		throw new ConfigurationFieldException();
+    	} else if (type.equals(Owner.FIELD_NAME)) {
+    		Owner field = new Owner();
+    	    field.setValue(value);
+    	    return field;
     	} else if (type.equals(ChannelTitle.FIELD_NAME)) {
     	    ChannelTitle field = new ChannelTitle();
     	    field.setValue(value);

@@ -1281,7 +1281,7 @@ public class JDBCNodeStore implements NodeStore {
 			}
 			stmt = conn.prepareStatement(query);
 			stmt.setString(1, nodeId);
-			stmt.setString(2, itemId);
+			stmt.setString(2, "%" + itemId);
 			stmt.setTimestamp(3, new java.sql.Timestamp(since.getTime()));
 			if (-1 != limit)
 				stmt.setInt(4, limit);
@@ -1311,7 +1311,7 @@ public class JDBCNodeStore implements NodeStore {
 		try {
 			stmt = conn.prepareStatement(dialect.selectCountItemReplies());
 			stmt.setString(1, nodeId);
-			stmt.setString(2, itemId);
+			stmt.setString(2, "%" + itemId);
 
 			java.sql.ResultSet rs = stmt.executeQuery();
 
@@ -1344,7 +1344,7 @@ public class JDBCNodeStore implements NodeStore {
 			}
 			stmt = conn.prepareStatement(query);
 			stmt.setString(1, nodeId);
-			stmt.setString(2, itemId);
+			stmt.setString(2, "%" + itemId);
 			stmt.setString(3, itemId);
 			stmt.setTimestamp(4, new java.sql.Timestamp(since.getTime()));
 			if (-1 != limit)
@@ -1375,7 +1375,7 @@ public class JDBCNodeStore implements NodeStore {
 		try {
 			stmt = conn.prepareStatement(dialect.selectCountItemThread());
 			stmt.setString(1, nodeId);
-			stmt.setString(2, itemId);
+			stmt.setString(2, "%" + itemId);
 			stmt.setString(3, itemId);
 
 			java.sql.ResultSet rs = stmt.executeQuery();

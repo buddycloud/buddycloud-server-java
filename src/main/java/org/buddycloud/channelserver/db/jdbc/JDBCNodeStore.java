@@ -501,12 +501,17 @@ public class JDBCNodeStore implements NodeStore {
 	}
 
 	@Override
-	public int countNodeAffiliations(String nodeId) throws NodeStoreException {
+	public int countNodeAffiliations(String nodeId, boolean isOwnerModerator) throws NodeStoreException {
 		PreparedStatement selectStatement = null;
 
 		try {
-			selectStatement = conn.prepareStatement(dialect
-					.countNodeAffiliations());
+			if (true == isOwnerModerator) {
+				selectStatement = conn.prepareStatement(dialect
+						.countNodeAffiliationsForOwner());
+			} else {
+				selectStatement = conn.prepareStatement(dialect
+						.countNodeAffiliations());
+			}
 			selectStatement.setString(1, nodeId);
 
 			java.sql.ResultSet rs = selectStatement.executeQuery();
@@ -525,13 +530,17 @@ public class JDBCNodeStore implements NodeStore {
 	}
 
 	@Override
-	public ResultSet<NodeAffiliation> getNodeAffiliations(String nodeId)
+	public ResultSet<NodeAffiliation> getNodeAffiliations(String nodeId, boolean isOwnerModerator)
 			throws NodeStoreException {
 
 		PreparedStatement stmt = null;
 
 		try {
-			stmt = conn.prepareStatement(dialect.selectAffiliationsForNode());
+			if (true == isOwnerModerator) {
+				stmt = conn.prepareStatement(dialect.selectAffiliationsToNodeForOwner());
+			} else {
+			    stmt = conn.prepareStatement(dialect.selectAffiliationsForNode());
+			}
 			stmt.setString(1, nodeId);
 
 			java.sql.ResultSet rs = stmt.executeQuery();
@@ -555,13 +564,18 @@ public class JDBCNodeStore implements NodeStore {
 	}
 
 	@Override
-	public ResultSet<NodeAffiliation> getNodeAffiliations(String nodeId,
+	public ResultSet<NodeAffiliation> getNodeAffiliations(String nodeId, boolean isOwnerModerator,
 			String afterItemId, int maxItemsToReturn) throws NodeStoreException {
 		PreparedStatement stmt = null;
 
 		try {
-			stmt = conn.prepareStatement(dialect
-					.selectAffiliationsForNodeAfterJID());
+			if (true == isOwnerModerator) {
+				stmt = conn.prepareStatement(dialect
+						.selectAffiliationsToNodeForOwnerAfterJid());
+			} else {
+				stmt = conn.prepareStatement(dialect
+						.selectAffiliationsForNodeAfterJid());
+			}
 			stmt.setString(1, nodeId);
 			stmt.setString(2, nodeId);
 			stmt.setString(3, afterItemId);
@@ -768,13 +782,17 @@ public class JDBCNodeStore implements NodeStore {
 	}
 
 	@Override
-	public ResultSet<NodeSubscription> getNodeSubscriptions(String nodeId)
+	public ResultSet<NodeSubscription> getNodeSubscriptions(String nodeId, boolean isOwnerModerator)
 			throws NodeStoreException {
 
 		PreparedStatement stmt = null;
 
 		try {
-			stmt = conn.prepareStatement(dialect.selectSubscriptionsForNode());
+			if (true == isOwnerModerator) {
+				stmt = conn.prepareStatement(dialect.selectSubscriptionsToNodeForOwner());
+			} else {
+			    stmt = conn.prepareStatement(dialect.selectSubscriptionsForNode());
+			}
 			stmt.setString(1, nodeId);
 
 			java.sql.ResultSet rs = stmt.executeQuery();
@@ -797,8 +815,12 @@ public class JDBCNodeStore implements NodeStore {
 		}
 	}
 
+
+	@Override
 	public ResultSet<NodeSubscription> getNodeSubscriptions(String nodeId,
-			JID afterItemId, int maxItemsToReturn) throws NodeStoreException {
+			boolean isOwnerModerator, JID afterItemId, int maxItemsToReturn)
+			throws NodeStoreException {
+
 		PreparedStatement stmt = null;
 
 		String maxItems;
@@ -1622,6 +1644,11 @@ public class JDBCNodeStore implements NodeStore {
 	public boolean isCachedNode(String nodeId) throws NodeStoreException {
 		return (this.countNodeItems(nodeId) > 0);
 	}
+	
+	@Override
+	public boolean isCachedNodeConfig(String nodeId) throws NodeStoreException {
+		return (this.getNodeConf(nodeId).size() > 0);
+	}
 
 	@Override
 	public boolean isCachedJID(JID JID) throws NodeStoreException {
@@ -1647,11 +1674,17 @@ public class JDBCNodeStore implements NodeStore {
 	}
 
 	@Override
-	public int countNodeSubscriptions(String nodeId) throws NodeStoreException {
+	public int countNodeSubscriptions(String nodeId, boolean isOwnerModerator) throws NodeStoreException {
 		PreparedStatement selectStatement = null;
 		try {
-			selectStatement = conn.prepareStatement(dialect
-					.countSubscriptionsForNode());
+			if (true == isOwnerModerator) {
+				selectStatement = conn.prepareStatement(dialect
+						.countSubscriptionsToNodeForOwner());
+			} else {
+				selectStatement = conn.prepareStatement(dialect
+						.countSubscriptionsForNode());
+			}
+			
 			selectStatement.setString(1, nodeId);
 
 			java.sql.ResultSet rs = selectStatement.executeQuery();
@@ -1672,7 +1705,7 @@ public class JDBCNodeStore implements NodeStore {
 	@Override
 	public boolean nodeHasSubscriptions(String nodeId)
 			throws NodeStoreException {
-		return (this.countNodeSubscriptions(nodeId) > 0);
+		return (this.countNodeSubscriptions(nodeId, false) > 0);
 	}
 
 	@Override
@@ -1937,10 +1970,14 @@ public class JDBCNodeStore implements NodeStore {
 		String selectRecentItemParts();
 
 		String countNodeAffiliations();
+		
+		String countNodeAffiliationsForOwner();
 
 		String countUserAffiliations();
 
 		String countSubscriptionsForNode();
+
+		String countSubscriptionsToNodeForOwner();
 
 		String deleteItems();
 
@@ -1967,8 +2004,12 @@ public class JDBCNodeStore implements NodeStore {
 		String selectAffiliationsForUserAfterNodeId();
 
 		String selectAffiliationsForNode();
+		
+		String selectAffiliationsToNodeForOwner();
 
-		String selectAffiliationsForNodeAfterJID();
+		String selectAffiliationsForNodeAfterJid();
+		
+		String selectAffiliationsToNodeForOwnerAfterJid();
 
 		String selectAffiliationChanges();
 
@@ -1986,6 +2027,8 @@ public class JDBCNodeStore implements NodeStore {
 
 		String getSubscriptionChanges();
 
+		String selectSubscriptionsToNodeForOwner();
+		
 		String selectSubscriptionsForNode();
 
 		String selectSubscriptionsForNodeAfterJID();

@@ -170,7 +170,7 @@ public class UnregisterSetTest extends IQTestHandler {
 		List<NodeAffiliation> nodeAffiliations = new LinkedList<NodeAffiliation>();
 		nodeAffiliations.add(affiliation);
 		nodeAffiliations.add(otherAffiliation);
-		Mockito.when(channelManager.getNodeAffiliations(topicNode)).thenReturn(
+		Mockito.when(channelManager.getNodeAffiliations(Mockito.eq(topicNode), Mockito.anyBoolean())).thenReturn(
 				new ResultSetImpl<NodeAffiliation>(nodeAffiliations));
 		
 		// Record local node
@@ -204,7 +204,7 @@ public class UnregisterSetTest extends IQTestHandler {
 		affiliations.add(affiliation);
 		Mockito.when(channelManager.getUserAffiliations(actorJid)).thenReturn(
 				new ResultSetImpl<NodeAffiliation>(affiliations));
-		Mockito.when(channelManager.getNodeAffiliations(topicNode)).thenReturn(
+		Mockito.when(channelManager.getNodeAffiliations(Mockito.eq(topicNode), Mockito.anyBoolean())).thenReturn(
 				new ResultSetImpl<NodeAffiliation>(affiliations));
 		
 		// Record local node
@@ -238,7 +238,7 @@ public class UnregisterSetTest extends IQTestHandler {
 		affiliations.add(affiliation);
 		Mockito.when(channelManager.getUserAffiliations(actorJid)).thenReturn(
 				new ResultSetImpl<NodeAffiliation>(affiliations));
-		Mockito.when(channelManager.getNodeAffiliations(topicNode)).thenReturn(
+		Mockito.when(channelManager.getNodeAffiliations(Mockito.eq(topicNode), Mockito.anyBoolean())).thenReturn(
 				new ResultSetImpl<NodeAffiliation>(affiliations));
 		
 		// Record local node

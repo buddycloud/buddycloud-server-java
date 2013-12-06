@@ -17,11 +17,20 @@ import org.xmpp.packet.Message;
 public class Helper {
 	private HashMap<String, Field> elements;
 	private Factory fieldFactory;
+	private boolean allowOwner;
 
 	public  static final String FORM_TYPE = "http://jabber.org/protocol/pubsub#node_config";
 	private static final String ELEMENT_NOT_FOUND = "Required XMPP element not found";
 
 	private static final Logger LOGGER = Logger.getLogger(Helper.class);
+	
+	public Helper(boolean allowOwner) {
+		this.allowOwner = true;
+	}
+	
+	public Helper() {
+		this.allowOwner = false;
+	}
 	
     public void parse(IQ request) throws NodeConfigurationException {
         try {
@@ -39,7 +48,6 @@ public class Helper {
         try {
             parseConfiguration(getConfigurationValuesFromEvent(request));
         } catch (NullPointerException e) {
-        	e.printStackTrace();
         	LOGGER.debug(e);
         	throw new NodeConfigurationException(ELEMENT_NOT_FOUND);
         } catch (ConfigurationFieldException e) {
@@ -98,6 +106,7 @@ public class Helper {
 		if (configurationValues.isEmpty()) {
 			return;
 		}
+		getFieldFactory().setAllowOwner(this.allowOwner);
 		for (FormField configurationValue : configurationValues) {
 			Field field = getFieldFactory().create(configurationValue.getVariable(), 
 					configurationValue.getFirstValue());

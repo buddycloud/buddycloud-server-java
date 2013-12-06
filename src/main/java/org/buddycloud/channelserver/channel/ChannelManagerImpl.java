@@ -83,6 +83,12 @@ public class ChannelManagerImpl implements ChannelManager {
 			throws NodeStoreException {
 		return nodeStore.getNodeConf(nodeId);
 	}
+	
+
+	@Override
+	public boolean isCachedNodeConfig(String nodeId) throws NodeStoreException {
+		return nodeStore.isCachedNodeConfig(nodeId);
+	}
 
 	@Override
 	public boolean nodeExists(String nodeId) throws NodeStoreException {
@@ -132,15 +138,15 @@ public class ChannelManagerImpl implements ChannelManager {
 	}
 
 	@Override
-	public ResultSet<NodeAffiliation> getNodeAffiliations(String nodeId)
+	public ResultSet<NodeAffiliation> getNodeAffiliations(String nodeId, boolean isOwnerModerator)
 			throws NodeStoreException {
-		return nodeStore.getNodeAffiliations(nodeId);
+		return nodeStore.getNodeAffiliations(nodeId, isOwnerModerator);
 	}
 
 	@Override
-	public ResultSet<NodeAffiliation> getNodeAffiliations(String nodeId,
+	public ResultSet<NodeAffiliation> getNodeAffiliations(String nodeId, boolean isOwnerModerator,
 			String afterItemId, int maxItemsToReturn) throws NodeStoreException {
-		return nodeStore.getNodeAffiliations(nodeId, afterItemId,
+		return nodeStore.getNodeAffiliations(nodeId, isOwnerModerator, afterItemId,
 				maxItemsToReturn);
 	}
 
@@ -150,8 +156,8 @@ public class ChannelManagerImpl implements ChannelManager {
 	}
 
 	@Override
-	public int countNodeAffiliations(String nodeId) throws NodeStoreException {
-		return nodeStore.countNodeAffiliations(nodeId);
+	public int countNodeAffiliations(String nodeId, boolean isOwnerModerator) throws NodeStoreException {
+		return nodeStore.countNodeAffiliations(nodeId, isOwnerModerator);
 	}
 
 	@Override
@@ -185,21 +191,23 @@ public class ChannelManagerImpl implements ChannelManager {
 	}
 
 	@Override
-	public ResultSet<NodeSubscription> getNodeSubscriptions(String nodeId)
-			throws NodeStoreException {
-		return nodeStore.getNodeSubscriptions(nodeId);
+	public ResultSet<NodeSubscription> getNodeSubscriptions(String nodeId,
+			boolean isOwnerModerator) throws NodeStoreException {
+		return nodeStore.getNodeSubscriptions(nodeId, isOwnerModerator);
 	}
 
 	@Override
 	public ResultSet<NodeSubscription> getNodeSubscriptions(String nodeId,
-			JID afterItemId, int maxItemsToReturn) throws NodeStoreException {
-		return nodeStore.getNodeSubscriptions(nodeId, afterItemId,
-				maxItemsToReturn);
+			boolean isOwnerModerator, JID afterItemId, int maxItemsToReturn)
+			throws NodeStoreException {
+		return nodeStore.getNodeSubscriptions(nodeId, isOwnerModerator,
+				afterItemId, maxItemsToReturn);
 	}
 
 	@Override
-	public int countNodeSubscriptions(String nodeId) throws NodeStoreException {
-		return nodeStore.countNodeSubscriptions(nodeId);
+	public int countNodeSubscriptions(String nodeId, boolean isOwnerModerator)
+			throws NodeStoreException {
+		return nodeStore.countNodeSubscriptions(nodeId, isOwnerModerator);
 	}
 
 	@Override
@@ -258,7 +266,7 @@ public class ChannelManagerImpl implements ChannelManager {
 	@Override
 	public boolean nodeHasSubscriptions(String nodeId)
 			throws NodeStoreException {
-		return (nodeStore.countNodeSubscriptions(nodeId) > 0);
+		return (nodeStore.countNodeSubscriptions(nodeId, false) > 0);
 	}
 
 	public boolean isCachedJID(JID JID) throws NodeStoreException {
@@ -366,7 +374,7 @@ public class ChannelManagerImpl implements ChannelManager {
 			String nodeId) throws NodeStoreException {
 		return nodeStore.getNodeSubscriptionListeners(nodeId);
 	}
-	
+
 	@Override
 	public ResultSet<NodeSubscription> getNodeSubscriptionListeners()
 			throws NodeStoreException {
@@ -431,28 +439,31 @@ public class ChannelManagerImpl implements ChannelManager {
 	@Override
 	public Affiliations getDefaultNodeAffiliation(String nodeId)
 			throws NodeStoreException {
-		String affiliationString = getNodeConfValue(nodeId, Conf.DEFAULT_AFFILIATION);
-		
-		if(affiliationString != null) {
+		String affiliationString = getNodeConfValue(nodeId,
+				Conf.DEFAULT_AFFILIATION);
+
+		if (affiliationString != null) {
 			try {
 				return Affiliations.valueOf(affiliationString);
-			}
-			catch(IllegalArgumentException e) {
-				logger.error("Invalid default affiliation stored for node " + nodeId + ": " + affiliationString, e);
+			} catch (IllegalArgumentException e) {
+				logger.error("Invalid default affiliation stored for node "
+						+ nodeId + ": " + affiliationString, e);
 			}
 		}
-		
+
 		return Affiliations.member;
 	}
 
 	@Override
 	public CloseableIterator<NodeItem> performSearch(JID searcher,
-			List content, JID author, int page, int rpp)  throws NodeStoreException {
+			List content, JID author, int page, int rpp)
+			throws NodeStoreException {
 		return nodeStore.performSearch(searcher, content, author, page, rpp);
 	}
 
 	@Override
-	public ResultSet<NodeItem> getUserItems(JID userJid) throws NodeStoreException {
+	public ResultSet<NodeItem> getUserItems(JID userJid)
+			throws NodeStoreException {
 		return nodeStore.getUserItems(userJid);
 	}
 
@@ -481,5 +492,4 @@ public class ChannelManagerImpl implements ChannelManager {
 	public int countNodeThreads(String node) throws NodeStoreException {
 		return nodeStore.countNodeThreads(node);
 	}
-
 }

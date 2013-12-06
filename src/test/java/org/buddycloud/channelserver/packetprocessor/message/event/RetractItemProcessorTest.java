@@ -49,7 +49,7 @@ public class RetractItemProcessorTest extends IQTestHandler {
 				"/users/romeo@shakespeare.lit/posts", jid,
 				Subscriptions.subscribed));
 		Mockito.doReturn(new ResultSetImpl<NodeSubscription>(subscribers))
-				.when(channelManager).getNodeSubscriptions(Mockito.anyString());
+				.when(channelManager).getNodeSubscriptions(Mockito.anyString(), Mockito.anyBoolean());
 		Mockito.when(channelManager.isLocalNode(Mockito.anyString()))
 				.thenReturn(false);
         Mockito.when(channelManager.isLocalJID(Mockito.any(JID.class))).thenReturn(true);
@@ -81,7 +81,7 @@ public class RetractItemProcessorTest extends IQTestHandler {
 	@Test(expected = NodeStoreException.class)
 	public void testNodeStoreExceptionIsThrown() throws Exception {
 		Mockito.doThrow(new NodeStoreException()).when(channelManager)
-				.getNodeSubscriptions(Mockito.anyString());
+				.getNodeSubscriptions(Mockito.anyString(), Mockito.anyBoolean());
 		retractItemProcessor.process(message);
 	}
 

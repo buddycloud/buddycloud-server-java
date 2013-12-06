@@ -16,6 +16,7 @@ import org.buddycloud.channelserver.pubsub.affiliation.Affiliations;
 import org.buddycloud.channelserver.pubsub.model.NodeAffiliation;
 import org.buddycloud.channelserver.pubsub.model.NodeItem;
 import org.buddycloud.channelserver.pubsub.model.NodeSubscription;
+import org.buddycloud.channelserver.pubsub.model.impl.GlobalItemIDImpl;
 import org.buddycloud.channelserver.pubsub.model.impl.NodeItemImpl;
 import org.buddycloud.channelserver.pubsub.subscription.Subscriptions;
 import org.dom4j.Element;
@@ -151,9 +152,7 @@ public class PublishSet extends PubSubElementProcessorAbstract {
 		entry = vEntry.createBcCompatible(publishersJID.toBareJID(),
 				requestIq.getTo().toBareJID(), node);
 
-		id = entry.element("id").getText();
-		String[] idParts = id.split(",");
-		id = idParts[2];
+		id = GlobalItemIDImpl.toLocalId(entry.element("id").getText());
 
 		String updatedText = entry.elementText("updated");
 

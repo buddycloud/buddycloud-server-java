@@ -1,5 +1,7 @@
 package org.buddycloud.channelserver.channel.node.configuration.field;
 
+import org.xmpp.packet.JID;
+
 public class Owner extends Field
 {
 	public static final String FIELD_NAME    = "pubsub#owner";
@@ -12,6 +14,12 @@ public class Owner extends Field
 	
 	public boolean isValid()
 	{
-		return true;
+		try {
+			JID owner = new JID(getValue());
+			owner.toBareJID();
+			return true;
+		} catch (IllegalArgumentException e) {
+			return false;
+		}
 	}
 }

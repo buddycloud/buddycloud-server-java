@@ -80,7 +80,7 @@ public class MessageArchiveManagementTest extends IQTestHandler {
 		date1 = Conf.parseDate("1995-10-26T10:00:00Z");
 		date2 = Conf.parseDate("2015-10-21T16:29:00Z");
 		date3 = Conf.parseDate("1985-10-27T09:59:00Z");
-		
+
 		Mockito.when(
 				channelManager.getAffiliationChanges(Mockito.any(JID.class),
 						Mockito.any(Date.class), Mockito.any(Date.class)))
@@ -93,6 +93,13 @@ public class MessageArchiveManagementTest extends IQTestHandler {
 				channelManager.getNewNodeItemsForUser(Mockito.any(JID.class),
 						Mockito.any(Date.class), Mockito.any(Date.class)))
 				.thenReturn(noItems);
+
+		NodeAffiliation requesterAffiliation = new NodeAffiliationImpl(node1,
+				jid1, Affiliations.member, new Date());
+		Mockito.when(
+				channelManager.getUserAffiliation(Mockito.anyString(),
+						Mockito.any(JID.class))).thenReturn(
+				requesterAffiliation);
 	}
 
 	@Test
@@ -122,7 +129,7 @@ public class MessageArchiveManagementTest extends IQTestHandler {
 		Assert.assertEquals(1, queue.size());
 
 		Packet response = queue.poll(100, TimeUnit.MILLISECONDS);
-		
+
 		PacketError error = response.getError();
 		Assert.assertNotNull(error);
 		Assert.assertEquals(PacketError.Type.modify, error.getType());
@@ -172,7 +179,65 @@ public class MessageArchiveManagementTest extends IQTestHandler {
 				channelManager.getAffiliationChanges(Mockito.any(JID.class),
 						Mockito.any(Date.class), Mockito.any(Date.class)))
 				.thenReturn(new ResultSetImpl<NodeAffiliation>(affiliations));
+
+		mam.process(request);
+
+		Assert.assertEquals(3, queue.size());
+		checkAffiliationStanza(queue.poll(), jid1, date1, node1,
+				Affiliations.member);
+		checkAffiliationStanza(queue.poll(), jid2, date2, node2,
+				Affiliations.publisher);
+
+		IQ result = (IQ) queue.poll();
+		Assert.assertEquals("result", result.getType().toString());
+	}
+
+	@Test
+	public void testOutcastChangeReportedAsExpected() throws Exception {
+
+		NodeAffiliation requesterAffiliation = new NodeAffiliationImpl(node1,
+				jid1, Affiliations.owner, new Date());
+		Mockito.when(
+				channelManager.getUserAffiliation(Mockito.anyString(),
+						Mockito.any(JID.class))).thenReturn(
+				requesterAffiliation);
 		
+		ArrayList<NodeAffiliation> affiliations = new ArrayList<NodeAffiliation>();
+
+		affiliations.add(new NodeAffiliationImpl(node1, jid1,
+				Affiliations.outcast, date1));
+
+		Mockito.when(
+				channelManager.getAffiliationChanges(Mockito.any(JID.class),
+						Mockito.any(Date.class), Mockito.any(Date.class)))
+				.thenReturn(new ResultSetImpl<NodeAffiliation>(affiliations));
+
+		mam.process(request);
+
+		Assert.assertEquals(2, queue.size());
+		checkAffiliationStanza(queue.poll(), jid1, date1, node1,
+				Affiliations.none);
+
+		IQ result = (IQ) queue.poll();
+		Assert.assertEquals("result", result.getType().toString());
+	}
+
+	@Test
+	public void testOutcastChangeReportedAsExpectedToOwnerModerator()
+			throws Exception {
+
+		ArrayList<NodeAffiliation> affiliations = new ArrayList<NodeAffiliation>();
+
+		affiliations.add(new NodeAffiliationImpl(node1, jid1,
+				Affiliations.member, date1));
+		affiliations.add(new NodeAffiliationImpl(node2, jid2,
+				Affiliations.publisher, date2));
+
+		Mockito.when(
+				channelManager.getAffiliationChanges(Mockito.any(JID.class),
+						Mockito.any(Date.class), Mockito.any(Date.class)))
+				.thenReturn(new ResultSetImpl<NodeAffiliation>(affiliations));
+
 		mam.process(request);
 
 		Assert.assertEquals(3, queue.size());
@@ -205,7 +270,7 @@ public class MessageArchiveManagementTest extends IQTestHandler {
 		Assert.assertTrue(outgoingMessage.contains(node));
 		Assert.assertTrue(outgoingMessage.contains(affiliation.toString()));
 	}
-	
+
 	@Test
 	public void testTwoSubscriptionChangesReportAsExpected() throws Exception {
 
@@ -219,7 +284,7 @@ public class MessageArchiveManagementTest extends IQTestHandler {
 				channelManager.getSubscriptionChanges(Mockito.any(JID.class),
 						Mockito.any(Date.class), Mockito.any(Date.class)))
 				.thenReturn(new ResultSetImpl<NodeSubscription>(subscriptions));
-		
+
 		mam.process(request);
 
 		Assert.assertEquals(3, queue.size());
@@ -242,22 +307,24 @@ public class MessageArchiveManagementTest extends IQTestHandler {
 				message.element("forwarded").getNamespaceURI());
 
 		Element delay = message.element("forwarded").element("delay");
-		Element sub = message.element("forwarded").element("event").element("subscription");
-		
+		Element sub = message.element("forwarded").element("event")
+				.element("subscription");
+
 		Assert.assertEquals(node, sub.attributeValue("node"));
 		Assert.assertEquals(jid.toBareJID(), sub.attributeValue("jid"));
-		Assert.assertEquals(subscription, Subscriptions.valueOf(sub.attributeValue("subscription")));
+		Assert.assertEquals(subscription,
+				Subscriptions.valueOf(sub.attributeValue("subscription")));
 
 		Assert.assertEquals(date, Conf.parseDate(delay.attributeValue("stamp")));
 	}
-	
+
 	@Test
 	public void testTwoNewItemsReportAsExpected() throws Exception {
 
 		String item1 = "<entry>item1</entry>";
 		String item2 = "<entry>item2</entry>";
 		String item3 = "<entry>item3</entry>";
-		
+
 		ArrayList<NodeItem> items = new ArrayList<NodeItem>();
 		items.add(new NodeItemImpl(node1, "1", date1, item1));
 		items.add(new NodeItemImpl(node1, "2", date2, item2));
@@ -266,8 +333,9 @@ public class MessageArchiveManagementTest extends IQTestHandler {
 		Mockito.when(
 				channelManager.getNewNodeItemsForUser(Mockito.any(JID.class),
 						Mockito.any(Date.class), Mockito.any(Date.class)))
-				.thenReturn(new ClosableIteratorImpl<NodeItem>(items.iterator()));
-		
+				.thenReturn(
+						new ClosableIteratorImpl<NodeItem>(items.iterator()));
+
 		mam.process(request);
 
 		Assert.assertEquals(4, queue.size());
@@ -279,8 +347,8 @@ public class MessageArchiveManagementTest extends IQTestHandler {
 		Assert.assertEquals("result", result.getType().toString());
 	}
 
-	private void checkItemStanza(Packet result, Date date,
-			String node, String id, String entry) throws ParseException {
+	private void checkItemStanza(Packet result, Date date, String node,
+			String id, String entry) throws ParseException {
 
 		Element message = result.getElement();
 		Assert.assertEquals(MessageArchiveManagement.NAMESPACE_MAM, message
@@ -289,13 +357,15 @@ public class MessageArchiveManagementTest extends IQTestHandler {
 				message.element("forwarded").getNamespaceURI());
 
 		Element delay = message.element("forwarded").element("delay");
-		Element items = message.element("forwarded").element("event").element("items");
+		Element items = message.element("forwarded").element("event")
+				.element("items");
 		Element item = items.element("item");
-		
+
 		Assert.assertEquals(id, item.attributeValue("id"));
 		Assert.assertEquals(node, items.attributeValue("node"));
 		// Hack to make up for SMACK
-		Assert.assertTrue(item.asXML().replace(" xmlns=\"\"", "").contains(entry));
+		Assert.assertTrue(item.asXML().replace(" xmlns=\"\"", "")
+				.contains(entry));
 
 		Assert.assertEquals(date, Conf.parseDate(delay.attributeValue("stamp")));
 	}

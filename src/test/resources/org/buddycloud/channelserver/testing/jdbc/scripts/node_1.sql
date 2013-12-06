@@ -6,12 +6,15 @@ INSERT INTO "node_config" ("node", "key", "value", "updated") VALUES ('users/nod
 
 INSERT INTO "affiliations" ("node", "user", "affiliation", "updated") VALUES ('users/node1@server1/posts', 'user1@server1', 'owner', current_timestamp - interval '3' second);
 INSERT INTO "affiliations" ("node", "user", "affiliation", "updated") VALUES ('users/node1@server1/posts', 'user2@server1', 'publisher', current_timestamp - interval '2' second);
+INSERT INTO "affiliations" ("node", "user", "affiliation", "updated") VALUES ('users/node1@server1/posts', 'user1@server2', 'publisher', current_timestamp - interval '2' second);
+INSERT INTO "affiliations" ("node", "user", "affiliation", "updated") VALUES ('users/node1@server1/posts', 'user3@server2', 'member', current_timestamp - interval '1' second);
+INSERT INTO "affiliations" ("node", "user", "affiliation", "updated") VALUES ('users/node1@server1/posts', 'outcast@server1', 'outcast', current_timestamp - interval '2' second);
 
 INSERT INTO "subscriptions" ("node", "user", "listener", "subscription", "updated") VALUES ('users/node1@server1/posts', 'user1@server1', 'user1@server1', 'subscribed', current_timestamp - interval '4' second);
 INSERT INTO "subscriptions" ("node", "user", "listener", "subscription", "updated") VALUES ('users/node1@server1/posts', 'user2@server1', 'user2@server1', 'subscribed', current_timestamp - interval '3' second);
 INSERT INTO "subscriptions" ("node", "user", "listener", "subscription", "updated") VALUES ('users/node1@server1/posts', 'user1@server2', 'channels.server2', 'subscribed', current_timestamp - interval '2' second);
 INSERT INTO "subscriptions" ("node", "user", "listener", "subscription", "updated") VALUES ('users/node1@server1/posts', 'user3@server2', 'channels.server2', 'subscribed', current_timestamp - interval '1' second);
-
+INSERT INTO "subscriptions" ("node", "user", "listener", "subscription", "updated") VALUES ('users/node1@server1/posts', 'outcast@server1', 'outcast@server1', 'subscribed', current_timestamp - interval '2' second);
 -- The strange order of insertion of the items is deliberate
             
 INSERT INTO "items" ("node", "id", "updated", "xml") VALUES ('users/node1@server1/posts', 'a5', TIMESTAMP '2010-01-08 11:45:12', '<entry xmlns="http://www.w3.org/2005/Atom" xmlns:activity="http://activitystrea.ms/spec/1.0/"> 

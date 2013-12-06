@@ -88,7 +88,8 @@ public class ThreadGetTest extends IQTestHandler {
 				.canViewNode(Mockito.anyString(),
 						Mockito.any(Affiliations.class),
 						Mockito.any(Subscriptions.class),
-						Mockito.any(AccessModels.class));
+						Mockito.any(AccessModels.class),
+						Mockito.anyBoolean());
 	}
 
 	@Test
@@ -158,7 +159,8 @@ public class ThreadGetTest extends IQTestHandler {
 				.canViewNode(Mockito.anyString(),
 						Mockito.any(Affiliations.class),
 						Mockito.any(Subscriptions.class),
-						Mockito.any(AccessModels.class));
+						Mockito.any(AccessModels.class),
+						Mockito.anyBoolean());
 		NodeAclRefuseReason refusalReason = new NodeAclRefuseReason(
 				PacketError.Type.auth, PacketError.Condition.forbidden,
 				"pending-subscription");

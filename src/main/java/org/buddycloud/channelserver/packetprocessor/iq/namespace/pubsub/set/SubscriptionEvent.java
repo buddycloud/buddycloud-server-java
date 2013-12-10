@@ -91,7 +91,6 @@ public class SubscriptionEvent extends PubSubElementProcessorAbstract {
 
 		Document document = getDocumentHelper();
 		Element message = document.addElement("message");
-		message.addAttribute("remote-server-discover", "false");
 		Element event = message.addElement("event",
 				JabberPubsub.NS_PUBSUB_EVENT);
 		Element subscription = event.addElement("subscription");
@@ -101,23 +100,27 @@ public class SubscriptionEvent extends PubSubElementProcessorAbstract {
 				requestedSubscription.attributeValue("jid"));
 		subscription.addAttribute("subscription",
 				requestedSubscription.attributeValue("subscription"));
+		
+		if (isInvite()) subscription.addAttribute("invited-by", actor.toBareJID());
+
 		Message rootElement = new Message(message);
 
-		if (!isInvite()) {
-			ResultSet<NodeSubscription> subscribers = channelManager
-					.getNodeSubscriptionListeners(node);
-			for (NodeSubscription subscriber : subscribers) {
-				Message notification = rootElement.createCopy();
-				notification.setTo(subscriber.getListener());
-				outQueue.put(notification);
-			}
-		} else {
-			subscription.addAttribute("invited-by", actor.toBareJID());
+		ResultSet<NodeSubscription> subscribers = channelManager
+				.getNodeSubscriptionListeners(node);
+		Message notification;
+		for (NodeSubscription subscriber : subscribers) {
+			notification = rootElement.createCopy();
+			notification.setTo(subscriber.getListener());
+			outQueue.put(notification);
 		}
+		
+		notification = rootElement.createCopy();
+		notification.setTo(requestedSubscription.attributeValue("jid"));
+		outQueue.put(notification);
 		
 		Collection<JID> admins = getAdminUsers();
 		for (JID admin : admins) {
-			Message notification = rootElement.createCopy();
+			notification = rootElement.createCopy();
 			notification.setTo(admin);
 			outQueue.put(notification);
 		}

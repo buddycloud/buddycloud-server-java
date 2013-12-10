@@ -27,6 +27,7 @@ import org.junit.Test;
 import org.mockito.Mockito;
 import org.xmpp.packet.IQ;
 import org.xmpp.packet.JID;
+import org.xmpp.packet.Message;
 import org.xmpp.packet.Packet;
 import org.xmpp.packet.PacketError;
 import org.xmpp.packet.Roster.Subscription;
@@ -335,8 +336,9 @@ public class SubscriptionEventTest extends IQTestHandler {
 		event.setChannelManager(channelManager);
 		event.process(element, jid, request, null);
 
-		Assert.assertEquals(5, queue.size());
+		Assert.assertEquals(6, queue.size());
 		Packet notification = queue.poll();
+
 		Assert.assertEquals("francisco@denmark.lit/barracks", notification
 				.getTo().toString());
 		notification = queue.poll();
@@ -345,6 +347,9 @@ public class SubscriptionEventTest extends IQTestHandler {
 		notification = queue.poll();
 		Assert.assertEquals("hamlet@shakespeare.lit", notification.getTo()
 				.toString());
+		notification = queue.poll(100, TimeUnit.MILLISECONDS);
+		Assert.assertEquals("francisco@denmark.lit", notification.getTo()
+				.toBareJID());
 		notification = queue.poll(100, TimeUnit.MILLISECONDS);
 		Assert.assertEquals("user1@server1", notification.getTo().toBareJID());
 		notification = queue.poll(100, TimeUnit.MILLISECONDS);
@@ -528,20 +533,19 @@ public class SubscriptionEventTest extends IQTestHandler {
 
 		event.process(element, jid, invitationRequest, null);
 
-		Assert.assertEquals(2, queue.size());
-		
-		IQ response = (IQ) queue.poll();
-		
-		Assert.assertNull(response.getError());
-		Assert.assertEquals(IQ.Type.result, response.getType());
-		
+		Assert.assertEquals(6, queue.size());
 
-		//Assert.assertEquals(PacketError.Condition.conflict,
-		//		error.getCondition());
-		//Assert.assertEquals(PacketError.Type.cancel, error.getType());
-		//Assert.assertEquals(event.INVITE_IN_PROGRESS,
-		//		error.getApplicationConditionName());
-		//Assert.assertEquals(JabberPubsub.NS_BUDDYCLOUD_ERROR,
-		//		error.getApplicationConditionNamespaceURI());
+		IQ response = (IQ) queue.poll();
+		Assert.assertEquals(IQ.Type.result, response.getType());
+
+		Message message = (Message) queue.poll();
+
+		Element subscriptionElement = message.getElement().element("event")
+				.element("subscription");
+
+		Assert.assertEquals(invited.toBareJID(),
+				subscriptionElement.attributeValue("jid"));
+		Assert.assertEquals(invitationRequest.getFrom().toBareJID(),
+				subscriptionElement.attributeValue("invited-by"));
 	}
 }

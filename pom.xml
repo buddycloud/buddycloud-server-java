@@ -156,7 +156,6 @@
                               <report format="noframes" todir="target/surefire-reports"/>
                             </junitreport>
                           </tasks>
-                          <argLine>-Xmx1024m</argLine>
                         </configuration>
                         <goals>
                           <goal>run</goal>
@@ -188,6 +187,7 @@
                             <include>**/*Test.java</include>
                         </includes>
                         <useFile>false</useFile>
+                        <argLine>-Xmx1024m</argLine>
                     </configuration>
                 </plugin>
                 <plugin>

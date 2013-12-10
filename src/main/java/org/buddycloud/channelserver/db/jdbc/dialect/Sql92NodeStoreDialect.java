@@ -148,7 +148,7 @@ public class Sql92NodeStoreDialect implements NodeStoreSQLDialect {
 			+ "WHERE \"updated\" >= ? AND \"updated\" <= ? AND \"node\" IN "
 			+ "(SELECT \"subscriptions\".\"node\" FROM \"subscriptions\", \"affiliations\" "
 			+ "WHERE \"subscriptions\".\"user\" = ? AND "
-			+ "\"subscriptions\".\"subscription\" IN ('subscribed', 'invited') AND "
+			+ "\"subscriptions\".\"subscription\" = 'subscribed' AND "
 			+ "\"affiliations\".\"node\" = \"subscriptions\".\"node\" "
 			+ "AND \"subscriptions\".\"user\" = \"affiliations\".\"user\" "
 			+ "AND \"affiliations\".\"affiliation\" != 'banned'  "

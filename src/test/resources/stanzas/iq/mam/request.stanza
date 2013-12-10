@@ -1,5 +1,5 @@
 <iq type='get' id='sync1'
-    from='francisco@denmark.lit/barracks'
+    from='user@server1.com/barracks'
     to='channels.denmark.lit'>
     <query xmlns='urn:xmpp:mam:tmp'>
          <start>2010-06-07T00:00:00Z</start>

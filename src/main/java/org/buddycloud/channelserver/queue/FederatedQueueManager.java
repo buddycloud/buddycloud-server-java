@@ -52,7 +52,7 @@ public class FederatedQueueManager {
 	public FederatedQueueManager(ChannelsEngine component, String localServer) {
 		this.component = component;
 		this.localServer = localServer;
-		
+
 		nodeMap.start();
 		sentRemotePackets.start();
 	}
@@ -64,9 +64,9 @@ public class FederatedQueueManager {
 	}
 
 	public void process(Packet packet) throws ComponentException {
-		
+
 		logger.debug("Packet payload " + packet.toXML() + " going to federation.");
-		
+
 		String to = packet.getTo().toString();
 
 		String uniqueId = generateUniqueId(packet);
@@ -176,7 +176,7 @@ public class FederatedQueueManager {
 	public boolean isFederatedDiscoInfoRequest(String packetId) {
 		return remoteServerInfoRequestIds.containsKey(packetId);
 	}
-	
+
 	private void setDiscoveredServer(String server, String handler) {
 		discoveredServers.put(server, handler);
 	}
@@ -277,7 +277,7 @@ public class FederatedQueueManager {
 
 		component.sendPacket(packet);
 	}
-	
+
 	public String getRelatedNodeForRemotePacket(IQ packet) {
 		String id = null;
 		if (nodeMap.containsKey(packet.getID())) {

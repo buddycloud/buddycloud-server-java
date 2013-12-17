@@ -19,7 +19,11 @@ import org.xmpp.packet.IQ;
 import org.xmpp.packet.JID;
 import org.xmpp.packet.Packet;
 import org.xmpp.packet.PacketError;
-import org.xbill.DNS.*;
+import org.xbill.DNS.SRVRecord;
+import org.xbill.DNS.Record;
+import org.xbill.DNS.Type;
+import org.xbill.DNS.Lookup;
+import org.xbill.DNS.TextParseException;
 
 public class FederatedQueueManager {
 	private static final Logger logger = Logger
@@ -217,18 +221,23 @@ public class FederatedQueueManager {
 		}
 	}
 
-    private boolean attemptDnsDiscovery(String originatingServer) {
-        String query = SRV_PREFIX + originatingServer;
-        Record [] records = new Lookup(query, Type.SRV).run();
-        if ((null == records) || (0 == records.length)) {
+    private boolean attemptDnsDiscovery(String originatingServer) throws ComponentException {
+        try {
+            String query = SRV_PREFIX + originatingServer;
+            Record[] records = new Lookup(query, Type.SRV).run();
+            if ((null == records) || (0 == records.length)) {
+                return false;
+            }
+            SRVRecord record = (SRVRecord) records[0];
+            setDiscoveredServer(originatingServer, record.getTarget().toString());
+            sendFederatedRequests(originatingServer);
+            logger.info("Used DNS fallback to discover buddycloud server for "
+                + originatingServer + " (" + record.getTarget().toString() + ")");
+            return true;
+        } catch (TextParseException e) {
+            logger.error(e);
             return false;
         }
-        SRVRecord record = (SRVRecord) records[0];
-        setDiscoveredServer(originatingServer, record.getTarget());
-        sendFederatedRequests(originatingServer);
-        logger.info("Used DNS fallback to discover buddycloud server for "
-            + originatingServer + " (" + record.getTarget() ")");
-        return true;
     }
 
 	private void sendFederatedRequests(String originatingServer)

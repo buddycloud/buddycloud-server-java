@@ -233,6 +233,7 @@ public class FederatedQueueManager {
             sendFederatedRequests(originatingServer);
             logger.info("Used DNS fallback to discover buddycloud server for "
                 + originatingServer + " (" + record.getTarget().toString() + ")");
+            remoteChannelDiscoveryStatus.put(originatingServer, DISCOVERED);
             return true;
         } catch (TextParseException e) {
             logger.error(e);

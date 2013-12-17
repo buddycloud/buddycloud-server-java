@@ -19,6 +19,7 @@ import org.xmpp.packet.IQ;
 import org.xmpp.packet.JID;
 import org.xmpp.packet.Packet;
 import org.xmpp.packet.PacketError;
+import org.xbill.DNS.*;
 
 public class FederatedQueueManager {
 	private static final Logger logger = Logger
@@ -199,18 +200,24 @@ public class FederatedQueueManager {
 				sendFederatedRequests(originatingServer);
 			}
 		}
-		
+
 		if (remoteServerItemsToProcess.get(originatingServer) < 1) {
 			if (!discoveredServers.containsKey(originatingServer)) {
-				sendRemoteChannelServerNotFoundErrorResponses(originatingServer);
-				remoteChannelDiscoveryStatus.put(originatingServer,
-						NO_CHANNEL_SERVER);
-				waitingStanzas.remove(originatingServer);
+                if (false == attemptDnsDiscovery(originatingServer)) {
+                    sendRemoteChannelServerNotFoundErrorResponses(originatingServer);
+                    remoteChannelDiscoveryStatus.put(originatingServer,
+                            NO_CHANNEL_SERVER);
+                    waitingStanzas.remove(originatingServer);
+                }
 			} else {
 				remoteChannelDiscoveryStatus.put(originatingServer, DISCOVERED);
 			}
 		}
 	}
+
+    private void attemptDnsDiscovery(String originatingServer) {
+        return false;
+    }
 
 	private void sendFederatedRequests(String originatingServer)
 			throws ComponentException {

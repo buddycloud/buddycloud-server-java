@@ -33,6 +33,8 @@ public class FederatedQueueManager {
 	public static final String IDENTITY_TYPE_CHANNELS = "channels";
 	public static final String BUDDYCLOUD_SERVER = "buddycloud-server";
 
+    public static final String SRV_PREFIX = "_buddycloud-server._tcp.";
+
 	private int id = 1;
 
 	private final ChannelsEngine component;
@@ -215,7 +217,18 @@ public class FederatedQueueManager {
 		}
 	}
 
-    private void attemptDnsDiscovery(String originatingServer) {
+    private boolean attemptDnsDiscovery(String originatingServer) {
+        String query = SRV_PREFIX + originatingServer;
+        Record [] records = new Lookup(query, Type.SRV).run();
+        if ((null == records) || (0 == records.length)) {
+            return false;
+        }
+        SRVRecord record = (SRVRecord) records[0];
+        setDiscoveredServer(originatingServer, record.getTarget());
+        sendFederatedRequests(originatingServer);
+        logger.info("Used DNS fallback to discover buddycloud server for "
+            + originatingServer + " (" + record.getTarget() ")");
+        return true;
     }
 
 	private void sendFederatedRequests(String originatingServer)

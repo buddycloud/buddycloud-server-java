@@ -216,7 +216,6 @@ public class FederatedQueueManager {
 	}
 
     private void attemptDnsDiscovery(String originatingServer) {
-        return false;
     }
 
 	private void sendFederatedRequests(String originatingServer)

@@ -210,7 +210,6 @@ public class FederatedQueueManager {
 
 		if (remoteServerItemsToProcess.get(originatingServer) < 1) {
 			if (!discoveredServers.containsKey(originatingServer)) {
-
                 sendRemoteChannelServerNotFoundErrorResponses(originatingServer);
                 remoteChannelDiscoveryStatus.put(originatingServer,
                         NO_CHANNEL_SERVER);
@@ -248,10 +247,10 @@ public class FederatedQueueManager {
 		String remoteServer = discoveredServers.get(originatingServer);
 		List<Packet> packetsToSend = waitingStanzas.get(originatingServer);
 		if (packetsToSend == null) {
-            logger.trace("No queued federated packets to send");
+            logger.trace("No queued federated packets to send to " + originatingServer);
 			return;
 		}
-        logger.debug("Catching up on federated packet sending");
+        logger.trace("Catching up on federated packet sending to " + originatingServer);
 		for (Packet packet : packetsToSend) {
 			packet.setTo(remoteServer);
             logger.trace(packet.toString());

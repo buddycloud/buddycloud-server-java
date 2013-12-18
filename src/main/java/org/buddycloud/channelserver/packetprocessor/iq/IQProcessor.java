@@ -60,7 +60,7 @@ public class IQProcessor implements PacketProcessor<IQ> {
 		try {
 			processPacket(packet);
 		} catch (Exception e) {
-			if (true == packet.getType().toString().equals("result")) return;
+			if (packet.getType().equals(IQ.Type.result) || packet.getType().equals(IQ.Type.error)) return;
 			IQ reply = IQ.createResultIQ(packet);
 			reply.setChildElement(packet.getChildElement().createCopy());
 			reply.setType(Type.error);
@@ -101,7 +101,7 @@ public class IQProcessor implements PacketProcessor<IQ> {
 		}
 		logger.debug("Couldn't find processor for packet");
 
-		if (packet.getType() == IQ.Type.set || packet.getType() == IQ.Type.get) {
+		if (packet.getType().equals(IQ.Type.set) || packet.getType().equals(IQ.Type.get)) {
 
 			IQ reply = IQ.createResultIQ(packet);
 			reply.setChildElement(packet.getChildElement().createCopy());

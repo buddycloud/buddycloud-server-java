@@ -108,6 +108,7 @@ public class FederatedQueueManager {
 			waitingStanzas.get(to).add(packet);
 			logger.debug("Adding packet to waiting stanza list for " + to
 					+ " (size " + waitingStanzas.get(to).size() + ")");
+            attemptDnsDiscovery(to);
 		} catch (Exception e) {
 			logger.error(e);
 		}
@@ -209,12 +210,11 @@ public class FederatedQueueManager {
 
 		if (remoteServerItemsToProcess.get(originatingServer) < 1) {
 			if (!discoveredServers.containsKey(originatingServer)) {
-                if (false == attemptDnsDiscovery(originatingServer)) {
-                    sendRemoteChannelServerNotFoundErrorResponses(originatingServer);
-                    remoteChannelDiscoveryStatus.put(originatingServer,
-                            NO_CHANNEL_SERVER);
-                    waitingStanzas.remove(originatingServer);
-                }
+
+                sendRemoteChannelServerNotFoundErrorResponses(originatingServer);
+                remoteChannelDiscoveryStatus.put(originatingServer,
+                        NO_CHANNEL_SERVER);
+                waitingStanzas.remove(originatingServer);
 			} else {
 				remoteChannelDiscoveryStatus.put(originatingServer, DISCOVERED);
 			}
@@ -226,14 +226,16 @@ public class FederatedQueueManager {
             String query = SRV_PREFIX + originatingServer;
             Record[] records = new Lookup(query, Type.SRV).run();
             if ((null == records) || (0 == records.length)) {
+                logger.debug("No appropriate DNS entry found for " + originatingServer);
                 return false;
             }
             SRVRecord record = (SRVRecord) records[0];
-            setDiscoveredServer(originatingServer, record.getTarget().toString());
-            sendFederatedRequests(originatingServer);
-            logger.info("Used DNS fallback to discover buddycloud server for "
-                + originatingServer + " (" + record.getTarget().toString() + ")");
+            String targetServer = record.getTarget().toString(true);
+            setDiscoveredServer(originatingServer, targetServer);
+            logger.info("DNS discovery complete for buddycloud server @ "
+                + originatingServer + " (" + targetServer + ")");
             remoteChannelDiscoveryStatus.put(originatingServer, DISCOVERED);
+            sendFederatedRequests(originatingServer);
             return true;
         } catch (TextParseException e) {
             logger.error(e);
@@ -246,10 +248,13 @@ public class FederatedQueueManager {
 		String remoteServer = discoveredServers.get(originatingServer);
 		List<Packet> packetsToSend = waitingStanzas.get(originatingServer);
 		if (packetsToSend == null) {
+            logger.trace("No queued federated packets to send");
 			return;
 		}
+        logger.debug("Catching up on federated packet sending");
 		for (Packet packet : packetsToSend) {
 			packet.setTo(remoteServer);
+            logger.trace(packet.toString());
 			sendPacket(packet.createCopy());
 		}
 		waitingStanzas.remove(originatingServer);
@@ -289,6 +294,10 @@ public class FederatedQueueManager {
 					"Can not find original requesting packet! (ID:"
 							+ packet.getID() + ")");
 		}
+
+        if (packet.getType().equals(IQ.Type.error) && !remoteChannelDiscoveryStatus.get(packet.getFrom()).equals(DISCOVERED)) {
+            return;
+        }
 
 		String uniqueId = packet.getID();
 		packet.setID(idMap.get(uniqueId));

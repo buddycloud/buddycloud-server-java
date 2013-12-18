@@ -28,6 +28,8 @@ public class Configuration extends Properties {
 
 	public static final String CONFIGURATION_CHANNELS_AUTOSUBSCRIBE = "channels.autosubscribe";
 	public static final String CONFIGURATION_CHANNELS_AUTOSUBSCRIBE_AUTOAPPROVE = "channels.autosubscribe.autoapprove";
+	public static final String CONFIGURATION_CHANNELS_DEFAULT_ROLE = "channels.default.role";
+	public static final String CONFIGURATION_CHANNELS_DEFAULT_ACCESSMODEL = "channels.default.accessmodel";
 
 	private static final String CONFIGURATION_FILE = "configuration.properties";
 	private static Configuration instance = null;
@@ -40,22 +42,18 @@ public class Configuration extends Properties {
 	private Configuration() {
 		try {
 			conf = new Properties();
-			File f = new File(CONFIGURATION_FILE);
-
-			if (f.exists()) {
-				LOGGER.info("Found " + CONFIGURATION_FILE
-						+ " in working directory.");
-				load(new FileInputStream(f));
+			InputStream confFile = this.getClass().getClassLoader().getResourceAsStream(CONFIGURATION_FILE);
+			if(confFile != null) {
+				load(confFile);
+				LOGGER.info("Loaded " + CONFIGURATION_FILE + " from classpath.");
 			} else {
-				// Otherwise attempt to load it from the classpath
-				LOGGER.info("No "
-						+ CONFIGURATION_FILE
-						+ " found in working directory. Attempting to load from classpath.");
-				load(this.getClass().getClassLoader()
-						.getResourceAsStream(CONFIGURATION_FILE));
+				File f = new File(CONFIGURATION_FILE);
+				load(new FileInputStream(f));
+				LOGGER.info("Loaded " + CONFIGURATION_FILE + " from working directory.");
 			}
 		} catch (Exception e) {
-			System.out.println(e.getMessage());
+			LOGGER.error("Could not load " + CONFIGURATION_FILE + "!");
+			System.out.println(e.getLocalizedMessage());
 			System.exit(1);
 		}
 	}

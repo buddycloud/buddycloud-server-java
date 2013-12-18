@@ -26,3 +26,7 @@ channels.autosubscribe=lounge@example.com;welcome@example.com
 # then whether to automatically approve the user.
 # NOTE: This will only work on local private channels
 channels.autosubscribe.autoapprove=false
+
+# Default channels configuration related to access and permissions
+channels.default.accessmodel=open
+channels.default.role=follower+post

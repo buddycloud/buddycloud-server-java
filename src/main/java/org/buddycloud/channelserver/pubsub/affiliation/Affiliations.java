@@ -21,7 +21,25 @@ public enum Affiliations {
 		}
 		return none;
 	}
-	
+
+	public static Affiliations createFromBuddycloudString(String bcString) {
+
+		if ("producer".equals(bcString)) {
+			return owner;
+		} else if ("follower+post".equals(bcString)) {
+			return publisher;
+		} else if ("moderator".equals(bcString)) {
+			return moderator;
+		} else if ("follower".equals(bcString)) {
+			return member;
+		} else if ("none".equals(bcString)) {
+			return none;
+		} else if ("banned".equals(bcString)) {
+			return outcast;
+		}
+		return none;
+	}
+    
 	public boolean in(Affiliations... affiliations) {
 		for (Affiliations a : affiliations) {
 			if (a.equals(this)) return true;

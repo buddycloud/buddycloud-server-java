@@ -42,12 +42,14 @@ public class Conf {
 
 	/**
 	 * Parses a ISO 8601 to a string
-	 *
+	 * 
 	 * @param iso8601Str
 	 * @return
-	 * @throws IllegalArgumentException if the provided string is not ISO 8601
+	 * @throws IllegalArgumentException
+	 *             if the provided string is not ISO 8601
 	 */
-	public static Date parseDate(String iso8601Str) throws IllegalArgumentException {
+	public static Date parseDate(String iso8601Str)
+			throws IllegalArgumentException {
 		return ISO_8601_PARSER.parseDateTime(iso8601Str).toDate();
 	}
 

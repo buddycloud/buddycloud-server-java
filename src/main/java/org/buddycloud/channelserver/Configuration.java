@@ -28,8 +28,8 @@ public class Configuration extends Properties {
 
 	public static final String CONFIGURATION_CHANNELS_AUTOSUBSCRIBE = "channels.autosubscribe";
 	public static final String CONFIGURATION_CHANNELS_AUTOSUBSCRIBE_AUTOAPPROVE = "channels.autosubscribe.autoapprove";
-	public static final String CONFIGURATION_CHANNELS_DEFAULT_ROLE = "channels.default.role";
-	public static final String CONFIGURATION_CHANNELS_DEFAULT_ACCESSMODEL = "channels.default.accessmodel";
+	public static final String CONFIGURATION_CHANNELS_DEFAULT_AFFILIATION = "channel.configuration.default.affiliation";
+	public static final String CONFIGURATION_CHANNELS_DEFAULT_ACCESSMODEL = "channel.configuration.default.accessmodel";
 
 	private static final String CONFIGURATION_FILE = "configuration.properties";
 	private static Configuration instance = null;

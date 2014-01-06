@@ -6,16 +6,16 @@ server.domain=example.com
 server.domain.channels=buddycloud.example.com
 server.domain.topics=topics.example.com
 
-jdbc.proxool.driver-url=jdbc:hsqldb:.
-jdbc.proxool.driver-class=org.hsqldb.jdbcDriver
-jdbc.proxool.alias=buddycloud
-jdbc.user=username
+jdbc.proxool.alias=channelserver
+jdbc.proxool.driver-url=jdbc:postgresql://localhost:5432/buddycloud
+jdbc.proxool.driver-class=org.postgresql.Driver
+jdbc.user=buddycloud
 jdbc.password=password
 jdbc.proxool.maximum-connection-count=10
 jdbc.proxool.house-keeping-test-sql=select CURRENT_DATE
 
 # Admin users are sent all notiifcations as well as having access 
-# to all posts from the /firehose node (not just from public channels)
+# to all posts from the /firehose node (not just from open channels)
 users.admin = user1@example.com;crawler@searchengine.org
 
 # A list of channels (local or remote) to which to subscribe new users
@@ -26,3 +26,7 @@ channels.autosubscribe=lounge@example.com;welcome@example.com
 # then whether to automatically approve the user.
 # NOTE: This will only work on local private channels
 channels.autosubscribe.autoapprove=false
+
+# Default channels configuration related to access and permissions
+channels.default.accessmodel=open
+channels.default.role=follower+post

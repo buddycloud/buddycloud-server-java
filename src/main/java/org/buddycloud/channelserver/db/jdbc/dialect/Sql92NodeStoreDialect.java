@@ -159,14 +159,14 @@ public class Sql92NodeStoreDialect implements NodeStoreSQLDialect {
 	    + "(SELECT \"id\", \"node\", \"xml\", \"updated\", \"in_reply_to\" "
 		+ "FROM \"items\" "
 		+ "WHERE \"node\" = ? "
-        + "AND \"updated\" >= ? "
+        + "AND \"updated\" > ? "
         + "ORDER BY \"updated\" DESC, \"id\" ASC LIMIT ?) ";
 
 	private static final String SELECT_COUNT_RECENT_ITEM_PARTS = ""
 		    + "(SELECT COUNT(\"id\") "
 			+ "FROM \"items\" "
 			+ "WHERE \"node\" = ? "
-	        + "AND \"updated\" >= ? "
+	        + "AND \"updated\" > ? "
 	        + "LIMIT ?)";
 
 	private static final String COUNT_ITEMS_FOR_NODE = "SELECT COUNT(*)"

@@ -148,7 +148,7 @@
                         <id>test-reports</id>
                         <phase>test</phase>
                         <configuration>
-                          <tasks>
+                          <tasks unless="maven.test.skip">
                             <junitreport todir="target/surefire-reports">
                               <fileset dir="target/surefire-reports">
                                 <include name="**/*.xml"/>

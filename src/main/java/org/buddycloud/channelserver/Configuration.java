@@ -45,14 +45,16 @@ public class Configuration extends Properties {
 	private Configuration() {
 		try {
 			conf = new Properties();
-			InputStream confFile = this.getClass().getClassLoader().getResourceAsStream(CONFIGURATION_FILE);
-			if(confFile != null) {
+			InputStream confFile = this.getClass().getClassLoader()
+					.getResourceAsStream(CONFIGURATION_FILE);
+			if (confFile != null) {
 				load(confFile);
 				LOGGER.info("Loaded " + CONFIGURATION_FILE + " from classpath.");
 			} else {
 				File f = new File(CONFIGURATION_FILE);
 				load(new FileInputStream(f));
-				LOGGER.info("Loaded " + CONFIGURATION_FILE + " from working directory.");
+				LOGGER.info("Loaded " + CONFIGURATION_FILE
+						+ " from working directory.");
 			}
 		} catch (Exception e) {
 			LOGGER.error("Could not load " + CONFIGURATION_FILE + "!");
@@ -128,20 +130,21 @@ public class Configuration extends Properties {
 		return getProperty(CONFIGURATION_SERVER_TOPICS_DOMAIN);
 	}
 
-	public boolean getBooleanProperty(
-			final String key, final boolean defaultValue) {
+	public boolean getBooleanProperty(final String key,
+			final boolean defaultValue) {
 		String value = getProperty(key);
-		
-		if(value != null) {
-			if(value.equalsIgnoreCase("true")) {
+
+		if (value != null) {
+			if (value.equalsIgnoreCase("true")) {
 				return true;
 			}
-			if(value.equalsIgnoreCase("false")) {
+			if (value.equalsIgnoreCase("false")) {
 				return false;
 			}
-			LOGGER.warn("Invalid boolean property value for " + key + ": " + value);
+			LOGGER.warn("Invalid boolean property value for " + key + ": "
+					+ value);
 		}
-		
+
 		return defaultValue;
 	}
 }

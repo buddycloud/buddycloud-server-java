@@ -51,7 +51,7 @@ public class Conf {
 	}
 
 	public static HashMap<String, String> getDefaultChannelConf(JID channelJID, JID ownerJID) {
-		HashMap<String, String> conf = getDefaultConf(channelJID);
+		HashMap<String, String> conf = getDefaultConf(channelJID, null);
 		conf.put(TITLE, channelJID.toBareJID() + "'s title");
 		conf.put(DESCRIPTION, channelJID.toBareJID() + "'s description");
 		conf.put(OWNER, ownerJID.toBareJID());
@@ -59,7 +59,7 @@ public class Conf {
 	}
 
 	public static HashMap<String, String> getDefaultPostChannelConf(JID channelJID) {
-		HashMap<String, String> conf = getDefaultConf(channelJID);
+		HashMap<String, String> conf = getDefaultConf(channelJID, "posts");
 		conf.put(TITLE, channelJID.toBareJID() + "'s very own buddycloud channel!");
 		conf.put(DESCRIPTION, "This channel belongs to " + channelJID.toBareJID() + ". To nobody else!");
 		conf.put(CHANNEL_TYPE, "personal");
@@ -71,7 +71,7 @@ public class Conf {
 	}
 
 	public static HashMap<String, String> getDefaultStatusChannelConf(JID channelJID) {
-		HashMap<String, String> conf = getDefaultConf(channelJID);
+		HashMap<String, String> conf = getDefaultConf(channelJID, "status");
 		conf.put(TITLE, channelJID.toBareJID() + "'s very own buddycloud status!");
 		conf.put(DESCRIPTION, "This is " + channelJID.toBareJID() + "'s mood a.k.a status -channel. Depends how geek you are.");
 		return conf;
@@ -82,7 +82,7 @@ public class Conf {
 	}
 
 	public static HashMap<String, String> getDefaultGeoPreviousChannelConf(JID channelJID) {
-		HashMap<String, String> conf = getDefaultConf(channelJID);
+		HashMap<String, String> conf = getDefaultConf(channelJID, "geo/previous");
 		conf.put(TITLE, channelJID.toBareJID() + "'s previous location.");
 		conf.put(DESCRIPTION, "Where " + channelJID.toBareJID() + " has been before.");
 		return conf;
@@ -93,7 +93,7 @@ public class Conf {
 	}
 
 	public static HashMap<String, String> getDefaultGeoCurrentChannelConf(JID channelJID) {
-		HashMap<String, String> conf = getDefaultConf(channelJID);
+		HashMap<String, String> conf = getDefaultConf(channelJID, "geo/current");
 		conf.put(TITLE, channelJID.toBareJID() + "'s current location.");
 		conf.put(DESCRIPTION, "Where " + channelJID.toBareJID() + " is now.");
 		return conf;
@@ -104,7 +104,7 @@ public class Conf {
 	}
 
 	public static HashMap<String, String> getDefaultGeoNextChannelConf(JID channelJID) {
-		HashMap<String, String> conf = getDefaultConf(channelJID);
+		HashMap<String, String> conf = getDefaultConf(channelJID, "geo/next");
 		conf.put(TITLE, channelJID.toBareJID() + "'s next location.");
 		conf.put(DESCRIPTION, "Where " + channelJID.toBareJID() + " is going to go.");
 		return conf;
@@ -115,13 +115,14 @@ public class Conf {
 	}
 
 	public static HashMap<String, String> getDefaultSubscriptionsChannelConf(JID channelJID) {
-		HashMap<String, String> conf = getDefaultConf(channelJID);
+		HashMap<String, String> conf = getDefaultConf(channelJID, "subscriptions");
 		conf.put(TITLE, channelJID.toBareJID() + "'s susbcriptions.");
 		conf.put(DESCRIPTION, channelJID.toBareJID() + "'s subscriptions. ");
 		return conf;
 	}
 
-	private static HashMap<String, String> getDefaultConf(JID channelJID) {
+	private static HashMap<String, String> getDefaultConf(JID channelJID, String node) {
+		
 		HashMap<String, String> conf = new HashMap<String, String>();
 		Configuration projectConf = Configuration.getInstance();
 		conf.put(TYPE, "http://www.w3.org/2005/Atom");
@@ -131,10 +132,24 @@ public class Conf {
 		conf.put(ACCESS_MODEL, AccessModels.createFromString(projectConf.getProperty(
 				Configuration.CONFIGURATION_CHANNELS_DEFAULT_ACCESSMODEL, AccessModels.authorize.toString())).toString());
 		conf.put(DEFAULT_AFFILIATION, Affiliations.createFromString(
-				projectConf.getProperty(Configuration.CONFIGURATION_CHANNELS_DEFAULT_ROLE, Affiliations.member.toString()))
+				projectConf.getProperty(Configuration.CONFIGURATION_CHANNELS_DEFAULT_AFFILIATION, Affiliations.member.toString()))
 				.toString());
 		conf.put(NUM_SUBSCRIBERS, "1");
 		conf.put(NOTIFY_CONFIG, "1");
+		
+		if (null != node) {
+			String accessModelKey = Configuration.CONFIGURATION_CHANNELS_DEFAULT_ACCESSMODEL.replace("default", node.replace("/", "."));
+			if (null != projectConf.getProperty(accessModelKey)) {
+			    conf.put(ACCESS_MODEL, AccessModels.createFromString(projectConf.getProperty(
+					accessModelKey)).toString());
+			}
+			
+			String affiliationKey = Configuration.CONFIGURATION_CHANNELS_DEFAULT_AFFILIATION.replace("default", node.replace("/", "."));
+			if (null != projectConf.getProperty(affiliationKey)) {
+			    conf.put(DEFAULT_AFFILIATION, Affiliations.createFromString(projectConf.getProperty(
+			    		affiliationKey)).toString());
+			}
+		}
 		return conf;
 	}
 }

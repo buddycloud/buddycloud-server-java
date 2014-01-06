@@ -129,8 +129,9 @@ public class Conf {
 		conf.put(PUBLISH_MODEL, PUBLISHERS);
 		conf.put(CREATION_DATE, formatDate(new Date()));
 		conf.put(OWNER, channelJID.toBareJID());
+
 		conf.put(ACCESS_MODEL, AccessModels.createFromString(projectConf.getProperty(
-				Configuration.CONFIGURATION_CHANNELS_DEFAULT_ACCESSMODEL, AccessModels.authorize.toString())).toString());
+				Configuration.CONFIGURATION_CHANNELS_DEFAULT_ACCESSMODEL, AccessModels.open.toString())).toString());
 		conf.put(DEFAULT_AFFILIATION, Affiliations.createFromString(
 				projectConf.getProperty(Configuration.CONFIGURATION_CHANNELS_DEFAULT_AFFILIATION, Affiliations.member.toString()))
 				.toString());

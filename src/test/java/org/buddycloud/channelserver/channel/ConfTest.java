@@ -70,7 +70,7 @@ public class ConfTest {
 		// ToDo: Find a way to test the Date: assertEquals(Conf.formatDate(new
 		// Date()),result.get(Conf.CREATION_DATE));
 		assertEquals(testChannelJID.toBareJID(), result.get(Conf.OWNER));
-		assertEquals(Affiliations.member.toString(),
+		assertEquals(Affiliations.publisher.toString(),
 				result.get(Conf.DEFAULT_AFFILIATION));
 		assertEquals("1", result.get(Conf.NUM_SUBSCRIBERS));
 		assertEquals("1", result.get(Conf.NOTIFY_CONFIG));
@@ -124,7 +124,7 @@ public class ConfTest {
 				+ " has been before.", result.get(Conf.DESCRIPTION));
 		assertEquals("http://www.w3.org/2005/Atom", result.get(Conf.TYPE));
 		assertEquals("publishers", result.get(Conf.PUBLISH_MODEL));
-		assertEquals(AccessModels.open.toString(),
+		assertEquals(AccessModels.authorize.toString(),
 				result.get(Conf.ACCESS_MODEL));
 		// ToDo: Find a way to test the Date: assertEquals(Conf.formatDate(new
 		// Date()),result.get(Conf.CREATION_DATE));
@@ -153,7 +153,7 @@ public class ConfTest {
 				result.get(Conf.DESCRIPTION));
 		assertEquals("http://www.w3.org/2005/Atom", result.get(Conf.TYPE));
 		assertEquals("publishers", result.get(Conf.PUBLISH_MODEL));
-		assertEquals(AccessModels.open.toString(),
+		assertEquals(AccessModels.authorize.toString(),
 				result.get(Conf.ACCESS_MODEL));
 		// ToDo: Find a way to test the Date: assertEquals(Conf.formatDate(new
 		// Date()),result.get(Conf.CREATION_DATE));
@@ -181,7 +181,7 @@ public class ConfTest {
 				+ " is going to go.", result.get(Conf.DESCRIPTION));
 		assertEquals("http://www.w3.org/2005/Atom", result.get(Conf.TYPE));
 		assertEquals("publishers", result.get(Conf.PUBLISH_MODEL));
-		assertEquals(AccessModels.open.toString(),
+		assertEquals(AccessModels.authorize.toString(),
 				result.get(Conf.ACCESS_MODEL));
 		// ToDo: Find a way to test the Date: assertEquals(Conf.formatDate(new
 		// Date()),result.get(Conf.CREATION_DATE));

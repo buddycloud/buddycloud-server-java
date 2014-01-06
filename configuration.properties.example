@@ -38,3 +38,6 @@ channel.configuration.posts.affiliation=publisher
 channel.configuration.geo.next.accessmodel=authorize
 channel.configuration.geo.current.accessmodel=authorize
 channel.configuration.geo.previous.accessmodel=authorize
+
+channel.configuration.status.description="%jid%'s status"
+channel.configuration.status.description="The current status of %jid%"

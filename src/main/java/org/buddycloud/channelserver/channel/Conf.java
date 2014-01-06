@@ -129,9 +129,9 @@ public class Conf {
 		conf.put(CREATION_DATE, formatDate(new Date()));
 		conf.put(OWNER, channelJID.toBareJID());
 		conf.put(ACCESS_MODEL, AccessModels.createFromString(projectConf.getProperty(
-				Configuration.CONFIGURATION_CHANNELS_DEFAULT_ACCESSMODEL)).toString());
-		conf.put(DEFAULT_AFFILIATION, Affiliations.createFromBuddycloudString(
-				projectConf.getProperty(Configuration.CONFIGURATION_CHANNELS_DEFAULT_ROLE))
+				Configuration.CONFIGURATION_CHANNELS_DEFAULT_ACCESSMODEL, AccessModels.authorize.toString())).toString());
+		conf.put(DEFAULT_AFFILIATION, Affiliations.createFromString(
+				projectConf.getProperty(Configuration.CONFIGURATION_CHANNELS_DEFAULT_ROLE, Affiliations.member.toString()))
 				.toString());
 		conf.put(NUM_SUBSCRIBERS, "1");
 		conf.put(NOTIFY_CONFIG, "1");

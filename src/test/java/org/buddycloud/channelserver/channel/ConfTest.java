@@ -36,9 +36,10 @@ public class ConfTest {
 		HashMap<String, String> result = Conf.getDefaultChannelConf(
 				testChannelJID, testOwnerJID);
 		assertEquals(10, result.size());
-		assertEquals(this.testChannelJID.toBareJID() + "'s title",
-				result.get(Conf.TITLE));
-		assertEquals(this.testChannelJID.toBareJID() + "'s description",
+		assertEquals(this.testChannelJID.toBareJID()
+				+ "'s very own buddycloud channel", result.get(Conf.TITLE));
+		assertEquals(this.testChannelJID.toBareJID()
+				+ "'s very own buddycloud channel",
 				result.get(Conf.DESCRIPTION));
 		assertEquals("http://www.w3.org/2005/Atom", result.get(Conf.TYPE));
 		assertEquals("publishers", result.get(Conf.PUBLISH_MODEL));
@@ -59,10 +60,10 @@ public class ConfTest {
 				.getDefaultPostChannelConf(testChannelJID);
 		assertEquals(11, result.size());
 		assertEquals(this.testChannelJID.toBareJID()
-				+ "'s very own buddycloud channel!", result.get(Conf.TITLE));
-		assertEquals(
-				"This channel belongs to " + this.testChannelJID.toBareJID()
-						+ ". To nobody else!", result.get(Conf.DESCRIPTION));
+				+ "'s very own buddycloud channel", result.get(Conf.TITLE));
+		assertEquals(this.testChannelJID.toBareJID()
+				+ "'s very own buddycloud channel",
+				result.get(Conf.DESCRIPTION));
 		assertEquals("http://www.w3.org/2005/Atom", result.get(Conf.TYPE));
 		assertEquals("publishers", result.get(Conf.PUBLISH_MODEL));
 		assertEquals(AccessModels.open.toString(),
@@ -88,10 +89,10 @@ public class ConfTest {
 		HashMap<String, String> result = Conf
 				.getDefaultStatusChannelConf(testChannelJID);
 		assertEquals(10, result.size());
-		assertEquals(this.testChannelJID.toBareJID()
-				+ "'s very own buddycloud status!", result.get(Conf.TITLE));
-		assertEquals("This is " + this.testChannelJID.toBareJID()
-				+ "'s mood a.k.a status -channel. Depends how geek you are.",
+		assertEquals(this.testChannelJID.toBareJID() + "'s status",
+				result.get(Conf.TITLE));
+		assertEquals(
+				"The current status of " + this.testChannelJID.toBareJID(),
 				result.get(Conf.DESCRIPTION));
 		assertEquals("http://www.w3.org/2005/Atom", result.get(Conf.TYPE));
 		assertEquals("publishers", result.get(Conf.PUBLISH_MODEL));
@@ -118,10 +119,11 @@ public class ConfTest {
 		HashMap<String, String> result = Conf
 				.getDefaultGeoPreviousChannelConf(testChannelJID);
 		assertEquals(10, result.size());
-		assertEquals(this.testChannelJID.toBareJID() + "'s previous location.",
-				result.get(Conf.TITLE));
-		assertEquals("Where " + this.testChannelJID.toBareJID()
-				+ " has been before.", result.get(Conf.DESCRIPTION));
+		assertEquals(this.testChannelJID.toBareJID()
+				+ "'s very own buddycloud channel", result.get(Conf.TITLE));
+		assertEquals(this.testChannelJID.toBareJID()
+				+ "'s very own buddycloud channel",
+				result.get(Conf.DESCRIPTION));
 		assertEquals("http://www.w3.org/2005/Atom", result.get(Conf.TYPE));
 		assertEquals("publishers", result.get(Conf.PUBLISH_MODEL));
 		assertEquals(AccessModels.authorize.toString(),
@@ -147,9 +149,10 @@ public class ConfTest {
 		HashMap<String, String> result = Conf
 				.getDefaultGeoCurrentChannelConf(testChannelJID);
 		assertEquals(10, result.size());
-		assertEquals(this.testChannelJID.toBareJID() + "'s current location.",
-				result.get(Conf.TITLE));
-		assertEquals("Where " + this.testChannelJID.toBareJID() + " is now.",
+		assertEquals(this.testChannelJID.toBareJID()
+				+ "'s very own buddycloud channel", result.get(Conf.TITLE));
+		assertEquals(this.testChannelJID.toBareJID()
+				+ "'s very own buddycloud channel",
 				result.get(Conf.DESCRIPTION));
 		assertEquals("http://www.w3.org/2005/Atom", result.get(Conf.TYPE));
 		assertEquals("publishers", result.get(Conf.PUBLISH_MODEL));
@@ -175,10 +178,11 @@ public class ConfTest {
 		HashMap<String, String> result = Conf
 				.getDefaultGeoNextChannelConf(testChannelJID);
 		assertEquals(10, result.size());
-		assertEquals(this.testChannelJID.toBareJID() + "'s next location.",
-				result.get(Conf.TITLE));
-		assertEquals("Where " + this.testChannelJID.toBareJID()
-				+ " is going to go.", result.get(Conf.DESCRIPTION));
+		assertEquals(this.testChannelJID.toBareJID()
+				+ "'s very own buddycloud channel", result.get(Conf.TITLE));
+		assertEquals(this.testChannelJID.toBareJID()
+				+ "'s very own buddycloud channel",
+				result.get(Conf.DESCRIPTION));
 		assertEquals("http://www.w3.org/2005/Atom", result.get(Conf.TYPE));
 		assertEquals("publishers", result.get(Conf.PUBLISH_MODEL));
 		assertEquals(AccessModels.authorize.toString(),
@@ -204,9 +208,10 @@ public class ConfTest {
 		HashMap<String, String> result = Conf
 				.getDefaultSubscriptionsChannelConf(testChannelJID);
 		assertEquals(10, result.size());
-		assertEquals(this.testChannelJID.toBareJID() + "'s susbcriptions.",
-				result.get(Conf.TITLE));
-		assertEquals(this.testChannelJID.toBareJID() + "'s subscriptions. ",
+		assertEquals(this.testChannelJID.toBareJID()
+				+ "'s very own buddycloud channel", result.get(Conf.TITLE));
+		assertEquals(this.testChannelJID.toBareJID()
+				+ "'s very own buddycloud channel",
 				result.get(Conf.DESCRIPTION));
 		assertEquals("http://www.w3.org/2005/Atom", result.get(Conf.TYPE));
 		assertEquals("publishers", result.get(Conf.PUBLISH_MODEL));

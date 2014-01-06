@@ -15,6 +15,7 @@ import org.buddycloud.channelserver.pubsub.affiliation.Affiliations;
 import org.buddycloud.channelserver.pubsub.model.NodeAffiliation;
 import org.buddycloud.channelserver.pubsub.model.NodeItem;
 import org.buddycloud.channelserver.pubsub.model.NodeSubscription;
+import org.buddycloud.channelserver.pubsub.subscription.Subscriptions;
 import org.dom4j.DocumentException;
 import org.dom4j.Element;
 import org.dom4j.io.SAXReader;
@@ -201,6 +202,11 @@ public class MessageArchiveManagement implements PacketProcessor<IQ> {
 			Element subscription = event.addElement("subscription");
 
 			for (NodeSubscription change : changes) {
+				if (change.getSubscription().equals(Subscriptions.invited)
+						&& !requestIq.getFrom().toBareJID()
+								.equals(change.getUser().toBareJID())) {
+					continue;
+				}
 				subscription.addAttribute("node", change.getNodeId());
 				subscription.addAttribute("jid", change.getUser().toBareJID());
 				subscription.addAttribute("subscription", change

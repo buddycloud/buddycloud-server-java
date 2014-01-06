@@ -27,6 +27,7 @@ public class JabberPubsub extends AbstractNamespace {
 	public static final String VAR_ALLOW          = "pubsub#allow";
 
 	public static final String NS_BUDDYCLOUD = "http://buddycloud.org/v1";
+	public static final String NS_BUDDYCLOUD_ERROR = "http://buddycloud.org/v1#errors";
 
 	private final PubSubGet getProcessor;
 	private final PubSubSet setProcessor;

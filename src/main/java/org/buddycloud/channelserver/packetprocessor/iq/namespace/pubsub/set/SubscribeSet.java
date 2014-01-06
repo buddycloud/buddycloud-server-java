@@ -106,6 +106,9 @@ public class SubscribeSet extends PubSubElementProcessorAbstract {
 					.getAffiliation();
 			Subscriptions possibleExistingSubscription = nodeSubscription
 					.getSubscription();
+			if (Subscriptions.invited.equals(possibleExistingSubscription)) {
+				possibleExistingSubscription = Subscriptions.none;
+			}
 
 			if (Affiliations.outcast.toString().equals(
 					possibleExistingAffiliation.toString())) {

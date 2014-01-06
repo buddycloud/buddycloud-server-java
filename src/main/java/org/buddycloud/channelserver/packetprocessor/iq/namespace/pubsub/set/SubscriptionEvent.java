@@ -1,6 +1,7 @@
 package org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.set;
 
 import java.util.Collection;
+import java.util.Date;
 import java.util.concurrent.BlockingQueue;
 
 import org.apache.log4j.Logger;
@@ -8,6 +9,7 @@ import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.db.exception.NodeStoreException;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.JabberPubsub;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.PubSubElementProcessorAbstract;
+import org.buddycloud.channelserver.pubsub.affiliation.Affiliations;
 import org.buddycloud.channelserver.pubsub.model.NodeAffiliation;
 import org.buddycloud.channelserver.pubsub.model.NodeSubscription;
 import org.buddycloud.channelserver.pubsub.model.impl.NodeSubscriptionImpl;
@@ -30,6 +32,7 @@ public class SubscriptionEvent extends PubSubElementProcessorAbstract {
 
 	private static final Logger LOGGER = Logger
 			.getLogger(SubscriptionEvent.class);
+	public static final String INVITE_IN_PROGRESS = "invite-in-progress";
 
 	/**
 	 * Constructor
@@ -56,9 +59,9 @@ public class SubscriptionEvent extends PubSubElementProcessorAbstract {
 		actor = actorJID;
 		node = element.attributeValue("node");
 
-		if (actor == null) {
+		if (null == actor)
 			actor = request.getFrom();
-		}
+
 		if (false == channelManager.isLocalNode(node)) {
 			makeRemoteRequest();
 			return;
@@ -83,16 +86,13 @@ public class SubscriptionEvent extends PubSubElementProcessorAbstract {
 	}
 
 	private void sendNotifications() throws Exception {
-		
+
 		outQueue.put(response);
-		
-		ResultSet<NodeSubscription> subscribers = channelManager
-				.getNodeSubscriptionListeners(node);
 
 		Document document = getDocumentHelper();
 		Element message = document.addElement("message");
-		message.addAttribute("remote-server-discover", "false");
-		Element event = message.addElement("event", JabberPubsub.NS_PUBSUB_EVENT);
+		Element event = message.addElement("event",
+				JabberPubsub.NS_PUBSUB_EVENT);
 		Element subscription = event.addElement("subscription");
 		message.addAttribute("from", request.getTo().toString());
 		subscription.addAttribute("node", node);
@@ -100,26 +100,44 @@ public class SubscriptionEvent extends PubSubElementProcessorAbstract {
 				requestedSubscription.attributeValue("jid"));
 		subscription.addAttribute("subscription",
 				requestedSubscription.attributeValue("subscription"));
+		
+		if (isInvite()) subscription.addAttribute("invited-by", actor.toBareJID());
+
 		Message rootElement = new Message(message);
 
+		ResultSet<NodeSubscription> subscribers = channelManager
+				.getNodeSubscriptionListeners(node);
+		Message notification;
 		for (NodeSubscription subscriber : subscribers) {
-			Message notification = rootElement.createCopy();
-			notification.setTo(subscriber.getUser());
+			notification = rootElement.createCopy();
+			notification.setTo(subscriber.getListener());
 			outQueue.put(notification);
 		}
+		
+		notification = rootElement.createCopy();
+		notification.setTo(requestedSubscription.attributeValue("jid"));
+		outQueue.put(notification);
+		
 		Collection<JID> admins = getAdminUsers();
 		for (JID admin : admins) {
-			Message notification = rootElement.createCopy();
+			notification = rootElement.createCopy();
 			notification.setTo(admin);
 			outQueue.put(notification);
 		}
 	}
 
 	private void saveUpdatedSubscription() throws NodeStoreException {
+
+		String inviter = null;
+		if (null != currentSubscription.getInviter())
+			inviter = currentSubscription.getInviter().toBareJID();
+
 		NodeSubscription newSubscription = new NodeSubscriptionImpl(node,
-				new JID(requestedSubscription.attributeValue("jid")), currentSubscription.getListener(),
+				new JID(requestedSubscription.attributeValue("jid")),
+				currentSubscription.getListener(),
 				Subscriptions.valueOf(requestedSubscription
-						.attributeValue("subscription")));
+						.attributeValue("subscription")),
+				currentSubscription.getLastUpdated(), inviter);
 
 		channelManager.addUserSubscription(newSubscription);
 	}
@@ -168,10 +186,21 @@ public class SubscriptionEvent extends PubSubElementProcessorAbstract {
 	}
 
 	private boolean subscriberHasCurrentAffiliation() throws NodeStoreException {
-		currentSubscription = channelManager.getUserSubscription(node, new JID(
-				requestedSubscription.attributeValue("jid")));
+		JID subscriber = new JID(requestedSubscription.attributeValue("jid"));
+		currentSubscription = channelManager.getUserSubscription(node,
+				subscriber);
 
-		if (null == currentSubscription) {
+		if ((null == currentSubscription) && isInvite()) {
+			currentSubscription = new NodeSubscriptionImpl(node, subscriber,
+					subscriber, Subscriptions.invited, new Date(),
+					actor.toBareJID());
+			return true;
+		} else if (isInvite()
+				&& (true == currentSubscription.getSubscription().equals(
+						Subscriptions.invited))) {
+			createExtendedErrorReply(PacketError.Type.cancel, PacketError.Condition.conflict, INVITE_IN_PROGRESS);
+			return false;
+		} else if (null == currentSubscription) {
 			setErrorCondition(PacketError.Type.modify,
 					PacketError.Condition.unexpected_request);
 			return false;
@@ -179,11 +208,28 @@ public class SubscriptionEvent extends PubSubElementProcessorAbstract {
 		return true;
 	}
 
+	private boolean isInvite() {
+		return Subscriptions.invited.toString().equals(
+				requestedSubscription.attributeValue("subscription"));
+	}
+
 	private boolean actorHasPermissionToAuthorize() throws NodeStoreException {
+		NodeSubscription subscription = channelManager.getUserSubscription(
+				node, actor);
 		NodeAffiliation affiliation = channelManager.getUserAffiliation(node,
 				actor);
 
-		if (null == affiliation) {
+		if (isInvite()
+				&& (null != subscription)
+				&& (null != affiliation)
+				&& (true == Subscriptions.subscribed.equals(subscription
+						.getSubscription()))
+				&& (false == Affiliations.outcast.equals(affiliation
+						.getAffiliation()))) {
+			return true;
+		}
+
+		if ((null == subscription) || (null == affiliation)) {
 			setErrorCondition(PacketError.Type.auth,
 					PacketError.Condition.not_authorized);
 			return false;
@@ -209,11 +255,10 @@ public class SubscriptionEvent extends PubSubElementProcessorAbstract {
 
 	private void makeRemoteRequest() throws InterruptedException {
 		request.setTo(new JID(node.split("/")[2]).getDomain());
-		Element actor = request.getElement()
-		    .element("pubsub")
-		    .addElement("actor", JabberPubsub.NS_BUDDYCLOUD);
+		Element actor = request.getElement().element("pubsub")
+				.addElement("actor", JabberPubsub.NS_BUDDYCLOUD);
 		actor.addText(request.getFrom().toBareJID());
-	    outQueue.put(request);
+		outQueue.put(request);
 	}
 
 	/**

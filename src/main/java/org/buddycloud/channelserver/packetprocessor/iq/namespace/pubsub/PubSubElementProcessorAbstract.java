@@ -120,7 +120,7 @@ public abstract class PubSubElementProcessorAbstract
 		Element standardError = new DOMElement(condition.toString(),
 				new org.dom4j.Namespace("", JabberPubsub.NS_XMPP_STANZAS));
 		Element extraError = new DOMElement(additionalElement,
-				new org.dom4j.Namespace("", JabberPubsub.NS_PUBSUB_ERROR));
+				new org.dom4j.Namespace("", JabberPubsub.NS_BUDDYCLOUD_ERROR));
 		Element error = new DOMElement("error");
 		error.addAttribute("type", type.toString());
 		error.add(standardError);

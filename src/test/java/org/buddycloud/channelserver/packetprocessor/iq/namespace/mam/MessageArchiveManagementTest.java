@@ -275,10 +275,10 @@ public class MessageArchiveManagementTest extends IQTestHandler {
 	public void testTwoSubscriptionChangesReportAsExpected() throws Exception {
 
 		ArrayList<NodeSubscription> subscriptions = new ArrayList<NodeSubscription>();
-		subscriptions.add(new NodeSubscriptionImpl(node1, jid1,
-				Subscriptions.subscribed, date1));
-		subscriptions.add(new NodeSubscriptionImpl(node2, jid2,
-				Subscriptions.pending, date2));
+		subscriptions.add(new NodeSubscriptionImpl(node1, jid1, jid1, 
+				Subscriptions.subscribed, date1, null));
+		subscriptions.add(new NodeSubscriptionImpl(node2, jid2, jid2, 
+				Subscriptions.pending, date2, null));
 
 		Mockito.when(
 				channelManager.getSubscriptionChanges(Mockito.any(JID.class),
@@ -316,6 +316,83 @@ public class MessageArchiveManagementTest extends IQTestHandler {
 				Subscriptions.valueOf(sub.attributeValue("subscription")));
 
 		Assert.assertEquals(date, Conf.parseDate(delay.attributeValue("stamp")));
+	}
+	
+	@Test
+	public void testInviteForAnotherUserIsNotSentToUser() throws Exception {	
+		ArrayList<NodeSubscription> subscriptions = new ArrayList<NodeSubscription>();
+		subscriptions.add(new NodeSubscriptionImpl(node1, jid1, jid1, 
+				Subscriptions.subscribed, date1, null));
+		subscriptions.add(new NodeSubscriptionImpl(node2, jid2, jid2, 
+				Subscriptions.invited, date2, null));
+
+		Mockito.when(
+				channelManager.getSubscriptionChanges(Mockito.any(JID.class),
+						Mockito.any(Date.class), Mockito.any(Date.class)))
+				.thenReturn(new ResultSetImpl<NodeSubscription>(subscriptions));
+
+		mam.process(request);
+
+		Assert.assertEquals(2, queue.size());
+		checkSubscriptionStanza(queue.poll(), jid1, date1, node1,
+				Subscriptions.subscribed);
+
+		IQ result = (IQ) queue.poll();
+		Assert.assertEquals("result", result.getType().toString());
+	}
+
+	
+	@Test
+	public void testInviteForUserIsReceived() throws Exception {	
+		ArrayList<NodeSubscription> subscriptions = new ArrayList<NodeSubscription>();
+		subscriptions.add(new NodeSubscriptionImpl(node1, jid1, jid1, 
+				Subscriptions.subscribed, date1, null));
+		subscriptions.add(new NodeSubscriptionImpl(node2, jid1, jid1, 
+				Subscriptions.invited, date2, null));
+
+		Mockito.when(
+				channelManager.getSubscriptionChanges(Mockito.any(JID.class),
+						Mockito.any(Date.class), Mockito.any(Date.class)))
+				.thenReturn(new ResultSetImpl<NodeSubscription>(subscriptions));
+
+		mam.process(request);
+
+		Assert.assertEquals(3, queue.size());
+		checkSubscriptionStanza(queue.poll(), jid1, date1, node1,
+				Subscriptions.subscribed);
+		checkSubscriptionStanza(queue.poll(), jid1, date2, node2,
+				Subscriptions.invited);
+
+		IQ result = (IQ) queue.poll();
+		Assert.assertEquals("result", result.getType().toString());
+	}
+	
+	@Test
+	public void testNewItemsNotSentForSubscriptionStateInvited() throws Exception {
+		String item1 = "<entry>item1</entry>";
+		String item2 = "<entry>item2</entry>";
+		String item3 = "<entry>item3</entry>";
+
+		ArrayList<NodeItem> items = new ArrayList<NodeItem>();
+		items.add(new NodeItemImpl(node1, "1", date1, item1));
+		items.add(new NodeItemImpl(node1, "2", date2, item2));
+		items.add(new NodeItemImpl(node2, "1", date3, item3));
+
+		Mockito.when(
+				channelManager.getNewNodeItemsForUser(Mockito.any(JID.class),
+						Mockito.any(Date.class), Mockito.any(Date.class)))
+				.thenReturn(
+						new ClosableIteratorImpl<NodeItem>(items.iterator()));
+
+		mam.process(request);
+
+		Assert.assertEquals(4, queue.size());
+		checkItemStanza(queue.poll(), date1, node1, "1", item1);
+		checkItemStanza(queue.poll(), date2, node1, "2", item2);
+		checkItemStanza(queue.poll(), date3, node2, "1", item3);
+
+		IQ result = (IQ) queue.poll();
+		Assert.assertEquals("result", result.getType().toString());
 	}
 
 	@Test
@@ -369,4 +446,5 @@ public class MessageArchiveManagementTest extends IQTestHandler {
 
 		Assert.assertEquals(date, Conf.parseDate(delay.attributeValue("stamp")));
 	}
+	
 }

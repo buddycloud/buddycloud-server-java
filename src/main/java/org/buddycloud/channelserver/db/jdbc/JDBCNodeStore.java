@@ -360,6 +360,7 @@ public class JDBCNodeStore implements NodeStore {
 							.toString());
 					addStatement.setString(4, subscription.getSubscription()
 							.toString());
+					addStatement.setString(5, subscription.getInviter().toBareJID());
 					addStatement.executeUpdate();
 					addStatement.close();
 				}
@@ -624,13 +625,13 @@ public class JDBCNodeStore implements NodeStore {
 	}
 	
 	@Override
-	public int countUserAffiliations(JID actorJid) throws NodeStoreException {
+	public int countUserAffiliations(JID actorJID) throws NodeStoreException {
 		PreparedStatement selectStatement = null;
 
 		try {
 			selectStatement = conn.prepareStatement(dialect
 					.countUserAffiliations());
-			selectStatement.setString(1, actorJid.toBareJID());
+			selectStatement.setString(1, actorJID.toBareJID());
 
 			java.sql.ResultSet rs = selectStatement.executeQuery();
 
@@ -670,7 +671,7 @@ public class JDBCNodeStore implements NodeStore {
 				subscription = new NodeSubscriptionImpl(nodeId, new JID(
 						rs.getString(2)), new JID(rs.getString(3)),
 						Subscriptions.valueOf(rs.getString(4)),
-						rs.getTimestamp(5));
+						rs.getTimestamp(5), rs.getString(6));
 			} else {
 				subscription = new NodeSubscriptionImpl(nodeId, user, user,
 						Subscriptions.none);
@@ -703,7 +704,7 @@ public class JDBCNodeStore implements NodeStore {
 				NodeSubscriptionImpl nodeSub = new NodeSubscriptionImpl(
 						rs.getString(1), new JID(rs.getString(2)), new JID(
 								rs.getString(3)), Subscriptions.valueOf(rs
-								.getString(4)), rs.getTimestamp(5));
+								.getString(4)), rs.getTimestamp(5), rs.getString(6));
 				result.add(nodeSub);
 			}
 
@@ -737,7 +738,7 @@ public class JDBCNodeStore implements NodeStore {
 				NodeSubscriptionImpl nodeSub = new NodeSubscriptionImpl(
 						rs.getString(1), new JID(rs.getString(2)), new JID(
 								rs.getString(3)), Subscriptions.valueOf(rs
-								.getString(4)), rs.getTimestamp(5));
+								.getString(4)), rs.getTimestamp(5), rs.getString(6));
 				result.add(nodeSub);
 			}
 
@@ -768,7 +769,7 @@ public class JDBCNodeStore implements NodeStore {
 				NodeSubscriptionImpl nodeSub = new NodeSubscriptionImpl(
 						rs.getString(1), new JID(rs.getString(2)), new JID(
 								rs.getString(3)), Subscriptions.valueOf(rs
-								.getString(4)), rs.getTimestamp(5));
+								.getString(4)), rs.getTimestamp(5), rs.getString(6));
 				result.add(nodeSub);
 			}
 
@@ -802,7 +803,7 @@ public class JDBCNodeStore implements NodeStore {
 				NodeSubscriptionImpl nodeSub = new NodeSubscriptionImpl(
 						rs.getString(1), new JID(rs.getString(2)), new JID(
 								rs.getString(3)), Subscriptions.valueOf(rs
-								.getString(4)), rs.getTimestamp(5));
+								.getString(4)), rs.getTimestamp(5), rs.getString(6));
 				result.add(nodeSub);
 			}
 
@@ -827,17 +828,17 @@ public class JDBCNodeStore implements NodeStore {
 			maxItemsToReturn = 50;
 		}
 		try {
-			String jid;
+			String JID;
 			if (null == afterItemId) {
-				jid = "";
+				JID = "";
 			} else {
-				jid = afterItemId.toBareJID();
+				JID = afterItemId.toBareJID();
 			}
 			stmt = conn.prepareStatement(dialect
-					.selectSubscriptionsForNodeAfterJid());
+					.selectSubscriptionsForNodeAfterJID());
 			stmt.setString(1, nodeId);
 			stmt.setString(2, nodeId);
-			stmt.setString(3, jid);
+			stmt.setString(3, JID);
 			stmt.setInt(4, maxItemsToReturn);
 
 			java.sql.ResultSet rs = stmt.executeQuery();
@@ -848,7 +849,7 @@ public class JDBCNodeStore implements NodeStore {
 				NodeSubscriptionImpl nodeSub = new NodeSubscriptionImpl(
 						rs.getString(1), new JID(rs.getString(2)), new JID(
 								rs.getString(3)), Subscriptions.valueOf(rs
-								.getString(4)), rs.getTimestamp(5));
+								.getString(4)), rs.getTimestamp(5), rs.getString(6));
 				result.add(nodeSub);
 			}
 
@@ -865,7 +866,7 @@ public class JDBCNodeStore implements NodeStore {
 		PreparedStatement selectStatement = null;
 		try {
 			selectStatement = conn.prepareStatement(dialect
-					.countSubscriptionsForJid());
+					.countSubscriptionsForJID());
 			selectStatement.setString(1, user.toBareJID());
 
 			java.sql.ResultSet rs = selectStatement.executeQuery();
@@ -899,9 +900,9 @@ public class JDBCNodeStore implements NodeStore {
 
 			while (rs.next()) {
 				NodeSubscriptionImpl nodeSub = new NodeSubscriptionImpl(
-						rs.getString(2), new JID(rs.getString(1)),
-						Subscriptions.valueOf(rs.getString(3)),
-						rs.getTimestamp(4));
+						rs.getString(1), new JID(rs.getString(2)), new JID(
+								rs.getString(3)), Subscriptions.valueOf(rs
+								.getString(4)), rs.getTimestamp(5), rs.getString(6));
 				result.add(nodeSub);
 			}
 
@@ -928,9 +929,9 @@ public class JDBCNodeStore implements NodeStore {
 
 			while (rs.next()) {
 				NodeSubscriptionImpl nodeSub = new NodeSubscriptionImpl(
-						rs.getString(2), new JID(rs.getString(1)),
-						Subscriptions.valueOf(rs.getString(3)),
-						rs.getTimestamp(4));
+						rs.getString(1), new JID(rs.getString(2)), new JID(
+								rs.getString(3)), Subscriptions.valueOf(rs
+								.getString(4)), rs.getTimestamp(5), rs.getString(6));
 				result.add(nodeSub);
 			}
 
@@ -1650,12 +1651,12 @@ public class JDBCNodeStore implements NodeStore {
 	}
 
 	@Override
-	public boolean isCachedJID(JID jid) throws NodeStoreException {
+	public boolean isCachedJID(JID JID) throws NodeStoreException {
 		PreparedStatement selectStatement = null;
 		try {
 			selectStatement = conn.prepareStatement(dialect
-					.countSubscriptionsForJid());
-			selectStatement.setString(1, jid.toBareJID());
+					.countSubscriptionsForJID());
+			selectStatement.setString(1, JID.toBareJID());
 
 			java.sql.ResultSet rs = selectStatement.executeQuery();
 
@@ -1708,11 +1709,11 @@ public class JDBCNodeStore implements NodeStore {
 	}
 
 	@Override
-	public ResultSet<NodeItem> getUserItems(JID userJid) throws NodeStoreException {
+	public ResultSet<NodeItem> getUserItems(JID userJID) throws NodeStoreException {
 		PreparedStatement stmt = null;
 		try {
 			stmt = conn.prepareStatement(dialect.getUserItems());
-			stmt.setString(1, userJid.toBareJID());
+			stmt.setString(1, userJID.toBareJID());
 			java.sql.ResultSet rs = stmt.executeQuery();
 			ArrayList<NodeItem> result = new ArrayList<NodeItem>();
 			while (rs.next()) {
@@ -1730,11 +1731,11 @@ public class JDBCNodeStore implements NodeStore {
 	}
 
 	@Override
-	public void deleteUserItems(JID userJid) throws NodeStoreException {
+	public void deleteUserItems(JID userJID) throws NodeStoreException {
 		PreparedStatement stmt = null;
 		try {
 			stmt = conn.prepareStatement(dialect.deleteUserItems());
-			stmt.setString(1, userJid.toBareJID());
+			stmt.setString(1, userJID.toBareJID());
 			stmt.executeUpdate();
 		} catch (SQLException e) {
 			throw new NodeStoreException(e);
@@ -1744,11 +1745,11 @@ public class JDBCNodeStore implements NodeStore {
 	}
 
 	@Override
-	public void deleteUserAffiliations(JID userJid) throws NodeStoreException {
+	public void deleteUserAffiliations(JID userJID) throws NodeStoreException {
 		PreparedStatement stmt = null;
 		try {
 			stmt = conn.prepareStatement(dialect.deleteUserAffiliations());
-			stmt.setString(1, userJid.toBareJID());
+			stmt.setString(1, userJID.toBareJID());
 			stmt.executeUpdate();
 		} catch (SQLException e) {
 			throw new NodeStoreException(e);
@@ -1758,11 +1759,11 @@ public class JDBCNodeStore implements NodeStore {
 	}
 
 	@Override
-	public void deleteUserSubscriptions(JID userJid) throws NodeStoreException {
+	public void deleteUserSubscriptions(JID userJID) throws NodeStoreException {
 		PreparedStatement stmt = null;
 		try {
 			stmt = conn.prepareStatement(dialect.deleteUserSubscriptions());
-			stmt.setString(1, userJid.toBareJID());
+			stmt.setString(1, userJID.toBareJID());
 			stmt.executeUpdate();
 		} catch (SQLException e) {
 			throw new NodeStoreException(e);
@@ -1984,7 +1985,7 @@ public class JDBCNodeStore implements NodeStore {
 
 		String deleteNode();
 
-		String countSubscriptionsForJid();
+		String countSubscriptionsForJID();
 
 		String insertConf();
 
@@ -2030,7 +2031,7 @@ public class JDBCNodeStore implements NodeStore {
 		
 		String selectSubscriptionsForNode();
 
-		String selectSubscriptionsForNodeAfterJid();
+		String selectSubscriptionsForNodeAfterJID();
 		
 		String selectSubscriptionListeners();
 

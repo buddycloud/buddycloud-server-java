@@ -118,7 +118,7 @@ public class NodeThreadsGetTest extends IQTestHandler {
 				request.getFrom())).thenReturn(affiliation);
 		
 		NodeSubscriptionImpl subscription = new NodeSubscriptionImpl(node, 
-				request.getFrom(), Subscriptions.subscribed, new Date());
+				request.getFrom(), request.getFrom(), Subscriptions.subscribed, new Date(), null);
 		Mockito.when(channelManager.getUserSubscription(node, 
 				request.getFrom())).thenReturn(subscription);
 		

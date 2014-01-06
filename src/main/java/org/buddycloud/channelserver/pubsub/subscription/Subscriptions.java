@@ -3,11 +3,13 @@ package org.buddycloud.channelserver.pubsub.subscription;
 import org.buddycloud.channelserver.pubsub.affiliation.Affiliations;
 
 public enum Subscriptions {
-	none, pending, unconfigured, subscribed;
+	none, invited, pending, unconfigured, subscribed;
 
 	public static Subscriptions createFromString(String asString) {
 		if ("none".equals(asString)) {
 			return none;
+		} else if ("invited".equals(asString)) {
+			return invited;
 		} else if ("pending".equals(asString)) {
 			return pending;
 		} else if ("unconfigured".equals(asString)) {

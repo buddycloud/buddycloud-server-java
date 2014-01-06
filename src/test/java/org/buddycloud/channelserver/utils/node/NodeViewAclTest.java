@@ -212,6 +212,34 @@ public class NodeViewAclTest extends TestCase {
 				AccessModels.local, false, NodeViewAcl.CLOSED_NODE,
 				PacketError.Type.auth, PacketError.Condition.forbidden);
 	}
+	
+	@Test
+	public void testInvitedUserCanViewOpenChannel() {
+		checkForAllowedAccess(Affiliations.none, Subscriptions.invited,
+				AccessModels.open);
+	}
+
+	@Test
+	public void testPrivateNodeCanNotBeViewedByInvitedUser() {
+		checkForBlockedAccess(Affiliations.none, Subscriptions.invited,
+				AccessModels.authorize, NodeViewAcl.CLOSED_NODE, PacketError.Type.auth,
+				PacketError.Condition.forbidden);
+		checkForBlockedAccess(Affiliations.none, Subscriptions.invited,
+				AccessModels.authorize, NodeViewAcl.CLOSED_NODE, PacketError.Type.auth,
+				PacketError.Condition.forbidden);
+		checkForBlockedAccess(Affiliations.none, Subscriptions.invited,
+				AccessModels.authorize, NodeViewAcl.CLOSED_NODE, PacketError.Type.auth,
+				PacketError.Condition.forbidden);
+		checkForBlockedAccess(Affiliations.none, Subscriptions.invited,
+				AccessModels.authorize, NodeViewAcl.CLOSED_NODE, PacketError.Type.auth,
+				PacketError.Condition.forbidden);
+	}
+
+	@Test
+	public void testOpenChannelWithInvitedSubscriptionCanBeViewed() {
+		checkForAllowedAccess(Affiliations.none, Subscriptions.invited,
+				AccessModels.open);
+	}
 
 	private void checkForBlockedAccess(Affiliations affiliation,
 			Subscriptions subscription, AccessModels accessModel,

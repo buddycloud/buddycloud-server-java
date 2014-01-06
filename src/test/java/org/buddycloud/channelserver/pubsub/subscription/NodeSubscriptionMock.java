@@ -11,6 +11,7 @@ public class NodeSubscriptionMock implements NodeSubscription {
 	private Affiliations affiliation;
 	private Subscriptions subscription;
 	private String foreignChannelServer;
+	private JID inviter;
 
 	public void setBareJID(JID jid) {
 		this.subscriber = jid;
@@ -64,5 +65,15 @@ public class NodeSubscriptionMock implements NodeSubscription {
 	@Override
 	public Date getLastUpdated() {
 		return new Date();
+	}
+
+	@Override
+	public JID getInviter() {
+		return inviter;
+	}
+
+	@Override
+	public boolean isTemporary() {
+		throw new NullPointerException("Temporary subscriptions not yet supported");
 	}
 }

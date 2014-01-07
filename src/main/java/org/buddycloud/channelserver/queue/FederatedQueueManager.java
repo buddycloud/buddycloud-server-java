@@ -19,6 +19,11 @@ import org.xmpp.packet.IQ;
 import org.xmpp.packet.JID;
 import org.xmpp.packet.Packet;
 import org.xmpp.packet.PacketError;
+import org.xbill.DNS.SRVRecord;
+import org.xbill.DNS.Record;
+import org.xbill.DNS.Type;
+import org.xbill.DNS.Lookup;
+import org.xbill.DNS.TextParseException;
 
 public class FederatedQueueManager {
 	private static final Logger logger = Logger
@@ -31,6 +36,8 @@ public class FederatedQueueManager {
 
 	public static final String IDENTITY_TYPE_CHANNELS = "channels";
 	public static final String BUDDYCLOUD_SERVER = "buddycloud-server";
+
+    public static final String SRV_PREFIX = "_buddycloud-server._tcp.";
 
 	private int id = 1;
 
@@ -51,7 +58,7 @@ public class FederatedQueueManager {
 	public FederatedQueueManager(ChannelsEngine component, String localServer) {
 		this.component = component;
 		this.localServer = localServer;
-		
+
 		nodeMap.start();
 		sentRemotePackets.start();
 	}
@@ -63,9 +70,9 @@ public class FederatedQueueManager {
 	}
 
 	public void process(Packet packet) throws ComponentException {
-		
+
 		logger.debug("Packet payload " + packet.toXML() + " going to federation.");
-		
+
 		String to = packet.getTo().toString();
 
 		String uniqueId = generateUniqueId(packet);
@@ -101,6 +108,7 @@ public class FederatedQueueManager {
 			waitingStanzas.get(to).add(packet);
 			logger.debug("Adding packet to waiting stanza list for " + to
 					+ " (size " + waitingStanzas.get(to).size() + ")");
+            attemptDnsDiscovery(to);
 		} catch (Exception e) {
 			logger.error(e);
 		}
@@ -175,7 +183,7 @@ public class FederatedQueueManager {
 	public boolean isFederatedDiscoInfoRequest(String packetId) {
 		return remoteServerInfoRequestIds.containsKey(packetId);
 	}
-	
+
 	private void setDiscoveredServer(String server, String handler) {
 		discoveredServers.put(server, handler);
 	}
@@ -199,28 +207,53 @@ public class FederatedQueueManager {
 				sendFederatedRequests(originatingServer);
 			}
 		}
-		
+
 		if (remoteServerItemsToProcess.get(originatingServer) < 1) {
 			if (!discoveredServers.containsKey(originatingServer)) {
-				sendRemoteChannelServerNotFoundErrorResponses(originatingServer);
-				remoteChannelDiscoveryStatus.put(originatingServer,
-						NO_CHANNEL_SERVER);
-				waitingStanzas.remove(originatingServer);
+                sendRemoteChannelServerNotFoundErrorResponses(originatingServer);
+                remoteChannelDiscoveryStatus.put(originatingServer,
+                        NO_CHANNEL_SERVER);
+                waitingStanzas.remove(originatingServer);
 			} else {
 				remoteChannelDiscoveryStatus.put(originatingServer, DISCOVERED);
 			}
 		}
 	}
 
+    private boolean attemptDnsDiscovery(String originatingServer) throws ComponentException {
+        try {
+            String query = SRV_PREFIX + originatingServer;
+            Record[] records = new Lookup(query, Type.SRV).run();
+            if ((null == records) || (0 == records.length)) {
+                logger.debug("No appropriate DNS entry found for " + originatingServer);
+                return false;
+            }
+            SRVRecord record = (SRVRecord) records[0];
+            String targetServer = record.getTarget().toString(true);
+            setDiscoveredServer(originatingServer, targetServer);
+            logger.info("DNS discovery complete for buddycloud server @ "
+                + originatingServer + " (" + targetServer + ")");
+            remoteChannelDiscoveryStatus.put(originatingServer, DISCOVERED);
+            sendFederatedRequests(originatingServer);
+            return true;
+        } catch (TextParseException e) {
+            logger.error(e);
+            return false;
+        }
+    }
+
 	private void sendFederatedRequests(String originatingServer)
 			throws ComponentException {
 		String remoteServer = discoveredServers.get(originatingServer);
 		List<Packet> packetsToSend = waitingStanzas.get(originatingServer);
 		if (packetsToSend == null) {
+            logger.trace("No queued federated packets to send to " + originatingServer);
 			return;
 		}
+        logger.trace("Catching up on federated packet sending to " + originatingServer);
 		for (Packet packet : packetsToSend) {
 			packet.setTo(remoteServer);
+            logger.trace(packet.toString());
 			sendPacket(packet.createCopy());
 		}
 		waitingStanzas.remove(originatingServer);
@@ -261,6 +294,10 @@ public class FederatedQueueManager {
 							+ packet.getID() + ")");
 		}
 
+        if (packet.getType().equals(IQ.Type.error) && !remoteChannelDiscoveryStatus.get(packet.getFrom()).equals(DISCOVERED)) {
+            return;
+        }
+
 		String uniqueId = packet.getID();
 		packet.setID(idMap.get(uniqueId));
 		packet.setTo((JID) sentRemotePackets.get(uniqueId));
@@ -270,7 +307,7 @@ public class FederatedQueueManager {
 
 		component.sendPacket(packet);
 	}
-	
+
 	public String getRelatedNodeForRemotePacket(IQ packet) {
 		String id = null;
 		if (nodeMap.containsKey(packet.getID())) {

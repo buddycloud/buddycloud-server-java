@@ -27,6 +27,17 @@ channels.autosubscribe=lounge@example.com;welcome@example.com
 # NOTE: This will only work on local private channels
 channels.autosubscribe.autoapprove=false
 
-# Default channels configuration related to access and permissions
-channels.default.accessmodel=open
-channels.default.role=follower+post
+# Channel configuration related to access model and affiliation
+
+channel.configuration.default.accessmodel=open
+channel.configuration.default.affiliation=member
+
+# Overrides for default configuration
+channel.configuration.posts.affiliation=publisher
+
+channel.configuration.geo.next.accessmodel=authorize
+channel.configuration.geo.current.accessmodel=authorize
+channel.configuration.geo.previous.accessmodel=authorize
+
+channel.configuration.status.description=%jid%'s status
+channel.configuration.status.description=The current status of %jid%

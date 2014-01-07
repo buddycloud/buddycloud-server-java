@@ -28,10 +28,13 @@ public class Configuration extends Properties {
 
 	public static final String CONFIGURATION_CHANNELS_AUTOSUBSCRIBE = "channels.autosubscribe";
 	public static final String CONFIGURATION_CHANNELS_AUTOSUBSCRIBE_AUTOAPPROVE = "channels.autosubscribe.autoapprove";
-	public static final String CONFIGURATION_CHANNELS_DEFAULT_ROLE = "channels.default.role";
-	public static final String CONFIGURATION_CHANNELS_DEFAULT_ACCESSMODEL = "channels.default.accessmodel";
+	public static final String CONFIGURATION_CHANNELS_DEFAULT_AFFILIATION = "channel.configuration.default.affiliation";
+	public static final String CONFIGURATION_CHANNELS_DEFAULT_ACCESSMODEL = "channel.configuration.default.accessmodel";
+	public static final String CONFIGURATION_CHANNELS_DEFAULT_DESCRIPTION = "channel.configuration.default.description";
+	public static final String CONFIGURATION_CHANNELS_DEFAULT_TITLE = "channel.configuration.default.title";
 
 	private static final String CONFIGURATION_FILE = "configuration.properties";
+
 	private static Configuration instance = null;
 
 	private Collection<JID> adminUsers = new ArrayList<JID>();
@@ -42,14 +45,16 @@ public class Configuration extends Properties {
 	private Configuration() {
 		try {
 			conf = new Properties();
-			InputStream confFile = this.getClass().getClassLoader().getResourceAsStream(CONFIGURATION_FILE);
-			if(confFile != null) {
+			InputStream confFile = this.getClass().getClassLoader()
+					.getResourceAsStream(CONFIGURATION_FILE);
+			if (confFile != null) {
 				load(confFile);
 				LOGGER.info("Loaded " + CONFIGURATION_FILE + " from classpath.");
 			} else {
 				File f = new File(CONFIGURATION_FILE);
 				load(new FileInputStream(f));
-				LOGGER.info("Loaded " + CONFIGURATION_FILE + " from working directory.");
+				LOGGER.info("Loaded " + CONFIGURATION_FILE
+						+ " from working directory.");
 			}
 		} catch (Exception e) {
 			LOGGER.error("Could not load " + CONFIGURATION_FILE + "!");
@@ -125,20 +130,21 @@ public class Configuration extends Properties {
 		return getProperty(CONFIGURATION_SERVER_TOPICS_DOMAIN);
 	}
 
-	public boolean getBooleanProperty(
-			final String key, final boolean defaultValue) {
+	public boolean getBooleanProperty(final String key,
+			final boolean defaultValue) {
 		String value = getProperty(key);
-		
-		if(value != null) {
-			if(value.equalsIgnoreCase("true")) {
+
+		if (value != null) {
+			if (value.equalsIgnoreCase("true")) {
 				return true;
 			}
-			if(value.equalsIgnoreCase("false")) {
+			if (value.equalsIgnoreCase("false")) {
 				return false;
 			}
-			LOGGER.warn("Invalid boolean property value for " + key + ": " + value);
+			LOGGER.warn("Invalid boolean property value for " + key + ": "
+					+ value);
 		}
-		
+
 		return defaultValue;
 	}
 }

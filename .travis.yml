@@ -1,6 +1,6 @@
 language: java
-install: mvn --quiet -Dmaven.test.skip=true -s pom-travis.xml install
-script: mvn -s pom-travis.xml test
+install: mvn -Dmaven.test.skip=true -s=pom-travis.xml install
+script: mvn -s=pom-travis.xml test
 jdk:
   - oraclejdk7
   - openjdk6

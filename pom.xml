@@ -136,6 +136,13 @@
             <url>file:${project.basedir}/repo</url>
         </repository>
     </repositories>
+    <pluginRepositories>
+      <pluginRepository>
+        <id>evgenyg</id>
+        <name>Evgeny Goldin repo</name>
+        <url>http://evgenyg.artifactoryonline.com/evgenyg/repo/com/github/goldin/</url>
+      </pluginRepository>
+    </pluginRepositories>
     <build>
             <plugins>
                 <plugin>
@@ -207,7 +214,7 @@
                             </manifest>
                         </archive>
                         <descriptorRefs>
-                            <descriptorRef>jar-with-dependencies</descriptorRef>
+                            <descriptorRef>${project.build.withDependencies}</descriptorRef>
                         </descriptorRefs>
                     </configuration>
                     <executions>
@@ -220,9 +227,38 @@
                         </execution>
                     </executions>
                 </plugin>
+                <plugin>
+                  <groupId>com.github.goldin</groupId>
+                  <artifactId>copy-maven-plugin</artifactId>
+                  <version>0.2.5</version>
+                  <executions>
+                    <execution>
+                      <id>create-archive</id>
+                      <phase>package</phase>
+                      <goals>
+                        <goal>copy</goal>
+                      </goals>
+                      <configuration>
+                        <resources>
+                          <resource>
+                            <targetPath>${project.build.directory}</targetPath>
+                            <file>target/${project.build.finalName}.jar</file>
+                            <destFileName>${project.artifactId}.jar</destFileName>
+                          </resource>
+                          <resource>
+                            <targetPath>${project.build.directory}</targetPath>
+                            <file>${project.build.directory}/${project.build.finalName}-${project.build.withDependencies}.jar</file>
+                            <destFileName>${project.artifactId}-${project.build.withDependencies}.jar</destFileName>
+                          </resource>
+                        </resources>
+                      </configuration>
+                    </execution>
+                  </executions>
+                </plugin>
             </plugins>
     </build>
     <properties>
     	<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    	<project.build.withDependencies>jar-with-dependencies</project.build.withDependencies>
     </properties>
 </project>

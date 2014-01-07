@@ -86,7 +86,8 @@ public class SubscribeSetTest extends IQTestHandler {
 				Affiliations.member, new Date()));
 
 		Mockito.doReturn(new ResultSetImpl<NodeAffiliation>(affiliations))
-				.when(channelManager).getNodeAffiliations(Mockito.anyString(), Mockito.anyBoolean());
+				.when(channelManager)
+				.getNodeAffiliations(Mockito.anyString(), Mockito.anyBoolean());
 
 		ArrayList<NodeSubscription> subscribers = new ArrayList<NodeSubscription>();
 		subscribers.add(new NodeSubscriptionImpl(node, jid,
@@ -226,6 +227,46 @@ public class SubscribeSetTest extends IQTestHandler {
 		Assert.assertEquals(Subscriptions.pending.toString(),
 				response.getChildElement().element("subscription")
 						.attributeValue("subscription"));
+
+	}
+
+	@Test
+	public void testNoDefaultAffiliationConfigurationResultsInMemberAffiliation()
+			throws Exception {
+
+		Mockito.when(channelManager.getNodeConf(Mockito.anyString()))
+				.thenReturn(new HashMap<String, String>());
+
+		subscribe.process(element, new JID("francisco@denmark.lit"), request,
+				null);
+
+		Mockito.verify(channelManager).setUserAffiliation(Mockito.anyString(),
+				Mockito.any(JID.class), Mockito.eq(Affiliations.member));
+
+		IQ response = (IQ) queue.poll();
+		Assert.assertEquals(IQ.Type.result, response.getType());
+
+	}
+
+	@Test
+	public void testDefaultAffiliationConfigurationResultsInCorrectAffiliation()
+			throws Exception {
+
+		Map<String, String> configuration = new HashMap<String, String>();
+		configuration.put(Conf.ACCESS_MODEL, AccessModel.open.toString());
+		configuration.put(Conf.DEFAULT_AFFILIATION,
+				Affiliations.publisher.toString());
+		Mockito.when(channelManager.getNodeConf(Mockito.anyString()))
+				.thenReturn(configuration);
+
+		subscribe.process(element, new JID("francisco@denmark.lit"), request,
+				null);
+
+		Mockito.verify(channelManager).setUserAffiliation(Mockito.anyString(),
+				Mockito.any(JID.class), Mockito.eq(Affiliations.publisher));
+
+		IQ response = (IQ) queue.poll();
+		Assert.assertEquals(IQ.Type.result, response.getType());
 
 	}
 

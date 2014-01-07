@@ -126,8 +126,8 @@ public class SubscribeSet extends PubSubElementProcessorAbstract {
 				return;
 			}
 
-			Affiliations defaultAffiliation = null;
-			Subscriptions defaultSubscription = null;
+			Affiliations defaultAffiliation = Affiliations.member;
+			Subscriptions defaultSubscription = Subscriptions.none;
 
 			if (!possibleExistingSubscription.in(Subscriptions.none) && 
 					!possibleExistingAffiliation.in(Affiliations.none)) {
@@ -138,16 +138,17 @@ public class SubscribeSet extends PubSubElementProcessorAbstract {
 				defaultSubscription = possibleExistingSubscription;
 			} else {
 				try {
-					String nodeDefAffiliation = nodeConf.get(Conf.DEFAULT_AFFILIATION);
-					LOGGER.debug("Node default affiliation: '" + nodeDefAffiliation + "'");
-					defaultAffiliation = Affiliations.createFromString(nodeDefAffiliation);
+					String nodeDefaultAffiliation = nodeConf.get(Conf.DEFAULT_AFFILIATION);
+					LOGGER.debug("Node default affiliation: '" + nodeDefaultAffiliation + "'");
+					if (!Affiliations.none.equals(Affiliations.createFromString(nodeDefaultAffiliation))) {
+						defaultAffiliation = Affiliations.createFromString(nodeDefaultAffiliation);
+					}
 				} catch (NullPointerException e) {
 					LOGGER.error("Could not create affiliation.", e);
 					defaultAffiliation = Affiliations.member;
 				}
 				defaultSubscription = Subscriptions.subscribed;
 				String accessModel = nodeConf.get(Conf.ACCESS_MODEL);
-
 				if ((null == accessModel)
 						|| (true == accessModel.equals(AccessModels.authorize
 								.toString()))

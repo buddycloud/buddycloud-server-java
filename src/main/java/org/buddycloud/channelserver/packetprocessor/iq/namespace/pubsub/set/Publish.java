@@ -33,13 +33,8 @@ public class Publish extends PubSubElementProcessorAbstract {
 
 	private static final Logger LOGGER = Logger.getLogger(Publish.class);
 
-	private final BlockingQueue<Packet> outQueue;
-	private final ChannelManager channelManager;
-	private IQ requestIq;
-	private String node;
 	private Element entry;
 	private String id;
-	private IQ response;
 	private Date updated;
 	private JID publishersJID;
 	private String inReplyTo;
@@ -52,12 +47,14 @@ public class Publish extends PubSubElementProcessorAbstract {
 
 	@Override
 	public void process(Element elm, JID actorJID, IQ reqIQ, Element rsm)
-			throws InterruptedException, NodeStoreException {
+			throws Exception {
 		
-		node = elm.attributeValue("node");
-		requestIq = reqIQ;
+		request = reqIQ;
 		response = IQ.createResultIQ(reqIQ);
-		publishersJID = requestIq.getFrom();
+		publishersJID = request.getFrom();
+		
+		node = request.getChildElement().element("publish").attributeValue("node");
+
 		if (false == checkNode()) return;
 
 		boolean isLocalSubscriber = false;
@@ -91,16 +88,21 @@ public class Publish extends PubSubElementProcessorAbstract {
 			}
 		}
 
-		if (false == nodeExists()) return;
-		if (false == userCanPost()) return;
-		Element item = elm.element("item");
-		if (false == isRequestValid(item)) return;
-		if (false == extractItemDetails(item)) return;
-		if (false == determineInReplyToDetails()) return;
-		
-		saveNodeItem();
-		sendResponseStanza();
-		sendNotifications();
+		try {
+			if (false == nodeExists()) return;
+			if (false == userCanPost()) return;
+			Element item = elm.element("item");
+			if (false == isRequestValid(item)) return;
+			if (false == extractItemDetails(item)) return;
+			if (false == determineInReplyToDetails()) return;
+			
+			saveNodeItem();
+			sendResponseStanza();
+			sendNotifications();
+		} catch (NodeStoreException e) {
+			setErrorCondition(PacketError.Type.wait, PacketError.Condition.internal_server_error);
+			outQueue.put(response);
+		}
 
 	}
 
@@ -150,7 +152,7 @@ public class Publish extends PubSubElementProcessorAbstract {
 		}
 
 		entry = vEntry.createBcCompatible(publishersJID.toBareJID(),
-				requestIq.getTo().toBareJID(), node);
+				request.getTo().toBareJID(), node);
 
 		id = GlobalItemIDImpl.toLocalId(entry.element("id").getText());
 
@@ -272,7 +274,7 @@ public class Publish extends PubSubElementProcessorAbstract {
 		outQueue.put(response);
 	}
 
-	private boolean nodeExists() throws NodeStoreException, InterruptedException {
+	private boolean nodeExists() throws Exception {
 		if (true == channelManager.nodeExists(node)) return true;
 		response.setType(Type.error);
 		PacketError error = new PacketError(
@@ -331,7 +333,7 @@ public class Publish extends PubSubElementProcessorAbstract {
 		Message msg = new Message();
 		msg.getElement().addAttribute("remote-server-discover", "false");
 		msg.setType(Message.Type.headline);
-		msg.setFrom(requestIq.getTo());
+		msg.setFrom(request.getTo());
 		msg.getElement().addAttribute("remote-server-discover", "false");
 		Element event = msg.addChildElement("event",
 				JabberPubsub.NS_PUBSUB_EVENT);
@@ -361,12 +363,12 @@ public class Publish extends PubSubElementProcessorAbstract {
 	}
 
 	private void makeRemoteRequest() throws InterruptedException {
-		requestIq.setTo(new JID(node.split("/")[2]).getDomain());
-		Element actor = requestIq.getElement()
+		request.setTo(new JID(node.split("/")[2]).getDomain());
+		Element actor = request.getElement()
 		    .element("pubsub")
 		    .addElement("actor", JabberPubsub.NS_BUDDYCLOUD);
-		actor.addText(requestIq.getFrom().toBareJID());
-	    outQueue.put(requestIq);
+		actor.addText(request.getFrom().toBareJID());
+	    outQueue.put(request);
 	}
 	
 	@Override

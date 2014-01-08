@@ -230,14 +230,13 @@ public class Publish extends PubSubElementProcessorAbstract {
 	}
 
 	private boolean userCanPost() throws NodeStoreException, InterruptedException {
-		NodeSubscription nodeSubscription = channelManager.getUserSubscription(
-				node, publishersJID);
-		Subscriptions possibleExistingSubscription = nodeSubscription
+
+		Subscriptions possibleExistingSubscription = channelManager.getUserSubscription(
+				node, publishersJID)
 				.getSubscription();
 
-		NodeAffiliation nodeaffiliation = channelManager.getUserAffiliation(
-				node, publishersJID);
-		Affiliations possibleExistingAffiliation = nodeaffiliation
+		Affiliations possibleExistingAffiliation = channelManager.getUserAffiliation(
+				node, publishersJID)
 				.getAffiliation();
 
 		if ((false == possibleExistingSubscription.equals(

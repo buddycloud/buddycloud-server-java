@@ -38,6 +38,7 @@ public class Publish extends PubSubElementProcessorAbstract {
 	private Date updated;
 	private JID publishersJID;
 	private String inReplyTo;
+	private Element item;
 
 	public Publish(BlockingQueue<Packet> outQueue,
 			ChannelManager channelManager) {
@@ -91,9 +92,8 @@ public class Publish extends PubSubElementProcessorAbstract {
 		try {
 			if (false == nodeExists()) return;
 			if (false == userCanPost()) return;
-			Element item = elm.element("item");
-			if (false == isRequestValid(item)) return;
-			if (false == extractItemDetails(item)) return;
+			if (false == isRequestValid()) return;
+			if (false == extractItemDetails()) return;
 			if (false == determineInReplyToDetails()) return;
 			
 			saveNodeItem();
@@ -144,7 +144,7 @@ public class Publish extends PubSubElementProcessorAbstract {
 		return true;
 	}
 
-	private boolean extractItemDetails(Element item) throws InterruptedException {
+	private boolean extractItemDetails() throws InterruptedException {
 		ValidateEntry vEntry = new ValidateEntry(item.element("entry"));
 		if (!vEntry.isValid()) {
 			sendInvalidEntryResponse(vEntry);
@@ -207,7 +207,8 @@ public class Publish extends PubSubElementProcessorAbstract {
 		outQueue.put(response);
 	}
 
-	private boolean isRequestValid(Element item) throws InterruptedException {
+	private boolean isRequestValid() throws InterruptedException {
+		item = request.getChildElement().element("publish").element("item");
 		if (item != null) return true;
 		
 		response.setType(Type.error);

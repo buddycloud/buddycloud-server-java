@@ -37,38 +37,53 @@ public class ValidateEntryTest extends TestHandler {
 	@Test
 	public void missingIdAttributeGetsAdded() throws Exception {
 
-		Assert.assertEquals("96da02ee1baef61e767742844207bec4", entry.elementText("id"));
-		
+		Assert.assertEquals("96da02ee1baef61e767742844207bec4",
+				entry.elementText("id"));
+
 		Element entry = (Element) this.entry.clone();
 		entry.element("id").detach();
 		validateEntry = new ValidateEntry(entry);
 		Assert.assertTrue(validateEntry.isValid());
 		Assert.assertEquals("1", entry.elementText("id"));
 	}
-	
+
 	@Test
 	public void emptyIdElementHasValueAdded() throws Exception {
 
-		Assert.assertEquals("96da02ee1baef61e767742844207bec4", entry.elementText("id"));
-		
+		Assert.assertEquals("96da02ee1baef61e767742844207bec4",
+				entry.elementText("id"));
+
 		Element entry = (Element) this.entry.clone();
 		entry.element("id").detach();
 		entry.addElement("id");
-		
+
 		validateEntry = new ValidateEntry(entry);
 		Assert.assertTrue(validateEntry.isValid());
 		Assert.assertEquals("1", entry.elementText("id"));
 	}
-	
+
 	@Test
 	public void missingTitleElementIsAdded() throws Exception {
 
 		Assert.assertEquals("Post title", entry.elementText("title"));
-		
+
 		Element entry = (Element) this.entry.clone();
 		entry.element("title").detach();
 		validateEntry = new ValidateEntry(entry);
 		Assert.assertTrue(validateEntry.isValid());
 		Assert.assertEquals("Post", entry.elementText("title"));
+	}
+
+	@Test
+	public void missingContentElementReturnsInvalid() throws Exception {
+
+		Assert.assertNotNull(entry.element("content"));
+
+		Element entry = (Element) this.entry.clone();
+		entry.element("content").detach();
+		validateEntry = new ValidateEntry(entry);
+		Assert.assertFalse(validateEntry.isValid());
+		Assert.assertEquals(ValidateEntry.MISSING_CONTENT_ELEMENT,
+				validateEntry.getErrorMessage());
 	}
 }

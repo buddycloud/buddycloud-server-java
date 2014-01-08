@@ -11,6 +11,8 @@ import org.dom4j.dom.DOMElement;
 
 public class ValidateEntry {
 
+	public static final String MISSING_CONTENT_ELEMENT = "content-required";
+
 	private static Logger LOGGER = Logger.getLogger(ValidateEntry.class);
 
 	private Element entry;
@@ -28,7 +30,7 @@ public class ValidateEntry {
 		this.entry = entry;
 	}
 
-	public String getErrorMsg() {
+	public String getErrorMessage() {
 		return this.errorMsg;
 	}
 
@@ -57,8 +59,8 @@ public class ValidateEntry {
 		this.params.put("title", title.getText());
 
 		Element content = this.entry.element("content");
-		if (content == null) {
-			this.errorMsg = "Mandatory element content is missing.";
+		if (null == content) {
+			this.errorMsg = MISSING_CONTENT_ELEMENT;
 			return false;
 		}
 		this.params.put("content", content.getText());

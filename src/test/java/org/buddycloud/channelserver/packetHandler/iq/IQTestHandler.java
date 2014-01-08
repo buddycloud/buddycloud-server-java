@@ -1,36 +1,16 @@
 package org.buddycloud.channelserver.packetHandler.iq;
 
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 
 import junit.framework.Assert;
 
-import org.buddycloud.channelserver.Configuration;
 import org.buddycloud.channelserver.channel.TestHelper;
 import org.dom4j.DocumentException;
 import org.xmpp.packet.IQ;
 
 public class IQTestHandler extends TestHandler
 {
-	private final static String CONFIGURATION_PROPERTIES = "src/test/resources/configuration.properties";
-    public final static String  LOGGER_PROPERTIES        = "src/test/resources/log4j.properties";
-    
-    public static Properties readConf() 
-        throws FileNotFoundException, IOException
-    {
-        Configuration conf = Configuration.getInstance();
-        try {
-            conf.load(new FileInputStream(CONFIGURATION_PROPERTIES));
-        } catch (IOException e) {
-            System.out.println(e.getMessage());
-            System.exit(1);
-        }
-        return conf;
-    }
-
 	public void featureNotImplementedSuccess()
         throws IOException, InterruptedException, DocumentException
     {    

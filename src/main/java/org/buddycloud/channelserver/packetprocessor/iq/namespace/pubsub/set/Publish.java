@@ -211,21 +211,7 @@ public class Publish extends PubSubElementProcessorAbstract {
 		item = request.getChildElement().element("publish").element("item");
 		if (item != null) return true;
 		
-		response.setType(Type.error);
-
-		Element badRequest = new DOMElement("bad-request",
-				new org.dom4j.Namespace("", JabberPubsub.NS_XMPP_STANZAS));
-
-		Element nodeIdRequired = new DOMElement("item-required",
-				new org.dom4j.Namespace("", JabberPubsub.NS_PUBSUB_ERROR));
-
-		Element error = new DOMElement("error");
-		error.addAttribute("type", "modify");
-		error.add(badRequest);
-		error.add(nodeIdRequired);
-
-		response.setChildElement(error);
-
+		createExtendedErrorReply(PacketError.Type.modify, PacketError.Condition.bad_request, "item-required");
 		outQueue.put(response);
 		return false;
 	}

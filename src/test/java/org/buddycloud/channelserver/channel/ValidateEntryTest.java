@@ -17,10 +17,10 @@ import junit.framework.TestCase;
 /**
  * TODO Additional work required:
  * 
- * - Check for (and add) activity stream verb
- * - Check for (and add) activity stream object type
- * - Check for (and add) content type (accept 'text' and 'html', default 'text')
- *
+ * - Check for (and add) activity stream verb - Check for (and add) activity
+ * stream object type - Check for (and add) content type (accept 'text' and
+ * 'html', default 'text') - If in-reply-to set 'verb' to comment
+ * 
  */
 public class ValidateEntryTest extends TestHandler {
 
@@ -33,11 +33,11 @@ public class ValidateEntryTest extends TestHandler {
 	@Before
 	public void setUp() throws Exception {
 		publishRequest = readStanzaAsIq("/iq/pubsub/publish/request.stanza");
-		publishEntry = publishRequest.getChildElement().element("publish").element("item")
-				.element("entry");
+		publishEntry = publishRequest.getChildElement().element("publish")
+				.element("item").element("entry");
 		replyRequest = readStanzaAsIq("/iq/pubsub/publish/reply.stanza");
-		replyEntry = replyRequest.getChildElement().element("publish").element("item")
-				.element("entry");
+		replyEntry = replyRequest.getChildElement().element("publish")
+				.element("item").element("entry");
 	}
 
 	@Test
@@ -99,7 +99,7 @@ public class ValidateEntryTest extends TestHandler {
 		Assert.assertEquals(ValidateEntry.MISSING_CONTENT_ELEMENT,
 				validateEntry.getErrorMessage());
 	}
-	
+
 	@Test
 	public void missingUpdatedElementHasValueAdded() throws Exception {
 
@@ -110,18 +110,23 @@ public class ValidateEntryTest extends TestHandler {
 		entry.element("updated").detach();
 		validateEntry = new ValidateEntry(entry);
 		Assert.assertTrue(validateEntry.isValid());
-		Assert.assertTrue(entry.elementText("updated").matches("[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}.[0-9]{3}Z"));
+		Assert.assertTrue(entry
+				.elementText("updated")
+				.matches(
+						"[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}.[0-9]{3}Z"));
 	}
-	
+
 	@Test
 	public void globalInReplyToIdIsMadeALocalId() throws Exception {
 
-		Assert.assertEquals("null@channels.shakespeare.lit,/users/romeo@shakespeare.lit/posts,fc362eb42085f017ed9ccd9c4004b095",
+		Assert.assertEquals(
+				"null@channels.shakespeare.lit,/users/romeo@shakespeare.lit/posts,fc362eb42085f017ed9ccd9c4004b095",
 				replyEntry.element("in-reply-to").attributeValue("ref"));
 
 		Element entry = (Element) this.replyEntry.clone();
 		validateEntry = new ValidateEntry(entry);
 		Assert.assertTrue(validateEntry.isValid());
-		Assert.assertEquals("fc362eb42085f017ed9ccd9c4004b095", entry.element("in-reply-to").attributeValue("ref"));
+		Assert.assertEquals("fc362eb42085f017ed9ccd9c4004b095",
+				entry.element("in-reply-to").attributeValue("ref"));
 	}
 }

@@ -15,7 +15,7 @@ public class ValidateEntry {
 
 	public static final String CONTENT_TEXT = "text";
 	public static final String CONTENT_XHTML = "xhtml";
-	
+
 	private static Logger LOGGER = Logger.getLogger(ValidateEntry.class);
 
 	private Element entry;
@@ -85,10 +85,11 @@ public class ValidateEntry {
 			inReplyTo = reply.attributeValue("ref");
 			if (-1 != inReplyTo.indexOf(",")) {
 				String[] tokens = inReplyTo.split(",");
-				this.entry.element("in-reply-to").attribute("ref").setValue(tokens[2]);
+				this.entry.element("in-reply-to").attribute("ref")
+						.setValue(tokens[2]);
 			}
 		}
-		
+
 		Element meta = this.entry.element("meta");
 		if (null != meta) {
 			this.meta = meta;

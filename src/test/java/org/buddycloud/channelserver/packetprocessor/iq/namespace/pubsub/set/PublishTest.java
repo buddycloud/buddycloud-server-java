@@ -73,7 +73,6 @@ public class PublishTest extends IQTestHandler {
 		Mockito.when(channelManager.getUserAffiliation(Mockito.eq(node), Mockito.eq(jid))).thenReturn(affiliation);
 		
 		Mockito.when(validateEntry.isValid()).thenReturn(true);
-		
 	}
 
 	@Test
@@ -263,5 +262,20 @@ public class PublishTest extends IQTestHandler {
 		Assert.assertEquals(PacketError.Condition.bad_request,
 				error.getCondition());
 		Assert.assertEquals("item-required", error.getApplicationConditionName());
+	}
+	
+	@Test
+	public void invalidEntryReturnsError() throws Exception {
+		Mockito.when(validateEntry.isValid()).thenReturn(false);
+		
+		publish.process(element, jid, request, null);
+
+		Packet response = queue.poll();
+
+		PacketError error = response.getError();
+		Assert.assertNotNull(error);
+		Assert.assertEquals(PacketError.Type.modify, error.getType());
+		Assert.assertEquals(PacketError.Condition.bad_request,
+				error.getCondition());
 	}
 }

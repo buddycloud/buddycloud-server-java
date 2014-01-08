@@ -9,6 +9,7 @@ import java.util.concurrent.TimeUnit;
 import junit.framework.Assert;
 
 import org.buddycloud.channelserver.channel.ChannelManager;
+import org.buddycloud.channelserver.channel.ValidateEntry;
 import org.buddycloud.channelserver.db.exception.NodeStoreException;
 import org.buddycloud.channelserver.packetHandler.iq.IQTestHandler;
 import org.buddycloud.channelserver.pubsub.affiliation.Affiliations;
@@ -39,10 +40,13 @@ public class PublishTest extends IQTestHandler {
 	private Element element;
 	private BlockingQueue<Packet> queue = new LinkedBlockingQueue<Packet>();
 	private String node = "/user/romeo@shakespeare.lit/posts";
+	private ValidateEntry validateEntry;
 
 	@Before
 	public void setUp() throws Exception {
 		channelManager = Mockito.mock(ChannelManager.class);
+		validateEntry = Mockito.mock(ValidateEntry.class);
+		
 		Mockito.when(channelManager.isLocalNode(Mockito.anyString()))
 				.thenReturn(true);
 
@@ -67,6 +71,9 @@ public class PublishTest extends IQTestHandler {
 						Mockito.eq(jid))).thenReturn(subscription);
 		NodeAffiliation affiliation = new NodeAffiliationImpl(node, jid, Affiliations.publisher, new Date());
 		Mockito.when(channelManager.getUserAffiliation(Mockito.eq(node), Mockito.eq(jid))).thenReturn(affiliation);
+		
+		Mockito.when(validateEntry.isValid()).thenReturn(true);
+		
 	}
 
 	@Test

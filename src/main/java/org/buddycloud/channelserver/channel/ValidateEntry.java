@@ -43,12 +43,13 @@ public class ValidateEntry {
 
 		Element id = this.entry.element("id");
 		if ((id == null) || (true == id.getText().isEmpty())) {
+			if (null != id) id.detach();
 			LOGGER.debug("ID of the entry was missing. We add a default one to it: 1");
 			this.entry.addElement("id").setText("1");
 		}
 
 		Element title = this.entry.element("title");
-		if (title == null) {
+		if (null == title) {
 			LOGGER.debug("Title of the entry was missing. We add a default one to it: 'Post'.");
 			title = this.entry.addElement("title");
 			title.setText("Post");

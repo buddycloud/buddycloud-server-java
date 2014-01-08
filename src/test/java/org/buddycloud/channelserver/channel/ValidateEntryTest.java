@@ -37,7 +37,7 @@ public class ValidateEntryTest extends TestHandler {
 	@Test
 	public void missingIdAttributeGetsAdded() throws Exception {
 
-		Assert.assertNull(entry.element("id"));
+		Assert.assertEquals("96da02ee1baef61e767742844207bec4", entry.elementText("id"));
 		
 		Element entry = (Element) this.entry.clone();
 		entry.element("id").detach();
@@ -49,12 +49,26 @@ public class ValidateEntryTest extends TestHandler {
 	@Test
 	public void emptyIdElementHasValueAdded() throws Exception {
 
-		Assert.assertNull(entry.element("id"));
+		Assert.assertEquals("96da02ee1baef61e767742844207bec4", entry.elementText("id"));
 		
 		Element entry = (Element) this.entry.clone();
-		entry.element("id").setText(null);
+		entry.element("id").detach();
+		entry.addElement("id");
+		
 		validateEntry = new ValidateEntry(entry);
 		Assert.assertTrue(validateEntry.isValid());
 		Assert.assertEquals("1", entry.elementText("id"));
+	}
+	
+	@Test
+	public void missingTitleElementIsAdded() throws Exception {
+
+		Assert.assertEquals("Post title", entry.elementText("title"));
+		
+		Element entry = (Element) this.entry.clone();
+		entry.element("title").detach();
+		validateEntry = new ValidateEntry(entry);
+		Assert.assertTrue(validateEntry.isValid());
+		Assert.assertEquals("Post", entry.elementText("title"));
 	}
 }

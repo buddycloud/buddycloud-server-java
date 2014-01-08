@@ -31,7 +31,7 @@ import org.xmpp.resultsetmanagement.ResultSet;
 
 public class Publish extends PubSubElementProcessorAbstract {
 
-	private static final Logger LOGGER = Logger.getLogger(Publish.class);
+	private static final Logger logger = Logger.getLogger(Publish.class);
 
 	private Element entry;
 	private String id;
@@ -132,7 +132,7 @@ public class Publish extends PubSubElementProcessorAbstract {
 			return false;
 		}
 		if (null != nodeItem.getInReplyTo()) {
-			LOGGER.error("User is attempting to reply to a reply");
+			logger.error("User is attempting to reply to a reply");
 			response.setType(Type.error);
 			PacketError pe = new PacketError(
 					org.xmpp.packet.PacketError.Condition.bad_request,
@@ -170,7 +170,7 @@ public class Publish extends PubSubElementProcessorAbstract {
 			} catch (IllegalArgumentException e) {
 				updated = new Date();
 				logger.error(e);
-				LOGGER.error("Invalid date encountered in atom entry: "
+				logger.error("Invalid date encountered in atom entry: "
 						+ updatedText);
 				// Otherwise we will just let it pass
 			}
@@ -180,7 +180,7 @@ public class Publish extends PubSubElementProcessorAbstract {
 
 	private void sendInvalidEntryResponse(ValidateEntry vEntry)
 			throws InterruptedException {
-		LOGGER.info("Entry is not valid: '" + vEntry.getErrorMsg() + "'.");
+		logger.info("Entry is not valid: '" + vEntry.getErrorMsg() + "'.");
 
 		/*
 		 * <iq type='error' from='pubsub.shakespeare.lit'
@@ -335,7 +335,7 @@ public class Publish extends PubSubElementProcessorAbstract {
 		for (NodeSubscription ns : cur) {
 			JID to = ns.getUser();
 			if (ns.getSubscription().equals(Subscriptions.subscribed)) {
-			    LOGGER.debug("Sending post notification to " + to.toBareJID());
+			    logger.debug("Sending post notification to " + to.toBareJID());
 			    msg.setTo(ns.getListener());
 			    outQueue.put(msg.createCopy());
 			}

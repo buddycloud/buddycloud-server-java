@@ -183,5 +183,61 @@ public class PublishTest extends IQTestHandler {
 		Assert.assertEquals(PacketError.Condition.forbidden,
 				error.getCondition());
 	}
+	
+	@Test
+	public void noAffiliationCanNotPublish() throws Exception {
+		NodeAffiliation affiliation = new NodeAffiliationImpl(node, jid,
+				Affiliations.none, new Date());
+		Mockito.when(
+				channelManager.getUserAffiliation(Mockito.eq(node),
+						Mockito.eq(jid))).thenReturn(affiliation);
+		
+		publish.process(element, jid, request, null);
 
+		Packet response = queue.poll(100, TimeUnit.MILLISECONDS);
+
+		PacketError error = response.getError();
+		Assert.assertNotNull(error);
+		Assert.assertEquals(PacketError.Type.auth, error.getType());
+		Assert.assertEquals(PacketError.Condition.forbidden,
+				error.getCondition());
+	}
+	
+	@Test
+	public void memberAffiliationCanNotPublish() throws Exception {
+		NodeAffiliation affiliation = new NodeAffiliationImpl(node, jid,
+				Affiliations.member, new Date());
+		Mockito.when(
+				channelManager.getUserAffiliation(Mockito.eq(node),
+						Mockito.eq(jid))).thenReturn(affiliation);
+		
+		publish.process(element, jid, request, null);
+
+		Packet response = queue.poll(100, TimeUnit.MILLISECONDS);
+
+		PacketError error = response.getError();
+		Assert.assertNotNull(error);
+		Assert.assertEquals(PacketError.Type.auth, error.getType());
+		Assert.assertEquals(PacketError.Condition.forbidden,
+				error.getCondition());
+	}
+	
+	@Test
+	public void outcastAffiliationCanNotPublish() throws Exception {
+		NodeAffiliation affiliation = new NodeAffiliationImpl(node, jid,
+				Affiliations.outcast, new Date());
+		Mockito.when(
+				channelManager.getUserAffiliation(Mockito.eq(node),
+						Mockito.eq(jid))).thenReturn(affiliation);
+		
+		publish.process(element, jid, request, null);
+
+		Packet response = queue.poll(100, TimeUnit.MILLISECONDS);
+
+		PacketError error = response.getError();
+		Assert.assertNotNull(error);
+		Assert.assertEquals(PacketError.Type.auth, error.getType());
+		Assert.assertEquals(PacketError.Condition.forbidden,
+				error.getCondition());
+	}
 }

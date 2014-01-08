@@ -89,7 +89,7 @@ public class PublishTest extends IQTestHandler {
 
 		publish.process(element, jid, request, null);
 
-		Packet response = queue.poll(100, TimeUnit.MILLISECONDS);
+		Packet response = queue.poll();
 
 		PacketError error = response.getError();
 		Assert.assertNotNull(error);
@@ -105,7 +105,7 @@ public class PublishTest extends IQTestHandler {
 
 		publish.process(element, jid, request, null);
 
-		Packet response = queue.poll(100, TimeUnit.MILLISECONDS);
+		Packet response = queue.poll();
 
 		PacketError error = response.getError();
 		Assert.assertNotNull(error);
@@ -121,7 +121,7 @@ public class PublishTest extends IQTestHandler {
 
 		publish.process(element, jid, request, null);
 
-		Packet response = queue.poll(100, TimeUnit.MILLISECONDS);
+		Packet response = queue.poll();
 
 		PacketError error = response.getError();
 		Assert.assertNotNull(error);
@@ -141,7 +141,7 @@ public class PublishTest extends IQTestHandler {
 
 		Assert.assertEquals(1, queue.size());
 
-		Packet response = queue.poll(100, TimeUnit.MILLISECONDS);
+		Packet response = queue.poll();
 
 		Assert.assertEquals(new JID("shakespeare.lit"), response.getTo());
 	}
@@ -156,7 +156,7 @@ public class PublishTest extends IQTestHandler {
 		
 		publish.process(element, jid, request, null);
 
-		Packet response = queue.poll(100, TimeUnit.MILLISECONDS);
+		Packet response = queue.poll();
 
 		PacketError error = response.getError();
 		Assert.assertNotNull(error);
@@ -175,7 +175,7 @@ public class PublishTest extends IQTestHandler {
 		
 		publish.process(element, jid, request, null);
 
-		Packet response = queue.poll(100, TimeUnit.MILLISECONDS);
+		Packet response = queue.poll();
 
 		PacketError error = response.getError();
 		Assert.assertNotNull(error);
@@ -194,7 +194,7 @@ public class PublishTest extends IQTestHandler {
 		
 		publish.process(element, jid, request, null);
 
-		Packet response = queue.poll(100, TimeUnit.MILLISECONDS);
+		Packet response = queue.poll();
 
 		PacketError error = response.getError();
 		Assert.assertNotNull(error);
@@ -213,7 +213,7 @@ public class PublishTest extends IQTestHandler {
 		
 		publish.process(element, jid, request, null);
 
-		Packet response = queue.poll(100, TimeUnit.MILLISECONDS);
+		Packet response = queue.poll();
 
 		PacketError error = response.getError();
 		Assert.assertNotNull(error);

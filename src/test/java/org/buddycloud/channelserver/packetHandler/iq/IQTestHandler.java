@@ -19,7 +19,7 @@ import org.dom4j.io.SAXReader;
 import org.xmpp.packet.IQ;
 import org.xmpp.packet.IQ.Type;
 
-public class IQTestHandler
+public class IQTestHandler extends TestHandler
 {
 	private final static String CONFIGURATION_PROPERTIES = "src/test/resources/configuration.properties";
     public final static String  STANZA_PATH              = "src/test/resources/stanzas";

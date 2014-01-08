@@ -60,19 +60,19 @@ public class PublishTest extends IQTestHandler {
 	}
 
 	@Test
-	public void testPassingRetractAsElementNameReturnsTrue() {
+	public void passingRetractAsElementNameReturnsTrue() {
 		Element element = new BaseElement("publish");
 		Assert.assertTrue(publish.accept(element));
 	}
 
 	@Test
-	public void testPassingNotRetractAsElementNameReturnsFalse() {
+	public void passingNotRetractAsElementNameReturnsFalse() {
 		Element element = new BaseElement("not-publish");
 		Assert.assertFalse(publish.accept(element));
 	}
 
 	@Test
-	public void testPassingNoNodeResultsInErrorStanza() throws Exception {
+	public void passingNoNodeResultsInErrorStanza() throws Exception {
 		
 		IQ request = this.request.createCopy();
 		request.getChildElement().element("publish").attribute("node").detach();
@@ -89,7 +89,7 @@ public class PublishTest extends IQTestHandler {
 	}
 
 	@Test
-	public void testNodeStoreExceptionReturnsErrorStanza() throws Exception {
+	public void nodeStoreExceptionReturnsErrorStanza() throws Exception {
 		Mockito.doThrow(new NodeStoreException()).when(channelManager)
 				.nodeExists(Mockito.eq(node));
 
@@ -106,7 +106,7 @@ public class PublishTest extends IQTestHandler {
 	}
 
 	@Test
-	public void testProvidingNodeWhichDoesntExistReturnsError()
+	public void providingNodeWhichDoesntExistReturnsError()
 			throws Exception {
 		Mockito.when(channelManager.nodeExists(node)).thenReturn(false);
 
@@ -122,7 +122,7 @@ public class PublishTest extends IQTestHandler {
 	}
 	
 	@Test
-	public void testRequestToRemoteNodeResultsInForwardedPacket() throws Exception {
+	public void requestToRemoteNodeResultsInForwardedPacket() throws Exception {
 		Mockito.when(channelManager.isLocalNode(node)).thenReturn(false);
 		
 		Assert.assertEquals(new JID("channels.shakespeare.lit"), request.getTo());
@@ -135,5 +135,6 @@ public class PublishTest extends IQTestHandler {
 		
 		Assert.assertEquals(new JID("shakespeare.lit"), response.getTo());
 	}
+	
 
 }

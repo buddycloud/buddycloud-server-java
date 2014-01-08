@@ -11,9 +11,8 @@ public class ValidateEntryTest extends TestHandler {
 
 	@Test
 	public void notProvidingAnEntryReturnsError() throws Exception {
-		validateEntry = new ValidateEntry(null);
 		
+		validateEntry = new ValidateEntry(null);
 		Assert.assertFalse(validateEntry.isValid());
-        
 	}
 }

@@ -190,29 +190,8 @@ public class Publish extends PubSubElementProcessorAbstract {
 	private void sendInvalidEntryResponse(ValidateEntry vEntry)
 			throws InterruptedException {
 		logger.info("Entry is not valid: '" + vEntry.getErrorMsg() + "'.");
-
-		/*
-		 * <iq type='error' from='pubsub.shakespeare.lit'
-		 * to='hamlet@denmark.lit/elsinore' id='publish1'> <error
-		 * type='modify'> <bad-request
-		 * xmlns='urn:ietf:params:xml:ns:xmpp-stanzas'/> <invalid-payload
-		 * xmlns='http://jabber.org/protocol/pubsub#errors'/> </error> </iq>
-		 */
-		response.setType(Type.error);
-
-		Element badRequest = new DOMElement("bad-request",
-				new org.dom4j.Namespace("", JabberPubsub.NS_XMPP_STANZAS));
-
-		Element nodeIdRequired = new DOMElement("invalid-payload",
-				new org.dom4j.Namespace("", JabberPubsub.NS_PUBSUB_ERROR));
-
-		Element error = new DOMElement("error");
-		error.addAttribute("type", "modify");
-		error.add(badRequest);
-		error.add(nodeIdRequired);
-
-		response.setChildElement(error);
-
+		createExtendedErrorReply(PacketError.Type.modify,
+				PacketError.Condition.bad_request, "invalid-payload");
 		outQueue.put(response);
 	}
 

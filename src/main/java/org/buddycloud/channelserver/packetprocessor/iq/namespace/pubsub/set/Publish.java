@@ -40,8 +40,7 @@ public class Publish extends PubSubElementProcessorAbstract {
 	private String inReplyTo;
 	private Element item;
 
-	public Publish(BlockingQueue<Packet> outQueue,
-			ChannelManager channelManager) {
+	public Publish(BlockingQueue<Packet> outQueue, ChannelManager channelManager) {
 		this.outQueue = outQueue;
 		this.channelManager = channelManager;
 	}
@@ -49,14 +48,16 @@ public class Publish extends PubSubElementProcessorAbstract {
 	@Override
 	public void process(Element elm, JID actorJID, IQ reqIQ, Element rsm)
 			throws Exception {
-		
+
 		request = reqIQ;
 		response = IQ.createResultIQ(reqIQ);
 		publishersJID = request.getFrom();
-		
-		node = request.getChildElement().element("publish").attributeValue("node");
 
-		if (false == checkNode()) return;
+		node = request.getChildElement().element("publish")
+				.attributeValue("node");
+
+		if (false == checkNode())
+			return;
 
 		boolean isLocalSubscriber = false;
 
@@ -90,17 +91,23 @@ public class Publish extends PubSubElementProcessorAbstract {
 		}
 
 		try {
-			if (false == nodeExists()) return;
-			if (false == userCanPost()) return;
-			if (false == isRequestValid()) return;
-			if (false == extractItemDetails()) return;
-			if (false == determineInReplyToDetails()) return;
-			
+			if (false == nodeExists())
+				return;
+			if (false == userCanPost())
+				return;
+			if (false == isRequestValid())
+				return;
+			if (false == extractItemDetails())
+				return;
+			if (false == determineInReplyToDetails())
+				return;
+
 			saveNodeItem();
 			sendResponseStanza();
 			sendNotifications();
 		} catch (NodeStoreException e) {
-			setErrorCondition(PacketError.Type.wait, PacketError.Condition.internal_server_error);
+			setErrorCondition(PacketError.Type.wait,
+					PacketError.Condition.internal_server_error);
 			outQueue.put(response);
 		}
 
@@ -108,20 +115,22 @@ public class Publish extends PubSubElementProcessorAbstract {
 
 	private void saveNodeItem() throws NodeStoreException {
 		// Let's store the new item.
-		channelManager.addNodeItem(new NodeItemImpl(node, id, updated,
-				entry.asXML(), inReplyTo));
+		channelManager.addNodeItem(new NodeItemImpl(node, id, updated, entry
+				.asXML(), inReplyTo));
 	}
 
-	private boolean determineInReplyToDetails() throws NodeStoreException, InterruptedException {
+	private boolean determineInReplyToDetails() throws NodeStoreException,
+			InterruptedException {
 		inReplyTo = null;
 		Element reply;
 		NodeItem nodeItem = null;
-		
-		if (null == (reply = entry.element("in-reply-to"))) return true;
+
+		if (null == (reply = entry.element("in-reply-to")))
+			return true;
 
 		String[] inReplyToParts = reply.attributeValue("ref").split(",");
 		inReplyTo = inReplyToParts[inReplyToParts.length - 1];
-		
+
 		if (null == (nodeItem = channelManager.getNodeItem(node, inReplyTo))) {
 			response.setType(Type.error);
 			PacketError pe = new PacketError(
@@ -140,7 +149,7 @@ public class Publish extends PubSubElementProcessorAbstract {
 			response.setError(pe);
 			outQueue.put(response);
 			return false;
-        }
+		}
 		return true;
 	}
 
@@ -151,8 +160,8 @@ public class Publish extends PubSubElementProcessorAbstract {
 			return false;
 		}
 
-		entry = vEntry.createBcCompatible(publishersJID.toBareJID(),
-				request.getTo().toBareJID(), node);
+		entry = vEntry.createBcCompatible(publishersJID.toBareJID(), request
+				.getTo().toBareJID(), node);
 
 		id = GlobalItemIDImpl.toLocalId(entry.element("id").getText());
 
@@ -209,38 +218,39 @@ public class Publish extends PubSubElementProcessorAbstract {
 
 	private boolean isRequestValid() throws InterruptedException {
 		item = request.getChildElement().element("publish").element("item");
-		if (item != null) return true;
-		
-		createExtendedErrorReply(PacketError.Type.modify, PacketError.Condition.bad_request, "item-required");
+		if (item != null)
+			return true;
+
+		createExtendedErrorReply(PacketError.Type.modify,
+				PacketError.Condition.bad_request, "item-required");
 		outQueue.put(response);
 		return false;
 	}
 
-	private boolean userCanPost() throws NodeStoreException, InterruptedException {
+	private boolean userCanPost() throws NodeStoreException,
+			InterruptedException {
 
-		Subscriptions possibleExistingSubscription = channelManager.getUserSubscription(
-				node, publishersJID)
-				.getSubscription();
+		Subscriptions possibleExistingSubscription = channelManager
+				.getUserSubscription(node, publishersJID).getSubscription();
 
-		Affiliations possibleExistingAffiliation = channelManager.getUserAffiliation(
-				node, publishersJID)
-				.getAffiliation();
+		Affiliations possibleExistingAffiliation = channelManager
+				.getUserAffiliation(node, publishersJID).getAffiliation();
 
-		if ((false == possibleExistingSubscription.equals(
-				Subscriptions.subscribed))
-				|| (false == possibleExistingAffiliation.in(Affiliations.moderator,
-						Affiliations.owner, Affiliations.publisher))) {
+		if ((false == possibleExistingSubscription
+				.equals(Subscriptions.subscribed))
+				|| (false == possibleExistingAffiliation.in(
+						Affiliations.moderator, Affiliations.owner,
+						Affiliations.publisher))) {
 			response.setType(Type.error);
 			PacketError error = new PacketError(
-					PacketError.Condition.forbidden,
-					PacketError.Type.auth);
+					PacketError.Condition.forbidden, PacketError.Type.auth);
 			response.setError(error);
 			outQueue.put(response);
 			return false;
 		}
 		return true;
 	}
-	
+
 	private void sendResponseStanza() throws InterruptedException {
 		/*
 		 * Success, let's response as defined in
@@ -261,11 +271,11 @@ public class Publish extends PubSubElementProcessorAbstract {
 	}
 
 	private boolean nodeExists() throws Exception {
-		if (true == channelManager.nodeExists(node)) return true;
+		if (true == channelManager.nodeExists(node))
+			return true;
 		response.setType(Type.error);
 		PacketError error = new PacketError(
-				PacketError.Condition.item_not_found,
-				PacketError.Type.cancel);
+				PacketError.Condition.item_not_found, PacketError.Type.cancel);
 		response.setError(error);
 		outQueue.put(response);
 		return false;
@@ -274,26 +284,26 @@ public class Publish extends PubSubElementProcessorAbstract {
 	private boolean checkNode() throws InterruptedException, NodeStoreException {
 		if ((node == null) || (true == node.equals(""))) {
 			response.setType(Type.error);
-	
+
 			Element badRequest = new DOMElement("bad-request",
 					new org.dom4j.Namespace("", JabberPubsub.NS_XMPP_STANZAS));
-	
+
 			Element nodeIdRequired = new DOMElement("nodeid-required",
 					new org.dom4j.Namespace("", JabberPubsub.NS_PUBSUB_ERROR));
-	
+
 			Element error = new DOMElement("error");
 			error.addAttribute("type", "modify");
 			error.add(badRequest);
 			error.add(nodeIdRequired);
-	
+
 			response.setChildElement(error);
-	
+
 			outQueue.put(response);
 			return false;
 		}
 		boolean isLocalNode = false;
 		try {
-		    isLocalNode = channelManager.isLocalNode(node);
+			isLocalNode = channelManager.isLocalNode(node);
 		} catch (IllegalArgumentException e) {
 			response.setType(Type.error);
 			PacketError pe = new PacketError(
@@ -304,7 +314,7 @@ public class Publish extends PubSubElementProcessorAbstract {
 			outQueue.put(response);
 			return false;
 		}
-		
+
 		if (false == isLocalNode) {
 			makeRemoteRequest();
 			return false;
@@ -312,8 +322,8 @@ public class Publish extends PubSubElementProcessorAbstract {
 		return true;
 	}
 
-	private void sendNotifications()
-			throws NodeStoreException, InterruptedException {
+	private void sendNotifications() throws NodeStoreException,
+			InterruptedException {
 		// Let's send notifications as defined in 7.1.2.1 Notification With
 		// Payload
 		Message msg = new Message();
@@ -335,28 +345,27 @@ public class Publish extends PubSubElementProcessorAbstract {
 		for (NodeSubscription ns : cur) {
 			JID to = ns.getUser();
 			if (ns.getSubscription().equals(Subscriptions.subscribed)) {
-			    logger.debug("Sending post notification to " + to.toBareJID());
-			    msg.setTo(ns.getListener());
-			    outQueue.put(msg.createCopy());
+				logger.debug("Sending post notification to " + to.toBareJID());
+				msg.setTo(ns.getListener());
+				outQueue.put(msg.createCopy());
 			}
 		}
-		
+
 		Collection<JID> admins = getAdminUsers();
 		for (JID admin : admins) {
-			msg.setTo(admin);	
+			msg.setTo(admin);
 			outQueue.put(msg.createCopy());
 		}
 	}
 
 	private void makeRemoteRequest() throws InterruptedException {
 		request.setTo(new JID(node.split("/")[2]).getDomain());
-		Element actor = request.getElement()
-		    .element("pubsub")
-		    .addElement("actor", JabberPubsub.NS_BUDDYCLOUD);
+		Element actor = request.getElement().element("pubsub")
+				.addElement("actor", JabberPubsub.NS_BUDDYCLOUD);
 		actor.addText(request.getFrom().toBareJID());
-	    outQueue.put(request);
+		outQueue.put(request);
 	}
-	
+
 	@Override
 	public boolean accept(Element elm) {
 		return elm.getName().equals("publish");

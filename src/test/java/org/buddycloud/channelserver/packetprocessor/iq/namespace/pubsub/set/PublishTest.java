@@ -55,6 +55,8 @@ public class PublishTest extends IQTestHandler {
 		publish.setChannelManager(channelManager);
 
 		element = new BaseElement("publish");
+		
+		Mockito.when(channelManager.isLocalNode(node)).thenReturn(true);
 	}
 
 	@Test
@@ -88,7 +90,6 @@ public class PublishTest extends IQTestHandler {
 
 	@Test
 	public void testNodeStoreExceptionReturnsErrorStanza() throws Exception {
-		Mockito.when(channelManager.isLocalNode(Mockito.eq(node))).thenReturn(true);
 		Mockito.doThrow(new NodeStoreException()).when(channelManager)
 				.nodeExists(Mockito.eq(node));
 
@@ -107,9 +108,7 @@ public class PublishTest extends IQTestHandler {
 	@Test
 	public void testProvidingNodeWhichDoesntExistReturnsError()
 			throws Exception {
-		Mockito.when(channelManager.isLocalNode(node)).thenReturn(true);
 		Mockito.when(channelManager.nodeExists(node)).thenReturn(false);
-		publish.setChannelManager(channelManager);
 
 		publish.process(element, jid, request, null);
 
@@ -120,6 +119,21 @@ public class PublishTest extends IQTestHandler {
 		Assert.assertEquals(PacketError.Type.cancel, error.getType());
 		Assert.assertEquals(PacketError.Condition.item_not_found,
 				error.getCondition());
+	}
+	
+	@Test
+	public void testRequestToRemoteNodeResultsInForwardedPacket() throws Exception {
+		Mockito.when(channelManager.isLocalNode(node)).thenReturn(false);
+		
+		Assert.assertEquals(new JID("channels.shakespeare.lit"), request.getTo());
+		
+		publish.process(element, jid, request, null);
+
+		Assert.assertEquals(1, queue.size());
+		
+		Packet response = queue.poll(100, TimeUnit.MILLISECONDS);
+		
+		Assert.assertEquals(new JID("shakespeare.lit"), response.getTo());
 	}
 
 }

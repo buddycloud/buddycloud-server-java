@@ -13,6 +13,9 @@ public class ValidateEntry {
 
 	public static final String MISSING_CONTENT_ELEMENT = "content-required";
 
+	public static final String CONTENT_TEXT = "text";
+	public static final String CONTENT_XHTML = "xhtml";
+	
 	private static Logger LOGGER = Logger.getLogger(ValidateEntry.class);
 
 	private Element entry;

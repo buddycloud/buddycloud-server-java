@@ -14,16 +14,29 @@ import org.dom4j.Element;
 import junit.framework.Assert;
 import junit.framework.TestCase;
 
+/**
+ * TODO Additional work required:
+ * 
+ * - Check for (and add) activity stream verb
+ * - Check for (and add) activity stream object type
+ * - Check for (and add) content type (accept 'text' and 'html', default 'text')
+ *
+ */
 public class ValidateEntryTest extends TestHandler {
 
 	ValidateEntry validateEntry;
-	IQ request;
-	Element entry;
+	IQ publishRequest;
+	Element publishEntry;
+	IQ replyRequest;
+	Element replyEntry;
 
 	@Before
 	public void setUp() throws Exception {
-		request = readStanzaAsIq("/iq/pubsub/publish/request.stanza");
-		entry = request.getChildElement().element("publish").element("item")
+		publishRequest = readStanzaAsIq("/iq/pubsub/publish/request.stanza");
+		publishEntry = publishRequest.getChildElement().element("publish").element("item")
+				.element("entry");
+		replyRequest = readStanzaAsIq("/iq/pubsub/publish/reply.stanza");
+		replyEntry = replyRequest.getChildElement().element("publish").element("item")
 				.element("entry");
 	}
 
@@ -38,9 +51,9 @@ public class ValidateEntryTest extends TestHandler {
 	public void missingIdAttributeGetsAdded() throws Exception {
 
 		Assert.assertEquals("96da02ee1baef61e767742844207bec4",
-				entry.elementText("id"));
+				publishEntry.elementText("id"));
 
-		Element entry = (Element) this.entry.clone();
+		Element entry = (Element) this.publishEntry.clone();
 		entry.element("id").detach();
 		validateEntry = new ValidateEntry(entry);
 		Assert.assertTrue(validateEntry.isValid());
@@ -51,9 +64,9 @@ public class ValidateEntryTest extends TestHandler {
 	public void emptyIdElementHasValueAdded() throws Exception {
 
 		Assert.assertEquals("96da02ee1baef61e767742844207bec4",
-				entry.elementText("id"));
+				publishEntry.elementText("id"));
 
-		Element entry = (Element) this.entry.clone();
+		Element entry = (Element) this.publishEntry.clone();
 		entry.element("id").detach();
 		entry.addElement("id");
 
@@ -65,9 +78,9 @@ public class ValidateEntryTest extends TestHandler {
 	@Test
 	public void missingTitleElementIsAdded() throws Exception {
 
-		Assert.assertEquals("Post title", entry.elementText("title"));
+		Assert.assertEquals("Post title", publishEntry.elementText("title"));
 
-		Element entry = (Element) this.entry.clone();
+		Element entry = (Element) this.publishEntry.clone();
 		entry.element("title").detach();
 		validateEntry = new ValidateEntry(entry);
 		Assert.assertTrue(validateEntry.isValid());
@@ -77,9 +90,9 @@ public class ValidateEntryTest extends TestHandler {
 	@Test
 	public void missingContentElementReturnsInvalid() throws Exception {
 
-		Assert.assertNotNull(entry.element("content"));
+		Assert.assertNotNull(publishEntry.element("content"));
 
-		Element entry = (Element) this.entry.clone();
+		Element entry = (Element) this.publishEntry.clone();
 		entry.element("content").detach();
 		validateEntry = new ValidateEntry(entry);
 		Assert.assertFalse(validateEntry.isValid());

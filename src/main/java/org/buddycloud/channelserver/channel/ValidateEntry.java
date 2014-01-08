@@ -79,12 +79,13 @@ public class ValidateEntry {
 
 		Element reply = this.entry.element("in-reply-to");
 		if (null != reply) {
-			inReplyTo = reply.attributeValue("ref").toString();
-			if (true == inReplyTo.matches(",+")) {
+			inReplyTo = reply.attributeValue("ref");
+			if (-1 != inReplyTo.indexOf(",")) {
 				String[] tokens = inReplyTo.split(",");
-				inReplyTo = tokens[2];
+				this.entry.element("in-reply-to").attribute("ref").setValue(tokens[2]);
 			}
 		}
+		
 		Element meta = this.entry.element("meta");
 		if (null != meta) {
 			this.meta = meta;

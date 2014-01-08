@@ -104,12 +104,24 @@ public class ValidateEntryTest extends TestHandler {
 	public void missingUpdatedElementHasValueAdded() throws Exception {
 
 		Assert.assertEquals("2014-01-01T00:00:00.000Z",
-				entry.elementText("updated"));
+				publishEntry.elementText("updated"));
 
-		Element entry = (Element) this.entry.clone();
+		Element entry = (Element) this.publishEntry.clone();
 		entry.element("updated").detach();
 		validateEntry = new ValidateEntry(entry);
 		Assert.assertTrue(validateEntry.isValid());
 		Assert.assertTrue(entry.elementText("updated").matches("[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}.[0-9]{3}Z"));
+	}
+	
+	@Test
+	public void globalInReplyToIdIsMadeALocalId() throws Exception {
+
+		Assert.assertEquals("null@channels.shakespeare.lit,/users/romeo@shakespeare.lit/posts,fc362eb42085f017ed9ccd9c4004b095",
+				replyEntry.element("in-reply-to").attributeValue("ref"));
+
+		Element entry = (Element) this.replyEntry.clone();
+		validateEntry = new ValidateEntry(entry);
+		Assert.assertTrue(validateEntry.isValid());
+		Assert.assertEquals("fc362eb42085f017ed9ccd9c4004b095", entry.element("in-reply-to").attributeValue("ref"));
 	}
 }

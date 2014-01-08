@@ -17,7 +17,7 @@
                <activity:object>
                   <activity:object-type>post</activity:object-type>
                </activity:object>
-            </entry>
+             </entry>
          </item>
       </publish>
    </pubsub>

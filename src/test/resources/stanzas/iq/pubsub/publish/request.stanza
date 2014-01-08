@@ -6,8 +6,8 @@
             <entry xmlns="http://www.w3.org/2005/Atom" xmlns:activity="http://activitystrea.ms/spec/1.0/">
                <id>96da02ee1baef61e767742844207bec4</id>
                <title>Post title</title>
-               <published>2010-01-06T21:41:32Z</published>
-               <updated>2010-01-06T21:41:32Z</updated>
+               <published>2014-01-01T00:00:00.000Z</published>
+               <updated>2014-01-01T00:00:00.000Z</updated>
                <author>
                   <name>juliet@shakespeare.lit</name>
                   <jid xmlns="http://buddycloud.com/atom-elements-0">juliet@shakespeare.lit</jid>

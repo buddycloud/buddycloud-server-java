@@ -86,4 +86,17 @@ public class ValidateEntryTest extends TestHandler {
 		Assert.assertEquals(ValidateEntry.MISSING_CONTENT_ELEMENT,
 				validateEntry.getErrorMessage());
 	}
+	
+	@Test
+	public void missingUpdatedElementHasValueAdded() throws Exception {
+
+		Assert.assertEquals("2014-01-01T00:00:00.000Z",
+				entry.elementText("updated"));
+
+		Element entry = (Element) this.entry.clone();
+		entry.element("updated").detach();
+		validateEntry = new ValidateEntry(entry);
+		Assert.assertTrue(validateEntry.isValid());
+		Assert.assertTrue(entry.elementText("updated").matches("[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}.[0-9]{3}Z"));
+	}
 }

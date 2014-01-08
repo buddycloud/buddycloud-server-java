@@ -45,7 +45,8 @@ public class ValidateEntry {
 
 		Element id = this.entry.element("id");
 		if ((id == null) || (true == id.getText().isEmpty())) {
-			if (null != id) id.detach();
+			if (null != id)
+				id.detach();
 			LOGGER.debug("ID of the entry was missing. We add a default one to it: 1");
 			this.entry.addElement("id").setText("1");
 		}
@@ -66,10 +67,9 @@ public class ValidateEntry {
 		this.params.put("content", content.getText());
 
 		Element updated = this.entry.element("updated");
-		if (updated == null) {
+		if (null == updated) {
 
 			String updateTime = Conf.formatDate(new Date());
-
 			LOGGER.debug("Update of the entry was missing. We add a default one to it: '"
 					+ updateTime + "'.");
 			this.entry.addElement("updated").setText(updateTime);

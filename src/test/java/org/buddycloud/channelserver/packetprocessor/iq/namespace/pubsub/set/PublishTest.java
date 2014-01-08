@@ -232,12 +232,29 @@ public class PublishTest extends IQTestHandler {
 		
 		publish.process(element, jid, request, null);
 
-		Packet response = queue.poll(100, TimeUnit.MILLISECONDS);
+		Packet response = queue.poll();
 
 		PacketError error = response.getError();
 		Assert.assertNotNull(error);
 		Assert.assertEquals(PacketError.Type.auth, error.getType());
 		Assert.assertEquals(PacketError.Condition.forbidden,
 				error.getCondition());
+	}
+	
+	@Test
+	public void noItemElementReturnsError() throws Exception {
+		IQ request = this.request.createCopy();
+		request.getChildElement().element("publish").element("item").detach();
+		
+		publish.process(element, jid, request, null);
+
+		Packet response = queue.poll();
+
+		PacketError error = response.getError();
+		Assert.assertNotNull(error);
+		Assert.assertEquals(PacketError.Type.modify, error.getType());
+		Assert.assertEquals(PacketError.Condition.bad_request,
+				error.getCondition());
+		Assert.assertEquals("item-required", error.getApplicationConditionName());
 	}
 }

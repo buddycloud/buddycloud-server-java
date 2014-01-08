@@ -29,9 +29,9 @@ import org.xmpp.packet.Packet;
 import org.xmpp.packet.PacketError;
 import org.xmpp.resultsetmanagement.ResultSet;
 
-public class PublishSet extends PubSubElementProcessorAbstract {
+public class Publish extends PubSubElementProcessorAbstract {
 
-	private static final Logger LOGGER = Logger.getLogger(PublishSet.class);
+	private static final Logger LOGGER = Logger.getLogger(Publish.class);
 
 	private final BlockingQueue<Packet> outQueue;
 	private final ChannelManager channelManager;
@@ -44,7 +44,7 @@ public class PublishSet extends PubSubElementProcessorAbstract {
 	private JID publishersJID;
 	private String inReplyTo;
 
-	public PublishSet(BlockingQueue<Packet> outQueue,
+	public Publish(BlockingQueue<Packet> outQueue,
 			ChannelManager channelManager) {
 		this.outQueue = outQueue;
 		this.channelManager = channelManager;

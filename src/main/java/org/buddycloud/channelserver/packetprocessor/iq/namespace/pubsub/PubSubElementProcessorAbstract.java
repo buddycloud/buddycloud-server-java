@@ -117,12 +117,12 @@ public abstract class PubSubElementProcessorAbstract
 			String additionalElement) {
 		if (null == response) response = IQ.createResultIQ(request);
 		response.setType(IQ.Type.error);
-		Element standardError = new DOMElement(condition.toString(),
+		Element standardError = new DOMElement(condition.toXMPP(),
 				new org.dom4j.Namespace("", JabberPubsub.NS_XMPP_STANZAS));
 		Element extraError = new DOMElement(additionalElement,
 				new org.dom4j.Namespace("", JabberPubsub.NS_PUBSUB_ERROR));
 		Element error = new DOMElement("error");
-		error.addAttribute("type", type.toString());
+		error.addAttribute("type", type.toXMPP());
 		error.add(standardError);
 		error.add(extraError);
 		response.setChildElement(error);

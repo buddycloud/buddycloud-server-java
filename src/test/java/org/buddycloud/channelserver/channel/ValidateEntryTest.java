@@ -209,5 +209,23 @@ public class ValidateEntryTest extends TestHandler {
 		Assert.assertEquals("fc362eb42085f017ed9ccd9c4004b095",
 				entry.element("in-reply-to").attributeValue("ref"));
 	}
+	
+	@Test
+	public void postGetsNoteTypeReplyGetsCommentType() throws Exception {
+		
+		Element entry = (Element) this.publishEntry.clone();
+		validateEntry = new ValidateEntry(entry);
+		Assert.assertTrue(validateEntry.isValid());
+		entry = validateEntry.createBcCompatible(jid, server, node);
+		
+		Assert.assertEquals(ValidateEntry.POST_TYPE_NOTE, entry.element("object").elementText("object-type"));
+		
+		entry = (Element) this.replyEntry.clone();
+		validateEntry = new ValidateEntry(entry);
+		Assert.assertTrue(validateEntry.isValid());
+		entry = validateEntry.createBcCompatible(jid, server, node);
+		
+		Assert.assertEquals(ValidateEntry.POST_TYPE_COMMENT, entry.element("object").elementText("object-type"));
+	}
 
 }

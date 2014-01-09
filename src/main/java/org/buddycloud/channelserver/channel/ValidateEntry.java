@@ -25,6 +25,9 @@ public class ValidateEntry {
 	public static final String AUTHOR_URI_PREFIX = "acct:";
 	public static final String AUTHOR_TYPE = "person";
 
+	public static final String POST_TYPE_NOTE = "note";
+	public static final String POST_TYPE_COMMENT = "comment";
+	
 	private static Logger LOGGER = Logger.getLogger(ValidateEntry.class);
 
 	private Element entry;
@@ -136,7 +139,7 @@ public class ValidateEntry {
 		 * channel="channel@example.com"/> </media> </entry>
 		 */
 		String id = UUID.randomUUID().toString();
-		String postType = "note";
+		String postType = POST_TYPE_NOTE;
 
 		entry.addElement("id").setText(
 				"tag:" + channelServerDomain + "," + node + "," + id);
@@ -167,15 +170,15 @@ public class ValidateEntry {
 			Element reply = entry.addElement("in-reply-to");
 			reply.addNamespace("", NS_ATOM_THREAD);
 			reply.addAttribute("ref", inReplyTo);
-			postType = "comment";
+			postType = POST_TYPE_COMMENT;
 		}
 
 		this.geoloc = this.entry.element("geoloc");
 
 		entry.addElement("activity:verb").setText("post");
 
-		Element activity_object = entry.addElement("activity:object");
-		activity_object.addElement("activity:object-type").setText(postType);
+		Element activityObject = entry.addElement("activity:object");
+		activityObject.addElement("activity:object-type").setText(postType);
 
 		if (null != meta) {
 			entry.add(meta.createCopy());

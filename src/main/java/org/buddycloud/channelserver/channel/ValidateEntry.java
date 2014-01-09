@@ -14,6 +14,7 @@ public class ValidateEntry {
 
 	public static final String MISSING_CONTENT_ELEMENT = "content-element-required";
 	public static final String MISSING_ENTRY_ELEMENT = "entry-element-required";
+	public static final String UNSUPPORTED_CONTENT_TYPE = "unsupported-content-type";
 
 	public static final String CONTENT_TEXT = "text";
 	public static final String CONTENT_XHTML = "xhtml";
@@ -22,13 +23,13 @@ public class ValidateEntry {
 	public static final String NS_ACTIVITYSTREAM = "http://activitystrea.ms/spec/1.0/";
 	public static final String NS_ATOM_THREAD = "http://purl.org/syndication/thread/1.0";
 	public static final String NS_GEOLOCATION = "http://jabber.org/protocol/geoloc";
-	
+
 	public static final String AUTHOR_URI_PREFIX = "acct:";
 	public static final String AUTHOR_TYPE = "person";
 
 	public static final String POST_TYPE_NOTE = "note";
 	public static final String POST_TYPE_COMMENT = "comment";
-	
+
 	private static Logger LOGGER = Logger.getLogger(ValidateEntry.class);
 
 	private Element entry;
@@ -80,7 +81,17 @@ public class ValidateEntry {
 			this.errorMessage = MISSING_CONTENT_ELEMENT;
 			return false;
 		}
+		String contentType = content.attributeValue("type");
+		if (null == contentType) {
+			contentType = CONTENT_TEXT;
+		}
+		if ((false == contentType.equals(CONTENT_TEXT))
+				&& (false == contentType.equals(CONTENT_XHTML))) {
+			this.errorMessage = UNSUPPORTED_CONTENT_TYPE;
+			return false;
+		}
 		this.params.put("content", content.getText());
+		this.params.put("content-type", contentType);
 
 		Element updated = this.entry.element("updated");
 		if (null == updated) {
@@ -120,8 +131,7 @@ public class ValidateEntry {
 
 		Element entry = new DOMElement("entry", new org.dom4j.Namespace("",
 				NS_ATOM));
-		entry.add(new org.dom4j.Namespace("activity",
-				NS_ACTIVITYSTREAM));
+		entry.add(new org.dom4j.Namespace("activity", NS_ACTIVITYSTREAM));
 
 		/**
 		 * We are going to build this now.
@@ -147,7 +157,9 @@ public class ValidateEntry {
 
 		entry.addElement("title").setText(this.params.get("title"));
 
-		entry.addElement("content").setText(this.params.get("content"));
+		Element content = entry.addElement("content");
+		content.setText(this.params.get("content"));
+		content.addAttribute("type", this.params.get("content-type"));
 
 		String publishedDate = Conf.formatDate(new Date());
 
@@ -166,7 +178,7 @@ public class ValidateEntry {
 		if (this.geoloc != null) {
 			entry.add(this.geoloc.createCopy());
 		}
-		
+
 		if (this.inReplyTo != null) {
 			Element reply = entry.addElement("in-reply-to");
 			reply.addNamespace("", NS_ATOM_THREAD);

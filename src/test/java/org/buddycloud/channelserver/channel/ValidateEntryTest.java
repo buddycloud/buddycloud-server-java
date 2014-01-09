@@ -23,7 +23,7 @@ import junit.framework.TestCase;
  * - Check for (and add) activity stream object type
  * 
  * - Check for (and add) content type (accept 'text' and 'html', default 'text')
- *
+ * 
  * - Test 'media' if present
  * 
  * - Test 'meta' if present
@@ -56,7 +56,8 @@ public class ValidateEntryTest extends TestHandler {
 
 		validateEntry = new ValidateEntry(null);
 		Assert.assertFalse(validateEntry.isValid());
-		Assert.assertEquals(ValidateEntry.MISSING_ENTRY_ELEMENT, validateEntry.getErrorMessage());
+		Assert.assertEquals(ValidateEntry.MISSING_ENTRY_ELEMENT,
+				validateEntry.getErrorMessage());
 	}
 
 	@Test
@@ -146,12 +147,11 @@ public class ValidateEntryTest extends TestHandler {
 				.matches(
 						"[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}.[0-9]{3}Z"));
 	}
-	
+
 	@Test
 	public void updateDateIsIgnored() throws Exception {
 		String dateString = "2014-01-01T00:00:00.000Z";
-		Assert.assertEquals(dateString,
-				publishEntry.elementText("updated"));
+		Assert.assertEquals(dateString, publishEntry.elementText("updated"));
 
 		Element entry = (Element) this.publishEntry.clone();
 		validateEntry = new ValidateEntry(entry);
@@ -159,36 +159,37 @@ public class ValidateEntryTest extends TestHandler {
 		entry = validateEntry.createBcCompatible(jid, server, node);
 		Assert.assertFalse(entry.elementText("updated").equals(dateString));
 	}
-	
-	
+
 	@Test
 	public void authorEntryIsAdded() throws Exception {
 		Element entry = (Element) this.publishEntry.clone();
 		validateEntry = new ValidateEntry(entry);
 		Assert.assertTrue(validateEntry.isValid());
 		entry = validateEntry.createBcCompatible(jid, server, node);
-		
+
 		Element author = entry.element("author");
 		Assert.assertNotNull(author);
-		Assert.assertEquals(ValidateEntry.AUTHOR_URI_PREFIX + jid.toBareJID(), author.elementText("uri"));
+		Assert.assertEquals(ValidateEntry.AUTHOR_URI_PREFIX + jid.toBareJID(),
+				author.elementText("uri"));
 		Assert.assertEquals(jid.toBareJID(), author.elementText("name"));
-		Assert.assertEquals(ValidateEntry.AUTHOR_TYPE, author.elementText("object-type"));
+		Assert.assertEquals(ValidateEntry.AUTHOR_TYPE,
+				author.elementText("object-type"));
 	}
-	
+
 	@Test
 	public void geolocationEntryIsAdded() throws Exception {
 		Element entry = (Element) this.publishEntry.clone();
 		validateEntry = new ValidateEntry(entry);
 		Assert.assertTrue(validateEntry.isValid());
 		entry = validateEntry.createBcCompatible(jid, server, node);
-		
+
 		Assert.assertNotNull(entry.element("geoloc"));
-		
+
 		entry = (Element) this.replyEntry.clone();
 		validateEntry = new ValidateEntry(entry);
 		Assert.assertTrue(validateEntry.isValid());
 		entry = validateEntry.createBcCompatible(jid, server, node);
-		
+
 		Assert.assertNull(entry.element("geoloc"));
 	}
 
@@ -206,23 +207,59 @@ public class ValidateEntryTest extends TestHandler {
 		Assert.assertEquals("fc362eb42085f017ed9ccd9c4004b095",
 				entry.element("in-reply-to").attributeValue("ref"));
 	}
-	
+
 	@Test
 	public void postGetsNoteTypeReplyGetsCommentType() throws Exception {
-		
+
 		Element entry = (Element) this.publishEntry.clone();
 		validateEntry = new ValidateEntry(entry);
 		Assert.assertTrue(validateEntry.isValid());
 		entry = validateEntry.createBcCompatible(jid, server, node);
-		
-		Assert.assertEquals(ValidateEntry.POST_TYPE_NOTE, entry.element("object").elementText("object-type"));
-		
+
+		Assert.assertEquals(ValidateEntry.POST_TYPE_NOTE,
+				entry.element("object").elementText("object-type"));
+
 		entry = (Element) this.replyEntry.clone();
 		validateEntry = new ValidateEntry(entry);
 		Assert.assertTrue(validateEntry.isValid());
 		entry = validateEntry.createBcCompatible(jid, server, node);
-		
-		Assert.assertEquals(ValidateEntry.POST_TYPE_COMMENT, entry.element("object").elementText("object-type"));
+
+		Assert.assertEquals(ValidateEntry.POST_TYPE_COMMENT,
+				entry.element("object").elementText("object-type"));
+	}
+
+	@Test
+	public void badContentTypeReturnsError() throws Exception {
+		Element entry = (Element) this.publishEntry.clone();
+		entry.element("content").attribute("type").setText("emojis");
+		validateEntry = new ValidateEntry(entry);
+		Assert.assertFalse(validateEntry.isValid());
+		Assert.assertEquals(ValidateEntry.UNSUPPORTED_CONTENT_TYPE,
+				validateEntry.getErrorMessage());
+	}
+
+	@Test
+	public void noContentTypeGetsDefaultedToText() throws Exception {
+		Element entry = (Element) this.publishEntry.clone();
+		entry.element("content").attribute("type").detach();
+		validateEntry = new ValidateEntry(entry);
+		Assert.assertTrue(validateEntry.isValid());
+		entry = validateEntry.createBcCompatible(jid, server, node);
+		Assert.assertEquals(ValidateEntry.CONTENT_TEXT, entry
+				.element("content").attributeValue("type"));
+
+	}
+
+	@Test
+	public void contentTypeGetsAddedAsRequired() throws Exception {
+		Element entry = (Element) this.publishEntry.clone();
+		entry.element("content").attribute("type")
+				.setText(ValidateEntry.CONTENT_XHTML);
+		validateEntry = new ValidateEntry(entry);
+		Assert.assertTrue(validateEntry.isValid());
+		entry = validateEntry.createBcCompatible(jid, server, node);
+		Assert.assertEquals(ValidateEntry.CONTENT_XHTML,
+				entry.element("content").attributeValue("type"));
 	}
 
 }

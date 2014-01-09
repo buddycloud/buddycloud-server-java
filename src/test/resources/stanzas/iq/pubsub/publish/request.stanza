@@ -17,6 +17,11 @@
                <activity:object>
                   <activity:object-type>post</activity:object-type>
                </activity:object>
+               <geoloc xmlns="http://jabber.org/protocol/geoloc"> 
+                   <text>Verona, Italy</text> 
+                   <locality>Verona</locality> 
+                   <country>Italy</country> 
+                </geoloc>
              </entry>
          </item>
       </publish>

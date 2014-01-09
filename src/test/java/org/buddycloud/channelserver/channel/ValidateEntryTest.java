@@ -180,7 +180,7 @@ public class ValidateEntryTest extends TestHandler {
 	
 	@Test
 	public void authorEntryIsAdded() throws Exception {
-		Element entry = (Element) this.replyEntry.clone();
+		Element entry = (Element) this.publishEntry.clone();
 		validateEntry = new ValidateEntry(entry);
 		Assert.assertTrue(validateEntry.isValid());
 		entry = validateEntry.createBcCompatible(jid, server, node);
@@ -191,4 +191,22 @@ public class ValidateEntryTest extends TestHandler {
 		Assert.assertEquals(jid.toBareJID(), author.elementText("name"));
 		Assert.assertEquals(ValidateEntry.AUTHOR_TYPE, author.elementText("object-type"));
 	}
+	
+	@Test
+	public void geolocationEntryIsAdded() throws Exception {
+		Element entry = (Element) this.publishEntry.clone();
+		validateEntry = new ValidateEntry(entry);
+		Assert.assertTrue(validateEntry.isValid());
+		entry = validateEntry.createBcCompatible(jid, server, node);
+		
+		Assert.assertNotNull(entry.element("geoloc"));
+		
+		entry = (Element) this.replyEntry.clone();
+		validateEntry = new ValidateEntry(entry);
+		Assert.assertTrue(validateEntry.isValid());
+		entry = validateEntry.createBcCompatible(jid, server, node);
+		
+		Assert.assertNull(entry.element("geoloc"));
+	}
+
 }

@@ -216,7 +216,7 @@ public class Publish extends PubSubElementProcessorAbstract {
 			return true;
 
 		createExtendedErrorReply(PacketError.Type.modify,
-				PacketError.Condition.bad_request, "item-required");
+				PacketError.Condition.bad_request, MISSING_ITEM_ELEMENT);
 		outQueue.put(response);
 		return false;
 	}

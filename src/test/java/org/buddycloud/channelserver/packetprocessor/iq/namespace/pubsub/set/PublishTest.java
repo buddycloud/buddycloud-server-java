@@ -265,7 +265,7 @@ public class PublishTest extends IQTestHandler {
 		Assert.assertEquals(PacketError.Type.modify, error.getType());
 		Assert.assertEquals(PacketError.Condition.bad_request,
 				error.getCondition());
-		Assert.assertEquals("item-required", error.getApplicationConditionName());
+		Assert.assertEquals(Publish.MISSING_ITEM_ELEMENT, error.getApplicationConditionName());
 	}
 	
 	@Test

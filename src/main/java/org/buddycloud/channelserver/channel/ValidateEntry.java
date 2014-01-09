@@ -136,11 +136,11 @@ public class ValidateEntry {
 
 		entry.addElement("content").setText(this.params.get("content"));
 
-		String leData = Conf.formatDate(new Date());
+		String publishedDate = Conf.formatDate(new Date());
 
-		entry.addElement("published").setText(leData);
+		entry.addElement("published").setText(publishedDate);
 
-		entry.addElement("updated").setText(leData);
+		entry.addElement("updated").setText(publishedDate);
 
 		Element author = entry.addElement("author");
 

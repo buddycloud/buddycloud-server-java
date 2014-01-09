@@ -30,6 +30,8 @@ public class ValidateEntry {
 	public static final String POST_TYPE_NOTE = "note";
 	public static final String POST_TYPE_COMMENT = "comment";
 
+	public static final String ACTIVITY_VERB_POST = "post";
+
 	private static Logger LOGGER = Logger.getLogger(ValidateEntry.class);
 
 	private Element entry;
@@ -133,24 +135,9 @@ public class ValidateEntry {
 				NS_ATOM));
 		entry.add(new org.dom4j.Namespace("activity", NS_ACTIVITYSTREAM));
 
-		/**
-		 * We are going to build this now.
-		 * 
-		 * <entry xmlns="http://www.w3.org/2005/Atom"
-		 * xmlns:activity="http://activitystrea.ms/spec/1.0/">
-		 * <id>tag:channels.koski
-		 * .com,/user/tuomas@koski.com/status,1dfs5-6s8e-zerf-4494</id>
-		 * <title>Status update.</title> <content>This is my new
-		 * status!</content> <updated>2011-08-03T09:58:57Z</updated> <author>
-		 * <name>tuomas@koski.com</name> <uri>acct:tuomas@koski.com</uri>
-		 * <activity:object-type>person</activity:object-type> </author>
-		 * <activity:verb>post</activity:verb> <activity:object>
-		 * <activity:object-type>note</activity:object-type> </activity:object>
-		 * <meta> ... additional meta ... </meta> <media> <item id="mediaId"
-		 * channel="channel@example.com"/> </media> </entry>
-		 */
 		String id = UUID.randomUUID().toString();
 		String postType = POST_TYPE_NOTE;
+		String activityVerb = ACTIVITY_VERB_POST;
 
 		entry.addElement("id").setText(
 				"tag:" + channelServerDomain + "," + node + "," + id);
@@ -188,7 +175,7 @@ public class ValidateEntry {
 
 		this.geoloc = this.entry.element("geoloc");
 
-		entry.addElement("activity:verb").setText("post");
+		entry.addElement("activity:verb").setText(activityVerb);
 
 		Element activityObject = entry.addElement("activity:object");
 		activityObject.addElement("activity:object-type").setText(postType);

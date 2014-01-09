@@ -20,10 +20,6 @@ import junit.framework.TestCase;
  * 
  * - Check for (and add) activity stream verb
  * 
- * - Check for (and add) activity stream object type
- * 
- * - Check for (and add) content type (accept 'text' and 'html', default 'text')
- * 
  * - Test 'media' if present
  * 
  * - Test 'meta' if present
@@ -260,6 +256,17 @@ public class ValidateEntryTest extends TestHandler {
 		entry = validateEntry.createBcCompatible(jid, server, node);
 		Assert.assertEquals(ValidateEntry.CONTENT_XHTML,
 				entry.element("content").attributeValue("type"));
+	}
+
+	@Test
+	public void activityVerbIsAdded() throws Exception {
+		Element entry = (Element) this.publishEntry.clone();
+		validateEntry = new ValidateEntry(entry);
+		Assert.assertTrue(validateEntry.isValid());
+		entry = validateEntry.createBcCompatible(jid, server, node);
+
+		Assert.assertEquals(ValidateEntry.ACTIVITY_VERB_POST,
+				entry.elementText("verb"));
 	}
 
 }

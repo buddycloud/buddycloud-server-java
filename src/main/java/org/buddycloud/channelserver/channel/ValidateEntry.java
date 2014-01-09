@@ -12,7 +12,8 @@ import org.xmpp.packet.JID;
 
 public class ValidateEntry {
 
-	public static final String MISSING_CONTENT_ELEMENT = "content-required";
+	public static final String MISSING_CONTENT_ELEMENT = "content-element-required";
+	public static final String MISSING_ENTRY_ELEMENT = "entry-element-required";
 
 	public static final String CONTENT_TEXT = "text";
 	public static final String CONTENT_XHTML = "xhtml";
@@ -54,7 +55,7 @@ public class ValidateEntry {
 	 */
 	public boolean isValid() {
 		if (this.entry == null) {
-			this.errorMessage = "Dude, the entry is missing.";
+			this.errorMessage = MISSING_ENTRY_ELEMENT;
 			return false;
 		}
 

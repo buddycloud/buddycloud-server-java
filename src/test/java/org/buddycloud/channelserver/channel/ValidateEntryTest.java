@@ -23,11 +23,7 @@ import junit.framework.TestCase;
  * - Check for (and add) activity stream object type
  * 
  * - Check for (and add) content type (accept 'text' and 'html', default 'text')
- * 
- * - If in-reply-to set 'verb' to comment
- * 
- * - Test 'geoloc' if present
- * 
+ *
  * - Test 'media' if present
  * 
  * - Test 'meta' if present
@@ -60,6 +56,7 @@ public class ValidateEntryTest extends TestHandler {
 
 		validateEntry = new ValidateEntry(null);
 		Assert.assertFalse(validateEntry.isValid());
+		Assert.assertEquals(ValidateEntry.MISSING_ENTRY_ELEMENT, validateEntry.getErrorMessage());
 	}
 
 	@Test

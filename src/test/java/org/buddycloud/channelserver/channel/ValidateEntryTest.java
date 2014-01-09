@@ -18,11 +18,11 @@ import junit.framework.TestCase;
 /**
  * TODO Additional work required:
  * 
- * - Check for (and add) activity stream verb 
+ * - Check for (and add) activity stream verb
  * 
- * - Check for (and add) activity stream object type 
+ * - Check for (and add) activity stream object type
  * 
- * - Check for (and add) content type (accept 'text' and 'html', default 'text') 
+ * - Check for (and add) content type (accept 'text' and 'html', default 'text')
  * 
  * - If in-reply-to set 'verb' to comment
  * 
@@ -40,10 +40,10 @@ public class ValidateEntryTest extends TestHandler {
 	Element publishEntry;
 	IQ replyRequest;
 	Element replyEntry;
-	
+
 	JID jid = new JID("juliet@shakespeare.lit/balcony");
 	String node = "/users/romeo@shakespeare.lit/posts";
-    String server = "channels.shakespeare.lit";
+	String server = "channels.shakespeare.lit";
 
 	@Before
 	public void setUp() throws Exception {
@@ -73,7 +73,8 @@ public class ValidateEntryTest extends TestHandler {
 		validateEntry = new ValidateEntry(entry);
 		Assert.assertTrue(validateEntry.isValid());
 		entry = validateEntry.createBcCompatible(jid.toBareJID(), server, node);
-		Assert.assertTrue(entry.elementText("id").contains("tag:" + server + "," + node + ","));
+		Assert.assertTrue(entry.elementText("id").contains(
+				"tag:" + server + "," + node + ","));
 	}
 
 	@Test
@@ -89,21 +90,21 @@ public class ValidateEntryTest extends TestHandler {
 		validateEntry = new ValidateEntry(entry);
 		Assert.assertTrue(validateEntry.isValid());
 		entry = validateEntry.createBcCompatible(jid.toBareJID(), server, node);
-		Assert.assertTrue(entry.elementText("id").contains("tag:" + server + "," + node + ","));
+		Assert.assertTrue(entry.elementText("id").contains(
+				"tag:" + server + "," + node + ","));
 	}
-	
+
 	@Test
 	public void idElementIsIgnored() throws Exception {
 		String id = "96da02ee1baef61e767742844207bec4";
-		Assert.assertEquals(id,
-				publishEntry.elementText("id"));
+		Assert.assertEquals(id, publishEntry.elementText("id"));
 
 		Element entry = (Element) this.publishEntry.clone();
 		validateEntry = new ValidateEntry(entry);
 		Assert.assertTrue(validateEntry.isValid());
 		entry = validateEntry.createBcCompatible(jid.toBareJID(), server, node);
 		Assert.assertFalse(entry.elementText("id").contains(id));
-		
+
 	}
 
 	@Test

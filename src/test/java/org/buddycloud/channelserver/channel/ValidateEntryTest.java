@@ -162,21 +162,7 @@ public class ValidateEntryTest extends TestHandler {
 		entry = validateEntry.createBcCompatible(jid, server, node);
 		Assert.assertFalse(entry.elementText("updated").equals(dateString));
 	}
-
-	@Test
-	public void globalInReplyToIdIsMadeALocalId() throws Exception {
-
-		Assert.assertEquals(
-				"null@channels.shakespeare.lit,/users/romeo@shakespeare.lit/posts,fc362eb42085f017ed9ccd9c4004b095",
-				replyEntry.element("in-reply-to").attributeValue("ref"));
-
-		Element entry = (Element) this.replyEntry.clone();
-		validateEntry = new ValidateEntry(entry);
-		Assert.assertTrue(validateEntry.isValid());
-		entry = validateEntry.createBcCompatible(jid, server, node);
-		Assert.assertEquals("fc362eb42085f017ed9ccd9c4004b095",
-				entry.element("in-reply-to").attributeValue("ref"));
-	}
+	
 	
 	@Test
 	public void authorEntryIsAdded() throws Exception {
@@ -207,6 +193,21 @@ public class ValidateEntryTest extends TestHandler {
 		entry = validateEntry.createBcCompatible(jid, server, node);
 		
 		Assert.assertNull(entry.element("geoloc"));
+	}
+
+	@Test
+	public void globalInReplyToIdIsMadeALocalId() throws Exception {
+
+		Assert.assertEquals(
+				"null@channels.shakespeare.lit,/users/romeo@shakespeare.lit/posts,fc362eb42085f017ed9ccd9c4004b095",
+				replyEntry.element("in-reply-to").attributeValue("ref"));
+
+		Element entry = (Element) this.replyEntry.clone();
+		validateEntry = new ValidateEntry(entry);
+		Assert.assertTrue(validateEntry.isValid());
+		entry = validateEntry.createBcCompatible(jid, server, node);
+		Assert.assertEquals("fc362eb42085f017ed9ccd9c4004b095",
+				entry.element("in-reply-to").attributeValue("ref"));
 	}
 
 }

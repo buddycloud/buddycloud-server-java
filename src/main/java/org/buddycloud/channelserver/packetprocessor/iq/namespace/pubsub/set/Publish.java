@@ -41,7 +41,7 @@ public class Publish extends PubSubElementProcessorAbstract {
 	private JID publishersJID;
 	private String inReplyTo;
 	private Element item;
-	private ValidateEntry vEntry;
+	private ValidateEntry entryContent;
 
 	private ValidateEntry validator;
 
@@ -160,7 +160,7 @@ public class Publish extends PubSubElementProcessorAbstract {
 
 	private boolean extractItemDetails() throws InterruptedException {
 
-		entry = vEntry.createBcCompatible(publishersJID, request
+		entry = entryContent.getPayload(publishersJID, request
 				.getTo().toBareJID(), node);
 
 		id = GlobalItemIDImpl.toLocalId(entry.element("id").getText());
@@ -200,9 +200,9 @@ public class Publish extends PubSubElementProcessorAbstract {
 
 	private void sendInvalidEntryResponse()
 			throws InterruptedException {
-		logger.info("Entry is not valid: '" + vEntry.getErrorMessage() + "'.");
+		logger.info("Entry is not valid: '" + entryContent.getErrorMessage() + "'.");
 		createExtendedErrorReply(PacketError.Type.modify,
-				PacketError.Condition.bad_request, vEntry.getErrorMessage());
+				PacketError.Condition.bad_request, entryContent.getErrorMessage());
 		outQueue.put(response);
 	}
 
@@ -214,10 +214,11 @@ public class Publish extends PubSubElementProcessorAbstract {
 			outQueue.put(response);
 			return false;
 		}
-		vEntry = getEntryValidator();
-		vEntry.setEntry(item.element("entry"));
+		
+		entryContent = getEntryValidator();
+		entryContent.setEntry(item.element("entry"));
 
-		if (!vEntry.isValid()) {
+		if (!entryContent.isValid()) {
 			sendInvalidEntryResponse();
 			return false;
 		}

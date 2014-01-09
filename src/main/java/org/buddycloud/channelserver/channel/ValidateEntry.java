@@ -134,7 +134,7 @@ public class ValidateEntry {
 		return true;
 	}
 
-	public Element createBcCompatible(JID jid, String channelServerDomain,
+	public Element getPayload(JID jid, String channelServerDomain,
 			String node) {
 
 		Element entry = new DOMElement("entry", new org.dom4j.Namespace("",

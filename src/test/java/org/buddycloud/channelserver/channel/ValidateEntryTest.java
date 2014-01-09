@@ -66,7 +66,7 @@ public class ValidateEntryTest extends TestHandler {
 		entry.element("id").detach();
 		validateEntry = new ValidateEntry(entry);
 		Assert.assertTrue(validateEntry.isValid());
-		entry = validateEntry.createBcCompatible(jid, server, node);
+		entry = validateEntry.getPayload(jid, server, node);
 		Assert.assertTrue(entry.elementText("id").contains(
 				"tag:" + server + "," + node + ","));
 	}
@@ -83,7 +83,7 @@ public class ValidateEntryTest extends TestHandler {
 
 		validateEntry = new ValidateEntry(entry);
 		Assert.assertTrue(validateEntry.isValid());
-		entry = validateEntry.createBcCompatible(jid, server, node);
+		entry = validateEntry.getPayload(jid, server, node);
 		Assert.assertTrue(entry.elementText("id").contains(
 				"tag:" + server + "," + node + ","));
 	}
@@ -96,7 +96,7 @@ public class ValidateEntryTest extends TestHandler {
 		Element entry = (Element) this.publishEntry.clone();
 		validateEntry = new ValidateEntry(entry);
 		Assert.assertTrue(validateEntry.isValid());
-		entry = validateEntry.createBcCompatible(jid, server, node);
+		entry = validateEntry.getPayload(jid, server, node);
 		Assert.assertFalse(entry.elementText("id").contains(id));
 
 	}
@@ -110,7 +110,7 @@ public class ValidateEntryTest extends TestHandler {
 		entry.element("title").detach();
 		validateEntry = new ValidateEntry(entry);
 		Assert.assertTrue(validateEntry.isValid());
-		entry = validateEntry.createBcCompatible(jid, server, node);
+		entry = validateEntry.getPayload(jid, server, node);
 		Assert.assertEquals("Post", entry.elementText("title"));
 	}
 
@@ -137,7 +137,7 @@ public class ValidateEntryTest extends TestHandler {
 		entry.element("updated").detach();
 		validateEntry = new ValidateEntry(entry);
 		Assert.assertTrue(validateEntry.isValid());
-		entry = validateEntry.createBcCompatible(jid, server, node);
+		entry = validateEntry.getPayload(jid, server, node);
 		Assert.assertTrue(entry
 				.elementText("updated")
 				.matches(
@@ -152,7 +152,7 @@ public class ValidateEntryTest extends TestHandler {
 		Element entry = (Element) this.publishEntry.clone();
 		validateEntry = new ValidateEntry(entry);
 		Assert.assertTrue(validateEntry.isValid());
-		entry = validateEntry.createBcCompatible(jid, server, node);
+		entry = validateEntry.getPayload(jid, server, node);
 		Assert.assertFalse(entry.elementText("updated").equals(dateString));
 	}
 
@@ -161,7 +161,7 @@ public class ValidateEntryTest extends TestHandler {
 		Element entry = (Element) this.publishEntry.clone();
 		validateEntry = new ValidateEntry(entry);
 		Assert.assertTrue(validateEntry.isValid());
-		entry = validateEntry.createBcCompatible(jid, server, node);
+		entry = validateEntry.getPayload(jid, server, node);
 
 		Element author = entry.element("author");
 		Assert.assertNotNull(author);
@@ -177,14 +177,14 @@ public class ValidateEntryTest extends TestHandler {
 		Element entry = (Element) this.publishEntry.clone();
 		validateEntry = new ValidateEntry(entry);
 		Assert.assertTrue(validateEntry.isValid());
-		entry = validateEntry.createBcCompatible(jid, server, node);
+		entry = validateEntry.getPayload(jid, server, node);
 
 		Assert.assertNotNull(entry.element("geoloc"));
 
 		entry = (Element) this.replyEntry.clone();
 		validateEntry = new ValidateEntry(entry);
 		Assert.assertTrue(validateEntry.isValid());
-		entry = validateEntry.createBcCompatible(jid, server, node);
+		entry = validateEntry.getPayload(jid, server, node);
 
 		Assert.assertNull(entry.element("geoloc"));
 	}
@@ -199,7 +199,7 @@ public class ValidateEntryTest extends TestHandler {
 		Element entry = (Element) this.replyEntry.clone();
 		validateEntry = new ValidateEntry(entry);
 		Assert.assertTrue(validateEntry.isValid());
-		entry = validateEntry.createBcCompatible(jid, server, node);
+		entry = validateEntry.getPayload(jid, server, node);
 		Assert.assertEquals("fc362eb42085f017ed9ccd9c4004b095",
 				entry.element("in-reply-to").attributeValue("ref"));
 	}
@@ -210,7 +210,7 @@ public class ValidateEntryTest extends TestHandler {
 		Element entry = (Element) this.publishEntry.clone();
 		validateEntry = new ValidateEntry(entry);
 		Assert.assertTrue(validateEntry.isValid());
-		entry = validateEntry.createBcCompatible(jid, server, node);
+		entry = validateEntry.getPayload(jid, server, node);
 
 		Assert.assertEquals(ValidateEntry.POST_TYPE_NOTE,
 				entry.element("object").elementText("object-type"));
@@ -218,7 +218,7 @@ public class ValidateEntryTest extends TestHandler {
 		entry = (Element) this.replyEntry.clone();
 		validateEntry = new ValidateEntry(entry);
 		Assert.assertTrue(validateEntry.isValid());
-		entry = validateEntry.createBcCompatible(jid, server, node);
+		entry = validateEntry.getPayload(jid, server, node);
 
 		Assert.assertEquals(ValidateEntry.POST_TYPE_COMMENT,
 				entry.element("object").elementText("object-type"));
@@ -240,7 +240,7 @@ public class ValidateEntryTest extends TestHandler {
 		entry.element("content").attribute("type").detach();
 		validateEntry = new ValidateEntry(entry);
 		Assert.assertTrue(validateEntry.isValid());
-		entry = validateEntry.createBcCompatible(jid, server, node);
+		entry = validateEntry.getPayload(jid, server, node);
 		Assert.assertEquals(ValidateEntry.CONTENT_TEXT, entry
 				.element("content").attributeValue("type"));
 
@@ -253,7 +253,7 @@ public class ValidateEntryTest extends TestHandler {
 				.setText(ValidateEntry.CONTENT_XHTML);
 		validateEntry = new ValidateEntry(entry);
 		Assert.assertTrue(validateEntry.isValid());
-		entry = validateEntry.createBcCompatible(jid, server, node);
+		entry = validateEntry.getPayload(jid, server, node);
 		Assert.assertEquals(ValidateEntry.CONTENT_XHTML,
 				entry.element("content").attributeValue("type"));
 	}
@@ -263,7 +263,7 @@ public class ValidateEntryTest extends TestHandler {
 		Element entry = (Element) this.publishEntry.clone();
 		validateEntry = new ValidateEntry(entry);
 		Assert.assertTrue(validateEntry.isValid());
-		entry = validateEntry.createBcCompatible(jid, server, node);
+		entry = validateEntry.getPayload(jid, server, node);
 
 		Assert.assertEquals(ValidateEntry.ACTIVITY_VERB_POST,
 				entry.elementText("verb"));

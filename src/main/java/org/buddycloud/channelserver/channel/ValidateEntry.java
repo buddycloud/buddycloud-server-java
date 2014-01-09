@@ -8,6 +8,7 @@ import java.util.UUID;
 import org.apache.log4j.Logger;
 import org.dom4j.Element;
 import org.dom4j.dom.DOMElement;
+import org.xmpp.packet.JID;
 
 public class ValidateEntry {
 
@@ -130,7 +131,7 @@ public class ValidateEntry {
 		String postType = "note";
 
 		entry.addElement("id").setText(
-				"tag:" + channelServerJID + "," + node + "," + id);
+				"tag:" + channelServerDomain + "," + node + "," + id);
 
 		entry.addElement("title").setText(this.params.get("title"));
 

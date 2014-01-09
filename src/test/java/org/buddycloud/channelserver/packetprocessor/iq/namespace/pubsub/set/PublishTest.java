@@ -6,6 +6,8 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
+import javax.annotation.PreDestroy;
+
 import junit.framework.Assert;
 
 import org.buddycloud.channelserver.channel.ChannelManager;
@@ -24,6 +26,7 @@ import org.dom4j.Element;
 import org.dom4j.tree.BaseElement;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.xmpp.packet.IQ;
 import org.xmpp.packet.JID;
@@ -57,7 +60,8 @@ public class PublishTest extends IQTestHandler {
 
 		publish.setServerDomain("shakespeare.lit");
 		publish.setChannelManager(channelManager);
-
+		publish.setEntryValidator(validateEntry);
+		
 		element = new BaseElement("publish");
 
 		Mockito.when(channelManager.isLocalNode(node)).thenReturn(true);
@@ -266,6 +270,7 @@ public class PublishTest extends IQTestHandler {
 	
 	@Test
 	public void invalidEntryReturnsError() throws Exception {
+		
 		Mockito.when(validateEntry.isValid()).thenReturn(false);
 		
 		publish.process(element, jid, request, null);

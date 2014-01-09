@@ -40,6 +40,8 @@ public class Publish extends PubSubElementProcessorAbstract {
 	private String inReplyTo;
 	private Element item;
 
+	private ValidateEntry validator;
+
 	public Publish(BlockingQueue<Packet> outQueue, ChannelManager channelManager) {
 		this.outQueue = outQueue;
 		this.channelManager = channelManager;
@@ -154,13 +156,15 @@ public class Publish extends PubSubElementProcessorAbstract {
 	}
 
 	private boolean extractItemDetails() throws InterruptedException {
-		ValidateEntry vEntry = new ValidateEntry(item.element("entry"));
+		ValidateEntry vEntry = getEntryValidator();
+		vEntry.setEntry(item.element("entry"));
+
 		if (!vEntry.isValid()) {
 			sendInvalidEntryResponse(vEntry);
 			return false;
 		}
 
-		entry = vEntry.createBcCompatible(publishersJID.toBareJID(), request
+		entry = vEntry.createBcCompatible(publishersJID, request
 				.getTo().toBareJID(), node);
 
 		id = GlobalItemIDImpl.toLocalId(entry.element("id").getText());
@@ -186,10 +190,21 @@ public class Publish extends PubSubElementProcessorAbstract {
 		}
 		return true;
 	}
+	
+	public void setEntryValidator(ValidateEntry validator) {
+		this.validator = validator;
+	}
+
+	private ValidateEntry getEntryValidator() {
+		if (null == this.validator) {
+			this.validator = new ValidateEntry();
+		}
+		return this.validator;
+	}
 
 	private void sendInvalidEntryResponse(ValidateEntry vEntry)
 			throws InterruptedException {
-		logger.info("Entry is not valid: '" + vEntry.getErrorMsg() + "'.");
+		logger.info("Entry is not valid: '" + vEntry.getErrorMessage() + "'.");
 		createExtendedErrorReply(PacketError.Type.modify,
 				PacketError.Condition.bad_request, "invalid-payload");
 		outQueue.put(response);

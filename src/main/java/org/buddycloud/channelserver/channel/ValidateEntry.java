@@ -28,7 +28,7 @@ public class ValidateEntry {
 
 	private Element entry;
 
-	private String errorMsg = "";
+	private String errorMessage = "";
 	private String inReplyTo;
 	private Element meta;
 	private Element media;
@@ -42,7 +42,7 @@ public class ValidateEntry {
 	}
 
 	public String getErrorMessage() {
-		return this.errorMsg;
+		return this.errorMessage;
 	}
 
 	/**
@@ -50,7 +50,7 @@ public class ValidateEntry {
 	 */
 	public boolean isValid() {
 		if (this.entry == null) {
-			this.errorMsg = "Dude, the entry is missing.";
+			this.errorMessage = "Dude, the entry is missing.";
 			return false;
 		}
 
@@ -72,7 +72,7 @@ public class ValidateEntry {
 
 		Element content = this.entry.element("content");
 		if (null == content) {
-			this.errorMsg = MISSING_CONTENT_ELEMENT;
+			this.errorMessage = MISSING_CONTENT_ELEMENT;
 			return false;
 		}
 		this.params.put("content", content.getText());
@@ -161,6 +161,7 @@ public class ValidateEntry {
 		if (this.geoloc != null) {
 			entry.add(this.geoloc.createCopy());
 		}
+		
 		if (this.inReplyTo != null) {
 			Element reply = entry.addElement("in-reply-to");
 			reply.addNamespace("", NS_ATOM_THREAD);

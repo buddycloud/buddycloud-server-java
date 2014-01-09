@@ -17,6 +17,13 @@ public class ValidateEntry {
 	public static final String CONTENT_TEXT = "text";
 	public static final String CONTENT_XHTML = "xhtml";
 
+	public static final String NS_ATOM = "http://www.w3.org/2005/Atom";
+	public static final String NS_ACTIVITYSTREAM = "http://activitystrea.ms/spec/1.0/";
+	public static final String NS_ATOM_THREAD = "http://purl.org/syndication/thread/1.0";
+	
+	public static final String AUTHOR_URI_PREFIX = "acct:";
+	public static final String AUTHOR_TYPE = "person";
+
 	private static Logger LOGGER = Logger.getLogger(ValidateEntry.class);
 
 	private Element entry;
@@ -103,13 +110,13 @@ public class ValidateEntry {
 		return true;
 	}
 
-	public Element createBcCompatible(String bareJID, String channelServerJID,
+	public Element createBcCompatible(JID jid, String channelServerDomain,
 			String node) {
 
 		Element entry = new DOMElement("entry", new org.dom4j.Namespace("",
-				"http://www.w3.org/2005/Atom"));
+				NS_ATOM));
 		entry.add(new org.dom4j.Namespace("activity",
-				"http://activitystrea.ms/spec/1.0/"));
+				NS_ACTIVITYSTREAM));
 
 		/**
 		 * We are going to build this now.
@@ -145,18 +152,18 @@ public class ValidateEntry {
 
 		Element author = entry.addElement("author");
 
-		author.addElement("name").setText(bareJID);
+		author.addElement("name").setText(jid.toBareJID());
 
-		author.addElement("uri").setText("acct:" + bareJID);
+		author.addElement("uri").setText(AUTHOR_URI_PREFIX + jid.toBareJID());
 
-		author.addElement("activity:object-type").setText("person");
+		author.addElement("activity:object-type").setText(AUTHOR_TYPE);
 
 		if (this.geoloc != null) {
 			entry.add(this.geoloc.createCopy());
 		}
 		if (this.inReplyTo != null) {
 			Element reply = entry.addElement("in-reply-to");
-			reply.addNamespace("", "http://purl.org/syndication/thread/1.0");
+			reply.addNamespace("", NS_ATOM_THREAD);
 			reply.addAttribute("ref", inReplyTo);
 			postType = "comment";
 		}

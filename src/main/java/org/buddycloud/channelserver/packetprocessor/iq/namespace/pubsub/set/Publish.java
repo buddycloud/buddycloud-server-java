@@ -206,7 +206,7 @@ public class Publish extends PubSubElementProcessorAbstract {
 			throws InterruptedException {
 		logger.info("Entry is not valid: '" + vEntry.getErrorMessage() + "'.");
 		createExtendedErrorReply(PacketError.Type.modify,
-				PacketError.Condition.bad_request, "invalid-payload");
+				PacketError.Condition.bad_request, vEntry.getErrorMessage());
 		outQueue.put(response);
 	}
 

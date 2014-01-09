@@ -271,8 +271,9 @@ public class PublishTest extends IQTestHandler {
 	@Test
 	public void invalidEntryReturnsError() throws Exception {
 		
+		String errorMessage = "errorMessage";
 		Mockito.when(validateEntry.isValid()).thenReturn(false);
-		
+		Mockito.when(validateEntry.getErrorMessage()).thenReturn(errorMessage);
 		publish.process(element, jid, request, null);
 
 		Packet response = queue.poll();
@@ -282,5 +283,6 @@ public class PublishTest extends IQTestHandler {
 		Assert.assertEquals(PacketError.Type.modify, error.getType());
 		Assert.assertEquals(PacketError.Condition.bad_request,
 				error.getCondition());
+		Assert.assertEquals(errorMessage, error.getApplicationConditionName());
 	}
 }

@@ -6,6 +6,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.xmpp.packet.IQ;
+import org.xmpp.packet.JID;
 import org.xmpp.packet.Packet;
 import org.buddycloud.channelserver.packetHandler.iq.TestHandler;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.get.RepliesGet;
@@ -17,9 +18,19 @@ import junit.framework.TestCase;
 /**
  * TODO Additional work required:
  * 
- * - Check for (and add) activity stream verb - Check for (and add) activity
- * stream object type - Check for (and add) content type (accept 'text' and
- * 'html', default 'text') - If in-reply-to set 'verb' to comment
+ * - Check for (and add) activity stream verb 
+ * 
+ * - Check for (and add) activity stream object type 
+ * 
+ * - Check for (and add) content type (accept 'text' and 'html', default 'text') 
+ * 
+ * - If in-reply-to set 'verb' to comment
+ * 
+ * - Test 'geoloc' if present
+ * 
+ * - Test 'media' if present
+ * 
+ * - Test 'meta' if present
  * 
  */
 public class ValidateEntryTest extends TestHandler {
@@ -29,6 +40,10 @@ public class ValidateEntryTest extends TestHandler {
 	Element publishEntry;
 	IQ replyRequest;
 	Element replyEntry;
+	
+	JID jid = new JID("juliet@shakespeare.lit/balcony");
+	String node = "/users/romeo@shakespeare.lit/posts";
+    String server = "channels.shakespeare.lit";
 
 	@Before
 	public void setUp() throws Exception {
@@ -57,7 +72,8 @@ public class ValidateEntryTest extends TestHandler {
 		entry.element("id").detach();
 		validateEntry = new ValidateEntry(entry);
 		Assert.assertTrue(validateEntry.isValid());
-		Assert.assertEquals("1", entry.elementText("id"));
+		entry = validateEntry.createBcCompatible(jid.toBareJID(), server, node);
+		Assert.assertTrue(entry.elementText("id").contains("tag:" + server + "," + node + ","));
 	}
 
 	@Test
@@ -72,7 +88,8 @@ public class ValidateEntryTest extends TestHandler {
 
 		validateEntry = new ValidateEntry(entry);
 		Assert.assertTrue(validateEntry.isValid());
-		Assert.assertEquals("1", entry.elementText("id"));
+		entry = validateEntry.createBcCompatible(jid.toBareJID(), server, node);
+		Assert.assertTrue(entry.elementText("id").contains("tag:" + server + "," + node + ","));
 	}
 
 	@Test
@@ -84,6 +101,7 @@ public class ValidateEntryTest extends TestHandler {
 		entry.element("title").detach();
 		validateEntry = new ValidateEntry(entry);
 		Assert.assertTrue(validateEntry.isValid());
+		entry = validateEntry.createBcCompatible(jid.toBareJID(), server, node);
 		Assert.assertEquals("Post", entry.elementText("title"));
 	}
 
@@ -110,6 +128,7 @@ public class ValidateEntryTest extends TestHandler {
 		entry.element("updated").detach();
 		validateEntry = new ValidateEntry(entry);
 		Assert.assertTrue(validateEntry.isValid());
+		entry = validateEntry.createBcCompatible(jid.toBareJID(), server, node);
 		Assert.assertTrue(entry
 				.elementText("updated")
 				.matches(
@@ -126,6 +145,7 @@ public class ValidateEntryTest extends TestHandler {
 		Element entry = (Element) this.replyEntry.clone();
 		validateEntry = new ValidateEntry(entry);
 		Assert.assertTrue(validateEntry.isValid());
+		entry = validateEntry.createBcCompatible(jid.toBareJID(), server, node);
 		Assert.assertEquals("fc362eb42085f017ed9ccd9c4004b095",
 				entry.element("in-reply-to").attributeValue("ref"));
 	}

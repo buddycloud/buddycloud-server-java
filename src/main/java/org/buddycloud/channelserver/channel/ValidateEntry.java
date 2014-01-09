@@ -85,8 +85,7 @@ public class ValidateEntry {
 			inReplyTo = reply.attributeValue("ref");
 			if (-1 != inReplyTo.indexOf(",")) {
 				String[] tokens = inReplyTo.split(",");
-				this.entry.element("in-reply-to").attribute("ref")
-						.setValue(tokens[2]);
+				inReplyTo = tokens[2];
 			}
 		}
 

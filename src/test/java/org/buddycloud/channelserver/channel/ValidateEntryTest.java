@@ -149,6 +149,19 @@ public class ValidateEntryTest extends TestHandler {
 				.matches(
 						"[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}.[0-9]{3}Z"));
 	}
+	
+	@Test
+	public void updateDateIsIgnored() throws Exception {
+		String dateString = "2014-01-01T00:00:00.000Z";
+		Assert.assertEquals(dateString,
+				publishEntry.elementText("updated"));
+
+		Element entry = (Element) this.publishEntry.clone();
+		validateEntry = new ValidateEntry(entry);
+		Assert.assertTrue(validateEntry.isValid());
+		entry = validateEntry.createBcCompatible(jid.toBareJID(), server, node);
+		Assert.assertFalse(entry.elementText("updated").equals(dateString));
+	}
 
 	@Test
 	public void globalInReplyToIdIsMadeALocalId() throws Exception {

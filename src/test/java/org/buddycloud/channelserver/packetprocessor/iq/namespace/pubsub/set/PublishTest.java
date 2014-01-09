@@ -124,7 +124,7 @@ public class PublishTest extends IQTestHandler {
 		PacketError error = response.getError();
 		Assert.assertNotNull(error);
 		Assert.assertEquals(PacketError.Type.modify, error.getType());
-		Assert.assertEquals("nodeid-required",
+		Assert.assertEquals(Publish.NODE_ID_REQUIRED,
 				error.getApplicationConditionName());
 	}
 

@@ -34,6 +34,7 @@ public class Publish extends PubSubElementProcessorAbstract {
 	private static final Logger logger = Logger.getLogger(Publish.class);
 
 	public static final String MISSING_ITEM_ELEMENT = "item-required";
+	public static final String NODE_ID_REQUIRED = "nodeid-required";
 
 	private Element entry;
 	private String id;
@@ -261,14 +262,14 @@ public class Publish extends PubSubElementProcessorAbstract {
 		if ((node == null) || (true == node.equals(""))) {
 			response.setType(Type.error);
 
-			Element badRequest = new DOMElement("bad-request",
+			Element badRequest = new DOMElement(PacketError.Condition.bad_request.toXMPP(),
 					new org.dom4j.Namespace("", JabberPubsub.NS_XMPP_STANZAS));
 
-			Element nodeIdRequired = new DOMElement("nodeid-required",
+			Element nodeIdRequired = new DOMElement(NODE_ID_REQUIRED,
 					new org.dom4j.Namespace("", JabberPubsub.NS_PUBSUB_ERROR));
 
 			Element error = new DOMElement("error");
-			error.addAttribute("type", "modify");
+			error.addAttribute("type", PacketError.Type.modify.toXMPP());
 			error.add(badRequest);
 			error.add(nodeIdRequired);
 
@@ -283,8 +284,8 @@ public class Publish extends PubSubElementProcessorAbstract {
 		} catch (IllegalArgumentException e) {
 			response.setType(Type.error);
 			PacketError pe = new PacketError(
-					org.xmpp.packet.PacketError.Condition.bad_request,
-					org.xmpp.packet.PacketError.Type.modify);
+					PacketError.Condition.bad_request,
+					PacketError.Type.modify);
 			response.setError(pe);
 			logger.error(e);
 			outQueue.put(response);

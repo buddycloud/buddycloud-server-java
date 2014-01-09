@@ -315,4 +315,27 @@ public class PublishTest extends IQTestHandler {
 		Mockito.verify(channelManager, Mockito.times(1)).addNodeItem(
 				Mockito.any(NodeItemImpl.class));
 	}
+	
+	@Test
+	public void expectedSuccessResponseReceived() throws Exception {
+		IQ request = this.request.createCopy();
+		publish.process(element, jid, request, null);
+
+		IQ response = (IQ) queue.poll();
+		
+		Assert.assertEquals(IQ.Type.result, response.getType());
+		Assert.assertEquals(request.getFrom(), response.getTo());
+		Assert.assertEquals(request.getTo(), response.getFrom());
+		
+		Element publish = response.getElement().element("pubsub").element("publish");
+		Assert.assertEquals(node, publish.attributeValue("node"));
+		
+		Element item = publish.element("item");
+		Assert.assertNotNull(item);
+		
+		Assert.assertTrue(item.attributeValue("id").length() > 0);
+		
+		
+		
+	}
 }

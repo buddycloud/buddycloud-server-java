@@ -32,6 +32,7 @@ import org.xmpp.packet.IQ;
 import org.xmpp.packet.JID;
 import org.xmpp.packet.Packet;
 import org.xmpp.packet.PacketError;
+import org.xmpp.resultsetmanagement.ResultSet;
 import org.xmpp.resultsetmanagement.ResultSetImpl;
 
 public class PublishTest extends IQTestHandler {
@@ -43,13 +44,15 @@ public class PublishTest extends IQTestHandler {
 	private Element element;
 	private BlockingQueue<Packet> queue = new LinkedBlockingQueue<Packet>();
 	private String node = "/user/romeo@shakespeare.lit/posts";
+	private String server = "channels.shakespeare.lit";
 	private ValidateEntry validateEntry;
+	private Element entry;
 
 	@Before
 	public void setUp() throws Exception {
 		channelManager = Mockito.mock(ChannelManager.class);
 		validateEntry = Mockito.mock(ValidateEntry.class);
-		
+
 		Mockito.when(channelManager.isLocalNode(Mockito.anyString()))
 				.thenReturn(true);
 
@@ -61,22 +64,39 @@ public class PublishTest extends IQTestHandler {
 		publish.setServerDomain("shakespeare.lit");
 		publish.setChannelManager(channelManager);
 		publish.setEntryValidator(validateEntry);
-		
+
+		entry = request.getChildElement().element("publish").element("item")
+				.element("entry").createCopy();
+
 		element = new BaseElement("publish");
 
 		Mockito.when(channelManager.isLocalNode(node)).thenReturn(true);
-		
+
 		Mockito.when(channelManager.nodeExists(node)).thenReturn(true);
-		
+
 		NodeSubscription subscription = new NodeSubscriptionImpl(node, jid,
 				Subscriptions.subscribed);
 		Mockito.when(
 				channelManager.getUserSubscription(Mockito.eq(node),
 						Mockito.eq(jid))).thenReturn(subscription);
-		NodeAffiliation affiliation = new NodeAffiliationImpl(node, jid, Affiliations.publisher, new Date());
-		Mockito.when(channelManager.getUserAffiliation(Mockito.eq(node), Mockito.eq(jid))).thenReturn(affiliation);
-		
+		NodeAffiliation affiliation = new NodeAffiliationImpl(node, jid,
+				Affiliations.publisher, new Date());
+		Mockito.when(
+				channelManager.getUserAffiliation(Mockito.eq(node),
+						Mockito.eq(jid))).thenReturn(affiliation);
+		Mockito.when(
+				channelManager.getNodeSubscriptionListeners(Mockito.eq(node)))
+				.thenReturn(
+						new ResultSetImpl<NodeSubscription>(
+								new ArrayList<NodeSubscription>()));
+
 		Mockito.when(validateEntry.isValid()).thenReturn(true);
+
+		Mockito.when(
+				validateEntry.getPayload(Mockito.any(JID.class),
+						Mockito.anyString(), Mockito.anyString())).thenReturn(
+				entry);
+
 	}
 
 	@Test
@@ -163,7 +183,7 @@ public class PublishTest extends IQTestHandler {
 		Mockito.when(
 				channelManager.getUserSubscription(Mockito.eq(node),
 						Mockito.eq(jid))).thenReturn(subscription);
-		
+
 		publish.process(element, jid, request, null);
 
 		Packet response = queue.poll();
@@ -182,7 +202,7 @@ public class PublishTest extends IQTestHandler {
 		Mockito.when(
 				channelManager.getUserSubscription(Mockito.eq(node),
 						Mockito.eq(jid))).thenReturn(subscription);
-		
+
 		publish.process(element, jid, request, null);
 
 		Packet response = queue.poll();
@@ -193,7 +213,7 @@ public class PublishTest extends IQTestHandler {
 		Assert.assertEquals(PacketError.Condition.forbidden,
 				error.getCondition());
 	}
-	
+
 	@Test
 	public void noAffiliationCanNotPublish() throws Exception {
 		NodeAffiliation affiliation = new NodeAffiliationImpl(node, jid,
@@ -201,7 +221,7 @@ public class PublishTest extends IQTestHandler {
 		Mockito.when(
 				channelManager.getUserAffiliation(Mockito.eq(node),
 						Mockito.eq(jid))).thenReturn(affiliation);
-		
+
 		publish.process(element, jid, request, null);
 
 		Packet response = queue.poll();
@@ -212,7 +232,7 @@ public class PublishTest extends IQTestHandler {
 		Assert.assertEquals(PacketError.Condition.forbidden,
 				error.getCondition());
 	}
-	
+
 	@Test
 	public void memberAffiliationCanNotPublish() throws Exception {
 		NodeAffiliation affiliation = new NodeAffiliationImpl(node, jid,
@@ -220,7 +240,7 @@ public class PublishTest extends IQTestHandler {
 		Mockito.when(
 				channelManager.getUserAffiliation(Mockito.eq(node),
 						Mockito.eq(jid))).thenReturn(affiliation);
-		
+
 		publish.process(element, jid, request, null);
 
 		Packet response = queue.poll();
@@ -231,7 +251,7 @@ public class PublishTest extends IQTestHandler {
 		Assert.assertEquals(PacketError.Condition.forbidden,
 				error.getCondition());
 	}
-	
+
 	@Test
 	public void outcastAffiliationCanNotPublish() throws Exception {
 		NodeAffiliation affiliation = new NodeAffiliationImpl(node, jid,
@@ -239,7 +259,7 @@ public class PublishTest extends IQTestHandler {
 		Mockito.when(
 				channelManager.getUserAffiliation(Mockito.eq(node),
 						Mockito.eq(jid))).thenReturn(affiliation);
-		
+
 		publish.process(element, jid, request, null);
 
 		Packet response = queue.poll();
@@ -250,12 +270,12 @@ public class PublishTest extends IQTestHandler {
 		Assert.assertEquals(PacketError.Condition.forbidden,
 				error.getCondition());
 	}
-	
+
 	@Test
 	public void noItemElementReturnsError() throws Exception {
 		IQ request = this.request.createCopy();
 		request.getChildElement().element("publish").element("item").detach();
-		
+
 		publish.process(element, jid, request, null);
 
 		Packet response = queue.poll();
@@ -265,12 +285,13 @@ public class PublishTest extends IQTestHandler {
 		Assert.assertEquals(PacketError.Type.modify, error.getType());
 		Assert.assertEquals(PacketError.Condition.bad_request,
 				error.getCondition());
-		Assert.assertEquals(Publish.MISSING_ITEM_ELEMENT, error.getApplicationConditionName());
+		Assert.assertEquals(Publish.MISSING_ITEM_ELEMENT,
+				error.getApplicationConditionName());
 	}
-	
+
 	@Test
 	public void invalidEntryReturnsError() throws Exception {
-		
+
 		String errorMessage = "errorMessage";
 		Mockito.when(validateEntry.isValid()).thenReturn(false);
 		Mockito.when(validateEntry.getErrorMessage()).thenReturn(errorMessage);
@@ -284,5 +305,14 @@ public class PublishTest extends IQTestHandler {
 		Assert.assertEquals(PacketError.Condition.bad_request,
 				error.getCondition());
 		Assert.assertEquals(errorMessage, error.getApplicationConditionName());
+	}
+
+	@Test
+	public void itemIsSavedAsExpected() throws Exception {
+		IQ request = this.request.createCopy();
+		publish.process(element, jid, request, null);
+
+		Mockito.verify(channelManager, Mockito.times(1)).addNodeItem(
+				Mockito.any(NodeItemImpl.class));
 	}
 }

@@ -102,14 +102,14 @@ public class Publish extends PubSubElementProcessorAbstract {
 				return;
 			if (false == isRequestValid())
 				return;
-			if (false == extractItemDetails())
-				return;
+			extractItemDetails();
 			if (false == determineInReplyToDetails())
 				return;
 
 			saveNodeItem();
 			sendResponseStanza();
 			sendNotifications();
+			
 		} catch (NodeStoreException e) {
 			setErrorCondition(PacketError.Type.wait,
 					PacketError.Condition.internal_server_error);
@@ -120,7 +120,7 @@ public class Publish extends PubSubElementProcessorAbstract {
 
 	private void saveNodeItem() throws NodeStoreException {
 		// Let's store the new item.
-		channelManager.addNodeItem(new NodeItemImpl(node, id, updated, entry
+		channelManager.addNodeItem(new NodeItemImpl(node, id, new Date(), entry
 				.asXML(), inReplyTo));
 	}
 
@@ -130,8 +130,9 @@ public class Publish extends PubSubElementProcessorAbstract {
 		Element reply;
 		NodeItem nodeItem = null;
 
-		if (null == (reply = entry.element("in-reply-to")))
+		if (null == (reply = entry.element("in-reply-to"))) {
 			return true;
+		}
 
 		String[] inReplyToParts = reply.attributeValue("ref").split(",");
 		inReplyTo = inReplyToParts[inReplyToParts.length - 1];
@@ -158,33 +159,11 @@ public class Publish extends PubSubElementProcessorAbstract {
 		return true;
 	}
 
-	private boolean extractItemDetails() throws InterruptedException {
+	private void extractItemDetails() throws InterruptedException {
 
 		entry = entryContent.getPayload(publishersJID, request
 				.getTo().toBareJID(), node);
-
 		id = GlobalItemIDImpl.toLocalId(entry.element("id").getText());
-
-		String updatedText = entry.elementText("updated");
-
-		if (updatedText == null || updatedText.isEmpty()) {
-			updatedText = entry.elementText("published");
-		}
-
-		if (updatedText == null || updatedText.isEmpty()) {
-			updated = new Date(); // Default to now
-		} else {
-			try {
-				updated = Conf.parseDate(updatedText);
-			} catch (IllegalArgumentException e) {
-				updated = new Date();
-				logger.error(e);
-				logger.error("Invalid date encountered in atom entry: "
-						+ updatedText);
-				// Otherwise we will just let it pass
-			}
-		}
-		return true;
 	}
 	
 	public void setEntryValidator(ValidateEntry validator) {
@@ -214,7 +193,6 @@ public class Publish extends PubSubElementProcessorAbstract {
 			outQueue.put(response);
 			return false;
 		}
-		
 		entryContent = getEntryValidator();
 		entryContent.setEntry(item.element("entry"));
 

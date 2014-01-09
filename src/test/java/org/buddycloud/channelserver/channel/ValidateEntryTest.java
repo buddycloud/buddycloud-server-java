@@ -91,6 +91,20 @@ public class ValidateEntryTest extends TestHandler {
 		entry = validateEntry.createBcCompatible(jid.toBareJID(), server, node);
 		Assert.assertTrue(entry.elementText("id").contains("tag:" + server + "," + node + ","));
 	}
+	
+	@Test
+	public void idElementIsIgnored() throws Exception {
+		String id = "96da02ee1baef61e767742844207bec4";
+		Assert.assertEquals(id,
+				publishEntry.elementText("id"));
+
+		Element entry = (Element) this.publishEntry.clone();
+		validateEntry = new ValidateEntry(entry);
+		Assert.assertTrue(validateEntry.isValid());
+		entry = validateEntry.createBcCompatible(jid.toBareJID(), server, node);
+		Assert.assertFalse(entry.elementText("id").contains(id));
+		
+	}
 
 	@Test
 	public void missingTitleElementIsAdded() throws Exception {

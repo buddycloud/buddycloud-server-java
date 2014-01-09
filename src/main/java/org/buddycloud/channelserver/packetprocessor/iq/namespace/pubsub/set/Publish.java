@@ -33,12 +33,15 @@ public class Publish extends PubSubElementProcessorAbstract {
 
 	private static final Logger logger = Logger.getLogger(Publish.class);
 
+	public static final String MISSING_ITEM_ELEMENT = "item-required";
+
 	private Element entry;
 	private String id;
 	private Date updated;
 	private JID publishersJID;
 	private String inReplyTo;
 	private Element item;
+	private ValidateEntry vEntry;
 
 	private ValidateEntry validator;
 
@@ -156,13 +159,6 @@ public class Publish extends PubSubElementProcessorAbstract {
 	}
 
 	private boolean extractItemDetails() throws InterruptedException {
-		ValidateEntry vEntry = getEntryValidator();
-		vEntry.setEntry(item.element("entry"));
-
-		if (!vEntry.isValid()) {
-			sendInvalidEntryResponse(vEntry);
-			return false;
-		}
 
 		entry = vEntry.createBcCompatible(publishersJID, request
 				.getTo().toBareJID(), node);
@@ -202,7 +198,7 @@ public class Publish extends PubSubElementProcessorAbstract {
 		return this.validator;
 	}
 
-	private void sendInvalidEntryResponse(ValidateEntry vEntry)
+	private void sendInvalidEntryResponse()
 			throws InterruptedException {
 		logger.info("Entry is not valid: '" + vEntry.getErrorMessage() + "'.");
 		createExtendedErrorReply(PacketError.Type.modify,
@@ -212,13 +208,20 @@ public class Publish extends PubSubElementProcessorAbstract {
 
 	private boolean isRequestValid() throws InterruptedException {
 		item = request.getChildElement().element("publish").element("item");
-		if (item != null)
-			return true;
+		if (null == item) {
+			createExtendedErrorReply(PacketError.Type.modify,
+					PacketError.Condition.bad_request, MISSING_ITEM_ELEMENT);
+			outQueue.put(response);
+			return false;
+		}
+		vEntry = getEntryValidator();
+		vEntry.setEntry(item.element("entry"));
 
-		createExtendedErrorReply(PacketError.Type.modify,
-				PacketError.Condition.bad_request, MISSING_ITEM_ELEMENT);
-		outQueue.put(response);
-		return false;
+		if (!vEntry.isValid()) {
+			sendInvalidEntryResponse();
+			return false;
+		}
+		return true;
 	}
 
 	private boolean userCanPost() throws NodeStoreException,

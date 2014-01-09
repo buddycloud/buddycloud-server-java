@@ -14,6 +14,7 @@ import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.channel.ValidateEntry;
 import org.buddycloud.channelserver.db.exception.NodeStoreException;
 import org.buddycloud.channelserver.packetHandler.iq.IQTestHandler;
+import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.JabberPubsub;
 import org.buddycloud.channelserver.pubsub.affiliation.Affiliations;
 import org.buddycloud.channelserver.pubsub.model.NodeAffiliation;
 import org.buddycloud.channelserver.pubsub.model.NodeItem;
@@ -30,6 +31,7 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.xmpp.packet.IQ;
 import org.xmpp.packet.JID;
+import org.xmpp.packet.Message;
 import org.xmpp.packet.Packet;
 import org.xmpp.packet.PacketError;
 import org.xmpp.resultsetmanagement.ResultSet;
@@ -315,27 +317,84 @@ public class PublishTest extends IQTestHandler {
 		Mockito.verify(channelManager, Mockito.times(1)).addNodeItem(
 				Mockito.any(NodeItemImpl.class));
 	}
-	
+
 	@Test
 	public void expectedSuccessResponseReceived() throws Exception {
 		IQ request = this.request.createCopy();
 		publish.process(element, jid, request, null);
 
 		IQ response = (IQ) queue.poll();
-		
+
 		Assert.assertEquals(IQ.Type.result, response.getType());
 		Assert.assertEquals(request.getFrom(), response.getTo());
 		Assert.assertEquals(request.getTo(), response.getFrom());
-		
-		Element publish = response.getElement().element("pubsub").element("publish");
+
+		Element pubsub = response.getElement().element("pubsub");
+		Assert.assertEquals(JabberPubsub.NAMESPACE_URI,
+				pubsub.getNamespaceURI());
+		Element publish = pubsub.element("publish");
 		Assert.assertEquals(node, publish.attributeValue("node"));
-		
+
 		Element item = publish.element("item");
 		Assert.assertNotNull(item);
-		
+
 		Assert.assertTrue(item.attributeValue("id").length() > 0);
-		
-		
-		
+	}
+
+	@Test
+	public void sendsOutExpectedNotifications() throws Exception {
+
+		NodeSubscription subscriber1 = new NodeSubscriptionImpl(node, new JID(
+				"romeo@shakespeare.lit"), Subscriptions.subscribed);
+		// Expect not to see this user (subscription: 'pending')
+		NodeSubscription subscriber2 = new NodeSubscriptionImpl(node, new JID(
+				"titania@shakespeare.lit"), Subscriptions.pending);
+		NodeSubscription subscriber3 = new NodeSubscriptionImpl(node, new JID(
+				"faustus@marlowe.lit"), new JID("channels.marlowe.lit"),
+				Subscriptions.subscribed);
+
+		ArrayList<NodeSubscription> subscribers = new ArrayList<NodeSubscription>();
+		subscribers.add(subscriber1);
+		subscribers.add(subscriber2);
+		subscribers.add(subscriber3);
+
+		Mockito.when(
+				channelManager.getNodeSubscriptionListeners(Mockito.eq(node)))
+				.thenReturn(new ResultSetImpl<NodeSubscription>(subscribers));
+
+		IQ request = this.request.createCopy();
+		publish.process(element, jid, request, null);
+
+		Assert.assertEquals(5, queue.size());
+
+		IQ response = (IQ) queue.poll();
+		Message notification = (Message) queue.poll();
+
+		Assert.assertEquals(Message.Type.headline, notification.getType());
+		Assert.assertEquals(subscriber1.getUser(), notification.getTo());
+		Assert.assertEquals(server, notification.getFrom().toString());
+
+		Element event = notification.getElement().element("event");
+		Assert.assertEquals(JabberPubsub.NS_PUBSUB_EVENT,
+				event.getNamespaceURI());
+
+		Element items = event.element("items");
+		Assert.assertEquals(node, items.attributeValue("node"));
+
+		Element item = items.element("item");
+		Assert.assertTrue(item.attributeValue("id").length() > 0);
+
+		Element responseEntry = item.element("entry");
+		Assert.assertEquals(entry.asXML(), responseEntry.asXML());
+
+		notification = (Message) queue.poll();
+		Assert.assertEquals(subscriber3.getListener(), notification.getTo());
+
+		notification = (Message) queue.poll();
+		Assert.assertEquals(new JID("user1@server1"), notification.getTo());
+
+		notification = (Message) queue.poll();
+		Assert.assertEquals(new JID("user2@server1"), notification.getTo());
+
 	}
 }

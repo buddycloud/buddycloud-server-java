@@ -183,9 +183,6 @@ public class FederatedQueueManagerTest extends IQTestHandler {
         Assert.assertEquals(1, channelsEngine.size());
         Packet redirected = channelsEngine.poll();
 
-        System.out.println(packet);
-        System.out.println(redirected);
-
         Assert.assertEquals(packet.getFrom(), redirected.getTo());
 	}
 
@@ -229,4 +226,33 @@ public class FederatedQueueManagerTest extends IQTestHandler {
         Assert.assertEquals(clientOnePacket.getFrom(), clientOneRedirected.getTo());
         Assert.assertEquals(clientTwoPacket.getFrom(), clientTwoRedirected.getTo());
 	}
+	
+	@Test
+	public void testOutgoingIqPacketsGetIdMapped() throws Exception {
+		channelsEngine.clear();
+
+		String originalId = "id:12345";
+		IQ packet = new IQ();
+		packet.setFrom(new JID("romeo@montague.lit/street"));
+		packet.setTo(new JID("topics.capulet.lit"));
+		packet.setType(IQ.Type.get);
+		packet.setID(originalId);
+		packet.getElement().addAttribute("remote-server-discover", "false");
+		
+		queueManager.addChannelMap(new JID("topics.capulet.lit"));
+		
+		queueManager.process(packet.createCopy());
+		
+		IQ packetExternal = (IQ) channelsEngine.poll();
+
+		Assert.assertFalse(originalId.equals(packetExternal.getID()));
+		
+		IQ response = IQ.createResultIQ(packetExternal);
+		queueManager.passResponseToRequester(response);
+		
+		IQ packetInternal = (IQ) channelsEngine.poll();
+
+		Assert.assertTrue(originalId.equals(packetInternal.getID()));
+	}
+
 }

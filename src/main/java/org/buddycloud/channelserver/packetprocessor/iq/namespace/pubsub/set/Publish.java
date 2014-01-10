@@ -119,10 +119,11 @@ public class Publish extends PubSubElementProcessorAbstract {
 
 	}
 
-	private boolean determineExtensionDetails() {
+	private boolean determineExtensionDetails() throws Exception {
 		if (false == determineInReplyToDetails()) {
 			return false;
 		}
+		return true;
 	}
 
 	private void saveNodeItem() throws NodeStoreException {

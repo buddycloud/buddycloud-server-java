@@ -17,7 +17,10 @@
                <activity:object>
                   <activity:object-type>post</activity:object-type>
                </activity:object>
-               <thr:in-reply-to ref="tag:channels.shakespeare.lit,/users/romeo@shakespeare.lit/posts,fc362eb42085f017ed9ccd9c4004b095" />
+               <thr:in-reply-to ref="1" />
+               <activity:target>
+                   <id>tag:channels.shakespeare.lit,/users/romeo@shakespeare.lit/posts,2</id>
+               </activity:target>
             </entry>
          </item>
       </publish>

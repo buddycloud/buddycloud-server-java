@@ -34,8 +34,6 @@ public class Publish extends PubSubElementProcessorAbstract {
 	public static final String MISSING_ITEM_ELEMENT = "item-required";
 	public static final String NODE_ID_REQUIRED = "nodeid-required";
 
-	public static final String MAX_THREAD_DEPTH_EXCEEDED = "max-thread-depth-exceeded";
-
 	private Element entry;
 	private String id;
 	private JID publishersJID;
@@ -103,10 +101,6 @@ public class Publish extends PubSubElementProcessorAbstract {
 			if (false == isRequestValid())
 				return;
 			extractItemDetails();
-			if (false == determineExtensionDetails()) {
-				return;
-			}
-
 			saveNodeItem();
 			sendResponseStanza();
 			sendNotifications();
@@ -119,44 +113,10 @@ public class Publish extends PubSubElementProcessorAbstract {
 
 	}
 
-	private boolean determineExtensionDetails() throws Exception {
-		if (false == determineInReplyToDetails()) {
-			return false;
-		}
-		return true;
-	}
-
 	private void saveNodeItem() throws NodeStoreException {
 		// Let's store the new item.
 		channelManager.addNodeItem(new NodeItemImpl(node, id, new Date(), entry
 				.asXML(), inReplyTo));
-	}
-
-	private boolean determineInReplyToDetails() throws NodeStoreException,
-			InterruptedException {
-		inReplyTo = null;
-		Element reply;
-		NodeItem nodeItem = null;
-
-		if (null == (reply = entry.element("in-reply-to"))) {
-			return true;
-		}
-
-		String[] inReplyToParts = reply.attributeValue("ref").split(",");
-		inReplyTo = inReplyToParts[inReplyToParts.length - 1];
-
-		if (null == (nodeItem = channelManager.getNodeItem(node, inReplyTo))) {
-			setErrorCondition(PacketError.Type.cancel, PacketError.Condition.item_not_found);
-			outQueue.put(response);
-			return false;
-		}
-		if (null != nodeItem.getInReplyTo()) {
-			logger.error("User is attempting to reply to a reply");
-			createExtendedErrorReply(PacketError.Type.modify, PacketError.Condition.bad_request, MAX_THREAD_DEPTH_EXCEEDED);
-			outQueue.put(response);
-			return false;
-		}
-		return true;
 	}
 
 	private void extractItemDetails() throws InterruptedException {

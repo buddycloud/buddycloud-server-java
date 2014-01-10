@@ -1,5 +1,6 @@
 package org.buddycloud.channelserver.channel;
 
+import java.util.Date;
 import java.util.concurrent.LinkedBlockingQueue;
 
 import org.junit.Before;
@@ -10,6 +11,8 @@ import org.xmpp.packet.JID;
 import org.xmpp.packet.Packet;
 import org.buddycloud.channelserver.packetHandler.iq.TestHandler;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.get.RepliesGet;
+import org.buddycloud.channelserver.pubsub.model.NodeItem;
+import org.buddycloud.channelserver.pubsub.model.impl.NodeItemImpl;
 import org.dom4j.Element;
 
 import junit.framework.Assert;
@@ -27,11 +30,12 @@ import junit.framework.TestCase;
  */
 public class ValidateEntryTest extends TestHandler {
 
-	ValidateEntry validateEntry;
-	IQ publishRequest;
-	Element publishEntry;
-	IQ replyRequest;
-	Element replyEntry;
+	private ValidateEntry validateEntry;
+	private IQ publishRequest;
+	private Element publishEntry;
+	private IQ replyRequest;
+	private Element replyEntry;
+	private ChannelManager channelManager;
 
 	JID jid = new JID("juliet@shakespeare.lit/balcony");
 	String node = "/users/romeo@shakespeare.lit/posts";
@@ -45,13 +49,22 @@ public class ValidateEntryTest extends TestHandler {
 		replyRequest = readStanzaAsIq("/iq/pubsub/publish/reply.stanza");
 		replyEntry = replyRequest.getChildElement().element("publish")
 				.element("item").element("entry");
+
+		channelManager = Mockito.mock(ChannelManager.class);
+
+		NodeItem item = new NodeItemImpl(node, "1", new Date(), "<entry/>");
+		Mockito.when(
+				channelManager.getNodeItem(Mockito.eq(node),
+						Mockito.anyString())).thenReturn(item);
+
 	}
-	
+
 	private ValidateEntry getEntryObject(Element entry) {
 		ValidateEntry validate = new ValidateEntry(entry);
 		validate.setNode(node);
 		validate.setTo(server);
 		validate.setUser(jid);
+		validate.setChannelManager(channelManager);
 		return validate;
 	}
 
@@ -63,7 +76,7 @@ public class ValidateEntryTest extends TestHandler {
 		Assert.assertEquals(ValidateEntry.MISSING_ENTRY_ELEMENT,
 				validateEntry.getErrorMessage());
 	}
-	
+
 	@Test
 	public void missingIdAttributeGetsAdded() throws Exception {
 
@@ -277,4 +290,34 @@ public class ValidateEntryTest extends TestHandler {
 				entry.elementText("verb"));
 	}
 
+	@Test
+	public void replyParentItemNotFoundResultsInError() throws Exception {
+
+		Mockito.when(
+				channelManager.getNodeItem(Mockito.eq(node),
+						Mockito.anyString())).thenReturn(null);
+
+		Element entry = (Element) this.replyEntry.clone();
+		validateEntry = getEntryObject(entry);
+		
+		Assert.assertFalse(validateEntry.isValid());
+		Assert.assertEquals(ValidateEntry.PARENT_ITEM_NOT_FOUND,
+				validateEntry.getErrorMessage());
+	}
+
+	@Test
+	public void canNotReplyToAReply() throws Exception {
+
+		NodeItem item = new NodeItemImpl(node, "2", new Date(), "<entry/>", "1");
+		Mockito.when(
+				channelManager.getNodeItem(Mockito.eq(node),
+						Mockito.anyString())).thenReturn(item);
+
+		Element entry = (Element) this.replyEntry.clone();
+		validateEntry = getEntryObject(entry);
+		
+		Assert.assertFalse(validateEntry.isValid());
+		Assert.assertEquals(ValidateEntry.MAX_THREAD_DEPTH_EXCEEDED,
+				validateEntry.getErrorMessage());
+	}
 }

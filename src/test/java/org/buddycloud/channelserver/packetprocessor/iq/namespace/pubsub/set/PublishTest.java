@@ -4,9 +4,6 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.TimeUnit;
-
-import javax.annotation.PreDestroy;
 
 import junit.framework.Assert;
 
@@ -27,14 +24,12 @@ import org.dom4j.Element;
 import org.dom4j.tree.BaseElement;
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.xmpp.packet.IQ;
 import org.xmpp.packet.JID;
 import org.xmpp.packet.Message;
 import org.xmpp.packet.Packet;
 import org.xmpp.packet.PacketError;
-import org.xmpp.resultsetmanagement.ResultSet;
 import org.xmpp.resultsetmanagement.ResultSetImpl;
 
 public class PublishTest extends IQTestHandler {
@@ -395,70 +390,5 @@ public class PublishTest extends IQTestHandler {
 		notification = (Message) queue.poll();
 		Assert.assertEquals(new JID("user2@server1"), notification.getTo());
 
-	}
-
-	@Test
-	public void errorsIfReplyingToAPostWhichDoesntExist() throws Exception {
-		
-		IQ request = readStanzaAsIq("/iq/pubsub/publish/reply.stanza");
-		
-		Mockito.when(
-				channelManager.getNodeItem(Mockito.eq(node),
-						Mockito.eq("fc362eb42085f017ed9ccd9c4004b095")))
-				.thenReturn(null);
-		
-		Element entry = request.getChildElement().element("publish").element("item")
-				.element("entry").createCopy();
-
-		Mockito.when(
-				validateEntry.getPayload()).thenReturn(
-				entry);
-		
-		publish.process(element, jid, request, null);
-		
-		Assert.assertEquals(1, queue.size());
-		
-		IQ response = (IQ) queue.poll();
-
-		Assert.assertEquals(IQ.Type.error, response.getType());
-		
-		PacketError error = response.getError();
-		Assert.assertNotNull(error);
-		Assert.assertEquals(PacketError.Type.cancel, error.getType());
-		Assert.assertEquals(PacketError.Condition.item_not_found,
-				error.getCondition());
-	}
-	
-	@Test
-	public void canNotReplyToAReply() throws Exception {
-		IQ request = readStanzaAsIq("/iq/pubsub/publish/reply.stanza");
-		
-		NodeItem item = new NodeItemImpl(node, "2", new Date(), "<entry/>", "1");
-		Mockito.when(
-				channelManager.getNodeItem(Mockito.eq(node),
-						Mockito.eq("fc362eb42085f017ed9ccd9c4004b095")))
-				.thenReturn(item);
-		
-		Element entry = request.getChildElement().element("publish").element("item")
-				.element("entry").createCopy();
-
-		Mockito.when(
-				validateEntry.getPayload()).thenReturn(
-				entry);
-		
-		publish.process(element, jid, request, null);
-		
-		Assert.assertEquals(1, queue.size());
-		
-		IQ response = (IQ) queue.poll();
-
-		Assert.assertEquals(IQ.Type.error, response.getType());
-		
-		PacketError error = response.getError();
-		Assert.assertNotNull(error);
-		Assert.assertEquals(PacketError.Type.modify, error.getType());
-		Assert.assertEquals(PacketError.Condition.bad_request,
-				error.getCondition());
-		Assert.assertEquals(Publish.MAX_THREAD_DEPTH_EXCEEDED, error.getApplicationConditionName());
 	}
 }

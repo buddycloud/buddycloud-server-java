@@ -6,15 +6,20 @@ import java.util.Map;
 import java.util.UUID;
 
 import org.apache.log4j.Logger;
+import org.buddycloud.channelserver.db.exception.NodeStoreException;
+import org.buddycloud.channelserver.pubsub.model.NodeItem;
 import org.dom4j.Element;
 import org.dom4j.dom.DOMElement;
 import org.xmpp.packet.JID;
+import org.xmpp.packet.PacketError;
 
 public class ValidateEntry {
 
 	public static final String MISSING_CONTENT_ELEMENT = "content-element-required";
 	public static final String MISSING_ENTRY_ELEMENT = "entry-element-required";
 	public static final String UNSUPPORTED_CONTENT_TYPE = "unsupported-content-type";
+	public static final String MAX_THREAD_DEPTH_EXCEEDED = "max-thread-depth-exceeded";
+	public static final String PARENT_ITEM_NOT_FOUND = "parent-item-not-found";
 
 	public static final String CONTENT_TEXT = "text";
 	public static final String CONTENT_XHTML = "xhtml";
@@ -32,7 +37,7 @@ public class ValidateEntry {
 
 	public static final String ACTIVITY_VERB_POST = "post";
 
-	private static Logger LOGGER = Logger.getLogger(ValidateEntry.class);
+	private static Logger logger = Logger.getLogger(ValidateEntry.class);
 
 	private Element entry;
 
@@ -44,6 +49,7 @@ public class ValidateEntry {
 	private JID jid;
 	private String channelServerDomain;
 	private String node;
+	private ChannelManager channelManager;
 
 	Map<String, String> params = new HashMap<String, String>();
 
@@ -62,11 +68,17 @@ public class ValidateEntry {
 	public String getErrorMessage() {
 		return this.errorMessage;
 	}
+	
+	public void setChannelManager(ChannelManager channelManager) {
+		this.channelManager = channelManager;
+	}
 
 	/**
 	 * This is a big hackety-hack.
+	 * @throws InterruptedException 
+	 * @throws NodeStoreException 
 	 */
-	public boolean isValid() {
+	public boolean isValid() throws NodeStoreException {
 		if (this.entry == null) {
 			this.errorMessage = MISSING_ENTRY_ELEMENT;
 			return false;
@@ -76,13 +88,13 @@ public class ValidateEntry {
 		if ((id == null) || (true == id.getText().isEmpty())) {
 			if (null != id)
 				id.detach();
-			LOGGER.debug("ID of the entry was missing. We add a default one to it: 1");
+			logger.debug("ID of the entry was missing. We add a default one to it: 1");
 			this.entry.addElement("id").setText("1");
 		}
 
 		Element title = this.entry.element("title");
 		if (null == title) {
-			LOGGER.debug("Title of the entry was missing. We add a default one to it: 'Post'.");
+			logger.debug("Title of the entry was missing. We add a default one to it: 'Post'.");
 			title = this.entry.addElement("title");
 			title.setText("Post");
 		}
@@ -109,7 +121,7 @@ public class ValidateEntry {
 		if (null == updated) {
 
 			String updateTime = Conf.formatDate(new Date());
-			LOGGER.debug("Update of the entry was missing. We add a default one to it: '"
+			logger.debug("Update of the entry was missing. We add a default one to it: '"
 					+ updateTime + "'.");
 			this.entry.addElement("updated").setText(updateTime);
 		}
@@ -117,12 +129,8 @@ public class ValidateEntry {
 		this.geoloc = this.entry.element("geoloc");
 
 		Element reply = this.entry.element("in-reply-to");
-		if (null != reply) {
-			inReplyTo = reply.attributeValue("ref");
-			if (-1 != inReplyTo.indexOf(",")) {
-				String[] tokens = inReplyTo.split(",");
-				inReplyTo = tokens[2];
-			}
+		if ((null != reply) && (false == validateInReplyToElement(reply))) {
+			return false;
 		}
 
 		Element meta = this.entry.element("meta");
@@ -210,6 +218,31 @@ public class ValidateEntry {
 
 	public void setTo(String channelServerDomain) {
 		this.channelServerDomain = channelServerDomain;
+	}
+	
+
+	private boolean validateInReplyToElement(Element reply) throws NodeStoreException {
+
+		inReplyTo = reply.attributeValue("ref");
+		if (-1 != inReplyTo.indexOf(",")) {
+			String[] tokens = inReplyTo.split(",");
+			inReplyTo = tokens[2];
+		}
+
+		String[] inReplyToParts = reply.attributeValue("ref").split(",");
+		inReplyTo = inReplyToParts[inReplyToParts.length - 1];
+
+		NodeItem nodeItem = null;
+		if (null == (nodeItem = channelManager.getNodeItem(node, inReplyTo))) {
+			this.errorMessage = PARENT_ITEM_NOT_FOUND;
+			return false;
+		}
+		if (null != nodeItem.getInReplyTo()) {
+			logger.error("User is attempting to reply to a reply");
+			this.errorMessage = MAX_THREAD_DEPTH_EXCEEDED;
+			return false;
+		}
+		return true;
 	}
 
 }

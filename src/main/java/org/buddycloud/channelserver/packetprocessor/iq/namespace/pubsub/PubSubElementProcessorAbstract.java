@@ -18,23 +18,23 @@ import org.xmpp.packet.PacketError;
 import org.xmpp.packet.PacketError.Condition;
 import org.xmpp.packet.PacketError.Type;
 
-public abstract class PubSubElementProcessorAbstract
-    implements PubSubElementProcessor
-{
+public abstract class PubSubElementProcessorAbstract implements
+		PubSubElementProcessor {
 	public static final String NS_RSM = "http://jabber.org/protocol/rsm";
-    
-	public static Logger logger = Logger.getLogger(PubSubElementProcessorAbstract.class);
-	
-    protected BlockingQueue<Packet> outQueue;
-    protected ChannelManager        channelManager;
-    protected Element               element;
-    protected IQ                    response;
-    protected IQ                    request;
-    protected JID                   actor;
-    protected String                serverDomain;
-    protected String                topicsDomain;
-    protected String                node = null;
-    protected Helper                configurationHelper;
+
+	public static Logger logger = Logger
+			.getLogger(PubSubElementProcessorAbstract.class);
+
+	protected BlockingQueue<Packet> outQueue;
+	protected ChannelManager channelManager;
+	protected Element element;
+	protected IQ response;
+	protected IQ request;
+	protected JID actor;
+	protected String serverDomain;
+	protected String topicsDomain;
+	protected String node = null;
+	protected Helper configurationHelper;
 
 	protected Element resultSetManagement;
 	protected String firstItem;
@@ -43,26 +43,22 @@ public abstract class PubSubElementProcessorAbstract
 
 	private Collection<JID> adminUsers;
 
-	public void setOutQueue(BlockingQueue<Packet> outQueue)
-	{
+	public void setOutQueue(BlockingQueue<Packet> outQueue) {
 		this.outQueue = outQueue;
 	}
 
-	public void setChannelManager(ChannelManager channelManager)
-	{
+	public void setChannelManager(ChannelManager channelManager) {
 		this.channelManager = channelManager;
 	}
-	
-	public void setServerDomain(String domain)
-	{
+
+	public void setServerDomain(String domain) {
 		serverDomain = domain;
 	}
 
-	protected String getServerDomain()
-	{
+	protected String getServerDomain() {
 		if (null == serverDomain) {
-            serverDomain = Configuration.getInstance()
-			    .getProperty("server.domain");
+			serverDomain = Configuration.getInstance().getProperty(
+					"server.domain");
 		}
 		return serverDomain;
 	}
@@ -73,32 +69,28 @@ public abstract class PubSubElementProcessorAbstract
 		}
 		return adminUsers;
 	}
-	
-	public void setTopicsDomain(String domain)
-	{
-	    topicsDomain = domain;		
-	}
-	
-	public void setNode(String node) {
-        this.node = node;
-	}
-	
-	protected String getTopicsDomain()
-	{
-		if (null == topicsDomain) {
-            topicsDomain = Configuration.getInstance()
-			    .getProperty("server.domain.topics");
-		}
-		return topicsDomain;		
+
+	public void setTopicsDomain(String domain) {
+		topicsDomain = domain;
 	}
 
-	public void setConfigurationHelper(Helper helper)
-	{
+	public void setNode(String node) {
+		this.node = node;
+	}
+
+	protected String getTopicsDomain() {
+		if (null == topicsDomain) {
+			topicsDomain = Configuration.getInstance().getProperty(
+					"server.domain.topics");
+		}
+		return topicsDomain;
+	}
+
+	public void setConfigurationHelper(Helper helper) {
 		configurationHelper = helper;
 	}
-	
-	protected Helper getNodeConfigurationHelper()
-	{
+
+	protected Helper getNodeConfigurationHelper() {
 		if (null == configurationHelper) {
 			configurationHelper = new Helper();
 		}
@@ -136,9 +128,8 @@ public abstract class PubSubElementProcessorAbstract
 		error.add(extraError);
 		response.setChildElement(error);
 	}
-	
-	protected Document getDocumentHelper()
-	{
+
+	protected Document getDocumentHelper() {
 		return DocumentHelper.createDocument();
 	}
 }

@@ -144,7 +144,7 @@ public class Publish extends PubSubElementProcessorAbstract {
 		outQueue.put(response);
 	}
 
-	private boolean isRequestValid() throws InterruptedException {
+	private boolean isRequestValid() throws Exception {
 		item = request.getChildElement().element("publish").element("item");
 		if (null == item) {
 			createExtendedErrorReply(PacketError.Type.modify,

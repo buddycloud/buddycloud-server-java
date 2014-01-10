@@ -296,4 +296,26 @@ public class FederatedQueueManagerTest extends IQTestHandler {
 
 		Assert.assertTrue(originalId.equals(packetExternal.getID()));
 	}
+	
+	
+	@Test
+	public void testIqErrorPacketsDontGetIdMapped() throws Exception {
+		channelsEngine.clear();
+
+		String originalId = "id:12345";
+		IQ packet = new IQ();
+		packet.setFrom(new JID("romeo@montague.lit/street"));
+		packet.setTo(new JID("topics.capulet.lit"));
+		packet.setType(IQ.Type.error);
+		packet.setID(originalId);
+		packet.getElement().addAttribute("remote-server-discover", "false");
+		
+		queueManager.addChannelMap(new JID("topics.capulet.lit"));
+		
+		queueManager.process(packet.createCopy());
+		
+		IQ packetExternal = (IQ) channelsEngine.poll();
+
+		Assert.assertTrue(originalId.equals(packetExternal.getID()));
+	}
 }

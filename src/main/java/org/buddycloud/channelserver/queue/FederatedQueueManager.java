@@ -71,18 +71,19 @@ public class FederatedQueueManager {
 
 	public void process(Packet packet) throws ComponentException {
 
-		logger.debug("Packet payload " + packet.toXML() + " going to federation.");
+		logger.debug("Packet payload " + packet.toXML()
+				+ " going to federation.");
 
 		String to = packet.getTo().toString();
-        String uniqueId = packet.getID();
-        
-        if (true == performIdMapping(packet)) {
+		String uniqueId = packet.getID();
+
+		if (true == performIdMapping(packet)) {
 
 			uniqueId = generateUniqueId(packet);
 			idMap.put(uniqueId, packet.getID());
 			packet.setID(uniqueId);
-        }
-        
+		}
+
 		sentRemotePackets.put(uniqueId, packet.getFrom());
 		try {
 			extractNodeDetails(packet);
@@ -123,7 +124,8 @@ public class FederatedQueueManager {
 			return false;
 		}
 		IQ iq = (IQ) packet;
-		if (true == iq.getType().equals(IQ.Type.result)) {
+		if ((true == iq.getType().equals(IQ.Type.result))
+				|| (true == iq.getType().equals(IQ.Type.error))) {
 			return false;
 		}
 		return true;

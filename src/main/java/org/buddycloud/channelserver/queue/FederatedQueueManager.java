@@ -37,7 +37,7 @@ public class FederatedQueueManager {
 	public static final String IDENTITY_TYPE_CHANNELS = "channels";
 	public static final String BUDDYCLOUD_SERVER = "buddycloud-server";
 
-    public static final String SRV_PREFIX = "_buddycloud-server._tcp.";
+	public static final String SRV_PREFIX = "_buddycloud-server._tcp.";
 
 	private int id = 1;
 
@@ -113,7 +113,7 @@ public class FederatedQueueManager {
 			waitingStanzas.get(to).add(packet);
 			logger.debug("Adding packet to waiting stanza list for " + to
 					+ " (size " + waitingStanzas.get(to).size() + ")");
-            attemptDnsDiscovery(to);
+			attemptDnsDiscovery(to);
 		} catch (Exception e) {
 			logger.error(e);
 		}
@@ -137,10 +137,8 @@ public class FederatedQueueManager {
 			if (!packetXml.contains("node=")) {
 				return;
 			}
-			nodeMap.put(
-			    packet.getID(),
-			    packetXml.split("node=\"")[1].split("\"")[0]
-			);
+			nodeMap.put(packet.getID(),
+					packetXml.split("node=\"")[1].split("\"")[0]);
 		} catch (NullPointerException e) {
 			logger.info("No node details found in federated packet");
 			logger.error(e);
@@ -172,8 +170,7 @@ public class FederatedQueueManager {
 
 		for (Element item : items) {
 			Attribute name = item.attribute("name");
-			if (name != null
-					&& name.getStringValue().equals(BUDDYCLOUD_SERVER)) {
+			if (name != null && name.getStringValue().equals(BUDDYCLOUD_SERVER)) {
 				remoteChannelDiscoveryStatus.put(from.toString(), DISCOVERED);
 				setDiscoveredServer(from.toString(), item.attributeValue("jid"));
 				sendFederatedRequests(from.toString());
@@ -227,50 +224,54 @@ public class FederatedQueueManager {
 
 		if (remoteServerItemsToProcess.get(originatingServer) < 1) {
 			if (!discoveredServers.containsKey(originatingServer)) {
-                sendRemoteChannelServerNotFoundErrorResponses(originatingServer);
-                remoteChannelDiscoveryStatus.put(originatingServer,
-                        NO_CHANNEL_SERVER);
-                waitingStanzas.remove(originatingServer);
+				sendRemoteChannelServerNotFoundErrorResponses(originatingServer);
+				remoteChannelDiscoveryStatus.put(originatingServer,
+						NO_CHANNEL_SERVER);
+				waitingStanzas.remove(originatingServer);
 			} else {
 				remoteChannelDiscoveryStatus.put(originatingServer, DISCOVERED);
 			}
 		}
 	}
 
-    private boolean attemptDnsDiscovery(String originatingServer) throws ComponentException {
-        try {
-            String query = SRV_PREFIX + originatingServer;
-            Record[] records = new Lookup(query, Type.SRV).run();
-            if ((null == records) || (0 == records.length)) {
-                logger.debug("No appropriate DNS entry found for " + originatingServer);
-                return false;
-            }
-            SRVRecord record = (SRVRecord) records[0];
-            String targetServer = record.getTarget().toString(true);
-            setDiscoveredServer(originatingServer, targetServer);
-            logger.info("DNS discovery complete for buddycloud server @ "
-                + originatingServer + " (" + targetServer + ")");
-            remoteChannelDiscoveryStatus.put(originatingServer, DISCOVERED);
-            sendFederatedRequests(originatingServer);
-            return true;
-        } catch (TextParseException e) {
-            logger.error(e);
-            return false;
-        }
-    }
+	private boolean attemptDnsDiscovery(String originatingServer)
+			throws ComponentException {
+		try {
+			String query = SRV_PREFIX + originatingServer;
+			Record[] records = new Lookup(query, Type.SRV).run();
+			if ((null == records) || (0 == records.length)) {
+				logger.debug("No appropriate DNS entry found for "
+						+ originatingServer);
+				return false;
+			}
+			SRVRecord record = (SRVRecord) records[0];
+			String targetServer = record.getTarget().toString(true);
+			setDiscoveredServer(originatingServer, targetServer);
+			logger.info("DNS discovery complete for buddycloud server @ "
+					+ originatingServer + " (" + targetServer + ")");
+			remoteChannelDiscoveryStatus.put(originatingServer, DISCOVERED);
+			sendFederatedRequests(originatingServer);
+			return true;
+		} catch (TextParseException e) {
+			logger.error(e);
+			return false;
+		}
+	}
 
 	private void sendFederatedRequests(String originatingServer)
 			throws ComponentException {
 		String remoteServer = discoveredServers.get(originatingServer);
 		List<Packet> packetsToSend = waitingStanzas.get(originatingServer);
 		if (packetsToSend == null) {
-            logger.trace("No queued federated packets to send to " + originatingServer);
+			logger.trace("No queued federated packets to send to "
+					+ originatingServer);
 			return;
 		}
-        logger.trace("Catching up on federated packet sending to " + originatingServer);
+		logger.trace("Catching up on federated packet sending to "
+				+ originatingServer);
 		for (Packet packet : packetsToSend) {
 			packet.setTo(remoteServer);
-            logger.trace(packet.toString());
+			logger.trace(packet.toString());
 			sendPacket(packet.createCopy());
 		}
 		waitingStanzas.remove(originatingServer);
@@ -311,9 +312,11 @@ public class FederatedQueueManager {
 							+ packet.getID() + ")");
 		}
 
-        if (packet.getType().equals(IQ.Type.error) && !remoteChannelDiscoveryStatus.get(packet.getFrom()).equals(DISCOVERED)) {
-            return;
-        }
+		if (packet.getType().equals(IQ.Type.error)
+				&& !remoteChannelDiscoveryStatus.get(packet.getFrom()).equals(
+						DISCOVERED)) {
+			return;
+		}
 
 		String uniqueId = packet.getID();
 		packet.setID(idMap.get(uniqueId));
@@ -347,10 +350,10 @@ public class FederatedQueueManager {
 
 	/**
 	 * Generate a unique ID for a packet
-	 *
+	 * 
 	 * Supplied packet IDs might not be unique so we use the ID and the FROM
 	 * values to create a hash which we map back to the original packet ID.
-	 *
+	 * 
 	 * @param packet
 	 * @return unique ID for the packet
 	 */
@@ -360,30 +363,31 @@ public class FederatedQueueManager {
 
 	/**
 	 * Generates an MD5 hash of a supplied String
-	 *
-	 * @param message to encode
+	 * 
+	 * @param message
+	 *            to encode
 	 * @return MD5 Hash of supplied string
 	 */
-    private String generateMd5(String message) {
-        String digest = null;
-        try {
-            MessageDigest md = MessageDigest.getInstance("MD5");
-            byte[] hash = md.digest(message.getBytes("UTF-8"));
+	private String generateMd5(String message) {
+		String digest = null;
+		try {
+			MessageDigest md = MessageDigest.getInstance("MD5");
+			byte[] hash = md.digest(message.getBytes("UTF-8"));
 
-            //converting byte array to Hexadecimal String
-            StringBuilder sb = new StringBuilder(2*hash.length);
-            for(byte b : hash) {
-               sb.append(String.format("%02x", b&0xff));
-            }
+			// converting byte array to Hexadecimal String
+			StringBuilder sb = new StringBuilder(2 * hash.length);
+			for (byte b : hash) {
+				sb.append(String.format("%02x", b & 0xff));
+			}
 
-            digest = sb.toString();
-        } catch (UnsupportedEncodingException e) {
+			digest = sb.toString();
+		} catch (UnsupportedEncodingException e) {
 			logger.info("Error generating unique packet ID");
 			logger.error(e);
-        } catch (NoSuchAlgorithmException e) {
+		} catch (NoSuchAlgorithmException e) {
 			logger.info("Error generating unique packet ID");
 			logger.error(e);
-        }
-        return digest;
-    }
+		}
+		return digest;
+	}
 }

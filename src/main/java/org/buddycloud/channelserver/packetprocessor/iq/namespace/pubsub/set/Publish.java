@@ -103,8 +103,9 @@ public class Publish extends PubSubElementProcessorAbstract {
 			if (false == isRequestValid())
 				return;
 			extractItemDetails();
-			if (false == determineInReplyToDetails())
+			if (false == determineExtensionDetails()) {
 				return;
+			}
 
 			saveNodeItem();
 			sendResponseStanza();
@@ -116,6 +117,12 @@ public class Publish extends PubSubElementProcessorAbstract {
 			outQueue.put(response);
 		}
 
+	}
+
+	private boolean determineExtensionDetails() {
+		if (false == determineInReplyToDetails()) {
+			return false;
+		}
 	}
 
 	private void saveNodeItem() throws NodeStoreException {

@@ -149,7 +149,7 @@ public class PublishSet extends PubSubElementProcessorAbstract {
 			return false;
 		}
 
-		entry = vEntry.createBcCompatible(publishersJID.toBareJID(),
+		entry = vEntry.createBcCompatible(publishersJID,
 				requestIq.getTo().toBareJID(), node);
 
 		id = GlobalItemIDImpl.toLocalId(entry.element("id").getText());
@@ -178,7 +178,7 @@ public class PublishSet extends PubSubElementProcessorAbstract {
 
 	private void sendInvalidEntryResponse(ValidateEntry vEntry)
 			throws InterruptedException {
-		LOGGER.info("Entry is not valid: '" + vEntry.getErrorMsg() + "'.");
+		LOGGER.info("Entry is not valid: '" + vEntry.getErrorMessage() + "'.");
 
 		/*
 		 * <iq type='error' from='pubsub.shakespeare.lit'

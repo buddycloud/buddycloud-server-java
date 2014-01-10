@@ -161,8 +161,7 @@ public class Publish extends PubSubElementProcessorAbstract {
 
 	private void extractItemDetails() throws InterruptedException {
 
-		entry = entryContent.getPayload(publishersJID, request
-				.getTo().toBareJID(), node);
+		entry = entryContent.getPayload();
 		id = GlobalItemIDImpl.toLocalId(entry.element("id").getText());
 	}
 	
@@ -195,6 +194,9 @@ public class Publish extends PubSubElementProcessorAbstract {
 		}
 		entryContent = getEntryValidator();
 		entryContent.setEntry(item.element("entry"));
+		entryContent.setUser(publishersJID);
+		entryContent.setTo(request.getTo().toBareJID());
+		entryContent.setNode(node);
 
 		if (!entryContent.isValid()) {
 			sendInvalidEntryResponse();

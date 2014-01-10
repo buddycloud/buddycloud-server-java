@@ -95,8 +95,7 @@ public class PublishTest extends IQTestHandler {
 		Mockito.when(validateEntry.isValid()).thenReturn(true);
 
 		Mockito.when(
-				validateEntry.getPayload(Mockito.any(JID.class),
-						Mockito.anyString(), Mockito.anyString())).thenReturn(
+				validateEntry.getPayload()).thenReturn(
 				entry);
 
 	}
@@ -412,8 +411,7 @@ public class PublishTest extends IQTestHandler {
 				.element("entry").createCopy();
 
 		Mockito.when(
-				validateEntry.getPayload(Mockito.any(JID.class),
-						Mockito.anyString(), Mockito.anyString())).thenReturn(
+				validateEntry.getPayload()).thenReturn(
 				entry);
 		
 		publish.process(element, jid, request, null);
@@ -445,8 +443,7 @@ public class PublishTest extends IQTestHandler {
 				.element("entry").createCopy();
 
 		Mockito.when(
-				validateEntry.getPayload(Mockito.any(JID.class),
-						Mockito.anyString(), Mockito.anyString())).thenReturn(
+				validateEntry.getPayload()).thenReturn(
 				entry);
 		
 		publish.process(element, jid, request, null);

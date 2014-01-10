@@ -46,6 +46,14 @@ public class ValidateEntryTest extends TestHandler {
 		replyEntry = replyRequest.getChildElement().element("publish")
 				.element("item").element("entry");
 	}
+	
+	private ValidateEntry getEntryObject(Element entry) {
+		ValidateEntry validate = new ValidateEntry(entry);
+		validate.setNode(node);
+		validate.setTo(server);
+		validate.setUser(jid);
+		return validate;
+	}
 
 	@Test
 	public void notProvidingAnEntryReturnsError() throws Exception {
@@ -55,7 +63,7 @@ public class ValidateEntryTest extends TestHandler {
 		Assert.assertEquals(ValidateEntry.MISSING_ENTRY_ELEMENT,
 				validateEntry.getErrorMessage());
 	}
-
+	
 	@Test
 	public void missingIdAttributeGetsAdded() throws Exception {
 
@@ -64,9 +72,9 @@ public class ValidateEntryTest extends TestHandler {
 
 		Element entry = (Element) this.publishEntry.clone();
 		entry.element("id").detach();
-		validateEntry = new ValidateEntry(entry);
+		validateEntry = getEntryObject(entry);
 		Assert.assertTrue(validateEntry.isValid());
-		entry = validateEntry.getPayload(jid, server, node);
+		entry = validateEntry.getPayload();
 		Assert.assertTrue(entry.elementText("id").contains(
 				"tag:" + server + "," + node + ","));
 	}
@@ -81,9 +89,9 @@ public class ValidateEntryTest extends TestHandler {
 		entry.element("id").detach();
 		entry.addElement("id");
 
-		validateEntry = new ValidateEntry(entry);
+		validateEntry = getEntryObject(entry);
 		Assert.assertTrue(validateEntry.isValid());
-		entry = validateEntry.getPayload(jid, server, node);
+		entry = validateEntry.getPayload();
 		Assert.assertTrue(entry.elementText("id").contains(
 				"tag:" + server + "," + node + ","));
 	}
@@ -94,9 +102,9 @@ public class ValidateEntryTest extends TestHandler {
 		Assert.assertEquals(id, publishEntry.elementText("id"));
 
 		Element entry = (Element) this.publishEntry.clone();
-		validateEntry = new ValidateEntry(entry);
+		validateEntry = getEntryObject(entry);
 		Assert.assertTrue(validateEntry.isValid());
-		entry = validateEntry.getPayload(jid, server, node);
+		entry = validateEntry.getPayload();
 		Assert.assertFalse(entry.elementText("id").contains(id));
 
 	}
@@ -108,9 +116,9 @@ public class ValidateEntryTest extends TestHandler {
 
 		Element entry = (Element) this.publishEntry.clone();
 		entry.element("title").detach();
-		validateEntry = new ValidateEntry(entry);
+		validateEntry = getEntryObject(entry);
 		Assert.assertTrue(validateEntry.isValid());
-		entry = validateEntry.getPayload(jid, server, node);
+		entry = validateEntry.getPayload();
 		Assert.assertEquals("Post", entry.elementText("title"));
 	}
 
@@ -121,7 +129,7 @@ public class ValidateEntryTest extends TestHandler {
 
 		Element entry = (Element) this.publishEntry.clone();
 		entry.element("content").detach();
-		validateEntry = new ValidateEntry(entry);
+		validateEntry = getEntryObject(entry);
 		Assert.assertFalse(validateEntry.isValid());
 		Assert.assertEquals(ValidateEntry.MISSING_CONTENT_ELEMENT,
 				validateEntry.getErrorMessage());
@@ -135,9 +143,9 @@ public class ValidateEntryTest extends TestHandler {
 
 		Element entry = (Element) this.publishEntry.clone();
 		entry.element("updated").detach();
-		validateEntry = new ValidateEntry(entry);
+		validateEntry = getEntryObject(entry);
 		Assert.assertTrue(validateEntry.isValid());
-		entry = validateEntry.getPayload(jid, server, node);
+		entry = validateEntry.getPayload();
 		Assert.assertTrue(entry
 				.elementText("updated")
 				.matches(
@@ -150,18 +158,18 @@ public class ValidateEntryTest extends TestHandler {
 		Assert.assertEquals(dateString, publishEntry.elementText("updated"));
 
 		Element entry = (Element) this.publishEntry.clone();
-		validateEntry = new ValidateEntry(entry);
+		validateEntry = getEntryObject(entry);
 		Assert.assertTrue(validateEntry.isValid());
-		entry = validateEntry.getPayload(jid, server, node);
+		entry = validateEntry.getPayload();
 		Assert.assertFalse(entry.elementText("updated").equals(dateString));
 	}
 
 	@Test
 	public void authorEntryIsAdded() throws Exception {
 		Element entry = (Element) this.publishEntry.clone();
-		validateEntry = new ValidateEntry(entry);
+		validateEntry = getEntryObject(entry);
 		Assert.assertTrue(validateEntry.isValid());
-		entry = validateEntry.getPayload(jid, server, node);
+		entry = validateEntry.getPayload();
 
 		Element author = entry.element("author");
 		Assert.assertNotNull(author);
@@ -175,16 +183,16 @@ public class ValidateEntryTest extends TestHandler {
 	@Test
 	public void geolocationEntryIsAdded() throws Exception {
 		Element entry = (Element) this.publishEntry.clone();
-		validateEntry = new ValidateEntry(entry);
+		validateEntry = getEntryObject(entry);
 		Assert.assertTrue(validateEntry.isValid());
-		entry = validateEntry.getPayload(jid, server, node);
+		entry = validateEntry.getPayload();
 
 		Assert.assertNotNull(entry.element("geoloc"));
 
 		entry = (Element) this.replyEntry.clone();
-		validateEntry = new ValidateEntry(entry);
+		validateEntry = getEntryObject(entry);
 		Assert.assertTrue(validateEntry.isValid());
-		entry = validateEntry.getPayload(jid, server, node);
+		entry = validateEntry.getPayload();
 
 		Assert.assertNull(entry.element("geoloc"));
 	}
@@ -197,9 +205,9 @@ public class ValidateEntryTest extends TestHandler {
 				replyEntry.element("in-reply-to").attributeValue("ref"));
 
 		Element entry = (Element) this.replyEntry.clone();
-		validateEntry = new ValidateEntry(entry);
+		validateEntry = getEntryObject(entry);
 		Assert.assertTrue(validateEntry.isValid());
-		entry = validateEntry.getPayload(jid, server, node);
+		entry = validateEntry.getPayload();
 		Assert.assertEquals("fc362eb42085f017ed9ccd9c4004b095",
 				entry.element("in-reply-to").attributeValue("ref"));
 	}
@@ -208,17 +216,17 @@ public class ValidateEntryTest extends TestHandler {
 	public void postGetsNoteTypeReplyGetsCommentType() throws Exception {
 
 		Element entry = (Element) this.publishEntry.clone();
-		validateEntry = new ValidateEntry(entry);
+		validateEntry = getEntryObject(entry);
 		Assert.assertTrue(validateEntry.isValid());
-		entry = validateEntry.getPayload(jid, server, node);
+		entry = validateEntry.getPayload();
 
 		Assert.assertEquals(ValidateEntry.POST_TYPE_NOTE,
 				entry.element("object").elementText("object-type"));
 
 		entry = (Element) this.replyEntry.clone();
-		validateEntry = new ValidateEntry(entry);
+		validateEntry = getEntryObject(entry);
 		Assert.assertTrue(validateEntry.isValid());
-		entry = validateEntry.getPayload(jid, server, node);
+		entry = validateEntry.getPayload();
 
 		Assert.assertEquals(ValidateEntry.POST_TYPE_COMMENT,
 				entry.element("object").elementText("object-type"));
@@ -228,7 +236,7 @@ public class ValidateEntryTest extends TestHandler {
 	public void badContentTypeReturnsError() throws Exception {
 		Element entry = (Element) this.publishEntry.clone();
 		entry.element("content").attribute("type").setText("emojis");
-		validateEntry = new ValidateEntry(entry);
+		validateEntry = getEntryObject(entry);
 		Assert.assertFalse(validateEntry.isValid());
 		Assert.assertEquals(ValidateEntry.UNSUPPORTED_CONTENT_TYPE,
 				validateEntry.getErrorMessage());
@@ -238,9 +246,9 @@ public class ValidateEntryTest extends TestHandler {
 	public void noContentTypeGetsDefaultedToText() throws Exception {
 		Element entry = (Element) this.publishEntry.clone();
 		entry.element("content").attribute("type").detach();
-		validateEntry = new ValidateEntry(entry);
+		validateEntry = getEntryObject(entry);
 		Assert.assertTrue(validateEntry.isValid());
-		entry = validateEntry.getPayload(jid, server, node);
+		entry = validateEntry.getPayload();
 		Assert.assertEquals(ValidateEntry.CONTENT_TEXT, entry
 				.element("content").attributeValue("type"));
 
@@ -251,9 +259,9 @@ public class ValidateEntryTest extends TestHandler {
 		Element entry = (Element) this.publishEntry.clone();
 		entry.element("content").attribute("type")
 				.setText(ValidateEntry.CONTENT_XHTML);
-		validateEntry = new ValidateEntry(entry);
+		validateEntry = getEntryObject(entry);
 		Assert.assertTrue(validateEntry.isValid());
-		entry = validateEntry.getPayload(jid, server, node);
+		entry = validateEntry.getPayload();
 		Assert.assertEquals(ValidateEntry.CONTENT_XHTML,
 				entry.element("content").attributeValue("type"));
 	}
@@ -261,9 +269,9 @@ public class ValidateEntryTest extends TestHandler {
 	@Test
 	public void activityVerbIsAdded() throws Exception {
 		Element entry = (Element) this.publishEntry.clone();
-		validateEntry = new ValidateEntry(entry);
+		validateEntry = getEntryObject(entry);
 		Assert.assertTrue(validateEntry.isValid());
-		entry = validateEntry.getPayload(jid, server, node);
+		entry = validateEntry.getPayload();
 
 		Assert.assertEquals(ValidateEntry.ACTIVITY_VERB_POST,
 				entry.elementText("verb"));

@@ -40,6 +40,10 @@ public class ValidateEntry {
 	private String inReplyTo;
 	private Element meta;
 	private Element media;
+	
+	private JID jid;
+	private String channelServerDomain;
+	private String node;
 
 	Map<String, String> params = new HashMap<String, String>();
 
@@ -134,8 +138,7 @@ public class ValidateEntry {
 		return true;
 	}
 
-	public Element getPayload(JID jid, String channelServerDomain,
-			String node) {
+	public Element getPayload() {
 
 		Element entry = new DOMElement("entry", new org.dom4j.Namespace("",
 				NS_ATOM));
@@ -195,6 +198,18 @@ public class ValidateEntry {
 		}
 
 		return entry;
+	}
+
+	public void setUser(JID jid) {
+		this.jid = jid;
+	}
+
+	public void setNode(String node) {
+		this.node = node;
+	}
+
+	public void setTo(String channelServerDomain) {
+		this.channelServerDomain = channelServerDomain;
 	}
 
 }

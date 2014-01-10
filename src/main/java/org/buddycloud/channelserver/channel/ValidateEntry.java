@@ -37,7 +37,7 @@ public class ValidateEntry {
 
 	public static final String ACTIVITY_VERB_POST = "post";
 
-	private static Logger logger = Logger.getLogger(ValidateEntry.class);
+	private static Logger LOGGER = Logger.getLogger(ValidateEntry.class);
 
 	private Element entry;
 
@@ -88,13 +88,13 @@ public class ValidateEntry {
 		if ((id == null) || (true == id.getText().isEmpty())) {
 			if (null != id)
 				id.detach();
-			logger.debug("ID of the entry was missing. We add a default one to it: 1");
+			LOGGER.debug("ID of the entry was missing. We add a default one to it: 1");
 			this.entry.addElement("id").setText("1");
 		}
 
 		Element title = this.entry.element("title");
 		if (null == title) {
-			logger.debug("Title of the entry was missing. We add a default one to it: 'Post'.");
+			LOGGER.debug("Title of the entry was missing. We add a default one to it: 'Post'.");
 			title = this.entry.addElement("title");
 			title.setText("Post");
 		}
@@ -121,7 +121,7 @@ public class ValidateEntry {
 		if (null == updated) {
 
 			String updateTime = Conf.formatDate(new Date());
-			logger.debug("Update of the entry was missing. We add a default one to it: '"
+			LOGGER.debug("Update of the entry was missing. We add a default one to it: '"
 					+ updateTime + "'.");
 			this.entry.addElement("updated").setText(updateTime);
 		}
@@ -129,6 +129,7 @@ public class ValidateEntry {
 		this.geoloc = this.entry.element("geoloc");
 
 		Element reply = this.entry.element("in-reply-to");
+		
 		if ((null != reply) && (false == validateInReplyToElement(reply))) {
 			return false;
 		}
@@ -238,7 +239,7 @@ public class ValidateEntry {
 			return false;
 		}
 		if (null != nodeItem.getInReplyTo()) {
-			logger.error("User is attempting to reply to a reply");
+			LOGGER.error("User is attempting to reply to a reply");
 			this.errorMessage = MAX_THREAD_DEPTH_EXCEEDED;
 			return false;
 		}

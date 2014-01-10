@@ -74,11 +74,15 @@ public class FederatedQueueManager {
 		logger.debug("Packet payload " + packet.toXML() + " going to federation.");
 
 		String to = packet.getTo().toString();
+        String uniqueId = packet.getID();
+        
+        if (true == performIdMapping(packet)) {
 
-		String uniqueId = generateUniqueId(packet);
-		idMap.put(uniqueId, packet.getID());
-		packet.setID(uniqueId);
-
+			uniqueId = generateUniqueId(packet);
+			idMap.put(uniqueId, packet.getID());
+			packet.setID(uniqueId);
+        }
+        
 		sentRemotePackets.put(uniqueId, packet.getFrom());
 		try {
 			extractNodeDetails(packet);
@@ -112,6 +116,17 @@ public class FederatedQueueManager {
 		} catch (Exception e) {
 			logger.error(e);
 		}
+	}
+
+	private boolean performIdMapping(Packet packet) {
+		if (false == packet.getElement().getName().equals("iq")) {
+			return false;
+		}
+		IQ iq = (IQ) packet;
+		if (true == iq.getType().equals(IQ.Type.result)) {
+			return false;
+		}
+		return true;
 	}
 
 	private void extractNodeDetails(Packet packet) {

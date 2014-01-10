@@ -6,14 +6,12 @@ import java.util.concurrent.BlockingQueue;
 
 import org.apache.log4j.Logger;
 import org.buddycloud.channelserver.channel.ChannelManager;
-import org.buddycloud.channelserver.channel.Conf;
 import org.buddycloud.channelserver.channel.ValidateEntry;
 import org.buddycloud.channelserver.db.exception.NodeStoreException;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.JabberPubsub;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.PubSubElementProcessorAbstract;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.PubSubSet;
 import org.buddycloud.channelserver.pubsub.affiliation.Affiliations;
-import org.buddycloud.channelserver.pubsub.model.NodeAffiliation;
 import org.buddycloud.channelserver.pubsub.model.NodeItem;
 import org.buddycloud.channelserver.pubsub.model.NodeSubscription;
 import org.buddycloud.channelserver.pubsub.model.impl.GlobalItemIDImpl;
@@ -36,9 +34,10 @@ public class Publish extends PubSubElementProcessorAbstract {
 	public static final String MISSING_ITEM_ELEMENT = "item-required";
 	public static final String NODE_ID_REQUIRED = "nodeid-required";
 
+	public static final String MAX_THREAD_DEPTH_EXCEEDED = "max-thread-depth-exceeded";
+
 	private Element entry;
 	private String id;
-	private Date updated;
 	private JID publishersJID;
 	private String inReplyTo;
 	private Element item;
@@ -139,21 +138,13 @@ public class Publish extends PubSubElementProcessorAbstract {
 		inReplyTo = inReplyToParts[inReplyToParts.length - 1];
 
 		if (null == (nodeItem = channelManager.getNodeItem(node, inReplyTo))) {
-			response.setType(Type.error);
-			PacketError pe = new PacketError(
-					org.xmpp.packet.PacketError.Condition.item_not_found,
-					org.xmpp.packet.PacketError.Type.cancel);
-			response.setError(pe);
+			setErrorCondition(PacketError.Type.cancel, PacketError.Condition.item_not_found);
 			outQueue.put(response);
 			return false;
 		}
 		if (null != nodeItem.getInReplyTo()) {
 			logger.error("User is attempting to reply to a reply");
-			response.setType(Type.error);
-			PacketError pe = new PacketError(
-					org.xmpp.packet.PacketError.Condition.bad_request,
-					org.xmpp.packet.PacketError.Type.modify);
-			response.setError(pe);
+			createExtendedErrorReply(PacketError.Type.modify, PacketError.Condition.bad_request, MAX_THREAD_DEPTH_EXCEEDED);
 			outQueue.put(response);
 			return false;
 		}

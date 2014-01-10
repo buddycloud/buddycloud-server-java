@@ -430,4 +430,38 @@ public class PublishTest extends IQTestHandler {
 		Assert.assertEquals(PacketError.Condition.item_not_found,
 				error.getCondition());
 	}
+	
+	@Test
+	public void canNotReplyToAReply() throws Exception {
+		IQ request = readStanzaAsIq("/iq/pubsub/publish/reply.stanza");
+		
+		NodeItem item = new NodeItemImpl(node, "2", new Date(), "<entry/>", "1");
+		Mockito.when(
+				channelManager.getNodeItem(Mockito.eq(node),
+						Mockito.eq("fc362eb42085f017ed9ccd9c4004b095")))
+				.thenReturn(item);
+		
+		Element entry = request.getChildElement().element("publish").element("item")
+				.element("entry").createCopy();
+
+		Mockito.when(
+				validateEntry.getPayload(Mockito.any(JID.class),
+						Mockito.anyString(), Mockito.anyString())).thenReturn(
+				entry);
+		
+		publish.process(element, jid, request, null);
+		
+		Assert.assertEquals(1, queue.size());
+		
+		IQ response = (IQ) queue.poll();
+
+		Assert.assertEquals(IQ.Type.error, response.getType());
+		
+		PacketError error = response.getError();
+		Assert.assertNotNull(error);
+		Assert.assertEquals(PacketError.Type.modify, error.getType());
+		Assert.assertEquals(PacketError.Condition.bad_request,
+				error.getCondition());
+		Assert.assertEquals(Publish.MAX_THREAD_DEPTH_EXCEEDED, error.getApplicationConditionName());
+	}
 }

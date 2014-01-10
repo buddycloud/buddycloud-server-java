@@ -104,23 +104,32 @@ public abstract class PubSubElementProcessorAbstract
 		}
 		return configurationHelper;
 	}
-	
-	protected void setErrorCondition(Type type, Condition condition)
-	{
-		if (null == response) response = IQ.createResultIQ(request);
+
+	protected void setErrorCondition(Type type, Condition condition) {
+		if (null == response)
+			response = IQ.createResultIQ(request);
 		response.setType(IQ.Type.error);
 		PacketError error = new PacketError(condition, type);
 		response.setError(error);
 	}
-	
+
 	protected void createExtendedErrorReply(Type type, Condition condition,
 			String additionalElement) {
-		if (null == response) response = IQ.createResultIQ(request);
+		createExtendedErrorReply(type, condition, additionalElement,
+				JabberPubsub.NS_PUBSUB_ERROR);
+	}
+
+	private void createExtendedErrorReply(Type type, Condition condition,
+			String additionalElement, String additionalNamespace) {
+		
+		if (null == response) {
+			response = IQ.createResultIQ(request);
+		}
 		response.setType(IQ.Type.error);
 		Element standardError = new DOMElement(condition.toXMPP(),
 				new org.dom4j.Namespace("", JabberPubsub.NS_XMPP_STANZAS));
 		Element extraError = new DOMElement(additionalElement,
-				new org.dom4j.Namespace("", JabberPubsub.NS_PUBSUB_ERROR));
+				new org.dom4j.Namespace("", additionalNamespace));
 		Element error = new DOMElement("error");
 		error.addAttribute("type", type.toXMPP());
 		error.add(standardError);

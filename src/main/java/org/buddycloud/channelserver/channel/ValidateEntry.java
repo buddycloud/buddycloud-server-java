@@ -86,8 +86,9 @@ public class ValidateEntry {
 
 		Element id = this.entry.element("id");
 		if ((id == null) || (true == id.getText().isEmpty())) {
-			if (null != id)
+			if (null != id) {
 				id.detach();
+			}
 			LOGGER.debug("ID of the entry was missing. We add a default one to it: 1");
 			this.entry.addElement("id").setText("1");
 		}

@@ -397,4 +397,37 @@ public class PublishTest extends IQTestHandler {
 		Assert.assertEquals(new JID("user2@server1"), notification.getTo());
 
 	}
+
+	@Test
+	public void errorsIfReplyingToAPostWhichDoesntExist() throws Exception {
+		
+		IQ request = readStanzaAsIq("/iq/pubsub/publish/reply.stanza");
+		
+		Mockito.when(
+				channelManager.getNodeItem(Mockito.eq(node),
+						Mockito.eq("fc362eb42085f017ed9ccd9c4004b095")))
+				.thenReturn(null);
+		
+		Element entry = request.getChildElement().element("publish").element("item")
+				.element("entry").createCopy();
+
+		Mockito.when(
+				validateEntry.getPayload(Mockito.any(JID.class),
+						Mockito.anyString(), Mockito.anyString())).thenReturn(
+				entry);
+		
+		publish.process(element, jid, request, null);
+		
+		Assert.assertEquals(1, queue.size());
+		
+		IQ response = (IQ) queue.poll();
+
+		Assert.assertEquals(IQ.Type.error, response.getType());
+		
+		PacketError error = response.getError();
+		Assert.assertNotNull(error);
+		Assert.assertEquals(PacketError.Type.cancel, error.getType());
+		Assert.assertEquals(PacketError.Condition.item_not_found,
+				error.getCondition());
+	}
 }

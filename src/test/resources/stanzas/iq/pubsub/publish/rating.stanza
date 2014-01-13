@@ -1,0 +1,30 @@
+
+<iq from="juliet@shakespeare.lit/balcony" to="channels.shakespeare.lit" type="set" id="publish:20"> 
+   <pubsub xmlns="http://jabber.org/protocol/pubsub">
+      <publish node="/user/romeo@shakespeare.lit/posts">
+         <item>
+            <entry xmlns="http://www.w3.org/2005/Atom" xmlns:thr="http://purl.org/syndication/thread/1.0" xmlns:activity="http://activitystrea.ms/spec/1.0/" xmlns:review="http://activitystrea.ms/schema/1.0/review">
+               <id>96da02ee1baef61e767742844207bec4</id>
+               <title>rating</title>
+               <published>2014-01-01T00:00:00.000Z</published>
+               <updated>2014-01-01T00:00:00.000Z</updated>
+               <author>
+                  <name>juliet@shakespeare.lit</name>
+                  <jid xmlns="http://buddycloud.com/atom-elements-0">juliet@shakespeare.lit</jid>
+               </author>
+               <content type="text">rating:5.0</content>
+               <activity:verb>post</activity:verb>
+               <activity:object>
+                  <activity:object-type>post</activity:object-type>
+               </activity:object>
+               <thr:in-reply-to ref="1" />
+               <activity:target>
+                   <id>tag:channels.shakespeare.lit,/users/romeo@shakespeare.lit/posts,2</id>
+                   <activity:object-type>post</activity:object-type>
+               </activity:target>
+               <review:rating>5.0</review:rating>
+            </entry>
+         </item>
+      </publish>
+   </pubsub>
+</iq>

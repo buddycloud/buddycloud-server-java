@@ -33,6 +33,7 @@ public class ValidateEntry {
 	public static final String NS_ACTIVITYSTREAM = "http://activitystrea.ms/spec/1.0/";
 	public static final String NS_ATOM_THREAD = "http://purl.org/syndication/thread/1.0";
 	public static final String NS_GEOLOCATION = "http://jabber.org/protocol/geoloc";
+	public static final String NS_REVIEW = "http://activitystrea.ms/schema/1.0/review";
 
 	public static final String AUTHOR_URI_PREFIX = "acct:";
 	public static final String AUTHOR_TYPE = "person";

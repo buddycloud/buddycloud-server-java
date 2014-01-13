@@ -568,6 +568,7 @@ public class ValidateEntryTest extends TestHandler {
 		Assert.assertTrue(validateEntry.isValid());
 		Element payload = validateEntry.getPayload();
 		
+		Assert.assertEquals(ValidateEntry.NS_REVIEW, payload.getNamespaceForPrefix("review").getText());
 		Assert.assertEquals(rating + ".0", payload.element("rating").getTextTrim());
     }
 

@@ -25,7 +25,7 @@ public class ValidateEntry {
 	public static final String IN_REPLY_TO_MISSING = "missing-in-reply-to";
 	public static final String MISSING_TARGET_ID = "missing-target-id";
 	public static final String TARGET_MUST_BE_IN_SAME_THREAD = "target-outside-thread";
-	
+
 	public static final String CONTENT_TEXT = "text";
 	public static final String CONTENT_XHTML = "xhtml";
 
@@ -41,7 +41,7 @@ public class ValidateEntry {
 	public static final String POST_TYPE_COMMENT = "comment";
 
 	public static final String ACTIVITY_VERB_POST = "post";
-		
+
 	private static Logger LOGGER = Logger.getLogger(ValidateEntry.class);
 
 	private Element entry;
@@ -51,7 +51,7 @@ public class ValidateEntry {
 	private String targetId;
 	private Element meta;
 	private Element media;
-	
+
 	private JID jid;
 	private String channelServerDomain;
 	private String node;
@@ -62,12 +62,13 @@ public class ValidateEntry {
 
 	private Element geoloc;
 
-	public ValidateEntry() {}
-	
+	public ValidateEntry() {
+	}
+
 	public ValidateEntry(Element entry) {
 		setEntry(entry);
 	}
-	
+
 	public void setEntry(Element entry) {
 		this.entry = entry;
 	}
@@ -75,15 +76,16 @@ public class ValidateEntry {
 	public String getErrorMessage() {
 		return this.errorMessage;
 	}
-	
+
 	public void setChannelManager(ChannelManager channelManager) {
 		this.channelManager = channelManager;
 	}
 
 	/**
 	 * This is a big hackety-hack.
-	 * @throws InterruptedException 
-	 * @throws NodeStoreException 
+	 * 
+	 * @throws InterruptedException
+	 * @throws NodeStoreException
 	 */
 	public boolean isValid() throws NodeStoreException {
 		if (this.entry == null) {
@@ -217,8 +219,10 @@ public class ValidateEntry {
 		}
 
 		if (null != targetId) {
-			GlobalItemIDImpl globalTargetId = new GlobalItemIDImpl(new JID(channelServerDomain), node, targetId);
-			entry.addElement("activity:target").addElement("id").setText(globalTargetId.toString());
+			GlobalItemIDImpl globalTargetId = new GlobalItemIDImpl(new JID(
+					channelServerDomain), node, targetId);
+			entry.addElement("activity:target").addElement("id")
+					.setText(globalTargetId.toString());
 		}
 
 		return entry;
@@ -235,20 +239,21 @@ public class ValidateEntry {
 	public void setTo(String channelServerDomain) {
 		this.channelServerDomain = channelServerDomain;
 	}
-	
 
-	private boolean validateInReplyToElement(Element reply) throws NodeStoreException {
-        if (null == reply) {
-        	return true;
-        }
+	private boolean validateInReplyToElement(Element reply)
+			throws NodeStoreException {
+		if (null == reply) {
+			return true;
+		}
 
-        inReplyTo = reply.attributeValue("ref");
-        if (true == GlobalItemIDImpl.isGlobalId(inReplyTo)) {
-        	inReplyTo = GlobalItemIDImpl.toLocalId(inReplyTo);
+		inReplyTo = reply.attributeValue("ref");
+		if (true == GlobalItemIDImpl.isGlobalId(inReplyTo)) {
+			inReplyTo = GlobalItemIDImpl.toLocalId(inReplyTo);
 		}
 
 		replyingToItem = null;
-		if (null == (replyingToItem = channelManager.getNodeItem(node, inReplyTo))) {
+		if (null == (replyingToItem = channelManager.getNodeItem(node,
+				inReplyTo))) {
 			this.errorMessage = PARENT_ITEM_NOT_FOUND;
 			return false;
 		}
@@ -260,7 +265,8 @@ public class ValidateEntry {
 		return true;
 	}
 
-	private boolean validateTargetElement(Element target) throws NodeStoreException {
+	private boolean validateTargetElement(Element target)
+			throws NodeStoreException {
 		if (null == target) {
 			return true;
 		}
@@ -274,13 +280,13 @@ public class ValidateEntry {
 			return false;
 		}
 		if (true == GlobalItemIDImpl.isGlobalId(targetId)) {
-		    targetId = GlobalItemIDImpl.toLocalId(targetId);
+			targetId = GlobalItemIDImpl.toLocalId(targetId);
 		}
 		NodeItem targetItem;
 		if (true == targetId.equals(replyingToItem.getId())) {
 			targetItem = replyingToItem;
 		} else {
-		    targetItem = channelManager.getNodeItem(node, targetId);
+			targetItem = channelManager.getNodeItem(node, targetId);
 		}
 		if (null == targetItem) {
 			this.errorMessage = TARGETED_ITEM_NOT_FOUND;
@@ -289,7 +295,8 @@ public class ValidateEntry {
 		if (true == targetItem.getId().equals(targetId)) {
 			return true;
 		}
-		if ((null == targetItem.getInReplyTo()) || (false == targetItem.getInReplyTo().equals(targetId))) {
+		if ((null == targetItem.getInReplyTo())
+				|| (false == targetItem.getInReplyTo().equals(targetId))) {
 			this.errorMessage = TARGET_MUST_BE_IN_SAME_THREAD;
 			return false;
 		}

@@ -216,6 +216,11 @@ public class ValidateEntry {
 			entry.add(media.createCopy());
 		}
 
+		if (null != targetId) {
+			GlobalItemIDImpl globalTargetId = new GlobalItemIDImpl(new JID(channelServerDomain), node, targetId);
+			entry.addElement("activity:target").addElement("id").setText(globalTargetId.toString());
+		}
+
 		return entry;
 	}
 
@@ -259,7 +264,7 @@ public class ValidateEntry {
 		if (null == target) {
 			return true;
 		}
-		String targetId = target.elementText("id");
+		targetId = target.elementText("id");
 		if ((null == targetId) || (0 == targetId.length())) {
 			this.errorMessage = MISSING_TARGET_ID;
 			return false;

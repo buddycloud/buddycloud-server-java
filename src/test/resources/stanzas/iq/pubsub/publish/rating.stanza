@@ -12,7 +12,7 @@
                   <name>juliet@shakespeare.lit</name>
                   <jid xmlns="http://buddycloud.com/atom-elements-0">juliet@shakespeare.lit</jid>
                </author>
-               <content type="text">rating:5.0</content>
+               <content type="text">I really liked this post!</content>
                <activity:verb>rated</activity:verb>
                <activity:object>
                   <activity:object-type>post</activity:object-type>

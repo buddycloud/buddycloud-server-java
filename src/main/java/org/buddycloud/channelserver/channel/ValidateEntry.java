@@ -27,6 +27,7 @@ public class ValidateEntry {
 	public static final String RATING_OUT_OF_RANGE = "rating-out-of-range";
 	public static final String INVALID_RATING_VALUE = "invalid-rating";
 	public static final String TARGET_MUST_BE_IN_SAME_THREAD = "target-outside-thread";
+    public static final String CAN_ONLY_RATE_A_POST = "invalid-rating-request";
 
 	public static final String CONTENT_TEXT = "text";
 	public static final String CONTENT_XHTML = "xhtml";
@@ -44,6 +45,7 @@ public class ValidateEntry {
 	public static final String POST_TYPE_COMMENT = "comment";
 
 	public static final String ACTIVITY_VERB_POST = "post";
+	public static final String ACTIVITY_VERB_RATED = "rated";
 
 	private static Logger LOGGER = Logger.getLogger(ValidateEntry.class);
 
@@ -181,11 +183,7 @@ public class ValidateEntry {
 				"tag:" + channelServerDomain + "," + node + "," + id);
 
 		String title = this.params.get("title");
-
-		Element content = entry.addElement("content");
-		content.setText(this.params.get("content"));
-		content.addAttribute("type", this.params.get("content-type"));
-
+		String itemContent = this.params.get("content");
 		String publishedDate = Conf.formatDate(new Date());
 
 		entry.addElement("published").setText(publishedDate);
@@ -213,11 +211,6 @@ public class ValidateEntry {
 
 		this.geoloc = this.entry.element("geoloc");
 
-		entry.addElement("activity:verb").setText(activityVerb);
-
-		Element activityObject = entry.addElement("activity:object");
-		activityObject.addElement("activity:object-type").setText(postType);
-
 		if (null != meta) {
 			entry.add(meta.createCopy());
 		}
@@ -240,9 +233,20 @@ public class ValidateEntry {
 			String rating = String.format("%d.0", itemRating);
 			entry.addElement("review:rating").setText(rating);
 			title = "Rating";
+			itemContent = "rating:" + rating;
+			activityVerb = ACTIVITY_VERB_RATED;
 		}
 
 		entry.addElement("title").setText(title);
+		
+		Element content = entry.addElement("content");
+		content.setText(itemContent);
+		content.addAttribute("type", this.params.get("content-type"));
+		
+		entry.addElement("activity:verb").setText(activityVerb);
+		Element activityObject = entry.addElement("activity:object");
+		activityObject.addElement("activity:object-type").setText(postType);
+
 		
 		return entry;
 	}

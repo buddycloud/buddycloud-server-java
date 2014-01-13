@@ -585,5 +585,33 @@ public class ValidateEntryTest extends TestHandler {
 		Assert.assertEquals(ValidateEntry.NS_REVIEW, payload.getNamespaceForPrefix("review").getText());
 		Assert.assertEquals("Rating", payload.elementText("title"));
     }
+    
+    @Test
+    public void postVerbGetsSwitchedToRated() throws Exception {
+		Element entry = (Element) this.ratingEntry.clone();
+		entry.element("target").element("id").setText("1");
+		validateEntry = getEntryObject(entry);
+		
+		Assert.assertTrue(validateEntry.isValid());
+		Element payload = validateEntry.getPayload();
+		
+		Assert.assertEquals(ValidateEntry.ACTIVITY_VERB_RATED, payload.elementText("verb"));
+    }
+    
+    @Test
+    public void postContentGetsReplacedWithRating() throws Exception {
+		Element entry = (Element) this.ratingEntry.clone();
+		entry.element("target").element("id").setText("1");
+		
+		String expectedContent = "rating:5.0";
+		Assert.assertFalse(entry.elementText("content").equals(expectedContent));
+		
+		validateEntry = getEntryObject(entry);
+		
+		Assert.assertTrue(validateEntry.isValid());
+		Element payload = validateEntry.getPayload();
+
+		Assert.assertEquals(expectedContent, payload.elementText("content"));
+    }
 
 }

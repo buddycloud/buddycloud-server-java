@@ -27,7 +27,7 @@ public class ValidateEntry {
 	public static final String RATING_OUT_OF_RANGE = "rating-out-of-range";
 	public static final String INVALID_RATING_VALUE = "invalid-rating";
 	public static final String TARGET_MUST_BE_IN_SAME_THREAD = "target-outside-thread";
-    public static final String CAN_ONLY_RATE_A_POST = "invalid-rating-request";
+	public static final String CAN_ONLY_RATE_A_POST = "invalid-rating-request";
 
 	public static final String CONTENT_TEXT = "text";
 	public static final String CONTENT_XHTML = "xhtml";
@@ -152,7 +152,7 @@ public class ValidateEntry {
 		if (false == validateTargetElement(this.entry.element("target"))) {
 			return false;
 		}
-		
+
 		if (false == validateRatingElement(this.entry.element("rating"))) {
 			return false;
 		}
@@ -224,11 +224,10 @@ public class ValidateEntry {
 			GlobalItemIDImpl globalTargetId = new GlobalItemIDImpl(new JID(
 					channelServerDomain), node, targetId);
 			Element target = entry.addElement("activity:target");
-			target.addElement("id")
-					.setText(globalTargetId.toString());
+			target.addElement("id").setText(globalTargetId.toString());
 			target.addElement("activity:object-type").setText("post");
 		}
-		
+
 		if (itemRating > 0) {
 			entry.addNamespace("review", NS_REVIEW);
 			String rating = String.format("%d.0", itemRating);
@@ -239,11 +238,11 @@ public class ValidateEntry {
 		}
 
 		entry.addElement("title").setText(title);
-		
+
 		Element content = entry.addElement("content");
 		content.setText(itemContent);
 		content.addAttribute("type", this.params.get("content-type"));
-		
+
 		entry.addElement("activity:verb").setText(activityVerb);
 		Element activityObject = entry.addElement("activity:object");
 		activityObject.addElement("activity:object-type").setText(postType);
@@ -324,7 +323,7 @@ public class ValidateEntry {
 		}
 		return true;
 	}
-	
+
 	private boolean validateRatingElement(Element rating) {
 		if (null == rating) {
 			return true;
@@ -342,11 +341,11 @@ public class ValidateEntry {
 			return false;
 		}
 		try {
-		    double itemRatingFloat = Double.parseDouble(rating.getTextTrim());
-		    if (itemRatingFloat != Math.floor(itemRatingFloat)) {
-		    	throw new NumberFormatException("Non-integer rating provided");
-		    }
-		    itemRating = (int) itemRatingFloat;
+			double itemRatingFloat = Double.parseDouble(rating.getTextTrim());
+			if (itemRatingFloat != Math.floor(itemRatingFloat)) {
+				throw new NumberFormatException("Non-integer rating provided");
+			}
+			itemRating = (int) itemRatingFloat;
 		} catch (NumberFormatException e) {
 			this.errorMessage = INVALID_RATING_VALUE;
 			return false;

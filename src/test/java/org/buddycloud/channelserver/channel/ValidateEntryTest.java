@@ -519,7 +519,7 @@ public class ValidateEntryTest extends TestHandler {
 
 	@Test
 	public void invalidRatingValueReturnsError() throws Exception {
-		
+
 		Element entry = (Element) this.ratingEntry.clone();
 		entry.element("target").element("id").setText("1");
 		entry.element("rating").setText("awesome");
@@ -532,7 +532,7 @@ public class ValidateEntryTest extends TestHandler {
 
 	@Test
 	public void outOfRangeRatingReturnsError() throws Exception {
-		
+
 		Element entry = (Element) this.ratingEntry.clone();
 		entry.element("rating").setText("6.0");
 		entry.element("target").element("id").setText("1");
@@ -542,7 +542,7 @@ public class ValidateEntryTest extends TestHandler {
 		Assert.assertEquals(ValidateEntry.RATING_OUT_OF_RANGE,
 				validateEntry.getErrorMessage());
 	}
-	
+
 	@Test
 	public void nonWholeNumberRatingReturnsError() throws Exception {
 		Element entry = (Element) this.ratingEntry.clone();
@@ -554,82 +554,87 @@ public class ValidateEntryTest extends TestHandler {
 		Assert.assertEquals(ValidateEntry.INVALID_RATING_VALUE,
 				validateEntry.getErrorMessage());
 	}
-	
-    @Test
-    public void ratingElementGetsAddedToPayloadAsExpected() throws Exception {
-    	
-    	String rating = "4";
-    	
+
+	@Test
+	public void ratingElementGetsAddedToPayloadAsExpected() throws Exception {
+
+		String rating = "4";
+
 		Element entry = (Element) this.ratingEntry.clone();
 		entry.element("rating").setText(rating);
 		entry.element("target").element("id").setText("1");
 		validateEntry = getEntryObject(entry);
-		
+
 		Assert.assertTrue(validateEntry.isValid());
 		Element payload = validateEntry.getPayload();
-		
-		Assert.assertEquals(ValidateEntry.NS_REVIEW, payload.getNamespaceForPrefix("review").getText());
-		Assert.assertEquals(rating + ".0", payload.element("rating").getTextTrim());
-    }
-    
-    @Test
-    public void postTitleIsSetToRatingWhenRated() throws Exception {
+
+		Assert.assertEquals(ValidateEntry.NS_REVIEW, payload
+				.getNamespaceForPrefix("review").getText());
+		Assert.assertEquals(rating + ".0", payload.element("rating")
+				.getTextTrim());
+	}
+
+	@Test
+	public void postTitleIsSetToRatingWhenRated() throws Exception {
 
 		Element entry = (Element) this.ratingEntry.clone();
 		entry.element("target").element("id").setText("1");
 		validateEntry = getEntryObject(entry);
-		
+
 		Assert.assertTrue(validateEntry.isValid());
 		Element payload = validateEntry.getPayload();
-		
-		Assert.assertEquals(ValidateEntry.NS_REVIEW, payload.getNamespaceForPrefix("review").getText());
+
+		Assert.assertEquals(ValidateEntry.NS_REVIEW, payload
+				.getNamespaceForPrefix("review").getText());
 		Assert.assertEquals("Rating", payload.elementText("title"));
-    }
-    
-    @Test
-    public void postVerbGetsSwitchedToRated() throws Exception {
+	}
+
+	@Test
+	public void postVerbGetsSwitchedToRated() throws Exception {
 		Element entry = (Element) this.ratingEntry.clone();
 		entry.element("target").element("id").setText("1");
 		validateEntry = getEntryObject(entry);
-		
+
 		Assert.assertTrue(validateEntry.isValid());
 		Element payload = validateEntry.getPayload();
-		
-		Assert.assertEquals(ValidateEntry.ACTIVITY_VERB_RATED, payload.elementText("verb"));
-    }
-    
-    @Test
-    public void postContentGetsReplacedWithRating() throws Exception {
+
+		Assert.assertEquals(ValidateEntry.ACTIVITY_VERB_RATED,
+				payload.elementText("verb"));
+	}
+
+	@Test
+	public void postContentGetsReplacedWithRating() throws Exception {
 		Element entry = (Element) this.ratingEntry.clone();
 		entry.element("target").element("id").setText("1");
-		
+
 		String expectedContent = "rating:5.0";
 		Assert.assertFalse(entry.elementText("content").equals(expectedContent));
-		
+
 		validateEntry = getEntryObject(entry);
-		
+
 		Assert.assertTrue(validateEntry.isValid());
 		Element payload = validateEntry.getPayload();
 
 		Assert.assertEquals(expectedContent, payload.elementText("content"));
-    }
-    
-    @Test
-    public void canNotRateARating() throws Exception {
-    	String testPayload = "<entry xmlns=\"http://www.w3.org/2005/Atom\" " +
-            "xmlns:review=\"http://activitystrea.ms/schema/1.0/review\">" +
-    		"<review:rating>5.0</review:rating></entry>";
+	}
+
+	@Test
+	public void canNotRateARating() throws Exception {
+		String testPayload = "<entry xmlns=\"http://www.w3.org/2005/Atom\" "
+				+ "xmlns:review=\"http://activitystrea.ms/schema/1.0/review\">"
+				+ "<review:rating>5.0</review:rating></entry>";
 		NodeItem item = new NodeItemImpl(node, "1", new Date(), testPayload);
 		Mockito.when(
 				channelManager.getNodeItem(Mockito.eq(node),
 						Mockito.anyString())).thenReturn(item);
-    	
-    	Element entry = (Element) this.ratingEntry.clone();
+
+		Element entry = (Element) this.ratingEntry.clone();
 		entry.element("target").element("id").setText("1");
 		validateEntry = getEntryObject(entry);
-		
+
 		Assert.assertFalse(validateEntry.isValid());
-		Assert.assertEquals(ValidateEntry.CAN_ONLY_RATE_A_POST, validateEntry.getErrorMessage());
-    }
+		Assert.assertEquals(ValidateEntry.CAN_ONLY_RATE_A_POST,
+				validateEntry.getErrorMessage());
+	}
 
 }

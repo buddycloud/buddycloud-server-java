@@ -37,8 +37,8 @@ public class ValidateEntryTest extends TestHandler {
 	private Element publishEntry;
 	private IQ replyRequest;
 	private Element replyEntry;
-	private IQ targetRequest;
-	private Element targetEntry;
+	private IQ ratingRequest;
+	private Element ratingEntry;
 
 	private ChannelManager channelManager;
 
@@ -54,8 +54,8 @@ public class ValidateEntryTest extends TestHandler {
 		replyRequest = readStanzaAsIq("/iq/pubsub/publish/reply.stanza");
 		replyEntry = replyRequest.getChildElement().element("publish")
 				.element("item").element("entry");
-		targetRequest = readStanzaAsIq("/iq/pubsub/publish/target.stanza");
-		targetEntry = targetRequest.getChildElement().element("publish")
+		ratingRequest = readStanzaAsIq("/iq/pubsub/publish/rating.stanza");
+		ratingEntry = ratingRequest.getChildElement().element("publish")
 				.element("item").element("entry");
 
 		channelManager = Mockito.mock(ChannelManager.class);
@@ -340,7 +340,7 @@ public class ValidateEntryTest extends TestHandler {
 				channelManager.getNodeItem(Mockito.eq(node), Mockito.eq("2")))
 				.thenReturn(null);
 
-		Element entry = (Element) this.targetEntry.clone();
+		Element entry = (Element) this.ratingEntry.clone();
 
 		entry.element("in-reply-to").detach();
 		validateEntry = getEntryObject(entry);
@@ -361,7 +361,7 @@ public class ValidateEntryTest extends TestHandler {
 				channelManager.getNodeItem(Mockito.eq(node), Mockito.eq("2")))
 				.thenReturn(null);
 
-		Element entry = (Element) this.targetEntry.clone();
+		Element entry = (Element) this.ratingEntry.clone();
 
 		entry.element("target").element("id").detach();
 		validateEntry = getEntryObject(entry);
@@ -382,7 +382,7 @@ public class ValidateEntryTest extends TestHandler {
 				channelManager.getNodeItem(Mockito.eq(node), Mockito.eq("2")))
 				.thenReturn(null);
 
-		Element entry = (Element) this.targetEntry.clone();
+		Element entry = (Element) this.ratingEntry.clone();
 
 		entry.element("target").element("id").detach();
 		entry.element("target").addElement("id");
@@ -404,7 +404,7 @@ public class ValidateEntryTest extends TestHandler {
 				channelManager.getNodeItem(Mockito.eq(node), Mockito.eq("2")))
 				.thenReturn(null);
 
-		Element entry = (Element) this.targetEntry.clone();
+		Element entry = (Element) this.ratingEntry.clone();
 		validateEntry = getEntryObject(entry);
 
 		Assert.assertFalse(validateEntry.isValid());
@@ -423,7 +423,7 @@ public class ValidateEntryTest extends TestHandler {
 				channelManager.getNodeItem(Mockito.eq(node), Mockito.eq("2")))
 				.thenReturn(item);
 
-		Element entry = (Element) this.targetEntry.clone();
+		Element entry = (Element) this.ratingEntry.clone();
 		validateEntry = getEntryObject(entry);
 
 		Assert.assertFalse(validateEntry.isValid());
@@ -445,7 +445,7 @@ public class ValidateEntryTest extends TestHandler {
 				channelManager.getNodeItem(Mockito.eq(node), Mockito.eq("2")))
 				.thenReturn(item2);
 
-		Element entry = (Element) this.targetEntry.clone();
+		Element entry = (Element) this.ratingEntry.clone();
 		entry.element("target").element("id").setText("B");
 		validateEntry = getEntryObject(entry);
 
@@ -462,7 +462,7 @@ public class ValidateEntryTest extends TestHandler {
 				channelManager.getNodeItem(Mockito.eq(node), Mockito.eq("1")))
 				.thenReturn(item);
 
-		Element entry = (Element) this.targetEntry.clone();
+		Element entry = (Element) this.ratingEntry.clone();
 		entry.element("target").element("id").setText("1");
 
 		validateEntry = getEntryObject(entry);
@@ -476,12 +476,7 @@ public class ValidateEntryTest extends TestHandler {
 	@Test
 	public void targetElementGetsAddedAsExpected() throws Exception {
 
-		NodeItem item = new NodeItemImpl(node, "1", new Date(), "<entry/>");
-		Mockito.when(
-				channelManager.getNodeItem(Mockito.eq(node), Mockito.eq("1")))
-				.thenReturn(item);
-
-		Element entry = (Element) this.targetEntry.clone();
+		Element entry = (Element) this.ratingEntry.clone();
 		entry.element("target").element("id").setText("1");
 
 		validateEntry = getEntryObject(entry);
@@ -496,4 +491,29 @@ public class ValidateEntryTest extends TestHandler {
 		Assert.assertEquals("post",
 				payload.element("target").elementText("object-type"));
 	}
+
+	@Test
+	public void missingInReplyToErrorsIfRatingElementPresent() throws Exception {
+
+		Element entry = (Element) this.ratingEntry.clone();
+		entry.element("in-reply-to").detach();
+		validateEntry = getEntryObject(entry);
+
+		Assert.assertFalse(validateEntry.isValid());
+		Assert.assertEquals(ValidateEntry.IN_REPLY_TO_MISSING,
+				validateEntry.getErrorMessage());
+	}
+
+	@Test
+	public void missingTargetErrorsIfRatingElementPresent() throws Exception {
+
+		Element entry = (Element) this.ratingEntry.clone();
+		entry.element("target").detach();
+		validateEntry = getEntryObject(entry);
+
+		Assert.assertFalse(validateEntry.isValid());
+		Assert.assertEquals(ValidateEntry.TARGET_ELEMENT_MISSING,
+				validateEntry.getErrorMessage());
+	}
+
 }

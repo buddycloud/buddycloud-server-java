@@ -23,6 +23,7 @@ public class ValidateEntry {
 	public static final String PARENT_ITEM_NOT_FOUND = "parent-item-not-found";
 	public static final String TARGETED_ITEM_NOT_FOUND = "targeted-item-not-found";
 	public static final String IN_REPLY_TO_MISSING = "missing-in-reply-to";
+	public static final String TARGET_ELEMENT_MISSING = "missing-target";
 	public static final String MISSING_TARGET_ID = "missing-target-id";
 	public static final String TARGET_MUST_BE_IN_SAME_THREAD = "target-outside-thread";
 
@@ -48,8 +49,8 @@ public class ValidateEntry {
 	private Element entry;
 
 	private String errorMessage = "";
-	private String inReplyTo;
-	private String targetId;
+	private String inReplyTo = null;
+	private String targetId = null;
 	private Element meta;
 	private Element media;
 
@@ -144,6 +145,10 @@ public class ValidateEntry {
 		}
 
 		if (false == validateTargetElement(this.entry.element("target"))) {
+			return false;
+		}
+		
+		if (false == validateRatingElement(this.entry.element("rating"))) {
 			return false;
 		}
 
@@ -301,6 +306,21 @@ public class ValidateEntry {
 		if ((null == targetItem.getInReplyTo())
 				|| (false == targetItem.getInReplyTo().equals(targetId))) {
 			this.errorMessage = TARGET_MUST_BE_IN_SAME_THREAD;
+			return false;
+		}
+		return true;
+	}
+	
+	private boolean validateRatingElement(Element rating) {
+		if (null == rating) {
+			return true;
+		}
+		if (null == inReplyTo) {
+			this.errorMessage = IN_REPLY_TO_MISSING;
+			return false;
+		}
+		if (null == targetId) {
+			this.errorMessage = TARGET_ELEMENT_MISSING;
 			return false;
 		}
 		return true;

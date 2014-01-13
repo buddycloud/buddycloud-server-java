@@ -63,6 +63,7 @@ public class ValidateEntry {
 	private String node;
 	private ChannelManager channelManager;
 	private NodeItem replyingToItem;
+	private NodeItem targetItem;
 
 	Map<String, String> params = new HashMap<String, String>();
 
@@ -247,7 +248,6 @@ public class ValidateEntry {
 		Element activityObject = entry.addElement("activity:object");
 		activityObject.addElement("activity:object-type").setText(postType);
 
-		
 		return entry;
 	}
 
@@ -305,7 +305,6 @@ public class ValidateEntry {
 		if (true == GlobalItemIDImpl.isGlobalId(targetId)) {
 			targetId = GlobalItemIDImpl.toLocalId(targetId);
 		}
-		NodeItem targetItem;
 		if (true == targetId.equals(replyingToItem.getId())) {
 			targetItem = replyingToItem;
 		} else {
@@ -336,6 +335,10 @@ public class ValidateEntry {
 		}
 		if (null == targetId) {
 			this.errorMessage = TARGET_ELEMENT_MISSING;
+			return false;
+		}
+		if (targetItem.getPayload().indexOf(NS_REVIEW) > -1) {
+			this.errorMessage = CAN_ONLY_RATE_A_POST;
 			return false;
 		}
 		try {

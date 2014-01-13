@@ -613,5 +613,23 @@ public class ValidateEntryTest extends TestHandler {
 
 		Assert.assertEquals(expectedContent, payload.elementText("content"));
     }
+    
+    @Test
+    public void canNotRateARating() throws Exception {
+    	String testPayload = "<entry xmlns=\"http://www.w3.org/2005/Atom\" " +
+            "xmlns:review=\"http://activitystrea.ms/schema/1.0/review\">" +
+    		"<review:rating>5.0</review:rating></entry>";
+		NodeItem item = new NodeItemImpl(node, "1", new Date(), testPayload);
+		Mockito.when(
+				channelManager.getNodeItem(Mockito.eq(node),
+						Mockito.anyString())).thenReturn(item);
+    	
+    	Element entry = (Element) this.ratingEntry.clone();
+		entry.element("target").element("id").setText("1");
+		validateEntry = getEntryObject(entry);
+		
+		Assert.assertFalse(validateEntry.isValid());
+		Assert.assertEquals(ValidateEntry.CAN_ONLY_RATE_A_POST, validateEntry.getErrorMessage());
+    }
 
 }

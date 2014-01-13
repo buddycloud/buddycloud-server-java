@@ -508,11 +508,50 @@ public class ValidateEntryTest extends TestHandler {
 	public void missingTargetErrorsIfRatingElementPresent() throws Exception {
 
 		Element entry = (Element) this.ratingEntry.clone();
+		entry.element("target").element("id").setText("1");
 		entry.element("target").detach();
 		validateEntry = getEntryObject(entry);
 
 		Assert.assertFalse(validateEntry.isValid());
 		Assert.assertEquals(ValidateEntry.TARGET_ELEMENT_MISSING,
+				validateEntry.getErrorMessage());
+	}
+
+	@Test
+	public void invalidRatingValueReturnsError() throws Exception {
+		
+		Element entry = (Element) this.ratingEntry.clone();
+		entry.element("target").element("id").setText("1");
+		entry.element("rating").setText("awesome");
+		validateEntry = getEntryObject(entry);
+
+		Assert.assertFalse(validateEntry.isValid());
+		Assert.assertEquals(ValidateEntry.INVALID_RATING_VALUE,
+				validateEntry.getErrorMessage());
+	}
+
+	@Test
+	public void outOfRangeRatingReturnsError() throws Exception {
+		
+		Element entry = (Element) this.ratingEntry.clone();
+		entry.element("rating").setText("6.0");
+		entry.element("target").element("id").setText("1");
+		validateEntry = getEntryObject(entry);
+
+		Assert.assertFalse(validateEntry.isValid());
+		Assert.assertEquals(ValidateEntry.RATING_OUT_OF_RANGE,
+				validateEntry.getErrorMessage());
+	}
+	
+	@Test
+	public void nonWholeNumberRatingReturnsError() throws Exception {
+		Element entry = (Element) this.ratingEntry.clone();
+		entry.element("rating").setText("4.1");
+		entry.element("target").element("id").setText("1");
+		validateEntry = getEntryObject(entry);
+
+		Assert.assertFalse(validateEntry.isValid());
+		Assert.assertEquals(ValidateEntry.INVALID_RATING_VALUE,
 				validateEntry.getErrorMessage());
 	}
 

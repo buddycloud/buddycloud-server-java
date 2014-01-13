@@ -12,7 +12,6 @@ import org.buddycloud.channelserver.pubsub.model.impl.GlobalItemIDImpl;
 import org.dom4j.Element;
 import org.dom4j.dom.DOMElement;
 import org.xmpp.packet.JID;
-import org.xmpp.packet.PacketError;
 
 public class ValidateEntry {
 
@@ -25,6 +24,8 @@ public class ValidateEntry {
 	public static final String IN_REPLY_TO_MISSING = "missing-in-reply-to";
 	public static final String TARGET_ELEMENT_MISSING = "missing-target";
 	public static final String MISSING_TARGET_ID = "missing-target-id";
+	public static final String RATING_OUT_OF_RANGE = "rating-out-of-range";
+	public static final String INVALID_RATING_VALUE = "invalid-rating";
 	public static final String TARGET_MUST_BE_IN_SAME_THREAD = "target-outside-thread";
 
 	public static final String CONTENT_TEXT = "text";
@@ -51,6 +52,7 @@ public class ValidateEntry {
 	private String errorMessage = "";
 	private String inReplyTo = null;
 	private String targetId = null;
+	private int itemRating = 0;
 	private Element meta;
 	private Element media;
 
@@ -321,6 +323,20 @@ public class ValidateEntry {
 		}
 		if (null == targetId) {
 			this.errorMessage = TARGET_ELEMENT_MISSING;
+			return false;
+		}
+		try {
+		    double itemRatingFloat = Double.parseDouble(rating.getTextTrim());
+		    if (itemRatingFloat != Math.floor(itemRatingFloat)) {
+		    	throw new NumberFormatException("Non-integer rating provided");
+		    }
+		    itemRating = (int) itemRatingFloat;
+		} catch (NumberFormatException e) {
+			this.errorMessage = INVALID_RATING_VALUE;
+			return false;
+		}
+		if ((itemRating < 1) || (itemRating > 5)) {
+			this.errorMessage = RATING_OUT_OF_RANGE;
 			return false;
 		}
 		return true;

@@ -180,7 +180,7 @@ public class ValidateEntry {
 		entry.addElement("id").setText(
 				"tag:" + channelServerDomain + "," + node + "," + id);
 
-		entry.addElement("title").setText(this.params.get("title"));
+		String title = this.params.get("title");
 
 		Element content = entry.addElement("content");
 		content.setText(this.params.get("content"));
@@ -239,8 +239,11 @@ public class ValidateEntry {
 			entry.addNamespace("review", NS_REVIEW);
 			String rating = String.format("%d.0", itemRating);
 			entry.addElement("review:rating").setText(rating);
+			title = "Rating";
 		}
 
+		entry.addElement("title").setText(title);
+		
 		return entry;
 	}
 

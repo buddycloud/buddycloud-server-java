@@ -571,5 +571,19 @@ public class ValidateEntryTest extends TestHandler {
 		Assert.assertEquals(ValidateEntry.NS_REVIEW, payload.getNamespaceForPrefix("review").getText());
 		Assert.assertEquals(rating + ".0", payload.element("rating").getTextTrim());
     }
+    
+    @Test
+    public void postTitleIsSetToRatingWhenRated() throws Exception {
+
+		Element entry = (Element) this.ratingEntry.clone();
+		entry.element("target").element("id").setText("1");
+		validateEntry = getEntryObject(entry);
+		
+		Assert.assertTrue(validateEntry.isValid());
+		Element payload = validateEntry.getPayload();
+		
+		Assert.assertEquals(ValidateEntry.NS_REVIEW, payload.getNamespaceForPrefix("review").getText());
+		Assert.assertEquals("Rating", payload.elementText("title"));
+    }
 
 }

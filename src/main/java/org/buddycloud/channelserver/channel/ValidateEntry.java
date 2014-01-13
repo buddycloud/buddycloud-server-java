@@ -234,6 +234,12 @@ public class ValidateEntry {
 					.setText(globalTargetId.toString());
 			target.addElement("activity:object-type").setText("post");
 		}
+		
+		if (itemRating > 0) {
+			entry.addNamespace("review", NS_REVIEW);
+			String rating = String.format("%d.0", itemRating);
+			entry.addElement("review:rating").setText(rating);
+		}
 
 		return entry;
 	}

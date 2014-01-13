@@ -554,5 +554,21 @@ public class ValidateEntryTest extends TestHandler {
 		Assert.assertEquals(ValidateEntry.INVALID_RATING_VALUE,
 				validateEntry.getErrorMessage());
 	}
+	
+    @Test
+    public void ratingElementGetsAddedToPayloadAsExpected() throws Exception {
+    	
+    	String rating = "4";
+    	
+		Element entry = (Element) this.ratingEntry.clone();
+		entry.element("rating").setText(rating);
+		entry.element("target").element("id").setText("1");
+		validateEntry = getEntryObject(entry);
+		
+		Assert.assertTrue(validateEntry.isValid());
+		Element payload = validateEntry.getPayload();
+		
+		Assert.assertEquals(rating + ".0", payload.element("rating").getTextTrim());
+    }
 
 }

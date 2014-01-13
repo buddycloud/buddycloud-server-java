@@ -493,5 +493,7 @@ public class ValidateEntryTest extends TestHandler {
 		String expectedId = "tag:channels.shakespeare.lit,/users/romeo@shakespeare.lit/posts,1";
 		Assert.assertEquals(expectedId,
 				payload.element("target").elementText("id"));
+		Assert.assertEquals("post",
+				payload.element("target").elementText("object-type"));
 	}
 }

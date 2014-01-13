@@ -221,8 +221,10 @@ public class ValidateEntry {
 		if (null != targetId) {
 			GlobalItemIDImpl globalTargetId = new GlobalItemIDImpl(new JID(
 					channelServerDomain), node, targetId);
-			entry.addElement("activity:target").addElement("id")
+			Element target = entry.addElement("activity:target");
+			target.addElement("id")
 					.setText(globalTargetId.toString());
+			target.addElement("activity:object-type").setText("post");
 		}
 
 		return entry;

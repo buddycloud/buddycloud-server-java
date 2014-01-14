@@ -157,6 +157,7 @@ public class Publish extends PubSubElementProcessorAbstract {
 		entryContent.setUser(publishersJID);
 		entryContent.setTo(request.getTo().toBareJID());
 		entryContent.setNode(node);
+		entryContent.setChannelManager(channelManager);
 
 		if (!entryContent.isValid()) {
 			sendInvalidEntryResponse();

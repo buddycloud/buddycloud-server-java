@@ -273,9 +273,9 @@ public class ValidateEntry {
 			inReplyTo = GlobalItemIDImpl.toLocalId(inReplyTo);
 		}
 
-		replyingToItem = null;
-		if (null == (replyingToItem = channelManager.getNodeItem(node,
-				inReplyTo))) {
+		replyingToItem = channelManager.getNodeItem(node,
+				inReplyTo);
+		if (null == replyingToItem) {
 			this.errorMessage = PARENT_ITEM_NOT_FOUND;
 			return false;
 		}

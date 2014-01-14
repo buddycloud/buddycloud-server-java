@@ -104,7 +104,7 @@ public class Publish extends PubSubElementProcessorAbstract {
 			saveNodeItem();
 			sendResponseStanza();
 			sendNotifications();
-			
+
 		} catch (NodeStoreException e) {
 			setErrorCondition(PacketError.Type.wait,
 					PacketError.Condition.internal_server_error);
@@ -127,9 +127,10 @@ public class Publish extends PubSubElementProcessorAbstract {
 		if (null == inReplyToElement) {
 			return;
 		}
-		inReplyTo = inReplyToElement.attributeValue("ref");
+		inReplyTo = GlobalItemIDImpl.toLocalId(inReplyToElement
+				.attributeValue("ref"));
 	}
-	
+
 	public void setEntryValidator(ValidateEntry validator) {
 		this.validator = validator;
 	}
@@ -141,11 +142,12 @@ public class Publish extends PubSubElementProcessorAbstract {
 		return this.validator;
 	}
 
-	private void sendInvalidEntryResponse()
-			throws InterruptedException {
-		LOGGER.info("Entry is not valid: '" + entryContent.getErrorMessage() + "'.");
+	private void sendInvalidEntryResponse() throws InterruptedException {
+		LOGGER.info("Entry is not valid: '" + entryContent.getErrorMessage()
+				+ "'.");
 		createExtendedErrorReply(PacketError.Type.modify,
-				PacketError.Condition.bad_request, entryContent.getErrorMessage());
+				PacketError.Condition.bad_request,
+				entryContent.getErrorMessage());
 		outQueue.put(response);
 	}
 
@@ -229,7 +231,8 @@ public class Publish extends PubSubElementProcessorAbstract {
 		if ((node == null) || (true == node.equals(""))) {
 			response.setType(Type.error);
 
-			Element badRequest = new DOMElement(PacketError.Condition.bad_request.toXMPP(),
+			Element badRequest = new DOMElement(
+					PacketError.Condition.bad_request.toXMPP(),
 					new org.dom4j.Namespace("", JabberPubsub.NS_XMPP_STANZAS));
 
 			Element nodeIdRequired = new DOMElement(NODE_ID_REQUIRED,
@@ -250,8 +253,7 @@ public class Publish extends PubSubElementProcessorAbstract {
 			isLocalNode = channelManager.isLocalNode(node);
 		} catch (IllegalArgumentException e) {
 			response.setType(Type.error);
-			PacketError pe = new PacketError(
-					PacketError.Condition.bad_request,
+			PacketError pe = new PacketError(PacketError.Condition.bad_request,
 					PacketError.Type.modify);
 			response.setError(pe);
 			LOGGER.error(e);

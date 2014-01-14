@@ -123,6 +123,11 @@ public class Publish extends PubSubElementProcessorAbstract {
 
 		entry = entryContent.getPayload();
 		id = GlobalItemIDImpl.toLocalId(entry.element("id").getText());
+		Element inReplyToElement = entry.element("in-reply-to");
+		if (null == inReplyToElement) {
+			return;
+		}
+		inReplyTo = inReplyToElement.attributeValue("ref");
 	}
 	
 	public void setEntryValidator(ValidateEntry validator) {

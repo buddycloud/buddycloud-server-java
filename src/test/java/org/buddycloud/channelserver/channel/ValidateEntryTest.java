@@ -12,6 +12,7 @@ import org.xmpp.packet.Packet;
 import org.buddycloud.channelserver.packetHandler.iq.TestHandler;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.get.RepliesGet;
 import org.buddycloud.channelserver.pubsub.model.NodeItem;
+import org.buddycloud.channelserver.pubsub.model.impl.GlobalItemIDImpl;
 import org.buddycloud.channelserver.pubsub.model.impl.NodeItemImpl;
 import org.dom4j.Element;
 
@@ -31,10 +32,14 @@ import junit.framework.TestCase;
 public class ValidateEntryTest extends TestHandler {
 
 	private ValidateEntry validateEntry;
+
 	private IQ publishRequest;
 	private Element publishEntry;
 	private IQ replyRequest;
 	private Element replyEntry;
+	private IQ ratingRequest;
+	private Element ratingEntry;
+
 	private ChannelManager channelManager;
 
 	JID jid = new JID("juliet@shakespeare.lit/balcony");
@@ -48,6 +53,9 @@ public class ValidateEntryTest extends TestHandler {
 				.element("item").element("entry");
 		replyRequest = readStanzaAsIq("/iq/pubsub/publish/reply.stanza");
 		replyEntry = replyRequest.getChildElement().element("publish")
+				.element("item").element("entry");
+		ratingRequest = readStanzaAsIq("/iq/pubsub/publish/rating.stanza");
+		ratingEntry = ratingRequest.getChildElement().element("publish")
 				.element("item").element("entry");
 
 		channelManager = Mockito.mock(ChannelManager.class);
@@ -214,7 +222,7 @@ public class ValidateEntryTest extends TestHandler {
 	public void globalInReplyToIdIsMadeALocalId() throws Exception {
 
 		Assert.assertEquals(
-				"null@channels.shakespeare.lit,/users/romeo@shakespeare.lit/posts,fc362eb42085f017ed9ccd9c4004b095",
+				"tag:channels.shakespeare.lit,/users/romeo@shakespeare.lit/posts,fc362eb42085f017ed9ccd9c4004b095",
 				replyEntry.element("in-reply-to").attributeValue("ref"));
 
 		Element entry = (Element) this.replyEntry.clone();
@@ -299,7 +307,7 @@ public class ValidateEntryTest extends TestHandler {
 
 		Element entry = (Element) this.replyEntry.clone();
 		validateEntry = getEntryObject(entry);
-		
+
 		Assert.assertFalse(validateEntry.isValid());
 		Assert.assertEquals(ValidateEntry.PARENT_ITEM_NOT_FOUND,
 				validateEntry.getErrorMessage());
@@ -315,9 +323,318 @@ public class ValidateEntryTest extends TestHandler {
 
 		Element entry = (Element) this.replyEntry.clone();
 		validateEntry = getEntryObject(entry);
-		
+
 		Assert.assertFalse(validateEntry.isValid());
 		Assert.assertEquals(ValidateEntry.MAX_THREAD_DEPTH_EXCEEDED,
 				validateEntry.getErrorMessage());
 	}
+
+	@Test
+	public void targetElementWithoutInReplyToReturnsError() throws Exception {
+
+		NodeItem item = new NodeItemImpl(node, "2", new Date(), "<entry/>", "1");
+		Mockito.when(
+				channelManager.getNodeItem(Mockito.eq(node), Mockito.eq("1")))
+				.thenReturn(item);
+		Mockito.when(
+				channelManager.getNodeItem(Mockito.eq(node), Mockito.eq("2")))
+				.thenReturn(null);
+
+		Element entry = (Element) this.ratingEntry.clone();
+
+		entry.element("in-reply-to").detach();
+		validateEntry = getEntryObject(entry);
+
+		Assert.assertFalse(validateEntry.isValid());
+		Assert.assertEquals(ValidateEntry.IN_REPLY_TO_MISSING,
+				validateEntry.getErrorMessage());
+	}
+
+	@Test
+	public void missingTargetIdElementReturnsError() throws Exception {
+
+		NodeItem item = new NodeItemImpl(node, "2", new Date(), "<entry/>");
+		Mockito.when(
+				channelManager.getNodeItem(Mockito.eq(node), Mockito.eq("1")))
+				.thenReturn(item);
+		Mockito.when(
+				channelManager.getNodeItem(Mockito.eq(node), Mockito.eq("2")))
+				.thenReturn(null);
+
+		Element entry = (Element) this.ratingEntry.clone();
+
+		entry.element("target").element("id").detach();
+		validateEntry = getEntryObject(entry);
+
+		Assert.assertFalse(validateEntry.isValid());
+		Assert.assertEquals(ValidateEntry.MISSING_TARGET_ID,
+				validateEntry.getErrorMessage());
+	}
+
+	@Test
+	public void emptyTargetIdElementReturnsError() throws Exception {
+
+		NodeItem item = new NodeItemImpl(node, "2", new Date(), "<entry/>");
+		Mockito.when(
+				channelManager.getNodeItem(Mockito.eq(node), Mockito.eq("1")))
+				.thenReturn(item);
+		Mockito.when(
+				channelManager.getNodeItem(Mockito.eq(node), Mockito.eq("2")))
+				.thenReturn(null);
+
+		Element entry = (Element) this.ratingEntry.clone();
+
+		entry.element("target").element("id").detach();
+		entry.element("target").addElement("id");
+		validateEntry = getEntryObject(entry);
+
+		Assert.assertFalse(validateEntry.isValid());
+		Assert.assertEquals(ValidateEntry.MISSING_TARGET_ID,
+				validateEntry.getErrorMessage());
+	}
+
+	@Test
+	public void ifTargetedPostDoesntExistErrorIsReturned() throws Exception {
+
+		NodeItem item = new NodeItemImpl(node, "1", new Date(), "<entry/>");
+		Mockito.when(
+				channelManager.getNodeItem(Mockito.eq(node), Mockito.eq("1")))
+				.thenReturn(item);
+		Mockito.when(
+				channelManager.getNodeItem(Mockito.eq(node), Mockito.eq("2")))
+				.thenReturn(null);
+
+		Element entry = (Element) this.ratingEntry.clone();
+		validateEntry = getEntryObject(entry);
+
+		Assert.assertFalse(validateEntry.isValid());
+		Assert.assertEquals(ValidateEntry.TARGETED_ITEM_NOT_FOUND,
+				validateEntry.getErrorMessage());
+	}
+
+	@Test
+	public void ifTargetedPostIsntInSameThreadErrorIsReturnedParentCheck()
+			throws Exception {
+		NodeItem item = new NodeItemImpl(node, "1", new Date(), "<entry/>");
+		Mockito.when(
+				channelManager.getNodeItem(Mockito.eq(node), Mockito.eq("1")))
+				.thenReturn(item);
+		Mockito.when(
+				channelManager.getNodeItem(Mockito.eq(node), Mockito.eq("2")))
+				.thenReturn(item);
+
+		Element entry = (Element) this.ratingEntry.clone();
+		validateEntry = getEntryObject(entry);
+
+		Assert.assertFalse(validateEntry.isValid());
+		Assert.assertEquals(ValidateEntry.TARGET_MUST_BE_IN_SAME_THREAD,
+				validateEntry.getErrorMessage());
+	}
+
+	@Test
+	public void ifTargetedPostIsntInSameThreadErrorIsReturnedThreadCheck()
+			throws Exception {
+
+		NodeItem item1 = new NodeItemImpl(node, "1", new Date(), "<entry/>");
+		NodeItem item2 = new NodeItemImpl(node, "B", new Date(), "<entry/>",
+				"A");
+		Mockito.when(
+				channelManager.getNodeItem(Mockito.eq(node), Mockito.eq("1")))
+				.thenReturn(item1);
+		Mockito.when(
+				channelManager.getNodeItem(Mockito.eq(node), Mockito.eq("2")))
+				.thenReturn(item2);
+
+		Element entry = (Element) this.ratingEntry.clone();
+		entry.element("target").element("id").setText("B");
+		validateEntry = getEntryObject(entry);
+
+		Assert.assertFalse(validateEntry.isValid());
+		Assert.assertEquals(ValidateEntry.TARGET_MUST_BE_IN_SAME_THREAD,
+				validateEntry.getErrorMessage());
+	}
+
+	@Test
+	public void ifTargetedIdIsSameAsReplyToIdOnlyOneDatabaseLookupPerformed()
+			throws Exception {
+		NodeItem item = new NodeItemImpl(node, "1", new Date(), "<entry/>");
+		Mockito.when(
+				channelManager.getNodeItem(Mockito.eq(node), Mockito.eq("1")))
+				.thenReturn(item);
+
+		Element entry = (Element) this.ratingEntry.clone();
+		entry.element("target").element("id").setText("1");
+
+		validateEntry = getEntryObject(entry);
+
+		validateEntry.isValid();
+
+		Mockito.verify(channelManager, Mockito.times(1)).getNodeItem(
+				Mockito.eq(node), Mockito.eq("1"));
+	}
+
+	@Test
+	public void targetElementGetsAddedAsExpected() throws Exception {
+
+		Element entry = (Element) this.ratingEntry.clone();
+		entry.element("target").element("id").setText("1");
+
+		validateEntry = getEntryObject(entry);
+
+		Assert.assertTrue(validateEntry.isValid());
+
+		Element payload = validateEntry.getPayload();
+
+		String expectedId = "tag:channels.shakespeare.lit,/users/romeo@shakespeare.lit/posts,1";
+		Assert.assertEquals(expectedId,
+				payload.element("target").elementText("id"));
+		Assert.assertEquals("post",
+				payload.element("target").elementText("object-type"));
+	}
+
+	@Test
+	public void missingInReplyToErrorsIfRatingElementPresent() throws Exception {
+
+		Element entry = (Element) this.ratingEntry.clone();
+		entry.element("in-reply-to").detach();
+		validateEntry = getEntryObject(entry);
+
+		Assert.assertFalse(validateEntry.isValid());
+		Assert.assertEquals(ValidateEntry.IN_REPLY_TO_MISSING,
+				validateEntry.getErrorMessage());
+	}
+
+	@Test
+	public void missingTargetErrorsIfRatingElementPresent() throws Exception {
+
+		Element entry = (Element) this.ratingEntry.clone();
+		entry.element("target").element("id").setText("1");
+		entry.element("target").detach();
+		validateEntry = getEntryObject(entry);
+
+		Assert.assertFalse(validateEntry.isValid());
+		Assert.assertEquals(ValidateEntry.TARGET_ELEMENT_MISSING,
+				validateEntry.getErrorMessage());
+	}
+
+	@Test
+	public void invalidRatingValueReturnsError() throws Exception {
+
+		Element entry = (Element) this.ratingEntry.clone();
+		entry.element("target").element("id").setText("1");
+		entry.element("rating").setText("awesome");
+		validateEntry = getEntryObject(entry);
+
+		Assert.assertFalse(validateEntry.isValid());
+		Assert.assertEquals(ValidateEntry.INVALID_RATING_VALUE,
+				validateEntry.getErrorMessage());
+	}
+
+	@Test
+	public void outOfRangeRatingReturnsError() throws Exception {
+
+		Element entry = (Element) this.ratingEntry.clone();
+		entry.element("rating").setText("6.0");
+		entry.element("target").element("id").setText("1");
+		validateEntry = getEntryObject(entry);
+
+		Assert.assertFalse(validateEntry.isValid());
+		Assert.assertEquals(ValidateEntry.RATING_OUT_OF_RANGE,
+				validateEntry.getErrorMessage());
+	}
+
+	@Test
+	public void nonWholeNumberRatingReturnsError() throws Exception {
+		Element entry = (Element) this.ratingEntry.clone();
+		entry.element("rating").setText("4.1");
+		entry.element("target").element("id").setText("1");
+		validateEntry = getEntryObject(entry);
+
+		Assert.assertFalse(validateEntry.isValid());
+		Assert.assertEquals(ValidateEntry.INVALID_RATING_VALUE,
+				validateEntry.getErrorMessage());
+	}
+
+	@Test
+	public void ratingElementGetsAddedToPayloadAsExpected() throws Exception {
+
+		String rating = "4";
+
+		Element entry = (Element) this.ratingEntry.clone();
+		entry.element("rating").setText(rating);
+		entry.element("target").element("id").setText("1");
+		validateEntry = getEntryObject(entry);
+
+		Assert.assertTrue(validateEntry.isValid());
+		Element payload = validateEntry.getPayload();
+
+		Assert.assertEquals(ValidateEntry.NS_REVIEW, payload
+				.getNamespaceForPrefix("review").getText());
+		Assert.assertEquals(rating + ".0", payload.element("rating")
+				.getTextTrim());
+	}
+
+	@Test
+	public void postTitleIsSetToRatingWhenRated() throws Exception {
+
+		Element entry = (Element) this.ratingEntry.clone();
+		entry.element("target").element("id").setText("1");
+		validateEntry = getEntryObject(entry);
+
+		Assert.assertTrue(validateEntry.isValid());
+		Element payload = validateEntry.getPayload();
+
+		Assert.assertEquals(ValidateEntry.NS_REVIEW, payload
+				.getNamespaceForPrefix("review").getText());
+		Assert.assertEquals("Rating", payload.elementText("title"));
+	}
+
+	@Test
+	public void postVerbGetsSwitchedToRated() throws Exception {
+		Element entry = (Element) this.ratingEntry.clone();
+		entry.element("target").element("id").setText("1");
+		validateEntry = getEntryObject(entry);
+
+		Assert.assertTrue(validateEntry.isValid());
+		Element payload = validateEntry.getPayload();
+
+		Assert.assertEquals(ValidateEntry.ACTIVITY_VERB_RATED,
+				payload.elementText("verb"));
+	}
+
+	@Test
+	public void postContentGetsReplacedWithRating() throws Exception {
+		Element entry = (Element) this.ratingEntry.clone();
+		entry.element("target").element("id").setText("1");
+
+		String expectedContent = "rating:5.0";
+		Assert.assertFalse(entry.elementText("content").equals(expectedContent));
+
+		validateEntry = getEntryObject(entry);
+
+		Assert.assertTrue(validateEntry.isValid());
+		Element payload = validateEntry.getPayload();
+
+		Assert.assertEquals(expectedContent, payload.elementText("content"));
+	}
+
+	@Test
+	public void canNotRateARating() throws Exception {
+		String testPayload = "<entry xmlns=\"http://www.w3.org/2005/Atom\" "
+				+ "xmlns:review=\"http://activitystrea.ms/schema/1.0/review\">"
+				+ "<review:rating>5.0</review:rating></entry>";
+		NodeItem item = new NodeItemImpl(node, "1", new Date(), testPayload);
+		Mockito.when(
+				channelManager.getNodeItem(Mockito.eq(node),
+						Mockito.anyString())).thenReturn(item);
+
+		Element entry = (Element) this.ratingEntry.clone();
+		entry.element("target").element("id").setText("1");
+		validateEntry = getEntryObject(entry);
+
+		Assert.assertFalse(validateEntry.isValid());
+		Assert.assertEquals(ValidateEntry.CAN_ONLY_RATE_A_POST,
+				validateEntry.getErrorMessage());
+	}
+
 }

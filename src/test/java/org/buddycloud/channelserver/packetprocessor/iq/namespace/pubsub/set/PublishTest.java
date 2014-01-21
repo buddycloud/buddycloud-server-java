@@ -24,6 +24,7 @@ import org.dom4j.Element;
 import org.dom4j.tree.BaseElement;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 import org.xmpp.packet.IQ;
 import org.xmpp.packet.JID;
@@ -89,9 +90,7 @@ public class PublishTest extends IQTestHandler {
 
 		Mockito.when(validateEntry.isValid()).thenReturn(true);
 
-		Mockito.when(
-				validateEntry.getPayload()).thenReturn(
-				entry);
+		Mockito.when(validateEntry.getPayload()).thenReturn(entry);
 
 	}
 
@@ -390,5 +389,27 @@ public class PublishTest extends IQTestHandler {
 		notification = (Message) queue.poll();
 		Assert.assertEquals(new JID("user2@server1"), notification.getTo());
 
+	}
+
+	@Test
+	public void inReplyToIdIsSavedToDatabase() throws Exception {
+		IQ request = readStanzaAsIq("/iq/pubsub/publish/reply.stanza");
+		Mockito.when(validateEntry.getPayload()).thenReturn(
+				request.getChildElement().element("publish").element("item")
+						.element("entry"));
+
+		publish.process(element, jid, request, null);
+
+		Assert.assertEquals(IQ.Type.result, ((IQ) queue.poll()).getType());
+
+		ArgumentCaptor<NodeItemImpl> argument = ArgumentCaptor
+				.forClass(NodeItemImpl.class);
+
+		Mockito.verify(channelManager, Mockito.times(1)).addNodeItem(
+				argument.capture());
+
+		Assert.assertEquals("fc362eb42085f017ed9ccd9c4004b095", argument
+				.getValue().getInReplyTo());
+		Assert.assertEquals(node, argument.getValue().getNodeId());
 	}
 }

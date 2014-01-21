@@ -29,7 +29,7 @@ import org.xmpp.resultsetmanagement.ResultSet;
 
 public class Publish extends PubSubElementProcessorAbstract {
 
-	private static final Logger logger = Logger.getLogger(Publish.class);
+	private static final Logger LOGGER = Logger.getLogger(Publish.class);
 
 	public static final String MISSING_ITEM_ELEMENT = "item-required";
 	public static final String NODE_ID_REQUIRED = "nodeid-required";
@@ -104,7 +104,7 @@ public class Publish extends PubSubElementProcessorAbstract {
 			saveNodeItem();
 			sendResponseStanza();
 			sendNotifications();
-			
+
 		} catch (NodeStoreException e) {
 			setErrorCondition(PacketError.Type.wait,
 					PacketError.Condition.internal_server_error);
@@ -123,8 +123,14 @@ public class Publish extends PubSubElementProcessorAbstract {
 
 		entry = entryContent.getPayload();
 		id = GlobalItemIDImpl.toLocalId(entry.element("id").getText());
+		Element inReplyToElement = entry.element("in-reply-to");
+		if (null == inReplyToElement) {
+			return;
+		}
+		inReplyTo = GlobalItemIDImpl.toLocalId(inReplyToElement
+				.attributeValue("ref"));
 	}
-	
+
 	public void setEntryValidator(ValidateEntry validator) {
 		this.validator = validator;
 	}
@@ -136,11 +142,12 @@ public class Publish extends PubSubElementProcessorAbstract {
 		return this.validator;
 	}
 
-	private void sendInvalidEntryResponse()
-			throws InterruptedException {
-		logger.info("Entry is not valid: '" + entryContent.getErrorMessage() + "'.");
+	private void sendInvalidEntryResponse() throws InterruptedException {
+		LOGGER.info("Entry is not valid: '" + entryContent.getErrorMessage()
+				+ "'.");
 		createExtendedErrorReply(PacketError.Type.modify,
-				PacketError.Condition.bad_request, entryContent.getErrorMessage());
+				PacketError.Condition.bad_request,
+				entryContent.getErrorMessage());
 		outQueue.put(response);
 	}
 
@@ -157,6 +164,7 @@ public class Publish extends PubSubElementProcessorAbstract {
 		entryContent.setUser(publishersJID);
 		entryContent.setTo(request.getTo().toBareJID());
 		entryContent.setNode(node);
+		entryContent.setChannelManager(channelManager);
 
 		if (!entryContent.isValid()) {
 			sendInvalidEntryResponse();
@@ -223,7 +231,8 @@ public class Publish extends PubSubElementProcessorAbstract {
 		if ((node == null) || (true == node.equals(""))) {
 			response.setType(Type.error);
 
-			Element badRequest = new DOMElement(PacketError.Condition.bad_request.toXMPP(),
+			Element badRequest = new DOMElement(
+					PacketError.Condition.bad_request.toXMPP(),
 					new org.dom4j.Namespace("", JabberPubsub.NS_XMPP_STANZAS));
 
 			Element nodeIdRequired = new DOMElement(NODE_ID_REQUIRED,
@@ -244,11 +253,10 @@ public class Publish extends PubSubElementProcessorAbstract {
 			isLocalNode = channelManager.isLocalNode(node);
 		} catch (IllegalArgumentException e) {
 			response.setType(Type.error);
-			PacketError pe = new PacketError(
-					PacketError.Condition.bad_request,
+			PacketError pe = new PacketError(PacketError.Condition.bad_request,
 					PacketError.Type.modify);
 			response.setError(pe);
-			logger.error(e);
+			LOGGER.error(e);
 			outQueue.put(response);
 			return false;
 		}
@@ -283,7 +291,7 @@ public class Publish extends PubSubElementProcessorAbstract {
 		for (NodeSubscription ns : cur) {
 			JID to = ns.getUser();
 			if (ns.getSubscription().equals(Subscriptions.subscribed)) {
-				logger.debug("Sending post notification to " + to.toBareJID());
+				LOGGER.debug("Sending post notification to " + to.toBareJID());
 				msg.setTo(ns.getListener());
 				outQueue.put(msg.createCopy());
 			}

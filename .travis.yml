@@ -3,3 +3,12 @@ jdk:
   - oraclejdk7
   - openjdk6
   - openjdk7
+  
+  
+env: 
+  global: 
+    - MAVEN_URL=http://apache.mirrors.pair.com/maven/maven-3/3.0.5/binaries/apache-maven-3.0.5-bin.tar.gz 
+install:
+  - wget -O - $MAVEN_URL | sudo tar xvz -C /usr/local 
+  - sudo rm /usr/local/maven
+  - sudo ln -s /usr/local/apache-maven-3.0.5 /usr/local/maven

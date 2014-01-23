@@ -12,7 +12,7 @@ import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.set.Item
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.set.NodeConfigure;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.set.NodeCreate;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.set.NodeDelete;
-import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.set.PublishSet;
+import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.set.Publish;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.set.SubscribeSet;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.set.SubscriptionEvent;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.set.UnsubscribeSet;
@@ -40,7 +40,7 @@ public class PubSubSet implements PacketProcessor<IQ> {
     }
     
     private void initElementProcessors() {
-        elementProcessors.add(new PublishSet(outQueue, channelManager));
+        elementProcessors.add(new Publish(outQueue, channelManager));
         elementProcessors.add(new SubscribeSet(outQueue, channelManager));
         elementProcessors.add(new UnsubscribeSet(outQueue, channelManager));
         elementProcessors.add(new NodeCreate(outQueue, channelManager));

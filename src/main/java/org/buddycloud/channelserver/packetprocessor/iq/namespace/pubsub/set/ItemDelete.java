@@ -88,7 +88,7 @@ public class ItemDelete extends PubSubElementProcessorAbstract {
 			String notify = request.getElement().element("pubsub")
 					.element("retract").attributeValue("notify");
 
-			if (notify == null || (!notify.equals("true") && !notify.equals("1"))) {
+			if ((notify != null) && (notify.equals("false") || notify.equals("0"))) {
 				return;
 			}
 			ResultSet<NodeSubscription> subscriptions = channelManager

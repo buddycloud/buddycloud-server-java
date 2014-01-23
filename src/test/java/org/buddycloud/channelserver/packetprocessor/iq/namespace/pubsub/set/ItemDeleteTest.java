@@ -128,9 +128,8 @@ public class ItemDeleteTest extends IQTestHandler {
 		Mockito.when(channelManagerMock.nodeExists(node)).thenReturn(true);
 		itemDelete.setChannelManager(channelManagerMock);
 
-		request = toIq(readStanzaAsString(
-				"/iq/pubsub/item/delete/request.stanza").replaceFirst(
-				"<item id='item-id' notify='true' />", ""));
+		IQ request = toIq(readStanzaAsString("/iq/pubsub/item/delete/request.stanza"));
+		request.getChildElement().element("retract").element("item").detach();
 		itemDelete.process(element, jid, request, null);
 
 		Packet response = queue.poll(100, TimeUnit.MILLISECONDS);
@@ -148,9 +147,9 @@ public class ItemDeleteTest extends IQTestHandler {
 		Mockito.when(channelManagerMock.nodeExists(node)).thenReturn(true);
 		itemDelete.setChannelManager(channelManagerMock);
 
-		request = toIq(readStanzaAsString(
-				"/iq/pubsub/item/delete/request.stanza").replaceFirst(
-				"id='item-id'", ""));
+		IQ request = toIq(readStanzaAsString("/iq/pubsub/item/delete/request.stanza"));
+		request.getChildElement().element("retract").element("item")
+				.attribute("id").detach();
 		itemDelete.process(element, jid, request, null);
 
 		Packet response = queue.poll(100, TimeUnit.MILLISECONDS);
@@ -348,7 +347,7 @@ public class ItemDeleteTest extends IQTestHandler {
 		itemDelete.process(element, jid, request, null);
 
 		Mockito.verify(channelManagerMock).deleteNodeItemById(node, "item-id");
-		IQ response = (IQ) queue.poll(100, TimeUnit.MILLISECONDS);
+		IQ response = (IQ) queue.poll();
 
 		Assert.assertEquals(IQ.Type.result.toString(), response.getElement()
 				.attribute("type").getValue());
@@ -360,5 +359,48 @@ public class ItemDeleteTest extends IQTestHandler {
 		Assert.assertEquals("item-id",
 				notification.getElement().element("event").element("items")
 						.element("retract").attributeValue("id"));
+	}
+
+	@Test
+	public void testNoNotifyAttributeStillSendsNotifications() throws Exception {
+		NodeAffiliation affiliation = new NodeAffiliationImpl(node, jid,
+				Affiliations.member, new Date());
+
+		NodeItem nodeItem = new NodeItemImpl(node, "item-id", new Date(),
+				payload.replaceAll("romeo@shakespeare.lit",
+						"juliet@shakespeare.lit"));
+
+		IQ request = toIq(readStanzaAsString("/iq/pubsub/item/delete/request.stanza"));
+		request.getChildElement().element("retract").element("item")
+				.attribute("notify").detach();
+
+		ArrayList<NodeSubscription> subscriptions = new ArrayList<NodeSubscription>();
+		NodeSubscriptionImpl subscription1 = new NodeSubscriptionImpl(node,
+				new JID("romeo@shakespeare.lit"), Subscriptions.pending);
+		NodeSubscriptionImpl subscription2 = new NodeSubscriptionImpl(node,
+				new JID("juliet@shakespeare.lit"), Subscriptions.subscribed);
+		subscriptions.add(subscription1);
+		subscriptions.add(subscription2);
+
+		Mockito.when(channelManagerMock.isLocalNode(node)).thenReturn(true);
+		Mockito.when(channelManagerMock.nodeExists(node)).thenReturn(true);
+		Mockito.when(channelManagerMock.getNodeItem(node, "item-id"))
+				.thenReturn(nodeItem);
+		Mockito.when(
+				channelManagerMock.getUserAffiliation(Mockito.anyString(),
+						Mockito.any(JID.class))).thenReturn(affiliation);
+
+		Mockito.doReturn(new ResultSetImpl<NodeSubscription>(subscriptions))
+				.when(channelManagerMock).getNodeSubscriptionListeners(node);
+
+		itemDelete.setChannelManager(channelManagerMock);
+
+		itemDelete.process(element, jid, request, null);
+
+		Mockito.verify(channelManagerMock).deleteNodeItemById(node, "item-id");
+
+		// Check that one notification is sent (on subscriber + 2 admins)
+		Assert.assertEquals(4, queue.size());
+
 	}
 }

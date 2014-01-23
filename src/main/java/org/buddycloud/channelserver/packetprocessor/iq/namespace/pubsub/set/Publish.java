@@ -276,7 +276,6 @@ public class Publish extends PubSubElementProcessorAbstract {
 		msg.getElement().addAttribute("remote-server-discover", "false");
 		msg.setType(Message.Type.headline);
 		msg.setFrom(request.getTo());
-		msg.getElement().addAttribute("remote-server-discover", "false");
 		Element event = msg.addChildElement("event",
 				JabberPubsub.NS_PUBSUB_EVENT);
 		Element items = event.addElement("items");

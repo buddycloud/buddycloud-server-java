@@ -20,19 +20,19 @@ public class LocalDomainChecker {
 		}
 		int exitValue;
 		try {
-			exitValue = runChecker(command);
+			exitValue = runChecker(command, domain);
 		} catch (Exception e) {
 			return false;
 		}
 		return exitValue == IS_LOCAL_EXIT_VALUE;
 	}
 
-	private static int runChecker(String command) throws IOException,
+	private static int runChecker(String command, String domain) throws IOException,
 			InterruptedException {
 		if (command.equals(Boolean.TRUE.toString())) {
 			return IS_LOCAL_EXIT_VALUE;
 		}
-		ProcessBuilder processBuilder = new ProcessBuilder(command);
+		ProcessBuilder processBuilder = new ProcessBuilder(command, domain);
 		Process process = processBuilder.start();
 		return process.waitFor();
 	}

@@ -45,7 +45,11 @@ public class OnlineResourceManagerTest extends IQTestHandler {
 				configuration
 						.getProperty(Configuration.CONFIGURATION_SERVER_DOMAIN))
 				.thenReturn("server1.com");
-
+		Mockito.when(
+				configuration
+						.containsKey(Configuration.CONFIGURATION_SERVER_DOMAIN))
+				.thenReturn(true);
+		
 		onlineUser = new OnlineResourceManager(configuration);
 	}
 

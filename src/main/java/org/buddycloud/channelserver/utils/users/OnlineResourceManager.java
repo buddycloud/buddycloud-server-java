@@ -22,13 +22,12 @@ public class OnlineResourceManager {
 	public static final String UNAVAILABLE = "unavailable";
 	private static final Logger LOGGER = Logger.getLogger(OnlineResourceManager.class);
 	
-	private String domain;
 	private HashMap<String, ArrayList<JID>> users = new HashMap<String, ArrayList<JID>>();
 	private Properties conf;
 
 	public OnlineResourceManager(Properties conf) {
-		this.domain = conf.getProperty(Configuration.CONFIGURATION_SERVER_DOMAIN);
-		if (this.domain == null) {
+		if (!conf.containsKey(Configuration.CONFIGURATION_SERVER_DOMAIN) && 
+				!conf.containsKey(Configuration.CONFIGURATION_LOCAL_DOMAIN_CHECKER)) {
 			throw new NullPointerException("Missing server domain configuration");
 		}
 		this.conf = conf;
@@ -62,8 +61,7 @@ public class OnlineResourceManager {
 	}
 
 	public void updateStatus(JID jid, String type) {
-		if (!jid.getDomain().equals(domain) && 
-				!LocalDomainChecker.isLocal(jid.getDomain(), conf)) {
+		if (!LocalDomainChecker.isLocal(jid.getDomain(), conf)) {
 			return;
 		}
 		if (type != null && type.equals(UNAVAILABLE)) {

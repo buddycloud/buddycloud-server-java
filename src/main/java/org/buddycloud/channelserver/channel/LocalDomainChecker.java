@@ -15,9 +15,18 @@ public class LocalDomainChecker {
 		}
 		String command = configuration.getProperty(
 				Configuration.CONFIGURATION_LOCAL_DOMAIN_CHECKER);
+		
 		if (command == null) {
-			return false;
+			String serverDomain = configuration
+					.getProperty(Configuration.CONFIGURATION_SERVER_DOMAIN);
+			String topicDomain = configuration
+					.getProperty(Configuration.CONFIGURATION_SERVER_TOPICS_DOMAIN);
+			String channelDomain = configuration
+					.getProperty(Configuration.CONFIGURATION_SERVER_CHANNELS_DOMAIN);
+			return (domain.equals(serverDomain) || domain.equals(topicDomain)
+					|| domain.equals(channelDomain));
 		}
+		
 		int exitValue;
 		try {
 			exitValue = runChecker(command, domain);

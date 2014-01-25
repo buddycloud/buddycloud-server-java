@@ -97,19 +97,6 @@ public class OutQueueConsumer extends QueueConsumer {
 		}
 
 		String domain = jid.getDomain();
-
-		if (domain.equals(conf.getServerDomain())) {
-			return false;
-		}
-
-		if (domain.equals(conf.getServerChannelsDomain())) {
-			return false;
-		}
-
-		if (domain.equals(conf.getServerTopicsDomain())) {
-			return false;
-		}
-
 		if (LocalDomainChecker.isLocal(domain, conf)) {
 			return false;
 		}

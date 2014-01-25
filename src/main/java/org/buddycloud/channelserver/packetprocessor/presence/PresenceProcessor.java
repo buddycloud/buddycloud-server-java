@@ -16,22 +16,22 @@ public class PresenceProcessor implements PacketProcessor<Presence> {
 
 	private final Properties configuration;
 	private OnlineResourceManager onlineUsers;
-	private String domain;
 
 	public PresenceProcessor(Properties configuration, OnlineResourceManager onlineUsers) {
-		this.domain = configuration.getProperty(Configuration.CONFIGURATION_SERVER_DOMAIN);
 		this.configuration = configuration;
 		this.onlineUsers = onlineUsers;
 		
-		if (null == this.domain) 
+		if (!configuration.containsKey(Configuration.CONFIGURATION_SERVER_DOMAIN) && 
+				!configuration.containsKey(Configuration.CONFIGURATION_LOCAL_DOMAIN_CHECKER)) {
 			throw new NullPointerException("Missing server domain configuration");
+		}
 	}
 	
 	@Override
 	public void process(Presence packet) throws Exception {
 		JID from = packet.getFrom();
-        if (from == null || (!from.getDomain().equals(domain) && 
-        		!LocalDomainChecker.isLocal(from.getDomain(), configuration))) {
+        if (from == null || 
+        		!LocalDomainChecker.isLocal(from.getDomain(), configuration)) {
         	return;
         }
         

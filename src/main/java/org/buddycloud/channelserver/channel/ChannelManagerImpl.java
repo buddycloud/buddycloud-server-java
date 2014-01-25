@@ -343,18 +343,6 @@ public class ChannelManagerImpl implements ChannelManager {
 
 	@Override
 	public boolean isLocalDomain(String domain) {
-		String serverDomain = configuration
-				.getProperty(Configuration.CONFIGURATION_SERVER_DOMAIN);
-		String topicDomain = configuration
-				.getProperty(Configuration.CONFIGURATION_SERVER_TOPICS_DOMAIN);
-		String channelDomain = configuration
-				.getProperty(Configuration.CONFIGURATION_SERVER_CHANNELS_DOMAIN);
-		
-		if (domain.equals(serverDomain) || domain.equals(topicDomain)
-				|| domain.equals(channelDomain)) {
-			return true;
-		}
-		
 		return LocalDomainChecker.isLocal(domain, configuration);
 	}
 

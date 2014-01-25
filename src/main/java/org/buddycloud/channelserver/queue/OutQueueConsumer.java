@@ -6,6 +6,7 @@ import java.util.concurrent.BlockingQueue;
 import org.apache.log4j.Logger;
 import org.buddycloud.channelserver.ChannelsEngine;
 import org.buddycloud.channelserver.Configuration;
+import org.buddycloud.channelserver.channel.LocalDomainChecker;
 import org.buddycloud.channelserver.utils.users.OnlineResourceManager;
 import org.dom4j.Attribute;
 import org.xmpp.component.ComponentException;
@@ -109,6 +110,10 @@ public class OutQueueConsumer extends QueueConsumer {
 			return false;
 		}
 
+		if (LocalDomainChecker.isLocal(domain, conf)) {
+			return false;
+		}
+		
 		return true;
 	}
 

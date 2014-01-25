@@ -43,6 +43,18 @@ public interface ChannelManager extends NodeStore {
 	boolean isLocalJID(JID jid) throws NodeStoreException;
 
 	/**
+	 * Determines whether the domain is served by this server.
+	 * 
+	 * @param domain
+	 *            the domain name
+	 * @return <code>true</code> if the domain appears to be local,
+	 *         <code>false</code> otherwise.
+	 * @throws NodeStoreException
+	 */
+	boolean isLocalDomain(String domain) throws NodeStoreException;
+
+	
+	/**
 	 * Deletes all data from remote nodes
 	 * 
 	 * @throws NodeStoreException

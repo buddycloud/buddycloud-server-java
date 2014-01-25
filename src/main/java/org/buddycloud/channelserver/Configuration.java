@@ -23,7 +23,8 @@ public class Configuration extends Properties {
 	public static final String CONFIGURATION_SERVER_DOMAIN = "server.domain";
 	public static final String CONFIGURATION_SERVER_CHANNELS_DOMAIN = "server.domain.channels";
 	public static final String CONFIGURATION_SERVER_TOPICS_DOMAIN = "server.domain.topics";
-
+	public static final String CONFIGURATION_LOCAL_DOMAIN_CHECKER = "server.domain.checker";
+	
 	public static final String CONFIGURATION_ADMIN_USERS = "users.admin";
 
 	public static final String CONFIGURATION_CHANNELS_AUTOSUBSCRIBE = "channels.autosubscribe";

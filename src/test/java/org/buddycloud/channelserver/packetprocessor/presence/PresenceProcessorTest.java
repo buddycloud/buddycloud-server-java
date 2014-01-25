@@ -36,10 +36,6 @@ public class PresenceProcessorTest extends IQTestHandler {
 				configuration
 						.getProperty(Configuration.CONFIGURATION_SERVER_DOMAIN))
 				.thenReturn("server1.com");
-		Mockito.when(
-				configuration
-						.containsKey(Configuration.CONFIGURATION_SERVER_DOMAIN))
-				.thenReturn(true);
 		
 		onlineUsers = Mockito.mock(OnlineResourceManager.class);
 		presenceProcessor = new PresenceProcessor(configuration, onlineUsers);

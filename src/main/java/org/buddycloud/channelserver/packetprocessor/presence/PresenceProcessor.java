@@ -21,8 +21,8 @@ public class PresenceProcessor implements PacketProcessor<Presence> {
 		this.configuration = configuration;
 		this.onlineUsers = onlineUsers;
 		
-		if (!configuration.containsKey(Configuration.CONFIGURATION_SERVER_DOMAIN) && 
-				!configuration.containsKey(Configuration.CONFIGURATION_LOCAL_DOMAIN_CHECKER)) {
+		if (configuration.getProperty(Configuration.CONFIGURATION_SERVER_DOMAIN) == null && 
+				configuration.getProperty(Configuration.CONFIGURATION_LOCAL_DOMAIN_CHECKER) == null) {
 			throw new NullPointerException("Missing server domain configuration");
 		}
 	}

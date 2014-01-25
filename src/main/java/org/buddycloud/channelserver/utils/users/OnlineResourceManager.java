@@ -26,8 +26,8 @@ public class OnlineResourceManager {
 	private Properties conf;
 
 	public OnlineResourceManager(Properties conf) {
-		if (!conf.containsKey(Configuration.CONFIGURATION_SERVER_DOMAIN) && 
-				!conf.containsKey(Configuration.CONFIGURATION_LOCAL_DOMAIN_CHECKER)) {
+		if (conf.getProperty(Configuration.CONFIGURATION_SERVER_DOMAIN) == null && 
+				conf.getProperty(Configuration.CONFIGURATION_LOCAL_DOMAIN_CHECKER) == null) {
 			throw new NullPointerException("Missing server domain configuration");
 		}
 		this.conf = conf;

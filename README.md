@@ -14,7 +14,7 @@ The java server purposefully uses the same database schema as the buddycloud nod
 
 ## Build and run
 
-* install openjdk-6-jdk maven2
+* install openjdk-6-jdk maven 3
 * `git clone https://github.com/buddycloud/buddycloud-server-java`
 * `cd buddycloud-server-java`
 * `mvn package`

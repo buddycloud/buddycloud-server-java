@@ -49,4 +49,4 @@ Now we're done, but we must test that we can connect to the database and that th
 ~~~~ {.bash}
 psql -h 127.0.0.1 --username buddycloud_server -d buddycloud_server -c "select * from nodes;"
 ~~~~
-If you got an output similar to (or exactly like) this, you're good to go.
+If you got an output similar to (or exactly like) this, you're good to go. 

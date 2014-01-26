@@ -3,7 +3,7 @@
 A buddycloud server written in Java, implementing the [buddycloud channels](http://buddycloud.org/) protocol.
 
 ## Build status
-
+ 
 Note this points to the main buddycloud repository for the java server.
 
 [![Build Status](https://travis-ci.org/buddycloud/buddycloud-server-java.png?branch=master)](https://travis-ci.org/buddycloud/buddycloud-server-java)

@@ -20,7 +20,7 @@ The java server purposefully uses the same database schema as the buddycloud nod
 * `mvn package`
 * Edit configuration files as required
 * Install database
-* `java -jar target/channelserver-<VERSION>-jar-with-dependencies.jar
+* `java -jar target/channelserver-<VERSION>-jar-with-dependencies.jar`
 
 ### Manually create the buddycloud server database
 

@@ -4,6 +4,7 @@ import java.util.HashMap;
 
 import junit.framework.Assert;
 
+import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.channel.node.configuration.field.ChannelTitle;
 import org.buddycloud.channelserver.channel.node.configuration.field.ConfigurationFieldException;
 import org.buddycloud.channelserver.channel.node.configuration.field.Field;
@@ -31,7 +32,8 @@ public class HelperTest extends IQTestHandler
 	@Before
 	public void setUp()
 	{
-		parser = new Helper();
+		ChannelManager channelManager = Mockito.mock(ChannelManager.class);
+		parser = new Helper(channelManager);
 	}
     
     @Test(expected=NodeConfigurationException.class)

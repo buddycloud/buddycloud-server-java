@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map.Entry;
 
 import org.apache.log4j.Logger;
+import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.channel.node.configuration.field.ConfigurationFieldException;
 import org.buddycloud.channelserver.channel.node.configuration.field.Factory;
 import org.buddycloud.channelserver.channel.node.configuration.field.Field;
@@ -18,17 +19,20 @@ public class Helper {
 	private HashMap<String, Field> elements;
 	private Factory fieldFactory;
 	private boolean allowCreator;
+	private ChannelManager channelManager;
 
 	public  static final String FORM_TYPE = "http://jabber.org/protocol/pubsub#node_config";
 	private static final String ELEMENT_NOT_FOUND = "Required XMPP element not found";
 
 	private static final Logger LOGGER = Logger.getLogger(Helper.class);
 	
-	public Helper(boolean allowOwner) {
+	public Helper(ChannelManager channelManager, boolean allowOwner) {
+		this.channelManager = channelManager;
 		this.allowCreator = allowCreator;
 	}
 	
-	public Helper() {
+	public Helper(ChannelManager channelManager) {
+		this.channelManager = channelManager;
 		this.allowCreator = false;
 	}
 	

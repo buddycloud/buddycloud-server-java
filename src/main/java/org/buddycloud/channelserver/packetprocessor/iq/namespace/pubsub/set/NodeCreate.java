@@ -1,14 +1,14 @@
 package org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.set;
 
+import java.security.acl.Owner;
 import java.util.HashMap;
 import java.util.concurrent.BlockingQueue;
 
-import org.apache.bcel.generic.ACONST_NULL;
 import org.apache.log4j.Logger;
 import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.channel.Conf;
 import org.buddycloud.channelserver.channel.node.configuration.NodeConfigurationException;
-import org.buddycloud.channelserver.channel.node.configuration.field.Owner;
+import org.buddycloud.channelserver.channel.node.configuration.field.Creator;
 import org.buddycloud.channelserver.db.exception.NodeStoreException;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.JabberPubsub;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.PubSubElementProcessorAbstract;
@@ -89,7 +89,7 @@ public class NodeCreate extends PubSubElementProcessorAbstract {
 				new JID(node.split("/")[2]), actor);
 		HashMap<String, String> configuration = getNodeConfigurationHelper()
 				.getValues();
-		configuration.put(Owner.FIELD_NAME, actor.toBareJID());
+		configuration.put(Creator.FIELD_NAME, actor.toBareJID());
 		
 		defaultConfiguration.putAll(configuration);
 		

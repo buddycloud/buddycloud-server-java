@@ -22,7 +22,7 @@ public class Conf {
 	public static final String PUBLISH_MODEL = "pubsub#publish_model";
 	public static final String ACCESS_MODEL = "pubsub#access_model";
 	public static final String CREATION_DATE = "pubsub#creation_date";
-	public static final String OWNER = "pubsub#owner";
+	public static final String CREATOR = "pubsub#owner";
 	public static final String DEFAULT_AFFILIATION = "buddycloud#default_affiliation";
 	public static final String NUM_SUBSCRIBERS = "pubsub#num_subscribers";
 	public static final String NOTIFY_CONFIG = "pubsub#notify_config";
@@ -60,7 +60,7 @@ public class Conf {
 	public static HashMap<String, String> getDefaultChannelConf(JID channelJID,
 			JID ownerJID) {
 		HashMap<String, String> conf = getDefaultConf(channelJID, null);
-		conf.put(OWNER, ownerJID.toBareJID());
+		conf.put(CREATOR, ownerJID.toBareJID());
 		return conf;
 	}
 
@@ -144,9 +144,8 @@ public class Conf {
 								"%jid%", channelJID.toBareJID()));
 
 		conf.put(TYPE, "http://www.w3.org/2005/Atom");
-		conf.put(PUBLISH_MODEL, PUBLISHERS);
 		conf.put(CREATION_DATE, formatDate(new Date()));
-		conf.put(OWNER, channelJID.toBareJID());
+		conf.put(CREATOR, channelJID.toBareJID());
 
 		conf.put(
 				ACCESS_MODEL,
@@ -166,8 +165,7 @@ public class Conf {
 												Configuration.CONFIGURATION_CHANNELS_DEFAULT_AFFILIATION,
 												Affiliations.member.toString()))
 						.toString());
-		conf.put(NUM_SUBSCRIBERS, "1");
-		conf.put(NOTIFY_CONFIG, "1");
+
 
 		getConfigurationOverrides(channelJID, node);
 		return conf;

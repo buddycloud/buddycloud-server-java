@@ -75,9 +75,6 @@ public class NodeConfigure extends PubSubElementProcessorAbstract {
 			if (getNodeConfigurationHelper().isValid()) {
 				HashMap<String, String> configuration = getNodeConfigurationHelper()
 						.getValues();
-				configuration
-						.put(Owner.FIELD_NAME, channelManager.getNodeConfValue(
-								node, Owner.FIELD_NAME));
 				updateNodeConfiguration(configuration);
 				notifySubscribers(configuration);
 				return;

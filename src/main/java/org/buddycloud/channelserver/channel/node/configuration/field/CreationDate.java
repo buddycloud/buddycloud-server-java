@@ -5,7 +5,7 @@ import java.util.Date;
 import org.apache.log4j.Logger;
 import org.buddycloud.channelserver.channel.Conf;
 
-public class CreationDate extends Field
+public class CreationDate extends DateField
 {
 	public static final String FIELD_NAME    = "pubsub#creation_date";
 	public static final String DEFAULT_VALUE = "1955-11-05T01:21:00Z";

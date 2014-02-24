@@ -85,15 +85,15 @@ public class NodeCreate extends PubSubElementProcessorAbstract {
 		if (false == getNodeConfigurationHelper().isValid()) {
 			throw new NodeConfigurationException(INVALID_NODE_CONFIGURATION);
 		}
-		HashMap<String, String> defConfiguration = Conf.getDefaultChannelConf(
+		HashMap<String, String> defaultConfiguration = Conf.getDefaultChannelConf(
 				new JID(node.split("/")[2]), actor);
 		HashMap<String, String> configuration = getNodeConfigurationHelper()
 				.getValues();
 		configuration.put(Owner.FIELD_NAME, actor.toBareJID());
 		
-		defConfiguration.putAll(configuration);
+		defaultConfiguration.putAll(configuration);
 		
-		return defConfiguration;
+		return defaultConfiguration;
 	}
 
 	private boolean validateNode() {

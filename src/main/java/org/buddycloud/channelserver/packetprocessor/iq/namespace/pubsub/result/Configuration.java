@@ -1,21 +1,15 @@
 package org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.result;
 
 import java.util.HashMap;
-import java.util.List;
 
 import org.apache.log4j.Logger;
 import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.channel.node.configuration.NodeConfigurationException;
-import org.buddycloud.channelserver.channel.node.configuration.field.Owner;
 import org.buddycloud.channelserver.db.exception.NodeStoreException;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.PubSubElementProcessorAbstract;
-import org.buddycloud.channelserver.pubsub.model.NodeSubscription;
-import org.buddycloud.channelserver.pubsub.model.impl.NodeSubscriptionImpl;
-import org.buddycloud.channelserver.pubsub.subscription.Subscriptions;
 import org.dom4j.Element;
 import org.xmpp.packet.IQ;
 import org.xmpp.packet.JID;
-import org.xmpp.packet.PacketError;
 
 public class Configuration extends PubSubElementProcessorAbstract {
 

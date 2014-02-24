@@ -19,7 +19,7 @@ import org.xmpp.packet.IQ;
 import org.xmpp.packet.JID;
 import org.xmpp.packet.Packet;
 import org.xmpp.packet.PacketError;
-import org.xbill.DNS.SRVRecord;
+import org.xbill.DNS.PTRRecord;
 import org.xbill.DNS.Record;
 import org.xbill.DNS.Type;
 import org.xbill.DNS.Lookup;
@@ -37,7 +37,7 @@ public class FederatedQueueManager {
 	public static final String IDENTITY_TYPE_CHANNELS = "channels";
 	public static final String BUDDYCLOUD_SERVER = "buddycloud-server";
 
-	public static final String SRV_PREFIX = "_buddycloud-server._tcp.";
+	public static final String PTR_PREFIX = "_buddycloud-server._tcp.";
 
 	private int id = 1;
 
@@ -237,14 +237,14 @@ public class FederatedQueueManager {
 	private boolean attemptDnsDiscovery(String originatingServer)
 			throws ComponentException {
 		try {
-			String query = SRV_PREFIX + originatingServer;
-			Record[] records = new Lookup(query, Type.SRV).run();
+			String query = PTR_PREFIX + originatingServer;
+			Record[] records = new Lookup(query, Type.PTR).run();
 			if ((null == records) || (0 == records.length)) {
 				logger.debug("No appropriate DNS entry found for "
 						+ originatingServer);
 				return false;
 			}
-			SRVRecord record = (SRVRecord) records[0];
+			PTRRecord record = (PTRRecord) records[0];
 			String targetServer = record.getTarget().toString(true);
 			setDiscoveredServer(originatingServer, targetServer);
 			logger.info("DNS discovery complete for buddycloud server @ "

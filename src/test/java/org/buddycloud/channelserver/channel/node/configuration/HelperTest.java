@@ -21,6 +21,7 @@ import org.junit.rules.ExpectedException;
 import org.mockito.Mockito;
 import org.xmpp.packet.IQ;
 import org.buddycloud.channelserver.channel.node.configuration.field.Factory;
+import org.buddycloud.channelserver.db.exception.NodeStoreException;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.JabberPubsub;
 
 public class HelperTest extends IQTestHandler
@@ -47,7 +48,7 @@ public class HelperTest extends IQTestHandler
 	}
     
     @Test
-    public void testNotProvidingAnyConfigurationFieldsReturnsNoConfiguration()
+    public void testNotProvidingAnyConfigurationFieldsReturnsNoConfiguration() throws NodeStoreException
     {
     	Element iq        = new DOMElement("iq");
     	Element pubsub    = iq.addElement("pubsub");
@@ -81,7 +82,7 @@ public class HelperTest extends IQTestHandler
     }
     
     @Test
-    public void testPassingSimpleConfigurationReturnsExceptedResults()
+    public void testPassingSimpleConfigurationReturnsExceptedResults() throws NodeStoreException
     {
     	Mock fieldMock = new Mock();
     	fieldMock.setValue(Mock.DEFAULT_VALUE);
@@ -122,7 +123,7 @@ public class HelperTest extends IQTestHandler
     }
     
     @Test
-    public void testAllValidElementsMeansPositiveIsValidCall()
+    public void testAllValidElementsMeansPositiveIsValidCall() throws NodeStoreException
     {
     	Mock fieldMock = Mockito.mock(Mock.class);
     	Mockito
@@ -153,7 +154,7 @@ public class HelperTest extends IQTestHandler
     }
     
     @Test
-    public void testInvalidElementMeansNegativeIsValidCall()
+    public void testInvalidElementMeansNegativeIsValidCall() throws NodeStoreException
     {
     	Mock fieldMock = Mockito.mock(Mock.class);
     	Mockito

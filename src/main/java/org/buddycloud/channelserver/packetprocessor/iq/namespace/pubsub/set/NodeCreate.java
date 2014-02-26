@@ -80,8 +80,9 @@ public class NodeCreate extends PubSubElementProcessorAbstract {
 		return elm.getName().equals("create");
 	}
 
-	private HashMap<String, String> getNodeConfiguration() {
+	private HashMap<String, String> getNodeConfiguration() throws NodeStoreException {
 		getNodeConfigurationHelper().parse(request);
+		getNodeConfigurationHelper().setNode(node);
 		if (false == getNodeConfigurationHelper().isValid()) {
 			throw new NodeConfigurationException(INVALID_NODE_CONFIGURATION);
 		}

@@ -71,6 +71,7 @@ public class NodeConfigure extends PubSubElementProcessorAbstract {
 	private void setNodeConfiguration() throws Exception {
 		try {
 			getNodeConfigurationHelper().parse(request);
+			getNodeConfigurationHelper().setNode(node);
 			if (getNodeConfigurationHelper().isValid()) {
 				HashMap<String, String> configuration = getNodeConfigurationHelper()
 						.getValues();

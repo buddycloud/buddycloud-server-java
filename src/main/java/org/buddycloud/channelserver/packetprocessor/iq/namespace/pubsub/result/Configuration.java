@@ -47,6 +47,7 @@ public class Configuration extends PubSubElementProcessorAbstract {
 	private void setNodeConfiguration() throws Exception {
 		try {
 			getNodeConfigurationHelper().parse(request);
+			getNodeConfigurationHelper().setNode(node);
 			updateNodeConfiguration(getNodeConfigurationHelper()
 					.getValues());
 		} catch (NodeConfigurationException e) {

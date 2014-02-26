@@ -21,7 +21,7 @@ public class ConfigurationProcessor extends AbstractMessageProcessor  {
 	public ConfigurationProcessor(BlockingQueue<Packet> outQueue,
 			Properties configuration, ChannelManager channelManager) {
 		super(channelManager, configuration, outQueue);
-		this.helper = new Helper();
+		this.helper = new Helper(channelManager);
 	}
 	
 	public void setConfigurationHelper(Helper helper) {

@@ -2,16 +2,16 @@ package org.buddycloud.channelserver.channel.node.configuration.field;
 
 import org.xmpp.packet.JID;
 
-public class Owner extends Field
+public class Creator extends Field
 {
-	public static final String FIELD_NAME    = "pubsub#owner";
+	public static final String FIELD_NAME    = "pubsub#creator";
 	public static final String DEFAULT_VALUE = "";
 
-	public Owner()
+	public Creator()
 	{
 		name = FIELD_NAME;
 	}
-	
+
 	public boolean isValid()
 	{
 		try {

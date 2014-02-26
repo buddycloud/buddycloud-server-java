@@ -1,13 +1,24 @@
 package org.buddycloud.channelserver.channel.node.configuration;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map.Entry;
 
 import org.apache.log4j.Logger;
+import org.buddycloud.channelserver.channel.ChannelManager;
+import org.buddycloud.channelserver.channel.node.configuration.field.AccessModel;
+import org.buddycloud.channelserver.channel.node.configuration.field.Affiliation;
+import org.buddycloud.channelserver.channel.node.configuration.field.ChannelDescription;
+import org.buddycloud.channelserver.channel.node.configuration.field.ChannelTitle;
+import org.buddycloud.channelserver.channel.node.configuration.field.ChannelType;
 import org.buddycloud.channelserver.channel.node.configuration.field.ConfigurationFieldException;
+import org.buddycloud.channelserver.channel.node.configuration.field.ContentType;
+import org.buddycloud.channelserver.channel.node.configuration.field.CreationDate;
+import org.buddycloud.channelserver.channel.node.configuration.field.Creator;
 import org.buddycloud.channelserver.channel.node.configuration.field.Factory;
 import org.buddycloud.channelserver.channel.node.configuration.field.Field;
+import org.buddycloud.channelserver.channel.node.configuration.field.LastUpdatedDate;
 import org.dom4j.Element;
 import org.xmpp.forms.DataForm;
 import org.xmpp.forms.FormField;
@@ -17,19 +28,37 @@ import org.xmpp.packet.Message;
 public class Helper {
 	private HashMap<String, Field> elements;
 	private Factory fieldFactory;
-	private boolean allowOwner;
+	private boolean allowCreator;
+	private ChannelManager channelManager;
 
 	public  static final String FORM_TYPE = "http://jabber.org/protocol/pubsub#node_config";
 	private static final String ELEMENT_NOT_FOUND = "Required XMPP element not found";
 
 	private static final Logger LOGGER = Logger.getLogger(Helper.class);
 	
-	public Helper(boolean allowOwner) {
-		this.allowOwner = true;
+	private ArrayList<String> requiredFields = new ArrayList<String>();
+
+	public Helper(ChannelManager channelManager, boolean allowCreator) {
+	    setupRequiredFields();
+		this.channelManager = channelManager;
+		this.allowCreator = allowCreator;
 	}
 	
-	public Helper() {
-		this.allowOwner = false;
+	public Helper(ChannelManager channelManager) {
+		this.channelManager = channelManager;
+		this.allowCreator = false;
+	}
+	
+	private void setupRequiredFields() {
+		requiredFields.add(ChannelTitle.FIELD_NAME);
+		requiredFields.add(ChannelDescription.FIELD_NAME);
+		requiredFields.add(AccessModel.FIELD_NAME);
+		requiredFields.add(Creator.FIELD_NAME);
+		requiredFields.add(Affiliation.FIELD_NAME);
+		requiredFields.add(ChannelType.FIELD_NAME);
+		requiredFields.add(ContentType.FIELD_NAME);
+		requiredFields.add(CreationDate.FIELD_NAME);
+		requiredFields.add(LastUpdatedDate.FIELD_NAME);
 	}
 	
     public void parse(IQ request) throws NodeConfigurationException {
@@ -106,7 +135,7 @@ public class Helper {
 		if (configurationValues.isEmpty()) {
 			return;
 		}
-		getFieldFactory().setAllowOwner(this.allowOwner);
+		getFieldFactory().setAllowCreatorField(this.allowCreator);
 		for (FormField configurationValue : configurationValues) {
 			Field field = getFieldFactory().create(configurationValue.getVariable(), 
 					configurationValue.getFirstValue());

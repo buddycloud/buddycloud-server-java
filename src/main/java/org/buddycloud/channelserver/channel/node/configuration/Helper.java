@@ -38,7 +38,7 @@ public class Helper {
 	
 	private ArrayList<String> requiredFields = new ArrayList<String>();
 
-	public Helper(ChannelManager channelManager, boolean allowOwner) {
+	public Helper(ChannelManager channelManager, boolean allowCreator) {
 	    setupRequiredFields();
 		this.channelManager = channelManager;
 		this.allowCreator = allowCreator;

@@ -2,10 +2,10 @@ package org.buddycloud.channelserver.channel.node.configuration.field;
 
 public class Factory
 {	
-	private boolean allowOwner = false;
+	private boolean allowCreator = false;
 	
-	public void setAllowOwner(boolean allowOwner) {
-		this.allowOwner = allowOwner;
+	public void setAllowCreatorField(boolean allowCreator) {
+		this.allowCreator = allowCreator;
 	}
 	
 	public Field create(String type, String value)
@@ -13,10 +13,10 @@ public class Factory
     	if ((null == type) || (null == value)) {
     		throw new ConfigurationFieldException();
     	}
-    	if (type.equals(Owner.FIELD_NAME) && (false == this.allowOwner)) {
+    	if (type.equals(Creator.FIELD_NAME) && (false == this.allowCreator)) {
     		throw new ConfigurationFieldException();
-    	} else if (type.equals(Owner.FIELD_NAME)) {
-    		Owner field = new Owner();
+    	} else if (type.equals(Creator.FIELD_NAME)) {
+    		Creator field = new Creator();
     	    field.setValue(value);
     	    return field;
     	} else if (type.equals(ChannelTitle.FIELD_NAME)) {
@@ -37,6 +37,10 @@ public class Factory
     		return field;
     	} else if (type.equals(CreationDate.FIELD_NAME)) {
     		CreationDate field = new CreationDate();
+    		field.setValue(value);
+    		return field;
+    	} else if (type.equals(LastUpdatedDate.FIELD_NAME)) {
+    		LastUpdatedDate field = new LastUpdatedDate();
     		field.setValue(value);
     		return field;
     	} else if (type.equals(ChannelType.FIELD_NAME)) {

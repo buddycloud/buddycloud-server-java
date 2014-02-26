@@ -7,6 +7,7 @@ import org.buddycloud.channelserver.packetHandler.iq.IQTestHandler;
 import org.buddycloud.channelserver.pubsub.affiliation.Affiliations;
 import org.buddycloud.channelserver.pubsub.model.NodeItem;
 import org.buddycloud.channelserver.pubsub.model.NodeSubscription;
+import org.buddycloud.channelserver.utils.node.item.payload.Atom;
 import org.dom4j.Element;
 import org.dom4j.tree.BaseElement;
 import org.junit.Before;
@@ -137,7 +138,7 @@ public class ItemsResultTest extends IQTestHandler {
 				+ "<pubsub xmlns=\"http://jabber.org/protocol/pubsub\">"
 				+ "<items node=\"/user/francisco@denmark.lit/posts\">"
 				+ "<item id=\"3\">"
-				+ "<entry xmlns=\"http://www.w3.org/2005/Atom\" xmlns:activity=\"http://activitystrea.ms/spec/1.0/\">"
+				+ "<entry xmlns=\"" + Atom.NS + "\" xmlns:activity=\"http://activitystrea.ms/spec/1.0/\">"
 				+ "<id>tag:channels.buddycloud.com,/user/koski@buddycloud.com/posts,3</id>"
 				+ "<updated>November 5, 1955</updated>" + "<author>"
 				+ "<name>koski@buddycloud.com</name>" + "</author>"

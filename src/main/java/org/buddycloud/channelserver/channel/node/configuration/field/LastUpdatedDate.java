@@ -7,14 +7,18 @@ import org.buddycloud.channelserver.channel.Conf;
 
 public class LastUpdatedDate extends DateField
 {
-	public static final String FIELD_NAME    = "buddycloud#last_updated";
+	public static final String FIELD_NAME = "buddycloud#last_updated";
 	
 	public static Logger logger = Logger.getLogger(LastUpdatedDate.class);
 
 	public LastUpdatedDate()
 	{
-		setValue(Conf.formatDate(new Date()));
-		name = FIELD_NAME;
+		super();
+		this.name = FIELD_NAME;
+	}
+	
+	public void setValue(String value) {
+		this.value = Conf.formatDate(new Date());
 	}
 
 	public boolean isValid()

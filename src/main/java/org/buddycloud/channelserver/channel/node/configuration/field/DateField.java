@@ -11,11 +11,7 @@ public abstract class DateField extends Field
 	
 	public static Logger logger = Logger.getLogger(DateField.class);
 
-	public DateField()
-	{
-		setValue(Conf.formatDate(new Date()));
-		name = FIELD_NAME;
-	}
+	public DateField() {}
 
 	abstract public boolean isValid();
 }

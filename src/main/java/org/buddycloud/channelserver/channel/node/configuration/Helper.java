@@ -192,12 +192,17 @@ public class Helper {
 	}
 
 	private HashMap<String, String> cleanData(HashMap data) {
-		if (data.containsKey(ChannelType.FIELD_NAME)
-				&& existingConfiguration.containsKey(ChannelType.FIELD_NAME)) {
-			data.remove(ChannelType.FIELD_NAME);
-			data.put(ChannelType.FIELD_NAME,
-					existingConfiguration.get(ChannelType.FIELD_NAME));
-		}
+		preventOverwrite(data, ChannelType.FIELD_NAME);
+		preventOverwrite(data, CreationDate.FIELD_NAME);
 		return data;
+	}
+
+	private void preventOverwrite(HashMap data, String fieldName) {
+		if (!data.containsKey(fieldName)
+				|| !existingConfiguration.containsKey(fieldName)) {
+			return;
+		}
+		data.remove(fieldName);
+		data.put(fieldName, existingConfiguration.get(fieldName));
 	}
 }

@@ -6,6 +6,7 @@ import junit.framework.Assert;
 
 import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.channel.node.configuration.field.ChannelTitle;
+import org.buddycloud.channelserver.channel.node.configuration.field.ChannelType;
 import org.buddycloud.channelserver.channel.node.configuration.field.ConfigurationFieldException;
 import org.buddycloud.channelserver.channel.node.configuration.field.Field;
 import org.buddycloud.channelserver.channel.node.configuration.field.Mock;
@@ -27,14 +28,17 @@ import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.JabberPu
 public class HelperTest extends IQTestHandler
 {
 	private Helper parser;
+	private String node = "/user/user@example.com/posts";
+	private ChannelManager channelManager;
 	
 	@Rule public ExpectedException thrown = ExpectedException.none();
 	
 	@Before
 	public void setUp()
 	{
-		ChannelManager channelManager = Mockito.mock(ChannelManager.class);
+		channelManager = Mockito.mock(ChannelManager.class);
 		parser = new Helper(channelManager);
+		parser.setNode(node);
 	}
     
     @Test(expected=NodeConfigurationException.class)
@@ -183,4 +187,63 @@ public class HelperTest extends IQTestHandler
     	Assert.assertEquals(1, parser.getValues().size());
     	Assert.assertFalse(parser.isValid());
     }
+    
+    @Test(expected=NodeConfigurationException.class)
+    public void testThrowsExceptionIfNodeValueNotSet() throws Exception {
+    	Helper parser = new Helper(channelManager);
+    	parser.getValues();
+    }
+    
+    @Test(expected=NodeConfigurationException.class)
+    public void testThrowsExceptionIfEmptyNodeValueProvided() throws Exception {
+    	Helper parser = new Helper(channelManager);
+    	parser.setNode("");
+    	parser.getValues();
+    }
+    
+    @Test
+    public void testOverwritesChannelTypeIfUserAttemptsToChange() throws Exception {
+    	
+    	Element iq          = new DOMElement("iq");
+    	Element pubsub      = iq.addElement("pubsub");
+    	pubsub.addAttribute("xmlns", JabberPubsub.NS_PUBSUB_OWNER);
+    	Element configure   = pubsub.addElement("configure");
+    	Element x           = configure.addElement("x");
+    	Element field       = x.addElement("field");
+    	field.addAttribute("var", ChannelType.FIELD_NAME);
+    	Element value       = field.addElement("value");
+    	value.addText(ChannelType.DEFAULT_VALUE);
+    	IQ request          = new IQ(iq);
+    	
+    	parser.parse(request);
+    	
+    	HashMap<String, String> configuration = new HashMap<String, String>();
+    	String channelType = "mine-all-mine";
+    	configuration.put(ChannelType.FIELD_NAME, channelType);
+    	Mockito.when(channelManager.getNodeConf(Mockito.eq(node))).thenReturn(configuration);
+    	
+    	Assert.assertEquals(channelType, parser.getValues().get(ChannelType.FIELD_NAME));
+    }
+    
+    @Test
+    public void testAllowsSettingOfChannelTypeIfNotCurrentlySet() throws Exception {
+    	Element iq          = new DOMElement("iq");
+    	Element pubsub      = iq.addElement("pubsub");
+    	pubsub.addAttribute("xmlns", JabberPubsub.NS_PUBSUB_OWNER);
+    	Element configure   = pubsub.addElement("configure");
+    	Element x           = configure.addElement("x");
+    	Element field       = x.addElement("field");
+    	field.addAttribute("var", ChannelType.FIELD_NAME);
+    	Element value       = field.addElement("value");
+    	value.addText(ChannelType.DEFAULT_VALUE);
+    	IQ request          = new IQ(iq);
+    	
+    	parser.parse(request);
+    	
+    	HashMap<String, String> configuration = new HashMap<String, String>();
+    	Mockito.when(channelManager.getNodeConf(Mockito.eq(node))).thenReturn(configuration);
+    	
+    	Assert.assertEquals(ChannelType.DEFAULT_VALUE, parser.getValues().get(ChannelType.FIELD_NAME));
+    }
+    
 }

@@ -1,14 +1,24 @@
 package org.buddycloud.channelserver.channel.node.configuration;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map.Entry;
 
 import org.apache.log4j.Logger;
 import org.buddycloud.channelserver.channel.ChannelManager;
+import org.buddycloud.channelserver.channel.node.configuration.field.AccessModel;
+import org.buddycloud.channelserver.channel.node.configuration.field.Affiliation;
+import org.buddycloud.channelserver.channel.node.configuration.field.ChannelDescription;
+import org.buddycloud.channelserver.channel.node.configuration.field.ChannelTitle;
+import org.buddycloud.channelserver.channel.node.configuration.field.ChannelType;
 import org.buddycloud.channelserver.channel.node.configuration.field.ConfigurationFieldException;
+import org.buddycloud.channelserver.channel.node.configuration.field.ContentType;
+import org.buddycloud.channelserver.channel.node.configuration.field.CreationDate;
+import org.buddycloud.channelserver.channel.node.configuration.field.Creator;
 import org.buddycloud.channelserver.channel.node.configuration.field.Factory;
 import org.buddycloud.channelserver.channel.node.configuration.field.Field;
+import org.buddycloud.channelserver.channel.node.configuration.field.LastUpdatedDate;
 import org.dom4j.Element;
 import org.xmpp.forms.DataForm;
 import org.xmpp.forms.FormField;
@@ -26,7 +36,10 @@ public class Helper {
 
 	private static final Logger LOGGER = Logger.getLogger(Helper.class);
 	
+	private ArrayList<String> requiredFields = new ArrayList<String>();
+
 	public Helper(ChannelManager channelManager, boolean allowOwner) {
+	    setupRequiredFields();
 		this.channelManager = channelManager;
 		this.allowCreator = allowCreator;
 	}
@@ -34,6 +47,18 @@ public class Helper {
 	public Helper(ChannelManager channelManager) {
 		this.channelManager = channelManager;
 		this.allowCreator = false;
+	}
+	
+	private void setupRequiredFields() {
+		requiredFields.add(ChannelTitle.FIELD_NAME);
+		requiredFields.add(ChannelDescription.FIELD_NAME);
+		requiredFields.add(AccessModel.FIELD_NAME);
+		requiredFields.add(Creator.FIELD_NAME);
+		requiredFields.add(Affiliation.FIELD_NAME);
+		requiredFields.add(ChannelType.FIELD_NAME);
+		requiredFields.add(ContentType.FIELD_NAME);
+		requiredFields.add(CreationDate.FIELD_NAME);
+		requiredFields.add(LastUpdatedDate.FIELD_NAME);
 	}
 	
     public void parse(IQ request) throws NodeConfigurationException {

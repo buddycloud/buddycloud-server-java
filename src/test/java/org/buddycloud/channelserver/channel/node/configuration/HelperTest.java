@@ -11,6 +11,7 @@ import org.buddycloud.channelserver.channel.node.configuration.field.ChannelTitl
 import org.buddycloud.channelserver.channel.node.configuration.field.ChannelType;
 import org.buddycloud.channelserver.channel.node.configuration.field.ConfigurationFieldException;
 import org.buddycloud.channelserver.channel.node.configuration.field.CreationDate;
+import org.buddycloud.channelserver.channel.node.configuration.field.Creator;
 import org.buddycloud.channelserver.channel.node.configuration.field.Field;
 import org.buddycloud.channelserver.channel.node.configuration.field.LastUpdatedDate;
 import org.buddycloud.channelserver.channel.node.configuration.field.Mock;

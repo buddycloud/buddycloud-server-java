@@ -29,7 +29,6 @@ import org.xmpp.packet.Message;
 public class Helper {
 	private HashMap<String, Field> elements;
 	private Factory fieldFactory;
-	private boolean allowCreator;
 	private ChannelManager channelManager;
 
 	public static final String FORM_TYPE = "http://jabber.org/protocol/pubsub#node_config";
@@ -43,15 +42,9 @@ public class Helper {
 
 	private String node;
 
-	public Helper(ChannelManager channelManager, boolean allowCreator) {
+	public Helper(ChannelManager channelManager) {
 		setupRequiredFields();
 		this.channelManager = channelManager;
-		this.allowCreator = allowCreator;
-	}
-
-	public Helper(ChannelManager channelManager) {
-		this.channelManager = channelManager;
-		this.allowCreator = false;
 	}
 
 	public void setNode(String node) {
@@ -143,7 +136,6 @@ public class Helper {
 		if (configurationValues.isEmpty()) {
 			return;
 		}
-		getFieldFactory().setAllowCreatorField(this.allowCreator);
 		for (FormField configurationValue : configurationValues) {
 			Field field = getFieldFactory().create(
 					configurationValue.getVariable(),
@@ -173,6 +165,7 @@ public class Helper {
 				return false;
 			}
 		}
+		
 		return true;
 	}
 
@@ -188,16 +181,28 @@ public class Helper {
 			data.put(key, value);
 		}
 		cleanData(data);
+		addRequiredFields(data);
 		return data;
 	}
+	
+	private void addRequiredFields(HashMap<String, String> data) {
+		for (String field : requiredFields) {
+			if (!data.containsKey(field)) {
+				if (existingConfiguration.containsKey(field)) {
+				    data.put(field, existingConfiguration.get(field));
+				} else {
+					data.put(field, elements.get(field).getValue());
+				}
+			}
+		}
+	}
 
-	private HashMap<String, String> cleanData(HashMap data) {
+	private void cleanData(HashMap<String, String> data) {
 		preventOverwrite(data, ChannelType.FIELD_NAME);
 		preventOverwrite(data, CreationDate.FIELD_NAME);
-		return data;
 	}
 
-	private void preventOverwrite(HashMap data, String fieldName) {
+	private void preventOverwrite(HashMap<String, String> data, String fieldName) {
 		if (!data.containsKey(fieldName)
 				|| !existingConfiguration.containsKey(fieldName)) {
 			return;

@@ -16,6 +16,7 @@ import org.buddycloud.channelserver.pubsub.affiliation.Affiliations;
 import org.buddycloud.channelserver.pubsub.model.NodeAffiliation;
 import org.buddycloud.channelserver.pubsub.model.NodeItem;
 import org.buddycloud.channelserver.pubsub.model.NodeSubscription;
+import org.buddycloud.channelserver.pubsub.model.impl.GlobalItemIDImpl;
 import org.buddycloud.channelserver.pubsub.model.impl.NodeAffiliationImpl;
 import org.buddycloud.channelserver.pubsub.model.impl.NodeItemImpl;
 import org.buddycloud.channelserver.pubsub.model.impl.NodeSubscriptionImpl;
@@ -332,6 +333,7 @@ public class PublishTest extends IQTestHandler {
 		Assert.assertNotNull(item);
 
 		Assert.assertTrue(item.attributeValue("id").length() > 0);
+		Assert.assertTrue(GlobalItemIDImpl.isGlobalId(item.attributeValue("id")));
 	}
 
 	@Test
@@ -376,6 +378,7 @@ public class PublishTest extends IQTestHandler {
 
 		Element item = items.element("item");
 		Assert.assertTrue(item.attributeValue("id").length() > 0);
+		Assert.assertTrue(GlobalItemIDImpl.isGlobalId(item.attributeValue("id")));
 
 		Element responseEntry = item.element("entry");
 		Assert.assertEquals(entry.asXML(), responseEntry.asXML());

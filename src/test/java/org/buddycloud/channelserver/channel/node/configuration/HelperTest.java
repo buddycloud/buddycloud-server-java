@@ -293,5 +293,56 @@ public class HelperTest extends IQTestHandler {
 				parser.getValues().get(LastUpdatedDate.FIELD_NAME)
 						.substring(0, 10));
 	}
+	
+	@Test
+	public void testCreatorCantBeOverwritten() throws Exception {
+
+		Element iq = new DOMElement("iq");
+		Element pubsub = iq.addElement("pubsub");
+		pubsub.addAttribute("xmlns", JabberPubsub.NS_PUBSUB_OWNER);
+		Element configure = pubsub.addElement("configure");
+		Element x = configure.addElement("x");
+		Element field = x.addElement("field");
+		field.addAttribute("var", Creator.FIELD_NAME);
+		Element value = field.addElement("value");
+		value.addText("Doc Emmett Brown");
+		IQ request = new IQ(iq);
+
+		parser.parse(request);
+
+		HashMap<String, String> configuration = new HashMap<String, String>();
+		String creator = "Marty McFly";
+		configuration.put(Creator.FIELD_NAME, creator);
+		Mockito.when(channelManager.getNodeConf(Mockito.eq(node))).thenReturn(
+				configuration);
+
+		Assert.assertEquals(creator,
+				parser.getValues().get(Creator.FIELD_NAME));
+	}
+	
+	@Test
+	public void testCreatorRetrievedFromExistingOwnerInformationIfProvided() throws Exception {
+		Assert.assertTrue(false);
+	}
+	
+	@Test
+	public void testCreatorCanBeSetIfItDoesntAlreadyExist() throws Exception {
+		Assert.assertTrue(false);
+	}
+	
+	@Test
+	public void testOwnerFieldIsRemoved() throws Exception {
+		Assert.assertTrue(false);
+	}
+	
+	@Test
+	public void testRequiredFieldsAreAddedFromExistingData() throws Exception {
+		Assert.assertTrue(false);
+	}
+	
+	@Test
+	public void testRequiredFieldsAreAddedFromFieldValuesIfNotProvided() throws Exception {
+		Assert.assertTrue(false);
+	}
 
 }

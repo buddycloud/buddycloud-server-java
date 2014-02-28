@@ -190,7 +190,7 @@ public class Helper {
 			if (!data.containsKey(field)) {
 				if (existingConfiguration.containsKey(field)) {
 				    data.put(field, existingConfiguration.get(field));
-				} else {
+				} else if (elements.containsKey(field)) {
 					data.put(field, elements.get(field).getValue());
 				}
 			}

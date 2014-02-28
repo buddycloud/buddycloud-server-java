@@ -7,6 +7,7 @@ import org.apache.log4j.Logger;
 import org.buddycloud.channelserver.Configuration;
 import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.channel.Conf;
+import org.buddycloud.channelserver.channel.LocalDomainChecker;
 import org.buddycloud.channelserver.db.exception.NodeStoreException;
 import org.buddycloud.channelserver.packetprocessor.PacketProcessor;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.JabberPubsub;
@@ -49,7 +50,7 @@ public class RegisterSet implements PacketProcessor<IQ> {
 		LOGGER.debug("Processing register request from " + request.getFrom());
 
 		String domain = reqIQ.getFrom().getDomain();
-		if (!domain.equals(Configuration.getInstance().getServerDomain())) {
+		if (!LocalDomainChecker.isLocal(domain, configuration)) {
 			notThisDomain(reqIQ);
 			return;
 		}

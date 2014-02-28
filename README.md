@@ -3,7 +3,7 @@
 A buddycloud server written in Java, implementing the [buddycloud channels](http://buddycloud.org/) protocol.
 
 ## Build status
-
+ 
 Note this points to the main buddycloud repository for the java server.
 
 [![Build Status](https://travis-ci.org/buddycloud/buddycloud-server-java.png?branch=master)](https://travis-ci.org/buddycloud/buddycloud-server-java)
@@ -14,13 +14,13 @@ The java server purposefully uses the same database schema as the buddycloud nod
 
 ## Build and run
 
-* install openjdk-6-jdk maven2
+* install openjdk-6-jdk maven
 * `git clone https://github.com/buddycloud/buddycloud-server-java`
 * `cd buddycloud-server-java`
 * `mvn package`
 * Edit configuration files as required
 * Install database
-* `java -jar target/channelserver-<VERSION>-jar-with-dependencies.jar
+* `java -jar target/channelserver-<VERSION>-jar-with-dependencies.jar`
 
 ### Manually create the buddycloud server database
 
@@ -49,4 +49,4 @@ Now we're done, but we must test that we can connect to the database and that th
 ~~~~ {.bash}
 psql -h 127.0.0.1 --username buddycloud_server -d buddycloud_server -c "select * from nodes;"
 ~~~~
-If you got an output similar to (or exactly like) this, you're good to go.
+If you got an output similar to (or exactly like) this, you're good to go. 

@@ -9,6 +9,7 @@ import org.apache.log4j.Logger;
 import org.buddycloud.channelserver.Configuration;
 import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.channel.ChannelManagerFactory;
+import org.buddycloud.channelserver.channel.LocalDomainChecker;
 import org.buddycloud.channelserver.pubsub.model.NodeSubscription;
 import org.xmpp.packet.JID;
 import org.xmpp.packet.Packet;
@@ -21,14 +22,15 @@ public class OnlineResourceManager {
 	public static final String UNAVAILABLE = "unavailable";
 	private static final Logger LOGGER = Logger.getLogger(OnlineResourceManager.class);
 	
-	private String domain;
 	private HashMap<String, ArrayList<JID>> users = new HashMap<String, ArrayList<JID>>();
+	private Properties conf;
 
 	public OnlineResourceManager(Properties conf) {
-		this.domain = conf.getProperty(Configuration.CONFIGURATION_SERVER_DOMAIN);
-		if (this.domain == null) {
+		if (conf.getProperty(Configuration.CONFIGURATION_SERVER_DOMAIN) == null && 
+				conf.getProperty(Configuration.CONFIGURATION_LOCAL_DOMAIN_CHECKER) == null) {
 			throw new NullPointerException("Missing server domain configuration");
 		}
+		this.conf = conf;
 	}
 
 	public void subscribeToNodeListeners(ChannelManagerFactory channelManagerFactory, 
@@ -59,7 +61,7 @@ public class OnlineResourceManager {
 	}
 
 	public void updateStatus(JID jid, String type) {
-		if (!jid.getDomain().equals(domain)) {
+		if (!LocalDomainChecker.isLocal(jid.getDomain(), conf)) {
 			return;
 		}
 		if (type != null && type.equals(UNAVAILABLE)) {

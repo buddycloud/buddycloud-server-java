@@ -6,6 +6,7 @@ import java.util.concurrent.BlockingQueue;
 import org.apache.log4j.Logger;
 import org.buddycloud.channelserver.ChannelsEngine;
 import org.buddycloud.channelserver.Configuration;
+import org.buddycloud.channelserver.channel.LocalDomainChecker;
 import org.buddycloud.channelserver.utils.users.OnlineResourceManager;
 import org.dom4j.Attribute;
 import org.xmpp.component.ComponentException;
@@ -96,19 +97,10 @@ public class OutQueueConsumer extends QueueConsumer {
 		}
 
 		String domain = jid.getDomain();
-
-		if (domain.equals(conf.getServerDomain())) {
+		if (LocalDomainChecker.isLocal(domain, conf)) {
 			return false;
 		}
-
-		if (domain.equals(conf.getServerChannelsDomain())) {
-			return false;
-		}
-
-		if (domain.equals(conf.getServerTopicsDomain())) {
-			return false;
-		}
-
+		
 		return true;
 	}
 

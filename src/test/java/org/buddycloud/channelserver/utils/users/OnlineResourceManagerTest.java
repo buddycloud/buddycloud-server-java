@@ -1,6 +1,7 @@
 package org.buddycloud.channelserver.utils.users;
 
 import static org.junit.Assert.assertEquals;
+import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -44,7 +45,7 @@ public class OnlineResourceManagerTest extends IQTestHandler {
 				configuration
 						.getProperty(Configuration.CONFIGURATION_SERVER_DOMAIN))
 				.thenReturn("server1.com");
-
+		
 		onlineUser = new OnlineResourceManager(configuration);
 	}
 
@@ -78,6 +79,16 @@ public class OnlineResourceManagerTest extends IQTestHandler {
 		onlineUser.updateStatus(remoteUser, "online");
 		ArrayList<JID> users = onlineUser.getResources(new JID(remoteUser.toBareJID()));
 		assertEquals(0, users.size());
+	}
+	
+	@Test
+	public void testAttemptingToUpdateStatusOfUserFromExternallyValidatedDomain() throws Exception {
+		when(configuration.getProperty(
+				Configuration.CONFIGURATION_LOCAL_DOMAIN_CHECKER)).thenReturn(
+						Boolean.TRUE.toString());
+		onlineUser.updateStatus(remoteUser, "online");
+		ArrayList<JID> users = onlineUser.getResources(new JID(remoteUser.toBareJID()));
+		assertEquals(1, users.size());
 	}
 	
 	@Test

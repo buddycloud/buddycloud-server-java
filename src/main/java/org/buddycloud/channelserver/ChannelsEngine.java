@@ -36,10 +36,10 @@ public class ChannelsEngine implements Component {
 	private ServerSync serverSync;
 	private OnlineResourceManager onlineUsers;
 
-	private Configuration conf;
+	private Configuration configuration;
 
 	public ChannelsEngine(Configuration conf) {
-		this.conf = conf;
+		this.configuration = conf;
 	}
 
 	@Override
@@ -75,9 +75,9 @@ public class ChannelsEngine implements Component {
 	private void startQueueConsumers() {
 		OutQueueConsumer outQueueConsumer = new OutQueueConsumer(this,
 				outQueue, federatedQueueManager,
-				conf, onlineUsers, inQueue);
+				configuration, onlineUsers, inQueue);
 
-		InQueueConsumer inQueueConsumer = new InQueueConsumer(outQueue, conf,
+		InQueueConsumer inQueueConsumer = new InQueueConsumer(outQueue, configuration,
 				inQueue, channelManagerFactory, federatedQueueManager,
 				onlineUsers);
 
@@ -88,16 +88,16 @@ public class ChannelsEngine implements Component {
 	private void setupManagers() throws ComponentException {
 		NodeStoreFactory nodeStoreFactory;
 		try {
-			nodeStoreFactory = new DefaultNodeStoreFactoryImpl(conf);
+			nodeStoreFactory = new DefaultNodeStoreFactoryImpl(configuration);
 		} catch (NodeStoreException e) {
 			throw new ComponentException(e);
 		}
 
-		channelManagerFactory = new ChannelManagerFactoryImpl(conf,
+		channelManagerFactory = new ChannelManagerFactoryImpl(configuration,
 				nodeStoreFactory);
 		federatedQueueManager = new FederatedQueueManager(this,
-				conf.getProperty("server.domain.channels"));
-		onlineUsers = new OnlineResourceManager(conf);
+				configuration);
+		onlineUsers = new OnlineResourceManager(configuration);
 	}
 
 	@Override

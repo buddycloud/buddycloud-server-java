@@ -80,6 +80,15 @@ public class ChannelManagerImplTest {
 	}
 
 	@Test
+	public void testCreatePersonalWorksForExternallyValidatedDomain() throws Exception {
+		when(configuration.getProperty(
+				Configuration.CONFIGURATION_LOCAL_DOMAIN_CHECKER)).thenReturn(
+						Boolean.TRUE.toString());
+		JID channelJID = new JID("testchannel@otherdomain.com");
+		channelManager.createPersonalChannel(channelJID);
+	}
+	
+	@Test
 	@Ignore("Until we can so something about the millisecond matching")
 	public void testCreatePersonalChannelSomeNodesExist() throws Exception {
 		JID channelJID = new JID("testchannel@domain.com");

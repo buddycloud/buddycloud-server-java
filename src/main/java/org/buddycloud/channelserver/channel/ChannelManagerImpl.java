@@ -337,26 +337,19 @@ public class ChannelManagerImpl implements ChannelManager {
 			logger.debug("Node " + nodeId + " has an invalid format");
 			throw new IllegalArgumentException(INVALID_NODE);
 		}
-		return ((true == nodeId
-				.contains("@"
-						+ configuration
-								.getProperty(Configuration.CONFIGURATION_SERVER_DOMAIN))) || (true == nodeId
-				.contains("@"
-						+ configuration
-								.getProperty(Configuration.CONFIGURATION_SERVER_TOPICS_DOMAIN))));
+		String domain = new JID(nodeId.split("/")[2]).getDomain();
+		return isLocalDomain(domain);
+	}
+
+	@Override
+	public boolean isLocalDomain(String domain) {
+		return LocalDomainChecker.isLocal(domain, configuration);
 	}
 
 	@Override
 	public boolean isLocalJID(JID jid) {
 		String domain = jid.getDomain();
-
-		return (domain.equals(configuration
-				.getProperty(Configuration.CONFIGURATION_SERVER_DOMAIN))
-				|| domain
-						.equals(configuration
-								.getProperty(Configuration.CONFIGURATION_SERVER_CHANNELS_DOMAIN)) || domain
-					.equals(configuration
-							.getProperty(Configuration.CONFIGURATION_SERVER_TOPICS_DOMAIN)));
+		return isLocalDomain(domain);
 	}
 
 	@Override

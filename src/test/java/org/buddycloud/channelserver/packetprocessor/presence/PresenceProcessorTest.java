@@ -1,5 +1,7 @@
 package org.buddycloud.channelserver.packetprocessor.presence;
 
+import static org.mockito.Mockito.when;
+
 import java.util.Properties;
 
 import org.buddycloud.channelserver.Configuration;
@@ -34,9 +36,8 @@ public class PresenceProcessorTest extends IQTestHandler {
 				configuration
 						.getProperty(Configuration.CONFIGURATION_SERVER_DOMAIN))
 				.thenReturn("server1.com");
-
+		
 		onlineUsers = Mockito.mock(OnlineResourceManager.class);
-
 		presenceProcessor = new PresenceProcessor(configuration, onlineUsers);
 	}
 
@@ -63,6 +64,21 @@ public class PresenceProcessorTest extends IQTestHandler {
 		presenceProcessor.process(presence);
 
 		Mockito.verify(onlineUsers, Mockito.times(0)).updateStatus(
+				Mockito.any(JID.class), Mockito.anyString());
+	}
+	
+	@Test
+	public void testFromAddressForExternallyValidatedServer() throws Exception {
+		
+		when(configuration.getProperty(
+				Configuration.CONFIGURATION_LOCAL_DOMAIN_CHECKER)).thenReturn(
+						Boolean.TRUE.toString());
+		
+		Presence presence = new Presence();
+		presence.setFrom(new JID("user@server2.com/webclient"));
+		presenceProcessor.process(presence);
+
+		Mockito.verify(onlineUsers, Mockito.times(1)).updateStatus(
 				Mockito.any(JID.class), Mockito.anyString());
 	}
 	

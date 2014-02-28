@@ -4,6 +4,7 @@ import java.util.Properties;
 
 import org.apache.log4j.Logger;
 import org.buddycloud.channelserver.Configuration;
+import org.buddycloud.channelserver.channel.LocalDomainChecker;
 import org.buddycloud.channelserver.packetprocessor.PacketProcessor;
 import org.buddycloud.channelserver.utils.users.OnlineResourceManager;
 import org.xmpp.packet.JID;
@@ -13,21 +14,24 @@ public class PresenceProcessor implements PacketProcessor<Presence> {
 	
 	private static final Logger LOGGER = Logger.getLogger(PresenceProcessor.class);
 
+	private final Properties configuration;
 	private OnlineResourceManager onlineUsers;
-	private String domain;
 
 	public PresenceProcessor(Properties configuration, OnlineResourceManager onlineUsers) {
-		this.domain = configuration.getProperty(Configuration.CONFIGURATION_SERVER_DOMAIN);
+		this.configuration = configuration;
 		this.onlineUsers = onlineUsers;
 		
-		if (null == this.domain) 
+		if (configuration.getProperty(Configuration.CONFIGURATION_SERVER_DOMAIN) == null && 
+				configuration.getProperty(Configuration.CONFIGURATION_LOCAL_DOMAIN_CHECKER) == null) {
 			throw new NullPointerException("Missing server domain configuration");
+		}
 	}
 	
 	@Override
 	public void process(Presence packet) throws Exception {
 		JID from = packet.getFrom();
-        if (from == null || !from.getDomain().equals(domain)) {
+        if (from == null || 
+        		!LocalDomainChecker.isLocal(from.getDomain(), configuration)) {
         	return;
         }
         

@@ -14,6 +14,7 @@ import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.get.Repl
 import org.buddycloud.channelserver.pubsub.model.NodeItem;
 import org.buddycloud.channelserver.pubsub.model.impl.GlobalItemIDImpl;
 import org.buddycloud.channelserver.pubsub.model.impl.NodeItemImpl;
+import org.buddycloud.channelserver.utils.node.item.payload.ActivityStreams;
 import org.dom4j.Element;
 
 import junit.framework.Assert;
@@ -568,7 +569,7 @@ public class ValidateEntryTest extends TestHandler {
 		Assert.assertTrue(validateEntry.isValid());
 		Element payload = validateEntry.getPayload();
 
-		Assert.assertEquals(ValidateEntry.NS_REVIEW, payload
+		Assert.assertEquals(ActivityStreams.NS_REVIEW, payload
 				.getNamespaceForPrefix("review").getText());
 		Assert.assertEquals(rating + ".0", payload.element("rating")
 				.getTextTrim());
@@ -584,7 +585,7 @@ public class ValidateEntryTest extends TestHandler {
 		Assert.assertTrue(validateEntry.isValid());
 		Element payload = validateEntry.getPayload();
 
-		Assert.assertEquals(ValidateEntry.NS_REVIEW, payload
+		Assert.assertEquals(ActivityStreams.NS_REVIEW, payload
 				.getNamespaceForPrefix("review").getText());
 		Assert.assertEquals("Rating", payload.elementText("title"));
 	}

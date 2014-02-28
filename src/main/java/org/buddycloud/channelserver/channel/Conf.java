@@ -2,10 +2,11 @@ package org.buddycloud.channelserver.channel;
 
 import java.util.Date;
 import java.util.HashMap;
-import org.buddycloud.channelserver.Configuration;
 
+import org.buddycloud.channelserver.Configuration;
 import org.buddycloud.channelserver.pubsub.accessmodel.AccessModels;
 import org.buddycloud.channelserver.pubsub.affiliation.Affiliations;
+import org.buddycloud.channelserver.utils.node.item.payload.Atom;
 import org.joda.time.format.DateTimeFormatter;
 import org.joda.time.format.ISODateTimeFormat;
 import org.xmpp.packet.JID;
@@ -143,7 +144,7 @@ public class Conf {
 								"%jid%'s very own buddycloud channel").replace(
 								"%jid%", channelJID.toBareJID()));
 
-		conf.put(TYPE, "http://www.w3.org/2005/Atom");
+		conf.put(TYPE, Atom.NS);
 		conf.put(CREATION_DATE, formatDate(new Date()));
 		conf.put(CREATOR, channelJID.toBareJID());
 

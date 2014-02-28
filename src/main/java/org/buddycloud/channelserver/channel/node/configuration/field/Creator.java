@@ -11,7 +11,7 @@ public class Creator extends Field
 	{
 		name = FIELD_NAME;
 	}
-	
+
 	public boolean isValid()
 	{
 		try {

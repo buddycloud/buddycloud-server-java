@@ -3,6 +3,7 @@ package org.buddycloud.channelserver.channel;
 import java.util.HashMap;
 import org.buddycloud.channelserver.pubsub.accessmodel.AccessModels;
 import org.buddycloud.channelserver.pubsub.affiliation.Affiliations;
+import org.buddycloud.channelserver.utils.node.item.payload.Atom;
 import org.junit.Test;
 import static org.junit.Assert.*;
 import org.xmpp.packet.JID;
@@ -41,7 +42,7 @@ public class ConfTest {
 		assertEquals(this.testChannelJID.toBareJID()
 				+ "'s very own buddycloud channel",
 				result.get(Conf.DESCRIPTION));
-		assertEquals("http://www.w3.org/2005/Atom", result.get(Conf.TYPE));
+		assertEquals(Atom.NS, result.get(Conf.TYPE));
 		assertEquals(AccessModels.open.toString(),
 				result.get(Conf.ACCESS_MODEL));
 		// ToDo: Find a way to test the Date: assertEquals(Conf.formatDate(new
@@ -61,7 +62,7 @@ public class ConfTest {
 		assertEquals(this.testChannelJID.toBareJID()
 				+ "'s very own buddycloud channel",
 				result.get(Conf.DESCRIPTION));
-		assertEquals("http://www.w3.org/2005/Atom", result.get(Conf.TYPE));
+		assertEquals(Atom.NS, result.get(Conf.TYPE));
 		assertEquals(AccessModels.open.toString(),
 				result.get(Conf.ACCESS_MODEL));
 		// ToDo: Find a way to test the Date: assertEquals(Conf.formatDate(new
@@ -88,7 +89,7 @@ public class ConfTest {
 		assertEquals(
 				"The current status of " + this.testChannelJID.toBareJID(),
 				result.get(Conf.DESCRIPTION));
-		assertEquals("http://www.w3.org/2005/Atom", result.get(Conf.TYPE));
+		assertEquals(Atom.NS, result.get(Conf.TYPE));
 		assertEquals(AccessModels.open.toString(),
 				result.get(Conf.ACCESS_MODEL));
 		// ToDo: Find a way to test the Date: assertEquals(Conf.formatDate(new
@@ -115,7 +116,7 @@ public class ConfTest {
 		assertEquals(this.testChannelJID.toBareJID()
 				+ "'s very own buddycloud channel",
 				result.get(Conf.DESCRIPTION));
-		assertEquals("http://www.w3.org/2005/Atom", result.get(Conf.TYPE));
+		assertEquals(Atom.NS, result.get(Conf.TYPE));
 		assertEquals(AccessModels.authorize.toString(),
 				result.get(Conf.ACCESS_MODEL));
 		// ToDo: Find a way to test the Date: assertEquals(Conf.formatDate(new
@@ -142,7 +143,7 @@ public class ConfTest {
 		assertEquals(this.testChannelJID.toBareJID()
 				+ "'s very own buddycloud channel",
 				result.get(Conf.DESCRIPTION));
-		assertEquals("http://www.w3.org/2005/Atom", result.get(Conf.TYPE));
+		assertEquals(Atom.NS, result.get(Conf.TYPE));
 		assertEquals(AccessModels.authorize.toString(),
 				result.get(Conf.ACCESS_MODEL));
 		// ToDo: Find a way to test the Date: assertEquals(Conf.formatDate(new
@@ -168,7 +169,7 @@ public class ConfTest {
 		assertEquals(this.testChannelJID.toBareJID()
 				+ "'s very own buddycloud channel",
 				result.get(Conf.DESCRIPTION));
-		assertEquals("http://www.w3.org/2005/Atom", result.get(Conf.TYPE));
+		assertEquals(Atom.NS, result.get(Conf.TYPE));
 		assertEquals(AccessModels.authorize.toString(),
 				result.get(Conf.ACCESS_MODEL));
 		// ToDo: Find a way to test the Date: assertEquals(Conf.formatDate(new
@@ -195,7 +196,7 @@ public class ConfTest {
 		assertEquals(this.testChannelJID.toBareJID()
 				+ "'s very own buddycloud channel",
 				result.get(Conf.DESCRIPTION));
-		assertEquals("http://www.w3.org/2005/Atom", result.get(Conf.TYPE));
+		assertEquals(Atom.NS, result.get(Conf.TYPE));
 		assertEquals(AccessModels.open.toString(),
 				result.get(Conf.ACCESS_MODEL));
 		// ToDo: Find a way to test the Date: assertEquals(Conf.formatDate(new

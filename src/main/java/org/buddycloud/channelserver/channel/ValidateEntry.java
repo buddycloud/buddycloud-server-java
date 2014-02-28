@@ -9,6 +9,8 @@ import org.apache.log4j.Logger;
 import org.buddycloud.channelserver.db.exception.NodeStoreException;
 import org.buddycloud.channelserver.pubsub.model.NodeItem;
 import org.buddycloud.channelserver.pubsub.model.impl.GlobalItemIDImpl;
+import org.buddycloud.channelserver.utils.node.item.payload.ActivityStreams;
+import org.buddycloud.channelserver.utils.node.item.payload.Atom;
 import org.dom4j.Element;
 import org.dom4j.dom.DOMElement;
 import org.xmpp.packet.JID;
@@ -31,12 +33,6 @@ public class ValidateEntry {
 
 	public static final String CONTENT_TEXT = "text";
 	public static final String CONTENT_XHTML = "xhtml";
-
-	public static final String NS_ATOM = "http://www.w3.org/2005/Atom";
-	public static final String NS_ACTIVITYSTREAM = "http://activitystrea.ms/spec/1.0/";
-	public static final String NS_ATOM_THREAD = "http://purl.org/syndication/thread/1.0";
-	public static final String NS_GEOLOCATION = "http://jabber.org/protocol/geoloc";
-	public static final String NS_REVIEW = "http://activitystrea.ms/schema/1.0/review";
 
 	public static final String AUTHOR_URI_PREFIX = "acct:";
 	public static final String AUTHOR_TYPE = "person";
@@ -173,8 +169,8 @@ public class ValidateEntry {
 	public Element getPayload() {
 
 		Element entry = new DOMElement("entry", new org.dom4j.Namespace("",
-				NS_ATOM));
-		entry.add(new org.dom4j.Namespace("activity", NS_ACTIVITYSTREAM));
+				Atom.NS));
+		entry.add(new org.dom4j.Namespace("activity", ActivityStreams.NS));
 
 		String id = UUID.randomUUID().toString();
 		String postType = POST_TYPE_NOTE;
@@ -205,7 +201,7 @@ public class ValidateEntry {
 
 		if (this.inReplyTo != null) {
 			Element reply = entry.addElement("in-reply-to");
-			reply.addNamespace("", NS_ATOM_THREAD);
+			reply.addNamespace("", Atom.NS_THREAD);
 			reply.addAttribute("ref", inReplyTo);
 			postType = POST_TYPE_COMMENT;
 		}
@@ -229,7 +225,7 @@ public class ValidateEntry {
 		}
 
 		if (itemRating > 0) {
-			entry.addNamespace("review", NS_REVIEW);
+			entry.addNamespace("review", ActivityStreams.NS_REVIEW);
 			String rating = String.format("%d.0", itemRating);
 			entry.addElement("review:rating").setText(rating);
 			title = "Rating";
@@ -336,7 +332,7 @@ public class ValidateEntry {
 			this.errorMessage = TARGET_ELEMENT_MISSING;
 			return false;
 		}
-		if (targetItem.getPayload().indexOf(NS_REVIEW) > -1) {
+		if (targetItem.getPayload().indexOf(ActivityStreams.NS_REVIEW) > -1) {
 			this.errorMessage = CAN_ONLY_RATE_A_POST;
 			return false;
 		}

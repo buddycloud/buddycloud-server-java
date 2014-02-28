@@ -92,7 +92,7 @@ public abstract class PubSubElementProcessorAbstract implements
 
 	protected Helper getNodeConfigurationHelper() {
 		if (null == configurationHelper) {
-			configurationHelper = new Helper();
+			configurationHelper = new Helper(channelManager);
 		}
 		return configurationHelper;
 	}

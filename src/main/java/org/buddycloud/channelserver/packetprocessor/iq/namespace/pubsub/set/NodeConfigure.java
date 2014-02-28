@@ -8,7 +8,6 @@ import java.util.concurrent.BlockingQueue;
 import org.apache.log4j.Logger;
 import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.channel.node.configuration.NodeConfigurationException;
-import org.buddycloud.channelserver.channel.node.configuration.field.Owner;
 import org.buddycloud.channelserver.db.exception.NodeStoreException;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.JabberPubsub;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.PubSubElementProcessorAbstract;
@@ -72,6 +71,7 @@ public class NodeConfigure extends PubSubElementProcessorAbstract {
 	private void setNodeConfiguration() throws Exception {
 		try {
 			getNodeConfigurationHelper().parse(request);
+			getNodeConfigurationHelper().setNode(node);
 			if (getNodeConfigurationHelper().isValid()) {
 				HashMap<String, String> configuration = getNodeConfigurationHelper()
 						.getValues();

@@ -9,6 +9,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.log4j.Logger;
 import org.buddycloud.channelserver.ChannelsEngine;
+import org.buddycloud.channelserver.Configuration;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.JabberPubsub;
 import org.dom4j.Attribute;
 import org.dom4j.Element;
@@ -19,7 +20,7 @@ import org.xmpp.packet.IQ;
 import org.xmpp.packet.JID;
 import org.xmpp.packet.Packet;
 import org.xmpp.packet.PacketError;
-import org.xbill.DNS.SRVRecord;
+import org.xbill.DNS.PTRRecord;
 import org.xbill.DNS.Record;
 import org.xbill.DNS.Type;
 import org.xbill.DNS.Lookup;
@@ -37,7 +38,7 @@ public class FederatedQueueManager {
 	public static final String IDENTITY_TYPE_CHANNELS = "channels";
 	public static final String BUDDYCLOUD_SERVER = "buddycloud-server";
 
-	public static final String SRV_PREFIX = "_buddycloud-server._tcp.";
+	public static final String PTR_PREFIX = "_buddycloud-server._tcp.";
 
 	private int id = 1;
 
@@ -55,10 +56,12 @@ public class FederatedQueueManager {
 
 	private String localServer;
 
-	public FederatedQueueManager(ChannelsEngine component, String localServer) {
-		this.component = component;
-		this.localServer = localServer;
+	private boolean performDnsDiscovery;
 
+	public FederatedQueueManager(ChannelsEngine component, Configuration configuration) {
+		this.component = component;
+		this.localServer = configuration.getProperty(Configuration.CONFIGURATION_SERVER_CHANNELS_DOMAIN);
+        this.performDnsDiscovery = Boolean.parseBoolean(configuration.getProperty(Configuration.DISCOVERY_USE_DNS, "true"));
 		nodeMap.start();
 		sentRemotePackets.start();
 	}
@@ -236,15 +239,16 @@ public class FederatedQueueManager {
 
 	private boolean attemptDnsDiscovery(String originatingServer)
 			throws ComponentException {
+		if (false == performDnsDiscovery) return false;
 		try {
-			String query = SRV_PREFIX + originatingServer;
-			Record[] records = new Lookup(query, Type.SRV).run();
+			String query = PTR_PREFIX + originatingServer;
+			Record[] records = new Lookup(query, Type.PTR).run();
 			if ((null == records) || (0 == records.length)) {
 				logger.debug("No appropriate DNS entry found for "
 						+ originatingServer);
 				return false;
 			}
-			SRVRecord record = (SRVRecord) records[0];
+			PTRRecord record = (PTRRecord) records[0];
 			String targetServer = record.getTarget().toString(true);
 			setDiscoveredServer(originatingServer, targetServer);
 			logger.info("DNS discovery complete for buddycloud server @ "

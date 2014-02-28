@@ -1,5 +1,6 @@
 package org.buddycloud.channelserver.channel.node.configuration;
 
+
 import java.util.Date;
 import java.util.HashMap;
 
@@ -15,6 +16,7 @@ import org.buddycloud.channelserver.channel.node.configuration.field.Creator;
 import org.buddycloud.channelserver.channel.node.configuration.field.Field;
 import org.buddycloud.channelserver.channel.node.configuration.field.LastUpdatedDate;
 import org.buddycloud.channelserver.channel.node.configuration.field.Mock;
+import org.buddycloud.channelserver.channel.node.configuration.field.Owner;
 import org.buddycloud.channelserver.packetHandler.iq.IQTestHandler;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.JabberPubsub;
 import org.dom4j.Element;
@@ -349,7 +351,29 @@ public class HelperTest extends IQTestHandler {
 	
 	@Test
 	public void testOwnerFieldIsRemoved() throws Exception {
-		Assert.assertTrue(false);
+
+		String owner = "buddycloud#owner";
+		
+		Element iq = new DOMElement("iq");
+		Element pubsub = iq.addElement("pubsub");
+		pubsub.addAttribute("xmlns", JabberPubsub.NS_PUBSUB_OWNER);
+		Element configure = pubsub.addElement("configure");
+		Element x = configure.addElement("x");
+		Element field = x.addElement("field");
+		field.addAttribute("var", owner);
+		Element value = field.addElement("value");
+		value.addText("Biff");
+		IQ request = new IQ(iq);
+
+		parser.parse(request);
+
+		HashMap<String, String> configuration = new HashMap<String, String>();
+		configuration.put(owner, "Biff");
+		
+		Mockito.when(channelManager.getNodeConf(Mockito.eq(node))).thenReturn(
+				configuration);
+
+		Assert.assertNull(parser.getValues().get(owner));
 	}
 	
 	@Test

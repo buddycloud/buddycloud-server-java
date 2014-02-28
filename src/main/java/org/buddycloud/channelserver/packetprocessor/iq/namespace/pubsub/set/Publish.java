@@ -43,6 +43,8 @@ public class Publish extends PubSubElementProcessorAbstract {
 
 	private ValidateEntry validator;
 
+	private String globalItemId;
+
 	public Publish(BlockingQueue<Packet> outQueue, ChannelManager channelManager) {
 		this.outQueue = outQueue;
 		this.channelManager = channelManager;
@@ -122,7 +124,12 @@ public class Publish extends PubSubElementProcessorAbstract {
 	private void extractItemDetails() throws InterruptedException {
 
 		entry = entryContent.getPayload();
-		id = GlobalItemIDImpl.toLocalId(entry.element("id").getText());
+		globalItemId = entry.element("id").getText();
+		if (false == GlobalItemIDImpl.isGlobalId(globalItemId)) {
+			globalItemId = new GlobalItemIDImpl(request.getTo(), node, globalItemId)
+			    .toString();
+		}
+		id = GlobalItemIDImpl.toLocalId(globalItemId);
 		Element inReplyToElement = entry.element("in-reply-to");
 		if (null == inReplyToElement) {
 			return;
@@ -210,7 +217,7 @@ public class Publish extends PubSubElementProcessorAbstract {
 		publish.addAttribute("node", node);
 
 		Element newItem = publish.addElement("item");
-		newItem.addAttribute("id", id);
+		newItem.addAttribute("id", globalItemId);
 
 		response.setChildElement(pubsub);
 		outQueue.put(response);
@@ -281,7 +288,7 @@ public class Publish extends PubSubElementProcessorAbstract {
 		Element items = event.addElement("items");
 		items.addAttribute("node", node);
 		Element i = items.addElement("item");
-		i.addAttribute("id", id);
+		i.addAttribute("id", globalItemId);
 		i.add(entry.createCopy());
 
 		ResultSet<NodeSubscription> cur = channelManager

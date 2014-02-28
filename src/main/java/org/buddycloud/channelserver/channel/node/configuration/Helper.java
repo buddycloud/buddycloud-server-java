@@ -200,6 +200,7 @@ public class Helper {
 	private void cleanData(HashMap<String, String> data) {
 		preventOverwrite(data, ChannelType.FIELD_NAME);
 		preventOverwrite(data, CreationDate.FIELD_NAME);
+		preventOverwrite(data, Creator.FIELD_NAME);
 	}
 
 	private void preventOverwrite(HashMap<String, String> data, String fieldName) {

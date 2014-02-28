@@ -33,6 +33,8 @@ public class Configuration extends Properties {
 	public static final String CONFIGURATION_CHANNELS_DEFAULT_ACCESSMODEL = "channel.configuration.default.accessmodel";
 	public static final String CONFIGURATION_CHANNELS_DEFAULT_DESCRIPTION = "channel.configuration.default.description";
 	public static final String CONFIGURATION_CHANNELS_DEFAULT_TITLE = "channel.configuration.default.title";
+	
+	public static final String DISCOVERY_USE_DNS = "discovery.dns.enabled";
 
 	private static final String CONFIGURATION_FILE = "configuration.properties";
 

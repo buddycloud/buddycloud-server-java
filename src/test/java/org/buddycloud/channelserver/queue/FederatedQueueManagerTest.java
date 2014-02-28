@@ -8,6 +8,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 import junit.framework.Assert;
 
 import org.buddycloud.channelserver.ChannelsEngine;
+import org.buddycloud.channelserver.Configuration;
 import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.packetHandler.iq.IQTestHandler;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.JabberPubsub;
@@ -31,13 +32,21 @@ public class FederatedQueueManagerTest extends IQTestHandler {
 	private ChannelManager channelManager;
 	private ChannelsEngineMock channelsEngine;
 	private String localServer = "channels.shakespeare.lit";
+	private Configuration configuration;
 
 	@Before
 	public void setUp() throws Exception {
 		channelsEngine = new ChannelsEngineMock();
 		channelManager = Mockito.mock(ChannelManager.class);
 
-		queueManager = new FederatedQueueManager(channelsEngine, localServer);
+		configuration = Mockito.mock(Configuration.class);
+		Mockito.when(
+				configuration
+						.getProperty(Configuration.CONFIGURATION_SERVER_CHANNELS_DOMAIN))
+				.thenReturn(localServer);
+		Mockito.when(configuration.getProperty(Configuration.DISCOVERY_USE_DNS))
+				.thenReturn("true");
+		queueManager = new FederatedQueueManager(channelsEngine, configuration);
 	}
 
 	@Test(expected = UnknownFederatedPacketException.class)
@@ -143,15 +152,16 @@ public class FederatedQueueManagerTest extends IQTestHandler {
 		packet.setType(IQ.Type.get);
 
 		queueManager.process(packet);
-        channelsEngine.poll();
-        
+		channelsEngine.poll();
+
 		// Pass in items with name="buddycloud-server"
 		Element item = new DefaultElement("item");
 		item.addAttribute("jid", "channels.capulet.lit");
 		item.addAttribute("name", "buddycloud-server");
 		ArrayList<Element> items = new ArrayList<Element>();
 		items.add(item);
-		queueManager.processDiscoItemsResponse(new JID("topics.capulet.lit"), items);
+		queueManager.processDiscoItemsResponse(new JID("topics.capulet.lit"),
+				items);
 
 		// Note original packet now sent with remote channel server tag
 		Packet originalPacketRedirected = channelsEngine.poll();
@@ -164,10 +174,11 @@ public class FederatedQueueManagerTest extends IQTestHandler {
 	}
 
 	@Test
-	public void testOutgoingFederatedPacketsAreRoutedBackToOriginalSender() throws Exception {
+	public void testOutgoingFederatedPacketsAreRoutedBackToOriginalSender()
+			throws Exception {
 
 		channelsEngine.clear();
-		
+
 		IQ packet = new IQ();
 		packet.setID("1:some-request");
 		packet.setFrom(new JID("romeo@montague.lit/street"));
@@ -178,56 +189,63 @@ public class FederatedQueueManagerTest extends IQTestHandler {
 		queueManager.process(packet.createCopy());
 		IQ originalPacketRedirected = (IQ) channelsEngine.poll();
 
-        IQ response = IQ.createResultIQ(originalPacketRedirected);
-        queueManager.passResponseToRequester(response);
+		IQ response = IQ.createResultIQ(originalPacketRedirected);
+		queueManager.passResponseToRequester(response);
 
-        Assert.assertEquals(1, channelsEngine.size());
-        Packet redirected = channelsEngine.poll();
+		Assert.assertEquals(1, channelsEngine.size());
+		Packet redirected = channelsEngine.poll();
 
-        Assert.assertEquals(packet.getFrom(), redirected.getTo());
+		Assert.assertEquals(packet.getFrom(), redirected.getTo());
 	}
 
 	@Test
-	public void testOutgoingFederatedPacketsFromDifferentClientsUsingSameIdAreRoutedBackToOriginalSender() throws Exception {
+	public void testOutgoingFederatedPacketsFromDifferentClientsUsingSameIdAreRoutedBackToOriginalSender()
+			throws Exception {
 
-        channelsEngine.clear();
+		channelsEngine.clear();
 
-        IQ clientOnePacket = new IQ();
-        clientOnePacket.setID("1:some-request");
-        clientOnePacket.setFrom(new JID("romeo@montague.lit/street"));
-        clientOnePacket.setTo(new JID("topics.capulet.lit"));
-        clientOnePacket.setType(IQ.Type.get);
-        clientOnePacket.getElement().addAttribute("remote-server-discover", "false");
+		IQ clientOnePacket = new IQ();
+		clientOnePacket.setID("1:some-request");
+		clientOnePacket.setFrom(new JID("romeo@montague.lit/street"));
+		clientOnePacket.setTo(new JID("topics.capulet.lit"));
+		clientOnePacket.setType(IQ.Type.get);
+		clientOnePacket.getElement().addAttribute("remote-server-discover",
+				"false");
 
-        IQ clientTwoPacket = new IQ();
-        clientTwoPacket.setID("1:some-request");
-        clientTwoPacket.setFrom(new JID("juliet@montague.lit/street"));
-        clientTwoPacket.setTo(new JID("topics.capulet.lit"));
-        clientTwoPacket.setType(IQ.Type.get);
-        clientTwoPacket.getElement().addAttribute("remote-server-discover", "false");
+		IQ clientTwoPacket = new IQ();
+		clientTwoPacket.setID("1:some-request");
+		clientTwoPacket.setFrom(new JID("juliet@montague.lit/street"));
+		clientTwoPacket.setTo(new JID("topics.capulet.lit"));
+		clientTwoPacket.setType(IQ.Type.get);
+		clientTwoPacket.getElement().addAttribute("remote-server-discover",
+				"false");
 
-        queueManager.addChannelMap(new JID("topics.capulet.lit"));
+		queueManager.addChannelMap(new JID("topics.capulet.lit"));
 
-        queueManager.process(clientOnePacket.createCopy());
-        queueManager.process(clientTwoPacket.createCopy());
+		queueManager.process(clientOnePacket.createCopy());
+		queueManager.process(clientTwoPacket.createCopy());
 
-        IQ clientOneOriginalPacketRedirected = (IQ) channelsEngine.poll();
-        IQ clientTwoOriginalPacketRedirected = (IQ) channelsEngine.poll();
+		IQ clientOneOriginalPacketRedirected = (IQ) channelsEngine.poll();
+		IQ clientTwoOriginalPacketRedirected = (IQ) channelsEngine.poll();
 
-        IQ clientOneResponse = IQ.createResultIQ(clientOneOriginalPacketRedirected);
-        queueManager.passResponseToRequester(clientOneResponse);
+		IQ clientOneResponse = IQ
+				.createResultIQ(clientOneOriginalPacketRedirected);
+		queueManager.passResponseToRequester(clientOneResponse);
 
-        IQ clientTwoResponse = IQ.createResultIQ(clientTwoOriginalPacketRedirected);
-        queueManager.passResponseToRequester(clientTwoResponse);
+		IQ clientTwoResponse = IQ
+				.createResultIQ(clientTwoOriginalPacketRedirected);
+		queueManager.passResponseToRequester(clientTwoResponse);
 
-        Assert.assertEquals(2, channelsEngine.size());
-        Packet clientOneRedirected = channelsEngine.poll();
-        Packet clientTwoRedirected = channelsEngine.poll();
+		Assert.assertEquals(2, channelsEngine.size());
+		Packet clientOneRedirected = channelsEngine.poll();
+		Packet clientTwoRedirected = channelsEngine.poll();
 
-        Assert.assertEquals(clientOnePacket.getFrom(), clientOneRedirected.getTo());
-        Assert.assertEquals(clientTwoPacket.getFrom(), clientTwoRedirected.getTo());
+		Assert.assertEquals(clientOnePacket.getFrom(),
+				clientOneRedirected.getTo());
+		Assert.assertEquals(clientTwoPacket.getFrom(),
+				clientTwoRedirected.getTo());
 	}
-	
+
 	@Test
 	public void testOutgoingIqPacketsGetIdMapped() throws Exception {
 		channelsEngine.clear();
@@ -239,23 +257,23 @@ public class FederatedQueueManagerTest extends IQTestHandler {
 		packet.setType(IQ.Type.get);
 		packet.setID(originalId);
 		packet.getElement().addAttribute("remote-server-discover", "false");
-		
+
 		queueManager.addChannelMap(new JID("topics.capulet.lit"));
-		
+
 		queueManager.process(packet.createCopy());
-		
+
 		IQ packetExternal = (IQ) channelsEngine.poll();
 
 		Assert.assertFalse(originalId.equals(packetExternal.getID()));
-		
+
 		IQ response = IQ.createResultIQ(packetExternal);
 		queueManager.passResponseToRequester(response);
-		
+
 		IQ packetInternal = (IQ) channelsEngine.poll();
 
 		Assert.assertTrue(originalId.equals(packetInternal.getID()));
 	}
-	
+
 	@Test
 	public void testNonIqPacketsDoNotGetIdMapped() throws Exception {
 		channelsEngine.clear();
@@ -266,16 +284,16 @@ public class FederatedQueueManagerTest extends IQTestHandler {
 		packet.setTo(new JID("topics.capulet.lit"));
 		packet.getElement().addAttribute("remote-server-discover", "false");
 		packet.setID(originalId);
-		
+
 		queueManager.addChannelMap(new JID("topics.capulet.lit"));
-		
+
 		queueManager.process(packet.createCopy());
-		
+
 		Message packetExternal = (Message) channelsEngine.poll();
 
 		Assert.assertTrue(originalId.equals(packetExternal.getID()));
 	}
-	
+
 	@Test
 	public void testIqResultPacketsDontGetIdMapped() throws Exception {
 		channelsEngine.clear();
@@ -287,17 +305,16 @@ public class FederatedQueueManagerTest extends IQTestHandler {
 		packet.setType(IQ.Type.result);
 		packet.setID(originalId);
 		packet.getElement().addAttribute("remote-server-discover", "false");
-		
+
 		queueManager.addChannelMap(new JID("topics.capulet.lit"));
-		
+
 		queueManager.process(packet.createCopy());
-		
+
 		IQ packetExternal = (IQ) channelsEngine.poll();
 
 		Assert.assertTrue(originalId.equals(packetExternal.getID()));
 	}
-	
-	
+
 	@Test
 	public void testIqErrorPacketsDontGetIdMapped() throws Exception {
 		channelsEngine.clear();
@@ -309,11 +326,11 @@ public class FederatedQueueManagerTest extends IQTestHandler {
 		packet.setType(IQ.Type.error);
 		packet.setID(originalId);
 		packet.getElement().addAttribute("remote-server-discover", "false");
-		
+
 		queueManager.addChannelMap(new JID("topics.capulet.lit"));
-		
+
 		queueManager.process(packet.createCopy());
-		
+
 		IQ packetExternal = (IQ) channelsEngine.poll();
 
 		Assert.assertTrue(originalId.equals(packetExternal.getID()));

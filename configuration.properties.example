@@ -41,3 +41,7 @@ channel.configuration.geo.previous.accessmodel=authorize
 
 channel.configuration.status.description=%jid%'s status
 channel.configuration.status.description=The current status of %jid%
+
+
+# Allow DNS discovery of other channel servers (default: true)
+discovery.dns.enabled = true

@@ -165,12 +165,13 @@ public class Helper {
 				return false;
 			}
 		}
-		
+
 		return true;
 	}
 
 	public HashMap<String, String> getValues() throws NodeStoreException {
-		existingConfiguration = (HashMap<String, String>) channelManager.getNodeConf(getNode());
+		existingConfiguration = (HashMap<String, String>) channelManager
+				.getNodeConf(getNode());
 
 		HashMap<String, String> data = new HashMap<String, String>();
 		for (Entry<String, Field> element : elements.entrySet()) {
@@ -180,16 +181,16 @@ public class Helper {
 					+ "'");
 			data.put(key, value);
 		}
-		cleanData(data);
 		addRequiredFields(data);
+		cleanData(data);
 		return data;
 	}
-	
+
 	private void addRequiredFields(HashMap<String, String> data) {
 		for (String field : requiredFields) {
 			if (!data.containsKey(field)) {
 				if (existingConfiguration.containsKey(field)) {
-				    data.put(field, existingConfiguration.get(field));
+					data.put(field, existingConfiguration.get(field));
 				} else if (elements.containsKey(field)) {
 					data.put(field, elements.get(field).getValue());
 				}
@@ -201,6 +202,29 @@ public class Helper {
 		preventOverwrite(data, ChannelType.FIELD_NAME);
 		preventOverwrite(data, CreationDate.FIELD_NAME);
 		preventOverwrite(data, Creator.FIELD_NAME);
+		preventOverwrite(data, ContentType.FIELD_NAME);
+
+		ensurePresent(data, ChannelTitle.FIELD_NAME);
+		ensurePresent(data, ChannelDescription.FIELD_NAME);
+		ensurePresent(data, AccessModel.FIELD_NAME);
+		ensurePresent(data, Affiliation.FIELD_NAME);
+
+		setLastUpdatedDate(data);
+	}
+
+	private void setLastUpdatedDate(HashMap<String, String> data) {
+		data.remove(LastUpdatedDate.FIELD_NAME);
+		data.put(LastUpdatedDate.FIELD_NAME,
+				fieldFactory.create(LastUpdatedDate.FIELD_NAME, "").getValue());
+
+	}
+
+	private void ensurePresent(HashMap<String, String> data, String fieldName) {
+		if (data.containsKey(fieldName))
+			return;
+		if (!existingConfiguration.containsKey(fieldName))
+			return;
+		data.put(fieldName, existingConfiguration.get(fieldName));
 	}
 
 	private void preventOverwrite(HashMap<String, String> data, String fieldName) {

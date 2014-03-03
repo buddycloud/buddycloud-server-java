@@ -8,19 +8,20 @@ import junit.framework.Assert;
 
 import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.channel.Conf;
+import org.buddycloud.channelserver.channel.node.configuration.field.AccessModel;
 import org.buddycloud.channelserver.channel.node.configuration.field.ChannelTitle;
 import org.buddycloud.channelserver.channel.node.configuration.field.ChannelType;
 import org.buddycloud.channelserver.channel.node.configuration.field.ConfigurationFieldException;
+import org.buddycloud.channelserver.channel.node.configuration.field.ContentType;
 import org.buddycloud.channelserver.channel.node.configuration.field.CreationDate;
 import org.buddycloud.channelserver.channel.node.configuration.field.Creator;
-import org.buddycloud.channelserver.channel.node.configuration.field.Field;
+import org.buddycloud.channelserver.channel.node.configuration.field.Factory;
 import org.buddycloud.channelserver.channel.node.configuration.field.LastUpdatedDate;
 import org.buddycloud.channelserver.channel.node.configuration.field.Mock;
-import org.buddycloud.channelserver.channel.node.configuration.field.Owner;
+import org.buddycloud.channelserver.db.exception.NodeStoreException;
 import org.buddycloud.channelserver.packetHandler.iq.IQTestHandler;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.JabberPubsub;
 import org.dom4j.Element;
-import org.dom4j.Node;
 import org.dom4j.dom.DOMElement;
 import org.junit.Before;
 import org.junit.Rule;
@@ -28,9 +29,6 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.mockito.Mockito;
 import org.xmpp.packet.IQ;
-import org.buddycloud.channelserver.channel.node.configuration.field.Factory;
-import org.buddycloud.channelserver.db.exception.NodeStoreException;
-import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.JabberPubsub;
 
 public class HelperTest extends IQTestHandler {
 	private Helper parser;
@@ -323,7 +321,66 @@ public class HelperTest extends IQTestHandler {
 	}
 	
 	@Test
-	public void testCreatorCanBeSetIfItDoesntAlreadyExist() throws Exception {
+	public void testRequiredFieldsGetSetIfPresentInExistingData() throws Exception {
+
+		Element iq = new DOMElement("iq");
+		Element pubsub = iq.addElement("pubsub");
+		pubsub.addAttribute("xmlns", JabberPubsub.NS_PUBSUB_OWNER);
+		Element configure = pubsub.addElement("configure");
+		Element x = configure.addElement("x");
+		
+		Element creatorField = x.addElement("field");
+		creatorField.addAttribute("var", Creator.FIELD_NAME);
+		Element creatorValue = creatorField.addElement("value");
+		creatorValue.addText(Creator.DEFAULT_VALUE);
+
+		Element creationDate = x.addElement("field");
+		creationDate.addAttribute("var", CreationDate.FIELD_NAME);
+		Element creationDateValue = creationDate.addElement("value");
+		creationDateValue.addText(CreationDate.DEFAULT_VALUE);
+
+		Element channelType = x.addElement("field");
+		creationDate.addAttribute("var", ChannelType.FIELD_NAME);
+		Element channelTypeValue = channelType.addElement("value");
+		channelTypeValue.addText(ChannelType.DEFAULT_VALUE);
+
+		Element contentType = x.addElement("field");
+		contentType.addAttribute("var", ContentType.FIELD_NAME);
+		Element contentTypeValue = contentType.addElement("value");
+		contentTypeValue.addText(ContentType.DEFAULT_VALUE);
+
+		Element channelTitle = x.addElement("field");
+		channelTitle.addAttribute("var", ContentType.FIELD_NAME);
+		Element channelTitleValue = channelTitle.addElement("value");
+		channelTitleValue.addText(ContentType.DEFAULT_VALUE);
+
+		Element channelDescription = x.addElement("field");
+		channelDescription.addAttribute("var", ContentType.FIELD_NAME);
+		Element channelDescriptionValue = channelDescription.addElement("value");
+		channelDescriptionValue.addText(ContentType.DEFAULT_VALUE);
+
+		Element accessModel = x.addElement("field");
+		accessModel.addAttribute("var", AccessModel.FIELD_NAME);
+		Element accessModelValue = accessModel.addElement("value");
+		accessModelValue.addText(AccessModel.DEFAULT_VALUE);	
+
+		Element channelAffiliation = x.addElement("field");
+		channelAffiliation.addAttribute("var", ContentType.FIELD_NAME);
+		Element channelAffiliationValue = channelDescription.addElement("value");
+		channelAffiliationValue.addText(ContentType.DEFAULT_VALUE);
+
+		HashMap<String, String> configuration = new HashMap<String, String>();
+		
+		Mockito.when(channelManager.getNodeConf(Mockito.eq(node))).thenReturn(
+				configuration);
+		
+		IQ request = new IQ(iq);
+		parser.parse(request);
+        parser.getValues();
+	}
+
+	@Test
+	public void testRequiredFieldsAreAddedFromExistingData() throws Exception {
 		
 		String creator = "Doc Emmett Brown";
 		
@@ -347,11 +404,6 @@ public class HelperTest extends IQTestHandler {
 
 		Assert.assertEquals(creator,
 				parser.getValues().get(Creator.FIELD_NAME));
-	}
-
-	@Test
-	public void testRequiredFieldsAreAddedFromExistingData() throws Exception {
-		Assert.assertTrue(false);
 	}
 	
 	@Test

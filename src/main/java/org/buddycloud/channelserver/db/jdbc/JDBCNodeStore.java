@@ -30,6 +30,7 @@ import org.buddycloud.channelserver.pubsub.model.NodeAffiliation;
 import org.buddycloud.channelserver.pubsub.model.NodeItem;
 import org.buddycloud.channelserver.pubsub.model.NodeSubscription;
 import org.buddycloud.channelserver.pubsub.model.NodeThread;
+import org.buddycloud.channelserver.pubsub.model.impl.GlobalItemIDImpl;
 import org.buddycloud.channelserver.pubsub.model.impl.NodeAffiliationImpl;
 import org.buddycloud.channelserver.pubsub.model.impl.NodeItemImpl;
 import org.buddycloud.channelserver.pubsub.model.impl.NodeSubscriptionImpl;
@@ -1525,6 +1526,9 @@ public class JDBCNodeStore implements NodeStore {
 		try {
 			stmt = conn.prepareStatement(dialect.deleteItem());
 
+			if (GlobalItemIDImpl.isGlobalId(nodeItemId)) {
+				nodeItemId = GlobalItemIDImpl.toLocalId(nodeItemId);
+			}
 			stmt.setString(1, nodeId);
 			stmt.setString(2, nodeItemId);
 

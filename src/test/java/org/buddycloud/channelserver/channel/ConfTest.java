@@ -36,13 +36,12 @@ public class ConfTest {
 	public void testGetDefaultChannelConf() {
 		HashMap<String, String> result = Conf.getDefaultChannelConf(
 				testChannelJID, testOwnerJID);
-		assertEquals(7, result.size());
+		assertEquals(6, result.size());
 		assertEquals(this.testChannelJID.toBareJID()
 				+ "'s very own buddycloud channel", result.get(Conf.TITLE));
 		assertEquals(this.testChannelJID.toBareJID()
 				+ "'s very own buddycloud channel",
 				result.get(Conf.DESCRIPTION));
-		assertEquals(Atom.NS, result.get(Conf.TYPE));
 		assertEquals(AccessModels.open.toString(),
 				result.get(Conf.ACCESS_MODEL));
 		// ToDo: Find a way to test the Date: assertEquals(Conf.formatDate(new
@@ -56,13 +55,12 @@ public class ConfTest {
 	public void testGetDefaultPostChannelConf() {
 		HashMap<String, String> result = Conf
 				.getDefaultPostChannelConf(testChannelJID);
-		assertEquals(8, result.size());
+		assertEquals(7, result.size());
 		assertEquals(this.testChannelJID.toBareJID()
 				+ "'s very own buddycloud channel", result.get(Conf.TITLE));
 		assertEquals(this.testChannelJID.toBareJID()
 				+ "'s very own buddycloud channel",
 				result.get(Conf.DESCRIPTION));
-		assertEquals(Atom.NS, result.get(Conf.TYPE));
 		assertEquals(AccessModels.open.toString(),
 				result.get(Conf.ACCESS_MODEL));
 		// ToDo: Find a way to test the Date: assertEquals(Conf.formatDate(new
@@ -83,13 +81,12 @@ public class ConfTest {
 	public void testGetDefaultStatusChannelConf() {
 		HashMap<String, String> result = Conf
 				.getDefaultStatusChannelConf(testChannelJID);
-		assertEquals(7, result.size());
+		assertEquals(6, result.size());
 		assertEquals(this.testChannelJID.toBareJID() + "'s status",
 				result.get(Conf.TITLE));
 		assertEquals(
 				"The current status of " + this.testChannelJID.toBareJID(),
 				result.get(Conf.DESCRIPTION));
-		assertEquals(Atom.NS, result.get(Conf.TYPE));
 		assertEquals(AccessModels.open.toString(),
 				result.get(Conf.ACCESS_MODEL));
 		// ToDo: Find a way to test the Date: assertEquals(Conf.formatDate(new
@@ -110,13 +107,12 @@ public class ConfTest {
 	public void testGetDefaultGeoPreviousChannelConf() {
 		HashMap<String, String> result = Conf
 				.getDefaultGeoPreviousChannelConf(testChannelJID);
-		assertEquals(7, result.size());
+		assertEquals(6, result.size());
 		assertEquals(this.testChannelJID.toBareJID()
 				+ "'s very own buddycloud channel", result.get(Conf.TITLE));
 		assertEquals(this.testChannelJID.toBareJID()
 				+ "'s very own buddycloud channel",
 				result.get(Conf.DESCRIPTION));
-		assertEquals(Atom.NS, result.get(Conf.TYPE));
 		assertEquals(AccessModels.authorize.toString(),
 				result.get(Conf.ACCESS_MODEL));
 		// ToDo: Find a way to test the Date: assertEquals(Conf.formatDate(new
@@ -137,13 +133,12 @@ public class ConfTest {
 	public void testGetDefaultGeoCurrentChannelConf() {
 		HashMap<String, String> result = Conf
 				.getDefaultGeoCurrentChannelConf(testChannelJID);
-		assertEquals(7, result.size());
+		assertEquals(6, result.size());
 		assertEquals(this.testChannelJID.toBareJID()
 				+ "'s very own buddycloud channel", result.get(Conf.TITLE));
 		assertEquals(this.testChannelJID.toBareJID()
 				+ "'s very own buddycloud channel",
 				result.get(Conf.DESCRIPTION));
-		assertEquals(Atom.NS, result.get(Conf.TYPE));
 		assertEquals(AccessModels.authorize.toString(),
 				result.get(Conf.ACCESS_MODEL));
 		// ToDo: Find a way to test the Date: assertEquals(Conf.formatDate(new
@@ -163,13 +158,12 @@ public class ConfTest {
 	public void testGetDefaultGeoNextChannelConf() {
 		HashMap<String, String> result = Conf
 				.getDefaultGeoNextChannelConf(testChannelJID);
-		assertEquals(7, result.size());
+		assertEquals(6, result.size());
 		assertEquals(this.testChannelJID.toBareJID()
 				+ "'s very own buddycloud channel", result.get(Conf.TITLE));
 		assertEquals(this.testChannelJID.toBareJID()
 				+ "'s very own buddycloud channel",
 				result.get(Conf.DESCRIPTION));
-		assertEquals(Atom.NS, result.get(Conf.TYPE));
 		assertEquals(AccessModels.authorize.toString(),
 				result.get(Conf.ACCESS_MODEL));
 		// ToDo: Find a way to test the Date: assertEquals(Conf.formatDate(new
@@ -190,13 +184,12 @@ public class ConfTest {
 	public void testGetDefaultSubscriptionsChannelConf() {
 		HashMap<String, String> result = Conf
 				.getDefaultSubscriptionsChannelConf(testChannelJID);
-		assertEquals(7, result.size());
+		assertEquals(6, result.size());
 		assertEquals(this.testChannelJID.toBareJID()
 				+ "'s very own buddycloud channel", result.get(Conf.TITLE));
 		assertEquals(this.testChannelJID.toBareJID()
 				+ "'s very own buddycloud channel",
 				result.get(Conf.DESCRIPTION));
-		assertEquals(Atom.NS, result.get(Conf.TYPE));
 		assertEquals(AccessModels.open.toString(),
 				result.get(Conf.ACCESS_MODEL));
 		// ToDo: Find a way to test the Date: assertEquals(Conf.formatDate(new

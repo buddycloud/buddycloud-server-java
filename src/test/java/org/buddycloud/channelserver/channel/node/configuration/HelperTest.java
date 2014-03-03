@@ -348,34 +348,7 @@ public class HelperTest extends IQTestHandler {
 		Assert.assertEquals(creator,
 				parser.getValues().get(Creator.FIELD_NAME));
 	}
-	
-	@Test
-	public void testOwnerFieldIsRemoved() throws Exception {
 
-		String owner = "buddycloud#owner";
-		
-		Element iq = new DOMElement("iq");
-		Element pubsub = iq.addElement("pubsub");
-		pubsub.addAttribute("xmlns", JabberPubsub.NS_PUBSUB_OWNER);
-		Element configure = pubsub.addElement("configure");
-		Element x = configure.addElement("x");
-		Element field = x.addElement("field");
-		field.addAttribute("var", owner);
-		Element value = field.addElement("value");
-		value.addText("Biff");
-		IQ request = new IQ(iq);
-
-		parser.parse(request);
-
-		HashMap<String, String> configuration = new HashMap<String, String>();
-		configuration.put(owner, "Biff");
-		
-		Mockito.when(channelManager.getNodeConf(Mockito.eq(node))).thenReturn(
-				configuration);
-
-		Assert.assertNull(parser.getValues().get(owner));
-	}
-	
 	@Test
 	public void testRequiredFieldsAreAddedFromExistingData() throws Exception {
 		Assert.assertTrue(false);

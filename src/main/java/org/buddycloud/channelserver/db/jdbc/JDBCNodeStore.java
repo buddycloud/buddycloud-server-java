@@ -992,7 +992,7 @@ public class JDBCNodeStore implements NodeStore {
 						.getUpdated().getTime()));
 				stmt.setTimestamp(3, new java.sql.Timestamp(afterItem
 						.getUpdated().getTime()));
-				stmt.setString(4, afterItemId);
+				stmt.setString(4, getLocalId(afterItemId));
 
 				java.sql.ResultSet rs = stmt.executeQuery();
 
@@ -1282,7 +1282,7 @@ public class JDBCNodeStore implements NodeStore {
 			}
 			stmt = conn.prepareStatement(query);
 			stmt.setString(1, nodeId);
-			stmt.setString(2, "%" + itemId);
+			stmt.setString(2, "%" + getLocalId(itemId));
 			stmt.setTimestamp(3, new java.sql.Timestamp(since.getTime()));
 			if (-1 != limit)
 				stmt.setInt(4, limit);
@@ -1312,7 +1312,7 @@ public class JDBCNodeStore implements NodeStore {
 		try {
 			stmt = conn.prepareStatement(dialect.selectCountItemReplies());
 			stmt.setString(1, nodeId);
-			stmt.setString(2, "%" + itemId);
+			stmt.setString(2, "%" + getLocalId(itemId));
 
 			java.sql.ResultSet rs = stmt.executeQuery();
 
@@ -1345,6 +1345,7 @@ public class JDBCNodeStore implements NodeStore {
 			}
 			stmt = conn.prepareStatement(query);
 			stmt.setString(1, nodeId);
+			itemId = getLocalId(itemId);
 			stmt.setString(2, "%" + itemId);
 			stmt.setString(3, itemId);
 			stmt.setTimestamp(4, new java.sql.Timestamp(since.getTime()));
@@ -1376,6 +1377,7 @@ public class JDBCNodeStore implements NodeStore {
 		try {
 			stmt = conn.prepareStatement(dialect.selectCountItemThread());
 			stmt.setString(1, nodeId);
+			itemId = getLocalId(itemId);
 			stmt.setString(2, "%" + itemId);
 			stmt.setString(3, itemId);
 
@@ -1455,8 +1457,9 @@ public class JDBCNodeStore implements NodeStore {
 
 		try {
 			stmt = conn.prepareStatement(dialect.selectSingleItem());
+			
 			stmt.setString(1, nodeId);
-			stmt.setString(2, nodeItemId);
+			stmt.setString(2, getLocalId(nodeItemId));
 
 			java.sql.ResultSet rs = stmt.executeQuery();
 
@@ -1526,11 +1529,8 @@ public class JDBCNodeStore implements NodeStore {
 		try {
 			stmt = conn.prepareStatement(dialect.deleteItem());
 
-			if (GlobalItemIDImpl.isGlobalId(nodeItemId)) {
-				nodeItemId = GlobalItemIDImpl.toLocalId(nodeItemId);
-			}
 			stmt.setString(1, nodeId);
-			stmt.setString(2, nodeItemId);
+			stmt.setString(2, getLocalId(nodeItemId));
 
 			int rows = stmt.executeUpdate();
 
@@ -1957,6 +1957,13 @@ public class JDBCNodeStore implements NodeStore {
 		} catch (SQLException e) {
 			throw new NodeStoreException(e);
 		}
+	}
+	
+	private String getLocalId(String nodeItemId) {
+		if (GlobalItemIDImpl.isGlobalId(nodeItemId)) {
+			nodeItemId = GlobalItemIDImpl.toLocalId(nodeItemId);
+		}
+		return nodeItemId;
 	}
 
 	public interface NodeStoreSQLDialect {

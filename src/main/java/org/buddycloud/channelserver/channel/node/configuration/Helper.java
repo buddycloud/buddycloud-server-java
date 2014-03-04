@@ -214,8 +214,8 @@ public class Helper {
 
 	private void setLastUpdatedDate(HashMap<String, String> data) {
 		data.remove(LastUpdatedDate.FIELD_NAME);
-		data.put(LastUpdatedDate.FIELD_NAME,
-				fieldFactory.create(LastUpdatedDate.FIELD_NAME, "").getValue());
+		String lastUpdated = getFieldFactory().create(LastUpdatedDate.FIELD_NAME, "").getValue();
+		data.put(LastUpdatedDate.FIELD_NAME, lastUpdated);
 
 	}
 

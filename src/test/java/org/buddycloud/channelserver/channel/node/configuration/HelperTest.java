@@ -55,7 +55,7 @@ public class HelperTest extends IQTestHandler {
 	}
 
 	@Test
-	public void testNotProvidingAnyConfigurationFieldsReturnsNoConfiguration()
+	public void testNotProvidingAnyConfigurationFieldsReturnsOnlyLastUpdatedDate()
 			throws NodeStoreException {
 		Element iq = new DOMElement("iq");
 		Element pubsub = iq.addElement("pubsub");
@@ -65,7 +65,8 @@ public class HelperTest extends IQTestHandler {
 		IQ request = new IQ(iq);
 
 		parser.parse(request);
-		Assert.assertEquals(0, parser.getValues().size());
+		Assert.assertEquals(1, parser.getValues().size());
+		Assert.assertNotNull(parser.getValues().get(LastUpdatedDate.FIELD_NAME));
 	}
 
 	@Test(expected = NodeConfigurationException.class)
@@ -117,11 +118,12 @@ public class HelperTest extends IQTestHandler {
 
 		parser.parse(request);
 
-		Assert.assertEquals(2, parser.getValues().size());
+		Assert.assertEquals(3, parser.getValues().size());
 		Assert.assertEquals(Mock.DEFAULT_VALUE,
 				parser.getValues().get(fieldMock.getName()));
 		Assert.assertEquals("My field value",
 				parser.getValues().get(fieldMock2.getName()));
+		Assert.assertNotNull(parser.getValues().get(LastUpdatedDate.FIELD_NAME));
 	}
 
 	@Test
@@ -148,7 +150,7 @@ public class HelperTest extends IQTestHandler {
 
 		parser.parse(request);
 
-		Assert.assertEquals(1, parser.getValues().size());
+		Assert.assertEquals(2, parser.getValues().size());
 		Assert.assertTrue(parser.isValid());
 	}
 
@@ -176,7 +178,7 @@ public class HelperTest extends IQTestHandler {
 
 		parser.parse(request);
 
-		Assert.assertEquals(1, parser.getValues().size());
+		Assert.assertEquals(2, parser.getValues().size());
 		Assert.assertFalse(parser.isValid());
 	}
 

@@ -26,6 +26,7 @@ import java.util.Map.Entry;
 import junit.framework.Assert;
 
 import org.apache.commons.collections.CollectionUtils;
+import org.buddycloud.channelserver.channel.node.configuration.field.AccessModel;
 import org.buddycloud.channelserver.db.ClosableIteratorImpl;
 import org.buddycloud.channelserver.db.CloseableIterator;
 import org.buddycloud.channelserver.db.NodeStore;
@@ -34,6 +35,7 @@ import org.buddycloud.channelserver.db.exception.NodeStoreException;
 import org.buddycloud.channelserver.db.jdbc.JDBCNodeStore.NodeStoreSQLDialect;
 import org.buddycloud.channelserver.db.jdbc.dialect.Sql92NodeStoreDialect;
 import org.buddycloud.channelserver.packetHandler.iq.IQTestHandler;
+import org.buddycloud.channelserver.pubsub.accessmodel.AccessModels;
 import org.buddycloud.channelserver.pubsub.affiliation.Affiliations;
 import org.buddycloud.channelserver.pubsub.model.GlobalItemID;
 import org.buddycloud.channelserver.pubsub.model.NodeAffiliation;
@@ -2288,20 +2290,20 @@ public class JDBCNodeStoreTest {
 			throws Exception {
 		dbTester.loadData("node_1");
 		dbTester.loadData("node_2");
-		store.setNodeConfValue(TEST_SERVER1_NODE1_ID, "pubsub#access_model",
-				"open");
-		store.setNodeConfValue(TEST_SERVER1_NODE2_ID, "pubsub#access_model",
-				"open");
+		store.setNodeConfValue(TEST_SERVER1_NODE1_ID, AccessModel.FIELD_NAME,
+				AccessModels.open.toString());
+		store.setNodeConfValue(TEST_SERVER1_NODE2_ID, AccessModel.FIELD_NAME,
+				AccessModels.open.toString());
 		// Add a private node - *do* expect to see
 		HashMap<String, String> privateNodeConf = new HashMap<String, String>();
-		privateNodeConf.put("pubsub#access_model", "subscribe");
+		privateNodeConf.put(AccessModel.FIELD_NAME, AccessModels.authorize.toString());
 		store.createNode(TEST_SERVER1_USER1_JID, TEST_SERVER1_NODE3_ID,
 				privateNodeConf);
 		store.addNodeItem(new NodeItemImpl(TEST_SERVER1_NODE3_ID, "1111",
 				new Date(), "<entry/>"));
 		// Add a remote node - don't expect to see
 		HashMap<String, String> remoteNodeConf = new HashMap<String, String>();
-		remoteNodeConf.put("pubsub#access_model", "open");
+		remoteNodeConf.put(AccessModel.FIELD_NAME, AccessModels.open.toString());
 		store.addRemoteNode(TEST_SERVER2_NODE1_ID);
 		store.setNodeConf(TEST_SERVER2_NODE1_ID, remoteNodeConf);
 

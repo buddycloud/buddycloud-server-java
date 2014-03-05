@@ -326,7 +326,7 @@ public class HelperTest extends IQTestHandler {
 	}
 	
 	@Test
-	public void testRequiredFieldsGetSetIfPresentInExistingData() throws Exception {
+	public void testRequiredFieldsGetSetIfNotPresentInExistingData() throws Exception {
 
 		String creator = "doc@delorean.org";
 		
@@ -388,37 +388,4 @@ public class HelperTest extends IQTestHandler {
         Assert.assertNotNull(configurationValues.get(LastUpdatedDate.FIELD_NAME));
         
 	}
-
-	@Test
-	public void testRequiredFieldsAreAddedFromExistingData() throws Exception {
-		
-		String creator = "Doc Emmett Brown";
-		
-		Element iq = new DOMElement("iq");
-		Element pubsub = iq.addElement("pubsub");
-		pubsub.addAttribute("xmlns", JabberPubsub.NS_PUBSUB_OWNER);
-		Element configure = pubsub.addElement("configure");
-		Element x = configure.addElement("x");
-		Element field = x.addElement("field");
-		field.addAttribute("var", Creator.FIELD_NAME);
-		Element value = field.addElement("value");
-		value.addText(creator);
-		IQ request = new IQ(iq);
-
-		parser.parse(request);
-
-		HashMap<String, String> configuration = new HashMap<String, String>();
-		
-		Mockito.when(channelManager.getNodeConf(Mockito.eq(node))).thenReturn(
-				configuration);
-
-		Assert.assertEquals(creator,
-				parser.getValues().get(Creator.FIELD_NAME));
-	}
-	
-	@Test
-	public void testRequiredFieldsAreAddedFromFieldValuesIfNotProvided() throws Exception {
-		Assert.assertTrue(false);
-	}
-
 }

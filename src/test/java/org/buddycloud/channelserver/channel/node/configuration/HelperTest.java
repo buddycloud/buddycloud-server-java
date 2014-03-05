@@ -9,6 +9,8 @@ import junit.framework.Assert;
 import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.channel.Conf;
 import org.buddycloud.channelserver.channel.node.configuration.field.AccessModel;
+import org.buddycloud.channelserver.channel.node.configuration.field.Affiliation;
+import org.buddycloud.channelserver.channel.node.configuration.field.ChannelDescription;
 import org.buddycloud.channelserver.channel.node.configuration.field.ChannelTitle;
 import org.buddycloud.channelserver.channel.node.configuration.field.ChannelType;
 import org.buddycloud.channelserver.channel.node.configuration.field.ConfigurationFieldException;
@@ -43,6 +45,7 @@ public class HelperTest extends IQTestHandler {
 		channelManager = Mockito.mock(ChannelManager.class);
 		parser = new Helper(channelManager);
 		parser.setNode(node);
+		parser.setFieldFactory(new Factory());
 	}
 
 	@Test(expected = NodeConfigurationException.class)
@@ -325,6 +328,8 @@ public class HelperTest extends IQTestHandler {
 	@Test
 	public void testRequiredFieldsGetSetIfPresentInExistingData() throws Exception {
 
+		String creator = "doc@delorean.org";
+		
 		Element iq = new DOMElement("iq");
 		Element pubsub = iq.addElement("pubsub");
 		pubsub.addAttribute("xmlns", JabberPubsub.NS_PUBSUB_OWNER);
@@ -333,52 +338,55 @@ public class HelperTest extends IQTestHandler {
 		
 		Element creatorField = x.addElement("field");
 		creatorField.addAttribute("var", Creator.FIELD_NAME);
-		Element creatorValue = creatorField.addElement("value");
-		creatorValue.addText(Creator.DEFAULT_VALUE);
+		creatorField.addElement("value").addText(creator);
 
 		Element creationDate = x.addElement("field");
 		creationDate.addAttribute("var", CreationDate.FIELD_NAME);
-		Element creationDateValue = creationDate.addElement("value");
-		creationDateValue.addText(CreationDate.DEFAULT_VALUE);
+		creationDate.addElement("value").addText(CreationDate.DEFAULT_VALUE);
 
 		Element channelType = x.addElement("field");
-		creationDate.addAttribute("var", ChannelType.FIELD_NAME);
-		Element channelTypeValue = channelType.addElement("value");
-		channelTypeValue.addText(ChannelType.DEFAULT_VALUE);
+		channelType.addAttribute("var", ChannelType.FIELD_NAME);
+		channelType.addElement("value").addText(ChannelType.DEFAULT_VALUE);
 
 		Element contentType = x.addElement("field");
 		contentType.addAttribute("var", ContentType.FIELD_NAME);
-		Element contentTypeValue = contentType.addElement("value");
-		contentTypeValue.addText(ContentType.DEFAULT_VALUE);
+		contentType.addElement("value").addText(ContentType.DEFAULT_VALUE);
 
 		Element channelTitle = x.addElement("field");
-		channelTitle.addAttribute("var", ContentType.FIELD_NAME);
-		Element channelTitleValue = channelTitle.addElement("value");
-		channelTitleValue.addText(ContentType.DEFAULT_VALUE);
+		channelTitle.addAttribute("var", ChannelTitle.FIELD_NAME);
+		channelTitle.addElement("value").addText(ChannelTitle.DEFAULT_VALUE);
 
 		Element channelDescription = x.addElement("field");
-		channelDescription.addAttribute("var", ContentType.FIELD_NAME);
-		Element channelDescriptionValue = channelDescription.addElement("value");
-		channelDescriptionValue.addText(ContentType.DEFAULT_VALUE);
+		channelDescription.addAttribute("var", ChannelDescription.FIELD_NAME);
+		channelDescription.addElement("value").addText(ChannelDescription.DEFAULT_VALUE);
 
 		Element accessModel = x.addElement("field");
 		accessModel.addAttribute("var", AccessModel.FIELD_NAME);
-		Element accessModelValue = accessModel.addElement("value");
-		accessModelValue.addText(AccessModel.DEFAULT_VALUE);	
+		accessModel.addElement("value").addText(AccessModel.DEFAULT_VALUE);	
 
 		Element channelAffiliation = x.addElement("field");
-		channelAffiliation.addAttribute("var", ContentType.FIELD_NAME);
-		Element channelAffiliationValue = channelDescription.addElement("value");
-		channelAffiliationValue.addText(ContentType.DEFAULT_VALUE);
+		channelAffiliation.addAttribute("var", Affiliation.FIELD_NAME);
+		channelAffiliation.addElement("value").addText(Affiliation.DEFAULT_VALUE);
 
 		HashMap<String, String> configuration = new HashMap<String, String>();
-		
+
 		Mockito.when(channelManager.getNodeConf(Mockito.eq(node))).thenReturn(
 				configuration);
-		
+
 		IQ request = new IQ(iq);
 		parser.parse(request);
-        parser.getValues();
+        HashMap<String, String> configurationValues = parser.getValues();
+
+        Assert.assertEquals(creator, configurationValues.get(Creator.FIELD_NAME));
+        Assert.assertEquals(CreationDate.DEFAULT_VALUE, configurationValues.get(CreationDate.FIELD_NAME));
+        Assert.assertEquals(ChannelType.DEFAULT_VALUE, configurationValues.get(ChannelType.FIELD_NAME));
+        Assert.assertEquals(ContentType.DEFAULT_VALUE, configurationValues.get(ContentType.FIELD_NAME));
+        Assert.assertEquals(ChannelTitle.DEFAULT_VALUE, configurationValues.get(ChannelTitle.FIELD_NAME));
+        Assert.assertEquals(ChannelDescription.DEFAULT_VALUE, configurationValues.get(ChannelDescription.FIELD_NAME));
+        Assert.assertEquals(AccessModel.DEFAULT_VALUE, configurationValues.get(AccessModel.FIELD_NAME));
+        Assert.assertEquals(Affiliation.DEFAULT_VALUE, configurationValues.get(Affiliation.FIELD_NAME));
+        Assert.assertNotNull(configurationValues.get(LastUpdatedDate.FIELD_NAME));
+        
 	}
 
 	@Test

@@ -90,7 +90,6 @@ public class Helper {
 			LOGGER.debug(e);
 			throw new NodeConfigurationException(ELEMENT_NOT_FOUND);
 		} catch (ConfigurationFieldException e) {
-			e.printStackTrace();
 			LOGGER.debug(e);
 			throw new NodeConfigurationException();
 		}
@@ -216,7 +215,6 @@ public class Helper {
 		data.remove(LastUpdatedDate.FIELD_NAME);
 		String lastUpdated = getFieldFactory().create(LastUpdatedDate.FIELD_NAME, "").getValue();
 		data.put(LastUpdatedDate.FIELD_NAME, lastUpdated);
-
 	}
 
 	private void ensurePresent(HashMap<String, String> data, String fieldName) {

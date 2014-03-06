@@ -1,11 +1,13 @@
 package org.buddycloud.channelserver;
 
+import java.util.ArrayList;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
 import org.apache.log4j.Logger;
 import org.buddycloud.channelserver.channel.ChannelManagerFactory;
 import org.buddycloud.channelserver.channel.ChannelManagerFactoryImpl;
+import org.buddycloud.channelserver.channel.Conf;
 import org.buddycloud.channelserver.db.DefaultNodeStoreFactoryImpl;
 import org.buddycloud.channelserver.db.NodeStoreFactory;
 import org.buddycloud.channelserver.db.exception.NodeStoreException;
@@ -18,6 +20,7 @@ import org.xmpp.component.Component;
 import org.xmpp.component.ComponentException;
 import org.xmpp.component.ComponentManager;
 import org.xmpp.packet.JID;
+import org.xmpp.packet.Message;
 import org.xmpp.packet.Packet;
 
 public class ChannelsEngine implements Component {
@@ -65,6 +68,19 @@ public class ChannelsEngine implements Component {
 		serverSync();
 		LOGGER.info("XMPP Component started. We are '" + jid.toString()
 				+ "' and ready to accept packages.");
+		sendConnectionNotification(jid);
+	}
+
+	private void sendConnectionNotification(JID jid2) {
+		ArrayList<JID> sendTo = Configuration.getInstance().getNotificationsList(Configuration.NOTIFICATIONS_CONNECTED);
+		Message message = new Message();
+		message.setFrom(jid);
+		message.setType(Message.Type.chat);
+		message.setBody("XMPP component started");
+		for (JID user : sendTo) {
+			message.setTo(user);
+			this.outQueue.add(message.createCopy());
+		}
 	}
 
 	private void serverSync() {

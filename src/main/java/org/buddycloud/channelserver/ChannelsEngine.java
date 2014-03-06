@@ -71,7 +71,7 @@ public class ChannelsEngine implements Component {
 		sendConnectionNotification(jid);
 	}
 
-	private void sendConnectionNotification(JID jid2) {
+	private void sendConnectionNotification(JID jid2) throws ComponentException {
 		ArrayList<JID> sendTo = Configuration.getInstance().getNotificationsList(Configuration.NOTIFICATIONS_CONNECTED);
 		Message message = new Message();
 		message.setFrom(jid);
@@ -79,7 +79,7 @@ public class ChannelsEngine implements Component {
 		message.setBody("XMPP component started");
 		for (JID user : sendTo) {
 			message.setTo(user);
-			this.outQueue.add(message.createCopy());
+			this.sendPacket(message.createCopy());
 		}
 	}
 

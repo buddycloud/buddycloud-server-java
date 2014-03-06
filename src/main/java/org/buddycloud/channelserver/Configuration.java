@@ -36,6 +36,9 @@ public class Configuration extends Properties {
 	
 	public static final String DISCOVERY_USE_DNS = "discovery.dns.enabled";
 
+	public static final String NOTIFICATIONS_SENDTO = "notifications.sendTo";
+	public static final String NOTIFICATIONS_CONNECTED = "notifications.connected";
+	
 	private static final String CONFIGURATION_FILE = "configuration.properties";
 
 	private static Configuration instance = null;
@@ -119,6 +122,24 @@ public class Configuration extends Properties {
 		}
 
 		return jids;
+	}
+	
+	public ArrayList<JID> getNotificationsList(String event) {
+		ArrayList<JID> notify = new ArrayList<JID>();
+		if (!getBooleanProperty(event, false)) {
+			return notify;
+		}
+		String[] users = getProperty(NOTIFICATIONS_SENDTO).split(";");
+		JID userJid;
+		for (String user : users) {
+			try {
+				userJid = new JID(user);
+				notify.add(userJid);
+			} catch (IllegalArgumentException e) {
+				LOGGER.error(e);
+			}
+		}
+		return notify;
 	}
 
 	public String getServerDomain() {

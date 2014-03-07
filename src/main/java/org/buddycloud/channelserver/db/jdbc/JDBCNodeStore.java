@@ -1186,7 +1186,7 @@ public class JDBCNodeStore implements NodeStore {
 			if (-1 == limit)
 				limit = 50;
 			if (-1 == maxPerNode)
-				maxPerNode = 50;
+				maxPerNode = Integer.MAX_VALUE;
 
 			ResultSet<NodeSubscription> subscriptions = this
 					.getUserSubscriptions(user);

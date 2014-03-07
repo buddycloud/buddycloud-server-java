@@ -27,7 +27,7 @@ import org.xmpp.packet.PacketError.Type;
 public class RecentItemsGet extends PubSubElementProcessorAbstract {
 
 	private static final Logger LOGGER = Logger.getLogger(RecentItemsGet.class);
-	private static final String NODE_SUFIX = "/posts";
+	private static final String NODE_SUFFIX = "/posts";
 
 	private Date maxAge;
 	private Integer maxItems;
@@ -118,12 +118,12 @@ public class RecentItemsGet extends PubSubElementProcessorAbstract {
 		rsm.addElement("last", NS_RSM).setText(lastItemId.toString());
 		rsm.addElement("count", NS_RSM).setText(
 				String.valueOf(channelManager.getCountRecentItems(actor,
-						maxAge, maxItems, NODE_SUFIX)));
+						maxAge, maxItems, NODE_SUFFIX)));
 	}
 
 	private void addRecentItems() throws NodeStoreException {
 		CloseableIterator<NodeItem> items = channelManager.getRecentItems(
-				actor, maxAge, maxItems, maxResults, afterItemId, NODE_SUFIX);
+				actor, maxAge, maxItems, maxResults, afterItemId, NODE_SUFFIX);
 		String lastNodeId = "";
 		Element itemsElement = null;
 		while (items.hasNext()) {

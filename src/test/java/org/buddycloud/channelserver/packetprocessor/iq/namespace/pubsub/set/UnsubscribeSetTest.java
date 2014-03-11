@@ -198,7 +198,7 @@ public class UnsubscribeSetTest extends IQTestHandler {
 	}
 
 	@Test
-	public void testCanNotUnsubscribeAsOnlyNodeOwner() throws Exception {
+	public void canNotUnsubscribeAsOnlyNodeOwner() throws Exception {
 
 		ArrayList<JID> owners = new ArrayList<JID>();
 		owners.add(jid);
@@ -226,6 +226,26 @@ public class UnsubscribeSetTest extends IQTestHandler {
 		Assert.assertEquals(PacketError.Type.cancel, error.getType());
 		Assert.assertEquals(PacketError.Condition.not_allowed,
 				error.getCondition());
+	}
+	
+	@Test
+	public void unsubscribesTheUser() throws Exception {
+		Assert.assertTrue(false);
+	}
+	
+	@Test
+	public void updatesUserAffiliationToNone() throws Exception {
+		Assert.assertTrue(false);
+	}
+	
+	@Test
+	public void doesNotUpdateAffiliationIfOutcast() throws Exception {
+		Assert.assertTrue(false);
+	}
+	
+	@Test
+	public void sendsExpectedNotifications() throws Exception {
+		Assert.assertTrue(false);
 	}
 
 }

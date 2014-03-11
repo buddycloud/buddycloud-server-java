@@ -146,6 +146,19 @@ public class UnsubscribeSetTest extends IQTestHandler {
 	@Test
 	public void notExistingNodeRetunsError() throws Exception {
 		Mockito.when(channelManager.nodeExists(Mockito.anyString())).thenReturn(false);
+		
+		unsubscribe.process(element, jid, request, null);
+		
+		Assert.assertEquals(1, queue.size());
+		
+		IQ response = (IQ) queue.poll();
+		
+		Assert.assertEquals(IQ.Type.error, response.getType());
+		Assert.assertEquals(request.getFrom(), response.getTo());
+		PacketError error = response.getError();
+		Assert.assertEquals(PacketError.Condition.item_not_found, error.getCondition());
+		Assert.assertEquals(PacketError.Type.cancel, error.getType());
+		
 	}
 
 	@Test

@@ -81,6 +81,26 @@ public class UnsubscribeSetTest extends IQTestHandler {
 		Assert.assertEquals(PacketError.Type.modify, error.getType());
 		Assert.assertEquals(unsubscribe.NODE_ID_REQUIRED, error.getApplicationConditionName());
 	}
+	
+	@Test
+	public void emptyNodeAttributeReturnsError() throws Exception {
+		IQ badRequest = request.createCopy();
+		badRequest.getChildElement().element("unsubscribe").attribute("node").detach();
+		badRequest.getChildElement().element("unsubscribe").addAttribute("node", "");
+		
+		unsubscribe.process(element, jid, badRequest, null);
+		
+		Assert.assertEquals(1, queue.size());
+		
+		IQ response = (IQ) queue.poll();
+		
+		Assert.assertEquals(IQ.Type.error, response.getType());
+		Assert.assertEquals(badRequest.getFrom(), response.getTo());
+		PacketError error = response.getError();
+		Assert.assertEquals(PacketError.Condition.bad_request, error.getCondition());
+		Assert.assertEquals(PacketError.Type.modify, error.getType());
+		Assert.assertEquals(unsubscribe.NODE_ID_REQUIRED, error.getApplicationConditionName());
+	}
 
 
 	@Test

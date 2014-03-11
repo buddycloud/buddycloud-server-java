@@ -31,6 +31,7 @@ public class UnsubscribeSet extends PubSubElementProcessorAbstract {
 	private final ChannelManager channelManager;
 
 	private static final Logger logger = Logger.getLogger(UnsubscribeSet.class);
+	public static final String NODE_ID_REQUIRED = "nodeid-required";
 
 	private String node;
 	private IQ request;
@@ -47,8 +48,8 @@ public class UnsubscribeSet extends PubSubElementProcessorAbstract {
 	public void process(Element elm, JID actorJID, IQ reqIQ, Element rsm)
 			throws Exception {
 
-		node = elm.attributeValue("node");
 		request = reqIQ;
+		node = request.getChildElement().element("unsubscribe").attributeValue("node");
 		response = IQ.createResultIQ(request);
 
 		if ((node == null) || (node.equals(""))) {
@@ -209,7 +210,7 @@ public class UnsubscribeSet extends PubSubElementProcessorAbstract {
 		Element badRequest = new DOMElement("bad-request",
 				new org.dom4j.Namespace("", JabberPubsub.NS_XMPP_STANZAS));
 
-		Element nodeIdRequired = new DOMElement("nodeid-required",
+		Element nodeIdRequired = new DOMElement(NODE_ID_REQUIRED,
 				new org.dom4j.Namespace("", JabberPubsub.NS_PUBSUB_ERROR));
 
 		Element error = new DOMElement("error");

@@ -9,6 +9,7 @@ import junit.framework.Assert;
 
 import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.packetHandler.iq.IQTestHandler;
+import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.JabberPubsub;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.set.UnsubscribeSet;
 import org.buddycloud.channelserver.pubsub.affiliation.Affiliations;
 import org.buddycloud.channelserver.pubsub.model.NodeAffiliation;
@@ -101,7 +102,30 @@ public class UnsubscribeSetTest extends IQTestHandler {
 		Assert.assertEquals(PacketError.Type.modify, error.getType());
 		Assert.assertEquals(unsubscribe.NODE_ID_REQUIRED, error.getApplicationConditionName());
 	}
-
+	
+	@Test
+	public void makesRemoteRequest() throws Exception {
+		Mockito.when(channelManager.isLocalNode(Mockito.anyString())).thenReturn(false);
+		
+		unsubscribe.process(element, jid,  request, null);
+		
+        Assert.assertEquals(1, queue.size());
+		
+        String domain = new JID(request.getChildElement().element("unsubscribe").attributeValue("node").split("/")[2]).getDomain();
+        
+		IQ response = (IQ) queue.poll();
+		Assert.assertEquals(IQ.Type.set, response.getType());
+		Assert.assertEquals(domain, response.getTo().toString());
+		Element actor = response.getChildElement().element("actor");
+		Assert.assertNotNull(actor);
+		Assert.assertEquals(JabberPubsub.NS_BUDDYCLOUD, actor.getNamespaceURI());
+		Assert.assertEquals(request.getFrom().toBareJID(), actor.getText());
+	}
+	
+	@Test
+	public void notExistingNodeRetunsError() throws Exception {
+		Mockito.when(channelManager.nodeExists(Mockito.anyString())).thenReturn(false);
+	}
 
 	@Test
 	public void testCanNotUnsubscribeAsOnlyNodeOwner() throws Exception {

@@ -72,12 +72,8 @@ public class UnsubscribeSet extends PubSubElementProcessorAbstract {
 				.attributeValue("jid"));
 		
 		if (false == unsubscribingJid.toBareJID().equals(from.toBareJID())) {
-			// Does user have permission to change the subscription
-			NodeAffiliation fromAffiliation = channelManager.getUserAffiliation(node, from);
-			if (false == fromAffiliation.getAffiliation().canAuthorize()) {
-			    failAuthRequired();
-			    return;
-			}
+		    failAuthRequired();
+		    return;
 		}
 
 

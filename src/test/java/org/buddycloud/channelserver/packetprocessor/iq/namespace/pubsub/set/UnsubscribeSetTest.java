@@ -123,6 +123,27 @@ public class UnsubscribeSetTest extends IQTestHandler {
 	}
 	
 	@Test
+	public void canNotUnsubscribeAnotherUser() throws Exception {
+		
+		IQ badRequest = request.createCopy();
+		badRequest.getChildElement().element("unsubscribe").attribute("jid").detach();
+		badRequest.getChildElement().element("unsubscribe").addAttribute("jid", "romeo@montague.lit");
+		
+		unsubscribe.process(element, jid, badRequest, null);
+		
+		Assert.assertEquals(1, queue.size());
+		
+		IQ response = (IQ) queue.poll();
+		
+		Assert.assertEquals(IQ.Type.error, response.getType());
+		Assert.assertEquals(badRequest.getFrom(), response.getTo());
+		PacketError error = response.getError();
+		Assert.assertEquals(PacketError.Condition.not_authorized, error.getCondition());
+		Assert.assertEquals(PacketError.Type.auth, error.getType());
+		
+	}
+	
+	@Test
 	public void notExistingNodeRetunsError() throws Exception {
 		Mockito.when(channelManager.nodeExists(Mockito.anyString())).thenReturn(false);
 	}

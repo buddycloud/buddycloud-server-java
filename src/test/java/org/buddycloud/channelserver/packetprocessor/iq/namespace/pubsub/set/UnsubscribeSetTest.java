@@ -64,55 +64,65 @@ public class UnsubscribeSetTest extends IQTestHandler {
 		affiliation = new NodeAffiliationImpl(node, jid, Affiliations.owner,
 				new Date());
 	}
-	
+
 	@Test
 	public void missingNodeAttributeReturnsError() throws Exception {
 		IQ badRequest = request.createCopy();
-		badRequest.getChildElement().element("unsubscribe").attribute("node").detach();
+		badRequest.getChildElement().element("unsubscribe").attribute("node")
+				.detach();
 		unsubscribe.process(element, jid, badRequest, null);
-		
+
 		Assert.assertEquals(1, queue.size());
-		
+
 		IQ response = (IQ) queue.poll();
-		
+
 		Assert.assertEquals(IQ.Type.error, response.getType());
 		Assert.assertEquals(badRequest.getFrom(), response.getTo());
 		PacketError error = response.getError();
-		Assert.assertEquals(PacketError.Condition.bad_request, error.getCondition());
+		Assert.assertEquals(PacketError.Condition.bad_request,
+				error.getCondition());
 		Assert.assertEquals(PacketError.Type.modify, error.getType());
-		Assert.assertEquals(unsubscribe.NODE_ID_REQUIRED, error.getApplicationConditionName());
+		Assert.assertEquals(unsubscribe.NODE_ID_REQUIRED,
+				error.getApplicationConditionName());
 	}
-	
+
 	@Test
 	public void emptyNodeAttributeReturnsError() throws Exception {
 		IQ badRequest = request.createCopy();
-		badRequest.getChildElement().element("unsubscribe").attribute("node").detach();
-		badRequest.getChildElement().element("unsubscribe").addAttribute("node", "");
-		
+		badRequest.getChildElement().element("unsubscribe").attribute("node")
+				.detach();
+		badRequest.getChildElement().element("unsubscribe")
+				.addAttribute("node", "");
+
 		unsubscribe.process(element, jid, badRequest, null);
-		
+
 		Assert.assertEquals(1, queue.size());
-		
+
 		IQ response = (IQ) queue.poll();
-		
+
 		Assert.assertEquals(IQ.Type.error, response.getType());
 		Assert.assertEquals(badRequest.getFrom(), response.getTo());
 		PacketError error = response.getError();
-		Assert.assertEquals(PacketError.Condition.bad_request, error.getCondition());
+		Assert.assertEquals(PacketError.Condition.bad_request,
+				error.getCondition());
 		Assert.assertEquals(PacketError.Type.modify, error.getType());
-		Assert.assertEquals(unsubscribe.NODE_ID_REQUIRED, error.getApplicationConditionName());
+		Assert.assertEquals(unsubscribe.NODE_ID_REQUIRED,
+				error.getApplicationConditionName());
 	}
-	
+
 	@Test
 	public void makesRemoteRequest() throws Exception {
-		Mockito.when(channelManager.isLocalNode(Mockito.anyString())).thenReturn(false);
-		
-		unsubscribe.process(element, jid,  request, null);
-		
-        Assert.assertEquals(1, queue.size());
-		
-        String domain = new JID(request.getChildElement().element("unsubscribe").attributeValue("node").split("/")[2]).getDomain();
-        
+		Mockito.when(channelManager.isLocalNode(Mockito.anyString()))
+				.thenReturn(false);
+
+		unsubscribe.process(element, jid, request, null);
+
+		Assert.assertEquals(1, queue.size());
+
+		String domain = new JID(request.getChildElement()
+				.element("unsubscribe").attributeValue("node").split("/")[2])
+				.getDomain();
+
 		IQ response = (IQ) queue.poll();
 		Assert.assertEquals(IQ.Type.set, response.getType());
 		Assert.assertEquals(domain, response.getTo().toString());
@@ -121,44 +131,70 @@ public class UnsubscribeSetTest extends IQTestHandler {
 		Assert.assertEquals(JabberPubsub.NS_BUDDYCLOUD, actor.getNamespaceURI());
 		Assert.assertEquals(request.getFrom().toBareJID(), actor.getText());
 	}
-	
+
 	@Test
 	public void canNotUnsubscribeAnotherUser() throws Exception {
-		
+
 		IQ badRequest = request.createCopy();
-		badRequest.getChildElement().element("unsubscribe").attribute("jid").detach();
-		badRequest.getChildElement().element("unsubscribe").addAttribute("jid", "romeo@montague.lit");
-		
+		badRequest.getChildElement().element("unsubscribe").attribute("jid")
+				.detach();
+		badRequest.getChildElement().element("unsubscribe")
+				.addAttribute("jid", "romeo@montague.lit");
+
 		unsubscribe.process(element, jid, badRequest, null);
-		
+
 		Assert.assertEquals(1, queue.size());
-		
+
 		IQ response = (IQ) queue.poll();
-		
+
 		Assert.assertEquals(IQ.Type.error, response.getType());
 		Assert.assertEquals(badRequest.getFrom(), response.getTo());
 		PacketError error = response.getError();
-		Assert.assertEquals(PacketError.Condition.not_authorized, error.getCondition());
+		Assert.assertEquals(PacketError.Condition.not_authorized,
+				error.getCondition());
 		Assert.assertEquals(PacketError.Type.auth, error.getType());
-		
+
 	}
-	
+
 	@Test
 	public void notExistingNodeRetunsError() throws Exception {
-		Mockito.when(channelManager.nodeExists(Mockito.anyString())).thenReturn(false);
-		
+		Mockito.when(channelManager.nodeExists(Mockito.anyString()))
+				.thenReturn(false);
+
 		unsubscribe.process(element, jid, request, null);
-		
+
 		Assert.assertEquals(1, queue.size());
-		
+
 		IQ response = (IQ) queue.poll();
-		
+
 		Assert.assertEquals(IQ.Type.error, response.getType());
 		Assert.assertEquals(request.getFrom(), response.getTo());
 		PacketError error = response.getError();
-		Assert.assertEquals(PacketError.Condition.item_not_found, error.getCondition());
+		Assert.assertEquals(PacketError.Condition.item_not_found,
+				error.getCondition());
 		Assert.assertEquals(PacketError.Type.cancel, error.getType());
-		
+
+	}
+
+	@Test
+	public void nonMatchingSubscriptionToSenderReturnsError() throws Exception {
+
+		Mockito.when(channelManager.getUserSubscription(Mockito.anyString(),
+				Mockito.any(JID.class))).thenReturn(
+				new NodeSubscriptionImpl(node, new JID("juliet@capulet.lit"),
+						Subscriptions.subscribed));
+		unsubscribe.process(element, jid, request, null);
+
+		Assert.assertEquals(1, queue.size());
+
+		IQ response = (IQ) queue.poll();
+
+		Assert.assertEquals(IQ.Type.error, response.getType());
+		Assert.assertEquals(request.getFrom(), response.getTo());
+		PacketError error = response.getError();
+		Assert.assertEquals(PacketError.Condition.forbidden,
+				error.getCondition());
+		Assert.assertEquals(PacketError.Type.auth, error.getType());
 	}
 
 	@Test
@@ -190,7 +226,6 @@ public class UnsubscribeSetTest extends IQTestHandler {
 		Assert.assertEquals(PacketError.Type.cancel, error.getType());
 		Assert.assertEquals(PacketError.Condition.not_allowed,
 				error.getCondition());
-
 	}
 
 }

@@ -29,7 +29,6 @@ import org.xmpp.packet.Message;
 public class Helper {
 	private HashMap<String, Field> elements;
 	private Factory fieldFactory;
-	private boolean allowCreator;
 	private ChannelManager channelManager;
 
 	public static final String FORM_TYPE = "http://jabber.org/protocol/pubsub#node_config";
@@ -43,15 +42,9 @@ public class Helper {
 
 	private String node;
 
-	public Helper(ChannelManager channelManager, boolean allowCreator) {
+	public Helper(ChannelManager channelManager) {
 		setupRequiredFields();
 		this.channelManager = channelManager;
-		this.allowCreator = allowCreator;
-	}
-
-	public Helper(ChannelManager channelManager) {
-		this.channelManager = channelManager;
-		this.allowCreator = false;
 	}
 
 	public void setNode(String node) {
@@ -97,7 +90,6 @@ public class Helper {
 			LOGGER.debug(e);
 			throw new NodeConfigurationException(ELEMENT_NOT_FOUND);
 		} catch (ConfigurationFieldException e) {
-			e.printStackTrace();
 			LOGGER.debug(e);
 			throw new NodeConfigurationException();
 		}
@@ -143,7 +135,6 @@ public class Helper {
 		if (configurationValues.isEmpty()) {
 			return;
 		}
-		getFieldFactory().setAllowCreatorField(this.allowCreator);
 		for (FormField configurationValue : configurationValues) {
 			Field field = getFieldFactory().create(
 					configurationValue.getVariable(),
@@ -173,11 +164,13 @@ public class Helper {
 				return false;
 			}
 		}
+
 		return true;
 	}
 
 	public HashMap<String, String> getValues() throws NodeStoreException {
-		existingConfiguration = (HashMap<String, String>) channelManager.getNodeConf(getNode());
+		existingConfiguration = (HashMap<String, String>) channelManager
+				.getNodeConf(getNode());
 
 		HashMap<String, String> data = new HashMap<String, String>();
 		for (Entry<String, Field> element : elements.entrySet()) {
@@ -187,17 +180,52 @@ public class Helper {
 					+ "'");
 			data.put(key, value);
 		}
+		addRequiredFields(data);
 		cleanData(data);
 		return data;
 	}
 
-	private HashMap<String, String> cleanData(HashMap data) {
-		preventOverwrite(data, ChannelType.FIELD_NAME);
-		preventOverwrite(data, CreationDate.FIELD_NAME);
-		return data;
+	private void addRequiredFields(HashMap<String, String> data) {
+		for (String field : requiredFields) {
+			if (!data.containsKey(field)) {
+				if (existingConfiguration.containsKey(field)) {
+					data.put(field, existingConfiguration.get(field));
+				} else if (elements.containsKey(field)) {
+					data.put(field, elements.get(field).getValue());
+				}
+			}
+		}
 	}
 
-	private void preventOverwrite(HashMap data, String fieldName) {
+	private void cleanData(HashMap<String, String> data) {
+		preventOverwrite(data, ChannelType.FIELD_NAME);
+		preventOverwrite(data, CreationDate.FIELD_NAME);
+		preventOverwrite(data, Creator.FIELD_NAME);
+		preventOverwrite(data, ContentType.FIELD_NAME);
+
+		ensurePresent(data, ChannelTitle.FIELD_NAME);
+		ensurePresent(data, ChannelDescription.FIELD_NAME);
+		ensurePresent(data, AccessModel.FIELD_NAME);
+		ensurePresent(data, Affiliation.FIELD_NAME);
+
+		setLastUpdatedDate(data);
+	}
+
+	private void setLastUpdatedDate(HashMap<String, String> data) {
+		data.remove(LastUpdatedDate.FIELD_NAME);
+		String lastUpdated = getFieldFactory().create(LastUpdatedDate.FIELD_NAME, "").getValue();
+		data.put(LastUpdatedDate.FIELD_NAME, lastUpdated);
+	}
+
+	private void ensurePresent(HashMap<String, String> data, String fieldName) {
+		if (data.containsKey(fieldName))
+			return;
+		if (!existingConfiguration.containsKey(fieldName))
+			return;
+		data.put(fieldName, existingConfiguration.get(fieldName));
+	}
+
+	private void preventOverwrite(HashMap<String, String> data, String fieldName) {
 		if (!data.containsKey(fieldName)
 				|| !existingConfiguration.containsKey(fieldName)) {
 			return;

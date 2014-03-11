@@ -23,7 +23,7 @@ public class DiscoResult implements PacketProcessor<IQ> {
 	
 	private FederatedQueueManager federatedQueueManager;
 	private ChannelManager channelManager;
-	private Helper helper = new Helper(channelManager, true);
+	private Helper helper = new Helper(channelManager);
 
 	public DiscoResult(ChannelManager channelManager,
 			FederatedQueueManager federatedQueueManager) {

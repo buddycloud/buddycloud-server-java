@@ -25,7 +25,7 @@ import org.xmpp.resultsetmanagement.ResultSet;
 public class AffiliationEvent extends PubSubElementProcessorAbstract {
 
 	Element requestedAffiliation;
-	NodeAffiliation currentAffiliation;
+	NodeAffiliation usersCurrentAffiliation;
 
 	private static final Logger LOGGER = Logger
 			.getLogger(AffiliationEvent.class);
@@ -84,7 +84,7 @@ public class AffiliationEvent extends PubSubElementProcessorAbstract {
 	}
 
 	private boolean attemptToChangeAffiliationOfNodeOwner() {
-		if (false == currentAffiliation.getAffiliation().equals(
+		if (false == usersCurrentAffiliation.getAffiliation().equals(
 				Affiliations.owner)) {
 			return true;
 		}
@@ -183,11 +183,11 @@ public class AffiliationEvent extends PubSubElementProcessorAbstract {
 	}
 
 	private boolean subscriberHasCurrentAffiliation() throws NodeStoreException {
-		currentAffiliation = channelManager.getUserAffiliation(node, new JID(
+		usersCurrentAffiliation = channelManager.getUserAffiliation(node, new JID(
 				requestedAffiliation.attributeValue("jid")));
 
-		if ((null == currentAffiliation)
-				|| (currentAffiliation.getAffiliation()
+		if ((null == usersCurrentAffiliation)
+				|| (usersCurrentAffiliation.getAffiliation()
 						.equals(Affiliations.none))) {
 			setErrorCondition(PacketError.Type.modify,
 					PacketError.Condition.unexpected_request);

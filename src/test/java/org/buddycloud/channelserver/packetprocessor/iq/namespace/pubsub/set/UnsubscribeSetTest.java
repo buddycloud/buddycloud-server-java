@@ -66,12 +66,13 @@ public class UnsubscribeSetTest extends IQTestHandler {
 
 		subscription = new NodeSubscriptionImpl(node, jid,
 				Subscriptions.subscribed);
-		affiliation = new NodeAffiliationImpl(node, jid, Affiliations.publisher,
-				new Date());
-		
-		ResultSet<NodeSubscription> listeners = new ResultSetImpl<NodeSubscription>(new ArrayList<NodeSubscription>());
-		Mockito.when(channelManager
-		    .getNodeSubscriptionListeners(node)).thenReturn(listeners);
+		affiliation = new NodeAffiliationImpl(node, jid,
+				Affiliations.publisher, new Date());
+
+		ResultSet<NodeSubscription> listeners = new ResultSetImpl<NodeSubscription>(
+				new ArrayList<NodeSubscription>());
+		Mockito.when(channelManager.getNodeSubscriptionListeners(node))
+				.thenReturn(listeners);
 	}
 
 	@Test
@@ -212,7 +213,7 @@ public class UnsubscribeSetTest extends IQTestHandler {
 
 		affiliation = new NodeAffiliationImpl(node, jid, Affiliations.owner,
 				new Date());
-		
+
 		ArrayList<JID> owners = new ArrayList<JID>();
 		owners.add(jid);
 
@@ -262,6 +263,7 @@ public class UnsubscribeSetTest extends IQTestHandler {
 				argument.capture());
 
 		IQ response = (IQ) queue.poll();
+
 		Assert.assertEquals(IQ.Type.result, response.getType());
 		Assert.assertEquals(node, argument.getValue().getNodeId());
 		Assert.assertEquals(request.getFrom().toBareJID(), argument.getValue()
@@ -272,7 +274,25 @@ public class UnsubscribeSetTest extends IQTestHandler {
 
 	@Test
 	public void updatesUserAffiliationToNone() throws Exception {
-		Assert.assertTrue(false);
+
+		Mockito.when(
+				channelManager.getUserSubscription(Mockito.anyString(),
+						Mockito.any(JID.class))).thenReturn(subscription);
+		Mockito.when(
+				channelManager.getUserAffiliation(Mockito.anyString(),
+						Mockito.any(JID.class))).thenReturn(affiliation);
+		Mockito.when(channelManager.getNodeOwners(Mockito.anyString()))
+				.thenReturn(new ArrayList<JID>());
+
+		unsubscribe.process(element, jid, request, null);
+
+		Mockito.verify(channelManager, Mockito.times(1)).setUserAffiliation(
+				Mockito.eq(node), Mockito.eq(jid),
+				Mockito.eq(Affiliations.none));
+
+		IQ response = (IQ) queue.poll();
+
+		Assert.assertEquals(IQ.Type.result, response.getType());
 	}
 
 	@Test

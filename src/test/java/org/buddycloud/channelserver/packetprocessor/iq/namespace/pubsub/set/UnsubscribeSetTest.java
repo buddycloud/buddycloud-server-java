@@ -73,6 +73,15 @@ public class UnsubscribeSetTest extends IQTestHandler {
 				new ArrayList<NodeSubscription>());
 		Mockito.when(channelManager.getNodeSubscriptionListeners(node))
 				.thenReturn(listeners);
+
+		Mockito.when(
+				channelManager.getUserSubscription(Mockito.anyString(),
+						Mockito.any(JID.class))).thenReturn(subscription);
+		Mockito.when(
+				channelManager.getUserAffiliation(Mockito.anyString(),
+						Mockito.any(JID.class))).thenReturn(affiliation);
+		Mockito.when(channelManager.getNodeOwners(Mockito.anyString()))
+				.thenReturn(new ArrayList<JID>());
 	}
 
 	@Test
@@ -218,9 +227,6 @@ public class UnsubscribeSetTest extends IQTestHandler {
 		owners.add(jid);
 
 		Mockito.when(
-				channelManager.getUserSubscription(Mockito.anyString(),
-						Mockito.any(JID.class))).thenReturn(subscription);
-		Mockito.when(
 				channelManager.getUserAffiliation(Mockito.anyString(),
 						Mockito.any(JID.class))).thenReturn(affiliation);
 		Mockito.when(channelManager.getNodeOwners(Mockito.anyString()))
@@ -245,15 +251,6 @@ public class UnsubscribeSetTest extends IQTestHandler {
 	@Test
 	public void unsubscribesTheUser() throws Exception {
 
-		Mockito.when(
-				channelManager.getUserSubscription(Mockito.anyString(),
-						Mockito.any(JID.class))).thenReturn(subscription);
-		Mockito.when(
-				channelManager.getUserAffiliation(Mockito.anyString(),
-						Mockito.any(JID.class))).thenReturn(affiliation);
-		Mockito.when(channelManager.getNodeOwners(Mockito.anyString()))
-				.thenReturn(new ArrayList<JID>());
-
 		ArgumentCaptor<NodeSubscriptionImpl> argument = ArgumentCaptor
 				.forClass(NodeSubscriptionImpl.class);
 
@@ -275,15 +272,6 @@ public class UnsubscribeSetTest extends IQTestHandler {
 	@Test
 	public void updatesUserAffiliationToNone() throws Exception {
 
-		Mockito.when(
-				channelManager.getUserSubscription(Mockito.anyString(),
-						Mockito.any(JID.class))).thenReturn(subscription);
-		Mockito.when(
-				channelManager.getUserAffiliation(Mockito.anyString(),
-						Mockito.any(JID.class))).thenReturn(affiliation);
-		Mockito.when(channelManager.getNodeOwners(Mockito.anyString()))
-				.thenReturn(new ArrayList<JID>());
-
 		unsubscribe.process(element, jid, request, null);
 
 		Mockito.verify(channelManager, Mockito.times(1)).setUserAffiliation(
@@ -297,7 +285,25 @@ public class UnsubscribeSetTest extends IQTestHandler {
 
 	@Test
 	public void doesNotUpdateAffiliationIfOutcast() throws Exception {
-		Assert.assertTrue(false);
+
+		affiliation = new NodeAffiliationImpl(node, jid, Affiliations.outcast,
+				new Date());
+		
+		Mockito.when(
+				channelManager.getUserAffiliation(Mockito.anyString(),
+						Mockito.any(JID.class))).thenReturn(affiliation);
+		Mockito.when(channelManager.getNodeOwners(Mockito.anyString()))
+				.thenReturn(new ArrayList<JID>());
+
+		unsubscribe.process(element, jid, request, null);
+
+		Mockito.verify(channelManager, Mockito.times(0)).setUserAffiliation(
+				Mockito.eq(node), Mockito.eq(jid),
+				Mockito.eq(Affiliations.none));
+
+		IQ response = (IQ) queue.poll();
+
+		Assert.assertEquals(IQ.Type.result, response.getType());
 	}
 
 	@Test

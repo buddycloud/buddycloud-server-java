@@ -12,6 +12,7 @@ import org.buddycloud.channelserver.packetHandler.iq.IQTestHandler;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.JabberPubsub;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.set.UnsubscribeSet;
 import org.buddycloud.channelserver.pubsub.affiliation.Affiliations;
+import org.buddycloud.channelserver.pubsub.event.Event;
 import org.buddycloud.channelserver.pubsub.model.NodeAffiliation;
 import org.buddycloud.channelserver.pubsub.model.NodeSubscription;
 import org.buddycloud.channelserver.pubsub.model.impl.NodeAffiliationImpl;
@@ -27,6 +28,7 @@ import org.mockito.Mockito;
 import org.mockito.stubbing.OngoingStubbing;
 import org.xmpp.packet.IQ;
 import org.xmpp.packet.JID;
+import org.xmpp.packet.Message;
 import org.xmpp.packet.Packet;
 import org.xmpp.packet.PacketError;
 import org.xmpp.resultsetmanagement.ResultSet;
@@ -101,7 +103,7 @@ public class UnsubscribeSetTest extends IQTestHandler {
 		Assert.assertEquals(PacketError.Condition.bad_request,
 				error.getCondition());
 		Assert.assertEquals(PacketError.Type.modify, error.getType());
-		Assert.assertEquals(unsubscribe.NODE_ID_REQUIRED,
+		Assert.assertEquals(UnsubscribeSet.NODE_ID_REQUIRED,
 				error.getApplicationConditionName());
 	}
 
@@ -125,7 +127,7 @@ public class UnsubscribeSetTest extends IQTestHandler {
 		Assert.assertEquals(PacketError.Condition.bad_request,
 				error.getCondition());
 		Assert.assertEquals(PacketError.Type.modify, error.getType());
-		Assert.assertEquals(unsubscribe.NODE_ID_REQUIRED,
+		Assert.assertEquals(UnsubscribeSet.NODE_ID_REQUIRED,
 				error.getApplicationConditionName());
 	}
 
@@ -288,7 +290,7 @@ public class UnsubscribeSetTest extends IQTestHandler {
 
 		affiliation = new NodeAffiliationImpl(node, jid, Affiliations.outcast,
 				new Date());
-		
+
 		Mockito.when(
 				channelManager.getUserAffiliation(Mockito.anyString(),
 						Mockito.any(JID.class))).thenReturn(affiliation);
@@ -308,7 +310,38 @@ public class UnsubscribeSetTest extends IQTestHandler {
 
 	@Test
 	public void sendsExpectedNotifications() throws Exception {
-		Assert.assertTrue(false);
+
+		JID listener = new JID("channels.example.com");
+		ArrayList<NodeSubscription> listeners = new ArrayList<NodeSubscription>();
+		listeners.add(new NodeSubscriptionImpl(node, jid, listener,
+				Subscriptions.subscribed));
+
+		ResultSet<NodeSubscription> nodeListeners = new ResultSetImpl<NodeSubscription>(
+				listeners);
+		Mockito.when(channelManager.getNodeSubscriptionListeners(node))
+				.thenReturn(nodeListeners);
+
+		unsubscribe.process(element, jid, request, null);
+
+		Assert.assertEquals(4, queue.size());
+
+		IQ response = (IQ) queue.poll();
+
+		Assert.assertEquals(IQ.Type.result, response.getType());
+
+		Message notification = (Message) queue.poll();
+
+		Assert.assertEquals(jid, notification.getTo());
+		Assert.assertEquals(Message.Type.headline, notification.getType());
+
+		Element event = notification.getElement().element("event");
+		Assert.assertEquals(Event.NAMESPACE, event.getNamespaceURI());
+		Element subscription = event.element("subscription");
+		Assert.assertEquals(node, subscription.attributeValue("node"));
+		Assert.assertEquals(jid.toBareJID(), subscription.attributeValue("jid"));
+		Assert.assertEquals(Subscriptions.none.toString(),
+				subscription.attributeValue("subscription"));
+
 	}
 
 }

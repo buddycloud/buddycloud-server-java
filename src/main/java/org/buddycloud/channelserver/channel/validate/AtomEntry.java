@@ -9,6 +9,7 @@ import org.apache.log4j.Logger;
 import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.channel.Conf;
 import org.buddycloud.channelserver.db.exception.NodeStoreException;
+import org.buddycloud.channelserver.pubsub.model.GlobalItemID;
 import org.buddycloud.channelserver.pubsub.model.NodeItem;
 import org.buddycloud.channelserver.pubsub.model.impl.GlobalItemIDImpl;
 import org.buddycloud.channelserver.utils.node.item.payload.ActivityStreams;
@@ -32,7 +33,8 @@ public class AtomEntry implements ValidateEntry {
 	public static final String INVALID_RATING_VALUE = "invalid-rating";
 	public static final String TARGET_MUST_BE_IN_SAME_THREAD = "target-outside-thread";
 	public static final String CAN_ONLY_RATE_A_POST = "invalid-rating-request";
-
+	public static final String ITEM_ALREADY_RATED = "item-already-rated";
+	
 	public static final String CONTENT_TEXT = "text";
 	public static final String CONTENT_XHTML = "xhtml";
 
@@ -44,6 +46,7 @@ public class AtomEntry implements ValidateEntry {
 
 	public static final String ACTIVITY_VERB_POST = "post";
 	public static final String ACTIVITY_VERB_RATED = "rated";
+
 
 	private static Logger LOGGER = Logger.getLogger(Atom.class);
 
@@ -347,7 +350,7 @@ public class AtomEntry implements ValidateEntry {
 		return true;
 	}
 
-	private boolean validateRatingElement(Element rating) {
+	private boolean validateRatingElement(Element rating) throws NodeStoreException {
 		if (null == rating) {
 			return true;
 		}
@@ -377,6 +380,14 @@ public class AtomEntry implements ValidateEntry {
 			this.errorMessage = RATING_OUT_OF_RANGE;
 			return false;
 		}
+		
+		GlobalItemID globalTargetId = new GlobalItemIDImpl(new JID(
+				channelServerDomain), node, targetId);
+		if (true == channelManager.userHasRatedPost(node, jid, globalTargetId)) {
+		    this.errorMessage = ITEM_ALREADY_RATED;
+		    return false;
+		}
+		
 		return true;
 	}
 }

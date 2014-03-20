@@ -12,6 +12,7 @@ import org.xmpp.packet.Packet;
 import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.packetHandler.iq.TestHandler;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.get.RepliesGet;
+import org.buddycloud.channelserver.pubsub.model.GlobalItemID;
 import org.buddycloud.channelserver.pubsub.model.NodeItem;
 import org.buddycloud.channelserver.pubsub.model.impl.GlobalItemIDImpl;
 import org.buddycloud.channelserver.pubsub.model.impl.NodeItemImpl;
@@ -243,16 +244,16 @@ public class AtomEntryTest extends TestHandler {
 		Assert.assertTrue(validator.isValid());
 		entry = validator.getPayload();
 
-		Assert.assertEquals(validator.POST_TYPE_NOTE,
-				entry.element("object").elementText("object-type"));
+		Assert.assertEquals(validator.POST_TYPE_NOTE, entry.element("object")
+				.elementText("object-type"));
 
 		entry = (Element) this.replyEntry.clone();
 		validator = getEntryObject(entry);
 		Assert.assertTrue(validator.isValid());
 		entry = validator.getPayload();
 
-		Assert.assertEquals(validator.POST_TYPE_COMMENT,
-				entry.element("object").elementText("object-type"));
+		Assert.assertEquals(validator.POST_TYPE_COMMENT, entry
+				.element("object").elementText("object-type"));
 	}
 
 	@Test
@@ -272,8 +273,8 @@ public class AtomEntryTest extends TestHandler {
 		validator = getEntryObject(entry);
 		Assert.assertTrue(validator.isValid());
 		entry = validator.getPayload();
-		Assert.assertEquals(validator.CONTENT_TEXT, entry
-				.element("content").attributeValue("type"));
+		Assert.assertEquals(validator.CONTENT_TEXT, entry.element("content")
+				.attributeValue("type"));
 
 	}
 
@@ -285,8 +286,8 @@ public class AtomEntryTest extends TestHandler {
 		validator = getEntryObject(entry);
 		Assert.assertTrue(validator.isValid());
 		entry = validator.getPayload();
-		Assert.assertEquals(validator.CONTENT_XHTML,
-				entry.element("content").attributeValue("type"));
+		Assert.assertEquals(validator.CONTENT_XHTML, entry.element("content")
+				.attributeValue("type"));
 	}
 
 	@Test
@@ -310,7 +311,7 @@ public class AtomEntryTest extends TestHandler {
 		Element entry = (Element) this.replyEntry.clone();
 		validator = getEntryObject(entry);
 
-		Assert.assertFalse(validator.isValid() );
+		Assert.assertFalse(validator.isValid());
 		Assert.assertEquals(validator.PARENT_ITEM_NOT_FOUND,
 				validator.getErrorMessage());
 	}
@@ -326,7 +327,7 @@ public class AtomEntryTest extends TestHandler {
 		Element entry = (Element) this.replyEntry.clone();
 		validator = getEntryObject(entry);
 
-		Assert.assertFalse(validator.isValid() );
+		Assert.assertFalse(validator.isValid());
 		Assert.assertEquals(validator.MAX_THREAD_DEPTH_EXCEEDED,
 				validator.getErrorMessage());
 	}
@@ -347,7 +348,7 @@ public class AtomEntryTest extends TestHandler {
 		entry.element("in-reply-to").detach();
 		validator = getEntryObject(entry);
 
-		Assert.assertFalse(validator.isValid() );
+		Assert.assertFalse(validator.isValid());
 		Assert.assertEquals(validator.IN_REPLY_TO_MISSING,
 				validator.getErrorMessage());
 	}
@@ -368,7 +369,7 @@ public class AtomEntryTest extends TestHandler {
 		entry.element("target").element("id").detach();
 		validator = getEntryObject(entry);
 
-		Assert.assertFalse(validator.isValid() );
+		Assert.assertFalse(validator.isValid());
 		Assert.assertEquals(validator.MISSING_TARGET_ID,
 				validator.getErrorMessage());
 	}
@@ -390,7 +391,7 @@ public class AtomEntryTest extends TestHandler {
 		entry.element("target").addElement("id");
 		validator = getEntryObject(entry);
 
-		Assert.assertFalse(validator.isValid() );
+		Assert.assertFalse(validator.isValid());
 		Assert.assertEquals(validator.MISSING_TARGET_ID,
 				validator.getErrorMessage());
 	}
@@ -409,7 +410,7 @@ public class AtomEntryTest extends TestHandler {
 		Element entry = (Element) this.ratingEntry.clone();
 		validator = getEntryObject(entry);
 
-		Assert.assertFalse(validator.isValid() );
+		Assert.assertFalse(validator.isValid());
 		Assert.assertEquals(validator.TARGETED_ITEM_NOT_FOUND,
 				validator.getErrorMessage());
 	}
@@ -428,7 +429,7 @@ public class AtomEntryTest extends TestHandler {
 		Element entry = (Element) this.ratingEntry.clone();
 		validator = getEntryObject(entry);
 
-		Assert.assertFalse(validator.isValid() );
+		Assert.assertFalse(validator.isValid());
 		Assert.assertEquals(validator.TARGET_MUST_BE_IN_SAME_THREAD,
 				validator.getErrorMessage());
 	}
@@ -451,7 +452,7 @@ public class AtomEntryTest extends TestHandler {
 		entry.element("target").element("id").setText("B");
 		validator = getEntryObject(entry);
 
-		Assert.assertFalse(validator.isValid() );
+		Assert.assertFalse(validator.isValid());
 		Assert.assertEquals(validator.TARGET_MUST_BE_IN_SAME_THREAD,
 				validator.getErrorMessage());
 	}
@@ -469,7 +470,7 @@ public class AtomEntryTest extends TestHandler {
 
 		validator = getEntryObject(entry);
 
-		validator.isValid() ;
+		validator.isValid();
 
 		Mockito.verify(channelManager, Mockito.times(1)).getNodeItem(
 				Mockito.eq(node), Mockito.eq("1"));
@@ -483,7 +484,7 @@ public class AtomEntryTest extends TestHandler {
 
 		validator = getEntryObject(entry);
 
-		Assert.assertTrue(validator.isValid() );
+		Assert.assertTrue(validator.isValid());
 
 		Element payload = validator.getPayload();
 
@@ -501,7 +502,7 @@ public class AtomEntryTest extends TestHandler {
 		entry.element("in-reply-to").detach();
 		validator = getEntryObject(entry);
 
-		Assert.assertFalse(validator.isValid() );
+		Assert.assertFalse(validator.isValid());
 		Assert.assertEquals(validator.IN_REPLY_TO_MISSING,
 				validator.getErrorMessage());
 	}
@@ -514,7 +515,7 @@ public class AtomEntryTest extends TestHandler {
 		entry.element("target").detach();
 		validator = getEntryObject(entry);
 
-		Assert.assertFalse(validator.isValid() );
+		Assert.assertFalse(validator.isValid());
 		Assert.assertEquals(validator.TARGET_ELEMENT_MISSING,
 				validator.getErrorMessage());
 	}
@@ -527,7 +528,7 @@ public class AtomEntryTest extends TestHandler {
 		entry.element("rating").setText("awesome");
 		validator = getEntryObject(entry);
 
-		Assert.assertFalse(validator.isValid() );
+		Assert.assertFalse(validator.isValid());
 		Assert.assertEquals(validator.INVALID_RATING_VALUE,
 				validator.getErrorMessage());
 	}
@@ -540,7 +541,7 @@ public class AtomEntryTest extends TestHandler {
 		entry.element("target").element("id").setText("1");
 		validator = getEntryObject(entry);
 
-		Assert.assertFalse(validator.isValid() );
+		Assert.assertFalse(validator.isValid());
 		Assert.assertEquals(validator.RATING_OUT_OF_RANGE,
 				validator.getErrorMessage());
 	}
@@ -552,7 +553,7 @@ public class AtomEntryTest extends TestHandler {
 		entry.element("target").element("id").setText("1");
 		validator = getEntryObject(entry);
 
-		Assert.assertFalse(validator.isValid() );
+		Assert.assertFalse(validator.isValid());
 		Assert.assertEquals(validator.INVALID_RATING_VALUE,
 				validator.getErrorMessage());
 	}
@@ -567,7 +568,7 @@ public class AtomEntryTest extends TestHandler {
 		entry.element("target").element("id").setText("1");
 		validator = getEntryObject(entry);
 
-		Assert.assertTrue(validator.isValid() );
+		Assert.assertTrue(validator.isValid());
 		Element payload = validator.getPayload();
 
 		Assert.assertEquals(ActivityStreams.NS_REVIEW, payload
@@ -583,7 +584,7 @@ public class AtomEntryTest extends TestHandler {
 		entry.element("target").element("id").setText("1");
 		validator = getEntryObject(entry);
 
-		Assert.assertTrue(validator.isValid() );
+		Assert.assertTrue(validator.isValid());
 		Element payload = validator.getPayload();
 
 		Assert.assertEquals(ActivityStreams.NS_REVIEW, payload
@@ -597,7 +598,7 @@ public class AtomEntryTest extends TestHandler {
 		entry.element("target").element("id").setText("1");
 		validator = getEntryObject(entry);
 
-		Assert.assertTrue(validator.isValid() );
+		Assert.assertTrue(validator.isValid());
 		Element payload = validator.getPayload();
 
 		Assert.assertEquals(validator.ACTIVITY_VERB_RATED,
@@ -638,22 +639,21 @@ public class AtomEntryTest extends TestHandler {
 		Assert.assertEquals(validator.CAN_ONLY_RATE_A_POST,
 				validator.getErrorMessage());
 	}
-	
+
 	@Test
 	public void onlyAllowsSingleRatingPerPersonPerPost() throws Exception {
 		String testPayload = "<entry xmlns=\"http://www.w3.org/2005/Atom\"/>";
 		NodeItem item = new NodeItemImpl(node, "1", new Date(), testPayload);
 		Mockito.when(
-				channelManager.getNodeItem(Mockito.eq(node),
-						Mockito.anyString())).thenReturn(item);
+			channelManager.userHasRatedPost(Mockito.anyString(), Mockito.any(JID.class), Mockito.any(GlobalItemID.class))
+		).thenReturn(true);
 
 		Element entry = (Element) this.ratingEntry.clone();
 		entry.element("target").element("id").setText("1");
 		validator = getEntryObject(entry);
 
 		Assert.assertFalse(validator.isValid());
-		Assert.assertEquals(validator.CAN_ONLY_RATE_A_POST,
+		Assert.assertEquals(validator.ITEM_ALREADY_RATED,
 				validator.getErrorMessage());
 	}
-
 }

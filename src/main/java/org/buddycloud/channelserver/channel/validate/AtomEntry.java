@@ -192,8 +192,7 @@ public class AtomEntry implements ValidateEntry {
 		String postType = POST_TYPE_NOTE;
 		String activityVerb = ACTIVITY_VERB_POST;
 
-		entry.addElement("id").setText(
-				"tag:" + channelServerDomain + "," + node + "," + id);
+		entry.addElement("id").setText(new GlobalItemIDImpl(new JID(channelServerDomain), node, id).toString());
 
 		String title = this.params.get("title");
 		String itemContent = this.params.get("content");

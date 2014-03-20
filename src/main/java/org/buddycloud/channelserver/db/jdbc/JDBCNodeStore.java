@@ -1675,6 +1675,30 @@ public class JDBCNodeStore implements NodeStore {
 									// required
 		}
 	}
+	
+	@Override
+	public boolean userHasRatedPost(String node, JID user, GlobalItemID id) throws NodeStoreException {
+		PreparedStatement selectStatement = null;
+		try {
+			selectStatement = conn.prepareStatement(dialect.selectUserRatingsForAPost());
+			selectStatement.setString(1, node);
+			selectStatement.setString(2, "%<uri>acct:" + user.toBareJID() + "</uri>%");
+            selectStatement.setString(3, "%<activity:target><id>" + id.toString() + "</id>%");
+            
+			java.sql.ResultSet rs = selectStatement.executeQuery();
+
+			if (rs.next()) {
+				return true;
+			} else {
+				return false; // This really shouldn't happen!
+			}
+		} catch (SQLException e) {
+			throw new NodeStoreException(e);
+		} finally {
+			close(selectStatement); // Will implicitly close the resultset if
+									// required
+		}
+	}
 
 	@Override
 	public int countNodeSubscriptions(String nodeId, boolean isOwnerModerator) throws NodeStoreException {
@@ -2092,6 +2116,8 @@ public class JDBCNodeStore implements NodeStore {
 		String selectNodeThreads();
 		
 		String countNodeThreads();
+
+		String selectUserRatingsForAPost();
 	
 	}
 }

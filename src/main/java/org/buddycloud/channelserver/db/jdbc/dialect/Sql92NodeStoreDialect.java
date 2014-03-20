@@ -264,7 +264,14 @@ public class Sql92NodeStoreDialect implements NodeStoreSQLDialect {
 	private static final String COUNT_NODE_THREADS = "SELECT COUNT(DISTINCT \"thread_id\") " +
 			"FROM (SELECT \"node\", (CASE WHEN (\"in_reply_to\" IS NULL) THEN \"id\" ELSE \"in_reply_to\" END) AS \"thread_id\" " +
 			      "FROM \"items\" WHERE \"node\" = ?) AS \"_items\"";
-
+	
+	private static final String SELECT_USER_POST_RATING = "SELECT \"node\", \"id\", \"updated\", \"xml\" " +
+			"FROM \"items\" WHERE " +
+			"\"node\" = ? " +
+			"AND \"xml\" LIKE ? " +
+			"AND \"xml\" LIKE ? " +
+			"AND \"xml\" LIKE '%<activity:verb>rated</activity:verb>%';";
+	
     @Override
 	public String insertNode() {
 		return INSERT_NODE;
@@ -542,6 +549,11 @@ public class Sql92NodeStoreDialect implements NodeStoreSQLDialect {
 	@Override
 	public String selectItemsForLocalNodesBeforeDate() {
 		return SELECT_ITEMS_FROM_LOCAL_NODES_BEFORE_DATE;
+	}
+	
+	@Override
+	public String selectUserRatingsForAPost() {
+		return SELECT_USER_POST_RATING;
 	}
 
 	@Override

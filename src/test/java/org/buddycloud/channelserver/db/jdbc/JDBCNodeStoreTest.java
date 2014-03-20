@@ -2681,4 +2681,114 @@ public class JDBCNodeStoreTest {
 		assertEquals(TEST_SERVER1_USER1_JID, store.getNodeOwners(TEST_SERVER1_NODE1_ID).get(0));
 		assertEquals(TEST_SERVER1_USER2_JID, store.getNodeOwners(TEST_SERVER1_NODE1_ID).get(1));
 	}
+	
+	@Test
+	public void notPreviousRatingByUserReturnsFalse() throws Exception {
+
+		String node = "/users/romeo@capulet.lit/posts";
+		store.addRemoteNode(node);
+		
+		String content = "" +
+			    "<entry xmlns='http://www.w3.org/2005/Atom' xmlns:thr='http://purl.org/syndication/thread/1.0' xmlns:activity='http://activitystrea.ms/spec/1.0/'>" +
+				    "<id>tag:channels.capulet.lit,/users/romeo@capulet.lit/posts,6</id>" +
+		            "<title>Post title</title>" +
+		            "<published>2014-01-01T00:00:00.000Z</published>" +
+		            "<updated>2014-01-01T00:00:00.000Z</updated>" +
+		            "<author>" +
+		                  "<name>romeo@capulet.lit</name>" +
+		                  "<uri>acct:romeo@capulet.lit</uri>" +
+		                  "<jid xmlns='http://buddycloud.com/atom-elements-0'>romeo@capulet.lit</jid>" +
+		            "</author>" +
+		               "<content type='text'>rating:5.0</content>" +
+		               "<activity:verb>rated</activity:verb>" +
+		               "<activity:object>" +
+		                  "<activity:object-type>comment</activity:object-type>" +
+		               "</activity:object>" +
+		               "<thr:in-reply-to ref='tag:channels.capulet.lit,/users/romeo@capulet.lit/posts,5' />" +
+		               "<activity:target>" +
+		                   "<id>tag:channels.capulet.lit,/users/romeo@capulet.lit/posts,5</id>" +
+		               "</activity:target>" +
+		               "<review:rating>5.0</review:rating>" +
+		           "</entry>";
+				String alternativeContent = "" +
+		            "<entry xmlns='http://www.w3.org/2005/Atom' xmlns:thr='http://purl.org/syndication/thread/1.0' xmlns:activity='http://activitystrea.ms/spec/1.0/'>" +
+					    "<id>tag:channels.capulet.lit,/users/romeo@capulet.lit/posts,7</id>" +
+			            "<title>Post title</title>" +
+			            "<published>2014-01-01T00:00:00.000Z</published>" +
+			               "<content type='text'>rating:5.0</content>" +
+			               "<activity:verb>rated</activity:verb>" +
+			               "<activity:object>" +
+			                  "<activity:object-type>comment</activity:object-type>" +
+			               "</activity:object>" +
+			               "<thr:in-reply-to ref='tag:channels.capulet.lit,/users/romeo@capulet.lit/posts,5' />" +
+			               "<activity:target>" +
+			                   "<id>tag:channels.capulet.lit,/users/romeo@capulet.lit/posts,5</id>" +
+			               "</activity:target>" +
+			               "<review:rating>5.0</review:rating>" +
+			           "</entry>";
+		
+		NodeItem item1 = new NodeItemImpl(node, "6", new Date(), content);
+		store.addNodeItem(item1);
+		NodeItem item2 = new NodeItemImpl(node, "7", new Date(), alternativeContent);
+		store.addNodeItem(item2);
+		
+		Assert.assertFalse(
+			store.userHasRatedPost(node, new JID("romeo@capulet.lit"), new GlobalItemIDImpl(new JID("channels.capulet.lit"), node, "6"))
+	    );
+	}
+	
+	@Test
+	public void previousRatingByUserReturnsTrue() throws Exception {
+
+		String node = "/users/romeo@capulet.lit/posts";
+		store.addRemoteNode(node);
+		
+		String content = "" +
+			    "<entry xmlns='http://www.w3.org/2005/Atom' xmlns:thr='http://purl.org/syndication/thread/1.0' xmlns:activity='http://activitystrea.ms/spec/1.0/'>" +
+				    "<id>tag:channels.capulet.lit,/users/romeo@capulet.lit/posts,6</id>" +
+		            "<title>Post title</title>" +
+		            "<published>2014-01-01T00:00:00.000Z</published>" +
+		            "<updated>2014-01-01T00:00:00.000Z</updated>" +
+		            "<author>" +
+		                  "<name>romeo@capulet.lit</name>" +
+		                  "<uri>acct:romeo@capulet.lit</uri>" +
+		                  "<jid xmlns='http://buddycloud.com/atom-elements-0'>romeo@capulet.lit</jid>" +
+		            "</author>" +
+		               "<content type='text'>rating:5.0</content>" +
+		               "<activity:verb>rated</activity:verb>" +
+		               "<activity:object>" +
+		                  "<activity:object-type>comment</activity:object-type>" +
+		               "</activity:object>" +
+		               "<thr:in-reply-to ref='tag:channels.capulet.lit,/users/romeo@capulet.lit/posts,5' />" +
+		               "<activity:target>" +
+		                   "<id>tag:channels.capulet.lit,/users/romeo@capulet.lit/posts,5</id>" +
+		               "</activity:target>" +
+		               "<review:rating>5.0</review:rating>" +
+		           "</entry>";
+				String alternativeContent = "" +
+		            "<entry xmlns='http://www.w3.org/2005/Atom' xmlns:thr='http://purl.org/syndication/thread/1.0' xmlns:activity='http://activitystrea.ms/spec/1.0/'>" +
+					    "<id>tag:channels.capulet.lit,/users/romeo@capulet.lit/posts,7</id>" +
+			            "<title>Post title</title>" +
+			            "<published>2014-01-01T00:00:00.000Z</published>" +
+			               "<content type='text'>rating:5.0</content>" +
+			               "<activity:verb>rated</activity:verb>" +
+			               "<activity:object>" +
+			                  "<activity:object-type>comment</activity:object-type>" +
+			               "</activity:object>" +
+			               "<thr:in-reply-to ref='tag:channels.capulet.lit,/users/romeo@capulet.lit/posts,5' />" +
+			               "<activity:target>" +
+			                   "<id>tag:channels.capulet.lit,/users/romeo@capulet.lit/posts,5</id>" +
+			               "</activity:target>" +
+			               "<review:rating>5.0</review:rating>" +
+			           "</entry>";
+		
+		NodeItem item1 = new NodeItemImpl(node, "6", new Date(), content);
+		store.addNodeItem(item1);
+		NodeItem item2 = new NodeItemImpl(node, "7", new Date(), alternativeContent);
+		store.addNodeItem(item2);
+		
+		Assert.assertTrue(
+			store.userHasRatedPost(node, new JID("romeo@capulet.lit"), new GlobalItemIDImpl(new JID("channels.capulet.lit"), node, "5"))
+	    );
+	}
 }

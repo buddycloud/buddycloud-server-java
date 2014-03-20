@@ -616,6 +616,17 @@ public interface NodeStore {
 	ResultSet<NodeItem> getUserItems(JID userJid) throws NodeStoreException;
 	
 	/**
+	 * Determine if a user has already rated a post
+	 * 
+	 * @param node
+	 * @param user
+	 * @param id
+	 * @return
+	 * @throws NodeStoreException
+	 */
+	boolean userHasRatedPost(String node, JID user, GlobalItemID id) throws NodeStoreException;
+	
+	/**
 	 * Delete user posts
 	 * 
 	 * @param userJid

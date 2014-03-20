@@ -638,5 +638,22 @@ public class AtomEntryTest extends TestHandler {
 		Assert.assertEquals(validator.CAN_ONLY_RATE_A_POST,
 				validator.getErrorMessage());
 	}
+	
+	@Test
+	public void onlyAllowsSingleRatingPerPersonPerPost() throws Exception {
+		String testPayload = "<entry xmlns=\"http://www.w3.org/2005/Atom\"/>";
+		NodeItem item = new NodeItemImpl(node, "1", new Date(), testPayload);
+		Mockito.when(
+				channelManager.getNodeItem(Mockito.eq(node),
+						Mockito.anyString())).thenReturn(item);
+
+		Element entry = (Element) this.ratingEntry.clone();
+		entry.element("target").element("id").setText("1");
+		validator = getEntryObject(entry);
+
+		Assert.assertFalse(validator.isValid());
+		Assert.assertEquals(validator.CAN_ONLY_RATE_A_POST,
+				validator.getErrorMessage());
+	}
 
 }

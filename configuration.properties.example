@@ -18,6 +18,10 @@ jdbc.proxool.house-keeping-test-sql=select CURRENT_DATE
 # to all posts from the /firehose node (not just from open channels)
 users.admin = user1@example.com;crawler@searchengine.org
 
+# Notifications that can be sent out to JIDs on the 
+#notifications.sendTo = user1@example.com;sysadmin@ops.net
+#notifications.connected = true
+
 # A list of channels (local or remote) to which to subscribe new users
 # Note that the channels will not be created - they must already exist
 channels.autosubscribe=lounge@example.com;welcome@example.com

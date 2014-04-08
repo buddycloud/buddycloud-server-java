@@ -6,13 +6,14 @@ import java.util.concurrent.BlockingQueue;
 
 import org.apache.log4j.Logger;
 import org.buddycloud.channelserver.channel.ChannelManager;
-import org.buddycloud.channelserver.channel.ValidateEntry;
+import org.buddycloud.channelserver.channel.ValidatePayload;
+import org.buddycloud.channelserver.channel.validate.UnknownContentTypeException;
+import org.buddycloud.channelserver.channel.validate.ValidateEntry;
 import org.buddycloud.channelserver.db.exception.NodeStoreException;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.JabberPubsub;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.PubSubElementProcessorAbstract;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.PubSubSet;
 import org.buddycloud.channelserver.pubsub.affiliation.Affiliations;
-import org.buddycloud.channelserver.pubsub.model.NodeItem;
 import org.buddycloud.channelserver.pubsub.model.NodeSubscription;
 import org.buddycloud.channelserver.pubsub.model.impl.GlobalItemIDImpl;
 import org.buddycloud.channelserver.pubsub.model.impl.NodeItemImpl;
@@ -39,7 +40,6 @@ public class Publish extends PubSubElementProcessorAbstract {
 	private JID publishersJID;
 	private String inReplyTo;
 	private Element item;
-	private ValidateEntry entryContent;
 
 	private ValidateEntry validator;
 
@@ -111,6 +111,10 @@ public class Publish extends PubSubElementProcessorAbstract {
 			setErrorCondition(PacketError.Type.wait,
 					PacketError.Condition.internal_server_error);
 			outQueue.put(response);
+		} catch (UnknownContentTypeException e) {
+			createExtendedErrorReply(PacketError.Type.modify,
+					PacketError.Condition.not_acceptable,
+					ValidatePayload.UNSUPPORTED_CONTENT_TYPE);
 		}
 
 	}
@@ -123,11 +127,11 @@ public class Publish extends PubSubElementProcessorAbstract {
 
 	private void extractItemDetails() throws InterruptedException {
 
-		entry = entryContent.getPayload();
+		entry = validator.getPayload();
 		globalItemId = entry.element("id").getText();
 		if (false == GlobalItemIDImpl.isGlobalId(globalItemId)) {
-			globalItemId = new GlobalItemIDImpl(request.getTo(), node, globalItemId)
-			    .toString();
+			globalItemId = new GlobalItemIDImpl(request.getTo(), node,
+					globalItemId).toString();
 		}
 		id = GlobalItemIDImpl.toLocalId(globalItemId);
 		Element inReplyToElement = entry.element("in-reply-to");
@@ -142,19 +146,20 @@ public class Publish extends PubSubElementProcessorAbstract {
 		this.validator = validator;
 	}
 
-	private ValidateEntry getEntryValidator() {
+	private ValidateEntry getEntryValidator() throws Exception {
 		if (null == this.validator) {
-			this.validator = new ValidateEntry();
+			this.validator = new ValidatePayload(channelManager, node)
+					.getValidator();
 		}
 		return this.validator;
 	}
 
 	private void sendInvalidEntryResponse() throws InterruptedException {
-		LOGGER.info("Entry is not valid: '" + entryContent.getErrorMessage()
+		LOGGER.info("Entry is not valid: '" + validator.getErrorMessage()
 				+ "'.");
 		createExtendedErrorReply(PacketError.Type.modify,
 				PacketError.Condition.bad_request,
-				entryContent.getErrorMessage());
+				validator.getErrorMessage());
 		outQueue.put(response);
 	}
 
@@ -166,14 +171,14 @@ public class Publish extends PubSubElementProcessorAbstract {
 			outQueue.put(response);
 			return false;
 		}
-		entryContent = getEntryValidator();
-		entryContent.setEntry(item.element("entry"));
-		entryContent.setUser(publishersJID);
-		entryContent.setTo(request.getTo().toBareJID());
-		entryContent.setNode(node);
-		entryContent.setChannelManager(channelManager);
+		validator = getEntryValidator();
+		validator.setEntry(item.element("entry"));
+		validator.setUser(publishersJID);
+		validator.setTo(request.getTo().toBareJID());
+		validator.setNode(node);
+		validator.setChannelManager(channelManager);
 
-		if (!entryContent.isValid()) {
+		if (!validator.isValid()) {
 			sendInvalidEntryResponse();
 			return false;
 		}

@@ -1,4 +1,4 @@
-package org.buddycloud.channelserver.channel;
+package org.buddycloud.channelserver.channel.validate;
 
 import java.util.Date;
 import java.util.HashMap;
@@ -6,7 +6,10 @@ import java.util.Map;
 import java.util.UUID;
 
 import org.apache.log4j.Logger;
+import org.buddycloud.channelserver.channel.ChannelManager;
+import org.buddycloud.channelserver.channel.Conf;
 import org.buddycloud.channelserver.db.exception.NodeStoreException;
+import org.buddycloud.channelserver.pubsub.model.GlobalItemID;
 import org.buddycloud.channelserver.pubsub.model.NodeItem;
 import org.buddycloud.channelserver.pubsub.model.impl.GlobalItemIDImpl;
 import org.buddycloud.channelserver.utils.node.item.payload.ActivityStreams;
@@ -15,7 +18,7 @@ import org.dom4j.Element;
 import org.dom4j.dom.DOMElement;
 import org.xmpp.packet.JID;
 
-public class ValidateEntry {
+public class AtomEntry implements ValidateEntry {
 
 	public static final String MISSING_CONTENT_ELEMENT = "content-element-required";
 	public static final String MISSING_ENTRY_ELEMENT = "entry-element-required";
@@ -30,7 +33,8 @@ public class ValidateEntry {
 	public static final String INVALID_RATING_VALUE = "invalid-rating";
 	public static final String TARGET_MUST_BE_IN_SAME_THREAD = "target-outside-thread";
 	public static final String CAN_ONLY_RATE_A_POST = "invalid-rating-request";
-
+	public static final String ITEM_ALREADY_RATED = "item-already-rated";
+	
 	public static final String CONTENT_TEXT = "text";
 	public static final String CONTENT_XHTML = "xhtml";
 
@@ -43,7 +47,8 @@ public class ValidateEntry {
 	public static final String ACTIVITY_VERB_POST = "post";
 	public static final String ACTIVITY_VERB_RATED = "rated";
 
-	private static Logger LOGGER = Logger.getLogger(ValidateEntry.class);
+
+	private static Logger LOGGER = Logger.getLogger(Atom.class);
 
 	private Element entry;
 
@@ -65,31 +70,41 @@ public class ValidateEntry {
 
 	private Element geoloc;
 
-	public ValidateEntry() {
+	public AtomEntry() {
 	}
 
-	public ValidateEntry(Element entry) {
+	public AtomEntry(Element entry) {
 		setEntry(entry);
 	}
 
+	/* (non-Javadoc)
+	 * @see org.buddycloud.channelserver.channel.validate.ValidateEntry#setEntry(org.dom4j.Element)
+	 */
+	@Override
 	public void setEntry(Element entry) {
 		this.entry = entry;
 	}
 
+	/* (non-Javadoc)
+	 * @see org.buddycloud.channelserver.channel.validate.ValidateEntry#getErrorMessage()
+	 */
+	@Override
 	public String getErrorMessage() {
 		return this.errorMessage;
 	}
 
+	/* (non-Javadoc)
+	 * @see org.buddycloud.channelserver.channel.validate.ValidateEntry#setChannelManager(org.buddycloud.channelserver.channel.ChannelManager)
+	 */
+	@Override
 	public void setChannelManager(ChannelManager channelManager) {
 		this.channelManager = channelManager;
 	}
 
-	/**
-	 * This is a big hackety-hack.
-	 * 
-	 * @throws InterruptedException
-	 * @throws NodeStoreException
+	/* (non-Javadoc)
+	 * @see org.buddycloud.channelserver.channel.validate.ValidateEntry#isValid()
 	 */
+	@Override
 	public boolean isValid() throws NodeStoreException {
 		if (this.entry == null) {
 			this.errorMessage = MISSING_ENTRY_ELEMENT;
@@ -166,6 +181,10 @@ public class ValidateEntry {
 		return true;
 	}
 
+	/* (non-Javadoc)
+	 * @see org.buddycloud.channelserver.channel.validate.ValidateEntry#getPayload()
+	 */
+	@Override
 	public Element getPayload() {
 
 		Element entry = new DOMElement("entry", new org.dom4j.Namespace("",
@@ -176,8 +195,7 @@ public class ValidateEntry {
 		String postType = POST_TYPE_NOTE;
 		String activityVerb = ACTIVITY_VERB_POST;
 
-		entry.addElement("id").setText(
-				"tag:" + channelServerDomain + "," + node + "," + id);
+		entry.addElement("id").setText(new GlobalItemIDImpl(new JID(channelServerDomain), node, id).toString());
 
 		String title = this.params.get("title");
 		String itemContent = this.params.get("content");
@@ -246,14 +264,26 @@ public class ValidateEntry {
 		return entry;
 	}
 
+	/* (non-Javadoc)
+	 * @see org.buddycloud.channelserver.channel.validate.ValidateEntry#setUser(org.xmpp.packet.JID)
+	 */
+	@Override
 	public void setUser(JID jid) {
 		this.jid = jid;
 	}
 
+	/* (non-Javadoc)
+	 * @see org.buddycloud.channelserver.channel.validate.ValidateEntry#setNode(java.lang.String)
+	 */
+	@Override
 	public void setNode(String node) {
 		this.node = node;
 	}
 
+	/* (non-Javadoc)
+	 * @see org.buddycloud.channelserver.channel.validate.ValidateEntry#setTo(java.lang.String)
+	 */
+	@Override
 	public void setTo(String channelServerDomain) {
 		this.channelServerDomain = channelServerDomain;
 	}
@@ -320,7 +350,7 @@ public class ValidateEntry {
 		return true;
 	}
 
-	private boolean validateRatingElement(Element rating) {
+	private boolean validateRatingElement(Element rating) throws NodeStoreException {
 		if (null == rating) {
 			return true;
 		}
@@ -350,6 +380,14 @@ public class ValidateEntry {
 			this.errorMessage = RATING_OUT_OF_RANGE;
 			return false;
 		}
+		
+		GlobalItemID globalTargetId = new GlobalItemIDImpl(new JID(
+				channelServerDomain), node, targetId);
+		if (true == channelManager.userHasRatedPost(node, jid, globalTargetId)) {
+		    this.errorMessage = ITEM_ALREADY_RATED;
+		    return false;
+		}
+		
 		return true;
 	}
 }

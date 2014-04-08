@@ -485,4 +485,10 @@ public class ChannelManagerImpl implements ChannelManager {
 	public int countNodeThreads(String node) throws NodeStoreException {
 		return nodeStore.countNodeThreads(node);
 	}
+
+	@Override
+	public boolean userHasRatedPost(String node, JID user, GlobalItemID id)
+			throws NodeStoreException {
+		return nodeStore.userHasRatedPost(node, user, id);
+	}
 }

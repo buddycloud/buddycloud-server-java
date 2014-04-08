@@ -8,13 +8,14 @@ import java.util.concurrent.LinkedBlockingQueue;
 import junit.framework.Assert;
 
 import org.buddycloud.channelserver.channel.ChannelManager;
-import org.buddycloud.channelserver.channel.ValidateEntry;
+import org.buddycloud.channelserver.channel.ValidatePayload;
+import org.buddycloud.channelserver.channel.validate.AtomEntry;
+import org.buddycloud.channelserver.channel.validate.UnknownContentTypeException;
 import org.buddycloud.channelserver.db.exception.NodeStoreException;
 import org.buddycloud.channelserver.packetHandler.iq.IQTestHandler;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.JabberPubsub;
 import org.buddycloud.channelserver.pubsub.affiliation.Affiliations;
 import org.buddycloud.channelserver.pubsub.model.NodeAffiliation;
-import org.buddycloud.channelserver.pubsub.model.NodeItem;
 import org.buddycloud.channelserver.pubsub.model.NodeSubscription;
 import org.buddycloud.channelserver.pubsub.model.impl.GlobalItemIDImpl;
 import org.buddycloud.channelserver.pubsub.model.impl.NodeAffiliationImpl;
@@ -44,13 +45,13 @@ public class PublishTest extends IQTestHandler {
 	private BlockingQueue<Packet> queue = new LinkedBlockingQueue<Packet>();
 	private String node = "/user/romeo@shakespeare.lit/posts";
 	private String server = "channels.shakespeare.lit";
-	private ValidateEntry validateEntry;
+	private AtomEntry validateEntry;
 	private Element entry;
 
 	@Before
 	public void setUp() throws Exception {
 		channelManager = Mockito.mock(ChannelManager.class);
-		validateEntry = Mockito.mock(ValidateEntry.class);
+		validateEntry = Mockito.mock(AtomEntry.class);
 
 		Mockito.when(channelManager.isLocalNode(Mockito.anyString()))
 				.thenReturn(true);
@@ -362,7 +363,7 @@ public class PublishTest extends IQTestHandler {
 
 		Assert.assertEquals(5, queue.size());
 
-		IQ response = (IQ) queue.poll();
+		queue.poll();
 		Message notification = (Message) queue.poll();
 
 		Assert.assertEquals(Message.Type.headline, notification.getType());
@@ -415,4 +416,5 @@ public class PublishTest extends IQTestHandler {
 				.getValue().getInReplyTo());
 		Assert.assertEquals(node, argument.getValue().getNodeId());
 	}
+	
 }

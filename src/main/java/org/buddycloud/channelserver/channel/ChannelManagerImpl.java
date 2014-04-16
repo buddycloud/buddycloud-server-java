@@ -83,7 +83,6 @@ public class ChannelManagerImpl implements ChannelManager {
 			throws NodeStoreException {
 		return nodeStore.getNodeConf(nodeId);
 	}
-	
 
 	@Override
 	public boolean isCachedNodeConfig(String nodeId) throws NodeStoreException {
@@ -138,16 +137,17 @@ public class ChannelManagerImpl implements ChannelManager {
 	}
 
 	@Override
-	public ResultSet<NodeAffiliation> getNodeAffiliations(String nodeId, boolean isOwnerModerator)
-			throws NodeStoreException {
+	public ResultSet<NodeAffiliation> getNodeAffiliations(String nodeId,
+			boolean isOwnerModerator) throws NodeStoreException {
 		return nodeStore.getNodeAffiliations(nodeId, isOwnerModerator);
 	}
 
 	@Override
-	public ResultSet<NodeAffiliation> getNodeAffiliations(String nodeId, boolean isOwnerModerator,
-			String afterItemId, int maxItemsToReturn) throws NodeStoreException {
-		return nodeStore.getNodeAffiliations(nodeId, isOwnerModerator, afterItemId,
-				maxItemsToReturn);
+	public ResultSet<NodeAffiliation> getNodeAffiliations(String nodeId,
+			boolean isOwnerModerator, String afterItemId, int maxItemsToReturn)
+			throws NodeStoreException {
+		return nodeStore.getNodeAffiliations(nodeId, isOwnerModerator,
+				afterItemId, maxItemsToReturn);
 	}
 
 	@Override
@@ -156,7 +156,8 @@ public class ChannelManagerImpl implements ChannelManager {
 	}
 
 	@Override
-	public int countNodeAffiliations(String nodeId, boolean isOwnerModerator) throws NodeStoreException {
+	public int countNodeAffiliations(String nodeId, boolean isOwnerModerator)
+			throws NodeStoreException {
 		return nodeStore.countNodeAffiliations(nodeId, isOwnerModerator);
 	}
 
@@ -406,16 +407,17 @@ public class ChannelManagerImpl implements ChannelManager {
 
 	@Override
 	public CloseableIterator<NodeItem> getRecentItems(JID user, Date since,
-			int maxPerNode, int limit, GlobalItemID afterItemId, String node)
-			throws NodeStoreException {
+			int maxPerNode, int limit, GlobalItemID afterItemId, String node,
+			boolean parentOnly) throws NodeStoreException {
 		return nodeStore.getRecentItems(user, since, maxPerNode, limit,
-				afterItemId, node);
+				afterItemId, node, parentOnly);
 	}
 
 	@Override
 	public int getCountRecentItems(JID user, Date since, int maxPerNode,
-			String node) throws NodeStoreException {
-		return nodeStore.getCountRecentItems(user, since, maxPerNode, node);
+			String node, boolean parentOnly) throws NodeStoreException {
+		return nodeStore.getCountRecentItems(user, since, maxPerNode, node,
+				parentOnly);
 	}
 
 	@Override

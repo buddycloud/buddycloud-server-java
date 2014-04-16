@@ -149,7 +149,7 @@ public class RecentItemsGetTest extends IQTestHandler {
 				channelManager.getRecentItems(Mockito.any(JID.class),
 						Mockito.any(Date.class), Mockito.anyInt(),
 						Mockito.anyInt(), Mockito.any(GlobalItemID.class),
-						Mockito.anyString())).thenThrow(
+						Mockito.anyString(), Mockito.anyBoolean())).thenThrow(
 				new NodeStoreException());
 
 		recentItemsGet.process(element, jid, request, null);
@@ -169,7 +169,7 @@ public class RecentItemsGetTest extends IQTestHandler {
 				channelManager.getRecentItems(Mockito.any(JID.class),
 						Mockito.any(Date.class), Mockito.anyInt(),
 						Mockito.anyInt(), Mockito.any(GlobalItemID.class),
-						Mockito.anyString())).thenReturn(
+						Mockito.anyString(), Mockito.anyBoolean())).thenReturn(
 				new ClosableIteratorImpl<NodeItem>(new ArrayList<NodeItem>()
 						.iterator()));
 
@@ -206,7 +206,7 @@ public class RecentItemsGetTest extends IQTestHandler {
 				channelManager.getRecentItems(Mockito.any(JID.class),
 						Mockito.any(Date.class), Mockito.anyInt(),
 						Mockito.anyInt(), Mockito.any(GlobalItemID.class),
-						Mockito.anyString())).thenReturn(
+						Mockito.anyString(), Mockito.anyBoolean())).thenReturn(
 				new ClosableIteratorImpl<NodeItem>(results.iterator()));
 
 		recentItemsGet.process(element, jid, request, null);
@@ -245,7 +245,7 @@ public class RecentItemsGetTest extends IQTestHandler {
 				channelManager.getRecentItems(Mockito.any(JID.class),
 						Mockito.any(Date.class), Mockito.anyInt(),
 						Mockito.anyInt(), Mockito.any(GlobalItemID.class),
-						Mockito.anyString())).thenReturn(
+						Mockito.anyString(), Mockito.anyBoolean())).thenReturn(
 				new ClosableIteratorImpl<NodeItem>(results.iterator()));
 
 		recentItemsGet.process(element, jid, request, null);
@@ -278,12 +278,12 @@ public class RecentItemsGetTest extends IQTestHandler {
 				channelManager.getRecentItems(Mockito.any(JID.class),
 						Mockito.any(Date.class), Mockito.anyInt(),
 						Mockito.anyInt(), Mockito.any(GlobalItemID.class),
-						Mockito.anyString())).thenReturn(
+						Mockito.anyString(), Mockito.anyBoolean())).thenReturn(
 				new ClosableIteratorImpl<NodeItem>(results.iterator()));
 		Mockito.when(
 				channelManager.getCountRecentItems(Mockito.any(JID.class),
 						Mockito.any(Date.class), Mockito.anyInt(),
-						Mockito.anyString())).thenReturn(results.size());
+						Mockito.anyString(), Mockito.anyBoolean())).thenReturn(results.size());
 
 		Element rsm = request.getElement().addElement("rsm");
 		rsm.addNamespace("", RecentItemsGet.NS_RSM);
@@ -341,16 +341,16 @@ public class RecentItemsGetTest extends IQTestHandler {
 				channelManager.getRecentItems(Mockito.any(JID.class),
 						Mockito.any(Date.class), Mockito.anyInt(),
 						Mockito.anyInt(), Mockito.any(GlobalItemID.class),
-						Mockito.anyString())).thenReturn(
+						Mockito.anyString(), Mockito.anyBoolean())).thenReturn(
 				new ClosableIteratorImpl<NodeItem>(results.iterator()));
 		Mockito.when(
 				channelManager.getCountRecentItems(Mockito.any(JID.class),
 						Mockito.any(Date.class), Mockito.anyInt(),
-						Mockito.anyString())).thenReturn(100);
+						Mockito.anyString(), Mockito.anyBoolean())).thenReturn(100);
 		
 		recentItemsGet.process(element, jid, request, rsm);
 		
-		verify(channelManager).getRecentItems(eq(jid), any(Date.class), anyInt(), eq(5), eq(itemID), eq("/posts"));
+		verify(channelManager).getRecentItems(eq(jid), any(Date.class), anyInt(), eq(5), eq(itemID), eq("/posts"), Mockito.anyBoolean());
 
 		Packet p = queue.poll(100, TimeUnit.MILLISECONDS);
 		
@@ -381,12 +381,12 @@ public class RecentItemsGetTest extends IQTestHandler {
 				channelManager.getRecentItems(Mockito.any(JID.class),
 						Mockito.any(Date.class), Mockito.anyInt(),
 						Mockito.anyInt(), Mockito.any(GlobalItemID.class),
-						Mockito.anyString())).thenReturn(
+						Mockito.anyString(), Mockito.anyBoolean())).thenReturn(
 				new ClosableIteratorImpl<NodeItem>(new ArrayList<NodeItem>().iterator()));
 		Mockito.when(
 				channelManager.getCountRecentItems(Mockito.any(JID.class),
 						Mockito.any(Date.class), Mockito.anyInt(),
-						Mockito.anyString())).thenReturn(0);
+						Mockito.anyString(), Mockito.anyBoolean())).thenReturn(0);
 		
 		recentItemsGet.process(element, jid, request, rsm);
 		

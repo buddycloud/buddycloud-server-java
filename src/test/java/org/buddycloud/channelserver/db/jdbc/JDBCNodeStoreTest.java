@@ -19,7 +19,6 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
@@ -56,82 +55,12 @@ import org.xmpp.packet.JID;
 import org.xmpp.resultsetmanagement.ResultSet;
 
 @SuppressWarnings("serial")
-public class JDBCNodeStoreTest {
-
-	private static final String TEST_SERVER1_NODE1_ID = "users/node1@server1/posts";
-	private static final String TEST_SERVER1_NODE2_ID = "users/node2@server1/posts";
-	private static final String TEST_SERVER1_NODE3_ID = "users/node3@server1/posts";
-
-	private static final String TEST_SERVER2_NODE1_ID = "users/node1@server2/posts";
-
-	private static final String TEST_SERVER1_NODE1_ITEM1_ID = "a1";
-	private static final String TEST_SERVER1_NODE1_ITEM1_CONTENT = "Test 1";
-
-	private static final String TEST_SERVER1_NODE1_ITEM2_ID = "a2";
-	private static final String TEST_SERVER1_NODE1_ITEM2_CONTENT = "Test 2";
-
-	private static final String TEST_SERVER1_NODE1_ITEM3_ID = "a3";
-	private static final String TEST_SERVER1_NODE1_ITEM3_CONTENT = "Test 3";
-
-	private static final String TEST_SERVER1_NODE1_ITEM4_ID = "a4";
-	private static final String TEST_SERVER1_NODE1_ITEM4_CONTENT = "Test 4";
-
-	private static final String TEST_SERVER1_NODE1_ITEM5_ID = "a5";
-	private static final String TEST_SERVER1_NODE1_ITEM5_CONTENT = "Test 5";
-
-	private static final String TEST_SERVER1_HOSTNAME = "server1";
-	private static final String TEST_SERVER2_HOSTNAME = "server2";
-
-	private static final String UNKNOWN_NODE = "/user/unknown@example.com/posts";
-
-	private static final HashMap<String, String> TEST_SERVER1_NODE1_CONF = new HashMap<String, String>() {
-		{
-			put("config1", "Value of config1");
-			put("config2", "Value of config2");
-		}
-	};
-
-	private static final String TEST_SERVER1_NODE1_CONFIG1_KEY = "config1";
-	private static final String TEST_SERVER1_NODE1_CONFIG1_VALUE = "Value of config1";
-
-	private static final JID TEST_SERVER1_CHANNELS_JID = new JID(
-			"channels.server1");
-	private static final JID TEST_SERVER2_CHANNELS_JID = new JID(
-			"channels.server2");
-
-	private static final JID TEST_SERVER1_USER1_JID = new JID("user1@server1");
-	private static final JID TEST_SERVER1_USER1_JID_WITH_RESOURCE = new JID(
-			"user1@server1/resource");
-	private static final JID TEST_SERVER1_USER2_JID = new JID("user2@server1");
-	private static final JID TEST_SERVER1_USER3_JID = new JID("user3@server1");
-	private static final JID TEST_SERVER1_OUTCAST_JID = new JID("outcast@server1");
-
-	private static final JID TEST_SERVER2_USER1_JID = new JID("user1@server2");
-	private static final JID TEST_SERVER2_USER2_JID = new JID("user2@server2");
-	private static final JID TEST_SERVER2_USER3_JID = new JID("user3@server2");
-
-	DatabaseTester dbTester;
-	Connection conn;
-
-	JDBCNodeStore store;
+public class JDBCNodeStoreTest extends JDBCNodeStoreAbstract {
 
 	public JDBCNodeStoreTest() throws SQLException, IOException,
 			ClassNotFoundException {
 		dbTester = new DatabaseTester();
 		IQTestHandler.readConf();
-	}
-
-	@Before
-	public void setUp() throws Exception {
-		dbTester.initialise();
-
-		store = new JDBCNodeStore(dbTester.getConnection(),
-				new Sql92NodeStoreDialect());
-	}
-
-	@After
-	public void tearDown() throws Exception {
-		dbTester.close();
 	}
 
 	@Test
@@ -1736,180 +1665,6 @@ public class JDBCNodeStoreTest {
 	}
 
 	@Test
-	public void testGetRecentItems() throws Exception {
-
-		Date since = new Date();
-		dbTester.loadData("node_1");
-		store.addRemoteNode(TEST_SERVER1_NODE2_ID);
-		store.addUserSubscription(new NodeSubscriptionImpl(
-				TEST_SERVER1_NODE2_ID, TEST_SERVER1_USER1_JID,
-				Subscriptions.subscribed));
-
-		NodeItem nodeItem1 = new NodeItemImpl(TEST_SERVER1_NODE1_ID, "123",
-				new Date(), "payload");
-		store.addNodeItem(nodeItem1);
-		Thread.sleep(1);
-		NodeItem nodeItem2 = new NodeItemImpl(TEST_SERVER1_NODE2_ID, "123",
-				new Date(), "payload2");
-		store.addNodeItem(nodeItem2);
-
-		Thread.sleep(20);
-
-		CloseableIterator<NodeItem> items = store.getRecentItems(
-				TEST_SERVER1_USER1_JID, since, -1, -1, null, null);
-
-		// 2 -> 1 on purpose results are most recent first!
-		assertSameNodeItem(items.next(), nodeItem2);
-		assertSameNodeItem(items.next(), nodeItem1);
-		assertEquals(false, items.hasNext());
-	}
-
-	@Test
-	public void testGetRecentItemsCanBePaged() throws Exception {
-
-		Date since = new Date(0);
-		dbTester.loadData("node_1");
-		store.addRemoteNode(TEST_SERVER1_NODE2_ID);
-		store.addUserSubscription(new NodeSubscriptionImpl(
-				TEST_SERVER1_NODE2_ID, TEST_SERVER1_USER1_JID,
-				Subscriptions.subscribed));
-
-		long now = System.currentTimeMillis();
-
-		NodeItem nodeItem1 = new NodeItemImpl(TEST_SERVER1_NODE1_ID, "123",
-				new Date(now - 400), "<entry><id>123</id></entry>");
-		store.addNodeItem(nodeItem1);
-
-		NodeItem nodeItem2 = new NodeItemImpl(TEST_SERVER1_NODE2_ID, "123",
-				new Date(now - 400), "<entry><id>123</id></entry>");
-		store.addNodeItem(nodeItem2);
-
-		NodeItem nodeItem3 = new NodeItemImpl(TEST_SERVER1_NODE2_ID, "124",
-				new Date(now - 300), "<entry><id>124</id></entry>");
-		store.addNodeItem(nodeItem3);
-
-		NodeItem nodeItem4 = new NodeItemImpl(TEST_SERVER1_NODE1_ID, "124",
-				new Date(now - 200), "<entry><id>124</id></entry>");
-		store.addNodeItem(nodeItem4);
-
-		CloseableIterator<NodeItem> items = store.getRecentItems(
-				TEST_SERVER1_USER1_JID, since, -1, 2,
-				new GlobalItemIDImpl(TEST_SERVER1_CHANNELS_JID,
-						TEST_SERVER1_NODE1_ID, "124"), null);
-
-		assertSameNodeItem(items.next(), nodeItem3);
-		assertSameNodeItem(items.next(), nodeItem1);
-		assertFalse(items.hasNext());
-	}
-
-	@Test
-	public void testGetRecentItemsWithNoResultsPerNodeRequestedReturnsExpectedCount()
-			throws Exception {
-		Date since = new Date(0);
-		dbTester.loadData("node_1");
-		store.addRemoteNode(TEST_SERVER1_NODE2_ID);
-		store.addUserSubscription(new NodeSubscriptionImpl(
-				TEST_SERVER1_NODE2_ID, TEST_SERVER1_USER1_JID,
-				Subscriptions.subscribed));
-
-		NodeItem nodeItem1 = new NodeItemImpl(TEST_SERVER1_NODE1_ID, "1",
-				new Date(), "payload");
-		NodeItem nodeItem2 = new NodeItemImpl(TEST_SERVER1_NODE2_ID, "2",
-				new Date(), "payload2");
-		store.addNodeItem(nodeItem1);
-		store.addNodeItem(nodeItem2);
-
-		CloseableIterator<NodeItem> items = store.getRecentItems(
-				TEST_SERVER1_USER1_JID, since, 0, -1, null, null);
-
-		int count = 0;
-		while (items.hasNext()) {
-			items.next();
-			++count;
-		}
-		assertEquals(0, count);
-	}
-
-	@Test
-	public void testGetRecentItemCountWithNoResultsPerNodeRequestedReturnsExpectedCount()
-			throws Exception {
-		Date since = new Date();
-		dbTester.loadData("node_1");
-		store.addRemoteNode(TEST_SERVER1_NODE2_ID);
-		store.addUserSubscription(new NodeSubscriptionImpl(
-				TEST_SERVER1_NODE2_ID, TEST_SERVER1_USER1_JID,
-				Subscriptions.subscribed));
-
-		store.addNodeItem(new NodeItemImpl(TEST_SERVER1_NODE1_ID, "123",
-				new Date(), "payload"));
-		store.addNodeItem(new NodeItemImpl(TEST_SERVER1_NODE2_ID, "123",
-				new Date(), "payload2"));
-
-		int count = store.getCountRecentItems(TEST_SERVER1_USER1_JID, since, 0,
-				null);
-		assertEquals(0, count);
-	}
-
-	@Test
-	public void testCanPageGetRecentItemsUsingResultSetManagement()
-			throws Exception {
-		dbTester.loadData("node_1");
-
-		Date since = new Date();
-
-		Thread.sleep(10);
-
-		store.addRemoteNode(TEST_SERVER1_NODE2_ID);
-		store.addUserSubscription(new NodeSubscriptionImpl(
-				TEST_SERVER1_NODE2_ID, TEST_SERVER1_USER1_JID,
-				Subscriptions.subscribed));
-
-		for (int i = 1; i < 20; i++) {
-			Thread.sleep(10);
-			store.addNodeItem(new NodeItemImpl(TEST_SERVER1_NODE1_ID, String
-					.valueOf(i), new Date(), "payload" + String.valueOf(i)));
-		}
-
-		GlobalItemID itemID = new GlobalItemIDImpl(TEST_SERVER1_CHANNELS_JID,
-				TEST_SERVER1_NODE1_ID, "15");
-
-		CloseableIterator<NodeItem> items = store.getRecentItems(
-				TEST_SERVER1_USER1_JID, since, -1, 10, itemID, null);
-
-		int count = 0;
-		int i = 14;
-
-		while (items.hasNext()) {
-			assertSameNodeItem(items.next(), new NodeItemImpl(
-					TEST_SERVER1_NODE1_ID, String.valueOf(i), new Date(),
-					"payload" + String.valueOf(i)));
-			--i;
-			++count;
-		}
-		assertEquals(10, count);
-	}
-
-	@Test
-	public void testGetRecentItemCount() throws Exception {
-
-		Date since = new Date();
-		dbTester.loadData("node_1");
-		store.addRemoteNode(TEST_SERVER1_NODE2_ID);
-		store.addUserSubscription(new NodeSubscriptionImpl(
-				TEST_SERVER1_NODE2_ID, TEST_SERVER1_USER1_JID,
-				Subscriptions.subscribed));
-		Thread.sleep(1);
-		store.addNodeItem(new NodeItemImpl(TEST_SERVER1_NODE1_ID, "123",
-				new Date(), "payload"));
-		store.addNodeItem(new NodeItemImpl(TEST_SERVER1_NODE2_ID, "123",
-				new Date(), "payload2"));
-
-		int count = store.getCountRecentItems(TEST_SERVER1_USER1_JID, since,
-				-1, null);
-		assertEquals(2, count);
-	}
-
-	@Test
 	public void testCanGetItemReplies() throws Exception {
 		dbTester.loadData("node_1");
 		NodeItem testItem = new NodeItemImpl(TEST_SERVER1_NODE1_ID, "a6",
@@ -2622,35 +2377,6 @@ public class JDBCNodeStoreTest {
 		t2.commit();
 	}
 
-	private void assertNodeConfigEquals(final String nodeId,
-			final Map<String, String> config) throws Exception {
-		// Check there's the correct number of config entries
-		dbTester.assertions().assertTableContains("node_config",
-				new HashMap<String, Object>() {
-					{
-						put("node", nodeId);
-					}
-				}, config.size());
-
-		for (final Entry<String, String> entry : config.entrySet()) {
-			dbTester.assertions().assertTableContains("node_config",
-					new HashMap<String, Object>() {
-						{
-							put("node", nodeId);
-							put("key", entry.getKey());
-							put("value", entry.getValue());
-						}
-					});
-		}
-	}
-
-	private void assertSameNodeItem(NodeItem actual, NodeItem expected) {
-		assertEquals(expected.getId(), actual.getId());
-		assertEquals(expected.getNodeId(), actual.getNodeId());
-		assertEquals(expected.getPayload(), actual.getPayload());
-		assertEquals(expected.getInReplyTo(), actual.getInReplyTo());
-	}
-
 	@Test
 	public void testSelectNodeThreads() throws Exception {
 		dbTester.loadData("node_1");
@@ -2791,4 +2517,5 @@ public class JDBCNodeStoreTest {
 			store.userHasRatedPost(node, new JID("romeo@capulet.lit"), new GlobalItemIDImpl(new JID("channels.capulet.lit"), node, "5"))
 	    );
 	}
+
 }

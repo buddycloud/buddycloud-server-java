@@ -1116,13 +1116,15 @@ public class JDBCNodeStore implements NodeStore {
 
 	@Override
 	public int getCountRecentItems(JID user, Date since, int maxPerNode,
-			String node) throws NodeStoreException {
+			String node, boolean parentOnly) throws NodeStoreException {
 
 		if (null == node)
 			node = "/posts";
 		if (-1 == maxPerNode)
-			maxPerNode = 50;
+			maxPerNode = Integer.MAX_VALUE;
 
+		String queryPart;
+		String parentOnlyReplacement;
 		PreparedStatement stmt = null;
 
 		try {
@@ -1142,7 +1144,15 @@ public class JDBCNodeStore implements NodeStore {
 								subscription.getNodeId().length()
 										- node.length()).equals(node))
 					continue;
-				queryParts.add(dialect.selectCountRecentItemParts());
+		        String parentQuery = "%";
+		        queryPart = dialect.selectCountRecentItemParts();
+		        parentOnlyReplacement = "";
+		        if (true == parentOnly) {
+		        	parentOnlyReplacement = "AND \"in_reply_to\" IS NULL";
+		        }
+		        queryPart = queryPart.replace("%parentOnly%", parentOnlyReplacement);
+		        queryParts.add(queryPart);
+				
 				parameters.add(subscription.getNodeId());
 				parameters.add(new java.sql.Timestamp(since.getTime()));
 				parameters.add(maxPerNode);
@@ -1174,7 +1184,7 @@ public class JDBCNodeStore implements NodeStore {
 
 	@Override
 	public CloseableIterator<NodeItem> getRecentItems(JID user, Date since,
-			int maxPerNode, int limit, GlobalItemID afterItemId, String node)
+			int maxPerNode, int limit, GlobalItemID afterItemId, String node, boolean parentOnly)
 			throws NodeStoreException {
 
 		PreparedStatement stmt = null;
@@ -1187,6 +1197,9 @@ public class JDBCNodeStore implements NodeStore {
 				limit = 50;
 			if (-1 == maxPerNode)
 				maxPerNode = Integer.MAX_VALUE;
+
+	        String queryPart;
+	        String parentOnlyReplacement;
 
 			ResultSet<NodeSubscription> subscriptions = this
 					.getUserSubscriptions(user);
@@ -1202,8 +1215,15 @@ public class JDBCNodeStore implements NodeStore {
 				if (false == subscription
 						.getNodeId().endsWith(node))
 					continue;
-				queryParts.add(dialect.selectRecentItemParts().replace(
-						"%counter%", String.valueOf(counter)));
+		        queryPart = dialect.selectRecentItemParts();
+		        parentOnlyReplacement = "";
+		        if (true == parentOnly) {
+		        	parentOnlyReplacement = "AND \"in_reply_to\" IS NULL ";
+		        }
+		        queryPart = queryPart.replace("%parentOnly%", parentOnlyReplacement);
+		        queryPart = queryPart.replace(
+						"%counter%", String.valueOf(counter));
+		        queryParts.add(queryPart);
 				parameters.add(subscription.getNodeId());
 				parameters.add(new java.sql.Timestamp(since.getTime()));
 				parameters.add(maxPerNode);
@@ -1214,7 +1234,7 @@ public class JDBCNodeStore implements NodeStore {
 				+ StringUtils.join(queryParts, " UNION ALL ")
 				+ ") AS recentItemsQuery";
 			
-			if(afterItemId != null) {
+			if (afterItemId != null) {
 				NodeItem afterItem = getNodeItem(afterItemId.getNodeID(), afterItemId.getItemID());
 				
 				if(afterItem != null) {

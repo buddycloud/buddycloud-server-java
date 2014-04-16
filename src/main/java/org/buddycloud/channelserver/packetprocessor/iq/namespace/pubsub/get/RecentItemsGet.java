@@ -40,6 +40,7 @@ public class RecentItemsGet extends PubSubElementProcessorAbstract {
 	private GlobalItemID lastItemId = null;
 	private GlobalItemID afterItemId = null;
 	private int maxResults = -1;
+	private boolean parentOnly = false;
 
 	public RecentItemsGet(BlockingQueue<Packet> outQueue,
 			ChannelManager channelManager) {
@@ -118,12 +119,12 @@ public class RecentItemsGet extends PubSubElementProcessorAbstract {
 		rsm.addElement("last", NS_RSM).setText(lastItemId.toString());
 		rsm.addElement("count", NS_RSM).setText(
 				String.valueOf(channelManager.getCountRecentItems(actor,
-						maxAge, maxItems, NODE_SUFFIX)));
+						maxAge, maxItems, NODE_SUFFIX, parentOnly )));
 	}
 
 	private void addRecentItems() throws NodeStoreException {
 		CloseableIterator<NodeItem> items = channelManager.getRecentItems(
-				actor, maxAge, maxItems, maxResults, afterItemId, NODE_SUFFIX);
+				actor, maxAge, maxItems, maxResults, afterItemId, NODE_SUFFIX, parentOnly);
 		String lastNodeId = "";
 		Element itemsElement = null;
 		while (items.hasNext()) {

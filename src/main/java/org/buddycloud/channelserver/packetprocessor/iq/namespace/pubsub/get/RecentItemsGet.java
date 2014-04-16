@@ -117,9 +117,10 @@ public class RecentItemsGet extends PubSubElementProcessorAbstract {
 		Element rsm = pubsub.addElement("set", NS_RSM);
 		rsm.addElement("first", NS_RSM).setText(firstItemId.toString());
 		rsm.addElement("last", NS_RSM).setText(lastItemId.toString());
+
 		rsm.addElement("count", NS_RSM).setText(
 				String.valueOf(channelManager.getCountRecentItems(actor,
-						maxAge, maxItems, NODE_SUFFIX, parentOnly )));
+						maxAge, maxItems, NODE_SUFFIX, parentOnly)));
 	}
 
 	private void addRecentItems() throws NodeStoreException {
@@ -164,9 +165,10 @@ public class RecentItemsGet extends PubSubElementProcessorAbstract {
 			maxItems = Integer.parseInt(max);
 			String since = recentItems.attributeValue("since");
 			String parentOnlyAttribute = recentItems.attributeValue("parent-only");
-			if (true == parentOnlyAttribute.equals("true")) {
+			if ((null != parentOnlyAttribute) && ((true == parentOnlyAttribute.equals("true")) || (true == parentOnlyAttribute.equals("1")))) {
 				parentOnly = true;
 			}
+
 			if (null == since) {
 				createExtendedErrorReply(PacketError.Type.modify,
 						PacketError.Condition.bad_request, "since-required");

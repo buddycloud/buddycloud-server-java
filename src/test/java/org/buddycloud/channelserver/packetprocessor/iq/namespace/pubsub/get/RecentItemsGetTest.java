@@ -381,17 +381,53 @@ public class RecentItemsGetTest extends IQTestHandler {
 				channelManager.getRecentItems(Mockito.any(JID.class),
 						Mockito.any(Date.class), Mockito.anyInt(),
 						Mockito.anyInt(), Mockito.any(GlobalItemID.class),
-						Mockito.anyString(), Mockito.anyBoolean())).thenReturn(
+						Mockito.anyString(), Mockito.eq(false))).thenReturn(
 				new ClosableIteratorImpl<NodeItem>(new ArrayList<NodeItem>().iterator()));
 		Mockito.when(
 				channelManager.getCountRecentItems(Mockito.any(JID.class),
 						Mockito.any(Date.class), Mockito.anyInt(),
-						Mockito.anyString(), Mockito.anyBoolean())).thenReturn(0);
+						Mockito.anyString(), Mockito.eq(false))).thenReturn(0);
 		
 		recentItemsGet.process(element, jid, request, rsm);
 		
 		Packet p = queue.poll(100, TimeUnit.MILLISECONDS);
 		
 		assertEquals("Error expected", "error", p.getElement().attributeValue("type"));
+	}
+	
+	@Test
+	public void whenRequestingParentOnlyCorrectFlagIsSetOnDatabaseRequest() throws Exception {
+		Element rsm = new BaseElement(new QName("set", new Namespace("", "http://jabber.org/protocol/rsm")));
+		
+				
+		element.addAttribute("node", "/user/francisco@denmark.lit/posts");
+		
+		IQ request = this.request.createCopy();
+		request.getChildElement().element("recent-items").addAttribute("parent-only", "true");
+		
+        Mockito.when(channelManager.nodeExists(anyString())).thenReturn(true);
+		
+		Mockito.when(channelManager.getUserSubscription(node, jid)).thenReturn(
+				new NodeSubscriptionImpl(node, jid, Subscriptions.subscribed));
+		Mockito.when(channelManager.getUserAffiliation(node, jid)).thenReturn(
+				new NodeAffiliationImpl(node, jid, Affiliations.member, new Date()));
+		
+		Mockito.when(
+				channelManager.getRecentItems(Mockito.any(JID.class),
+						Mockito.any(Date.class), Mockito.anyInt(),
+						Mockito.anyInt(), Mockito.any(GlobalItemID.class),
+						Mockito.anyString(), Mockito.anyBoolean())).thenReturn(
+				new ClosableIteratorImpl<NodeItem>(new ArrayList<NodeItem>().iterator()));
+		Mockito.when(
+				channelManager.getCountRecentItems(Mockito.any(JID.class),
+						Mockito.any(Date.class), Mockito.anyInt(),
+						Mockito.anyString(), Mockito.anyBoolean())).thenReturn(0);
+
+		recentItemsGet.process(element, jid, request, rsm);
+		
+		Mockito.verify(channelManager, Mockito.times(1)).getRecentItems(Mockito.any(JID.class),
+				Mockito.any(Date.class), Mockito.anyInt(),
+				Mockito.anyInt(), Mockito.any(GlobalItemID.class),
+				Mockito.anyString(), Mockito.eq(true));
 	}
 }

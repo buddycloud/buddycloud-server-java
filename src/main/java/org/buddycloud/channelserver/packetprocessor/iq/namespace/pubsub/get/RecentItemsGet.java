@@ -163,6 +163,10 @@ public class RecentItemsGet extends PubSubElementProcessorAbstract {
 			}
 			maxItems = Integer.parseInt(max);
 			String since = recentItems.attributeValue("since");
+			String parentOnlyAttribute = recentItems.attributeValue("parent-only");
+			if (true == parentOnlyAttribute.equals("true")) {
+				parentOnly = true;
+			}
 			if (null == since) {
 				createExtendedErrorReply(PacketError.Type.modify,
 						PacketError.Condition.bad_request, "since-required");

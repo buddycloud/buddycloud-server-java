@@ -5,9 +5,9 @@ import org.buddycloud.channelserver.db.exception.NodeStoreException;
 import org.dom4j.Element;
 import org.xmpp.packet.JID;
 
-public interface ValidateEntry {
+public interface PayloadValidator {
 
-	public abstract void setEntry(Element entry);
+	public abstract void setPayload(Element payload);
 
 	public abstract String getErrorMessage();
 

@@ -8,7 +8,7 @@ import org.apache.log4j.Logger;
 import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.channel.ValidatePayload;
 import org.buddycloud.channelserver.channel.validate.UnknownContentTypeException;
-import org.buddycloud.channelserver.channel.validate.ValidateEntry;
+import org.buddycloud.channelserver.channel.validate.PayloadValidator;
 import org.buddycloud.channelserver.db.exception.NodeStoreException;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.JabberPubsub;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.PubSubElementProcessorAbstract;
@@ -43,7 +43,7 @@ public class Publish extends PubSubElementProcessorAbstract {
 	private String inReplyTo;
 	private Element item;
 
-	private ValidateEntry validator;
+	private PayloadValidator validator;
 
 	private String globalItemId;
 
@@ -152,11 +152,11 @@ public class Publish extends PubSubElementProcessorAbstract {
 				.attributeValue("ref"));
 	}
 
-	public void setEntryValidator(ValidateEntry validator) {
+	public void setEntryValidator(PayloadValidator validator) {
 		this.validator = validator;
 	}
 
-	private ValidateEntry getEntryValidator() throws Exception {
+	private PayloadValidator getEntryValidator() throws Exception {
 		if (null == this.validator) {
 			this.validator = new ValidatePayload(channelManager, node)
 					.getValidator();
@@ -182,7 +182,7 @@ public class Publish extends PubSubElementProcessorAbstract {
 			return false;
 		}
 		validator = getEntryValidator();
-		validator.setEntry(item.element("entry"));
+		validator.setPayload(item.element("entry"));
 		validator.setUser(publishersJID);
 		validator.setTo(request.getTo().toBareJID());
 		validator.setNode(node);

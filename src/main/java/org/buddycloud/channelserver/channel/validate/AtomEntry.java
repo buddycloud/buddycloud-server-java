@@ -21,7 +21,7 @@ import org.dom4j.Namespace;
 import org.dom4j.dom.DOMElement;
 import org.xmpp.packet.JID;
 
-public class AtomEntry implements ValidateEntry {
+public class AtomEntry implements PayloadValidator {
 
 	public static final String MISSING_CONTENT_ELEMENT = "content-element-required";
 	public static final String MISSING_ENTRY_ELEMENT = "entry-element-required";
@@ -77,36 +77,24 @@ public class AtomEntry implements ValidateEntry {
 	}
 
 	public AtomEntry(Element entry) {
-		setEntry(entry);
+		setPayload(entry);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.buddycloud.channelserver.channel.validate.ValidateEntry#setEntry(org.dom4j.Element)
-	 */
 	@Override
-	public void setEntry(Element entry) {
+	public void setPayload(Element entry) {
 		this.entry = entry;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.buddycloud.channelserver.channel.validate.ValidateEntry#getErrorMessage()
-	 */
 	@Override
 	public String getErrorMessage() {
 		return this.errorMessage;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.buddycloud.channelserver.channel.validate.ValidateEntry#setChannelManager(org.buddycloud.channelserver.channel.ChannelManager)
-	 */
 	@Override
 	public void setChannelManager(ChannelManager channelManager) {
 		this.channelManager = channelManager;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.buddycloud.channelserver.channel.validate.ValidateEntry#isValid()
-	 */
 	@Override
 	public boolean isValid() throws NodeStoreException {
 		if (this.entry == null) {
@@ -184,9 +172,6 @@ public class AtomEntry implements ValidateEntry {
 		return true;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.buddycloud.channelserver.channel.validate.ValidateEntry#getPayload()
-	 */
 	@Override
 	public Element getPayload() {
 
@@ -274,25 +259,16 @@ public class AtomEntry implements ValidateEntry {
 		return entry;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.buddycloud.channelserver.channel.validate.ValidateEntry#setUser(org.xmpp.packet.JID)
-	 */
 	@Override
 	public void setUser(JID jid) {
 		this.jid = jid;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.buddycloud.channelserver.channel.validate.ValidateEntry#setNode(java.lang.String)
-	 */
 	@Override
 	public void setNode(String node) {
 		this.node = node;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.buddycloud.channelserver.channel.validate.ValidateEntry#setTo(java.lang.String)
-	 */
 	@Override
 	public void setTo(String channelServerDomain) {
 		this.channelServerDomain = channelServerDomain;

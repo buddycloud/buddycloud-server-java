@@ -40,6 +40,7 @@ public class RecentItemsGet extends PubSubElementProcessorAbstract {
 	private GlobalItemID lastItemId = null;
 	private GlobalItemID afterItemId = null;
 	private int maxResults = -1;
+	private boolean parentOnly = false;
 
 	public RecentItemsGet(BlockingQueue<Packet> outQueue,
 			ChannelManager channelManager) {
@@ -116,14 +117,15 @@ public class RecentItemsGet extends PubSubElementProcessorAbstract {
 		Element rsm = pubsub.addElement("set", NS_RSM);
 		rsm.addElement("first", NS_RSM).setText(firstItemId.toString());
 		rsm.addElement("last", NS_RSM).setText(lastItemId.toString());
+
 		rsm.addElement("count", NS_RSM).setText(
 				String.valueOf(channelManager.getCountRecentItems(actor,
-						maxAge, maxItems, NODE_SUFFIX)));
+						maxAge, maxItems, NODE_SUFFIX, parentOnly)));
 	}
 
 	private void addRecentItems() throws NodeStoreException {
 		CloseableIterator<NodeItem> items = channelManager.getRecentItems(
-				actor, maxAge, maxItems, maxResults, afterItemId, NODE_SUFFIX);
+				actor, maxAge, maxItems, maxResults, afterItemId, NODE_SUFFIX, parentOnly);
 		String lastNodeId = "";
 		Element itemsElement = null;
 		while (items.hasNext()) {
@@ -162,6 +164,11 @@ public class RecentItemsGet extends PubSubElementProcessorAbstract {
 			}
 			maxItems = Integer.parseInt(max);
 			String since = recentItems.attributeValue("since");
+			String parentOnlyAttribute = recentItems.attributeValue("parent-only");
+			if ((null != parentOnlyAttribute) && ((true == parentOnlyAttribute.equals("true")) || (true == parentOnlyAttribute.equals("1")))) {
+				parentOnly = true;
+			}
+
 			if (null == since) {
 				createExtendedErrorReply(PacketError.Type.modify,
 						PacketError.Condition.bad_request, "since-required");

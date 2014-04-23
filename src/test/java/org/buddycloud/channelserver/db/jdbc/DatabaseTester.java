@@ -98,15 +98,16 @@ public class DatabaseTester {
 	}
 	
 	public void close() throws SQLException {
-		if(conn != null) {
+		if (conn != null) {
 			executeDDL(conn, "SHUTDOWN");
 			conn = null;
 		}
 	}
 
 	public Connection getConnection() throws SQLException {
-		if(conn == null) {
+		if (conn == null) {
 			conn = DriverManager.getConnection("jdbc:log4jdbc:hsqldb:mem:test", "sa", "");
+			executeDDL(conn, "drop schema public cascade;");
 		}
 		return conn;
 	}

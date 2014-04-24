@@ -61,6 +61,9 @@ public class NodeThreadsGetTest extends IQTestHandler {
 	public void testMissingNodeAttribute() throws Exception {
 		IQ request = readStanzaAsIq("/iq/pubsub/threads/request-no-node.stanza");
 		Element threadsEl = request.getChildElement().element("threads");
+		
+		Mockito.when(channelManager.isLocalJID(request.getFrom())).thenReturn(true);
+		
 		threadsGet.process(threadsEl, request.getFrom(), request, null);
 		Packet response = queue.poll();
 
@@ -77,6 +80,7 @@ public class NodeThreadsGetTest extends IQTestHandler {
 		Element threadsEl = request.getChildElement().element("threads");
 		
 		String node = threadsEl.attributeValue("node");
+		Mockito.when(channelManager.isLocalJID(request.getFrom())).thenReturn(true);
 		Mockito.when(channelManager.isLocalNode(node)).thenReturn(true);
 		Mockito.when(channelManager.nodeExists(node)).thenReturn(false);
 		
@@ -95,6 +99,7 @@ public class NodeThreadsGetTest extends IQTestHandler {
 		Element threadsEl = request.getChildElement().element("threads");
 		
 		String node = threadsEl.attributeValue("node");
+		Mockito.when(channelManager.isLocalJID(request.getFrom())).thenReturn(true);
 		Mockito.when(channelManager.isLocalNode(node)).thenReturn(true);
 		Mockito.when(channelManager.nodeExists(node)).thenReturn(true);
 		
@@ -113,6 +118,7 @@ public class NodeThreadsGetTest extends IQTestHandler {
 		Element threadsEl = request.getChildElement().element("threads");
 		
 		String node = threadsEl.attributeValue("node");
+		Mockito.when(channelManager.isLocalJID(request.getFrom())).thenReturn(true);
 		Mockito.when(channelManager.isLocalNode(node)).thenReturn(true);
 		Mockito.when(channelManager.nodeExists(node)).thenReturn(true);
 		
@@ -145,6 +151,7 @@ public class NodeThreadsGetTest extends IQTestHandler {
 		Element threadsEl = request.getChildElement().element("threads");
 		
 		String node = threadsEl.attributeValue("node");
+		Mockito.when(channelManager.isLocalJID(request.getFrom())).thenReturn(true);
 		Mockito.when(channelManager.isLocalNode(node)).thenReturn(true);
 		Mockito.when(channelManager.nodeExists(node)).thenReturn(true);
 		
@@ -168,6 +175,7 @@ public class NodeThreadsGetTest extends IQTestHandler {
 		Element threadsEl = request.getChildElement().element("threads");
 		
 		String node = threadsEl.attributeValue("node");
+		Mockito.when(channelManager.isLocalJID(request.getFrom())).thenReturn(true);
 		Mockito.when(channelManager.nodeExists(node)).thenReturn(true);
 		
 		Map<String, String> conf = new HashMap<String, String>();
@@ -192,6 +200,7 @@ public class NodeThreadsGetTest extends IQTestHandler {
 		Element threadsEl = request.getChildElement().element("threads");
 		
 		String node = threadsEl.attributeValue("node");
+		Mockito.when(channelManager.isLocalJID(request.getFrom())).thenReturn(true);
 		Mockito.when(channelManager.isLocalNode(node)).thenReturn(true);
 		Mockito.when(channelManager.nodeExists(node)).thenReturn(true);
 		
@@ -237,6 +246,7 @@ public class NodeThreadsGetTest extends IQTestHandler {
 		Element threadsEl = request.getChildElement().element("threads");
 
 		String node = threadsEl.attributeValue("node");
+		Mockito.when(channelManager.isLocalJID(request.getFrom())).thenReturn(true);
 		Mockito.when(channelManager.isLocalNode(node)).thenReturn(false);
 		Mockito.when(channelManager.isCachedNode(node)).thenReturn(false);
 		JID from = request.getFrom();
@@ -257,5 +267,35 @@ public class NodeThreadsGetTest extends IQTestHandler {
 		Element actor = pubsubResponse.element("actor");
 		Assert.assertNotNull(actor);
 		Assert.assertEquals(actor.getText(), from.toBareJID());
+	}
+	
+	@Test
+	public void testRemoteRequest() throws Exception {
+		IQ request = readStanzaAsIq("/iq/pubsub/threads/request-with-node.stanza");
+		JID from = request.getFrom();
+		Mockito.when(channelManager.isLocalJID(from)).thenReturn(false);
+		
+		Element threadsEl = request.getChildElement().element("threads");
+		String node = threadsEl.attributeValue("node");
+		
+		Mockito.when(channelManager.isLocalNode(node)).thenReturn(true);
+		Mockito.when(channelManager.nodeExists(node)).thenReturn(true);
+		
+		Map<String, String> conf = new HashMap<String, String>();
+		conf.put(AccessModel.FIELD_NAME, AccessModels.open.toString());
+		Mockito.when(channelManager.getNodeConf(node)).thenReturn(conf);
+		
+		Mockito.when(channelManager.getNodeThreads(Mockito.eq(node), Mockito.anyString(), 
+				Mockito.anyInt())).thenReturn(new ResultSetImpl<NodeThread>(
+						new LinkedList<NodeThread>()));
+		
+		threadsGet.process(threadsEl, from, request, null);
+
+		Packet response = queue.poll();
+		
+		Assert.assertNull(response.getError());
+		Assert.assertNotNull(response.getElement().element("pubsub"));
+		Assert.assertNotNull(response.getElement().attributeValue(
+				"remote-server-discover"));
 	}
 }

@@ -44,6 +44,7 @@ public class NodeThreadsGet extends PubSubElementProcessorAbstract {
 	public void process(Element elm, JID actorJID, IQ reqIQ, Element rsm)
 			throws Exception {
 		this.request = reqIQ;
+		this.response = IQ.createResultIQ(request);
 		this.node = elm.attributeValue("node");
 		this.actor = actorJID;
 		this.resultSetManagement = rsm;
@@ -52,6 +53,12 @@ public class NodeThreadsGet extends PubSubElementProcessorAbstract {
 		if (actor == null) {
 			actor = request.getFrom();
 		}
+		
+		if (!channelManager.isLocalJID(request.getFrom())) {
+			response.getElement().addAttribute(
+					"remote-server-discover", "false");
+		}
+		
 		if (!isValidStanza()) {
 			outQueue.put(response);
 			return;
@@ -110,7 +117,6 @@ public class NodeThreadsGet extends PubSubElementProcessorAbstract {
 	private void getNodeThreads() throws NodeStoreException, DocumentException {
 		ResultSet<NodeThread> nodeThreads = channelManager.getNodeThreads(node,
 				afterId, max);
-		this.response = IQ.createResultIQ(request);
 		Element pubsubEl = response.getElement().addElement("pubsub",
 				JabberPubsub.NAMESPACE_URI);
 		SAXReader xmlReader = new SAXReader();

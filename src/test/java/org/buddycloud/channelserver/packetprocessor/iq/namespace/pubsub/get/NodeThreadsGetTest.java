@@ -27,6 +27,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.xmpp.packet.IQ;
+import org.xmpp.packet.JID;
 import org.xmpp.packet.Packet;
 import org.xmpp.packet.PacketError;
 import org.xmpp.resultsetmanagement.ResultSetImpl;
@@ -74,6 +75,11 @@ public class NodeThreadsGetTest extends IQTestHandler {
 	public void testInexistentNode() throws Exception {
 		IQ request = readStanzaAsIq("/iq/pubsub/threads/request-with-node.stanza");
 		Element threadsEl = request.getChildElement().element("threads");
+		
+		String node = threadsEl.attributeValue("node");
+		Mockito.when(channelManager.isLocalNode(node)).thenReturn(true);
+		Mockito.when(channelManager.nodeExists(node)).thenReturn(false);
+		
 		threadsGet.process(threadsEl, request.getFrom(), request, null);
 		Packet response = queue.poll();
 
@@ -89,6 +95,7 @@ public class NodeThreadsGetTest extends IQTestHandler {
 		Element threadsEl = request.getChildElement().element("threads");
 		
 		String node = threadsEl.attributeValue("node");
+		Mockito.when(channelManager.isLocalNode(node)).thenReturn(true);
 		Mockito.when(channelManager.nodeExists(node)).thenReturn(true);
 		
 		threadsGet.process(threadsEl, request.getFrom(), request, null);
@@ -106,6 +113,7 @@ public class NodeThreadsGetTest extends IQTestHandler {
 		Element threadsEl = request.getChildElement().element("threads");
 		
 		String node = threadsEl.attributeValue("node");
+		Mockito.when(channelManager.isLocalNode(node)).thenReturn(true);
 		Mockito.when(channelManager.nodeExists(node)).thenReturn(true);
 		
 		Map<String, String> conf = new HashMap<String, String>();
@@ -137,6 +145,7 @@ public class NodeThreadsGetTest extends IQTestHandler {
 		Element threadsEl = request.getChildElement().element("threads");
 		
 		String node = threadsEl.attributeValue("node");
+		Mockito.when(channelManager.isLocalNode(node)).thenReturn(true);
 		Mockito.when(channelManager.nodeExists(node)).thenReturn(true);
 		
 		Map<String, String> conf = new HashMap<String, String>();
@@ -183,6 +192,7 @@ public class NodeThreadsGetTest extends IQTestHandler {
 		Element threadsEl = request.getChildElement().element("threads");
 		
 		String node = threadsEl.attributeValue("node");
+		Mockito.when(channelManager.isLocalNode(node)).thenReturn(true);
 		Mockito.when(channelManager.nodeExists(node)).thenReturn(true);
 		
 		Map<String, String> conf = new HashMap<String, String>();
@@ -219,5 +229,33 @@ public class NodeThreadsGetTest extends IQTestHandler {
 		Assert.assertEquals("itemA", responseRsmEl.elementText("first"));
 		Assert.assertEquals("itemC", responseRsmEl.elementText("last"));
 		Assert.assertEquals("2", responseRsmEl.elementText("count"));
+	}
+	
+	@Test
+	public void testRemoteNodeNoError() throws Exception {
+		IQ request = readStanzaAsIq("/iq/pubsub/threads/request-with-node.stanza");
+		Element threadsEl = request.getChildElement().element("threads");
+
+		String node = threadsEl.attributeValue("node");
+		Mockito.when(channelManager.isLocalNode(node)).thenReturn(false);
+		Mockito.when(channelManager.isCachedNode(node)).thenReturn(false);
+		JID from = request.getFrom();
+		threadsGet.process(threadsEl, from, request, null);
+
+		Packet response = queue.poll();
+
+		Assert.assertNull(response.getError());
+
+		Element pubsubResponse = response.getElement().element("pubsub");
+		Assert.assertNotNull(pubsubResponse);
+
+		Element threadsResponseEl = pubsubResponse.element("threads");
+		Assert.assertNotNull(threadsResponseEl);
+		Assert.assertEquals(threadsEl.attributeValue("node"),
+				threadsResponseEl.attributeValue("node"));
+
+		Element actor = pubsubResponse.element("actor");
+		Assert.assertNotNull(actor);
+		Assert.assertEquals(actor.getText(), from.toBareJID());
 	}
 }

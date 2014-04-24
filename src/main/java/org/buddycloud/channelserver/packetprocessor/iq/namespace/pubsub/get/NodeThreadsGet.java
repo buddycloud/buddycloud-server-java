@@ -56,6 +56,20 @@ public class NodeThreadsGet extends PubSubElementProcessorAbstract {
 			outQueue.put(response);
 			return;
 		}
+		
+		if (!channelManager.isLocalNode(node) && 
+				!channelManager.isCachedNode(node)) {
+			logger.debug("Node " + node
+					+ " is remote and not cached, off to get some data");
+			makeRemoteRequest();
+			return;
+		}
+		
+		if (!checkNodeExists()) {
+			outQueue.put(response);
+			return;
+		}
+		
 		if (!userCanViewNode()) {
 			outQueue.put(response);
 			return;
@@ -67,6 +81,17 @@ public class NodeThreadsGet extends PubSubElementProcessorAbstract {
 		getNodeThreads();
 		addRsmElement();
 		outQueue.put(response);
+	}
+
+	private void makeRemoteRequest() throws InterruptedException {
+		String domain = new JID(node.split("/")[2]).getDomain();
+		request.setTo(domain);
+		if (null == request.getElement().element("pubsub").element("actor")) {
+		    Element actor = request.getElement().element("pubsub")
+				.addElement("actor", JabberPubsub.NS_BUDDYCLOUD);
+		    actor.addText(request.getFrom().toBareJID());
+		}
+	    outQueue.put(request);
 	}
 
 	private void addRsmElement() throws NodeStoreException {
@@ -116,6 +141,10 @@ public class NodeThreadsGet extends PubSubElementProcessorAbstract {
 					PacketError.Condition.bad_request, "nodeid-required");
 			return false;
 		}
+		return true;
+	}
+
+	private boolean checkNodeExists() throws NodeStoreException {
 		if (!channelManager.nodeExists(node)) {
 			setErrorCondition(PacketError.Type.cancel,
 					PacketError.Condition.item_not_found);

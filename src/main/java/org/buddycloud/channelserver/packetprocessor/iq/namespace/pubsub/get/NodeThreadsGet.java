@@ -45,7 +45,6 @@ public class NodeThreadsGet extends PubSubElementProcessorAbstract {
 			throws Exception {
 		this.request = reqIQ;
 		this.response = IQ.createResultIQ(request);
-		this.node = elm.attributeValue("node");
 		this.actor = actorJID;
 		this.resultSetManagement = rsm;
 		this.max = MAX_THREADS_TO_RETURN;
@@ -72,16 +71,7 @@ public class NodeThreadsGet extends PubSubElementProcessorAbstract {
 			return;
 		}
 		
-		if (!checkNodeExists()) {
-			outQueue.put(response);
-			return;
-		}
-		
-		if (!userCanViewNode()) {
-			outQueue.put(response);
-			return;
-		}
-		if (!parseRsmElement()) {
+		if (!checkNodeExists() || !userCanViewNode() || !parseRsmElement()) {
 			outQueue.put(response);
 			return;
 		}
@@ -142,12 +132,17 @@ public class NodeThreadsGet extends PubSubElementProcessorAbstract {
 	}
 
 	private boolean isValidStanza() throws NodeStoreException {
-		if (node == null) {
-			createExtendedErrorReply(PacketError.Type.modify,
-					PacketError.Condition.bad_request, "nodeid-required");
-			return false;
+		try {
+			this.node = request.getChildElement().element("threads").attributeValue("node");
+			if (node != null) {
+				return true;
+			}
+		} catch (NullPointerException e) {
+			logger.error(e);
 		}
-		return true;
+		createExtendedErrorReply(PacketError.Type.modify,
+				PacketError.Condition.bad_request, "nodeid-required");
+		return false;
 	}
 
 	private boolean checkNodeExists() throws NodeStoreException {

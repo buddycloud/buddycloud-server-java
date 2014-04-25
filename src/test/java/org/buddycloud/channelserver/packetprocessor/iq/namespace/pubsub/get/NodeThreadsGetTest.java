@@ -12,6 +12,7 @@ import junit.framework.Assert;
 
 import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.channel.node.configuration.field.AccessModel;
+import org.buddycloud.channelserver.db.exception.NodeStoreException;
 import org.buddycloud.channelserver.packetHandler.iq.IQTestHandler;
 import org.buddycloud.channelserver.pubsub.accessmodel.AccessModels;
 import org.buddycloud.channelserver.pubsub.affiliation.Affiliations;
@@ -37,17 +38,21 @@ public class NodeThreadsGetTest extends IQTestHandler {
 	private BlockingQueue<Packet> queue;
 	private ChannelManager channelManager;
 	private NodeThreadsGet threadsGet;
+	private Element element = new BaseElement("threads");
 	
 	@Before
-	public void setUp() {
+	public void setUp() throws NodeStoreException {
 		this.queue = new LinkedBlockingQueue<Packet>();
 		this.channelManager = Mockito.mock(ChannelManager.class);
+		Mockito.when(channelManager.isLocalNode(Mockito.anyString())).thenReturn(true);
+		Mockito.when(channelManager.nodeExists(Mockito.anyString())).thenReturn(true);
+		Mockito.when(channelManager.isLocalJID(Mockito.any(JID.class))).thenReturn(true);
+		
 		this.threadsGet = new NodeThreadsGet(queue, channelManager);
 	}
 	
 	@Test
 	public void testPassingThreadsAsElementName() {
-		Element element = new BaseElement("threads");
 		Assert.assertTrue(threadsGet.accept(element));
 	}
 	
@@ -60,11 +65,10 @@ public class NodeThreadsGetTest extends IQTestHandler {
 	@Test
 	public void testMissingNodeAttribute() throws Exception {
 		IQ request = readStanzaAsIq("/iq/pubsub/threads/request-no-node.stanza");
-		Element threadsEl = request.getChildElement().element("threads");
-		
+
 		Mockito.when(channelManager.isLocalJID(request.getFrom())).thenReturn(true);
 		
-		threadsGet.process(threadsEl, request.getFrom(), request, null);
+		threadsGet.process(element, request.getFrom(), request, null);
 		Packet response = queue.poll();
 
 		PacketError error = response.getError();
@@ -77,14 +81,11 @@ public class NodeThreadsGetTest extends IQTestHandler {
 	@Test
 	public void testInexistentNode() throws Exception {
 		IQ request = readStanzaAsIq("/iq/pubsub/threads/request-with-node.stanza");
-		Element threadsEl = request.getChildElement().element("threads");
+		Element element = request.getChildElement().element("threads");
+
+		Mockito.when(channelManager.nodeExists(Mockito.anyString())).thenReturn(false);
 		
-		String node = threadsEl.attributeValue("node");
-		Mockito.when(channelManager.isLocalJID(request.getFrom())).thenReturn(true);
-		Mockito.when(channelManager.isLocalNode(node)).thenReturn(true);
-		Mockito.when(channelManager.nodeExists(node)).thenReturn(false);
-		
-		threadsGet.process(threadsEl, request.getFrom(), request, null);
+		threadsGet.process(element, request.getFrom(), request, null);
 		Packet response = queue.poll();
 
 		PacketError error = response.getError();
@@ -96,17 +97,12 @@ public class NodeThreadsGetTest extends IQTestHandler {
 	@Test
 	public void testUserNotInAuthorizedChannel() throws Exception {
 		IQ request = readStanzaAsIq("/iq/pubsub/threads/request-with-node.stanza");
-		Element threadsEl = request.getChildElement().element("threads");
 		
-		String node = threadsEl.attributeValue("node");
-		Mockito.when(channelManager.isLocalJID(request.getFrom())).thenReturn(true);
-		Mockito.when(channelManager.isLocalNode(node)).thenReturn(true);
-		Mockito.when(channelManager.nodeExists(node)).thenReturn(true);
-		
-		threadsGet.process(threadsEl, request.getFrom(), request, null);
+		threadsGet.process(element, request.getFrom(), request, null);
 		Packet response = queue.poll();
 		
 		PacketError error = response.getError();
+
 		Assert.assertNotNull(error);
 		Assert.assertEquals(PacketError.Type.auth, error.getType());
 		Assert.assertEquals(PacketError.Condition.forbidden, error.getCondition());
@@ -115,28 +111,22 @@ public class NodeThreadsGetTest extends IQTestHandler {
 	@Test
 	public void testUserOutcastInOpenChannel() throws Exception {
 		IQ request = readStanzaAsIq("/iq/pubsub/threads/request-with-node.stanza");
-		Element threadsEl = request.getChildElement().element("threads");
-		
-		String node = threadsEl.attributeValue("node");
-		Mockito.when(channelManager.isLocalJID(request.getFrom())).thenReturn(true);
-		Mockito.when(channelManager.isLocalNode(node)).thenReturn(true);
-		Mockito.when(channelManager.nodeExists(node)).thenReturn(true);
-		
+			
 		Map<String, String> conf = new HashMap<String, String>();
 		conf.put(AccessModel.FIELD_NAME, AccessModels.open.toString());
-		Mockito.when(channelManager.getNodeConf(node)).thenReturn(conf);
+		Mockito.when(channelManager.getNodeConf(Mockito.anyString())).thenReturn(conf);
 		
-		NodeAffiliationImpl affiliation = new NodeAffiliationImpl(node, 
+		NodeAffiliationImpl affiliation = new NodeAffiliationImpl(Mockito.anyString(), 
 				request.getFrom(), Affiliations.outcast, new Date());
-		Mockito.when(channelManager.getUserAffiliation(node, 
+		Mockito.when(channelManager.getUserAffiliation(Mockito.anyString(), 
 				request.getFrom())).thenReturn(affiliation);
 		
-		NodeSubscriptionImpl subscription = new NodeSubscriptionImpl(node, 
+		NodeSubscriptionImpl subscription = new NodeSubscriptionImpl(Mockito.anyString(), 
 				request.getFrom(), Subscriptions.subscribed, new Date());
-		Mockito.when(channelManager.getUserSubscription(node, 
+		Mockito.when(channelManager.getUserSubscription(Mockito.anyString(), 
 				request.getFrom())).thenReturn(subscription);
 		
-		threadsGet.process(threadsEl, request.getFrom(), request, null);
+		threadsGet.process(element, request.getFrom(), request, null);
 		Packet response = queue.poll();
 		
 		PacketError error = response.getError();
@@ -148,19 +138,13 @@ public class NodeThreadsGetTest extends IQTestHandler {
 	@Test
 	public void testWrongAfterItemRSM() throws Exception {
 		IQ request = readStanzaAsIq("/iq/pubsub/threads/request-with-rsm.stanza");
-		Element threadsEl = request.getChildElement().element("threads");
-		
-		String node = threadsEl.attributeValue("node");
-		Mockito.when(channelManager.isLocalJID(request.getFrom())).thenReturn(true);
-		Mockito.when(channelManager.isLocalNode(node)).thenReturn(true);
-		Mockito.when(channelManager.nodeExists(node)).thenReturn(true);
-		
+			
 		Map<String, String> conf = new HashMap<String, String>();
 		conf.put(AccessModel.FIELD_NAME, AccessModels.open.toString());
-		Mockito.when(channelManager.getNodeConf(node)).thenReturn(conf);
+		Mockito.when(channelManager.getNodeConf(Mockito.anyString())).thenReturn(conf);
 		
 		Element rsmEl = request.getChildElement().element("set");
-		threadsGet.process(threadsEl, request.getFrom(), request, rsmEl);
+		threadsGet.process(element, request.getFrom(), request, rsmEl);
 		Packet response = queue.poll();
 		
 		PacketError error = response.getError();
@@ -172,21 +156,16 @@ public class NodeThreadsGetTest extends IQTestHandler {
 	@Test
 	public void testSucessfulEmptyResponse() throws Exception {
 		IQ request = readStanzaAsIq("/iq/pubsub/threads/request-with-node.stanza");
-		Element threadsEl = request.getChildElement().element("threads");
-		
-		String node = threadsEl.attributeValue("node");
-		Mockito.when(channelManager.isLocalJID(request.getFrom())).thenReturn(true);
-		Mockito.when(channelManager.nodeExists(node)).thenReturn(true);
-		
+	
 		Map<String, String> conf = new HashMap<String, String>();
 		conf.put(AccessModel.FIELD_NAME, AccessModels.open.toString());
-		Mockito.when(channelManager.getNodeConf(node)).thenReturn(conf);
+		Mockito.when(channelManager.getNodeConf(Mockito.anyString())).thenReturn(conf);
 
-		Mockito.when(channelManager.getNodeThreads(Mockito.eq(node), Mockito.anyString(), 
+		Mockito.when(channelManager.getNodeThreads(Mockito.anyString(), Mockito.anyString(), 
 				Mockito.anyInt())).thenReturn(new ResultSetImpl<NodeThread>(
 						new LinkedList<NodeThread>()));
 		
-		threadsGet.process(threadsEl, request.getFrom(), request, null);
+		threadsGet.process(element, request.getFrom(), request, null);
 		Packet response = queue.poll();
 		
 		Assert.assertNull(response.getError());
@@ -197,12 +176,10 @@ public class NodeThreadsGetTest extends IQTestHandler {
 	@Test
 	public void testSucessfulNonEmptyResponse() throws Exception {
 		IQ request = readStanzaAsIq("/iq/pubsub/threads/request-with-node.stanza");
-		Element threadsEl = request.getChildElement().element("threads");
 		
-		String node = threadsEl.attributeValue("node");
-		Mockito.when(channelManager.isLocalJID(request.getFrom())).thenReturn(true);
-		Mockito.when(channelManager.isLocalNode(node)).thenReturn(true);
-		Mockito.when(channelManager.nodeExists(node)).thenReturn(true);
+		Element element = request.getChildElement().element("threads");
+		String node = element.attributeValue("node");
+
 		
 		Map<String, String> conf = new HashMap<String, String>();
 		conf.put(AccessModel.FIELD_NAME, AccessModels.open.toString());
@@ -224,15 +201,15 @@ public class NodeThreadsGetTest extends IQTestHandler {
 						threads));
 		Mockito.when(channelManager.countNodeThreads(node)).thenReturn(threads.size());
 		
-		threadsGet.process(threadsEl, request.getFrom(), request, null);
+		threadsGet.process(element, request.getFrom(), request, null);
 		Packet response = queue.poll();
 		
 		Assert.assertNull(response.getError());
 		Element responsePubsubEl = response.getElement().element("pubsub");
 		
-		List<Element> responseThreadsEl = responsePubsubEl.elements("thread");
-		Assert.assertNotNull(responseThreadsEl);
-		Assert.assertEquals(2, responseThreadsEl.size());
+		List<Element> responseelement = responsePubsubEl.elements("thread");
+		Assert.assertNotNull(responseelement);
+		Assert.assertEquals(2, responseelement.size());
 		
 		Element responseRsmEl = responsePubsubEl.element("set");
 		Assert.assertEquals("itemA", responseRsmEl.elementText("first"));
@@ -243,14 +220,11 @@ public class NodeThreadsGetTest extends IQTestHandler {
 	@Test
 	public void testRemoteNodeNoError() throws Exception {
 		IQ request = readStanzaAsIq("/iq/pubsub/threads/request-with-node.stanza");
-		Element threadsEl = request.getChildElement().element("threads");
 
-		String node = threadsEl.attributeValue("node");
-		Mockito.when(channelManager.isLocalJID(request.getFrom())).thenReturn(true);
-		Mockito.when(channelManager.isLocalNode(node)).thenReturn(false);
-		Mockito.when(channelManager.isCachedNode(node)).thenReturn(false);
+		Mockito.when(channelManager.isLocalNode(Mockito.anyString())).thenReturn(false);
+		Mockito.when(channelManager.isCachedNode(Mockito.anyString())).thenReturn(false);
 		JID from = request.getFrom();
-		threadsGet.process(threadsEl, from, request, null);
+		threadsGet.process(element, from, request, null);
 
 		Packet response = queue.poll();
 
@@ -261,8 +235,10 @@ public class NodeThreadsGetTest extends IQTestHandler {
 
 		Element threadsResponseEl = pubsubResponse.element("threads");
 		Assert.assertNotNull(threadsResponseEl);
-		Assert.assertEquals(threadsEl.attributeValue("node"),
-				threadsResponseEl.attributeValue("node"));
+		Assert.assertEquals(
+				request.getChildElement().element("threads").attributeValue("node"),
+				threadsResponseEl.attributeValue("node")
+		);
 
 		Element actor = pubsubResponse.element("actor");
 		Assert.assertNotNull(actor);
@@ -275,21 +251,15 @@ public class NodeThreadsGetTest extends IQTestHandler {
 		JID from = request.getFrom();
 		Mockito.when(channelManager.isLocalJID(from)).thenReturn(false);
 		
-		Element threadsEl = request.getChildElement().element("threads");
-		String node = threadsEl.attributeValue("node");
-		
-		Mockito.when(channelManager.isLocalNode(node)).thenReturn(true);
-		Mockito.when(channelManager.nodeExists(node)).thenReturn(true);
-		
 		Map<String, String> conf = new HashMap<String, String>();
 		conf.put(AccessModel.FIELD_NAME, AccessModels.open.toString());
-		Mockito.when(channelManager.getNodeConf(node)).thenReturn(conf);
+		Mockito.when(channelManager.getNodeConf(Mockito.anyString())).thenReturn(conf);
 		
-		Mockito.when(channelManager.getNodeThreads(Mockito.eq(node), Mockito.anyString(), 
+		Mockito.when(channelManager.getNodeThreads(Mockito.anyString(), Mockito.anyString(), 
 				Mockito.anyInt())).thenReturn(new ResultSetImpl<NodeThread>(
 						new LinkedList<NodeThread>()));
 		
-		threadsGet.process(threadsEl, from, request, null);
+		threadsGet.process(element, from, request, null);
 
 		Packet response = queue.poll();
 		

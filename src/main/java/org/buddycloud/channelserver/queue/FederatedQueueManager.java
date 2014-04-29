@@ -10,7 +10,12 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.apache.log4j.Logger;
 import org.buddycloud.channelserver.ChannelsEngine;
 import org.buddycloud.channelserver.Configuration;
+import org.buddycloud.channelserver.channel.ChannelManager;
+import org.buddycloud.channelserver.channel.ChannelManagerFactory;
+import org.buddycloud.channelserver.db.exception.NodeStoreException;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.JabberPubsub;
+import org.buddycloud.channelserver.pubsub.model.NodeSubscription;
+import org.buddycloud.channelserver.pubsub.subscription.Subscriptions;
 import org.dom4j.Attribute;
 import org.dom4j.Element;
 import org.dom4j.Namespace;
@@ -58,10 +63,13 @@ public class FederatedQueueManager {
 
 	private boolean performDnsDiscovery;
 
-	public FederatedQueueManager(ChannelsEngine component, Configuration configuration) {
+	private ChannelManager channelManager;
+
+	public FederatedQueueManager(ChannelsEngine component, Configuration configuration, ChannelManagerFactory channelManagerFactory) {
 		this.component = component;
 		this.localServer = configuration.getProperty(Configuration.CONFIGURATION_SERVER_CHANNELS_DOMAIN);
         this.performDnsDiscovery = Boolean.parseBoolean(configuration.getProperty(Configuration.DISCOVERY_USE_DNS, "true"));
+        channelManager = channelManagerFactory.create();
 		nodeMap.start();
 		sentRemotePackets.start();
 	}
@@ -98,6 +106,9 @@ public class FederatedQueueManager {
 			}
 			// Are we already discovering a remote server?
 			if (!remoteChannelDiscoveryStatus.containsKey(to)) {
+				if (true == performDatabaseDiscovery(packet)) {
+					return;
+				}
 				discoverRemoteChannelServer(to, packet.getID());
 			} else if (remoteChannelDiscoveryStatus.get(to).equals(
 					NO_CHANNEL_SERVER)) {
@@ -119,6 +130,25 @@ public class FederatedQueueManager {
 			attemptDnsDiscovery(to);
 		} catch (Exception e) {
 			logger.error(e);
+		}
+	}
+
+	private boolean performDatabaseDiscovery(Packet packet) throws ComponentException {
+		try {
+			String to = packet.getTo().toString();
+			String node = nodeMap.get(packet.getID()).toString();
+			NodeSubscription subscription = channelManager.getUserSubscription(node, packet.getFrom());
+			if ((null == subscription) || subscription.getSubscription().equals(Subscriptions.none)) {
+				return false;
+			}
+			setDiscoveredServer(to, subscription.getListener().toString());
+			packet.setTo(new JID(discoveredServers.get(to)));
+			sendPacket(packet.createCopy());
+			return true;
+		} catch (NullPointerException e) {
+			return false;
+		} catch (NodeStoreException e) {
+			return false;
 		}
 	}
 

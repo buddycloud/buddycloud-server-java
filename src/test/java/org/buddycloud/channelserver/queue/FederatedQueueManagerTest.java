@@ -10,8 +10,12 @@ import junit.framework.Assert;
 import org.buddycloud.channelserver.ChannelsEngine;
 import org.buddycloud.channelserver.Configuration;
 import org.buddycloud.channelserver.channel.ChannelManager;
+import org.buddycloud.channelserver.channel.ChannelManagerFactory;
 import org.buddycloud.channelserver.packetHandler.iq.IQTestHandler;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.JabberPubsub;
+import org.buddycloud.channelserver.pubsub.model.NodeSubscription;
+import org.buddycloud.channelserver.pubsub.model.impl.NodeSubscriptionImpl;
+import org.buddycloud.channelserver.pubsub.subscription.Subscriptions;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -33,11 +37,15 @@ public class FederatedQueueManagerTest extends IQTestHandler {
 	private ChannelsEngineMock channelsEngine;
 	private String localServer = "channels.shakespeare.lit";
 	private Configuration configuration;
+	private ChannelManagerFactory channelManagerFactory;
 
 	@Before
 	public void setUp() throws Exception {
 		channelsEngine = new ChannelsEngineMock();
 		channelManager = Mockito.mock(ChannelManager.class);
+		channelManagerFactory = Mockito.mock(ChannelManagerFactory.class);
+
+		Mockito.when(channelManagerFactory.create()).thenReturn(channelManager);
 
 		configuration = Mockito.mock(Configuration.class);
 		Mockito.when(
@@ -46,7 +54,8 @@ public class FederatedQueueManagerTest extends IQTestHandler {
 				.thenReturn(localServer);
 		Mockito.when(configuration.getProperty(Configuration.DISCOVERY_USE_DNS))
 				.thenReturn("true");
-		queueManager = new FederatedQueueManager(channelsEngine, configuration);
+		queueManager = new FederatedQueueManager(channelsEngine, configuration,
+				channelManagerFactory);
 	}
 
 	@Test(expected = UnknownFederatedPacketException.class)
@@ -334,5 +343,32 @@ public class FederatedQueueManagerTest extends IQTestHandler {
 		IQ packetExternal = (IQ) channelsEngine.poll();
 
 		Assert.assertTrue(originalId.equals(packetExternal.getID()));
+	}
+
+	@Test
+	public void databaseLookupIsSuccessfullyUsed() throws Exception {
+
+		channelsEngine.clear();
+		
+		IQ request = readStanzaAsIq("/iq/federated/request.stanza");
+		JID user = new JID("francisco@shakespeare.lit/street");
+		JID listener = new JID("my.channel.server");
+		String node = "/user/";
+		
+		NodeSubscription subscription = new NodeSubscriptionImpl(node, user,
+				listener, Subscriptions.subscribed);
+
+		Mockito.when(
+				channelManager.getUserSubscription(Mockito.anyString(),
+						Mockito.any(JID.class))).thenReturn(subscription);
+
+		queueManager.process(request.createCopy());
+
+		IQ outgoing = (IQ) channelsEngine.poll();
+		
+		Mockito.verify(channelManager, Mockito.times(1)).getUserSubscription(Mockito.anyString(), Mockito.any(JID.class));
+		
+		Assert.assertEquals(listener, outgoing.getTo());
+
 	}
 }

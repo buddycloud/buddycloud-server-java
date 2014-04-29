@@ -112,7 +112,7 @@ public class ChannelsEngine implements Component {
 		channelManagerFactory = new ChannelManagerFactoryImpl(configuration,
 				nodeStoreFactory);
 		federatedQueueManager = new FederatedQueueManager(this,
-				configuration);
+				configuration, channelManagerFactory);
 		onlineUsers = new OnlineResourceManager(configuration);
 	}
 

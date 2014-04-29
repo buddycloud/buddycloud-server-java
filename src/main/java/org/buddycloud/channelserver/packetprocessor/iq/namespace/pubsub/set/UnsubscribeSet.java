@@ -29,9 +29,11 @@ public class UnsubscribeSet extends PubSubElementProcessorAbstract {
 
 	private static final Logger logger = Logger.getLogger(UnsubscribeSet.class);
 	public static final String NODE_ID_REQUIRED = "nodeid-required";
+	public static final String CAN_NOT_UNSUBSCRIBE_ANOTHER_USER = "can-only-unsubscribe-self";
+	public static String MUST_HAVE_ONE_OWNER = "node-must-have-owner";
 
 	private JID unsubscribingJid;
-	public static String MUST_HAVE_ONE_OWNER = "node-must-have-owner";
+	
 
 	public UnsubscribeSet(BlockingQueue<Packet> outQueue,
 			ChannelManager channelManager) {
@@ -87,10 +89,12 @@ public class UnsubscribeSet extends PubSubElementProcessorAbstract {
 		// Check that the requesting user is allowed to unsubscribe according to
 		// XEP-0060 section 6.2.3.3		
 		if (false == unsubscribingJid.equals(existingSubscription.getUser())) {
-			setErrorCondition(
-				PacketError.Type.auth,
-				PacketError.Condition.forbidden
-			);
+			createExtendedErrorReply(
+					PacketError.Type.auth,
+					PacketError.Condition.forbidden, 
+					CAN_NOT_UNSUBSCRIBE_ANOTHER_USER,
+					JabberPubsub.NS_BUDDYCLOUD
+				);
 			outQueue.put(response);
 			return;
 		}
@@ -163,50 +167,12 @@ public class UnsubscribeSet extends PubSubElementProcessorAbstract {
 	}
 
 	private void failAuthRequired() throws InterruptedException {
-		// If the packet did not have actor, and the sender is not a
-		// local user
-		// subscription is not allowed.
-
-		/*
-		 * <iq type='error' from='pubsub.shakespeare.lit'
-		 * to='hamlet@denmark.lit/elsinore' id='unsub1'> <error type='auth'>
-		 * <registration-required xmlns='urn:ietf:params:xml:ns:xmpp-stanzas'/>
-		 * </error> </iq>
-		 */
-		response.setType(Type.error);
-		PacketError pe = new PacketError(
-				org.xmpp.packet.PacketError.Condition.not_authorized,
-				org.xmpp.packet.PacketError.Type.auth);
-		response.setError(pe);
+		setErrorCondition(PacketError.Type.auth, PacketError.Condition.not_authorized);
 		outQueue.put(response);
 	}
 
 	private void missingNodeName() throws InterruptedException {
-		/*
-		 * 7.2.3.3 NodeID Required
-		 * 
-		 * <iq type='error' from='pubsub.shakespeare.lit'
-		 * to='hamlet@denmark.lit/elsinore' id='retract1'> <error type='modify'>
-		 * <bad-request xmlns='urn:ietf:params:xml:ns:xmpp-stanzas'/>
-		 * <nodeid-required xmlns='http://jabber.org/protocol/pubsub#errors'/>
-		 * </error> </iq>
-		 */
-
-		response.setType(Type.error);
-
-		Element badRequest = new DOMElement("bad-request",
-				new org.dom4j.Namespace("", JabberPubsub.NS_XMPP_STANZAS));
-
-		Element nodeIdRequired = new DOMElement(NODE_ID_REQUIRED,
-				new org.dom4j.Namespace("", JabberPubsub.NS_PUBSUB_ERROR));
-
-		Element error = new DOMElement("error");
-		error.addAttribute("type", "modify");
-		error.add(badRequest);
-		error.add(nodeIdRequired);
-
-		response.setChildElement(error);
-
+		createExtendedErrorReply(PacketError.Type.modify, PacketError.Condition.bad_request, NODE_ID_REQUIRED);
 		outQueue.put(response);
 	}
 

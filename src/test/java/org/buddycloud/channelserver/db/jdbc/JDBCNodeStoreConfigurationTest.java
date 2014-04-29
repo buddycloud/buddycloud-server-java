@@ -2,11 +2,16 @@ package org.buddycloud.channelserver.db.jdbc;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
 
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Map;
+import java.util.Map.Entry;
+
+import junit.framework.Assert;
 
 import org.buddycloud.channelserver.db.CloseableIterator;
 import org.buddycloud.channelserver.packetHandler.iq.IQTestHandler;
@@ -156,5 +161,49 @@ public class JDBCNodeStoreConfigurationTest extends JDBCNodeStoreAbstract {
 
 		// Check the config hasn't changed
 		assertNodeConfigEquals(TEST_SERVER1_NODE1_ID, TEST_SERVER1_NODE1_CONF);
+	}
+	
+
+	@Test
+	public void testGetNodeConfValueSuccess() throws Exception {
+		dbTester.loadData("node_1");
+
+		assertEquals("Request for config key config1 is incorrect",
+				"Value of config1",
+				store.getNodeConfValue(TEST_SERVER1_NODE1_ID, "config1"));
+	}
+
+	@Test
+	public void testGetNodeConfValueNonExistantReturnsNull() throws Exception {
+		dbTester.loadData("node_1");
+
+		assertNull("Request for non existant config key is incorrect",
+				store.getNodeConfValue(TEST_SERVER1_NODE1_ID, "nonexistant"));
+	}
+
+	@Test
+	public void testGetNodeConf() throws Exception {
+		dbTester.loadData("node_1");
+
+		Map<String, String> result = store.getNodeConf(TEST_SERVER1_NODE1_ID);
+
+		assertEquals("Returned config if incorrect size",
+				TEST_SERVER1_NODE1_CONF.size(), result.size());
+
+		for (Entry<String, String> entry : TEST_SERVER1_NODE1_CONF.entrySet()) {
+			assertEquals("Result has incorrect entry for " + entry.getKey(),
+					entry.getValue(), result.get(entry.getKey()));
+		}
+	}
+	
+	@Test
+	public void testNodeWithConfigSaysConfigIsCached() throws Exception {
+		dbTester.loadData("node_1");
+		Assert.assertTrue(store.isCachedNodeConfig(TEST_SERVER1_NODE1_ID));
+	}
+	
+	@Test
+	public void testNodeWithoutConfigSaysConfigNotCached() throws Exception {
+		Assert.assertFalse(store.isCachedNodeConfig(TEST_SERVER1_NODE1_ID));
 	}
 }

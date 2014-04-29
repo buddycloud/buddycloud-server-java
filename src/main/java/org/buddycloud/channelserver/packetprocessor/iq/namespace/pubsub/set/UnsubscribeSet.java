@@ -27,16 +27,11 @@ import org.xmpp.resultsetmanagement.ResultSet;
 
 public class UnsubscribeSet extends PubSubElementProcessorAbstract {
 
-	private final BlockingQueue<Packet> outQueue;
-	private final ChannelManager channelManager;
-
 	private static final Logger logger = Logger.getLogger(UnsubscribeSet.class);
 	public static final String NODE_ID_REQUIRED = "nodeid-required";
 
-	private String node;
-	private IQ request;
-	private IQ response;
 	private JID unsubscribingJid;
+	public static String MUST_HAVE_ONE_OWNER = "node-must-have-owner";
 
 	public UnsubscribeSet(BlockingQueue<Packet> outQueue,
 			ChannelManager channelManager) {
@@ -78,11 +73,7 @@ public class UnsubscribeSet extends PubSubElementProcessorAbstract {
 
 
 		if (false == channelManager.nodeExists(node)) {
-			response.setType(Type.error);
-			PacketError pe = new PacketError(
-					org.xmpp.packet.PacketError.Condition.item_not_found,
-					org.xmpp.packet.PacketError.Type.cancel);
-			response.setError(pe);
+			setErrorCondition(PacketError.Type.cancel, PacketError.Condition.item_not_found);
 			outQueue.put(response);
 			return;
 		}
@@ -96,11 +87,10 @@ public class UnsubscribeSet extends PubSubElementProcessorAbstract {
 		// Check that the requesting user is allowed to unsubscribe according to
 		// XEP-0060 section 6.2.3.3		
 		if (false == unsubscribingJid.equals(existingSubscription.getUser())) {
-			response.setType(Type.error);
-			PacketError pe = new PacketError(
-					org.xmpp.packet.PacketError.Condition.forbidden,
-					org.xmpp.packet.PacketError.Type.auth);
-			response.setError(pe);
+			setErrorCondition(
+				PacketError.Type.auth,
+				PacketError.Condition.forbidden
+			);
 			outQueue.put(response);
 			return;
 		}
@@ -108,11 +98,12 @@ public class UnsubscribeSet extends PubSubElementProcessorAbstract {
 		if ((Affiliations.owner == existingAffiliation.getAffiliation()) &&
 			(channelManager.getNodeOwners(node).size() < 2)) {
 			
-			response.setType(Type.error);
-			PacketError pe = new PacketError(
-					org.xmpp.packet.PacketError.Condition.not_allowed,
-					org.xmpp.packet.PacketError.Type.cancel);
-			response.setError(pe);
+			createExtendedErrorReply(
+				PacketError.Type.cancel,
+				PacketError.Condition.not_allowed, 
+				MUST_HAVE_ONE_OWNER,
+				JabberPubsub.NS_BUDDYCLOUD
+			);
 			outQueue.put(response);
 			return;
 		}

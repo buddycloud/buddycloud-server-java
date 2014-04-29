@@ -111,7 +111,7 @@ public abstract class PubSubElementProcessorAbstract implements
 				JabberPubsub.NS_PUBSUB_ERROR);
 	}
 
-	private void createExtendedErrorReply(Type type, Condition condition,
+	protected void createExtendedErrorReply(Type type, Condition condition,
 			String additionalElement, String additionalNamespace) {
 		
 		if (null == response) {

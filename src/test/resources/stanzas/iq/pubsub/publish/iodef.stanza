@@ -1,0 +1,24 @@
+
+<iq from="juliet@shakespeare.lit/balcony" to="channels.shakespeare.lit" type="set" id="publish:20">
+   <pubsub xmlns="http://jabber.org/protocol/pubsub">
+      <publish node="/user/romeo@shakespeare.lit/posts">
+         <item>
+            <IODEF-Document version="1.00" lang="en" formatid="simulation" xmlns="urn:ietf:params:xml:ns:iodef-1.0">
+            <Incident purpose="ext-value" ext-purpose="new-purpose" lang="en" restriction="need-to-know">
+                <IncidentID name="cert.example.com" instance="5" restriction="private">189493</IncidentID>
+                <ReportTime>2014-03-27T12:39:24+00:00</ReportTime>
+                <Assessment occurrence="actual" restriction="private">
+                    <Impact lang="en" severity="medium" completion="succeeded" type="ext-value" ext-type="new-type">
+                        A new type of attack has taken all of our printers offline.
+                    </Impact>
+                </Assessment>
+                <Contact role="ext-value" ext-role="new-role" type="ext-value" ext-type="new-type" restriction="public">
+                    <ContactName>Bill Folds</ContactName>
+                    <Email meaning="IRT group address, manned Mon-Fri 9-5 UTC">contact@cert.example.com</Email>
+                </Contact>
+            </Incident>
+            </IODEF-Document>
+         </item>
+      </publish>
+   </pubsub>
+</iq>

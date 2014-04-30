@@ -27,4 +27,11 @@ public interface PayloadValidator {
 
 	public abstract void setTo(String channelServerDomain);
 
+    public abstract String getLocalItemId();
+
+    public abstract String getGlobalItemId();
+
+    public abstract String getInReplyTo();
+
+    public abstract boolean canValidate(String contentType);
 }

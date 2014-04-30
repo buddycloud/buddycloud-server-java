@@ -104,7 +104,6 @@ public class Publish extends PubSubElementProcessorAbstract {
 				return;
 			if (false == isRequestValid())
 				return;
-			extractItemDetails();
 			saveNodeItem();
 			updateThreadParent();
 			sendResponseStanza();
@@ -131,32 +130,17 @@ public class Publish extends PubSubElementProcessorAbstract {
 
 	private void saveNodeItem() throws NodeStoreException {
 		// Let's store the new item.
-		channelManager.addNodeItem(new NodeItemImpl(node, id, new Date(), entry
-				.asXML(), inReplyTo));
-	}
-
-	private void extractItemDetails() throws InterruptedException {
-
 		entry = validator.getPayload();
-		globalItemId = entry.element("id").getText();
-		if (false == GlobalItemIDImpl.isGlobalId(globalItemId)) {
-			globalItemId = new GlobalItemIDImpl(request.getTo(), node,
-					globalItemId).toString();
-		}
-		id = GlobalItemIDImpl.toLocalId(globalItemId);
-		Element inReplyToElement = entry.element("in-reply-to");
-		if (null == inReplyToElement) {
-			return;
-		}
-		inReplyTo = GlobalItemIDImpl.toLocalId(inReplyToElement
-				.attributeValue("ref"));
+        channelManager.addNodeItem(new NodeItemImpl(
+                node, this.validator.getLocalItemId(), new Date(), entry.asXML(),
+                this.validator.getInReplyTo()));
 	}
 
 	public void setEntryValidator(PayloadValidator validator) {
 		this.validator = validator;
 	}
 
-	private PayloadValidator getEntryValidator() throws Exception {
+    private PayloadValidator getPayloadValidator() throws Exception {
 		if (null == this.validator) {
 			this.validator = new ValidatePayload(channelManager, node)
 					.getValidator();
@@ -164,12 +148,11 @@ public class Publish extends PubSubElementProcessorAbstract {
 		return this.validator;
 	}
 
-	private void sendInvalidEntryResponse() throws InterruptedException {
-		LOGGER.info("Entry is not valid: '" + validator.getErrorMessage()
+    private void sendInvalidPayloadResponse() throws InterruptedException {
+        LOGGER.info("Payload is not valid: '" + validator.getErrorMessage()
 				+ "'.");
 		createExtendedErrorReply(PacketError.Type.modify,
-				PacketError.Condition.bad_request,
-				validator.getErrorMessage());
+                PacketError.Condition.bad_request, validator.getErrorMessage());
 		outQueue.put(response);
 	}
 
@@ -181,15 +164,16 @@ public class Publish extends PubSubElementProcessorAbstract {
 			outQueue.put(response);
 			return false;
 		}
-		validator = getEntryValidator();
-		validator.setPayload(item.element("entry"));
+
+        validator = getPayloadValidator();
+        validator.setPayload(item);
 		validator.setUser(publishersJID);
 		validator.setTo(request.getTo().toBareJID());
 		validator.setNode(node);
 		validator.setChannelManager(channelManager);
 
 		if (!validator.isValid()) {
-			sendInvalidEntryResponse();
+            sendInvalidPayloadResponse();
 			return false;
 		}
 		return true;
@@ -228,7 +212,7 @@ public class Publish extends PubSubElementProcessorAbstract {
 		publish.addAttribute("node", node);
 
 		Element newItem = publish.addElement("item");
-		newItem.addAttribute("id", globalItemId);
+        newItem.addAttribute("id", validator.getGlobalItemId());
 
 		response.setChildElement(pubsub);
 		outQueue.put(response);
@@ -299,7 +283,7 @@ public class Publish extends PubSubElementProcessorAbstract {
 		Element items = event.addElement("items");
 		items.addAttribute("node", node);
 		Element i = items.addElement("item");
-		i.addAttribute("id", globalItemId);
+        i.addAttribute("id", validator.getGlobalItemId());
 		i.add(entry.createCopy());
 
 		ResultSet<NodeSubscription> cur = channelManager

@@ -88,6 +88,13 @@ public class PublishTest extends IQTestHandler {
 						new ResultSetImpl<NodeSubscription>(
 								new ArrayList<NodeSubscription>()));
 
+        validateEntry.setPayload(request.getChildElement().element("publish")
+                .element("item").createCopy());
+        Mockito.when(validateEntry.getGlobalItemId()).thenReturn(
+                new GlobalItemIDImpl(new JID(request.getTo().toBareJID()),
+                        node, entry.elementText("id")).toString());
+
+		Mockito.when(validateEntry.getLocalItemId()).thenCallRealMethod();
 		Mockito.when(validateEntry.isValid()).thenReturn(true);
 
 		Mockito.when(validateEntry.getPayload()).thenReturn(entry);
@@ -399,6 +406,11 @@ public class PublishTest extends IQTestHandler {
 		Mockito.when(validateEntry.getPayload()).thenReturn(
 				request.getChildElement().element("publish").element("item")
 						.element("entry"));
+
+        Mockito.when(validateEntry.getInReplyTo()).thenReturn(
+                GlobalItemIDImpl.toLocalId(request.getChildElement()
+                        .element("publish").element("item").element("entry")
+                        .element("in-reply-to").attributeValue("ref")));
 
 		publish.process(element, jid, request, null);
 

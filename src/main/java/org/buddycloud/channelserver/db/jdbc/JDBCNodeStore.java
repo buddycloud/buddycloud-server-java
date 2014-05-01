@@ -1665,7 +1665,8 @@ public class JDBCNodeStore implements NodeStore {
 
 	@Override
 	public boolean isCachedNode(String nodeId) throws NodeStoreException {
-		return (this.countNodeItems(nodeId) > 0);
+		return ((this.countNodeItems(nodeId) > 0) &&
+				(true == this.isCachedNodeConfig(nodeId)));
 	}
 	
 	@Override

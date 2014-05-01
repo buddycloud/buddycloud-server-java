@@ -391,4 +391,80 @@ public class JDBCNodeStoreAffiliationsTest extends JDBCNodeStoreAbstract {
 		int affiliations = store.countNodeAffiliations(TEST_SERVER1_NODE1_ID, true);
 		assertEquals(5, affiliations);
 	}
+	
+	@Test
+	public void testSetUserAffiliationNewAffiliation() throws Exception {
+		dbTester.loadData("node_1");
+
+		store.setUserAffiliation(TEST_SERVER1_NODE1_ID, new JID(
+				"user2@example.com"), Affiliations.member);
+
+		dbTester.assertions().assertTableContains("affiliations",
+				new HashMap<String, Object>() {
+					{
+						put("node", TEST_SERVER1_NODE1_ID);
+						put("user", "user2@example.com");
+						put("affiliation", Affiliations.member.toString());
+					}
+				});
+	}
+
+	@Test
+	public void testSetUserAffiliationUpdateAffiliation() throws Exception {
+		dbTester.loadData("node_1");
+
+		store.setUserAffiliation(TEST_SERVER1_NODE1_ID, new JID(
+				"user1@example.com"), Affiliations.member);
+
+		dbTester.assertions().assertTableContains("affiliations",
+				new HashMap<String, Object>() {
+					{
+						put("node", TEST_SERVER1_NODE1_ID);
+						put("user", "user1@example.com");
+						put("affiliation", Affiliations.member.toString());
+					}
+				});
+
+		dbTester.assertions().assertTableContains("affiliations",
+				new HashMap<String, Object>() {
+					{
+						put("node", TEST_SERVER1_NODE1_ID);
+						put("user", "user1@example.com");
+						put("affiliation", Affiliations.owner.toString());
+					}
+				}, 0);
+	}
+
+	@Test
+	public void testSetUserAffiliationUpdateAffiliationNoneRemovesAffiliation()
+			throws Exception {
+		dbTester.loadData("node_1");
+
+		store.setUserAffiliation(TEST_SERVER1_NODE1_ID, new JID(
+				"user1@example.com"), Affiliations.none);
+		dbTester.assertions().assertTableContains("affiliations",
+				new HashMap<String, Object>() {
+					{
+						put("node", TEST_SERVER1_NODE1_ID);
+						put("user", "user1@example.com");
+					}
+				}, 0);
+	}
+
+	@Test
+	public void testSetUserAffiliationUsesBareJID() throws Exception {
+		dbTester.loadData("node_1");
+
+		store.setUserAffiliation(TEST_SERVER1_NODE1_ID, new JID(
+				"user2@example.com/resource"), Affiliations.member);
+
+		dbTester.assertions().assertTableContains("affiliations",
+				new HashMap<String, Object>() {
+					{
+						put("node", TEST_SERVER1_NODE1_ID);
+						put("user", "user2@example.com");
+						put("affiliation", Affiliations.member.toString());
+					}
+				});
+	}
 }

@@ -71,6 +71,7 @@ public class AtomEntry implements PayloadValidator {
     Map<String, String> params = new HashMap<String, String>();
 
     private Element geoloc;
+    private String globalItemID;
 
     public AtomEntry() {
     }
@@ -180,13 +181,10 @@ public class AtomEntry implements PayloadValidator {
                 Atom.NS));
         entry.add(new org.dom4j.Namespace("activity", ActivityStreams.NS));
 
-        String id = UUID.randomUUID().toString();
         String postType = POST_TYPE_NOTE;
         String activityVerb = ACTIVITY_VERB_POST;
 
-        entry.addElement("id").setText(
-                new GlobalItemIDImpl(new JID(channelServerDomain), node, id)
-                        .toString());
+        entry.addElement("id").setText(getGlobalItemId());
 
         String title = this.params.get("title");
         String itemContent = this.params.get("content");
@@ -386,16 +384,12 @@ public class AtomEntry implements PayloadValidator {
 
     @Override
     public String getGlobalItemId() {
-        String globalItemId = null;
-        if (null != this.entry.element("id")) {
-            globalItemId = this.entry.element("id").getText();
-            if (false == GlobalItemIDImpl.isGlobalId(globalItemId)) {
-                globalItemId = new GlobalItemIDImpl(
-                        new JID(channelServerDomain), node, globalItemId)
-                .toString();
-            }
+        if (null == globalItemID) {
+            String id = UUID.randomUUID().toString();
+            globalItemID = new GlobalItemIDImpl(
+                        new JID(channelServerDomain), node, id).toString();
         }
-        return globalItemId;
+        return globalItemID;
     }
 
     @Override

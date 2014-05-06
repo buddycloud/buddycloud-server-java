@@ -106,6 +106,7 @@ public class Publish extends PubSubElementProcessorAbstract {
             sendNotifications();
 
         } catch (NodeStoreException e) {
+            LOGGER.error("Problem with node store", e);
             setErrorCondition(PacketError.Type.wait,
                     PacketError.Condition.internal_server_error);
             outQueue.put(response);

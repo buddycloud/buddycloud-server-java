@@ -1,11 +1,12 @@
 package org.buddycloud.channelserver.channel.validate;
 
+import net.xeoh.plugins.base.Plugin;
 import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.db.exception.NodeStoreException;
 import org.dom4j.Element;
 import org.xmpp.packet.JID;
 
-public interface PayloadValidator {
+public interface PayloadValidator extends Plugin {
 
 	public abstract void setPayload(Element payload);
 

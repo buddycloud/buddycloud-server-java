@@ -1,12 +1,17 @@
 package org.buddycloud.channelserver.channel;
 
+import java.io.File;
+import java.util.Collection;
+
+import net.xeoh.plugins.base.PluginManager;
+import net.xeoh.plugins.base.impl.PluginManagerFactory;
+import net.xeoh.plugins.base.util.PluginManagerUtil;
+
 import org.buddycloud.channelserver.channel.node.configuration.field.ContentType;
 import org.buddycloud.channelserver.channel.validate.AtomEntry;
-import org.buddycloud.channelserver.channel.validate.IodefDocument;
 import org.buddycloud.channelserver.channel.validate.UnknownContentTypeException;
 import org.buddycloud.channelserver.channel.validate.PayloadValidator;
 import org.buddycloud.channelserver.db.exception.NodeStoreException;
-import org.buddycloud.channelserver.utils.node.item.payload.Iodef;
 
 public class ValidatePayload {
 	
@@ -27,9 +32,16 @@ public class ValidatePayload {
 			return defaultValidator;
 		}
 
-		if (contentType.equals(Iodef.NS)) {
-			return new IodefDocument();
-		}
+        PluginManager pm = PluginManagerFactory.createPluginManager();
+        pm.addPluginsFrom(new File("plugins/").toURI());
+
+        Collection<PayloadValidator> validators = new PluginManagerUtil(pm).getPlugins(PayloadValidator.class);
+        for ( PayloadValidator validator : validators ) {
+            if (validator.canValidate(contentType)) {
+                return validator;
+            }
+        }
+
 		throw new UnknownContentTypeException("Unknown node content type " + contentType);
 	}
 }

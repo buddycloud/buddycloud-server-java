@@ -1,11 +1,10 @@
 package org.buddycloud.channelserver.channel;
 
 import java.io.File;
-import java.util.Collection;
 
 import net.xeoh.plugins.base.PluginManager;
 import net.xeoh.plugins.base.impl.PluginManagerFactory;
-import net.xeoh.plugins.base.util.PluginManagerUtil;
+import net.xeoh.plugins.base.options.getplugin.OptionCapabilities;
 
 import org.buddycloud.channelserver.channel.node.configuration.field.ContentType;
 import org.buddycloud.channelserver.channel.validate.AtomEntry;
@@ -18,6 +17,7 @@ public class ValidatePayload {
 	public static final String UNSUPPORTED_CONTENT_TYPE = "unsupported-content-type";
 	private ChannelManager channelManager;
 	private String node;
+    private PluginManager pluginManager;
 
 	public ValidatePayload(ChannelManager channelManager, String node) {
 		this.channelManager = channelManager;
@@ -27,21 +27,40 @@ public class ValidatePayload {
 	public PayloadValidator getValidator() throws NodeStoreException, UnknownContentTypeException {
 		String contentType = channelManager.getNodeConfValue(node, ContentType.FIELD_NAME);
 
-		PayloadValidator defaultValidator = new AtomEntry();
+		AtomEntry defaultValidator = new AtomEntry();
 		if ((null == contentType) || (defaultValidator.canValidate(contentType))) {
 			return defaultValidator;
 		}
 
-        PluginManager pm = PluginManagerFactory.createPluginManager();
-        pm.addPluginsFrom(new File("plugins/").toURI());
+		PayloadValidator validator = getValidatorFromPlugins(contentType);
 
-        Collection<PayloadValidator> validators = new PluginManagerUtil(pm).getPlugins(PayloadValidator.class);
-        for ( PayloadValidator validator : validators ) {
-            if (validator.canValidate(contentType)) {
-                return validator;
-            }
+		if (null == validator) {
+		    throw new UnknownContentTypeException("Unknown node content type " + contentType);
+		}
+
+		return validator;
+	}
+
+    private PayloadValidator getValidatorFromPlugins(String contentType) {
+        return getPluginManager().getPlugin(
+		        PayloadValidator.class, new OptionCapabilities(contentType));
+    }
+
+    public void setPluginManager(PluginManager pluginManager) {
+        this.pluginManager = pluginManager;
+    }
+
+    private PluginManager getPluginManager() {
+        if (null == pluginManager) {
+            setDefaultPluginManager();
         }
 
-		throw new UnknownContentTypeException("Unknown node content type " + contentType);
-	}
+        return pluginManager;
+    }
+
+    private void setDefaultPluginManager() {
+        PluginManager pluginManager = PluginManagerFactory.createPluginManager();
+        pluginManager.addPluginsFrom(new File("plugins/").toURI());
+        setPluginManager(pluginManager);
+    }
 }

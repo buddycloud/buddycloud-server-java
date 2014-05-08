@@ -1,6 +1,8 @@
 package org.buddycloud.channelserver.channel.validate;
 
 import net.xeoh.plugins.base.Plugin;
+import net.xeoh.plugins.base.annotations.Capabilities;
+
 import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.db.exception.NodeStoreException;
 import org.dom4j.Element;
@@ -34,5 +36,14 @@ public interface PayloadValidator extends Plugin {
 
     public abstract String getInReplyTo();
 
-    public abstract boolean canValidate(String contentType);
+    /**
+     * Indicate the capabilities of this plugin
+     *
+     * Should return an array of content types that can be
+     * validated by this plugin
+     *
+     * @return
+     */
+    @Capabilities
+    public abstract String[] capabilities();
 }

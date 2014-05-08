@@ -1,9 +1,12 @@
 package org.buddycloud.channelserver.channel;
 
 import junit.framework.Assert;
+import net.xeoh.plugins.base.PluginManager;
+import net.xeoh.plugins.base.options.getplugin.OptionCapabilities;
 
 import org.buddycloud.channelserver.channel.node.configuration.field.ContentType;
 import org.buddycloud.channelserver.channel.validate.AtomEntry;
+import org.buddycloud.channelserver.channel.validate.PayloadValidator;
 import org.buddycloud.channelserver.channel.validate.UnknownContentTypeException;
 import org.buddycloud.channelserver.db.exception.NodeStoreException;
 import org.buddycloud.channelserver.packetHandler.iq.TestHandler;
@@ -59,4 +62,22 @@ public class ValidatePayloadTest extends TestHandler {
 		validator.getValidator();
 	}
 
+	@Test(expected=UnknownContentTypeException.class)
+	public void looksForForAppropriateValidatorInPlugins() throws Exception {
+	    Mockito.when(
+	            channelManager.getNodeConfValue(node, ContentType.FIELD_NAME))
+	            .thenReturn("any-strange-content-type");
+
+	    PluginManager pm = Mockito.mock(PluginManager.class);
+	    OptionCapabilities capabilities = Mockito.mock(OptionCapabilities.class);
+
+	       Mockito.when(
+	               capabilities.getCapabilities())
+	                .thenReturn( new String[] {"any-strange-content-type"});
+
+	    validator.setPluginManager(pm);
+	    validator.getValidator();
+
+	    Mockito.verify(pm, Mockito.times(1)).getPlugin(PayloadValidator.class, capabilities);
+	}
 }

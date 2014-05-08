@@ -1,5 +1,6 @@
 package org.buddycloud.channelserver.channel.validate;
 
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -404,7 +405,11 @@ public class AtomEntry implements PayloadValidator {
     }
 
     @Override
+    public String[] capabilities() {
+        return new String[] {null, Atom.NS};
+    }
+
     public boolean canValidate(String contentType) {
-        return contentType.equals(Atom.NS);
+        return Arrays.asList(capabilities()).contains(contentType);
     }
 }

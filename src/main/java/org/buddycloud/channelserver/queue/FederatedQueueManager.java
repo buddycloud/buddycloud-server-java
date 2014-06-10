@@ -103,6 +103,7 @@ public class FederatedQueueManager {
 					NO_CHANNEL_SERVER)) {
 				logger.error("No remote channel server for " + to);
 				IQ reply = IQ.createResultIQ((IQ) packet);
+				reply.setFrom(this.localServer);
 				reply.setError(new PacketError(
 						PacketError.Condition.remote_server_not_found,
 						PacketError.Type.cancel));

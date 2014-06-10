@@ -11,7 +11,7 @@ public abstract class QueueConsumer {
 
     private static final Logger LOGGER = Logger.getLogger(QueueConsumer.class);
     
-    private ExecutorService executorService = Executors.newFixedThreadPool(1);
+    private ExecutorService executorService = Executors.newFixedThreadPool(5);
     private final BlockingQueue<Packet> queue;
     
     public QueueConsumer(BlockingQueue<Packet> queue) {

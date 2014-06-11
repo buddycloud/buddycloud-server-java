@@ -19,6 +19,7 @@ import org.buddycloud.channelserver.pubsub.model.NodeThread;
 import org.buddycloud.channelserver.pubsub.subscription.Subscriptions;
 import org.buddycloud.channelserver.utils.node.NodeAclRefuseReason;
 import org.buddycloud.channelserver.utils.node.NodeViewAcl;
+import org.buddycloud.channelserver.utils.node.item.payload.Buddycloud;
 import org.dom4j.DocumentException;
 import org.dom4j.Element;
 import org.dom4j.io.SAXReader;
@@ -85,7 +86,7 @@ public class NodeThreadsGet extends PubSubElementProcessorAbstract {
 		request.setTo(domain);
 		if (null == request.getElement().element("pubsub").element("actor")) {
 		    Element actor = request.getElement().element("pubsub")
-				.addElement("actor", JabberPubsub.NS_BUDDYCLOUD);
+				.addElement("actor", Buddycloud.NS);
 		    actor.addText(request.getFrom().toBareJID());
 		}
 	    outQueue.put(request);

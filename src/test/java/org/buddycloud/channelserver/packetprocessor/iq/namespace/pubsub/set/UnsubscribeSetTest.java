@@ -19,6 +19,7 @@ import org.buddycloud.channelserver.pubsub.model.impl.NodeAffiliationImpl;
 import org.buddycloud.channelserver.pubsub.model.impl.NodeItemImpl;
 import org.buddycloud.channelserver.pubsub.model.impl.NodeSubscriptionImpl;
 import org.buddycloud.channelserver.pubsub.subscription.Subscriptions;
+import org.buddycloud.channelserver.utils.node.item.payload.Buddycloud;
 import org.dom4j.Element;
 import org.dom4j.tree.BaseElement;
 import org.junit.Before;
@@ -149,7 +150,7 @@ public class UnsubscribeSetTest extends IQTestHandler {
 		Assert.assertEquals(domain, response.getTo().toString());
 		Element actor = response.getChildElement().element("actor");
 		Assert.assertNotNull(actor);
-		Assert.assertEquals(JabberPubsub.NS_BUDDYCLOUD, actor.getNamespaceURI());
+		Assert.assertEquals(Buddycloud.NS, actor.getNamespaceURI());
 		Assert.assertEquals(request.getFrom().toBareJID(), actor.getText());
 	}
 

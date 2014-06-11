@@ -1,26 +1,22 @@
 package org.buddycloud.channelserver.channel.validate;
 
 import java.util.Date;
-import java.util.concurrent.LinkedBlockingQueue;
 
+import junit.framework.Assert;
+
+import org.buddycloud.channelserver.channel.ChannelManager;
+import org.buddycloud.channelserver.packetHandler.iq.TestHandler;
+import org.buddycloud.channelserver.pubsub.model.GlobalItemID;
+import org.buddycloud.channelserver.pubsub.model.NodeItem;
+import org.buddycloud.channelserver.pubsub.model.impl.NodeItemImpl;
+import org.buddycloud.channelserver.utils.node.item.payload.ActivityStreams;
+import org.buddycloud.channelserver.utils.node.item.payload.Buddycloud;
+import org.dom4j.Element;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.xmpp.packet.IQ;
 import org.xmpp.packet.JID;
-import org.xmpp.packet.Packet;
-import org.buddycloud.channelserver.channel.ChannelManager;
-import org.buddycloud.channelserver.packetHandler.iq.TestHandler;
-import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.get.RepliesGet;
-import org.buddycloud.channelserver.pubsub.model.GlobalItemID;
-import org.buddycloud.channelserver.pubsub.model.NodeItem;
-import org.buddycloud.channelserver.pubsub.model.impl.GlobalItemIDImpl;
-import org.buddycloud.channelserver.pubsub.model.impl.NodeItemImpl;
-import org.buddycloud.channelserver.utils.node.item.payload.ActivityStreams;
-import org.dom4j.Element;
-
-import junit.framework.Assert;
-import junit.framework.TestCase;
 
 /**
  * TODO Additional work required:

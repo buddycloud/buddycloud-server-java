@@ -11,6 +11,7 @@ import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.PubSubEl
 import org.buddycloud.channelserver.pubsub.affiliation.Affiliations;
 import org.buddycloud.channelserver.pubsub.model.NodeAffiliation;
 import org.buddycloud.channelserver.pubsub.model.NodeSubscription;
+import org.buddycloud.channelserver.utils.node.item.payload.Buddycloud;
 import org.dom4j.Document;
 import org.dom4j.Element;
 import org.dom4j.Namespace;
@@ -232,7 +233,7 @@ public class AffiliationEvent extends PubSubElementProcessorAbstract {
 		request.setTo(new JID(node.split("/")[2]).getDomain());
 		Element actor = request.getElement()
 		    .element("pubsub")
-		    .addElement("actor", JabberPubsub.NS_BUDDYCLOUD);
+		    .addElement("actor", Buddycloud.NS);
 		actor.addText(request.getFrom().toBareJID());
 	    outQueue.put(request);
 	}

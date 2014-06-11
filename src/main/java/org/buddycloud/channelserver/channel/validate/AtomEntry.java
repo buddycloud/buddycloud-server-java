@@ -14,7 +14,9 @@ import org.buddycloud.channelserver.pubsub.model.NodeItem;
 import org.buddycloud.channelserver.pubsub.model.impl.GlobalItemIDImpl;
 import org.buddycloud.channelserver.utils.node.item.payload.ActivityStreams;
 import org.buddycloud.channelserver.utils.node.item.payload.Atom;
+import org.buddycloud.channelserver.utils.node.item.payload.Buddycloud;
 import org.dom4j.Element;
+import org.dom4j.Namespace;
 import org.dom4j.dom.DOMElement;
 import org.xmpp.packet.JID;
 

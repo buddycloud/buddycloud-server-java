@@ -233,7 +233,13 @@ public class AtomEntry implements ValidateEntry {
 		}
 
 		if (null != media) {
-			entry.add(media.createCopy());
+			Element mediaElement = media.createCopy();
+			Namespace namespace = mediaElement.getNamespaceForPrefix("media");
+			if (namespace != null) {
+			    mediaElement.remove(namespace);
+			}
+			mediaElement.addNamespace("media", Buddycloud.NS_MEDIA);
+			entry.add(mediaElement);
 		}
 
 		if (null != targetId) {

@@ -652,4 +652,36 @@ public class AtomEntryTest extends TestHandler {
 		Assert.assertEquals(validator.ITEM_ALREADY_RATED,
 				validator.getErrorMessage());
 	}
+	
+	@Test
+	public void addsMediaNamespace() throws Exception {
+		Element entry = (Element) this.ratingEntry.clone();
+		entry.element("target").element("id").setText("1");
+		entry.addElement("media").addElement("item").addAttribute("channel", "marty@mcfly.com");
+
+		validator = getEntryObject(entry);
+		Assert.assertTrue(validator.isValid());
+		Element payload = validator.getPayload();
+		Assert.assertEquals(
+			Buddycloud.NS_MEDIA,
+			payload.element("media").getNamespaceForPrefix("media").getText()
+		);
+	}
+	
+	@Test
+	public void existingMediaNamespaceDoesntCauseConflict() throws Exception {
+		Element entry = (Element) this.ratingEntry.clone();
+		entry.element("target").element("id").setText("1");
+		Element media = entry.addElement("media");
+		media.addNamespace("media", Buddycloud.NS_MEDIA);
+		media.addElement("item").addAttribute("channel", "marty@mcfly.com");
+
+		validator = getEntryObject(entry);
+		Assert.assertTrue(validator.isValid());
+		Element payload = validator.getPayload();
+		Assert.assertEquals(
+			Buddycloud.NS_MEDIA,
+			payload.element("media").getNamespaceForPrefix("media").getText()
+		);
+	}
 }

@@ -120,7 +120,7 @@ public class Publish extends PubSubElementProcessorAbstract {
 
 	}
 
-	private void updateThreadParent() {
+	private void updateThreadParent() throws NodeStoreException {
 		if (null == inReplyTo) return;
 		channelManager.updateThreadParent(node, inReplyTo);
 	}

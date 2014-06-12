@@ -664,7 +664,7 @@ public class AtomEntryTest extends TestHandler {
 		Element payload = validator.getPayload();
 		Assert.assertEquals(
 			Buddycloud.NS_MEDIA,
-			payload.getNamespaceForPrefix("bcm").getText()
+			payload.getNamespaceForPrefix(Buddycloud.NS_MEDIA_PREFIX).getText()
 		);
 	}
 	
@@ -672,8 +672,8 @@ public class AtomEntryTest extends TestHandler {
 	public void existingMediaNamespaceDoesntCauseConflict() throws Exception {
 		Element entry = (Element) this.ratingEntry.clone();
 		entry.element("target").element("id").setText("1");
-		entry.addNamespace("bcm", Buddycloud.NS_MEDIA);
-		Element media = entry.addElement("bcm:media");
+		entry.addNamespace(Buddycloud.NS_MEDIA_PREFIX, Buddycloud.NS_MEDIA);
+		Element media = entry.addElement(Buddycloud.NS_MEDIA_PREFIX + ":media");
 		media.addElement("item").addAttribute("channel", "marty@mcfly.com");
 
 		validator = getEntryObject(entry);
@@ -681,8 +681,8 @@ public class AtomEntryTest extends TestHandler {
 		Element payload = validator.getPayload();
 		Assert.assertEquals(
 			Buddycloud.NS_MEDIA,
-			entry.getNamespaceForPrefix("bcm").getText()
+			entry.getNamespaceForPrefix(Buddycloud.NS_MEDIA_PREFIX).getText()
 		);
-		Assert.assertNotNull(payload.element("bcm:media"));
+		Assert.assertNotNull(payload.element(Buddycloud.NS_MEDIA_PREFIX + ":media"));
 	}
 }

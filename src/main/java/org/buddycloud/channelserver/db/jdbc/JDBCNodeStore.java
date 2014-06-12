@@ -1540,6 +1540,23 @@ public class JDBCNodeStore implements NodeStore {
 			close(stmt); // Will implicitly close the resultset if required
 		}
 	}
+	
+	@Override
+	public void updateThreadParent(String node, String itemId) throws NodeStoreException {
+		PreparedStatement stmt = null;
+		try {
+			stmt = conn.prepareStatement(dialect.updateThreadParent());
+
+			stmt.setString(1, node);
+			stmt.setString(2, itemId);
+
+			stmt.executeUpdate();
+		} catch (SQLException e) {
+			throw new NodeStoreException(e);
+		} finally {
+			close(stmt); // Will implicitly close the resultset if required
+		}
+	}
 
 	@Override
 	public void deleteNodeItemById(String nodeId, String nodeItemId)
@@ -2123,6 +2140,8 @@ public class JDBCNodeStore implements NodeStore {
 		String insertItem();
 
 		String updateItem();
+		
+		String updateThreadParent();
 
 		String deleteItem();
 

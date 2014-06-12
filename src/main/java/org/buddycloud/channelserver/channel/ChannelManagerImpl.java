@@ -493,4 +493,11 @@ public class ChannelManagerImpl implements ChannelManager {
 			throws NodeStoreException {
 		return nodeStore.userHasRatedPost(node, user, id);
 	}
+
+	@Override
+	public void updateThreadParent(String node, String itemId)
+			throws NodeStoreException {
+		nodeStore.updateThreadParent(node, itemId);
+		
+	}
 }

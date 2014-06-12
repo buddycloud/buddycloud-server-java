@@ -369,6 +369,19 @@ public class JDBCNodeStoreTest extends JDBCNodeStoreAbstract {
 		assertTrue("Unexpected Node content returned", result.getPayload()
 				.contains(TEST_SERVER1_NODE1_ITEM1_CONTENT));
 	}
+	
+	@Test
+	public void canUpdateUpdatedDateOfItem() throws Exception {
+		dbTester.loadData("node_1");
+
+		NodeItem result = store.getNodeItem(TEST_SERVER1_NODE1_ID,
+				TEST_SERVER1_NODE1_ITEM1_ID);
+        Date originalDate = result.getUpdated();
+        store.updateThreadParent(result.getNodeId(), result.getId());
+        result = store.getNodeItem(TEST_SERVER1_NODE1_ID,
+				TEST_SERVER1_NODE1_ITEM1_ID);
+        assertTrue(result.getUpdated().after(originalDate));
+	}
 
 	@Test
 	public void testCanGetItemReplies() throws Exception {

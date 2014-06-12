@@ -507,6 +507,15 @@ public interface NodeStore {
 	 */
 	void updateNodeItem(NodeItem item) throws NodeStoreException;
 
+    /**
+     * Updates the updated date on a thread parent
+     * 
+     * @param node
+     * @param itemId
+     * @throws NodeStoreException 
+     */
+	void updateThreadParent(String node, String itemId) throws NodeStoreException;
+	
 	/**
 	 * Deletes the specified node item.
 	 * 

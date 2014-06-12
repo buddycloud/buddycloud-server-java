@@ -417,4 +417,35 @@ public class PublishTest extends IQTestHandler {
 		Assert.assertEquals(node, argument.getValue().getNodeId());
 	}
 	
+
+	@Test
+	public void replyUpdatesThreadParentDate() throws Exception {
+		IQ request = readStanzaAsIq("/iq/pubsub/publish/reply.stanza");
+		Mockito.when(validateEntry.getPayload()).thenReturn(
+				request.getChildElement().element("publish").element("item")
+						.element("entry"));
+
+		publish.process(element, jid, request, null);
+
+		Assert.assertEquals(IQ.Type.result, ((IQ) queue.poll()).getType());
+
+		ArgumentCaptor<String> inReplyTo = ArgumentCaptor.forClass(String.class);
+		ArgumentCaptor<String> passedNode = ArgumentCaptor.forClass(String.class);
+		
+		Mockito.verify(channelManager, Mockito.times(1)).updateThreadParent(
+				passedNode.capture(), inReplyTo.capture());
+
+		Assert.assertEquals("fc362eb42085f017ed9ccd9c4004b095", inReplyTo
+				.getValue());
+		Assert.assertEquals(node, passedNode.getValue());
+	}
+	
+	@Test
+	public void doesNotUpdateParentThreadIfNotReply() throws Exception {
+		IQ request = this.request.createCopy();
+		publish.process(element, jid, request, null);
+
+		Mockito.verify(channelManager, Mockito.times(0)).updateThreadParent(
+				Mockito.anyString(), Mockito.anyString());
+	}
 }

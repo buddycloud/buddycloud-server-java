@@ -104,6 +104,7 @@ public class Publish extends PubSubElementProcessorAbstract {
 				return;
 			extractItemDetails();
 			saveNodeItem();
+			updateThreadParent();
 			sendResponseStanza();
 			sendNotifications();
 
@@ -117,6 +118,11 @@ public class Publish extends PubSubElementProcessorAbstract {
 					ValidatePayload.UNSUPPORTED_CONTENT_TYPE);
 		}
 
+	}
+
+	private void updateThreadParent() {
+		if (null == inReplyTo) return;
+		channelManager.updateThreadParent(node, inReplyTo);
 	}
 
 	private void saveNodeItem() throws NodeStoreException {

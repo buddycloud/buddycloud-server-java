@@ -22,6 +22,7 @@ import org.buddycloud.channelserver.pubsub.model.NodeAffiliation;
 import org.buddycloud.channelserver.pubsub.model.NodeItem;
 import org.buddycloud.channelserver.pubsub.model.NodeSubscription;
 import org.buddycloud.channelserver.pubsub.subscription.Subscriptions;
+import org.buddycloud.channelserver.utils.node.item.payload.Buddycloud;
 import org.dom4j.Element;
 import org.xmpp.packet.IQ;
 import org.xmpp.packet.IQ.Type;
@@ -148,7 +149,7 @@ public class UnregisterSet implements PacketProcessor<IQ> {
 			remoteRequest.setTo(remoteDomain);
 			Element actor = remoteRequest.getElement()
 					.element("query").element("remove")
-					.addElement("actor", JabberPubsub.NS_BUDDYCLOUD);
+					.addElement("actor", Buddycloud.NS);
 			actor.addText(request.getFrom().toBareJID());
 			outQueue.put(remoteRequest);
 		}

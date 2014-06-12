@@ -2,6 +2,7 @@ package org.buddycloud.channelserver.channel.validate;
 
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.UUID;
 
@@ -14,7 +15,9 @@ import org.buddycloud.channelserver.pubsub.model.NodeItem;
 import org.buddycloud.channelserver.pubsub.model.impl.GlobalItemIDImpl;
 import org.buddycloud.channelserver.utils.node.item.payload.ActivityStreams;
 import org.buddycloud.channelserver.utils.node.item.payload.Atom;
+import org.buddycloud.channelserver.utils.node.item.payload.Buddycloud;
 import org.dom4j.Element;
+import org.dom4j.Namespace;
 import org.dom4j.dom.DOMElement;
 import org.xmpp.packet.JID;
 
@@ -231,7 +234,14 @@ public class AtomEntry implements ValidateEntry {
 		}
 
 		if (null != media) {
-			entry.add(media.createCopy());
+			entry.addNamespace(Buddycloud.NS_MEDIA_PREFIX, Buddycloud.NS_MEDIA);
+			Element mediaElement = media.createCopy();
+			for (Iterator<Element> iter = mediaElement.elements().iterator(); iter.hasNext();) {
+				Element item = iter.next();
+				item.setName(Buddycloud.NS_MEDIA_PREFIX + ":item");
+			}
+			mediaElement.setName(Buddycloud.NS_MEDIA_PREFIX + ":media");
+			entry.add(mediaElement);
 		}
 
 		if (null != targetId) {

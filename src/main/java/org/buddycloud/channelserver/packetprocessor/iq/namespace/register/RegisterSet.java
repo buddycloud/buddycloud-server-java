@@ -14,6 +14,7 @@ import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.JabberPu
 import org.buddycloud.channelserver.pubsub.accessmodel.AccessModels;
 import org.buddycloud.channelserver.pubsub.model.impl.NodeSubscriptionImpl;
 import org.buddycloud.channelserver.pubsub.subscription.Subscriptions;
+import org.buddycloud.channelserver.utils.node.item.payload.Buddycloud;
 import org.dom4j.Element;
 import org.dom4j.QName;
 import org.xmpp.packet.IQ;
@@ -137,7 +138,7 @@ public class RegisterSet implements PacketProcessor<IQ> {
 					subscribe.setTo(channel.getDomain());
 
 					Element actorEl = pubsubEl.addElement(QName.get("actor",
-							JabberPubsub.NS_BUDDYCLOUD));
+							Buddycloud.NS));
 
 					actorEl.setText(from.toBareJID());
 				}

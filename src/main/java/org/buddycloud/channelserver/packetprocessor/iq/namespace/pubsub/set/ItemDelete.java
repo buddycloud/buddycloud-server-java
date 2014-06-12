@@ -14,6 +14,7 @@ import org.buddycloud.channelserver.pubsub.model.NodeAffiliation;
 import org.buddycloud.channelserver.pubsub.model.NodeItem;
 import org.buddycloud.channelserver.pubsub.model.NodeSubscription;
 import org.buddycloud.channelserver.pubsub.subscription.Subscriptions;
+import org.buddycloud.channelserver.utils.node.item.payload.Buddycloud;
 import org.dom4j.Element;
 import org.dom4j.Namespace;
 import org.dom4j.dom.DOMElement;
@@ -244,7 +245,7 @@ public class ItemDelete extends PubSubElementProcessorAbstract {
 		request.setTo(new JID(node.split("/")[2]).getDomain());
 		request.getElement()
 		    .element("pubsub")
-		    .addElement("actor", JabberPubsub.NS_BUDDYCLOUD)
+		    .addElement("actor", Buddycloud.NS)
             .addText(actor.toBareJID());
 	    outQueue.put(request);
 	}

@@ -12,6 +12,7 @@ import org.buddycloud.channelserver.channel.node.configuration.field.Creator;
 import org.buddycloud.channelserver.db.exception.NodeStoreException;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.JabberPubsub;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.PubSubElementProcessorAbstract;
+import org.buddycloud.channelserver.utils.node.item.payload.Buddycloud;
 import org.dom4j.Element;
 import org.dom4j.Namespace;
 import org.dom4j.dom.DOMElement;
@@ -153,7 +154,7 @@ public class NodeCreate extends PubSubElementProcessorAbstract {
 		request.setTo(new JID(node.split("/")[2]).getDomain());
 		Element actor = request.getElement()
 		    .element("pubsub")
-		    .addElement("actor", JabberPubsub.NS_BUDDYCLOUD);
+		    .addElement("actor", Buddycloud.NS);
 		actor.addText(request.getFrom().toBareJID());
 	    outQueue.put(request);
 	}

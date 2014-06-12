@@ -22,6 +22,7 @@ import org.buddycloud.channelserver.pubsub.model.impl.GlobalItemIDImpl;
 import org.buddycloud.channelserver.pubsub.subscription.Subscriptions;
 import org.buddycloud.channelserver.utils.node.NodeAclRefuseReason;
 import org.buddycloud.channelserver.utils.node.NodeViewAcl;
+import org.buddycloud.channelserver.utils.node.item.payload.Buddycloud;
 import org.dom4j.DocumentException;
 import org.dom4j.Element;
 import org.dom4j.Namespace;
@@ -169,7 +170,7 @@ public class UserItemsGet implements PubSubElementProcessor {
 		requestIq.setTo(new JID(node.split("/")[2]).getDomain());
 		if (null == requestIq.getElement().element("pubsub").element("actor")) {
 			Element actor = requestIq.getElement().element("pubsub")
-					.addElement("actor", JabberPubsub.NS_BUDDYCLOUD);
+					.addElement("actor", Buddycloud.NS);
 			actor.addText(requestIq.getFrom().toBareJID());
 		}
 		outQueue.put(requestIq);

@@ -11,6 +11,7 @@ import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.PubSubGe
 import org.buddycloud.channelserver.pubsub.affiliation.Affiliations;
 import org.buddycloud.channelserver.pubsub.model.NodeAffiliation;
 import org.buddycloud.channelserver.queue.FederatedQueueManager;
+import org.buddycloud.channelserver.utils.node.item.payload.Buddycloud;
 import org.dom4j.Element;
 import org.xmpp.packet.IQ;
 import org.xmpp.packet.JID;
@@ -218,7 +219,7 @@ public class AffiliationsGet implements PubSubElementProcessor {
 		requestIq.setTo(new JID(node).getDomain());
 		if (null == requestIq.getElement().element("pubsub").element("actor")) {
 		    Element actor = requestIq.getElement().element("pubsub")
-				.addElement("actor", JabberPubsub.NS_BUDDYCLOUD);
+				.addElement("actor", Buddycloud.NS);
 		    actor.addText(requestIq.getFrom().toBareJID());
 		}
 		outQueue.put(requestIq);

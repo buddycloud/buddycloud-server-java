@@ -2,6 +2,7 @@ package org.buddycloud.channelserver.channel.validate;
 
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.UUID;
 
@@ -233,12 +234,13 @@ public class AtomEntry implements ValidateEntry {
 		}
 
 		if (null != media) {
+			entry.addNamespace("bcm", Buddycloud.NS_MEDIA);
 			Element mediaElement = media.createCopy();
-			Namespace namespace = mediaElement.getNamespaceForPrefix("media");
-			if (namespace != null) {
-			    mediaElement.remove(namespace);
+			for (Iterator<Element> iter = mediaElement.elements().iterator(); iter.hasNext();) {
+				Element item = iter.next();
+				item.setName("bcm:item");
 			}
-			mediaElement.addNamespace("media", Buddycloud.NS_MEDIA);
+			mediaElement.setName("bcm:media");
 			entry.add(mediaElement);
 		}
 

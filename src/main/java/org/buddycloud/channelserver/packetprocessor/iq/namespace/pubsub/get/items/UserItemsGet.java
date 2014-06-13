@@ -17,6 +17,7 @@ import org.buddycloud.channelserver.pubsub.affiliation.Affiliations;
 import org.buddycloud.channelserver.pubsub.model.GlobalItemID;
 import org.buddycloud.channelserver.pubsub.model.NodeAffiliation;
 import org.buddycloud.channelserver.pubsub.model.NodeItem;
+import org.buddycloud.channelserver.pubsub.model.NodeMembership;
 import org.buddycloud.channelserver.pubsub.model.NodeSubscription;
 import org.buddycloud.channelserver.pubsub.model.impl.GlobalItemIDImpl;
 import org.buddycloud.channelserver.pubsub.subscription.Subscriptions;
@@ -280,26 +281,11 @@ public class UserItemsGet implements PubSubElementProcessor {
 	}
 
 	private boolean userCanViewNode() throws NodeStoreException {
-		NodeSubscription nodeSubscription = channelManager.getUserSubscription(
+		NodeMembership nodeMembership = channelManager.getNodeMembership(
 				node, actor);
-		NodeAffiliation nodeAffiliation = channelManager.getUserAffiliation(
-				node, actor);
-
-		Affiliations possibleExistingAffiliation = Affiliations.none;
-		Subscriptions possibleExistingSubscription = Subscriptions.none;
-		if (nodeSubscription != null) {
-			if (nodeAffiliation.getAffiliation() != null) {
-				possibleExistingAffiliation = nodeAffiliation.getAffiliation();
-			}
-			if (nodeSubscription.getSubscription() != null) {
-				possibleExistingSubscription = nodeSubscription
-						.getSubscription();
-			}
-		}
 
 		if (getNodeViewAcl().canViewNode(node,
-				possibleExistingAffiliation, possibleExistingSubscription,
-				getNodeAccessModel(), channelManager.isLocalJID(actor))) {
+				nodeMembership, getNodeAccessModel(), channelManager.isLocalJID(actor))) {
 			return true;
 		}
 		NodeAclRefuseReason reason = getNodeViewAcl().getReason();

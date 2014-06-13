@@ -286,7 +286,11 @@ public class Sql92NodeStoreDialect implements NodeStoreSQLDialect {
 		         "THEN \"subscriptions\".\"user\" " +
 		         "ELSE \"affiliations\".\"user\" " +
 		    "END AS \"user\", " +
-		    "\"subscriptions\".\"listener\" AS \"listener\", " +
+		    "CASE " +
+		     "WHEN \"subscriptions\".\"listener\" != '' THEN \"subscriptions\".\"listener\" " +
+		     "WHEN \"subscriptions\".\"user\" != '' THEN \"subscriptions\".\"user\" " +
+	         "ELSE \"affiliations\".\"user\" " +
+	             "END AS \"listener\", " +
 		    "CASE WHEN \"subscriptions\".\"subscription\" != '' " +
 		         "THEN \"subscriptions\".\"subscription\" " +
 		         "ELSE 'none' " +

@@ -86,4 +86,20 @@ public class JDBCNodeStoreMembershipTest extends JDBCNodeStoreAbstract {
 		assertEquals("An unexpected node membership was returned", expected,
 				result);
 	}
+	
+	
+	@Test
+	public void canGetNodeMembershipWhereTheresNoMembership() throws Exception {
+
+		
+		NodeMembership result = store.getNodeMembership(
+				TEST_SERVER1_NODE1_ID, TEST_SERVER1_USER1_JID);
+
+		NodeMembership expected = new NodeMembershipImpl(
+				TEST_SERVER1_NODE1_ID, TEST_SERVER1_USER1_JID,
+				Subscriptions.none, Affiliations.none);
+
+		assertEquals("An unexpected node membership was returned", expected,
+				result);
+	}
 }

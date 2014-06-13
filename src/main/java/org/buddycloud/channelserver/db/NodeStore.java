@@ -335,8 +335,9 @@ public interface NodeStore {
      * @param nodeId
      * @param user
      * @return
+     * @throws NodeStoreException 
      */
-	NodeMembership getNodeMembership(String nodeId, JID user);
+	NodeMembership getNodeMembership(String nodeId, JID user) throws NodeStoreException;
 	
 	/**
 	 * Gets the user's subscription to a certain node.

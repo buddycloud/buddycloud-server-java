@@ -47,7 +47,7 @@ public class JDBCNodeStoreMembershipTest extends JDBCNodeStoreAbstract {
 
 		NodeMembership expected = new NodeMembershipImpl(
 				TEST_SERVER1_NODE1_ID, TEST_SERVER1_USER1_JID,
-				Subscriptions.subscribed, Affiliations.member);
+				Subscriptions.subscribed, Affiliations.owner);
 
 		assertEquals("An unexpected node membership was returned", expected,
 				result);

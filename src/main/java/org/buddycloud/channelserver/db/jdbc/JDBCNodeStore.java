@@ -34,6 +34,7 @@ import org.buddycloud.channelserver.pubsub.model.NodeThread;
 import org.buddycloud.channelserver.pubsub.model.impl.GlobalItemIDImpl;
 import org.buddycloud.channelserver.pubsub.model.impl.NodeAffiliationImpl;
 import org.buddycloud.channelserver.pubsub.model.impl.NodeItemImpl;
+import org.buddycloud.channelserver.pubsub.model.impl.NodeMembershipImpl;
 import org.buddycloud.channelserver.pubsub.model.impl.NodeSubscriptionImpl;
 import org.buddycloud.channelserver.pubsub.model.impl.NodeThreadImpl;
 import org.buddycloud.channelserver.pubsub.subscription.Subscriptions;
@@ -650,8 +651,39 @@ public class JDBCNodeStore implements NodeStore {
 	}
 	
 	@Override
-	public NodeMembership getNodeMembership(String nodeId, JID user) {
-		return null;
+	public NodeMembership getNodeMembership(String nodeId, JID user) throws NodeStoreException {
+		PreparedStatement selectStatement = null;
+
+		try {
+			NodeMembershipImpl membership;
+
+			selectStatement = conn.prepareStatement(dialect
+					.selectMembership());
+			selectStatement.setString(2, nodeId);
+			selectStatement.setString(1, user.toBareJID());
+			selectStatement.setString(4, nodeId);
+			selectStatement.setString(3, user.toBareJID());
+			
+			java.sql.ResultSet rs = selectStatement.executeQuery();
+
+			if (rs.next()) {
+				membership = new NodeMembershipImpl(nodeId, new JID(
+						rs.getString(2)), new JID(rs.getString(3)),
+						Subscriptions.valueOf(rs.getString(4)),
+						Affiliations.valueOf(rs.getString(5)),
+						rs.getTimestamp(6));
+			} else {
+				membership = new NodeMembershipImpl(nodeId, user, user,
+						Subscriptions.none, Affiliations.none);
+			}
+
+			return membership;
+		} catch (SQLException e) {
+			throw new NodeStoreException(e);
+		} finally {
+			close(selectStatement); // Will implicitly close the resultset if
+									// required
+		}
 	}
 
 	@Override
@@ -2036,6 +2068,8 @@ public class JDBCNodeStore implements NodeStore {
 
 	public interface NodeStoreSQLDialect {
 		String insertNode();
+
+		String selectMembership();
 
 		String selectNodeOwners();
 

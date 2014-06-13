@@ -138,7 +138,7 @@ public class NodeMembershipImpl implements NodeMembership {
 	
 	@Override
 	public String toString() {
-		return "NodeSubscriptionImpl [subscription=" + subscription +
+		return "NodeMembershipImpl [subscription=" + subscription +
 				", affiliation=" + affiliation + ",user=" +
 				user + ", listener=" + listener + ", nodeId=" + nodeId + "]";
 	}

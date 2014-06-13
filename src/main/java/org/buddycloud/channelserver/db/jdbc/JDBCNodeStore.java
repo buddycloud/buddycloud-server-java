@@ -28,6 +28,7 @@ import org.buddycloud.channelserver.pubsub.affiliation.Affiliations;
 import org.buddycloud.channelserver.pubsub.model.GlobalItemID;
 import org.buddycloud.channelserver.pubsub.model.NodeAffiliation;
 import org.buddycloud.channelserver.pubsub.model.NodeItem;
+import org.buddycloud.channelserver.pubsub.model.NodeMembership;
 import org.buddycloud.channelserver.pubsub.model.NodeSubscription;
 import org.buddycloud.channelserver.pubsub.model.NodeThread;
 import org.buddycloud.channelserver.pubsub.model.impl.GlobalItemIDImpl;
@@ -646,6 +647,11 @@ public class JDBCNodeStore implements NodeStore {
 			close(selectStatement); // Will implicitly close the resultset if
 									// required
 		}
+	}
+	
+	@Override
+	public NodeMembership getNodeMembership(String nodeId, JID user) {
+		return null;
 	}
 
 	@Override

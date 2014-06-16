@@ -167,12 +167,6 @@ public class ChannelManagerImpl implements ChannelManager {
 			throws NodeStoreException {
 		return nodeStore.getUserSubscription(nodeId, user);
 	}
-	
-	@Override
-	public NodeMembership getNodeMembership(String nodeId, JID user)
-	    throws NodeStoreException {
-		return nodeStore.getNodeMembership(nodeId, user);
-	}
 
 	@Override
 	public ResultSet<NodeSubscription> getUserSubscriptions(JID user)
@@ -506,5 +500,11 @@ public class ChannelManagerImpl implements ChannelManager {
 			throws NodeStoreException {
 		nodeStore.updateThreadParent(node, itemId);
 		
+	}
+
+	@Override
+	public NodeMembership getNodeMembership(String nodeId, JID user)
+			throws NodeStoreException {
+		return nodeStore.getNodeMembership(nodeId, user);
 	}
 }

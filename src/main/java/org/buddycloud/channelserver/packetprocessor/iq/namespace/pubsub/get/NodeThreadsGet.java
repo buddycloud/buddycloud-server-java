@@ -53,25 +53,25 @@ public class NodeThreadsGet extends PubSubElementProcessorAbstract {
 		if (actor == null) {
 			actor = request.getFrom();
 		}
-		
+
 		if (!channelManager.isLocalJID(request.getFrom())) {
-			response.getElement().addAttribute(
-					"remote-server-discover", "false");
+			response.getElement().addAttribute("remote-server-discover",
+					"false");
 		}
-		
+
 		if (!isValidStanza()) {
 			outQueue.put(response);
 			return;
 		}
-		
-		if (!channelManager.isLocalNode(node) && 
-				!channelManager.isCachedNode(node)) {
+
+		if (!channelManager.isLocalNode(node)
+				&& !channelManager.isCachedNode(node)) {
 			logger.debug("Node " + node
 					+ " is remote and not cached, off to get some data");
 			makeRemoteRequest();
 			return;
 		}
-		
+
 		if (!checkNodeExists() || !userCanViewNode() || !parseRsmElement()) {
 			outQueue.put(response);
 			return;
@@ -85,11 +85,11 @@ public class NodeThreadsGet extends PubSubElementProcessorAbstract {
 		String domain = new JID(node.split("/")[2]).getDomain();
 		request.setTo(domain);
 		if (null == request.getElement().element("pubsub").element("actor")) {
-		    Element actor = request.getElement().element("pubsub")
-				.addElement("actor", Buddycloud.NS);
-		    actor.addText(request.getFrom().toBareJID());
+			Element actor = request.getElement().element("pubsub")
+					.addElement("actor", Buddycloud.NS);
+			actor.addText(request.getFrom().toBareJID());
 		}
-	    outQueue.put(request);
+		outQueue.put(request);
 	}
 
 	private void addRsmElement() throws NodeStoreException {
@@ -134,7 +134,8 @@ public class NodeThreadsGet extends PubSubElementProcessorAbstract {
 
 	private boolean isValidStanza() throws NodeStoreException {
 		try {
-			this.node = request.getChildElement().element("threads").attributeValue("node");
+			this.node = request.getChildElement().element("threads")
+					.attributeValue("node");
 			if (node != null) {
 				return true;
 			}
@@ -165,22 +166,12 @@ public class NodeThreadsGet extends PubSubElementProcessorAbstract {
 	}
 
 	private boolean userCanViewNode() throws NodeStoreException {
-		NodeSubscription nodeSubscription = channelManager.getUserSubscription(
-				node, actor);
-		NodeAffiliation nodeAffiliation = channelManager.getUserAffiliation(
-				node, actor);
-
-		Affiliations affiliation = Affiliations.none;
-		Subscriptions subscription = Subscriptions.none;
-		if (nodeSubscription != null) {
-			affiliation = nodeAffiliation.getAffiliation();
-			subscription = nodeSubscription.getSubscription();
-		}
 		NodeViewAcl nodeViewAcl = new NodeViewAcl();
 		Map<String, String> nodeConfiguration = channelManager
 				.getNodeConf(node);
 
-		if (nodeViewAcl.canViewNode(node, affiliation, subscription,
+		if (nodeViewAcl.canViewNode(node,
+				channelManager.getNodeMembership(node, actor),
 				getNodeAccessModel(nodeConfiguration),
 				channelManager.isLocalJID(actor))) {
 			return true;

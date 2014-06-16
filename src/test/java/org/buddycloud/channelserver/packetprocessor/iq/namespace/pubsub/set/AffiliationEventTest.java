@@ -52,7 +52,21 @@ public class AffiliationEventTest extends IQTestHandler {
 		channelManager = Mockito.mock(ChannelManager.class);
 		Mockito.when(channelManager.isLocalNode(Mockito.anyString()))
 				.thenReturn(true);
-		
+		Mockito.when(channelManager.nodeExists(Mockito.anyString()))
+				.thenReturn(true);
+
+		Mockito.when(
+				channelManager.getNodeMembership(Mockito.anyString(),
+						Mockito.eq(jid))).thenReturn(
+				new NodeMembershipImpl(node, jid, Subscriptions.subscribed,
+						Affiliations.owner));
+		Mockito.when(
+				channelManager.getNodeMembership(Mockito.anyString(),
+						Mockito.eq(new JID("francisco@denmark.lit"))))
+				.thenReturn(
+						new NodeMembershipImpl(node, jid, Subscriptions.none,
+								Affiliations.publisher));
+
 		queue = new LinkedBlockingQueue<Packet>();
 		event = new AffiliationEvent(queue, channelManager);
 		request = readStanzaAsIq("/iq/pubsub/affiliation/affiliationChange.stanza");
@@ -84,7 +98,8 @@ public class AffiliationEventTest extends IQTestHandler {
 		PacketError error = response.getError();
 		Assert.assertNotNull(error);
 		Assert.assertEquals(PacketError.Type.modify, error.getType());
-		Assert.assertEquals("nodeid-required", error.getApplicationConditionName());
+		Assert.assertEquals("nodeid-required",
+				error.getApplicationConditionName());
 	}
 
 	@Test
@@ -103,7 +118,8 @@ public class AffiliationEventTest extends IQTestHandler {
 		PacketError error = response.getError();
 		Assert.assertNotNull(error);
 		Assert.assertEquals(PacketError.Type.modify, error.getType());
-		Assert.assertEquals(PacketError.Condition.bad_request, error.getCondition());
+		Assert.assertEquals(PacketError.Condition.bad_request,
+				error.getCondition());
 	}
 
 	@Test
@@ -118,7 +134,8 @@ public class AffiliationEventTest extends IQTestHandler {
 		PacketError error = response.getError();
 		Assert.assertNotNull(error);
 		Assert.assertEquals(PacketError.Type.modify, error.getType());
-		Assert.assertEquals(PacketError.Condition.bad_request, error.getCondition());
+		Assert.assertEquals(PacketError.Condition.bad_request,
+				error.getCondition());
 	}
 
 	@Test
@@ -133,7 +150,8 @@ public class AffiliationEventTest extends IQTestHandler {
 		PacketError error = response.getError();
 		Assert.assertNotNull(error);
 		Assert.assertEquals(PacketError.Type.modify, error.getType());
-		Assert.assertEquals(PacketError.Condition.bad_request, error.getCondition());
+		Assert.assertEquals(PacketError.Condition.bad_request,
+				error.getCondition());
 	}
 
 	@Test
@@ -166,16 +184,17 @@ public class AffiliationEventTest extends IQTestHandler {
 		PacketError error = response.getError();
 		Assert.assertNotNull(error);
 		Assert.assertEquals(PacketError.Type.cancel, error.getType());
-		Assert.assertEquals(PacketError.Condition.item_not_found, error.getCondition());
+		Assert.assertEquals(PacketError.Condition.item_not_found,
+				error.getCondition());
 	}
 
 	@Test
 	public void userWithoutAffiliationReturnsErrorStanza() throws Exception {
 
 		Mockito.when(channelManager.nodeExists(node)).thenReturn(true);
-		Mockito.when(channelManager.getNodeMembership(node, jid))
-				.thenReturn(new NodeMembershipImpl(node, jid, Subscriptions.subscribed, Affiliations.none));
-		event.setChannelManager(channelManager);
+		Mockito.when(channelManager.getNodeMembership(node, jid)).thenReturn(
+				new NodeMembershipImpl(node, jid, Subscriptions.subscribed,
+						Affiliations.none));
 
 		event.process(element, jid, request, null);
 		Packet response = queue.poll(100, TimeUnit.MILLISECONDS);
@@ -183,13 +202,20 @@ public class AffiliationEventTest extends IQTestHandler {
 		PacketError error = response.getError();
 		Assert.assertNotNull(error);
 		Assert.assertEquals(PacketError.Type.auth, error.getType());
-		Assert.assertEquals(PacketError.Condition.not_authorized, error.getCondition());
+		Assert.assertEquals(PacketError.Condition.not_authorized,
+				error.getCondition());
 	}
 
 	@Test
-	public void testUserWhoIsntOwnerOrModeratorCantUpdateAffiliation()
+	public void userWhoIsntOwnerOrModeratorCantUpdateAffiliation()
 			throws Exception {
 
+		Mockito.when(
+				channelManager.getNodeMembership(Mockito.anyString(),
+						Mockito.eq(jid))).thenReturn(
+				new NodeMembershipImpl(node, jid, Subscriptions.subscribed,
+						Affiliations.publisher));
+		
 		event.setChannelManager(channelManager);
 
 		event.process(element, jid, request, null);
@@ -198,26 +224,27 @@ public class AffiliationEventTest extends IQTestHandler {
 		PacketError error = response.getError();
 		Assert.assertNotNull(error);
 		Assert.assertEquals(PacketError.Type.auth, error.getType());
-		Assert.assertEquals(PacketError.Condition.not_authorized, error.getCondition());
+		Assert.assertEquals(PacketError.Condition.not_authorized,
+				error.getCondition());
 	}
 
 	@Test
-	public void testUserMustHaveExistingAffiliationToUpdate() throws Exception {
-		NodeAffiliation affiliationMock = Mockito.mock(NodeAffiliation.class);
-		Mockito.when(affiliationMock.getAffiliation()).thenReturn(
-				Affiliations.owner);
+	public void userMustHaveExistingAffiliationToUpdate() throws Exception {
 
-		Mockito.when(channelManager.nodeExists(node)).thenReturn(true);
-		// actorHasPermission
-		/*Mockito.when(channelManager.getUserAffiliation(node, jid))
-				.thenReturn(affiliationMock);
-		// subscriberHasCurrentAffiliation
 		Mockito.when(
-				channelManager.getUserAffiliation(node, new JID(
-						"francisco@denmark.lit"))).thenReturn(null);*/
+				channelManager.getNodeMembership(Mockito.anyString(),
+						Mockito.eq(jid))).thenReturn(
+				new NodeMembershipImpl(node, jid, Subscriptions.subscribed,
+						Affiliations.owner));
+		Mockito.when(
+				channelManager.getNodeMembership(Mockito.anyString(),
+						Mockito.eq(new JID("francisco@denmark.lit"))))
+				.thenReturn(
+						new NodeMembershipImpl(node, jid, Subscriptions.none,
+								Affiliations.none));
 
 		event.process(element, jid, request, null);
-		Packet response = queue.poll(100, TimeUnit.MILLISECONDS);
+		Packet response = queue.poll();
 
 		PacketError error = response.getError();
 		Assert.assertNotNull(error);
@@ -227,24 +254,35 @@ public class AffiliationEventTest extends IQTestHandler {
 	}
 
 	@Test
-	public void testItIsNotPossibleToChangeTheAffiliationOfNodeOwner()
+	public void notPossibleToChangeTheAffiliationOfNodeOwner()
 			throws Exception {
 
 		Mockito.when(channelManager.nodeExists(node)).thenReturn(true);
 
-		event.setChannelManager(channelManager);
+		Mockito.when(
+				channelManager.getNodeMembership(Mockito.anyString(),
+						Mockito.eq(jid))).thenReturn(
+				new NodeMembershipImpl(node, jid, Subscriptions.subscribed,
+						Affiliations.owner));
+		Mockito.when(
+				channelManager.getNodeMembership(Mockito.anyString(),
+						Mockito.eq(new JID("francisco@denmark.lit"))))
+				.thenReturn(
+						new NodeMembershipImpl(node, jid, Subscriptions.none,
+								Affiliations.owner));
 
 		event.process(element, jid, request, null);
 		Packet response = queue.poll(100, TimeUnit.MILLISECONDS);
 		PacketError error = response.getError();
 		Assert.assertNotNull(error);
 		Assert.assertEquals(PacketError.Type.modify, error.getType());
-		Assert.assertEquals(PacketError.Condition.not_acceptable, error.getCondition());
+		Assert.assertEquals(PacketError.Condition.not_acceptable,
+				error.getCondition());
 
 	}
 
 	@Test
-	public void testPassingInvalidAffiliationTypeSetsAffiliationToNone()
+	public void passingInvalidAffiliationTypeSetsAffiliationToNone()
 			throws Exception {
 
 		IQ request = toIq(readStanzaAsString(
@@ -252,21 +290,20 @@ public class AffiliationEventTest extends IQTestHandler {
 				.replaceFirst("affiliation='member'",
 						"affiliation='i-can-haz-all-the-items'"));
 
-		NodeAffiliation affiliationActor = Mockito.mock(NodeAffiliation.class);
-		Mockito.when(affiliationActor.getAffiliation()).thenReturn(
-				Affiliations.moderator);
-		ResultSet<NodeSubscription> subscriptions = new ResultSetImpl(new ArrayList<NodeSubscription>());
-		Mockito.when(channelManager.getNodeSubscriptionListeners(Mockito.anyString())).thenReturn(subscriptions);
 
+		ResultSet<NodeSubscription> subscriptions = new ResultSetImpl(
+				new ArrayList<NodeSubscription>());
+		Mockito.when(
+				channelManager.getNodeSubscriptionListeners(Mockito.anyString()))
+				.thenReturn(subscriptions);
 
 		Mockito.when(channelManager.nodeExists(node)).thenReturn(true);
 
 		event.setChannelManager(channelManager);
 		event.process(element, jid, request, null);
 
-		Mockito.verify(channelManager).setUserAffiliation(
-				Mockito.anyString(), Mockito.any(JID.class),
-				Mockito.eq(Affiliations.none));
+		Mockito.verify(channelManager).setUserAffiliation(Mockito.anyString(),
+				Mockito.any(JID.class), Mockito.eq(Affiliations.none));
 	}
 
 	@Test
@@ -277,17 +314,19 @@ public class AffiliationEventTest extends IQTestHandler {
 				"/iq/pubsub/affiliation/affiliationChange.stanza")
 				.replaceFirst("affiliation='member'", "affiliation='moderator'"));
 
-		Mockito.when(channelManager.getNodeSubscriptionListeners(Mockito.anyString()))
-		    .thenReturn(new ResultSetImpl<NodeSubscription>(new ArrayList<NodeSubscription>()));
+		Mockito.when(
+				channelManager.getNodeSubscriptionListeners(Mockito.anyString()))
+				.thenReturn(
+						new ResultSetImpl<NodeSubscription>(
+								new ArrayList<NodeSubscription>()));
 
 		Mockito.when(channelManager.nodeExists(node)).thenReturn(true);
 
 		event.setChannelManager(channelManager);
 		event.process(element, jid, request, null);
 
-		Mockito.verify(channelManager).setUserAffiliation(
-				Mockito.anyString(), Mockito.any(JID.class),
-				Mockito.eq(Affiliations.moderator));
+		Mockito.verify(channelManager).setUserAffiliation(Mockito.anyString(),
+				Mockito.any(JID.class), Mockito.eq(Affiliations.moderator));
 	}
 
 	@Test
@@ -304,7 +343,8 @@ public class AffiliationEventTest extends IQTestHandler {
 		subscribers.add(new NodeSubscriptionMock(new JID(
 				"hamlet@shakespeare.lit")));
 
-		Mockito.doReturn(new ResultSetImpl<NodeSubscription>(subscribers)).when(channelManager)
+		Mockito.doReturn(new ResultSetImpl<NodeSubscription>(subscribers))
+				.when(channelManager)
 				.getNodeSubscriptionListeners(Mockito.anyString());
 
 		event.setChannelManager(channelManager);
@@ -312,51 +352,61 @@ public class AffiliationEventTest extends IQTestHandler {
 
 		// One iq result, 2 user notifications and 2 admin notifications
 		Assert.assertEquals(5, queue.size());
-		
+
 		boolean hasIqResult = false;
 		boolean hasNotification1 = false;
 		boolean hasNotification2 = false;
-		
-		for(int i = 0; i < 3; ++i) {
+
+		for (int i = 0; i < 3; ++i) {
 			Packet packet = queue.poll(100, TimeUnit.MILLISECONDS);
-			
-			if(packet.getElement().getName().equals("iq") && packet.getTo().equals(new JID("francisco@denmark.lit/barracks"))) {
+
+			if (packet.getElement().getName().equals("iq")
+					&& packet.getTo().equals(
+							new JID("francisco@denmark.lit/barracks"))) {
 				hasIqResult = true;
 			}
-			
-			if(packet.getElement().getName().equals("message") && packet.getTo().equals(new JID("romeo@shakespeare.lit"))) {
+
+			if (packet.getElement().getName().equals("message")
+					&& packet.getTo().equals(new JID("romeo@shakespeare.lit"))) {
 				hasNotification1 = true;
 
-				Assert.assertEquals(
-						node,
-						packet.getElement().element("event")
-								.element("affiliations").attributeValue("node"));
-				Assert.assertTrue(packet.toXML().contains(JabberPubsub.NS_PUBSUB_EVENT));
+				Assert.assertEquals(node, packet.getElement().element("event")
+						.element("affiliations").attributeValue("node"));
+				Assert.assertTrue(packet.toXML().contains(
+						JabberPubsub.NS_PUBSUB_EVENT));
 				Assert.assertEquals(Affiliations.moderator.toString(), packet
-						.getElement().element("event").element("affiliations").element("affiliation")
-						.attributeValue("affiliation"));
-				Assert.assertEquals(subscriber, packet.getElement().element("event")
-						.element("affiliations").element("affiliation").attributeValue("jid"));
+						.getElement().element("event").element("affiliations")
+						.element("affiliation").attributeValue("affiliation"));
+				Assert.assertEquals(
+						subscriber,
+						packet.getElement().element("event")
+								.element("affiliations").element("affiliation")
+								.attributeValue("jid"));
 			}
-			
-			if(packet.getElement().getName().equals("message") && packet.getTo().equals(new JID("hamlet@shakespeare.lit"))) {
+
+			if (packet.getElement().getName().equals("message")
+					&& packet.getTo().equals(new JID("hamlet@shakespeare.lit"))) {
 				hasNotification2 = true;
 
-				Assert.assertEquals(
-						node,
-						packet.getElement().element("event")
-								.element("affiliations").attributeValue("node"));
-				Assert.assertTrue(packet.toXML().contains(JabberPubsub.NS_PUBSUB_EVENT));
+				Assert.assertEquals(node, packet.getElement().element("event")
+						.element("affiliations").attributeValue("node"));
+				Assert.assertTrue(packet.toXML().contains(
+						JabberPubsub.NS_PUBSUB_EVENT));
 				Assert.assertEquals(Affiliations.moderator.toString(), packet
-						.getElement().element("event").element("affiliations").element("affiliation")
-						.attributeValue("affiliation"));
-				Assert.assertEquals(subscriber, packet.getElement().element("event")
-						.element("affiliations").element("affiliation").attributeValue("jid"));
+						.getElement().element("event").element("affiliations")
+						.element("affiliation").attributeValue("affiliation"));
+				Assert.assertEquals(
+						subscriber,
+						packet.getElement().element("event")
+								.element("affiliations").element("affiliation")
+								.attributeValue("jid"));
 			}
 		}
-		
+
 		assertTrue("IQ result not sent", hasIqResult);
-		assertTrue("Notification to romeo@shakespeare.lit not sent", hasNotification1);
-		assertTrue("Notification to hamlet@shakespeare.lit not sent", hasNotification2);
+		assertTrue("Notification to romeo@shakespeare.lit not sent",
+				hasNotification1);
+		assertTrue("Notification to hamlet@shakespeare.lit not sent",
+				hasNotification2);
 	}
 }

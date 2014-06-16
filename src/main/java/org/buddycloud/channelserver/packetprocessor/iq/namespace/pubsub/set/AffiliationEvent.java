@@ -66,7 +66,8 @@ public class AffiliationEvent extends PubSubElementProcessorAbstract {
 		}
 		
 		try {
-			if ((false == nodeProvided()) || (false == validRequestStanza())
+			if ((false == nodeProvided())
+					|| (false == validRequestStanza())
 					|| (false == checkNodeExists())
 					|| (false == actorHasPermissionToAuthorize())
 					|| (false == subscriberHasCurrentAffiliation())
@@ -188,8 +189,8 @@ public class AffiliationEvent extends PubSubElementProcessorAbstract {
 		usersCurrentMembership = channelManager.getNodeMembership(node, new JID(
 				requestedAffiliation.attributeValue("jid")));
 
-		if ((usersCurrentMembership.getAffiliation()
-						.equals(Affiliations.none))) {
+		if (usersCurrentMembership.getAffiliation()
+						.equals(Affiliations.none)) {
 			setErrorCondition(PacketError.Type.modify,
 					PacketError.Condition.unexpected_request);
 			return false;
@@ -201,7 +202,6 @@ public class AffiliationEvent extends PubSubElementProcessorAbstract {
 
 		NodeMembership membership = channelManager.getNodeMembership(node,
 				actor);
-
 		if (membership.getAffiliation().canAuthorize()) {
 			return true;
 		}

@@ -466,7 +466,9 @@ public class UserItemsGetTest extends IQTestHandler {
 				Affiliations.member);
 		Mockito.when(membership.getSubscription()).thenReturn(
 				Subscriptions.subscribed);
-		Mockito.when(channelManager.getNodeMembership(node, jid)).thenReturn(
+		Mockito.when(membership.getUser()).thenReturn(jid);
+		Mockito.when(membership.getNodeId()).thenReturn(node);
+		Mockito.when(channelManager.getNodeMembership(Mockito.anyString(), Mockito.eq(jid))).thenReturn(
 				membership);
 
 		NodeSubscriptionImpl itemSubscription = Mockito
@@ -515,7 +517,7 @@ public class UserItemsGetTest extends IQTestHandler {
 
 		itemsGet.process(element, jid, request, null);
 
-		Packet response = queue.poll(100, TimeUnit.MILLISECONDS);
+		Packet response = queue.poll();
 		Element element = response.getElement();
 
 		Assert.assertEquals(IQ.Type.result.toString(),
@@ -529,7 +531,8 @@ public class UserItemsGetTest extends IQTestHandler {
 		Assert.assertEquals(jid.toBareJID(),
 				element.element("pubsub").element("items").element("item")
 						.attributeValue("id"));
-		Assert.assertEquals("/user/juliet@shakespeare.lit/posts",
+
+		Assert.assertEquals(node,
 				element.element("pubsub").element("items").element("item")
 						.element("query").element("item")
 						.attributeValue("node"));

@@ -163,12 +163,6 @@ public class ChannelManagerImpl implements ChannelManager {
 	}
 
 	@Override
-	public NodeSubscription getUserSubscription(String nodeId, JID user)
-			throws NodeStoreException {
-		return nodeStore.getUserSubscription(nodeId, user);
-	}
-
-	@Override
 	public ResultSet<NodeSubscription> getUserSubscriptions(JID user)
 			throws NodeStoreException {
 		return nodeStore.getUserSubscriptions(user);

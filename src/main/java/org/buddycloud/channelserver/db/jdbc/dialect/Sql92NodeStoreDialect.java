@@ -416,11 +416,6 @@ public class Sql92NodeStoreDialect implements NodeStoreSQLDialect {
 	}
 
 	@Override
-	public String selectSubscription() {
-		return SELECT_SUBSCRIPTION;
-	}
-
-	@Override
 	public String selectSubscriptionsForUser() {
 		return SELECT_SUBSCRIPTIONS_FOR_USER;
 	}

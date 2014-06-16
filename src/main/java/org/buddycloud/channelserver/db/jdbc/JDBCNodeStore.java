@@ -687,44 +687,6 @@ public class JDBCNodeStore implements NodeStore {
 	}
 
 	@Override
-	public NodeSubscription getUserSubscription(String nodeId, JID user)
-			throws NodeStoreException {
-		PreparedStatement selectStatement = null;
-
-		try {
-			NodeSubscriptionImpl subscription;
-
-			selectStatement = conn.prepareStatement(dialect
-					.selectSubscription());
-			selectStatement.setString(1, nodeId);
-			selectStatement.setString(2, user.toBareJID());
-			if ((null == user.getNode()) || (true == user.getNode().isEmpty())) {
-				selectStatement.setString(3, user.getDomain());
-			} else {
-				selectStatement.setString(3, user.toString());
-			}
-			java.sql.ResultSet rs = selectStatement.executeQuery();
-
-			if (rs.next()) {
-				subscription = new NodeSubscriptionImpl(nodeId, new JID(
-						rs.getString(2)), new JID(rs.getString(3)),
-						Subscriptions.valueOf(rs.getString(4)),
-						rs.getTimestamp(5));
-			} else {
-				subscription = new NodeSubscriptionImpl(nodeId, user, user,
-						Subscriptions.none);
-			}
-
-			return subscription;
-		} catch (SQLException e) {
-			throw new NodeStoreException(e);
-		} finally {
-			close(selectStatement); // Will implicitly close the resultset if
-									// required
-		}
-	}
-
-	@Override
 	public ResultSet<NodeSubscription> getUserSubscriptions(final JID user)
 			throws NodeStoreException {
 		PreparedStatement stmt = null;
@@ -2130,8 +2092,6 @@ public class JDBCNodeStore implements NodeStore {
 		String updateAffiliation();
 
 		String deleteAffiliation();
-
-		String selectSubscription();
 
 		String selectSubscriptionsForUser();
 

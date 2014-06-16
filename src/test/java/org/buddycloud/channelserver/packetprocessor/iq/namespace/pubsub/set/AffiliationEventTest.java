@@ -17,8 +17,10 @@ import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.JabberPu
 import org.buddycloud.channelserver.pubsub.affiliation.Affiliations;
 import org.buddycloud.channelserver.pubsub.model.NodeAffiliation;
 import org.buddycloud.channelserver.pubsub.model.NodeSubscription;
+import org.buddycloud.channelserver.pubsub.model.impl.NodeMembershipImpl;
 import org.buddycloud.channelserver.pubsub.model.impl.NodeSubscriptionImpl;
 import org.buddycloud.channelserver.pubsub.subscription.NodeSubscriptionMock;
+import org.buddycloud.channelserver.pubsub.subscription.Subscriptions;
 import org.dom4j.Element;
 import org.dom4j.tree.BaseElement;
 import org.junit.Before;
@@ -168,11 +170,11 @@ public class AffiliationEventTest extends IQTestHandler {
 	}
 
 	@Test
-	public void testUserWithoutAffiliationReturnsErrorStanza() throws Exception {
+	public void userWithoutAffiliationReturnsErrorStanza() throws Exception {
 
 		Mockito.when(channelManager.nodeExists(node)).thenReturn(true);
-		Mockito.when(channelManager.getUserSubscription(node, jid))
-				.thenReturn(null);
+		Mockito.when(channelManager.getNodeMembership(node, jid))
+				.thenReturn(new NodeMembershipImpl(node, jid, Subscriptions.subscribed, Affiliations.none));
 		event.setChannelManager(channelManager);
 
 		event.process(element, jid, request, null);

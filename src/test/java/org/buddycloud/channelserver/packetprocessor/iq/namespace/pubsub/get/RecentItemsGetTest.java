@@ -27,6 +27,7 @@ import org.buddycloud.channelserver.pubsub.model.NodeItem;
 import org.buddycloud.channelserver.pubsub.model.impl.GlobalItemIDImpl;
 import org.buddycloud.channelserver.pubsub.model.impl.NodeAffiliationImpl;
 import org.buddycloud.channelserver.pubsub.model.impl.NodeItemImpl;
+import org.buddycloud.channelserver.pubsub.model.impl.NodeMembershipImpl;
 import org.buddycloud.channelserver.pubsub.model.impl.NodeSubscriptionImpl;
 import org.buddycloud.channelserver.pubsub.subscription.Subscriptions;
 import org.dom4j.Element;
@@ -327,10 +328,8 @@ public class RecentItemsGetTest extends IQTestHandler {
 		
 		Mockito.when(channelManager.nodeExists(anyString())).thenReturn(true);
 		
-		Mockito.when(channelManager.getUserSubscription(node, jid)).thenReturn(
-				new NodeSubscriptionImpl(node, jid, Subscriptions.subscribed));
-		Mockito.when(channelManager.getUserAffiliation(node, jid)).thenReturn(
-				new NodeAffiliationImpl(node, jid, Affiliations.member, new Date()));
+		Mockito.when(channelManager.getNodeMembership(node, jid)).thenReturn(
+				new NodeMembershipImpl(node, jid, Subscriptions.subscribed, Affiliations.member));
 		
 		ArrayList<NodeItem> results = new ArrayList<NodeItem>() {{
 			add(new NodeItemImpl(TEST_NODE_1, "entry1", new Date(System.currentTimeMillis()), "<entry><id>entry1</id></entry>"));
@@ -372,10 +371,8 @@ public class RecentItemsGetTest extends IQTestHandler {
 		
 		Mockito.when(channelManager.nodeExists(anyString())).thenReturn(true);
 		
-		Mockito.when(channelManager.getUserSubscription(node, jid)).thenReturn(
-				new NodeSubscriptionImpl(node, jid, Subscriptions.subscribed));
-		Mockito.when(channelManager.getUserAffiliation(node, jid)).thenReturn(
-				new NodeAffiliationImpl(node, jid, Affiliations.member, new Date()));
+		Mockito.when(channelManager.getNodeMembership(node, jid)).thenReturn(
+				new NodeMembershipImpl(node, jid, Subscriptions.subscribed, Affiliations.member));
 		
 		Mockito.when(
 				channelManager.getRecentItems(Mockito.any(JID.class),
@@ -407,10 +404,8 @@ public class RecentItemsGetTest extends IQTestHandler {
 		
         Mockito.when(channelManager.nodeExists(anyString())).thenReturn(true);
 		
-		Mockito.when(channelManager.getUserSubscription(node, jid)).thenReturn(
-				new NodeSubscriptionImpl(node, jid, Subscriptions.subscribed));
-		Mockito.when(channelManager.getUserAffiliation(node, jid)).thenReturn(
-				new NodeAffiliationImpl(node, jid, Affiliations.member, new Date()));
+		Mockito.when(channelManager.getNodeMembership(node, jid)).thenReturn(
+				new NodeMembershipImpl(node, jid, Subscriptions.subscribed, Affiliations.member));
 		
 		Mockito.when(
 				channelManager.getRecentItems(Mockito.any(JID.class),

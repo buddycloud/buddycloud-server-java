@@ -16,6 +16,7 @@ import org.buddycloud.channelserver.pubsub.affiliation.Affiliations;
 import org.buddycloud.channelserver.pubsub.model.GlobalItemID;
 import org.buddycloud.channelserver.pubsub.model.NodeAffiliation;
 import org.buddycloud.channelserver.pubsub.model.NodeItem;
+import org.buddycloud.channelserver.pubsub.model.NodeMembership;
 import org.buddycloud.channelserver.pubsub.model.NodeSubscription;
 import org.buddycloud.channelserver.pubsub.model.NodeThread;
 import org.xmpp.packet.JID;
@@ -107,12 +108,6 @@ public class ChannelManagerImpl implements ChannelManager {
 	}
 
 	@Override
-	public NodeAffiliation getUserAffiliation(String nodeId, JID user)
-			throws NodeStoreException {
-		return nodeStore.getUserAffiliation(nodeId, user);
-	}
-
-	@Override
 	public ResultSet<NodeAffiliation> getAffiliationChanges(JID user,
 			Date startDate, Date endDate) throws NodeStoreException {
 		return nodeStore.getAffiliationChanges(user, startDate, endDate);
@@ -159,12 +154,6 @@ public class ChannelManagerImpl implements ChannelManager {
 	public int countNodeAffiliations(String nodeId, boolean isOwnerModerator)
 			throws NodeStoreException {
 		return nodeStore.countNodeAffiliations(nodeId, isOwnerModerator);
-	}
-
-	@Override
-	public NodeSubscription getUserSubscription(String nodeId, JID user)
-			throws NodeStoreException {
-		return nodeStore.getUserSubscription(nodeId, user);
 	}
 
 	@Override
@@ -492,5 +481,18 @@ public class ChannelManagerImpl implements ChannelManager {
 	public boolean userHasRatedPost(String node, JID user, GlobalItemID id)
 			throws NodeStoreException {
 		return nodeStore.userHasRatedPost(node, user, id);
+	}
+
+	@Override
+	public void updateThreadParent(String node, String itemId)
+			throws NodeStoreException {
+		nodeStore.updateThreadParent(node, itemId);
+		
+	}
+
+	@Override
+	public NodeMembership getNodeMembership(String nodeId, JID user)
+			throws NodeStoreException {
+		return nodeStore.getNodeMembership(nodeId, user);
 	}
 }

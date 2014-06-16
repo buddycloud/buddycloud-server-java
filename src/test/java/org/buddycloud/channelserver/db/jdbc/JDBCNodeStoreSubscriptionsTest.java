@@ -199,51 +199,6 @@ public class JDBCNodeStoreSubscriptionsTest extends JDBCNodeStoreAbstract {
 					}
 				});
 	}
-	
-	@Test
-	public void testGetUserSubscription() throws Exception {
-		dbTester.loadData("node_1");
-
-		NodeSubscription result = store.getUserSubscription(
-				TEST_SERVER1_NODE1_ID, TEST_SERVER1_USER1_JID);
-
-		NodeSubscriptionImpl expected = new NodeSubscriptionImpl(
-				TEST_SERVER1_NODE1_ID, TEST_SERVER1_USER1_JID,
-				Subscriptions.subscribed);
-
-		assertEquals("An unexpected node subscription was returned", expected,
-				result);
-	}
-
-	@Test
-	public void testGetUserSubscriptionIfNotSet() throws Exception {
-		dbTester.loadData("node_1");
-
-		NodeSubscription result = store.getUserSubscription(
-				TEST_SERVER1_NODE1_ID, new JID("anotheruser@sample.com"));
-
-		NodeSubscriptionImpl expected = new NodeSubscriptionImpl(
-				TEST_SERVER1_NODE1_ID, new JID("anotheruser@sample.com"),
-				Subscriptions.none);
-
-		assertEquals("An unexpected node subscription was returned", expected,
-				result);
-	}
-
-	@Test
-	public void testGetUserSubscriptionUsesBareJID() throws Exception {
-		dbTester.loadData("node_1");
-
-		NodeSubscription result = store.getUserSubscription(
-				TEST_SERVER1_NODE1_ID, TEST_SERVER1_USER1_JID_WITH_RESOURCE);
-
-		NodeSubscriptionImpl expected = new NodeSubscriptionImpl(
-				TEST_SERVER1_NODE1_ID, TEST_SERVER1_USER1_JID,
-				Subscriptions.subscribed);
-
-		assertEquals("An unexpected node subscription was returned", expected,
-				result);
-	}
 
 	@Test
 	public void testGetUserSubscriptions() throws Exception {

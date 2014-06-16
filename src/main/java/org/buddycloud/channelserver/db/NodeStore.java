@@ -11,6 +11,7 @@ import org.buddycloud.channelserver.pubsub.affiliation.Affiliations;
 import org.buddycloud.channelserver.pubsub.model.GlobalItemID;
 import org.buddycloud.channelserver.pubsub.model.NodeAffiliation;
 import org.buddycloud.channelserver.pubsub.model.NodeItem;
+import org.buddycloud.channelserver.pubsub.model.NodeMembership;
 import org.buddycloud.channelserver.pubsub.model.NodeSubscription;
 import org.buddycloud.channelserver.pubsub.model.NodeThread;
 import org.xmpp.packet.JID;
@@ -158,18 +159,6 @@ public interface NodeStore {
 	 *             if the user already has a subscription with the node.
 	 */
 	void addUserSubscription(NodeSubscription subscription)
-			throws NodeStoreException;
-
-	/**
-	 * Gets a user's affiliation with a node.
-	 * 
-	 * @param nodeId
-	 *            the node reference.
-	 * @param user
-	 *            the user's JID
-	 * @return
-	 */
-	NodeAffiliation getUserAffiliation(String nodeId, JID user)
 			throws NodeStoreException;
 
 	/**
@@ -327,18 +316,16 @@ public interface NodeStore {
 	 */
 	ResultSet<NodeSubscription> getNodeSubscriptionListeners()
 			throws NodeStoreException;
-	
-	/**
-	 * Gets the user's subscription to a certain node.
-	 * 
-	 * @param nodeId
-	 *            the node reference.
-	 * @param user
-	 *            the user's JID
-	 * @return
-	 */
-	NodeSubscription getUserSubscription(String nodeId, JID user)
-			throws NodeStoreException;
+
+    /**
+     * Gets a user's membership to a node.
+     * 
+     * @param nodeId
+     * @param user
+     * @return
+     * @throws NodeStoreException 
+     */
+	NodeMembership getNodeMembership(String nodeId, JID user) throws NodeStoreException;
 
 	/**
 	 * Retrieves the number of user subscriptions
@@ -507,6 +494,15 @@ public interface NodeStore {
 	 */
 	void updateNodeItem(NodeItem item) throws NodeStoreException;
 
+    /**
+     * Updates the updated date on a thread parent
+     * 
+     * @param node
+     * @param itemId
+     * @throws NodeStoreException 
+     */
+	void updateThreadParent(String node, String itemId) throws NodeStoreException;
+	
 	/**
 	 * Deletes the specified node item.
 	 * 

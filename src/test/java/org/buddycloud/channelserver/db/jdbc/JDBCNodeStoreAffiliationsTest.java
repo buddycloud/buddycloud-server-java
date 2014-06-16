@@ -36,51 +36,6 @@ public class JDBCNodeStoreAffiliationsTest extends JDBCNodeStoreAbstract {
 	}
 
 	@Test
-	public void testGetUserAffiliation() throws Exception {
-		dbTester.loadData("node_1");
-
-		NodeAffiliation result = store.getUserAffiliation(
-				TEST_SERVER1_NODE1_ID, TEST_SERVER1_USER1_JID);
-
-		NodeAffiliationImpl expected = new NodeAffiliationImpl(
-				TEST_SERVER1_NODE1_ID, TEST_SERVER1_USER1_JID,
-				Affiliations.owner, new Date());
-
-		assertEquals("An unexpected node affiliation was returned", expected,
-				result);
-	}
-
-	@Test
-	public void testGetUserAffiliationIfNotSet() throws Exception {
-		dbTester.loadData("node_1");
-
-		NodeAffiliation result = store.getUserAffiliation(
-				TEST_SERVER1_NODE1_ID, new JID("anotheruser@sample.com"));
-
-		NodeAffiliationImpl expected = new NodeAffiliationImpl(
-				TEST_SERVER1_NODE1_ID, new JID("anotheruser@sample.com"),
-				Affiliations.none, new Date());
-
-		assertEquals("An unexpected node affiliation was returned", expected,
-				result);
-	}
-
-	@Test
-	public void testGetUserAffiliationUsesBareJID() throws Exception {
-		dbTester.loadData("node_1");
-
-		NodeAffiliation result = store.getUserAffiliation(
-				TEST_SERVER1_NODE1_ID, TEST_SERVER1_USER1_JID_WITH_RESOURCE);
-
-		NodeAffiliationImpl expected = new NodeAffiliationImpl(
-				TEST_SERVER1_NODE1_ID, TEST_SERVER1_USER1_JID,
-				Affiliations.owner, new Date());
-
-		assertEquals("An unexpected node affiliation was returned", expected,
-				result);
-	}
-
-	@Test
 	public void testGetUserAffiliations() throws Exception {
 		dbTester.loadData("node_1");
 		dbTester.loadData("node_2");

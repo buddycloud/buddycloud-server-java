@@ -24,6 +24,7 @@ import org.buddycloud.channelserver.pubsub.model.NodeItem;
 import org.buddycloud.channelserver.pubsub.model.NodeSubscription;
 import org.buddycloud.channelserver.pubsub.model.impl.NodeAffiliationImpl;
 import org.buddycloud.channelserver.pubsub.model.impl.NodeItemImpl;
+import org.buddycloud.channelserver.pubsub.model.impl.NodeMembershipImpl;
 import org.buddycloud.channelserver.pubsub.model.impl.NodeSubscriptionImpl;
 import org.buddycloud.channelserver.pubsub.subscription.Subscriptions;
 import org.buddycloud.channelserver.utils.node.NodeAclRefuseReason;
@@ -86,8 +87,7 @@ public class ThreadGetTest extends IQTestHandler {
 		Mockito.doReturn(true)
 				.when(nodeViewAclMock)
 				.canViewNode(Mockito.anyString(),
-						Mockito.any(Affiliations.class),
-						Mockito.any(Subscriptions.class),
+						Mockito.any(NodeMembershipImpl.class),
 						Mockito.any(AccessModels.class),
 						Mockito.anyBoolean());
 	}
@@ -151,14 +151,13 @@ public class ThreadGetTest extends IQTestHandler {
 	}
 
 	@Test
-	public void testUserWhoCantAccessChannelGetsPermissionErrorStanzaReply()
+	public void userWhoCantAccessChannelGetsPermissionErrorStanzaReply()
 			throws Exception {
 
 		Mockito.doReturn(false)
 				.when(nodeViewAclMock)
 				.canViewNode(Mockito.anyString(),
-						Mockito.any(Affiliations.class),
-						Mockito.any(Subscriptions.class),
+						Mockito.any(NodeMembershipImpl.class),
 						Mockito.any(AccessModels.class),
 						Mockito.anyBoolean());
 		NodeAclRefuseReason refusalReason = new NodeAclRefuseReason(

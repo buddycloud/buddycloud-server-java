@@ -148,12 +148,8 @@ public class NodeConfigure extends PubSubElementProcessorAbstract {
 	}
 
 	private boolean isActorOwner() throws NodeStoreException {
-		NodeAffiliation affiliation = channelManager.getUserAffiliation(node,
-				new JID(actor.toBareJID()));
-		if (null == affiliation) {
-			return false;
-		}
-		return affiliation.getAffiliation().equals(Affiliations.owner);
+		return channelManager.getNodeMembership(node,
+				new JID(actor.toBareJID())).getAffiliation().equals(Affiliations.owner);
 	}
 	
 	private boolean actorCanModify() throws NodeStoreException {

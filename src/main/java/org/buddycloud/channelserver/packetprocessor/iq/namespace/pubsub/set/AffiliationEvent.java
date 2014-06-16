@@ -10,6 +10,7 @@ import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.JabberPu
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.PubSubElementProcessorAbstract;
 import org.buddycloud.channelserver.pubsub.affiliation.Affiliations;
 import org.buddycloud.channelserver.pubsub.model.NodeAffiliation;
+import org.buddycloud.channelserver.pubsub.model.NodeMembership;
 import org.buddycloud.channelserver.pubsub.model.NodeSubscription;
 import org.buddycloud.channelserver.utils.node.item.payload.Buddycloud;
 import org.dom4j.Document;
@@ -26,7 +27,7 @@ import org.xmpp.resultsetmanagement.ResultSet;
 public class AffiliationEvent extends PubSubElementProcessorAbstract {
 
 	Element requestedAffiliation;
-	NodeAffiliation usersCurrentAffiliation;
+	NodeMembership usersCurrentMembership;
 
 	private static final Logger LOGGER = Logger
 			.getLogger(AffiliationEvent.class);
@@ -65,7 +66,8 @@ public class AffiliationEvent extends PubSubElementProcessorAbstract {
 		}
 		
 		try {
-			if ((false == nodeProvided()) || (false == validRequestStanza())
+			if ((false == nodeProvided())
+					|| (false == validRequestStanza())
 					|| (false == checkNodeExists())
 					|| (false == actorHasPermissionToAuthorize())
 					|| (false == subscriberHasCurrentAffiliation())
@@ -85,7 +87,7 @@ public class AffiliationEvent extends PubSubElementProcessorAbstract {
 	}
 
 	private boolean attemptToChangeAffiliationOfNodeOwner() {
-		if (false == usersCurrentAffiliation.getAffiliation().equals(
+		if (!usersCurrentMembership.getAffiliation().equals(
 				Affiliations.owner)) {
 			return true;
 		}
@@ -184,12 +186,11 @@ public class AffiliationEvent extends PubSubElementProcessorAbstract {
 	}
 
 	private boolean subscriberHasCurrentAffiliation() throws NodeStoreException {
-		usersCurrentAffiliation = channelManager.getUserAffiliation(node, new JID(
+		usersCurrentMembership = channelManager.getNodeMembership(node, new JID(
 				requestedAffiliation.attributeValue("jid")));
 
-		if ((null == usersCurrentAffiliation)
-				|| (usersCurrentAffiliation.getAffiliation()
-						.equals(Affiliations.none))) {
+		if (usersCurrentMembership.getAffiliation()
+						.equals(Affiliations.none)) {
 			setErrorCondition(PacketError.Type.modify,
 					PacketError.Condition.unexpected_request);
 			return false;
@@ -199,25 +200,14 @@ public class AffiliationEvent extends PubSubElementProcessorAbstract {
 
 	private boolean actorHasPermissionToAuthorize() throws NodeStoreException {
 
-		NodeAffiliation affiliation = channelManager.getUserAffiliation(node,
+		NodeMembership membership = channelManager.getNodeMembership(node,
 				actor);
-
-		if (null == affiliation) {
-			setErrorCondition(PacketError.Type.auth,
-					PacketError.Condition.not_authorized);
-			return false;
+		if (membership.getAffiliation().canAuthorize()) {
+			return true;
 		}
-
-		if ((false == affiliation.getAffiliation().equals(
-				Affiliations.moderator))
-				&& (false == affiliation.getAffiliation().equals(
-						Affiliations.owner))) {
-			setErrorCondition(PacketError.Type.auth,
-					PacketError.Condition.not_authorized);
-			return false;
-		}
-		return affiliation.getAffiliation().in(Affiliations.moderator,
-				Affiliations.owner);
+		setErrorCondition(PacketError.Type.auth,
+				PacketError.Condition.not_authorized);
+		return false;
 	}
 
 	private boolean checkNodeExists() throws NodeStoreException {

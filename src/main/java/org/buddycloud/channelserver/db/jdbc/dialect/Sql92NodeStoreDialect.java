@@ -212,6 +212,8 @@ public class Sql92NodeStoreDialect implements NodeStoreSQLDialect {
 	private static final String UPDATE_ITEM = "UPDATE \"items\" SET \"updated\" = ?, \"xml\" = ?"
 			+ " WHERE \"node\" = ? AND \"id\" = ?";
 
+	private static final String UPDATE_THREAD_PARENT = "UPDATE \"items\" SET \"updated\"= NOW() WHERE \"node\" = ? AND \"id\" = ?;";
+
 	private static final String DELETE_ITEM = "DELETE FROM \"items\" WHERE \"node\" = ? AND \"id\" = ?;";
 
 	private static final String SELECT_SUBSCRIPTION_LISTENERS_FOR_NODE = "SELECT DISTINCT ON (\"listener\") \"listener\", \"node\", \"subscription\", \"updated\""
@@ -273,6 +275,40 @@ public class Sql92NodeStoreDialect implements NodeStoreSQLDialect {
 			"AND \"xml\" LIKE ? " +
 			"AND \"xml\" LIKE ? " +
 			"AND \"xml\" LIKE '%<activity:verb>rated</activity:verb>%';";
+
+	private static final String SELECT_NODE_MEMBERSHIP = "" +
+			"SELECT " +
+		    "CASE WHEN \"subscriptions\".\"node\" != '' " +
+		         "THEN \"subscriptions\".\"node\" " +
+		         "ELSE \"affiliations\".\"node\" " +
+		    "END AS \"node\"," +
+		    "CASE WHEN \"subscriptions\".\"user\" != '' " +
+		         "THEN \"subscriptions\".\"user\" " +
+		         "ELSE \"affiliations\".\"user\" " +
+		    "END AS \"user\", " +
+		    "CASE " +
+		     "WHEN \"subscriptions\".\"listener\" != '' THEN \"subscriptions\".\"listener\" " +
+		     "WHEN \"subscriptions\".\"user\" != '' THEN \"subscriptions\".\"user\" " +
+	         "ELSE \"affiliations\".\"user\" " +
+	             "END AS \"listener\", " +
+		    "CASE WHEN \"subscriptions\".\"subscription\" != '' " +
+		         "THEN \"subscriptions\".\"subscription\" " +
+		         "ELSE 'none' " +
+		    "END AS \"subscription\", " +
+		    "CASE WHEN \"affiliations\".\"affiliation\" != '' " +
+		         "THEN \"affiliations\".\"affiliation\" " +
+		         "ELSE 'none' " +
+		    "END AS \"affiliation\", " +
+		    "CASE WHEN \"affiliations\".\"updated\" > \"subscriptions\".\"updated\" " +
+		         "THEN \"affiliations\".\"updated\" " +
+		         "ELSE \"subscriptions\".\"updated\" " +
+		    "END AS \"updated\" " +
+		"FROM \"subscriptions\" " +
+		"FULL JOIN \"affiliations\" " +
+		    "ON \"subscriptions\".\"node\" = \"affiliations\".\"node\" AND \"affiliations\".\"user\" = \"subscriptions\".\"user\" " +
+		"WHERE " +
+		    "(\"subscriptions\".\"user\" = ? AND \"subscriptions\".\"node\" =  ?) " +
+		    "OR (\"affiliations\".\"user\" = ? AND \"affiliations\".\"node\" = ?); ";
 	
     @Override
 	public String insertNode() {
@@ -377,11 +413,6 @@ public class Sql92NodeStoreDialect implements NodeStoreSQLDialect {
 	@Override
 	public String deleteAffiliation() {
 		return DELETE_AFFILIATION;
-	}
-
-	@Override
-	public String selectSubscription() {
-		return SELECT_SUBSCRIPTION;
 	}
 
 	@Override
@@ -512,6 +543,11 @@ public class Sql92NodeStoreDialect implements NodeStoreSQLDialect {
 	public String deleteItem() {
 		return DELETE_ITEM;
 	}
+	
+	@Override
+	public String updateThreadParent() {
+		return UPDATE_THREAD_PARENT;
+	}
 
 	@Override
 	public String selectSubscriptionListenersForNode() {
@@ -576,6 +612,11 @@ public class Sql92NodeStoreDialect implements NodeStoreSQLDialect {
 	@Override
 	public String deleteUserAffiliations() {
 		return DELETE_USER_AFFILIATIONS;
+	}
+	
+	@Override
+	public String selectMembership() {
+		return SELECT_NODE_MEMBERSHIP;
 	}
 
 	@Override

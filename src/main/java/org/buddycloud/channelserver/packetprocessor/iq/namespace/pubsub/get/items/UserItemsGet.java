@@ -17,6 +17,7 @@ import org.buddycloud.channelserver.pubsub.affiliation.Affiliations;
 import org.buddycloud.channelserver.pubsub.model.GlobalItemID;
 import org.buddycloud.channelserver.pubsub.model.NodeAffiliation;
 import org.buddycloud.channelserver.pubsub.model.NodeItem;
+import org.buddycloud.channelserver.pubsub.model.NodeMembership;
 import org.buddycloud.channelserver.pubsub.model.NodeSubscription;
 import org.buddycloud.channelserver.pubsub.model.impl.GlobalItemIDImpl;
 import org.buddycloud.channelserver.pubsub.subscription.Subscriptions;
@@ -280,25 +281,10 @@ public class UserItemsGet implements PubSubElementProcessor {
 	}
 
 	private boolean userCanViewNode() throws NodeStoreException {
-		NodeSubscription nodeSubscription = channelManager.getUserSubscription(
-				node, actor);
-		NodeAffiliation nodeAffiliation = channelManager.getUserAffiliation(
-				node, actor);
+		NodeMembership nodeMembership = channelManager.getNodeMembership(node,
+				actor);
 
-		Affiliations possibleExistingAffiliation = Affiliations.none;
-		Subscriptions possibleExistingSubscription = Subscriptions.none;
-		if (nodeSubscription != null) {
-			if (nodeAffiliation.getAffiliation() != null) {
-				possibleExistingAffiliation = nodeAffiliation.getAffiliation();
-			}
-			if (nodeSubscription.getSubscription() != null) {
-				possibleExistingSubscription = nodeSubscription
-						.getSubscription();
-			}
-		}
-
-		if (getNodeViewAcl().canViewNode(node,
-				possibleExistingAffiliation, possibleExistingSubscription,
+		if (getNodeViewAcl().canViewNode(node, nodeMembership,
 				getNodeAccessModel(), channelManager.isLocalJID(actor))) {
 			return true;
 		}
@@ -393,12 +379,8 @@ public class UserItemsGet implements PubSubElementProcessor {
 	}
 
 	private boolean isOwnerModerator() throws NodeStoreException {
-		if (null == isOwnerModerator) {
-			isOwnerModerator = channelManager.getUserAffiliation(node, actor)
-			    .getAffiliation()
-			    .in(Affiliations.moderator, Affiliations.owner);
-		}
-		return isOwnerModerator;
+		return channelManager.getNodeMembership(node, actor).getAffiliation()
+				.canAuthorize();
 	}
 
 	private void addSubscriptionItems(Element query, JID subscriber)
@@ -419,18 +401,18 @@ public class UserItemsGet implements PubSubElementProcessor {
 			// subscription.getNodeId().contains(fetchersJid.toBareJID())) {
 			// continue;
 			// }
-			NodeAffiliation affiliation = channelManager.getUserAffiliation(
+			NodeMembership membership = channelManager.getNodeMembership(
 					subscription.getNodeId(), subscription.getUser());
 			item = query.addElement("item");
 			item.add(ns1);
 			item.add(ns2);
-			item.addAttribute("jid", subscription.getUser().toString());
-			item.addAttribute("node", subscription.getNodeId());
+			item.addAttribute("jid", membership.getUser().toString());
+			item.addAttribute("node", membership.getNodeId());
 			QName affiliationAttribute = new QName("affiliation", ns1);
 			QName subscriptionAttribute = new QName("subscription", ns2);
-			item.addAttribute(affiliationAttribute, affiliation
+			item.addAttribute(affiliationAttribute, membership
 					.getAffiliation().toString());
-			item.addAttribute(subscriptionAttribute, subscription
+			item.addAttribute(subscriptionAttribute, membership
 					.getSubscription().toString());
 		}
 	}

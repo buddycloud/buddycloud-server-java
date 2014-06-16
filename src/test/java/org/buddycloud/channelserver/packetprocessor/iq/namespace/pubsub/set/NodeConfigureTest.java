@@ -16,7 +16,9 @@ import org.buddycloud.channelserver.packetHandler.iq.IQTestHandler;
 import org.buddycloud.channelserver.pubsub.affiliation.Affiliations;
 import org.buddycloud.channelserver.pubsub.model.NodeSubscription;
 import org.buddycloud.channelserver.pubsub.model.impl.NodeAffiliationImpl;
+import org.buddycloud.channelserver.pubsub.model.impl.NodeMembershipImpl;
 import org.buddycloud.channelserver.pubsub.subscription.NodeSubscriptionMock;
+import org.buddycloud.channelserver.pubsub.subscription.Subscriptions;
 import org.dom4j.Element;
 import org.dom4j.tree.BaseElement;
 import org.junit.Before;
@@ -35,12 +37,14 @@ public class NodeConfigureTest extends IQTestHandler {
 	private JID jid;
 	private Element element;
 	private BlockingQueue<Packet> queue = new LinkedBlockingQueue<Packet>();
+	private String node = "/user/juliet@shakespeare.lit/posts";
 
 	@Before
 	public void setUp() throws Exception {
 		channelManager = Mockito.mock(ChannelManager.class);
-		Mockito.when(channelManager.isLocalNode(Mockito.anyString())).thenReturn(true);
-		
+		Mockito.when(channelManager.isLocalNode(Mockito.anyString()))
+				.thenReturn(true);
+
 		queue = new LinkedBlockingQueue<Packet>();
 		nodeConfigure = new NodeConfigure(queue, channelManager);
 		jid = new JID("juliet@shakespeare.lit");
@@ -74,7 +78,8 @@ public class NodeConfigureTest extends IQTestHandler {
 		PacketError error = response.getError();
 		Assert.assertNotNull(error);
 		Assert.assertEquals(PacketError.Type.modify, error.getType());
-		Assert.assertEquals("nodeid-required", error.getApplicationConditionName());
+		Assert.assertEquals("nodeid-required",
+				error.getApplicationConditionName());
 	}
 
 	@Test
@@ -82,9 +87,7 @@ public class NodeConfigureTest extends IQTestHandler {
 		Element element = new BaseElement("configure");
 		element.addAttribute("node", "/user/not-here@shakespeare.lit/status");
 
-		Mockito.when(
-				channelManager
-						.nodeExists(Mockito.anyString()))
+		Mockito.when(channelManager.nodeExists(Mockito.anyString()))
 				.thenReturn(false);
 		nodeConfigure.setChannelManager(channelManager);
 
@@ -94,31 +97,38 @@ public class NodeConfigureTest extends IQTestHandler {
 		PacketError error = response.getError();
 		Assert.assertNotNull(error);
 		Assert.assertEquals(PacketError.Type.cancel, error.getType());
-		Assert.assertEquals(PacketError.Condition.item_not_found, error.getCondition());
+		Assert.assertEquals(PacketError.Condition.item_not_found,
+				error.getCondition());
 	}
 
 	@Test
-	public void testUserMustBeNodeOwnerToModifyConfiguration() throws Exception {
+	public void userMustBeNodeOwnerToModifyConfiguration() throws Exception {
 		Element element = new BaseElement("configure");
 		element.addAttribute("node", "/user/juliet@shakespeare.lit/posts");
 
 		Mockito.when(
-				channelManager
-						.nodeExists("/user/juliet@shakespeare.lit/posts"))
+				channelManager.nodeExists(node))
 				.thenReturn(true);
 		Mockito.when(
 				channelManager.getNodeConfValue(
 						"/user/juliet@shakespeare.lit/posts", "pubsub#owner"))
 				.thenReturn("romeo@shakespeare.lit");
 
+		Mockito.when(
+				channelManager.getNodeMembership(Mockito.anyString(),
+						Mockito.any(JID.class))).thenReturn(
+				new NodeMembershipImpl(node, jid, Subscriptions.subscribed,
+						Affiliations.moderator));
+
 		nodeConfigure.setChannelManager(channelManager);
 		nodeConfigure.process(element, jid, request, null);
 
-		Packet response = queue.poll(100, TimeUnit.MILLISECONDS);
+		Packet response = queue.poll();
 		PacketError error = response.getError();
 		Assert.assertNotNull(error);
 		Assert.assertEquals(PacketError.Type.auth, error.getType());
-		Assert.assertEquals(PacketError.Condition.forbidden, error.getCondition());
+		Assert.assertEquals(PacketError.Condition.forbidden,
+				error.getCondition());
 	}
 
 	@Test
@@ -126,18 +136,15 @@ public class NodeConfigureTest extends IQTestHandler {
 			throws Exception {
 		String nodeId = "/user/juliet@shakespeare.lit/posts";
 		String actorJid = "juliet@shakespeare.lit";
-		
+
 		Element element = new BaseElement("configure");
 		element.addAttribute("node", nodeId);
+		Mockito.when(channelManager.nodeExists(nodeId)).thenReturn(true);
 		Mockito.when(
-				channelManager
-						.nodeExists(nodeId))
-				.thenReturn(true);
-		NodeAffiliationImpl affiliation = new NodeAffiliationImpl(nodeId, 
-				new JID(actorJid), Affiliations.owner, null);
-		Mockito.when(channelManager.getUserAffiliation(
-						nodeId, new JID(actorJid)))
-				.thenReturn(affiliation);
+				channelManager.getNodeMembership(Mockito.anyString(),
+						Mockito.any(JID.class))).thenReturn(
+				new NodeMembershipImpl(nodeId, jid, Subscriptions.subscribed,
+						Affiliations.owner));
 
 		Helper helper = Mockito.mock(Helper.class);
 		Mockito.doThrow(new NodeConfigurationException()).when(helper)
@@ -150,26 +157,25 @@ public class NodeConfigureTest extends IQTestHandler {
 		PacketError error = response.getError();
 		Assert.assertNotNull(error);
 		Assert.assertEquals(PacketError.Type.modify, error.getType());
-		Assert.assertEquals(PacketError.Condition.bad_request, error.getCondition());
+		Assert.assertEquals(PacketError.Condition.bad_request,
+				error.getCondition());
 	}
 
 	@Test
 	public void testInvalidConfigurationStanzaReturnsError() throws Exception {
-		
+
 		String nodeId = "/user/juliet@shakespeare.lit/posts";
 		String actorJid = "juliet@shakespeare.lit";
-		
+
 		Element element = new BaseElement("configure");
 		element.addAttribute("node", nodeId);
 
+		Mockito.when(channelManager.nodeExists(nodeId)).thenReturn(true);
 		Mockito.when(
-				channelManager.nodeExists(nodeId))
-				.thenReturn(true);
-		NodeAffiliationImpl affiliation = new NodeAffiliationImpl(nodeId, 
-				new JID(actorJid), Affiliations.owner, null);
-		Mockito.when(channelManager.getUserAffiliation(
-						nodeId, new JID(actorJid)))
-				.thenReturn(affiliation);
+				channelManager.getNodeMembership(Mockito.anyString(),
+						Mockito.any(JID.class))).thenReturn(
+				new NodeMembershipImpl(nodeId, jid, Subscriptions.subscribed,
+						Affiliations.owner));
 
 		Helper helper = Mockito.mock(Helper.class);
 		Mockito.when(helper.isValid()).thenReturn(false);
@@ -182,28 +188,29 @@ public class NodeConfigureTest extends IQTestHandler {
 		PacketError error = response.getError();
 		Assert.assertNotNull(error);
 		Assert.assertEquals(PacketError.Type.modify, error.getType());
-		Assert.assertEquals(PacketError.Condition.bad_request, error.getCondition());
+		Assert.assertEquals(PacketError.Condition.bad_request,
+				error.getCondition());
 	}
 
 	@SuppressWarnings("unchecked")
 	@Test
 	public void testDatabaseErrorOnUpdateConfigurationReturnsError()
 			throws Exception {
-		
+
 		String nodeId = "/user/juliet@shakespeare.lit/posts";
 		String actorJid = "juliet@shakespeare.lit";
-		
+
 		Element element = new BaseElement("configure");
 		element.addAttribute("node", nodeId);
 
+		Mockito.when(channelManager.nodeExists(nodeId)).thenReturn(true);
+
 		Mockito.when(
-				channelManager.nodeExists(nodeId))
-				.thenReturn(true);
-		NodeAffiliationImpl affiliation = new NodeAffiliationImpl(nodeId, 
-				new JID(actorJid), Affiliations.owner, null);
-		Mockito.when(channelManager.getUserAffiliation(
-						nodeId, new JID(actorJid)))
-				.thenReturn(affiliation);
+				channelManager.getNodeMembership(Mockito.anyString(),
+						Mockito.any(JID.class))).thenReturn(
+				new NodeMembershipImpl(nodeId, jid, Subscriptions.subscribed,
+						Affiliations.owner));
+
 		Mockito.doThrow(new NodeStoreException()).when(channelManager)
 				.setNodeConf(Mockito.anyString(), Mockito.any(Map.class));
 
@@ -225,24 +232,23 @@ public class NodeConfigureTest extends IQTestHandler {
 	@Test
 	public void testSuccessfulSettingOfConfigurationReturnsConfirmationStanza()
 			throws Exception {
-		
+
 		String nodeId = "/user/juliet@shakespeare.lit/posts";
 		String actorJid = "juliet@shakespeare.lit";
-		
+
 		Element element = new BaseElement("configure");
 		element.addAttribute("node", nodeId);
 
+		Mockito.when(channelManager.nodeExists(nodeId)).thenReturn(true);
+
 		Mockito.when(
-				channelManager.nodeExists(nodeId))
-				.thenReturn(true);
-		NodeAffiliationImpl affiliation = new NodeAffiliationImpl(nodeId, 
-				new JID(actorJid), Affiliations.owner, null);
-		Mockito.when(channelManager.getUserAffiliation(
-						nodeId, new JID(actorJid)))
-				.thenReturn(affiliation);
+				channelManager.getNodeMembership(Mockito.anyString(),
+						Mockito.any(JID.class))).thenReturn(
+				new NodeMembershipImpl(nodeId, jid, Subscriptions.subscribed,
+						Affiliations.owner));
 
 		ArrayList<NodeSubscriptionMock> subscribers = new ArrayList<NodeSubscriptionMock>();
-		
+
 		Mockito.doReturn(new ResultSetImpl<NodeSubscriptionMock>(subscribers))
 				.when(channelManager)
 				.getNodeSubscriptionListeners(Mockito.anyString());
@@ -255,26 +261,26 @@ public class NodeConfigureTest extends IQTestHandler {
 		nodeConfigure.process(element, jid, request, null);
 
 		IQ response = (IQ) queue.poll(100, TimeUnit.MILLISECONDS);
-		Assert.assertEquals(IQ.Type.result.toString(), response.getType().toString());
+		Assert.assertEquals(IQ.Type.result.toString(), response.getType()
+				.toString());
 	}
 
 	@Test
 	public void testSettingConfigurationUpdatesSubscribers() throws Exception {
-		
+
 		String nodeId = "/user/juliet@shakespeare.lit/posts";
 		String actorJid = "juliet@shakespeare.lit";
-		
+
 		Element element = new BaseElement("configure");
 		element.addAttribute("node", nodeId);
 
+		Mockito.when(channelManager.nodeExists(nodeId)).thenReturn(true);
+
 		Mockito.when(
-				channelManager.nodeExists(nodeId))
-				.thenReturn(true);
-		NodeAffiliationImpl affiliation = new NodeAffiliationImpl(nodeId, 
-				new JID(actorJid), Affiliations.owner, null);
-		Mockito.when(channelManager.getUserAffiliation(
-						nodeId, new JID(actorJid)))
-				.thenReturn(affiliation);
+				channelManager.getNodeMembership(Mockito.anyString(),
+						Mockito.any(JID.class))).thenReturn(
+				new NodeMembershipImpl(nodeId, jid, Subscriptions.subscribed,
+						Affiliations.owner));
 
 		ArrayList<NodeSubscription> subscribers = new ArrayList<NodeSubscription>();
 		subscribers.add(new NodeSubscriptionMock(new JID(
@@ -283,7 +289,8 @@ public class NodeConfigureTest extends IQTestHandler {
 				"hamlet@shakespeare.lit")));
 		subscribers.add(new NodeSubscriptionMock(new JID(
 				"bottom@shakespeare.lit")));
-        ResultSetImpl<NodeSubscription> res = new ResultSetImpl<NodeSubscription>(subscribers);
+		ResultSetImpl<NodeSubscription> res = new ResultSetImpl<NodeSubscription>(
+				subscribers);
 		Mockito.doReturn(res).when(channelManager)
 				.getNodeSubscriptionListeners(Mockito.anyString());
 
@@ -297,11 +304,14 @@ public class NodeConfigureTest extends IQTestHandler {
 		queue.poll(100, TimeUnit.MILLISECONDS);
 		Assert.assertEquals(5, queue.size());
 		Packet notification = queue.poll(100, TimeUnit.MILLISECONDS);
-		Assert.assertEquals("romeo@shakespeare.lit", notification.getTo().toString());
+		Assert.assertEquals("romeo@shakespeare.lit", notification.getTo()
+				.toString());
 		notification = queue.poll(100, TimeUnit.MILLISECONDS);
-		Assert.assertEquals("hamlet@shakespeare.lit", notification.getTo().toString());
+		Assert.assertEquals("hamlet@shakespeare.lit", notification.getTo()
+				.toString());
 		notification = queue.poll(100, TimeUnit.MILLISECONDS);
-		Assert.assertEquals("bottom@shakespeare.lit", notification.getTo().toString());
+		Assert.assertEquals("bottom@shakespeare.lit", notification.getTo()
+				.toString());
 		notification = queue.poll(100, TimeUnit.MILLISECONDS);
 		Assert.assertEquals("user1@server1", notification.getTo().toString());
 		notification = queue.poll(100, TimeUnit.MILLISECONDS);

@@ -231,9 +231,7 @@ public class MessageArchiveManagement implements PacketProcessor<IQ> {
 	}
 
 	private boolean isOwnerModerator(String node) throws NodeStoreException {
-		NodeAffiliation affiliation = channelManager.getUserAffiliation(node,
-				requestIq.getFrom());
-		return affiliation.getAffiliation().in(Affiliations.moderator,
-				Affiliations.owner);
+		return channelManager.getNodeMembership(node,
+				requestIq.getFrom()).getAffiliation().canAuthorize();
 	}
 }

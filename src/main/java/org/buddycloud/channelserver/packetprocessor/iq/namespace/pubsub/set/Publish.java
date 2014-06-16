@@ -14,6 +14,7 @@ import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.JabberPu
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.PubSubElementProcessorAbstract;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.PubSubSet;
 import org.buddycloud.channelserver.pubsub.affiliation.Affiliations;
+import org.buddycloud.channelserver.pubsub.model.NodeMembership;
 import org.buddycloud.channelserver.pubsub.model.NodeSubscription;
 import org.buddycloud.channelserver.pubsub.model.impl.GlobalItemIDImpl;
 import org.buddycloud.channelserver.pubsub.model.impl.NodeItemImpl;
@@ -105,6 +106,7 @@ public class Publish extends PubSubElementProcessorAbstract {
 				return;
 			extractItemDetails();
 			saveNodeItem();
+			updateThreadParent();
 			sendResponseStanza();
 			sendNotifications();
 
@@ -118,6 +120,13 @@ public class Publish extends PubSubElementProcessorAbstract {
 					ValidatePayload.UNSUPPORTED_CONTENT_TYPE);
 		}
 
+	}
+
+	private void updateThreadParent() throws NodeStoreException {
+		if (null == inReplyTo) {
+			return;
+		}
+		channelManager.updateThreadParent(node, inReplyTo);
 	}
 
 	private void saveNodeItem() throws NodeStoreException {
@@ -189,15 +198,11 @@ public class Publish extends PubSubElementProcessorAbstract {
 	private boolean userCanPost() throws NodeStoreException,
 			InterruptedException {
 
-		Subscriptions possibleExistingSubscription = channelManager
-				.getUserSubscription(node, publishersJID).getSubscription();
+		NodeMembership membership = channelManager.getNodeMembership(node, publishersJID);
 
-		Affiliations possibleExistingAffiliation = channelManager
-				.getUserAffiliation(node, publishersJID).getAffiliation();
-
-		if ((false == possibleExistingSubscription
+		if ((false == membership.getSubscription()
 				.equals(Subscriptions.subscribed))
-				|| (false == possibleExistingAffiliation.in(
+				|| (false == membership.getAffiliation().in(
 						Affiliations.moderator, Affiliations.owner,
 						Affiliations.publisher))) {
 			response.setType(Type.error);

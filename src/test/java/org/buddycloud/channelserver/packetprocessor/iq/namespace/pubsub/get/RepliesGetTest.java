@@ -24,6 +24,7 @@ import org.buddycloud.channelserver.pubsub.model.NodeItem;
 import org.buddycloud.channelserver.pubsub.model.NodeSubscription;
 import org.buddycloud.channelserver.pubsub.model.impl.NodeAffiliationImpl;
 import org.buddycloud.channelserver.pubsub.model.impl.NodeItemImpl;
+import org.buddycloud.channelserver.pubsub.model.impl.NodeMembershipImpl;
 import org.buddycloud.channelserver.pubsub.model.impl.NodeSubscriptionImpl;
 import org.buddycloud.channelserver.pubsub.subscription.Subscriptions;
 import org.buddycloud.channelserver.utils.node.NodeAclRefuseReason;
@@ -54,7 +55,7 @@ public class RepliesGetTest extends IQTestHandler {
 	private ChannelManager channelManager;
 
 	private String TEST_NODE = "node1";
-	private NodeViewAcl nodeViewAclMock;
+	private NodeViewAcl nodeViewAcl;
 
 	@Before
 	public void setUp() throws Exception {
@@ -79,17 +80,22 @@ public class RepliesGetTest extends IQTestHandler {
 						Mockito.anyString())).thenReturn(
 				new NodeItemImpl(TEST_NODE, "1", new Date(), "payload"));
 
-		nodeViewAclMock = Mockito.mock(NodeViewAcl.class);
+		nodeViewAcl = Mockito.mock(NodeViewAcl.class);
 
-		repliesGet.setNodeViewAcl(nodeViewAclMock);
+		repliesGet.setNodeViewAcl(nodeViewAcl);
 
 		Mockito.doReturn(true)
-				.when(nodeViewAclMock)
+				.when(nodeViewAcl)
 				.canViewNode(Mockito.anyString(),
-						Mockito.any(Affiliations.class),
-						Mockito.any(Subscriptions.class),
-						Mockito.any(AccessModels.class),
-						Mockito.anyBoolean());
+						Mockito.any(NodeMembershipImpl.class),
+						Mockito.any(AccessModels.class), Mockito.anyBoolean());
+
+		NodeMembershipImpl membership = new NodeMembershipImpl(node,
+				request.getFrom(), Subscriptions.subscribed,
+				Affiliations.member);
+		Mockito.when(
+				channelManager.getNodeMembership(Mockito.anyString(),
+						Mockito.any(JID.class))).thenReturn(membership);
 	}
 
 	@Test
@@ -151,20 +157,18 @@ public class RepliesGetTest extends IQTestHandler {
 	}
 
 	@Test
-	public void testUserWhoCantAccessChannelGetsPermissionErrorStanzaReply()
+	public void userWhoCantAccessChannelGetsPermissionErrorStanzaReply()
 			throws Exception {
 
 		Mockito.doReturn(false)
-				.when(nodeViewAclMock)
+				.when(nodeViewAcl)
 				.canViewNode(Mockito.anyString(),
-						Mockito.any(Affiliations.class),
-						Mockito.any(Subscriptions.class),
-						Mockito.any(AccessModels.class),
-						Mockito.anyBoolean());
+						Mockito.any(NodeMembershipImpl.class),
+						Mockito.any(AccessModels.class), Mockito.anyBoolean());
 		NodeAclRefuseReason refusalReason = new NodeAclRefuseReason(
 				PacketError.Type.auth, PacketError.Condition.forbidden,
 				"pending-subscription");
-		Mockito.when(nodeViewAclMock.getReason()).thenReturn(refusalReason);
+		Mockito.when(nodeViewAcl.getReason()).thenReturn(refusalReason);
 
 		repliesGet.process(element, jid, request, null);
 		Packet response = queue.poll();

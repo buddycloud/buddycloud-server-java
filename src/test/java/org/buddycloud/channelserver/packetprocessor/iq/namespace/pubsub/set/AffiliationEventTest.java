@@ -189,13 +189,7 @@ public class AffiliationEventTest extends IQTestHandler {
 	@Test
 	public void testUserWhoIsntOwnerOrModeratorCantUpdateAffiliation()
 			throws Exception {
-		NodeAffiliation affiliationMock = Mockito.mock(NodeAffiliation.class);
-		Mockito.when(affiliationMock.getAffiliation()).thenReturn(
-				Affiliations.member);
 
-		Mockito.when(channelManager.nodeExists(node)).thenReturn(true);
-		Mockito.when(channelManager.getUserAffiliation(node, jid))
-				.thenReturn(affiliationMock);
 		event.setChannelManager(channelManager);
 
 		event.process(element, jid, request, null);
@@ -215,13 +209,12 @@ public class AffiliationEventTest extends IQTestHandler {
 
 		Mockito.when(channelManager.nodeExists(node)).thenReturn(true);
 		// actorHasPermission
-		Mockito.when(channelManager.getUserAffiliation(node, jid))
+		/*Mockito.when(channelManager.getUserAffiliation(node, jid))
 				.thenReturn(affiliationMock);
 		// subscriberHasCurrentAffiliation
 		Mockito.when(
 				channelManager.getUserAffiliation(node, new JID(
-						"francisco@denmark.lit"))).thenReturn(null);
-		event.setChannelManager(channelManager);
+						"francisco@denmark.lit"))).thenReturn(null);*/
 
 		event.process(element, jid, request, null);
 		Packet response = queue.poll(100, TimeUnit.MILLISECONDS);
@@ -237,17 +230,8 @@ public class AffiliationEventTest extends IQTestHandler {
 	public void testItIsNotPossibleToChangeTheAffiliationOfNodeOwner()
 			throws Exception {
 
-		NodeAffiliation affiliationSubscriber = Mockito
-				.mock(NodeAffiliation.class);
-		Mockito.when(affiliationSubscriber.getAffiliation()).thenReturn(
-				Affiliations.owner);
-
 		Mockito.when(channelManager.nodeExists(node)).thenReturn(true);
 
-		Mockito.when(
-				channelManager.getUserAffiliation(Mockito.anyString(),
-						Mockito.any(JID.class))).thenReturn(
-				affiliationSubscriber);
 		event.setChannelManager(channelManager);
 
 		event.process(element, jid, request, null);
@@ -276,9 +260,6 @@ public class AffiliationEventTest extends IQTestHandler {
 
 
 		Mockito.when(channelManager.nodeExists(node)).thenReturn(true);
-		Mockito.when(
-				channelManager.getUserAffiliation(Mockito.anyString(),
-						Mockito.any(JID.class))).thenReturn(affiliationActor);
 
 		event.setChannelManager(channelManager);
 		event.process(element, jid, request, null);
@@ -298,14 +279,8 @@ public class AffiliationEventTest extends IQTestHandler {
 
 		Mockito.when(channelManager.getNodeSubscriptionListeners(Mockito.anyString()))
 		    .thenReturn(new ResultSetImpl<NodeSubscription>(new ArrayList<NodeSubscription>()));
-		NodeAffiliation affiliationMock = Mockito.mock(NodeAffiliation.class);
-		Mockito.when(affiliationMock.getAffiliation()).thenReturn(
-				Affiliations.moderator);
 
 		Mockito.when(channelManager.nodeExists(node)).thenReturn(true);
-		Mockito.when(
-				channelManager.getUserAffiliation(Mockito.anyString(),
-						Mockito.any(JID.class))).thenReturn(affiliationMock);
 
 		event.setChannelManager(channelManager);
 		event.process(element, jid, request, null);
@@ -322,15 +297,6 @@ public class AffiliationEventTest extends IQTestHandler {
 		IQ request = toIq(readStanzaAsString(
 				"/iq/pubsub/affiliation/affiliationChange.stanza")
 				.replaceFirst("affiliation='member'", "affiliation='moderator'"));
-
-		NodeAffiliation affiliationMock = Mockito.mock(NodeAffiliation.class);
-		Mockito.when(affiliationMock.getAffiliation()).thenReturn(
-				Affiliations.moderator);
-
-		Mockito.when(channelManager.nodeExists(node)).thenReturn(true);
-		Mockito.when(
-				channelManager.getUserAffiliation(Mockito.anyString(),
-						Mockito.any(JID.class))).thenReturn(affiliationMock);
 
 		ArrayList<NodeSubscription> subscribers = new ArrayList<NodeSubscription>();
 		subscribers.add(new NodeSubscriptionMock(new JID(

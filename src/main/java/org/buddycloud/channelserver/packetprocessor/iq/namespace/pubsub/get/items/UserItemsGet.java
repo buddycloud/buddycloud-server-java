@@ -281,11 +281,11 @@ public class UserItemsGet implements PubSubElementProcessor {
 	}
 
 	private boolean userCanViewNode() throws NodeStoreException {
-		NodeMembership nodeMembership = channelManager.getNodeMembership(
-				node, actor);
+		NodeMembership nodeMembership = channelManager.getNodeMembership(node,
+				actor);
 
-		if (getNodeViewAcl().canViewNode(node,
-				nodeMembership, getNodeAccessModel(), channelManager.isLocalJID(actor))) {
+		if (getNodeViewAcl().canViewNode(node, nodeMembership,
+				getNodeAccessModel(), channelManager.isLocalJID(actor))) {
 			return true;
 		}
 		NodeAclRefuseReason reason = getNodeViewAcl().getReason();
@@ -379,12 +379,8 @@ public class UserItemsGet implements PubSubElementProcessor {
 	}
 
 	private boolean isOwnerModerator() throws NodeStoreException {
-		if (null == isOwnerModerator) {
-			isOwnerModerator = channelManager.getUserAffiliation(node, actor)
-			    .getAffiliation()
-			    .in(Affiliations.moderator, Affiliations.owner);
-		}
-		return isOwnerModerator;
+		return channelManager.getNodeMembership(node, actor).getAffiliation()
+				.canAuthorize();
 	}
 
 	private void addSubscriptionItems(Element query, JID subscriber)
@@ -405,18 +401,18 @@ public class UserItemsGet implements PubSubElementProcessor {
 			// subscription.getNodeId().contains(fetchersJid.toBareJID())) {
 			// continue;
 			// }
-			NodeAffiliation affiliation = channelManager.getUserAffiliation(
+			NodeMembership membership = channelManager.getNodeMembership(
 					subscription.getNodeId(), subscription.getUser());
 			item = query.addElement("item");
 			item.add(ns1);
 			item.add(ns2);
-			item.addAttribute("jid", subscription.getUser().toString());
-			item.addAttribute("node", subscription.getNodeId());
+			item.addAttribute("jid", membership.getUser().toString());
+			item.addAttribute("node", membership.getNodeId());
 			QName affiliationAttribute = new QName("affiliation", ns1);
 			QName subscriptionAttribute = new QName("subscription", ns2);
-			item.addAttribute(affiliationAttribute, affiliation
+			item.addAttribute(affiliationAttribute, membership
 					.getAffiliation().toString());
-			item.addAttribute(subscriptionAttribute, subscription
+			item.addAttribute(subscriptionAttribute, membership
 					.getSubscription().toString());
 		}
 	}

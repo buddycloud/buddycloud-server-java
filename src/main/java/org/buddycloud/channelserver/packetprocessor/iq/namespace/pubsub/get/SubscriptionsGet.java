@@ -156,11 +156,7 @@ public class SubscriptionsGet implements PubSubElementProcessor {
 	}
 
 	private boolean isOwnerModerator() throws NodeStoreException {
-		if (null == isOwnerModerator) {
-			NodeAffiliation affiliation = channelManager.getUserAffiliation(node, actorJid);
-			isOwnerModerator = affiliation.getAffiliation().in(Affiliations.moderator, Affiliations.owner);
-		}
-		return isOwnerModerator;
+		return channelManager.getNodeMembership(node, actorJid).getAffiliation().canAuthorize();
 	}
 
 	private boolean getUserSubscriptions(Element subscriptions, int maxItemsToReturn, String afterItemId)

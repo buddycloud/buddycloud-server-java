@@ -16,7 +16,9 @@ import org.buddycloud.channelserver.packetHandler.iq.IQTestHandler;
 import org.buddycloud.channelserver.pubsub.affiliation.Affiliations;
 import org.buddycloud.channelserver.pubsub.model.NodeSubscription;
 import org.buddycloud.channelserver.pubsub.model.impl.NodeAffiliationImpl;
+import org.buddycloud.channelserver.pubsub.model.impl.NodeMembershipImpl;
 import org.buddycloud.channelserver.pubsub.subscription.NodeSubscriptionMock;
+import org.buddycloud.channelserver.pubsub.subscription.Subscriptions;
 import org.dom4j.Element;
 import org.dom4j.tree.BaseElement;
 import org.junit.Before;
@@ -133,11 +135,9 @@ public class NodeConfigureTest extends IQTestHandler {
 				channelManager
 						.nodeExists(nodeId))
 				.thenReturn(true);
-		NodeAffiliationImpl affiliation = new NodeAffiliationImpl(nodeId, 
-				new JID(actorJid), Affiliations.owner, null);
-		Mockito.when(channelManager.getUserAffiliation(
-						nodeId, new JID(actorJid)))
-				.thenReturn(affiliation);
+		Mockito.when(channelManager.getNodeMembership(Mockito.anyString(), Mockito.any(JID.class))).thenReturn(
+				new NodeMembershipImpl(nodeId, jid, Subscriptions.subscribed,
+						Affiliations.owner));
 
 		Helper helper = Mockito.mock(Helper.class);
 		Mockito.doThrow(new NodeConfigurationException()).when(helper)
@@ -165,11 +165,9 @@ public class NodeConfigureTest extends IQTestHandler {
 		Mockito.when(
 				channelManager.nodeExists(nodeId))
 				.thenReturn(true);
-		NodeAffiliationImpl affiliation = new NodeAffiliationImpl(nodeId, 
-				new JID(actorJid), Affiliations.owner, null);
-		Mockito.when(channelManager.getUserAffiliation(
-						nodeId, new JID(actorJid)))
-				.thenReturn(affiliation);
+		Mockito.when(channelManager.getNodeMembership(Mockito.anyString(), Mockito.any(JID.class))).thenReturn(
+				new NodeMembershipImpl(nodeId, jid, Subscriptions.subscribed,
+						Affiliations.owner));
 
 		Helper helper = Mockito.mock(Helper.class);
 		Mockito.when(helper.isValid()).thenReturn(false);
@@ -199,11 +197,11 @@ public class NodeConfigureTest extends IQTestHandler {
 		Mockito.when(
 				channelManager.nodeExists(nodeId))
 				.thenReturn(true);
-		NodeAffiliationImpl affiliation = new NodeAffiliationImpl(nodeId, 
-				new JID(actorJid), Affiliations.owner, null);
-		Mockito.when(channelManager.getUserAffiliation(
-						nodeId, new JID(actorJid)))
-				.thenReturn(affiliation);
+		
+		Mockito.when(channelManager.getNodeMembership(Mockito.anyString(), Mockito.any(JID.class))).thenReturn(
+				new NodeMembershipImpl(nodeId, jid, Subscriptions.subscribed,
+						Affiliations.owner));
+		
 		Mockito.doThrow(new NodeStoreException()).when(channelManager)
 				.setNodeConf(Mockito.anyString(), Mockito.any(Map.class));
 
@@ -235,11 +233,10 @@ public class NodeConfigureTest extends IQTestHandler {
 		Mockito.when(
 				channelManager.nodeExists(nodeId))
 				.thenReturn(true);
-		NodeAffiliationImpl affiliation = new NodeAffiliationImpl(nodeId, 
-				new JID(actorJid), Affiliations.owner, null);
-		Mockito.when(channelManager.getUserAffiliation(
-						nodeId, new JID(actorJid)))
-				.thenReturn(affiliation);
+		
+		Mockito.when(channelManager.getNodeMembership(Mockito.anyString(), Mockito.any(JID.class))).thenReturn(
+				new NodeMembershipImpl(nodeId, jid, Subscriptions.subscribed,
+						Affiliations.owner));
 
 		ArrayList<NodeSubscriptionMock> subscribers = new ArrayList<NodeSubscriptionMock>();
 		
@@ -270,11 +267,10 @@ public class NodeConfigureTest extends IQTestHandler {
 		Mockito.when(
 				channelManager.nodeExists(nodeId))
 				.thenReturn(true);
-		NodeAffiliationImpl affiliation = new NodeAffiliationImpl(nodeId, 
-				new JID(actorJid), Affiliations.owner, null);
-		Mockito.when(channelManager.getUserAffiliation(
-						nodeId, new JID(actorJid)))
-				.thenReturn(affiliation);
+		
+		Mockito.when(channelManager.getNodeMembership(Mockito.anyString(), Mockito.any(JID.class))).thenReturn(
+				new NodeMembershipImpl(nodeId, jid, Subscriptions.subscribed,
+						Affiliations.owner));
 
 		ArrayList<NodeSubscription> subscribers = new ArrayList<NodeSubscription>();
 		subscribers.add(new NodeSubscriptionMock(new JID(

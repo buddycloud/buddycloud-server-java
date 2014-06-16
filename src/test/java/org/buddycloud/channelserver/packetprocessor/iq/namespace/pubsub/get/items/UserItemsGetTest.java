@@ -239,13 +239,6 @@ public class UserItemsGetTest extends IQTestHandler {
 		Mockito.when(channelManager.getNodeMembership(node, jid)).thenReturn(
 				membership);
 
-		NodeAffiliationImpl affiliation = Mockito
-				.mock(NodeAffiliationImpl.class);
-		Mockito.when(affiliation.getAffiliation()).thenReturn(
-				Affiliations.member);
-		Mockito.when(channelManager.getUserAffiliation(node, jid)).thenReturn(
-				affiliation);
-
 		Mockito.when(
 				channelManager.getNodeItems(Mockito.anyString(),
 						Mockito.anyString(), Mockito.anyInt()))
@@ -396,13 +389,6 @@ public class UserItemsGetTest extends IQTestHandler {
 		Mockito.when(channelManager.getNodeMembership(node, jid)).thenReturn(
 				membership);
 
-		NodeAffiliationImpl affiliation = Mockito
-				.mock(NodeAffiliationImpl.class);
-		Mockito.when(affiliation.getAffiliation()).thenReturn(
-				Affiliations.member);
-		Mockito.when(channelManager.getUserAffiliation(node, jid)).thenReturn(
-				affiliation);
-
 		NodeAffiliationImpl itemAffiliation = Mockito
 				.mock(NodeAffiliationImpl.class);
 		Mockito.when(itemAffiliation.getAffiliation()).thenReturn(
@@ -441,9 +427,6 @@ public class UserItemsGetTest extends IQTestHandler {
 		Mockito.doReturn(new ResultSetImpl<NodeSubscription>(items))
 				.when(channelManager)
 				.getNodeSubscriptions(Mockito.eq(node), Mockito.anyBoolean());
-
-		Mockito.doReturn(null).when(channelManager)
-				.getUserAffiliation(node, new JID("pamela@denmark.lit"));
 
 		Mockito.when(channelManager.nodeExists(node)).thenReturn(true);
 
@@ -485,14 +468,6 @@ public class UserItemsGetTest extends IQTestHandler {
 				Subscriptions.subscribed);
 		Mockito.when(channelManager.getNodeMembership(node, jid)).thenReturn(
 				membership);
-
-		NodeAffiliationImpl affiliation = Mockito
-				.mock(NodeAffiliationImpl.class);
-		Mockito.when(affiliation.getAffiliation()).thenReturn(
-				Affiliations.member);
-		Mockito.when(
-				channelManager.getUserAffiliation(Mockito.anyString(),
-						Mockito.any(JID.class))).thenReturn(affiliation);
 
 		NodeSubscriptionImpl itemSubscription = Mockito
 				.mock(NodeSubscriptionImpl.class);

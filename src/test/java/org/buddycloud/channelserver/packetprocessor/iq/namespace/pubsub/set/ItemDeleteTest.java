@@ -252,9 +252,6 @@ public class ItemDeleteTest extends IQTestHandler {
 	@Test
 	public void testUserDoesNotOwnNodeCanNotDelete() throws Exception {
 
-		NodeAffiliation affiliation = new NodeAffiliationImpl(node, jid,
-				Affiliations.member, new Date());
-
 		NodeItem nodeItem = new NodeItemImpl(node, "item-id", new Date(),
 				payload);
 
@@ -262,9 +259,6 @@ public class ItemDeleteTest extends IQTestHandler {
 		Mockito.when(
 				channelManagerMock.getNodeItem(Mockito.anyString(),
 						Mockito.anyString())).thenReturn(nodeItem);
-		Mockito.when(
-				channelManagerMock.getUserAffiliation(Mockito.anyString(),
-						Mockito.any(JID.class))).thenReturn(affiliation);
 
 		itemDelete.process(element, jid, request, null);
 
@@ -279,8 +273,6 @@ public class ItemDeleteTest extends IQTestHandler {
 
 	@Test
 	public void testSuccessfulRequestSendsResponseStanza() throws Exception {
-		NodeAffiliation affiliation = new NodeAffiliationImpl(node, jid,
-				Affiliations.member, new Date());
 
 		NodeItem nodeItem = new NodeItemImpl(node, "item-id", new Date(),
 				payload.replaceAll("romeo@shakespeare.lit",
@@ -291,9 +283,6 @@ public class ItemDeleteTest extends IQTestHandler {
 		Mockito.when(
 				channelManagerMock.getNodeItem(Mockito.anyString(),
 						Mockito.anyString())).thenReturn(nodeItem);
-		Mockito.when(
-				channelManagerMock.getUserAffiliation(Mockito.anyString(),
-						Mockito.any(JID.class))).thenReturn(affiliation);
 
 		itemDelete.setChannelManager(channelManagerMock);
 
@@ -312,8 +301,6 @@ public class ItemDeleteTest extends IQTestHandler {
 	@Test
 	public void testRequestingNotificationsSendsRetractionNotifications()
 			throws Exception {
-		NodeAffiliation affiliation = new NodeAffiliationImpl(node, jid,
-				Affiliations.member, new Date());
 
 		NodeItem nodeItem = new NodeItemImpl(node, "item-id", new Date(),
 				payload.replaceAll("romeo@shakespeare.lit",
@@ -335,9 +322,6 @@ public class ItemDeleteTest extends IQTestHandler {
 		Mockito.when(channelManagerMock.nodeExists(node)).thenReturn(true);
 		Mockito.when(channelManagerMock.getNodeItem(node, "item-id"))
 				.thenReturn(nodeItem);
-		Mockito.when(
-				channelManagerMock.getUserAffiliation(Mockito.anyString(),
-						Mockito.any(JID.class))).thenReturn(affiliation);
 
 		Mockito.doReturn(new ResultSetImpl<NodeSubscription>(subscriptions))
 				.when(channelManagerMock).getNodeSubscriptionListeners(node);
@@ -363,8 +347,6 @@ public class ItemDeleteTest extends IQTestHandler {
 
 	@Test
 	public void testNoNotifyAttributeStillSendsNotifications() throws Exception {
-		NodeAffiliation affiliation = new NodeAffiliationImpl(node, jid,
-				Affiliations.member, new Date());
 
 		NodeItem nodeItem = new NodeItemImpl(node, "item-id", new Date(),
 				payload.replaceAll("romeo@shakespeare.lit",
@@ -386,9 +368,6 @@ public class ItemDeleteTest extends IQTestHandler {
 		Mockito.when(channelManagerMock.nodeExists(node)).thenReturn(true);
 		Mockito.when(channelManagerMock.getNodeItem(node, "item-id"))
 				.thenReturn(nodeItem);
-		Mockito.when(
-				channelManagerMock.getUserAffiliation(Mockito.anyString(),
-						Mockito.any(JID.class))).thenReturn(affiliation);
 
 		Mockito.doReturn(new ResultSetImpl<NodeSubscription>(subscriptions))
 				.when(channelManagerMock).getNodeSubscriptionListeners(node);

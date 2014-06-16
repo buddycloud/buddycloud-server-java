@@ -157,12 +157,8 @@ public class AffiliationsGet implements PubSubElementProcessor {
 	}
 	
 	private boolean isOwnerModerator() throws NodeStoreException {
-		if (null == isOwnerModerator) {
-			isOwnerModerator = channelManager.getUserAffiliation(node, actorJid)
-			    .getAffiliation()
-			    .in(Affiliations.moderator, Affiliations.owner);
-		}
-		return isOwnerModerator;
+		return channelManager.getNodeMembership(node,
+				actorJid).getAffiliation().canAuthorize();
 	}
 
 	private boolean getUserAffiliations(Element affiliations, int maxItemsToReturn, String afterItemId)

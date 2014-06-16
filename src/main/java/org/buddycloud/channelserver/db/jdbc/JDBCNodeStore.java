@@ -380,39 +380,6 @@ public class JDBCNodeStore implements NodeStore {
 	}
 
 	@Override
-	public NodeAffiliation getUserAffiliation(String nodeId, JID user)
-			throws NodeStoreException {
-		PreparedStatement selectStatement = null;
-
-		try {
-			NodeAffiliationImpl affiliation;
-
-			selectStatement = conn
-					.prepareStatement(dialect.selectAffiliation());
-			selectStatement.setString(1, nodeId);
-			selectStatement.setString(2, user.toBareJID());
-
-			java.sql.ResultSet rs = selectStatement.executeQuery();
-
-			if (rs.next()) {
-				affiliation = new NodeAffiliationImpl(nodeId, user,
-						Affiliations.valueOf(rs.getString(1)),
-						rs.getTimestamp(2));
-			} else {
-				affiliation = new NodeAffiliationImpl(nodeId, user,
-						Affiliations.none, new Date());
-			}
-
-			return affiliation;
-		} catch (SQLException e) {
-			throw new NodeStoreException(e);
-		} finally {
-			close(selectStatement); // Will implicitly close the resultset if
-									// required
-		}
-	}
-
-	@Override
 	public ResultSet<NodeAffiliation> getAffiliationChanges(JID user,
 			Date startDate, Date endDate) throws NodeStoreException {
 		PreparedStatement stmt = null;

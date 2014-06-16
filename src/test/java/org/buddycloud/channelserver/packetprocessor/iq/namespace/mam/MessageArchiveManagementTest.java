@@ -22,9 +22,11 @@ import org.buddycloud.channelserver.packetHandler.iq.IQTestHandler;
 import org.buddycloud.channelserver.pubsub.affiliation.Affiliations;
 import org.buddycloud.channelserver.pubsub.model.NodeAffiliation;
 import org.buddycloud.channelserver.pubsub.model.NodeItem;
+import org.buddycloud.channelserver.pubsub.model.NodeMembership;
 import org.buddycloud.channelserver.pubsub.model.NodeSubscription;
 import org.buddycloud.channelserver.pubsub.model.impl.NodeAffiliationImpl;
 import org.buddycloud.channelserver.pubsub.model.impl.NodeItemImpl;
+import org.buddycloud.channelserver.pubsub.model.impl.NodeMembershipImpl;
 import org.buddycloud.channelserver.pubsub.model.impl.NodeSubscriptionImpl;
 import org.buddycloud.channelserver.pubsub.subscription.Subscriptions;
 import org.dom4j.Element;
@@ -94,12 +96,12 @@ public class MessageArchiveManagementTest extends IQTestHandler {
 						Mockito.any(Date.class), Mockito.any(Date.class)))
 				.thenReturn(noItems);
 
-		NodeAffiliation requesterAffiliation = new NodeAffiliationImpl(node1,
-				jid1, Affiliations.member, new Date());
+		NodeMembership membership = new NodeMembershipImpl(node1,
+				jid1, Subscriptions.subscribed, Affiliations.owner);
 		Mockito.when(
-				channelManager.getUserAffiliation(Mockito.anyString(),
+				channelManager.getNodeMembership(Mockito.anyString(),
 						Mockito.any(JID.class))).thenReturn(
-				requesterAffiliation);
+								membership);
 	}
 
 	@Test
@@ -195,12 +197,12 @@ public class MessageArchiveManagementTest extends IQTestHandler {
 	@Test
 	public void testOutcastChangeReportedAsExpected() throws Exception {
 
-		NodeAffiliation requesterAffiliation = new NodeAffiliationImpl(node1,
-				jid1, Affiliations.owner, new Date());
+		NodeMembership membership = new NodeMembershipImpl(node1,
+				jid1, Subscriptions.subscribed, Affiliations.owner);
 		Mockito.when(
-				channelManager.getUserAffiliation(Mockito.anyString(),
+				channelManager.getNodeMembership(Mockito.anyString(),
 						Mockito.any(JID.class))).thenReturn(
-				requesterAffiliation);
+								membership);
 		
 		ArrayList<NodeAffiliation> affiliations = new ArrayList<NodeAffiliation>();
 

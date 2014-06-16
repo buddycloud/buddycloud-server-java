@@ -162,18 +162,6 @@ public interface NodeStore {
 			throws NodeStoreException;
 
 	/**
-	 * Gets a user's affiliation with a node.
-	 * 
-	 * @param nodeId
-	 *            the node reference.
-	 * @param user
-	 *            the user's JID
-	 * @return
-	 */
-	NodeAffiliation getUserAffiliation(String nodeId, JID user)
-			throws NodeStoreException;
-
-	/**
 	 * Gets all the given user's affiliations.
 	 * 
 	 * @param user

@@ -17,6 +17,7 @@ import org.buddycloud.channelserver.pubsub.model.NodeItem;
 import org.buddycloud.channelserver.pubsub.model.NodeSubscription;
 import org.buddycloud.channelserver.pubsub.model.impl.NodeAffiliationImpl;
 import org.buddycloud.channelserver.pubsub.model.impl.NodeItemImpl;
+import org.buddycloud.channelserver.pubsub.model.impl.NodeMembershipImpl;
 import org.buddycloud.channelserver.pubsub.model.impl.NodeSubscriptionImpl;
 import org.buddycloud.channelserver.pubsub.subscription.Subscriptions;
 import org.dom4j.Element;
@@ -56,6 +57,12 @@ public class ItemDeleteTest extends IQTestHandler {
 
 		element = new BaseElement("retract");
 		element.addAttribute("node", node);
+
+		Mockito.when(
+				channelManagerMock.getNodeMembership(Mockito.anyString(), Mockito
+						.any(JID.class))).thenReturn(
+				new NodeMembershipImpl(node, jid, Subscriptions.subscribed,
+						Affiliations.member));
 
 		payload = readStanzaAsString("/iq/pubsub/item/item.payload");
 	}
@@ -224,7 +231,7 @@ public class ItemDeleteTest extends IQTestHandler {
 	}
 
 	@Test
-	public void testUserDoesNotOwnItemCanNotDelete() throws Exception {
+	public void userDoesNotOwnItemCanNotDelete() throws Exception {
 
 		String payload = readStanzaAsString("/iq/pubsub/item/item.payload");
 
@@ -240,7 +247,7 @@ public class ItemDeleteTest extends IQTestHandler {
 
 		itemDelete.process(element, jid, request, null);
 
-		Packet response = queue.poll(100, TimeUnit.MILLISECONDS);
+		Packet response = queue.poll();
 
 		PacketError error = response.getError();
 		Assert.assertNotNull(error);

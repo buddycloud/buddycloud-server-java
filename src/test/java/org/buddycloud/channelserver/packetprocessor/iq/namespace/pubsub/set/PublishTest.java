@@ -16,10 +16,12 @@ import org.buddycloud.channelserver.packetHandler.iq.IQTestHandler;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.JabberPubsub;
 import org.buddycloud.channelserver.pubsub.affiliation.Affiliations;
 import org.buddycloud.channelserver.pubsub.model.NodeAffiliation;
+import org.buddycloud.channelserver.pubsub.model.NodeMembership;
 import org.buddycloud.channelserver.pubsub.model.NodeSubscription;
 import org.buddycloud.channelserver.pubsub.model.impl.GlobalItemIDImpl;
 import org.buddycloud.channelserver.pubsub.model.impl.NodeAffiliationImpl;
 import org.buddycloud.channelserver.pubsub.model.impl.NodeItemImpl;
+import org.buddycloud.channelserver.pubsub.model.impl.NodeMembershipImpl;
 import org.buddycloud.channelserver.pubsub.model.impl.NodeSubscriptionImpl;
 import org.buddycloud.channelserver.pubsub.subscription.Subscriptions;
 import org.dom4j.Element;
@@ -74,16 +76,12 @@ public class PublishTest extends IQTestHandler {
 
 		Mockito.when(channelManager.nodeExists(node)).thenReturn(true);
 
-		NodeSubscription subscription = new NodeSubscriptionImpl(node, jid,
-				Subscriptions.subscribed);
+		NodeMembership membership = new NodeMembershipImpl(node, jid,
+				Subscriptions.subscribed, Affiliations.publisher);
 		Mockito.when(
-				channelManager.getUserSubscription(Mockito.eq(node),
-						Mockito.eq(jid))).thenReturn(subscription);
-		NodeAffiliation affiliation = new NodeAffiliationImpl(node, jid,
-				Affiliations.publisher, new Date());
-		Mockito.when(
-				channelManager.getUserAffiliation(Mockito.eq(node),
-						Mockito.eq(jid))).thenReturn(affiliation);
+				channelManager.getNodeMembership(Mockito.eq(node),
+						Mockito.eq(jid))).thenReturn(membership);
+
 		Mockito.when(
 				channelManager.getNodeSubscriptionListeners(Mockito.eq(node)))
 				.thenReturn(
@@ -175,11 +173,11 @@ public class PublishTest extends IQTestHandler {
 
 	@Test
 	public void unsubscribedUserCanNotPublish() throws Exception {
-		NodeSubscription subscription = new NodeSubscriptionImpl(node, jid,
-				Subscriptions.none);
+		NodeMembership membership = new NodeMembershipImpl(node, jid,
+				Subscriptions.none, Affiliations.publisher);
 		Mockito.when(
-				channelManager.getUserSubscription(Mockito.eq(node),
-						Mockito.eq(jid))).thenReturn(subscription);
+				channelManager.getNodeMembership(Mockito.eq(node),
+						Mockito.eq(jid))).thenReturn(membership);
 
 		publish.process(element, jid, request, null);
 
@@ -194,11 +192,11 @@ public class PublishTest extends IQTestHandler {
 
 	@Test
 	public void pendingSubscriptionCanNotPublish() throws Exception {
-		NodeSubscription subscription = new NodeSubscriptionImpl(node, jid,
-				Subscriptions.pending);
+		NodeMembership membership = new NodeMembershipImpl(node, jid,
+				Subscriptions.pending, Affiliations.publisher);
 		Mockito.when(
-				channelManager.getUserSubscription(Mockito.eq(node),
-						Mockito.eq(jid))).thenReturn(subscription);
+				channelManager.getNodeMembership(Mockito.eq(node),
+						Mockito.eq(jid))).thenReturn(membership);
 
 		publish.process(element, jid, request, null);
 
@@ -213,11 +211,11 @@ public class PublishTest extends IQTestHandler {
 
 	@Test
 	public void noAffiliationCanNotPublish() throws Exception {
-		NodeAffiliation affiliation = new NodeAffiliationImpl(node, jid,
-				Affiliations.none, new Date());
+		NodeMembership membership = new NodeMembershipImpl(node, jid,
+				Subscriptions.subscribed, Affiliations.none);
 		Mockito.when(
-				channelManager.getUserAffiliation(Mockito.eq(node),
-						Mockito.eq(jid))).thenReturn(affiliation);
+				channelManager.getNodeMembership(Mockito.eq(node),
+						Mockito.eq(jid))).thenReturn(membership);
 
 		publish.process(element, jid, request, null);
 
@@ -232,11 +230,11 @@ public class PublishTest extends IQTestHandler {
 
 	@Test
 	public void memberAffiliationCanNotPublish() throws Exception {
-		NodeAffiliation affiliation = new NodeAffiliationImpl(node, jid,
-				Affiliations.member, new Date());
+		NodeMembership membership = new NodeMembershipImpl(node, jid,
+				Subscriptions.subscribed, Affiliations.member);
 		Mockito.when(
-				channelManager.getUserAffiliation(Mockito.eq(node),
-						Mockito.eq(jid))).thenReturn(affiliation);
+				channelManager.getNodeMembership(Mockito.eq(node),
+						Mockito.eq(jid))).thenReturn(membership);
 
 		publish.process(element, jid, request, null);
 
@@ -251,11 +249,11 @@ public class PublishTest extends IQTestHandler {
 
 	@Test
 	public void outcastAffiliationCanNotPublish() throws Exception {
-		NodeAffiliation affiliation = new NodeAffiliationImpl(node, jid,
-				Affiliations.outcast, new Date());
+		NodeMembership membership = new NodeMembershipImpl(node, jid,
+				Subscriptions.subscribed, Affiliations.outcast);
 		Mockito.when(
-				channelManager.getUserAffiliation(Mockito.eq(node),
-						Mockito.eq(jid))).thenReturn(affiliation);
+				channelManager.getNodeMembership(Mockito.eq(node),
+						Mockito.eq(jid))).thenReturn(membership);
 
 		publish.process(element, jid, request, null);
 
@@ -416,7 +414,6 @@ public class PublishTest extends IQTestHandler {
 				.getValue().getInReplyTo());
 		Assert.assertEquals(node, argument.getValue().getNodeId());
 	}
-	
 
 	@Test
 	public void replyUpdatesThreadParentDate() throws Exception {
@@ -429,17 +426,19 @@ public class PublishTest extends IQTestHandler {
 
 		Assert.assertEquals(IQ.Type.result, ((IQ) queue.poll()).getType());
 
-		ArgumentCaptor<String> inReplyTo = ArgumentCaptor.forClass(String.class);
-		ArgumentCaptor<String> passedNode = ArgumentCaptor.forClass(String.class);
-		
+		ArgumentCaptor<String> inReplyTo = ArgumentCaptor
+				.forClass(String.class);
+		ArgumentCaptor<String> passedNode = ArgumentCaptor
+				.forClass(String.class);
+
 		Mockito.verify(channelManager, Mockito.times(1)).updateThreadParent(
 				passedNode.capture(), inReplyTo.capture());
 
-		Assert.assertEquals("fc362eb42085f017ed9ccd9c4004b095", inReplyTo
-				.getValue());
+		Assert.assertEquals("fc362eb42085f017ed9ccd9c4004b095",
+				inReplyTo.getValue());
 		Assert.assertEquals(node, passedNode.getValue());
 	}
-	
+
 	@Test
 	public void doesNotUpdateParentThreadIfNotReply() throws Exception {
 		IQ request = this.request.createCopy();

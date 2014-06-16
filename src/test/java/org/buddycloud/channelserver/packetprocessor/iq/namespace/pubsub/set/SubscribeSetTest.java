@@ -3,7 +3,6 @@ package org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.set;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -14,11 +13,12 @@ import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.channel.Conf;
 import org.buddycloud.channelserver.channel.node.configuration.field.AccessModel;
 import org.buddycloud.channelserver.packetHandler.iq.IQTestHandler;
-import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.set.UnsubscribeSet;
 import org.buddycloud.channelserver.pubsub.affiliation.Affiliations;
 import org.buddycloud.channelserver.pubsub.model.NodeAffiliation;
+import org.buddycloud.channelserver.pubsub.model.NodeMembership;
 import org.buddycloud.channelserver.pubsub.model.NodeSubscription;
 import org.buddycloud.channelserver.pubsub.model.impl.NodeAffiliationImpl;
+import org.buddycloud.channelserver.pubsub.model.impl.NodeMembershipImpl;
 import org.buddycloud.channelserver.pubsub.model.impl.NodeSubscriptionImpl;
 import org.buddycloud.channelserver.pubsub.subscription.Subscriptions;
 import org.dom4j.Element;
@@ -30,7 +30,6 @@ import org.xmpp.packet.IQ;
 import org.xmpp.packet.JID;
 import org.xmpp.packet.Packet;
 import org.xmpp.packet.PacketError;
-import org.xmpp.resultsetmanagement.ResultSet;
 import org.xmpp.resultsetmanagement.ResultSetImpl;
 
 public class SubscribeSetTest extends IQTestHandler {
@@ -43,8 +42,7 @@ public class SubscribeSetTest extends IQTestHandler {
 	private JID jid = new JID("juliet@shakespeare.lit");
 	private ChannelManager channelManager;
 
-	private NodeSubscription subscription;
-	private NodeAffiliation affiliation;
+	private NodeMembership membership;
 
 	@Before
 	public void setUp() throws Exception {
@@ -64,22 +62,16 @@ public class SubscribeSetTest extends IQTestHandler {
 		element.addAttribute("node", node);
 
 		subscribe.setChannelManager(channelManager);
-
-		subscription = new NodeSubscriptionImpl(node, jid, Subscriptions.none);
-		affiliation = new NodeAffiliationImpl(node, jid, Affiliations.none,
-				new Date());
-
+		
 		Mockito.when(channelManager.isLocalJID(Mockito.any(JID.class)))
-				.thenReturn(true);
+		.thenReturn(true);
+
+		membership = new NodeMembershipImpl(node, jid, Subscriptions.none, Affiliations.none);
+
 		Mockito.when(
-				channelManager.getUserAffiliation(Mockito.anyString(),
-						Mockito.any(JID.class))).thenReturn(affiliation);
-		Mockito.when(
-				channelManager.getUserAffiliation(Mockito.anyString(),
-						Mockito.any(JID.class))).thenReturn(affiliation);
-		Mockito.when(
-				channelManager.getUserSubscription(Mockito.anyString(),
-						Mockito.any(JID.class))).thenReturn(subscription);
+				channelManager.getNodeMembership(Mockito.anyString(),
+						Mockito.any(JID.class))).thenReturn(membership);
+
 
 		ArrayList<NodeAffiliation> affiliations = new ArrayList<NodeAffiliation>();
 		affiliations.add(new NodeAffiliationImpl(node, jid,

@@ -169,9 +169,13 @@ public class Helper {
 	}
 
 	public HashMap<String, String> getValues() throws NodeStoreException {
-		existingConfiguration = (HashMap<String, String>) channelManager
+		
+		if (null == node) {
+			existingConfiguration = new HashMap<String, String>();
+		} else {
+			existingConfiguration = (HashMap<String, String>) channelManager
 				.getNodeConf(getNode());
-
+		}
 		HashMap<String, String> data = new HashMap<String, String>();
 		for (Entry<String, Field> element : elements.entrySet()) {
 			String value = element.getValue().getValue();

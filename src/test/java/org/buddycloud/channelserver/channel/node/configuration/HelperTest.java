@@ -186,12 +186,6 @@ public class HelperTest extends IQTestHandler {
 	}
 
 	@Test(expected = NodeConfigurationException.class)
-	public void testThrowsExceptionIfNodeValueNotSet() throws Exception {
-		Helper parser = new Helper(channelManager);
-		parser.getValues();
-	}
-
-	@Test(expected = NodeConfigurationException.class)
 	public void testThrowsExceptionIfEmptyNodeValueProvided() throws Exception {
 		Helper parser = new Helper(channelManager);
 		parser.setNode("");

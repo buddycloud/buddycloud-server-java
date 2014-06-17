@@ -195,7 +195,6 @@ public class UnsubscribeSetTest extends IQTestHandler {
 		Assert.assertEquals(PacketError.Condition.item_not_found,
 				error.getCondition());
 		Assert.assertEquals(PacketError.Type.cancel, error.getType());
-
 	}
 
 	@Test
@@ -218,6 +217,8 @@ public class UnsubscribeSetTest extends IQTestHandler {
 		Assert.assertEquals(PacketError.Condition.forbidden,
 				error.getCondition());
 		Assert.assertEquals(PacketError.Type.auth, error.getType());
+		Assert.assertEquals(JabberPubsub.NS_BUDDYCLOUD, error.getApplicationConditionNamespaceURI());
+		Assert.assertEquals(UnsubscribeSet.CAN_NOT_UNSUBSCRIBE_ANOTHER_USER, error.getApplicationConditionName());
 	}
 
 	@Test
@@ -249,6 +250,8 @@ public class UnsubscribeSetTest extends IQTestHandler {
 		Assert.assertEquals(PacketError.Type.cancel, error.getType());
 		Assert.assertEquals(PacketError.Condition.not_allowed,
 				error.getCondition());
+		Assert.assertEquals(UnsubscribeSet.MUST_HAVE_ONE_OWNER, error.getApplicationConditionName());
+		Assert.assertEquals(JabberPubsub.NS_BUDDYCLOUD, error.getApplicationConditionNamespaceURI());
 	}
 
 	@Test

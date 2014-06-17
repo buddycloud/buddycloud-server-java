@@ -94,7 +94,7 @@ public class UnsubscribeSet extends PubSubElementProcessorAbstract {
 					PacketError.Type.auth,
 					PacketError.Condition.forbidden, 
 					CAN_NOT_UNSUBSCRIBE_ANOTHER_USER,
-					JabberPubsub.NS_BUDDYCLOUD
+					Buddycloud.NS
 				);
 			outQueue.put(response);
 			return;
@@ -107,7 +107,7 @@ public class UnsubscribeSet extends PubSubElementProcessorAbstract {
 				PacketError.Type.cancel,
 				PacketError.Condition.not_allowed, 
 				MUST_HAVE_ONE_OWNER,
-				JabberPubsub.NS_BUDDYCLOUD
+				Buddycloud.NS
 			);
 			outQueue.put(response);
 			return;

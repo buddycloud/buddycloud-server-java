@@ -7,7 +7,6 @@ import java.util.Map;
 import java.util.Properties;
 
 import org.apache.log4j.Logger;
-import org.buddycloud.channelserver.Configuration;
 import org.buddycloud.channelserver.db.ClosableIteratorImpl;
 import org.buddycloud.channelserver.db.CloseableIterator;
 import org.buddycloud.channelserver.db.NodeStore;
@@ -494,5 +493,11 @@ public class ChannelManagerImpl implements ChannelManager {
 	public NodeMembership getNodeMembership(String nodeId, JID user)
 			throws NodeStoreException {
 		return nodeStore.getNodeMembership(nodeId, user);
+	}
+
+	@Override
+	public ResultSet<NodeMembership> getUserMemberships(JID jid,
+			String afterItemId, int maxItemsToReturn) throws NodeStoreException {
+		return nodeStore.getUserMemberships(jid, afterItemId, maxItemsToReturn);
 	}
 }

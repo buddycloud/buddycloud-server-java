@@ -468,6 +468,37 @@ public class JDBCNodeStore implements NodeStore {
 			close(stmt); // Will implicitly close the resultset if required
 		}
 	}
+	
+	@Override
+	public ResultSet<NodeMembership> getUserMemberships(JID jid,
+			String afterItemId, int maxItemsToReturn) throws NodeStoreException {
+		PreparedStatement stmt = null;
+
+		try {
+			stmt = conn.prepareStatement(dialect
+					.selectUserMembershipsAfterNodeId());
+			stmt.setString(1, jid.toBareJID());
+			stmt.setString(2, jid.toBareJID());
+			stmt.setString(3, afterItemId);
+			stmt.setInt(4, maxItemsToReturn);
+
+			java.sql.ResultSet rs = stmt.executeQuery();
+
+			ArrayList<NodeMembership> result = new ArrayList<NodeMembership>();
+			while (rs.next()) {
+				NodeMembershipImpl membership = new NodeMembershipImpl(
+						rs.getString(1), jid, Subscriptions.valueOf(rs.getString(3)), Affiliations.valueOf(rs
+								.getString(4)), rs.getTimestamp(5));
+				result.add(membership);
+			}
+
+			return new ResultSetImpl<NodeMembership>(result);
+		} catch (SQLException e) {
+			throw new NodeStoreException(e);
+		} finally {
+			close(stmt); // Will implicitly close the resultset if required
+		}
+	}
 
 	@Override
 	public int countNodeAffiliations(String nodeId, boolean isOwnerModerator) throws NodeStoreException {
@@ -1680,7 +1711,8 @@ public class JDBCNodeStore implements NodeStore {
 									// required
 		}
 	}
-	
+		 
+		
 	@Override
 	public boolean userHasRatedPost(String node, JID user, GlobalItemID id) throws NodeStoreException {
 		PreparedStatement selectStatement = null;
@@ -1997,6 +2029,8 @@ public class JDBCNodeStore implements NodeStore {
 
 	public interface NodeStoreSQLDialect {
 		String insertNode();
+
+		String selectUserMembershipsAfterNodeId();
 
 		String selectMembership();
 

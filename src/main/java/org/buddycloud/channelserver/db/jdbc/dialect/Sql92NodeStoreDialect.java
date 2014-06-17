@@ -212,6 +212,8 @@ public class Sql92NodeStoreDialect implements NodeStoreSQLDialect {
 	private static final String UPDATE_ITEM = "UPDATE \"items\" SET \"updated\" = ?, \"xml\" = ?"
 			+ " WHERE \"node\" = ? AND \"id\" = ?";
 
+	private static final String UPDATE_THREAD_PARENT = "UPDATE \"items\" SET \"updated\"= NOW() WHERE \"node\" = ? AND \"id\" = ?;";
+
 	private static final String DELETE_ITEM = "DELETE FROM \"items\" WHERE \"node\" = ? AND \"id\" = ?;";
 
 	private static final String SELECT_SUBSCRIPTION_LISTENERS_FOR_NODE = "SELECT DISTINCT ON (\"listener\") \"listener\", \"node\", \"subscription\", \"updated\""
@@ -511,6 +513,11 @@ public class Sql92NodeStoreDialect implements NodeStoreSQLDialect {
 	@Override
 	public String deleteItem() {
 		return DELETE_ITEM;
+	}
+	
+	@Override
+	public String updateThreadParent() {
+		return UPDATE_THREAD_PARENT;
 	}
 
 	@Override

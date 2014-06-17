@@ -35,7 +35,7 @@ public class DiscoResult implements PacketProcessor<IQ> {
 		requestIq = reqIQ;
 		node = requestIq.getElement().element("query")
 				.attributeValue("node");
-		if (federatedQueueManager.isFederatedDiscoInfoRequest(
+		if ((null == node) && federatedQueueManager.isFederatedDiscoInfoRequest(
 				reqIQ.getID())) {
 			federatedRequest();
 			return;

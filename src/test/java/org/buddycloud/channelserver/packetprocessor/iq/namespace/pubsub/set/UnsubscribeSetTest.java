@@ -1,7 +1,6 @@
 package org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.set;
 
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
@@ -9,14 +8,10 @@ import junit.framework.Assert;
 
 import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.packetHandler.iq.IQTestHandler;
-import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.JabberPubsub;
-import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.set.UnsubscribeSet;
 import org.buddycloud.channelserver.pubsub.affiliation.Affiliations;
 import org.buddycloud.channelserver.pubsub.event.Event;
 import org.buddycloud.channelserver.pubsub.model.NodeMembership;
 import org.buddycloud.channelserver.pubsub.model.NodeSubscription;
-import org.buddycloud.channelserver.pubsub.model.impl.NodeAffiliationImpl;
-import org.buddycloud.channelserver.pubsub.model.impl.NodeItemImpl;
 import org.buddycloud.channelserver.pubsub.model.impl.NodeMembershipImpl;
 import org.buddycloud.channelserver.pubsub.model.impl.NodeSubscriptionImpl;
 import org.buddycloud.channelserver.pubsub.subscription.Subscriptions;
@@ -27,7 +22,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
-import org.mockito.stubbing.OngoingStubbing;
 import org.xmpp.packet.IQ;
 import org.xmpp.packet.JID;
 import org.xmpp.packet.Message;
@@ -190,7 +184,6 @@ public class UnsubscribeSetTest extends IQTestHandler {
 		Assert.assertEquals(PacketError.Condition.item_not_found,
 				error.getCondition());
 		Assert.assertEquals(PacketError.Type.cancel, error.getType());
-
 	}
 
 	@Test
@@ -215,6 +208,8 @@ public class UnsubscribeSetTest extends IQTestHandler {
 		Assert.assertEquals(PacketError.Condition.forbidden,
 				error.getCondition());
 		Assert.assertEquals(PacketError.Type.auth, error.getType());
+		Assert.assertEquals(Buddycloud.NS, error.getApplicationConditionNamespaceURI());
+		Assert.assertEquals(UnsubscribeSet.CAN_NOT_UNSUBSCRIBE_ANOTHER_USER, error.getApplicationConditionName());
 	}
 
 	@Test
@@ -246,6 +241,8 @@ public class UnsubscribeSetTest extends IQTestHandler {
 		Assert.assertEquals(PacketError.Type.cancel, error.getType());
 		Assert.assertEquals(PacketError.Condition.not_allowed,
 				error.getCondition());
+		Assert.assertEquals(UnsubscribeSet.MUST_HAVE_ONE_OWNER, error.getApplicationConditionName());
+		Assert.assertEquals(Buddycloud.NS, error.getApplicationConditionNamespaceURI());
 	}
 
 	@Test

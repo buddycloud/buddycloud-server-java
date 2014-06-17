@@ -98,8 +98,9 @@ public abstract class PubSubElementProcessorAbstract implements
 	}
 
 	protected void setErrorCondition(Type type, Condition condition) {
-		if (null == response)
+		if (null == response) {
 			response = IQ.createResultIQ(request);
+		}
 		response.setType(IQ.Type.error);
 		PacketError error = new PacketError(condition, type);
 		response.setError(error);
@@ -111,7 +112,7 @@ public abstract class PubSubElementProcessorAbstract implements
 				JabberPubsub.NS_PUBSUB_ERROR);
 	}
 
-	private void createExtendedErrorReply(Type type, Condition condition,
+	protected void createExtendedErrorReply(Type type, Condition condition,
 			String additionalElement, String additionalNamespace) {
 		
 		if (null == response) {

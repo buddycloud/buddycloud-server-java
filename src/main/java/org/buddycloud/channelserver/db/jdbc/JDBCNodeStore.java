@@ -469,26 +469,24 @@ public class JDBCNodeStore implements NodeStore {
 		}
 	}
 	
-	@Override
-	public ResultSet<NodeMembership> getUserMemberships(JID jid,
-			String afterItemId, int maxItemsToReturn) throws NodeStoreException {
+    @Override
+	public ResultSet<NodeMembership> getUserMemberships(JID jid) throws NodeStoreException {
+
 		PreparedStatement stmt = null;
 
 		try {
 			stmt = conn.prepareStatement(dialect
-					.selectUserMembershipsAfterNodeId());
+					.selectUserMemberships());
 			stmt.setString(1, jid.toBareJID());
 			stmt.setString(2, jid.toBareJID());
-			stmt.setString(3, afterItemId);
-			stmt.setInt(4, maxItemsToReturn);
 
 			java.sql.ResultSet rs = stmt.executeQuery();
 
 			ArrayList<NodeMembership> result = new ArrayList<NodeMembership>();
 			while (rs.next()) {
 				NodeMembershipImpl membership = new NodeMembershipImpl(
-						rs.getString(1), jid, Subscriptions.valueOf(rs.getString(3)), Affiliations.valueOf(rs
-								.getString(4)), rs.getTimestamp(5));
+						rs.getString(1), new JID(rs.getString(2)), new JID(rs.getString(3)), Subscriptions.valueOf(rs.getString(4)), Affiliations.valueOf(rs
+								.getString(5)), rs.getTimestamp(6));
 				result.add(membership);
 			}
 
@@ -2030,7 +2028,7 @@ public class JDBCNodeStore implements NodeStore {
 	public interface NodeStoreSQLDialect {
 		String insertNode();
 
-		String selectUserMembershipsAfterNodeId();
+		String selectUserMemberships();
 
 		String selectMembership();
 
@@ -2161,4 +2159,5 @@ public class JDBCNodeStore implements NodeStore {
 		String selectUserRatingsForAPost();
 	
 	}
+
 }

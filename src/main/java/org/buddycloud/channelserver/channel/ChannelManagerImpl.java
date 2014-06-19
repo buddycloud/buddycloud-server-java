@@ -494,10 +494,11 @@ public class ChannelManagerImpl implements ChannelManager {
 			throws NodeStoreException {
 		return nodeStore.getNodeMembership(nodeId, user);
 	}
-
+	
 	@Override
-	public ResultSet<NodeMembership> getUserMemberships(JID jid,
-			String afterItemId, int maxItemsToReturn) throws NodeStoreException {
-		return nodeStore.getUserMemberships(jid, afterItemId, maxItemsToReturn);
+	public ResultSet<NodeMembership> getUserMemberships(JID jid)
+			throws NodeStoreException {
+		return nodeStore.getUserMemberships(jid);
 	}
+
 }

@@ -182,16 +182,15 @@ public interface NodeStore {
 	ResultSet<NodeAffiliation> getUserAffiliations(JID actorJid,
 			String afterItemId, int maxItemsToReturn) throws NodeStoreException;
 
+
 	/**
-	 * Get a user's node memberships (subscription + affiliation) using RSM
+	 * Get a user's node memberships (subscription + affiliation)
 	 * 
 	 * @param jid
-	 * @param maxItemsToReturn
-	 * @param afterItemId
 	 * @return
+	 * @throws NodeStoreException
 	 */
-	ResultSet<NodeMembership> getUserMemberships(JID jid, String afterItemId,
-			int maxItemsToReturn) throws NodeStoreException;
+	ResultSet<NodeMembership> getUserMemberships(JID jid) throws NodeStoreException;
 
 	/**
 	 * Get affiliation changes for a user

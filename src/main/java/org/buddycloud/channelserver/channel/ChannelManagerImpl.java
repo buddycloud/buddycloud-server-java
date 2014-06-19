@@ -113,24 +113,6 @@ public class ChannelManagerImpl implements ChannelManager {
 	}
 
 	@Override
-	public ResultSet<NodeAffiliation> getUserAffiliations(JID user)
-			throws NodeStoreException {
-		return nodeStore.getUserAffiliations(user);
-	}
-
-	@Override
-	public ResultSet<NodeAffiliation> getUserAffiliations(JID user,
-			String afterItemId, int maxItemsToReturn) throws NodeStoreException {
-		return nodeStore.getUserAffiliations(user, afterItemId,
-				maxItemsToReturn);
-	}
-
-	@Override
-	public int countUserAffiliations(JID jid) throws NodeStoreException {
-		return nodeStore.countUserAffiliations(jid);
-	}
-
-	@Override
 	public ResultSet<NodeAffiliation> getNodeAffiliations(String nodeId,
 			boolean isOwnerModerator) throws NodeStoreException {
 		return nodeStore.getNodeAffiliations(nodeId, isOwnerModerator);
@@ -150,25 +132,6 @@ public class ChannelManagerImpl implements ChannelManager {
 	}
 
 	@Override
-	public int countNodeAffiliations(String nodeId, boolean isOwnerModerator)
-			throws NodeStoreException {
-		return nodeStore.countNodeAffiliations(nodeId, isOwnerModerator);
-	}
-
-	@Override
-	public ResultSet<NodeSubscription> getUserSubscriptions(JID user)
-			throws NodeStoreException {
-		return nodeStore.getUserSubscriptions(user);
-	}
-
-	@Override
-	public ResultSet<NodeSubscription> getUserSubscriptions(JID user,
-			String afterNodeId, int maxItemsToReturn) throws NodeStoreException {
-		return nodeStore.getUserSubscriptions(user, afterNodeId,
-				maxItemsToReturn);
-	}
-
-	@Override
 	public ResultSet<NodeSubscription> getSubscriptionChanges(JID user,
 			Date startDate, Date endDate) throws NodeStoreException {
 		return nodeStore.getSubscriptionChanges(user, startDate, endDate);
@@ -177,26 +140,6 @@ public class ChannelManagerImpl implements ChannelManager {
 	@Override
 	public int countUserSubscriptions(JID user) throws NodeStoreException {
 		return nodeStore.countUserSubscriptions(user);
-	}
-
-	@Override
-	public ResultSet<NodeSubscription> getNodeSubscriptions(String nodeId,
-			boolean isOwnerModerator) throws NodeStoreException {
-		return nodeStore.getNodeSubscriptions(nodeId, isOwnerModerator);
-	}
-
-	@Override
-	public ResultSet<NodeSubscription> getNodeSubscriptions(String nodeId,
-			boolean isOwnerModerator, JID afterItemId, int maxItemsToReturn)
-			throws NodeStoreException {
-		return nodeStore.getNodeSubscriptions(nodeId, isOwnerModerator,
-				afterItemId, maxItemsToReturn);
-	}
-
-	@Override
-	public int countNodeSubscriptions(String nodeId, boolean isOwnerModerator)
-			throws NodeStoreException {
-		return nodeStore.countNodeSubscriptions(nodeId, isOwnerModerator);
 	}
 
 	@Override
@@ -255,7 +198,7 @@ public class ChannelManagerImpl implements ChannelManager {
 	@Override
 	public boolean nodeHasSubscriptions(String nodeId)
 			throws NodeStoreException {
-		return (nodeStore.countNodeSubscriptions(nodeId, false) > 0);
+		return (nodeStore.getNodeMemberships(nodeId).size() > 0);
 	}
 
 	public boolean isCachedJID(JID jid) throws NodeStoreException {
@@ -499,6 +442,12 @@ public class ChannelManagerImpl implements ChannelManager {
 	public ResultSet<NodeMembership> getUserMemberships(JID jid)
 			throws NodeStoreException {
 		return nodeStore.getUserMemberships(jid);
+	}
+	
+	@Override
+	public ResultSet<NodeMembership> getNodeMemberships(String nodeId)
+	    throws NodeStoreException {
+		return nodeStore.getNodeMemberships(nodeId);
 	}
 
 }

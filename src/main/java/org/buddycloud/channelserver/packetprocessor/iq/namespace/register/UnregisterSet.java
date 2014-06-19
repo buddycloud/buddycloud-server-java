@@ -20,6 +20,7 @@ import org.buddycloud.channelserver.pubsub.affiliation.Affiliations;
 import org.buddycloud.channelserver.pubsub.event.Event;
 import org.buddycloud.channelserver.pubsub.model.NodeAffiliation;
 import org.buddycloud.channelserver.pubsub.model.NodeItem;
+import org.buddycloud.channelserver.pubsub.model.NodeMembership;
 import org.buddycloud.channelserver.pubsub.model.NodeSubscription;
 import org.buddycloud.channelserver.pubsub.subscription.Subscriptions;
 import org.buddycloud.channelserver.utils.node.item.payload.Buddycloud;
@@ -93,9 +94,9 @@ public class UnregisterSet implements PacketProcessor<IQ> {
 			List<Packet> notifications = new LinkedList<Packet>();
 			Set<String> remoteDomains = getRemoteDomains();
 			
-			ResultSet<NodeAffiliation> userAffiliations = channelManager.getUserAffiliations(actorJID);
-			for (NodeAffiliation nodeAffiliation : userAffiliations) {
-				String nodeId = nodeAffiliation.getNodeId();
+			ResultSet<NodeMembership> userMemberships = channelManager.getUserMemberships(actorJID);
+			for (NodeMembership userMembership : userMemberships) {
+				String nodeId = userMembership.getNodeId();
 				if (isPersonal(nodeId) || isSingleOwner(nodeId, actorJID)) {
 					channelManager.deleteNode(nodeId);
 					if (channelManager.isLocalNode(nodeId)) {
@@ -112,11 +113,11 @@ public class UnregisterSet implements PacketProcessor<IQ> {
 			}
 			channelManager.deleteUserItems(actorJID);
 			
-			ResultSet<NodeSubscription> userSubscriptions = channelManager.getUserSubscriptions(actorJID);
-			for (NodeSubscription nodeSubscription : userSubscriptions) {
+			ResultSet<NodeMembership> userSubscriptions = channelManager.getUserMemberships(actorJID);
+			for (NodeMembership userMembership : userMemberships) {
 				if (!isRemote) {
 					addUnsubscribeFromNodeNotifications(actorJID, 
-							nodeSubscription.getNodeId(), notifications);
+							userMembership.getNodeId(), notifications);
 				}
 			}
 			channelManager.deleteUserSubscriptions(actorJID);

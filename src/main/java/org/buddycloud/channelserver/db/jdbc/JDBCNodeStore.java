@@ -409,65 +409,6 @@ public class JDBCNodeStore implements NodeStore {
 			close(stmt); // Will implicitly close the resultset if required
 		}
 	}
-
-	@Override
-	public ResultSet<NodeAffiliation> getUserAffiliations(JID user)
-			throws NodeStoreException {
-		PreparedStatement stmt = null;
-
-		try {
-			stmt = conn.prepareStatement(dialect.selectAffiliationsForUser());
-			stmt.setString(1, user.toBareJID());
-
-			java.sql.ResultSet rs = stmt.executeQuery();
-
-			ArrayList<NodeAffiliation> result = new ArrayList<NodeAffiliation>();
-
-			while (rs.next()) {
-				NodeAffiliationImpl nodeSub = new NodeAffiliationImpl(
-						rs.getString(1), user, Affiliations.valueOf(rs
-								.getString(3)), rs.getTimestamp(4));
-				result.add(nodeSub);
-			}
-
-			return new ResultSetImpl<NodeAffiliation>(result);
-		} catch (SQLException e) {
-			throw new NodeStoreException(e);
-		} finally {
-			close(stmt); // Will implicitly close the resultset if required
-		}
-	}
-
-	@Override
-	public ResultSet<NodeAffiliation> getUserAffiliations(JID user,
-			String afterItemId, int maxItemsToReturn) throws NodeStoreException {
-		PreparedStatement stmt = null;
-
-		try {
-			stmt = conn.prepareStatement(dialect
-					.selectAffiliationsForUserAfterNodeId());
-			stmt.setString(1, user.toBareJID());
-			stmt.setString(2, user.toBareJID());
-			stmt.setString(3, afterItemId);
-			stmt.setInt(4, maxItemsToReturn);
-
-			java.sql.ResultSet rs = stmt.executeQuery();
-
-			ArrayList<NodeAffiliation> result = new ArrayList<NodeAffiliation>();
-			while (rs.next()) {
-				NodeAffiliationImpl nodeSub = new NodeAffiliationImpl(
-						rs.getString(1), user, Affiliations.valueOf(rs
-								.getString(3)), rs.getTimestamp(4));
-				result.add(nodeSub);
-			}
-
-			return new ResultSetImpl<NodeAffiliation>(result);
-		} catch (SQLException e) {
-			throw new NodeStoreException(e);
-		} finally {
-			close(stmt); // Will implicitly close the resultset if required
-		}
-	}
 	
     @Override
 	public ResultSet<NodeMembership> getUserMemberships(JID jid) throws NodeStoreException {
@@ -495,35 +436,6 @@ public class JDBCNodeStore implements NodeStore {
 			throw new NodeStoreException(e);
 		} finally {
 			close(stmt); // Will implicitly close the resultset if required
-		}
-	}
-
-	@Override
-	public int countNodeAffiliations(String nodeId, boolean isOwnerModerator) throws NodeStoreException {
-		PreparedStatement selectStatement = null;
-
-		try {
-			if (true == isOwnerModerator) {
-				selectStatement = conn.prepareStatement(dialect
-						.countNodeAffiliationsForOwner());
-			} else {
-				selectStatement = conn.prepareStatement(dialect
-						.countNodeAffiliations());
-			}
-			selectStatement.setString(1, nodeId);
-
-			java.sql.ResultSet rs = selectStatement.executeQuery();
-
-			if (rs.next()) {
-				return rs.getInt(1);
-			} else {
-				return 0; // This really shouldn't happen!
-			}
-		} catch (SQLException e) {
-			throw new NodeStoreException(e);
-		} finally {
-			close(selectStatement); // Will implicitly close the resultset if
-									// required
 		}
 	}
 
@@ -623,30 +535,6 @@ public class JDBCNodeStore implements NodeStore {
 	}
 	
 	@Override
-	public int countUserAffiliations(JID actorJid) throws NodeStoreException {
-		PreparedStatement selectStatement = null;
-
-		try {
-			selectStatement = conn.prepareStatement(dialect
-					.countUserAffiliations());
-			selectStatement.setString(1, actorJid.toBareJID());
-
-			java.sql.ResultSet rs = selectStatement.executeQuery();
-
-			if (rs.next()) {
-				return rs.getInt(1);
-			} else {
-				return 0; // This really shouldn't happen!
-			}
-		} catch (SQLException e) {
-			throw new NodeStoreException(e);
-		} finally {
-			close(selectStatement); // Will implicitly close the resultset if
-									// required
-		}
-	}
-	
-	@Override
 	public NodeMembership getNodeMembership(String nodeId, JID user) throws NodeStoreException {
 		PreparedStatement selectStatement = null;
 
@@ -681,64 +569,29 @@ public class JDBCNodeStore implements NodeStore {
 									// required
 		}
 	}
-
+	
 	@Override
-	public ResultSet<NodeSubscription> getUserSubscriptions(final JID user)
-			throws NodeStoreException {
-		PreparedStatement stmt = null;
+	public ResultSet<NodeMembership> getNodeMemberships(String nodeId) throws NodeStoreException {
 
-		try {
-			stmt = conn.prepareStatement(dialect.selectSubscriptionsForUser());
-			stmt.setString(1, user.toBareJID());
-			stmt.setString(2, user.toString());
-
-			java.sql.ResultSet rs = stmt.executeQuery();
-
-			ArrayList<NodeSubscription> result = new ArrayList<NodeSubscription>();
-
-			while (rs.next()) {
-				NodeSubscriptionImpl nodeSub = new NodeSubscriptionImpl(
-						rs.getString(1), new JID(rs.getString(2)), new JID(
-								rs.getString(3)), Subscriptions.valueOf(rs
-								.getString(4)), rs.getTimestamp(5));
-				result.add(nodeSub);
-			}
-
-			return new ResultSetImpl<NodeSubscription>(result);
-		} catch (SQLException e) {
-			throw new NodeStoreException(e);
-		} finally {
-			close(stmt); // Will implicitly close the resultset if required
-		}
-	}
-
-	@Override
-	public ResultSet<NodeSubscription> getUserSubscriptions(JID user,
-			String afterNodeId, int maxItemsToReturn) throws NodeStoreException {
 		PreparedStatement stmt = null;
 
 		try {
 			stmt = conn.prepareStatement(dialect
-					.selectSubscriptionsForUserAfterNode());
-			stmt.setString(1, user.toBareJID());
-			stmt.setString(2, user.toString());
-			stmt.setString(3, afterNodeId);
-			stmt.setString(4, user.toBareJID());
-			stmt.setInt(4, maxItemsToReturn);
+					.selectNodeMemberships());
+			stmt.setString(1, nodeId);
+			stmt.setString(2, nodeId);
 
 			java.sql.ResultSet rs = stmt.executeQuery();
 
-			ArrayList<NodeSubscription> result = new ArrayList<NodeSubscription>();
-
+			ArrayList<NodeMembership> result = new ArrayList<NodeMembership>();
 			while (rs.next()) {
-				NodeSubscriptionImpl nodeSub = new NodeSubscriptionImpl(
-						rs.getString(1), new JID(rs.getString(2)), new JID(
-								rs.getString(3)), Subscriptions.valueOf(rs
-								.getString(4)), rs.getTimestamp(5));
-				result.add(nodeSub);
+				NodeMembershipImpl membership = new NodeMembershipImpl(
+						rs.getString(1), new JID(rs.getString(2)), new JID(rs.getString(3)), Subscriptions.valueOf(rs.getString(4)), Affiliations.valueOf(rs
+								.getString(5)), rs.getTimestamp(6));
+				result.add(membership);
 			}
 
-			return new ResultSetImpl<NodeSubscription>(result);
+			return new ResultSetImpl<NodeMembership>(result);
 		} catch (SQLException e) {
 			throw new NodeStoreException(e);
 		} finally {
@@ -774,109 +627,6 @@ public class JDBCNodeStore implements NodeStore {
 			throw new NodeStoreException(e);
 		} finally {
 			close(stmt); // Will implicitly close the resultset if required
-		}
-	}
-
-	@Override
-	public ResultSet<NodeSubscription> getNodeSubscriptions(String nodeId, boolean isOwnerModerator)
-			throws NodeStoreException {
-
-		PreparedStatement stmt = null;
-
-		try {
-			if (true == isOwnerModerator) {
-				stmt = conn.prepareStatement(dialect.selectSubscriptionsToNodeForOwner());
-			} else {
-			    stmt = conn.prepareStatement(dialect.selectSubscriptionsForNode());
-			}
-			stmt.setString(1, nodeId);
-
-			java.sql.ResultSet rs = stmt.executeQuery();
-
-			ArrayList<NodeSubscription> result = new ArrayList<NodeSubscription>();
-
-			while (rs.next()) {
-				NodeSubscriptionImpl nodeSub = new NodeSubscriptionImpl(
-						rs.getString(1), new JID(rs.getString(2)), new JID(
-								rs.getString(3)), Subscriptions.valueOf(rs
-								.getString(4)), rs.getTimestamp(5));
-				result.add(nodeSub);
-			}
-
-			return new ResultSetImpl<NodeSubscription>(result);
-		} catch (SQLException e) {
-			throw new NodeStoreException(e);
-		} finally {
-			close(stmt); // Will implicitly close the resultset if required
-		}
-	}
-
-
-	@Override
-	public ResultSet<NodeSubscription> getNodeSubscriptions(String nodeId,
-			boolean isOwnerModerator, JID afterItemId, int maxItemsToReturn)
-			throws NodeStoreException {
-
-		PreparedStatement stmt = null;
-
-		String maxItems;
-		if (-1 == maxItemsToReturn) {
-			maxItemsToReturn = 50;
-		}
-		try {
-			String jid;
-			if (null == afterItemId) {
-				jid = "";
-			} else {
-				jid = afterItemId.toBareJID();
-			}
-			stmt = conn.prepareStatement(dialect
-					.selectSubscriptionsForNodeAfterJid());
-			stmt.setString(1, nodeId);
-			stmt.setString(2, nodeId);
-			stmt.setString(3, jid);
-			stmt.setInt(4, maxItemsToReturn);
-
-			java.sql.ResultSet rs = stmt.executeQuery();
-
-			ArrayList<NodeSubscription> result = new ArrayList<NodeSubscription>();
-
-			while (rs.next()) {
-				NodeSubscriptionImpl nodeSub = new NodeSubscriptionImpl(
-						rs.getString(1), new JID(rs.getString(2)), new JID(
-								rs.getString(3)), Subscriptions.valueOf(rs
-								.getString(4)), rs.getTimestamp(5));
-				result.add(nodeSub);
-			}
-
-			return new ResultSetImpl<NodeSubscription>(result);
-		} catch (SQLException e) {
-			throw new NodeStoreException(e);
-		} finally {
-			close(stmt); // Will implicitly close the resultset if required
-		}
-	}
-
-	@Override
-	public int countUserSubscriptions(JID user) throws NodeStoreException {
-		PreparedStatement selectStatement = null;
-		try {
-			selectStatement = conn.prepareStatement(dialect
-					.countSubscriptionsForJid());
-			selectStatement.setString(1, user.toBareJID());
-
-			java.sql.ResultSet rs = selectStatement.executeQuery();
-
-			if (rs.next()) {
-				return rs.getInt(1);
-			} else {
-				return 0; // This really shouldn't happen!
-			}
-		} catch (SQLException e) {
-			throw new NodeStoreException(e);
-		} finally {
-			close(selectStatement); // Will implicitly close the resultset if
-									// required
 		}
 	}
 
@@ -1124,13 +874,13 @@ public class JDBCNodeStore implements NodeStore {
 		PreparedStatement stmt = null;
 
 		try {
-			ResultSet<NodeSubscription> subscriptions = this
-					.getUserSubscriptions(user);
+			ResultSet<NodeMembership> subscriptions = this
+					.getUserMemberships(user);
 
 			ArrayList<String> queryParts = new ArrayList<String>();
 			ArrayList<Object> parameters = new ArrayList<Object>();
 
-			for (NodeSubscription subscription : subscriptions) {
+			for (NodeMembership subscription : subscriptions) {
 				if (false == subscription.getSubscription().equals(
 						Subscriptions.subscribed))
 					continue;
@@ -1197,14 +947,14 @@ public class JDBCNodeStore implements NodeStore {
 	        String queryPart;
 	        String parentOnlyReplacement;
 
-			ResultSet<NodeSubscription> subscriptions = this
-					.getUserSubscriptions(user);
+			ResultSet<NodeMembership> subscriptions = this
+					.getUserMemberships(user);
 
 			ArrayList<String> queryParts = new ArrayList<String>();
 			ArrayList<Object> parameters = new ArrayList<Object>();
 
 			int counter = 1;
-			for (NodeSubscription subscription : subscriptions) {
+			for (NodeMembership subscription : subscriptions) {
 				if (false == subscription.getSubscription().equals(
 						Subscriptions.subscribed))
 					continue;
@@ -1736,38 +1486,9 @@ public class JDBCNodeStore implements NodeStore {
 	}
 
 	@Override
-	public int countNodeSubscriptions(String nodeId, boolean isOwnerModerator) throws NodeStoreException {
-		PreparedStatement selectStatement = null;
-		try {
-			if (true == isOwnerModerator) {
-				selectStatement = conn.prepareStatement(dialect
-						.countSubscriptionsToNodeForOwner());
-			} else {
-				selectStatement = conn.prepareStatement(dialect
-						.countSubscriptionsForNode());
-			}
-			
-			selectStatement.setString(1, nodeId);
-
-			java.sql.ResultSet rs = selectStatement.executeQuery();
-
-			if (rs.next()) {
-				return rs.getInt(1);
-			} else {
-				return 0; // This really shouldn't happen!
-			}
-		} catch (SQLException e) {
-			throw new NodeStoreException(e);
-		} finally {
-			close(selectStatement); // Will implicitly close the resultset if
-									// required
-		}
-	}
-
-	@Override
 	public boolean nodeHasSubscriptions(String nodeId)
 			throws NodeStoreException {
-		return (this.countNodeSubscriptions(nodeId, false) > 0);
+		return (this.getNodeMemberships(nodeId).size() > 0);
 	}
 
 	@Override
@@ -2027,6 +1748,8 @@ public class JDBCNodeStore implements NodeStore {
 
 	public interface NodeStoreSQLDialect {
 		String insertNode();
+
+		String selectNodeMemberships();
 
 		String selectUserMemberships();
 

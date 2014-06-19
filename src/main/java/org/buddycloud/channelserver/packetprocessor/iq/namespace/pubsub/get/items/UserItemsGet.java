@@ -352,27 +352,21 @@ public class UserItemsGet implements PubSubElementProcessor {
 	private int getSubscriptionItems(Element items, int maxItemsToReturn,
 			String afterItemId) throws NodeStoreException {
 
-		ResultSet<NodeSubscription> subscribers = channelManager
-				.getNodeSubscriptions(node, isOwnerModerator());
+		ResultSet<NodeMembership> members = channelManager
+				.getNodeMemberships(node);
 		int entries = 0;
-		if (null == subscribers) {
-			return entries;
-		}
+
 		Element jidItem;
 		Element query;
 
-		for (NodeSubscription subscriber : subscribers) {
+		for (NodeMembership member : members) {
 
 			jidItem = items.addElement("item");
-			jidItem.addAttribute("id", subscriber.getUser().toString());
+			jidItem.addAttribute("id", member.getUser().toString());
 			query = jidItem.addElement("query");
 			query.addNamespace("", JabberPubsub.NS_DISCO_ITEMS);
 
-			if (firstItem == null) {
-				firstItem = subscriber.getUser().toString();
-			}
-			lastItem = subscriber.getUser().toString();
-			addSubscriptionItems(query, subscriber.getUser());
+			addSubscriptionItems(query, member.getUser());
 			entries++;
 		}
 		return entries;
@@ -386,23 +380,17 @@ public class UserItemsGet implements PubSubElementProcessor {
 	private void addSubscriptionItems(Element query, JID subscriber)
 			throws NodeStoreException {
 
-		ResultSet<NodeSubscription> subscriptions = channelManager
-				.getUserSubscriptions(subscriber);
+		ResultSet<NodeMembership> memberships = channelManager
+				.getUserMemberships(subscriber);
 
-		if ((null == subscriptions) || (0 == subscriptions.size())) {
+		if ((0 == memberships.size())) {
 			return;
 		}
 		Element item;
 		Namespace ns1 = new Namespace("ns1", JabberPubsub.NAMESPACE_URI);
 		Namespace ns2 = new Namespace("ns2", JabberPubsub.NAMESPACE_URI);
-		// TODO: This whole section of code is very inefficient
-		for (NodeSubscription subscription : subscriptions) {
-			// //if (false ==
-			// subscription.getNodeId().contains(fetchersJid.toBareJID())) {
-			// continue;
-			// }
-			NodeMembership membership = channelManager.getNodeMembership(
-					subscription.getNodeId(), subscription.getUser());
+
+		for (NodeMembership membership : memberships) {
 			item = query.addElement("item");
 			item.add(ns1);
 			item.add(ns2);

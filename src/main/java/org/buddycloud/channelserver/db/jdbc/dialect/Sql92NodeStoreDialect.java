@@ -346,6 +346,41 @@ public class Sql92NodeStoreDialect implements NodeStoreSQLDialect {
 		    "OR (\"affiliations\".\"user\" = ?) " +
 		"ORDER BY \"updated\" DESC; ";
 	
+	private static final String SELECT_NODE_MEMBERSHIPS = "" +
+			"SELECT " +
+		    "CASE WHEN \"subscriptions\".\"node\" != '' " +
+		         "THEN \"subscriptions\".\"node\" " +
+		         "ELSE \"affiliations\".\"node\" " +
+		    "END AS \"node\"," +
+		    "CASE WHEN \"subscriptions\".\"user\" != '' " +
+		         "THEN \"subscriptions\".\"user\" " +
+		         "ELSE \"affiliations\".\"user\" " +
+		    "END AS \"user\", " +
+		    "CASE " +
+		     "WHEN \"subscriptions\".\"listener\" != '' THEN \"subscriptions\".\"listener\" " +
+		     "WHEN \"subscriptions\".\"user\" != '' THEN \"subscriptions\".\"user\" " +
+	         "ELSE \"affiliations\".\"user\" " +
+	             "END AS \"listener\", " +
+		    "CASE WHEN \"subscriptions\".\"subscription\" != '' " +
+		         "THEN \"subscriptions\".\"subscription\" " +
+		         "ELSE 'none' " +
+		    "END AS \"subscription\", " +
+		    "CASE WHEN \"affiliations\".\"affiliation\" != '' " +
+		         "THEN \"affiliations\".\"affiliation\" " +
+		         "ELSE 'none' " +
+		    "END AS \"affiliation\", " +
+		    "CASE WHEN \"affiliations\".\"updated\" > \"subscriptions\".\"updated\" " +
+		         "THEN \"affiliations\".\"updated\" " +
+		         "ELSE \"subscriptions\".\"updated\" " +
+		    "END AS \"updated\" " +
+		"FROM \"subscriptions\" " +
+		"FULL JOIN \"affiliations\" " +
+		    "ON \"subscriptions\".\"node\" = \"affiliations\".\"node\" AND \"affiliations\".\"user\" = \"subscriptions\".\"user\" " +
+		"WHERE " +
+		    "(\"subscriptions\".\"node\" = ?) " +
+		    "OR (\"affiliations\".\"node\" = ?) " +
+		"ORDER BY \"updated\" DESC; ";
+	
     @Override
 	public String insertNode() {
 		return INSERT_NODE;
@@ -658,6 +693,11 @@ public class Sql92NodeStoreDialect implements NodeStoreSQLDialect {
 	@Override
 	public String selectUserMemberships() {
 		return SELECT_USER_MEMBERSHIPS;
+	}
+	
+	@Override
+	public String selectNodeMemberships() {
+		return SELECT_NODE_MEMBERSHIPS;
 	}
 
 	@Override

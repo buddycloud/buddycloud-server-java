@@ -394,39 +394,39 @@ public class UserItemsGetTest extends IQTestHandler {
 		Mockito.when(itemAffiliation.getAffiliation()).thenReturn(
 				Affiliations.member);
 
-		NodeSubscriptionImpl itemSubscription1 = Mockito
-				.mock(NodeSubscriptionImpl.class);
-		Mockito.when(itemSubscription1.getSubscription()).thenReturn(
+		NodeMembershipImpl itemMembership1 = Mockito
+				.mock(NodeMembershipImpl.class);
+		Mockito.when(itemMembership1.getSubscription()).thenReturn(
 				Subscriptions.subscribed);
-		Mockito.when(itemSubscription1.getUser()).thenReturn(jid);
-		Mockito.when(itemSubscription1.getNodeId()).thenReturn(node);
-		Mockito.when(itemSubscription1.getUID()).thenReturn(jid.toString());
+		Mockito.when(itemMembership1.getUser()).thenReturn(jid);
+		Mockito.when(itemMembership1.getNodeId()).thenReturn(node);
+		Mockito.when(itemMembership1.getUID()).thenReturn(jid.toString());
 
 		JID jid2 = new JID("mercutio@shakespeare.lit");
-		NodeSubscriptionImpl itemSubscription2 = Mockito
-				.mock(NodeSubscriptionImpl.class);
-		Mockito.when(itemSubscription2.getSubscription()).thenReturn(
+		NodeMembershipImpl itemMembership2 = Mockito
+				.mock(NodeMembershipImpl.class);
+		Mockito.when(itemMembership2.getSubscription()).thenReturn(
 				Subscriptions.subscribed);
-		Mockito.when(itemSubscription2.getUser()).thenReturn(jid2);
-		Mockito.when(itemSubscription2.getNodeId()).thenReturn(node);
-		Mockito.when(itemSubscription2.getUID()).thenReturn(jid2.toString());
+		Mockito.when(itemMembership2.getUser()).thenReturn(jid2);
+		Mockito.when(itemMembership2.getNodeId()).thenReturn(node);
+		Mockito.when(itemMembership2.getUID()).thenReturn(jid2.toString());
 
 		JID jid3 = new JID("titania@shakespeare.lit");
-		NodeSubscriptionImpl itemSubscription3 = Mockito
-				.mock(NodeSubscriptionImpl.class);
-		Mockito.when(itemSubscription3.getSubscription()).thenReturn(
+		NodeMembershipImpl itemMembership3 = Mockito
+				.mock(NodeMembershipImpl.class);
+		Mockito.when(itemMembership3.getSubscription()).thenReturn(
 				Subscriptions.subscribed);
-		Mockito.when(itemSubscription3.getUser()).thenReturn(jid3);
-		Mockito.when(itemSubscription3.getNodeId()).thenReturn(node);
-		Mockito.when(itemSubscription3.getUID()).thenReturn(jid3.toString());
+		Mockito.when(itemMembership3.getUser()).thenReturn(jid3);
+		Mockito.when(itemMembership3.getNodeId()).thenReturn(node);
+		Mockito.when(itemMembership3.getUID()).thenReturn(jid3.toString());
 
-		ArrayList<NodeSubscription> items = new ArrayList<NodeSubscription>();
-		items.add(itemSubscription1);
-		items.add(itemSubscription2);
-		items.add(itemSubscription3);
-		Mockito.doReturn(new ResultSetImpl<NodeSubscription>(items))
+		ArrayList<NodeMembership> items = new ArrayList<NodeMembership>();
+		items.add(itemMembership1);
+		items.add(itemMembership2);
+		items.add(itemMembership3);
+		Mockito.doReturn(new ResultSetImpl<NodeMembership>(items))
 				.when(channelManager)
-				.getNodeSubscriptions(Mockito.eq(node), Mockito.anyBoolean());
+				.getNodeMemberships(Mockito.eq(node));
 
 		Mockito.when(channelManager.nodeExists(node)).thenReturn(true);
 
@@ -471,39 +471,39 @@ public class UserItemsGetTest extends IQTestHandler {
 		Mockito.when(channelManager.getNodeMembership(Mockito.anyString(), Mockito.eq(jid))).thenReturn(
 				membership);
 
-		NodeSubscriptionImpl itemSubscription = Mockito
-				.mock(NodeSubscriptionImpl.class);
+		NodeMembership itemMembership = Mockito
+				.mock(NodeMembershipImpl.class);
 		NodeAffiliationImpl itemAffiliation = Mockito
 				.mock(NodeAffiliationImpl.class);
-		Mockito.when(itemSubscription.getSubscription()).thenReturn(
+		Mockito.when(itemMembership.getSubscription()).thenReturn(
 				Subscriptions.subscribed);
-		Mockito.when(itemSubscription.getUser()).thenReturn(jid);
-		Mockito.when(itemSubscription.getUID()).thenReturn(jid.toString());
-		Mockito.when(itemSubscription.getNodeId()).thenReturn(node);
+		Mockito.when(itemMembership.getUser()).thenReturn(jid);
+		Mockito.when(itemMembership.getUID()).thenReturn(jid.toString());
+		Mockito.when(itemMembership.getNodeId()).thenReturn(node);
 		ArrayList items = new ArrayList<NodeSubscriptionImpl>();
-		items.add(itemSubscription);
+		items.add(itemMembership);
 		Mockito.doReturn(new ResultSetImpl<NodeSubscription>(items))
 				.when(channelManager)
-				.getNodeSubscriptions(Mockito.eq(node), Mockito.anyBoolean());
+				.getNodeMemberships(Mockito.eq(node));
 
-		NodeSubscriptionImpl childItemSubscription = Mockito
-				.mock(NodeSubscriptionImpl.class);
+		NodeMembership childItemMembership = Mockito
+				.mock(NodeMembershipImpl.class);
 		NodeAffiliationImpl childItemAffiliation = Mockito
 				.mock(NodeAffiliationImpl.class);
 		Mockito.when(childItemAffiliation.getAffiliation()).thenReturn(
 				Affiliations.member);
-		Mockito.when(childItemSubscription.getUser()).thenReturn(jid);
-		Mockito.when(childItemSubscription.getUID()).thenReturn(jid.toString());
-		Mockito.when(childItemSubscription.getNodeId()).thenReturn(
+		Mockito.when(childItemMembership.getUser()).thenReturn(jid);
+		Mockito.when(childItemMembership.getUID()).thenReturn(jid.toString());
+		Mockito.when(childItemMembership.getNodeId()).thenReturn(
 				"/user/juliet@shakespeare.lit/posts");
-		Mockito.when(childItemSubscription.getListener()).thenReturn(jid);
-		Mockito.when(childItemSubscription.getSubscription()).thenReturn(
+		Mockito.when(childItemMembership.getListener()).thenReturn(jid);
+		Mockito.when(childItemMembership.getSubscription()).thenReturn(
 				Subscriptions.subscribed);
-		ArrayList<NodeSubscription> childItems = new ArrayList<NodeSubscription>();
-		childItems.add(childItemSubscription);
-		Mockito.doReturn(new ResultSetImpl<NodeSubscription>(childItems))
+		ArrayList<NodeMembership> childItems = new ArrayList<NodeMembership>();
+		childItems.add(childItemMembership);
+		Mockito.doReturn(new ResultSetImpl<NodeMembership>(childItems))
 				.when(channelManager)
-				.getUserSubscriptions(new JID("juliet@shakespeare.lit"));
+				.getUserMemberships(new JID("juliet@shakespeare.lit"));
 
 		Mockito.when(channelManager.nodeExists(node)).thenReturn(true);
 

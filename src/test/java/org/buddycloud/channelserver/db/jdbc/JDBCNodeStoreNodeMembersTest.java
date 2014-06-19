@@ -30,21 +30,21 @@ import org.junit.Test;
 import org.xmpp.packet.JID;
 import org.xmpp.resultsetmanagement.ResultSet;
 
-public class JDBCNodeStoreUserMembershipsTest extends JDBCNodeStoreAbstract {
+public class JDBCNodeStoreNodeMembersTest extends JDBCNodeStoreAbstract {
 
-	public JDBCNodeStoreUserMembershipsTest() throws SQLException, IOException,
+	public JDBCNodeStoreNodeMembersTest() throws SQLException, IOException,
 			ClassNotFoundException {
 		dbTester = new DatabaseTester();
 		IQTestHandler.readConf();
 	}
 
 	@Test
-	public void getUserMemberships() throws Exception {
+	public void getNodeMemberships() throws Exception {
 		dbTester.loadData("node_1");
 		dbTester.loadData("node_2");
 
 		ResultSet<NodeMembership> result = store
-				.getUserMemberships(TEST_SERVER1_USER1_JID);
+				.getNodeMemberships(TEST_SERVER1_NODE1_ID);
 
 		HashSet<NodeMembership> expected = new HashSet<NodeMembership>() {
 			{
@@ -56,19 +56,19 @@ public class JDBCNodeStoreUserMembershipsTest extends JDBCNodeStoreAbstract {
 			}
 		};
 
-		assertEquals("Incorrect number of user memberships returned",
+		assertEquals("Incorrect number of node memberships returned",
 				expected.size(), result.size());
-		assertTrue("Incorrect user memberships returned",
+		assertTrue("Incorrect node memberships returned",
 				CollectionUtils.isEqualCollection(expected, result));
 	}
 
 	@Test
-	public void getUserMembershipsUsesBareJID() throws Exception {
+	public void getNodeMembershipsUsesBareJID() throws Exception {
 		dbTester.loadData("node_1");
 		dbTester.loadData("node_2");
 
 		ResultSet<NodeMembership> result = store
-				.getUserMemberships(TEST_SERVER1_USER1_JID_WITH_RESOURCE);
+				.getNodeMemberships(TEST_SERVER1_NODE1_ID);
 
 		HashSet<NodeMembership> expected = new HashSet<NodeMembership>() {
 			{
@@ -80,46 +80,46 @@ public class JDBCNodeStoreUserMembershipsTest extends JDBCNodeStoreAbstract {
 			}
 		};
 
-		assertEquals("Incorrect number of user memberships returned",
+		assertEquals("Incorrect number of node memberships returned",
 				expected.size(), result.size());
-		assertTrue("Incorrect user memberships returned",
+		assertTrue("Incorrect node memberships returned",
 				CollectionUtils.isEqualCollection(expected, result));
 	}
 	@Test
-	public void canGetUserMembershipWhereTheresOnlySubscription() throws Exception {
+	public void canGetNodeMembershipWhereTheresOnlySubscription() throws Exception {
 		dbTester.loadData("node_1");
 
 		store.deleteUserAffiliations(TEST_SERVER1_USER1_JID);
 		
-		ResultSet<NodeMembership> result = store.getUserMemberships(TEST_SERVER1_USER1_JID);
+		ResultSet<NodeMembership> result = store.getNodeMemberships(TEST_SERVER1_NODE1_ID);
 
 		NodeMembership expected = new NodeMembershipImpl(TEST_SERVER1_NODE1_ID, TEST_SERVER1_USER1_JID,
 				Subscriptions.subscribed, Affiliations.none);
 
-		assertEquals("An unexpected user membership was returned", expected,
+		assertEquals("An unexpected node membership was returned", expected,
 				result.get(0));
 	}
 	
 	@Test
-	public void canGetUserMembershipWhereTheresOnlyAffiliation() throws Exception {
+	public void canGetNodeMembershipWhereTheresOnlyAffiliation() throws Exception {
 		dbTester.loadData("node_1");
 
 		store.deleteUserSubscriptions(TEST_SERVER1_USER1_JID);
 		
-		ResultSet<NodeMembership> result = store.getUserMemberships(TEST_SERVER1_USER1_JID);
+		ResultSet<NodeMembership> result = store.getNodeMemberships(TEST_SERVER1_NODE1_ID);
 
 		NodeMembership expected = new NodeMembershipImpl(
-				TEST_SERVER1_NODE1_ID, TEST_SERVER1_USER1_JID,
+				TEST_SERVER1_NODE1_ID, TEST_SERVER1_USER3_JID,
 				Subscriptions.none, Affiliations.owner);
 
-		assertEquals("An unexpected user membership was returned", expected,
+		assertEquals("An unexpected node membership was returned", expected,
 				result.get(0));
 	}
 	
 	@Test
 	public void querySelectsTheMostRecentUpdatedDate() throws Exception {
 		dbTester.loadData("node_1");
-		Date originalDate = store.getUserMemberships(TEST_SERVER1_USER1_JID).get(0).getLastUpdated();
+		Date originalDate = store.getNodeMemberships(TEST_SERVER1_NODE1_ID).get(0).getLastUpdated();
         
         store.setUserAffiliation(
     		TEST_SERVER1_NODE1_ID,

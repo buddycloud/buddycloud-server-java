@@ -17,9 +17,11 @@ import org.buddycloud.channelserver.packetHandler.iq.IQTestHandler;
 import org.buddycloud.channelserver.pubsub.affiliation.Affiliations;
 import org.buddycloud.channelserver.pubsub.model.NodeAffiliation;
 import org.buddycloud.channelserver.pubsub.model.NodeItem;
+import org.buddycloud.channelserver.pubsub.model.NodeMembership;
 import org.buddycloud.channelserver.pubsub.model.NodeSubscription;
 import org.buddycloud.channelserver.pubsub.model.impl.NodeAffiliationImpl;
 import org.buddycloud.channelserver.pubsub.model.impl.NodeItemImpl;
+import org.buddycloud.channelserver.pubsub.model.impl.NodeMembershipImpl;
 import org.buddycloud.channelserver.pubsub.model.impl.NodeSubscriptionImpl;
 import org.buddycloud.channelserver.pubsub.subscription.Subscriptions;
 import org.dom4j.Element;
@@ -45,63 +47,70 @@ public class UnregisterSetTest extends IQTestHandler {
 		this.queue = new LinkedBlockingQueue<Packet>();
 		this.unregisterSet = new UnregisterSet(queue, channelManager);
 	}
-	
-	private void recordEmptyMockResponses(JID actorJid) throws NodeStoreException {
-		Mockito.when(channelManager.nodeExists("/user/" + actorJid.toBareJID() +
-				"/posts")).thenReturn(true);
-		Mockito.when(channelManager.getUserAffiliations(actorJid)).thenReturn(
-				new ResultSetImpl<NodeAffiliation>(new LinkedList<NodeAffiliation>()));
-		Mockito.when(channelManager.getUserSubscriptions(actorJid)).thenReturn(
-				new ResultSetImpl<NodeSubscription>(new LinkedList<NodeSubscription>()));
+
+	private void recordEmptyMockResponses(JID actorJid)
+			throws NodeStoreException {
+		Mockito.when(
+				channelManager.nodeExists("/user/" + actorJid.toBareJID()
+						+ "/posts")).thenReturn(true);
+		Mockito.when(channelManager.getUserMemberships(actorJid)).thenReturn(
+				new ResultSetImpl<NodeMembership>(
+						new LinkedList<NodeMembership>()));
+		Mockito.when(channelManager.getUserMemberships(actorJid)).thenReturn(
+				new ResultSetImpl<NodeMembership>(
+						new LinkedList<NodeMembership>()));
 		Mockito.when(channelManager.getUserItems(actorJid)).thenReturn(
 				new ResultSetImpl<NodeItem>(new LinkedList<NodeItem>()));
 		Mockito.when(channelManager.beginTransaction()).thenReturn(
 				Mockito.mock(Transaction.class));
 	}
-	
+
 	@Test
 	public void testRemoteRequestWrongDomain() throws Exception {
 		IQ request = readStanzaAsIq("/iq/unregister/fail/remote-wrong-domain.stanza");
 		unregisterSet.process(request);
 		Packet response = queue.poll();
-		
+
 		PacketError error = response.getError();
 		Assert.assertNotNull(error);
 		Assert.assertEquals(PacketError.Type.cancel, error.getType());
-		Assert.assertEquals(PacketError.Condition.bad_request, error.getCondition());
+		Assert.assertEquals(PacketError.Condition.bad_request,
+				error.getCondition());
 	}
-	
+
 	@Test
 	public void testBadFormattedStanza() throws Exception {
 		IQ request = readStanzaAsIq("/iq/unregister/fail/bad-formatted.stanza");
 		unregisterSet.process(request);
 		Packet response = queue.poll();
-		
+
 		PacketError error = response.getError();
 		Assert.assertNotNull(error);
 		Assert.assertEquals(PacketError.Type.modify, error.getType());
-		Assert.assertEquals(PacketError.Condition.bad_request, error.getCondition());
+		Assert.assertEquals(PacketError.Condition.bad_request,
+				error.getCondition());
 	}
-	
+
 	@Test
 	public void testUnregisteredUser() throws Exception {
 		IQ request = readStanzaAsIq("/iq/unregister/local-request.stanza");
 		unregisterSet.process(request);
 		Packet response = queue.poll();
-		
+
 		PacketError error = response.getError();
 		Assert.assertNotNull(error);
 		Assert.assertEquals(PacketError.Type.auth, error.getType());
-		Assert.assertEquals(PacketError.Condition.registration_required, error.getCondition());
+		Assert.assertEquals(PacketError.Condition.registration_required,
+				error.getCondition());
 	}
-	
+
 	@Test
 	public void testRegisteredUserNoNotifications() throws Exception {
 		IQ request = readStanzaAsIq("/iq/unregister/local-request.stanza");
 		JID actorJid = request.getFrom();
-		
+
 		recordEmptyMockResponses(actorJid);
-		
+
 		unregisterSet.process(request);
 		IQ response = (IQ) queue.poll();
 		Assert.assertNull(response.getError());
@@ -113,75 +122,83 @@ public class UnregisterSetTest extends IQTestHandler {
 	public void testNotifyDeletePersonalNode() throws Exception {
 		IQ request = readStanzaAsIq("/iq/unregister/local-request.stanza");
 		JID actorJid = request.getFrom();
-		
+
 		recordEmptyMockResponses(actorJid);
-		
+
 		String personalNode = "/user/" + actorJid.toBareJID() + "/posts";
-		
+
 		// Record affiliations
-		NodeAffiliation affiliation = new NodeAffiliationImpl(personalNode, actorJid, 
+		NodeMembership membership = new NodeMembershipImpl(personalNode,
+				actorJid, actorJid, Subscriptions.subscribed,
 				Affiliations.owner, new Date());
-		List<NodeAffiliation> affiliations = new LinkedList<NodeAffiliation>();
-		affiliations.add(affiliation);
-		Mockito.when(channelManager.getUserAffiliations(actorJid)).thenReturn(
-				new ResultSetImpl<NodeAffiliation>(affiliations));
-		
+		List<NodeMembership> memberships = new LinkedList<NodeMembership>();
+		memberships.add(membership);
+		Mockito.when(channelManager.getUserMemberships(actorJid)).thenReturn(
+				new ResultSetImpl<NodeMembership>(memberships));
+
 		// Record local node
 		Mockito.when(channelManager.isLocalNode(personalNode)).thenReturn(true);
-		
+
 		// Record channel type
-		Mockito.when(channelManager.getNodeConfValue(personalNode, 
-				Conf.CHANNEL_TYPE)).thenReturn("personal");
-		
+		Mockito.when(
+				channelManager
+						.getNodeConfValue(personalNode, Conf.CHANNEL_TYPE))
+				.thenReturn("personal");
+
 		unregisterSet.process(request);
-		
+
 		IQ response = (IQ) queue.poll();
 		Assert.assertNull(response.getError());
 		Assert.assertEquals(Type.result, response.getType());
 		Assert.assertFalse(queue.isEmpty());
-		
+
 		int adminCount = Configuration.getInstance().getAdminUsers().size();
 		Assert.assertEquals(adminCount, queue.size());
-		
+
 		Packet deleteNodeNotification = queue.poll();
-		Element deleteEl = deleteNodeNotification.getElement().element("event").element("delete");
+		Element deleteEl = deleteNodeNotification.getElement().element("event")
+				.element("delete");
 		Assert.assertEquals(personalNode, deleteEl.attributeValue("node"));
 	}
-	
+
 	@Test
 	public void testDontNotifyDeleteTopicNodeNotSingleOwner() throws Exception {
 		IQ request = readStanzaAsIq("/iq/unregister/local-request.stanza");
 		JID actorJid = request.getFrom();
-		
+
 		recordEmptyMockResponses(actorJid);
-		
+
 		String topicNode = "/user/topic@shakespeare.lit/posts";
-		
+
 		// Record affiliations
-		NodeAffiliation affiliation = new NodeAffiliationImpl(topicNode, actorJid, 
+		NodeMembership membership = new NodeMembershipImpl(topicNode, actorJid,
+				actorJid, Subscriptions.subscribed, Affiliations.owner,
+				new Date());
+		List<NodeMembership> memberships = new LinkedList<NodeMembership>();
+		memberships.add(membership);
+		Mockito.when(channelManager.getUserMemberships(actorJid)).thenReturn(
+				new ResultSetImpl<NodeMembership>(memberships));
+
+		NodeMembership otherMembership = new NodeMembershipImpl(topicNode,
+				new JID("other@shakespeare.lit"), new JID(
+						"other@shakespeare.lit"), Subscriptions.subscribed,
 				Affiliations.owner, new Date());
-		List<NodeAffiliation> affiliations = new LinkedList<NodeAffiliation>();
-		affiliations.add(affiliation);
-		Mockito.when(channelManager.getUserAffiliations(actorJid)).thenReturn(
-				new ResultSetImpl<NodeAffiliation>(affiliations));
-		
-		NodeAffiliation otherAffiliation = new NodeAffiliationImpl(topicNode, 
-				new JID("other@shakespeare.lit"), Affiliations.owner, new Date());
-		List<NodeAffiliation> nodeAffiliations = new LinkedList<NodeAffiliation>();
-		nodeAffiliations.add(affiliation);
-		nodeAffiliations.add(otherAffiliation);
-		Mockito.when(channelManager.getNodeAffiliations(Mockito.eq(topicNode), Mockito.anyBoolean())).thenReturn(
-				new ResultSetImpl<NodeAffiliation>(nodeAffiliations));
-		
+		List<NodeMembership> userMemberships = new LinkedList<NodeMembership>();
+		userMemberships.add(membership);
+		userMemberships.add(otherMembership);
+		//Mockito.when(channelManager.getNodeMemberships(Mockito.eq(topicNode)))
+		//		.thenReturn(new ResultSetImpl<NodeMembership>(userMemberships));
+
 		// Record local node
 		Mockito.when(channelManager.isLocalNode(topicNode)).thenReturn(true);
-		
+
 		// Record channel type
-		Mockito.when(channelManager.getNodeConfValue(topicNode, 
-				Conf.CHANNEL_TYPE)).thenReturn("topic");
-		
+		Mockito.when(
+				channelManager.getNodeConfValue(topicNode, Conf.CHANNEL_TYPE))
+				.thenReturn("topic");
+
 		unregisterSet.process(request);
-		
+
 		IQ response = (IQ) queue.poll();
 		Assert.assertNull(response.getError());
 		Assert.assertEquals(Type.result, response.getType());
@@ -192,199 +209,209 @@ public class UnregisterSetTest extends IQTestHandler {
 	public void testDontNotifyDeleteRemoteTopicNode() throws Exception {
 		IQ request = readStanzaAsIq("/iq/unregister/local-request.stanza");
 		JID actorJid = request.getFrom();
-		
+
 		recordEmptyMockResponses(actorJid);
-		
+
 		String topicNode = "/user/topic@shakespeare.lit/posts";
-		
+
 		// Record affiliations
-		NodeAffiliation affiliation = new NodeAffiliationImpl(topicNode, actorJid, 
-				Affiliations.owner, new Date());
-		List<NodeAffiliation> affiliations = new LinkedList<NodeAffiliation>();
-		affiliations.add(affiliation);
-		Mockito.when(channelManager.getUserAffiliations(actorJid)).thenReturn(
-				new ResultSetImpl<NodeAffiliation>(affiliations));
-		Mockito.when(channelManager.getNodeAffiliations(Mockito.eq(topicNode), Mockito.anyBoolean())).thenReturn(
-				new ResultSetImpl<NodeAffiliation>(affiliations));
-		
+		NodeMembership membership = new NodeMembershipImpl(topicNode,
+				actorJid, actorJid, Subscriptions.subscribed, Affiliations.owner, new Date());
+		List<NodeMembership> memberships = new LinkedList<NodeMembership>();
+		memberships.add(membership);
+		Mockito.when(channelManager.getUserMemberships(actorJid)).thenReturn(
+				new ResultSetImpl<NodeMembership>(memberships));
+		Mockito.when(
+				channelManager.getNodeMemberships(Mockito.eq(topicNode))).thenReturn(
+				new ResultSetImpl<NodeMembership>(memberships));
+
 		// Record local node
 		Mockito.when(channelManager.isLocalNode(topicNode)).thenReturn(false);
-		
+
 		// Record channel type
-		Mockito.when(channelManager.getNodeConfValue(topicNode, 
-				Conf.CHANNEL_TYPE)).thenReturn("topic");
-		
+		Mockito.when(
+				channelManager.getNodeConfValue(topicNode, Conf.CHANNEL_TYPE))
+				.thenReturn("topic");
+
 		unregisterSet.process(request);
-		
+
 		IQ response = (IQ) queue.poll();
 		Assert.assertNull(response.getError());
 		Assert.assertEquals(Type.result, response.getType());
 		Assert.assertTrue(queue.isEmpty());
 	}
-	
+
 	@Test
 	public void testNotifyDeleteLocalTopicNode() throws Exception {
 		IQ request = readStanzaAsIq("/iq/unregister/local-request.stanza");
 		JID actorJid = request.getFrom();
-		
+
 		recordEmptyMockResponses(actorJid);
-		
+
 		String topicNode = "/user/topic@shakespeare.lit/posts";
-		
+
 		// Record affiliations
-		NodeAffiliation affiliation = new NodeAffiliationImpl(topicNode, actorJid, 
-				Affiliations.owner, new Date());
-		List<NodeAffiliation> affiliations = new LinkedList<NodeAffiliation>();
-		affiliations.add(affiliation);
-		Mockito.when(channelManager.getUserAffiliations(actorJid)).thenReturn(
-				new ResultSetImpl<NodeAffiliation>(affiliations));
-		Mockito.when(channelManager.getNodeAffiliations(Mockito.eq(topicNode), Mockito.anyBoolean())).thenReturn(
-				new ResultSetImpl<NodeAffiliation>(affiliations));
-		
+		NodeMembership membership = new NodeMembershipImpl(topicNode,
+				actorJid, actorJid, Subscriptions.subscribed, Affiliations.owner, new Date());
+		List<NodeMembership> memberships = new LinkedList<NodeMembership>();
+		memberships.add(membership);
+		Mockito.when(channelManager.getUserMemberships(actorJid)).thenReturn(
+				new ResultSetImpl<NodeMembership>(memberships));
+		Mockito.when(
+				channelManager.getNodeMemberships(Mockito.eq(topicNode))).thenReturn(
+				new ResultSetImpl<NodeMembership>(memberships));
+
 		// Record local node
 		Mockito.when(channelManager.isLocalNode(topicNode)).thenReturn(true);
-		
+
 		// Record channel type
-		Mockito.when(channelManager.getNodeConfValue(topicNode, 
-				Conf.CHANNEL_TYPE)).thenReturn("topic");
-		
+		Mockito.when(
+				channelManager.getNodeConfValue(topicNode, Conf.CHANNEL_TYPE))
+				.thenReturn("topic");
+
 		unregisterSet.process(request);
-		
+
 		IQ response = (IQ) queue.poll();
 		Assert.assertNull(response.getError());
 		Assert.assertEquals(Type.result, response.getType());
 		Assert.assertFalse(queue.isEmpty());
-		
+
 		int adminCount = Configuration.getInstance().getAdminUsers().size();
 		Assert.assertEquals(adminCount, queue.size());
-		
+
 		Packet deleteNodeNotification = queue.poll();
-		Element deleteEl = deleteNodeNotification.getElement().element("event").element("delete");
+		Element deleteEl = deleteNodeNotification.getElement().element("event")
+				.element("delete");
 		Assert.assertEquals(topicNode, deleteEl.attributeValue("node"));
 	}
-	
+
 	@Test
 	public void testDontNotifyDeleteRemoteNodeItem() throws Exception {
 		IQ request = readStanzaAsIq("/iq/unregister/local-request.stanza");
 		JID actorJid = request.getFrom();
-		
+
 		recordEmptyMockResponses(actorJid);
-		
+
 		String topicNode = "/user/topic@shakespeare.lit/posts";
-		
+
 		// Record remote node
 		Mockito.when(channelManager.isLocalNode(topicNode)).thenReturn(false);
-		
+
 		// Record node items
-		NodeItem nodeItem = new NodeItemImpl(topicNode, "entry1", new Date(), "<payload/>");
+		NodeItem nodeItem = new NodeItemImpl(topicNode, "entry1", new Date(),
+				"<payload/>");
 		List<NodeItem> nodeItems = new LinkedList<NodeItem>();
 		nodeItems.add(nodeItem);
 		Mockito.when(channelManager.getUserItems(actorJid)).thenReturn(
 				new ResultSetImpl<NodeItem>(nodeItems));
-		
+
 		unregisterSet.process(request);
-		
+
 		IQ response = (IQ) queue.poll();
 		Assert.assertNull(response.getError());
 		Assert.assertEquals(Type.result, response.getType());
 		Assert.assertTrue(queue.isEmpty());
 	}
-	
+
 	@Test
 	public void testNotifyDeleteLocalNodeItem() throws Exception {
 		IQ request = readStanzaAsIq("/iq/unregister/local-request.stanza");
 		JID actorJid = request.getFrom();
-		
+
 		recordEmptyMockResponses(actorJid);
-		
+
 		String topicNode = "/user/topic@shakespeare.lit/posts";
-		
+
 		// Record remote node
 		Mockito.when(channelManager.isLocalNode(topicNode)).thenReturn(true);
-		
+
 		// Record node items
 		String itemId = "entry1";
-		NodeItem nodeItem = new NodeItemImpl(topicNode, itemId, new Date(), "<payload/>");
+		NodeItem nodeItem = new NodeItemImpl(topicNode, itemId, new Date(),
+				"<payload/>");
 		List<NodeItem> nodeItems = new LinkedList<NodeItem>();
 		nodeItems.add(nodeItem);
 		Mockito.when(channelManager.getUserItems(actorJid)).thenReturn(
 				new ResultSetImpl<NodeItem>(nodeItems));
-		
+
 		unregisterSet.process(request);
-		
+
 		IQ response = (IQ) queue.poll();
 		Assert.assertNull(response.getError());
 		Assert.assertEquals(Type.result, response.getType());
 		Assert.assertFalse(queue.isEmpty());
-		
+
 		int adminCount = Configuration.getInstance().getAdminUsers().size();
 		Assert.assertEquals(adminCount, queue.size());
-		
+
 		Packet deleteNodeNotification = queue.poll();
-		Element itemsEl = deleteNodeNotification.getElement().element("event").element("items");
+		Element itemsEl = deleteNodeNotification.getElement().element("event")
+				.element("items");
 		Assert.assertEquals(topicNode, itemsEl.attributeValue("node"));
-		
+
 		Element retractEl = itemsEl.element("retract");
 		Assert.assertEquals(itemId, retractEl.attributeValue("id"));
 	}
-	
+
 	@Test
 	public void testNotifyDeleteLocalSubscriptions() throws Exception {
 		IQ request = readStanzaAsIq("/iq/unregister/local-request.stanza");
 		JID actorJid = request.getFrom();
-		
+
 		recordEmptyMockResponses(actorJid);
-		
+
 		String topicNode = "/user/topic@shakespeare.lit/posts";
-		
+
 		// Record subscriptions
-		NodeSubscription subscription = new NodeSubscriptionImpl(topicNode,
-				actorJid, Subscriptions.subscribed);
-		List<NodeSubscription> subscriptions = new LinkedList<NodeSubscription>();
-		subscriptions.add(subscription);
-		Mockito.when(channelManager.getUserSubscriptions(actorJid)).thenReturn(
-				new ResultSetImpl<NodeSubscription>(subscriptions));
-		
+		NodeMembership membership = new NodeMembershipImpl(topicNode,
+				actorJid, Subscriptions.subscribed, Affiliations.member);
+		List<NodeMembership> memberships = new LinkedList<NodeMembership>();
+		memberships.add(membership);
+		Mockito.when(channelManager.getUserMemberships(actorJid)).thenReturn(
+				new ResultSetImpl<NodeMembership>(memberships));
+
 		unregisterSet.process(request);
-		
+
 		IQ response = (IQ) queue.poll();
 		Assert.assertNull(response.getError());
 		Assert.assertEquals(Type.result, response.getType());
 		Assert.assertFalse(queue.isEmpty());
-		
+
 		int adminCount = Configuration.getInstance().getAdminUsers().size();
 		Assert.assertEquals(adminCount, queue.size());
-		
+
 		Packet deleteNodeNotification = queue.poll();
-		Element itemsEl = deleteNodeNotification.getElement().element("event").element("subscription");
+		Element itemsEl = deleteNodeNotification.getElement().element("event")
+				.element("subscription");
 		Assert.assertEquals(topicNode, itemsEl.attributeValue("node"));
 		Assert.assertEquals(actorJid.toBareJID(), itemsEl.attributeValue("jid"));
 		Assert.assertEquals("none", itemsEl.attributeValue("subscription"));
 	}
-	
+
 	@Test
 	public void testForwardRemoteRequests() throws Exception {
 		IQ request = readStanzaAsIq("/iq/unregister/local-request.stanza");
 		JID actorJid = request.getFrom();
-		
+
 		recordEmptyMockResponses(actorJid);
-		
+
 		String remoteNode = "/user/remotenode@remotedomain.com/posts";
 		ArrayList<String> remoteNodes = new ArrayList<String>();
 		remoteNodes.add(remoteNode);
 		Mockito.when(channelManager.getNodeList()).thenReturn(remoteNodes);
-		
+
 		unregisterSet.process(request);
-		
+
 		IQ response = (IQ) queue.poll();
 		Assert.assertNull(response.getError());
 		Assert.assertEquals(Type.result, response.getType());
 		Assert.assertFalse(queue.isEmpty());
-		
+
 		Assert.assertEquals(1, queue.size());
-		
+
 		Packet remoteRequest = queue.poll();
-		Element removeEl = remoteRequest.getElement().element("query").element("remove");
+		Element removeEl = remoteRequest.getElement().element("query")
+				.element("remove");
 		Assert.assertNotNull(removeEl);
 		Element actorEl = removeEl.element("actor");
 		Assert.assertEquals(actorJid.toBareJID(), actorEl.getText());

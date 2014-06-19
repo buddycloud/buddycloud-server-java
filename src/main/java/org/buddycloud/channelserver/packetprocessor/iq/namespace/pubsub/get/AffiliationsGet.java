@@ -10,6 +10,7 @@ import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.PubSubEl
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.PubSubGet;
 import org.buddycloud.channelserver.pubsub.affiliation.Affiliations;
 import org.buddycloud.channelserver.pubsub.model.NodeAffiliation;
+import org.buddycloud.channelserver.pubsub.model.NodeMembership;
 import org.buddycloud.channelserver.queue.FederatedQueueManager;
 import org.buddycloud.channelserver.utils.node.item.payload.Buddycloud;
 import org.dom4j.Element;
@@ -69,7 +70,7 @@ public class AffiliationsGet implements PubSubElementProcessor {
 
 		boolean isProcessedLocally = true;
 		if (node == null) {
-			isProcessedLocally = getUserAffiliations(affiliations);
+			isProcessedLocally = getUserMemberships(affiliations);
 		} else {
 			isProcessedLocally = getNodeAffiliations(affiliations);
 		}
@@ -117,7 +118,7 @@ public class AffiliationsGet implements PubSubElementProcessor {
 				actorJid).getAffiliation().canAuthorize();
 	}
 
-	private boolean getUserAffiliations(Element affiliations)
+	private boolean getUserMemberships(Element affiliations)
 			throws NodeStoreException, InterruptedException {
 		
 		if (false == channelManager.isLocalJID(actorJid)
@@ -126,23 +127,23 @@ public class AffiliationsGet implements PubSubElementProcessor {
 			return false;
 		}
 		
-		ResultSet<NodeAffiliation> affs;
-		affs = channelManager.getUserAffiliations(actorJid);
+		ResultSet<NodeMembership> memberships;
+		memberships = channelManager.getUserMemberships(actorJid);
 				
-		for (NodeAffiliation aff : affs) {
-			logger.trace("Adding affiliation for " + aff.getUser()
-					+ " affiliation " + aff.getAffiliation()
+		for (NodeMembership membership : memberships) {
+			logger.trace("Adding affiliation for " + membership.getUser()
+					+ " affiliation " + membership.getAffiliation()
 					+ " (no node provided)");
 			
-			if (null == firstItem) firstItem = aff.getNodeId();
-			lastItem = aff.getNodeId();
+			if (null == firstItem) firstItem = membership.getNodeId();
+			lastItem = membership.getNodeId();
 			
 			affiliations
 					.addElement("affiliation")
-					.addAttribute("node", aff.getNodeId())
+					.addAttribute("node", membership.getNodeId())
 					.addAttribute("affiliation",
-							aff.getAffiliation().toString())
-					.addAttribute("jid", aff.getUser().toString());
+							membership.getAffiliation().toString())
+					.addAttribute("jid", membership.getUser().toBareJID());
 		}
 		return true;
 	}

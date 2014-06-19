@@ -10,6 +10,7 @@ import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.PubSubEl
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.PubSubGet;
 import org.buddycloud.channelserver.pubsub.affiliation.Affiliations;
 import org.buddycloud.channelserver.pubsub.model.NodeAffiliation;
+import org.buddycloud.channelserver.pubsub.model.NodeMembership;
 import org.buddycloud.channelserver.pubsub.model.NodeSubscription;
 import org.buddycloud.channelserver.utils.node.item.payload.Buddycloud;
 import org.dom4j.Element;
@@ -68,55 +69,19 @@ public class SubscriptionsGet implements PubSubElementProcessor {
 			actorJid = reqIQ.getFrom();
 		}
 		
-		int maxItemsToReturn = MAX_ITEMS_TO_RETURN;
-		String afterItemId   = null;
-
-		String max_items = elm.attributeValue("max_items");
-		if (max_items != null) {
-			maxItemsToReturn = Integer.parseInt(max_items);
-		}
-
-		if (resultSetManagement != null) {
-			Element max = resultSetManagement.element("max");
-			if (max != null) {
-				maxItemsToReturn = Integer.parseInt(max.getTextTrim());
-			}
-			Element after = resultSetManagement.element("after");
-			if (after != null) {
-				afterItemId = after.getTextTrim();
-			}
-		}
 		boolean isProcessedLocally = true;
 
 		if (node == null) {
-			isProcessedLocally = getUserSubscriptions(subscriptions, maxItemsToReturn, afterItemId);
+			isProcessedLocally = getUserMemberships(subscriptions);
 		} else {
-			isProcessedLocally = getNodeSubscriptions(subscriptions, maxItemsToReturn, afterItemId);
+			isProcessedLocally = getNodeMemberships(subscriptions);
 		}
 		if (false == isProcessedLocally) return;
-		if ((resultSetManagement != null)
-				|| (totalEntriesCount > maxItemsToReturn)) {
-			/*
-			 * TODO, add result set here as defined in 6.5.4 Returning Some
-			 * Items <set xmlns='http://jabber.org/protocol/rsm'> <first
-			 * index='0'>368866411b877c30064a5f62b917cffe</first>
-			 * <last>4e30f35051b7b8b42abe083742187228</last> <count>19</count>
-			 * </set>
-			 */
-			Element rsmElement = pubsub.addElement("set",
-					"http://jabber.org/protocol/rsm");
-
-			if (firstItem != null) {
-				rsmElement.addElement("first").setText(firstItem);
-				rsmElement.addElement("last").setText(lastItem);
-			}
-			rsmElement.addElement("count")
-					.setText(Integer.toString(totalEntriesCount));
-		}
+		
 		outQueue.put(result);
 	}
 
-	private boolean getNodeSubscriptions(Element subscriptions, int maxItemsToReturn, String afterItemId)
+	private boolean getNodeMemberships(Element subscriptions)
 			throws NodeStoreException, InterruptedException {
 		if (false == channelManager.isLocalNode(node) 
 		    && (false == channelManager.isCachedNode(node))
@@ -124,13 +89,9 @@ public class SubscriptionsGet implements PubSubElementProcessor {
 			makeRemoteRequest(new JID(node.split("/")[2]).getDomain());
 		    return false;
 		}
-		ResultSet<NodeSubscription> cur;
-		
-		if (null == afterItemId) {
-		     cur = channelManager.getNodeSubscriptions(node, isOwnerModerator());
-		} else {
-			cur = channelManager.getNodeSubscriptions(node, isOwnerModerator(), new JID(afterItemId), maxItemsToReturn);
-		}
+		ResultSet<NodeMembership> cur;
+		cur = channelManager.getNodeMemberships(node);
+
 		subscriptions.addAttribute("node", node);
 
 		if ((null != requestIq.getElement().element("pubsub").element("set"))
@@ -140,7 +101,7 @@ public class SubscriptionsGet implements PubSubElementProcessor {
 			return false;
 		}
 		
-		for (NodeSubscription ns : cur) {
+		for (NodeMembership ns : cur) {
 
 			if (null == firstItem) firstItem = ns.getUser().toBareJID();
 			lastItem = ns.getUser().toBareJID();
@@ -151,7 +112,6 @@ public class SubscriptionsGet implements PubSubElementProcessor {
 							ns.getSubscription().toString())
 					.addAttribute("jid", ns.getUser().toBareJID());
 		}
-		totalEntriesCount = channelManager.countNodeSubscriptions(node, isOwnerModerator());
 		return true;
 	}
 
@@ -159,7 +119,7 @@ public class SubscriptionsGet implements PubSubElementProcessor {
 		return channelManager.getNodeMembership(node, actorJid).getAffiliation().canAuthorize();
 	}
 
-	private boolean getUserSubscriptions(Element subscriptions, int maxItemsToReturn, String afterItemId)
+	private boolean getUserMemberships(Element subscriptions)
 			throws NodeStoreException, InterruptedException {
 		if (false == channelManager.isLocalJID(actorJid) 
 		    && (false == channelManager.isCachedJID(actorJid))
@@ -168,12 +128,8 @@ public class SubscriptionsGet implements PubSubElementProcessor {
 			return false;
 		}
 		// let's get all subscriptions.
-		ResultSet<NodeSubscription> cur;
-		if (null == afterItemId) {
-		    cur = channelManager.getUserSubscriptions(actorJid);
-		} else {
-			cur = channelManager.getUserSubscriptions(actorJid, afterItemId, maxItemsToReturn);
-		}
+		ResultSet<NodeMembership> cur;
+		cur = channelManager.getUserMemberships(actorJid);
 
 		if ((null != requestIq.getElement().element("pubsub").element("set"))
 				&& (0 == cur.size())
@@ -182,9 +138,7 @@ public class SubscriptionsGet implements PubSubElementProcessor {
 			return false;
 		}
 		
-		for (NodeSubscription ns : cur) {
-			if (null == firstItem) firstItem = ns.getNodeId();
-			lastItem = ns.getNodeId();
+		for (NodeMembership ns : cur) {
 			subscriptions
 					.addElement("subscription")
 					.addAttribute("node", ns.getNodeId())
@@ -192,7 +146,6 @@ public class SubscriptionsGet implements PubSubElementProcessor {
 							ns.getSubscription().toString())
 					.addAttribute("jid", ns.getUser().toBareJID());
 		}
-		totalEntriesCount = channelManager.countUserSubscriptions(actorJid);
 		return true;
 	}
 	

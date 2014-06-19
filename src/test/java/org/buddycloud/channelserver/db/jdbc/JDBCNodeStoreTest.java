@@ -660,66 +660,12 @@ public class JDBCNodeStoreTest extends JDBCNodeStoreAbstract {
 		store.purgeNodeItems(TEST_SERVER1_NODE2_ID); // <--- NODE **2**
 		assertEquals(itemCount, store.countNodeItems(TEST_SERVER1_NODE1_ID));
 	}
-
-	@Test
-	public void testGetNodeSubscriptionCountReturnsZeroWhereThereAreNone()
-			throws Exception {
-		int subscriptionCount = store
-				.countNodeSubscriptions(TEST_SERVER1_NODE1_ID, false);
-		assertEquals(0, subscriptionCount);
-	}
-
-	@Test
-	public void testGetNodeSubscriptionCountReturnsZeroForOwnerModeratorWhereThereAreNone()
-			throws Exception {
-		int subscriptionCount = store
-				.countNodeSubscriptions(TEST_SERVER1_NODE1_ID, true);
-		assertEquals(0, subscriptionCount);
-	}
-	
-	@Test
-	public void testGetNodeSubscriptionCountReturnsResultWhereThereAreSome()
-			throws Exception {
-		dbTester.loadData("node_1");
-		int subscriptionCount = store
-				.countNodeSubscriptions(TEST_SERVER1_NODE1_ID, false);
-		assertEquals(4, subscriptionCount);
-	}
-	
-	@Test
-	public void testGetNodeSubscriptionCountForOwnerModeratorReturnsResultWhereThereAreSome()
-			throws Exception {
-		dbTester.loadData("node_1");
-		int subscriptionCount = store
-				.countNodeSubscriptions(TEST_SERVER1_NODE1_ID, true);
-		assertEquals(5, subscriptionCount);
-	}
 	
 	@Test
 	public void testGetIsCachedSubscriptionNodeReturnsFalseWhereThereAreNoSubscriptions()
 			throws Exception {
 		boolean cached = store.nodeHasSubscriptions(TEST_SERVER1_NODE1_ID);
 		assertEquals(false, cached);
-	}
-
-	@Test
-	public void testGetIsCachedSubscriptionNodeReturnsTrueWhereThereAreSubscriptions()
-			throws Exception {
-		dbTester.loadData("node_1");
-		int subscriptionCount = store
-				.countNodeSubscriptions(TEST_SERVER1_NODE1_ID, false);
-		boolean cached = store.nodeHasSubscriptions(TEST_SERVER1_NODE1_ID);
-		assertEquals(true, cached);
-	}
-
-	@Test
-	public void testGetIsCachedSubscriptionNodeForOwnerModeratorReturnsTrueWhereThereAreSubscriptions()
-			throws Exception {
-		dbTester.loadData("node_1");
-		int subscriptionCount = store
-				.countNodeSubscriptions(TEST_SERVER1_NODE1_ID, true);
-		boolean cached = store.nodeHasSubscriptions(TEST_SERVER1_NODE1_ID);
-		assertEquals(true, cached);
 	}
 	
 	@Test(expected = IllegalArgumentException.class)

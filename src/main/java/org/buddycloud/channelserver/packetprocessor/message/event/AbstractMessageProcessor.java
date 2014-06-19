@@ -5,6 +5,7 @@ import java.util.concurrent.BlockingQueue;
 
 import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.packetprocessor.PacketProcessor;
+import org.buddycloud.channelserver.pubsub.model.NodeMembership;
 import org.buddycloud.channelserver.pubsub.model.NodeSubscription;
 import org.xmpp.packet.JID;
 import org.xmpp.packet.Message;
@@ -32,11 +33,11 @@ abstract public class AbstractMessageProcessor implements PacketProcessor<Messag
 	abstract public void process(Message packet) throws Exception;
 	
 	void sendLocalNotifications() throws Exception {
-		ResultSet<NodeSubscription> subscribers = channelManager
-				.getNodeSubscriptions(node, false);
-		for (NodeSubscription subscriber : subscribers) {
-			if (false == channelManager.isLocalJID(subscriber.getUser())) continue;
-			message.setTo(subscriber.getUser());
+		ResultSet<NodeMembership> members = channelManager
+				.getNodeMemberships(node);
+		for (NodeMembership member : members) {
+			if (false == channelManager.isLocalJID(member.getUser())) continue;
+			message.setTo(member.getUser());
 			message.setFrom(new JID(configuration
 					.getProperty("server.domain.channels")));
 			outQueue.put(message.createCopy());

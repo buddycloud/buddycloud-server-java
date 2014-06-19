@@ -138,11 +138,6 @@ public class ChannelManagerImpl implements ChannelManager {
 	}
 
 	@Override
-	public int countUserSubscriptions(JID user) throws NodeStoreException {
-		return nodeStore.countUserSubscriptions(user);
-	}
-
-	@Override
 	public CloseableIterator<NodeItem> getNodeItems(String nodeId,
 			String afterItemId, int count) throws NodeStoreException {
 		return nodeStore.getNodeItems(nodeId, afterItemId, count);

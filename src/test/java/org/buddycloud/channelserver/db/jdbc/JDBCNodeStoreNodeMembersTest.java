@@ -53,11 +53,22 @@ public class JDBCNodeStoreNodeMembersTest extends JDBCNodeStoreAbstract {
 				add(new NodeMembershipImpl(TEST_SERVER1_NODE2_ID,
 						TEST_SERVER1_USER1_JID, Subscriptions.subscribed, Affiliations.publisher,
 						new Date()));
+				add(new NodeMembershipImpl(TEST_SERVER1_NODE2_ID,
+						TEST_SERVER1_USER2_JID, Subscriptions.subscribed, Affiliations.publisher,
+						new Date()));
+				add(new NodeMembershipImpl(TEST_SERVER1_NODE2_ID,
+						TEST_SERVER2_USER1_JID, Subscriptions.subscribed, Affiliations.publisher,
+						new Date()));
+				add(new NodeMembershipImpl(TEST_SERVER1_NODE2_ID,
+						TEST_SERVER2_USER3_JID, Subscriptions.subscribed, Affiliations.publisher,
+						new Date()));
 			}
 		};
 
 		assertEquals("Incorrect number of node memberships returned",
 				expected.size(), result.size());
+		
+		System.out.println(result.toArray().toString());
 		assertTrue("Incorrect node memberships returned",
 				CollectionUtils.isEqualCollection(expected, result));
 	}
@@ -93,8 +104,8 @@ public class JDBCNodeStoreNodeMembersTest extends JDBCNodeStoreAbstract {
 		
 		ResultSet<NodeMembership> result = store.getNodeMemberships(TEST_SERVER1_NODE1_ID);
 
-		NodeMembership expected = new NodeMembershipImpl(TEST_SERVER1_NODE1_ID, TEST_SERVER1_USER1_JID,
-				Subscriptions.subscribed, Affiliations.none);
+		NodeMembership expected = new NodeMembershipImpl(TEST_SERVER1_NODE1_ID, TEST_SERVER2_USER3_JID,
+				TEST_SERVER2_CHANNELS_JID, Subscriptions.subscribed, Affiliations.member);
 
 		assertEquals("An unexpected node membership was returned", expected,
 				result.get(0));
@@ -109,8 +120,8 @@ public class JDBCNodeStoreNodeMembersTest extends JDBCNodeStoreAbstract {
 		ResultSet<NodeMembership> result = store.getNodeMemberships(TEST_SERVER1_NODE1_ID);
 
 		NodeMembership expected = new NodeMembershipImpl(
-				TEST_SERVER1_NODE1_ID, TEST_SERVER1_USER3_JID,
-				Subscriptions.none, Affiliations.owner);
+				TEST_SERVER1_NODE1_ID, TEST_SERVER1_USER1_JID,
+				TEST_SERVER1_USER1_JID, Subscriptions.none, Affiliations.owner);
 
 		assertEquals("An unexpected node membership was returned", expected,
 				result.get(0));

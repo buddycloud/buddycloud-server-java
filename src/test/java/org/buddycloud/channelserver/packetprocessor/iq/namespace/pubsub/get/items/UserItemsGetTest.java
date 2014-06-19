@@ -71,6 +71,15 @@ public class UserItemsGetTest extends IQTestHandler {
 				.thenReturn(true);
 		itemsGet.setChannelManager(channelManager);
 
+		ArrayList<NodeMembership> nodeMemberships = new ArrayList<NodeMembership>();
+		Mockito.when(channelManager.getNodeMemberships(Mockito.anyString())).thenReturn(
+				new ResultSetImpl<NodeMembership>(nodeMemberships)
+        );
+		ArrayList<NodeMembership> userMemberships = new ArrayList<NodeMembership>();
+		Mockito.when(channelManager.getUserMemberships(Mockito.any(JID.class))).thenReturn(
+				new ResultSetImpl<NodeMembership>(userMemberships)
+        );
+		
 		Mockito.when(channelManager.getNodeMembership(node, jid)).thenReturn(
 				new NodeMembershipImpl(node, jid, Subscriptions.subscribed, Affiliations.member));
 		nodeViewAcl = Mockito.mock(NodeViewAcl.class);
@@ -244,7 +253,7 @@ public class UserItemsGetTest extends IQTestHandler {
 						Mockito.anyString(), Mockito.anyInt()))
 				.thenReturn(null);
 		Mockito.when(channelManager.nodeExists(node)).thenReturn(true);
-
+		
 		NodeViewAcl nodeViewAcl = Mockito.mock(NodeViewAcl.class);
 		Mockito.doReturn(true)
 				.when(nodeViewAcl)
@@ -466,6 +475,8 @@ public class UserItemsGetTest extends IQTestHandler {
 				Affiliations.member);
 		Mockito.when(membership.getSubscription()).thenReturn(
 				Subscriptions.subscribed);
+		Mockito.when(membership.getAffiliation()).thenReturn(
+				Affiliations.member);
 		Mockito.when(membership.getUser()).thenReturn(jid);
 		Mockito.when(membership.getNodeId()).thenReturn(node);
 		Mockito.when(channelManager.getNodeMembership(Mockito.anyString(), Mockito.eq(jid))).thenReturn(
@@ -473,8 +484,6 @@ public class UserItemsGetTest extends IQTestHandler {
 
 		NodeMembership itemMembership = Mockito
 				.mock(NodeMembershipImpl.class);
-		NodeAffiliationImpl itemAffiliation = Mockito
-				.mock(NodeAffiliationImpl.class);
 		Mockito.when(itemMembership.getSubscription()).thenReturn(
 				Subscriptions.subscribed);
 		Mockito.when(itemMembership.getUser()).thenReturn(jid);
@@ -495,10 +504,12 @@ public class UserItemsGetTest extends IQTestHandler {
 		Mockito.when(childItemMembership.getUser()).thenReturn(jid);
 		Mockito.when(childItemMembership.getUID()).thenReturn(jid.toString());
 		Mockito.when(childItemMembership.getNodeId()).thenReturn(
-				"/user/juliet@shakespeare.lit/posts");
+				node);
 		Mockito.when(childItemMembership.getListener()).thenReturn(jid);
 		Mockito.when(childItemMembership.getSubscription()).thenReturn(
 				Subscriptions.subscribed);
+		Mockito.when(childItemMembership.getAffiliation()).thenReturn(
+				Affiliations.member);
 		ArrayList<NodeMembership> childItems = new ArrayList<NodeMembership>();
 		childItems.add(childItemMembership);
 		Mockito.doReturn(new ResultSetImpl<NodeMembership>(childItems))

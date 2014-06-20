@@ -208,7 +208,7 @@ public class UnsubscribeSetTest extends IQTestHandler {
 		Assert.assertEquals(PacketError.Condition.forbidden,
 				error.getCondition());
 		Assert.assertEquals(PacketError.Type.auth, error.getType());
-		Assert.assertEquals(Buddycloud.NS, error.getApplicationConditionNamespaceURI());
+		Assert.assertEquals(Buddycloud.NS, error.getElement().element(UnsubscribeSet.CAN_NOT_UNSUBSCRIBE_ANOTHER_USER).getNamespaceURI());
 		Assert.assertEquals(UnsubscribeSet.CAN_NOT_UNSUBSCRIBE_ANOTHER_USER, error.getApplicationConditionName());
 	}
 

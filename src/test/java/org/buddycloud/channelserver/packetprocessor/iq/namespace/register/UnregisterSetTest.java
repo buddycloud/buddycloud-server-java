@@ -51,15 +51,15 @@ public class UnregisterSetTest extends IQTestHandler {
 	private void recordEmptyMockResponses(JID actorJid)
 			throws NodeStoreException {
 		Mockito.when(
-				channelManager.nodeExists("/user/" + actorJid.toBareJID()
-						+ "/posts")).thenReturn(true);
-		Mockito.when(channelManager.getUserMemberships(actorJid)).thenReturn(
+				channelManager.nodeExists(Mockito.eq("/user/" + actorJid.toBareJID()
+						+ "/posts"))).thenReturn(true);
+		Mockito.when(channelManager.getUserMemberships(Mockito.eq(actorJid))).thenReturn(
 				new ResultSetImpl<NodeMembership>(
 						new LinkedList<NodeMembership>()));
-		Mockito.when(channelManager.getUserMemberships(actorJid)).thenReturn(
+		Mockito.when(channelManager.getUserMemberships(Mockito.eq(actorJid))).thenReturn(
 				new ResultSetImpl<NodeMembership>(
 						new LinkedList<NodeMembership>()));
-		Mockito.when(channelManager.getUserItems(actorJid)).thenReturn(
+		Mockito.when(channelManager.getUserItems(Mockito.eq(actorJid))).thenReturn(
 				new ResultSetImpl<NodeItem>(new LinkedList<NodeItem>()));
 		Mockito.when(channelManager.beginTransaction()).thenReturn(
 				Mockito.mock(Transaction.class));
@@ -119,7 +119,7 @@ public class UnregisterSetTest extends IQTestHandler {
 	}
 
 	@Test
-	public void testNotifyDeletePersonalNode() throws Exception {
+	public void notifyDeletePersonalNode() throws Exception {
 		IQ request = readStanzaAsIq("/iq/unregister/local-request.stanza");
 		JID actorJid = request.getFrom();
 
@@ -130,14 +130,14 @@ public class UnregisterSetTest extends IQTestHandler {
 		// Record affiliations
 		NodeMembership membership = new NodeMembershipImpl(personalNode,
 				actorJid, actorJid, Subscriptions.subscribed,
-				Affiliations.owner, new Date());
+				Affiliations.owner);
 		List<NodeMembership> memberships = new LinkedList<NodeMembership>();
 		memberships.add(membership);
-		Mockito.when(channelManager.getUserMemberships(actorJid)).thenReturn(
+		Mockito.when(channelManager.getUserMemberships(Mockito.eq(actorJid))).thenReturn(
 				new ResultSetImpl<NodeMembership>(memberships));
 
 		// Record local node
-		Mockito.when(channelManager.isLocalNode(personalNode)).thenReturn(true);
+		Mockito.when(channelManager.isLocalNode(Mockito.eq(personalNode))).thenReturn(true);
 
 		// Record channel type
 		Mockito.when(
@@ -152,7 +152,7 @@ public class UnregisterSetTest extends IQTestHandler {
 		Assert.assertEquals(Type.result, response.getType());
 		Assert.assertFalse(queue.isEmpty());
 
-		int adminCount = Configuration.getInstance().getAdminUsers().size();
+		int adminCount = Configuration.getInstance().getAdminUsers().size() * 2;
 		Assert.assertEquals(adminCount, queue.size());
 
 		Packet deleteNodeNotification = queue.poll();
@@ -162,51 +162,8 @@ public class UnregisterSetTest extends IQTestHandler {
 	}
 
 	@Test
-	public void testDontNotifyDeleteTopicNodeNotSingleOwner() throws Exception {
-		IQ request = readStanzaAsIq("/iq/unregister/local-request.stanza");
-		JID actorJid = request.getFrom();
+	public void dontNotifyDeleteRemoteTopicNode() throws Exception {
 
-		recordEmptyMockResponses(actorJid);
-
-		String topicNode = "/user/topic@shakespeare.lit/posts";
-
-		// Record affiliations
-		NodeMembership membership = new NodeMembershipImpl(topicNode, actorJid,
-				actorJid, Subscriptions.subscribed, Affiliations.owner,
-				new Date());
-		List<NodeMembership> memberships = new LinkedList<NodeMembership>();
-		memberships.add(membership);
-		Mockito.when(channelManager.getUserMemberships(actorJid)).thenReturn(
-				new ResultSetImpl<NodeMembership>(memberships));
-
-		NodeMembership otherMembership = new NodeMembershipImpl(topicNode,
-				new JID("other@shakespeare.lit"), new JID(
-						"other@shakespeare.lit"), Subscriptions.subscribed,
-				Affiliations.owner, new Date());
-		List<NodeMembership> userMemberships = new LinkedList<NodeMembership>();
-		userMemberships.add(membership);
-		userMemberships.add(otherMembership);
-		//Mockito.when(channelManager.getNodeMemberships(Mockito.eq(topicNode)))
-		//		.thenReturn(new ResultSetImpl<NodeMembership>(userMemberships));
-
-		// Record local node
-		Mockito.when(channelManager.isLocalNode(topicNode)).thenReturn(true);
-
-		// Record channel type
-		Mockito.when(
-				channelManager.getNodeConfValue(topicNode, Conf.CHANNEL_TYPE))
-				.thenReturn("topic");
-
-		unregisterSet.process(request);
-
-		IQ response = (IQ) queue.poll();
-		Assert.assertNull(response.getError());
-		Assert.assertEquals(Type.result, response.getType());
-		Assert.assertTrue(queue.isEmpty());
-	}
-
-	@Test
-	public void testDontNotifyDeleteRemoteTopicNode() throws Exception {
 		IQ request = readStanzaAsIq("/iq/unregister/local-request.stanza");
 		JID actorJid = request.getFrom();
 
@@ -217,16 +174,18 @@ public class UnregisterSetTest extends IQTestHandler {
 		// Record affiliations
 		NodeMembership membership = new NodeMembershipImpl(topicNode,
 				actorJid, actorJid, Subscriptions.subscribed, Affiliations.owner, new Date());
+		
 		List<NodeMembership> memberships = new LinkedList<NodeMembership>();
 		memberships.add(membership);
+		
 		Mockito.when(channelManager.getUserMemberships(actorJid)).thenReturn(
 				new ResultSetImpl<NodeMembership>(memberships));
+		
 		Mockito.when(
 				channelManager.getNodeMemberships(Mockito.eq(topicNode))).thenReturn(
 				new ResultSetImpl<NodeMembership>(memberships));
 
-		// Record local node
-		Mockito.when(channelManager.isLocalNode(topicNode)).thenReturn(false);
+		Mockito.when(channelManager.isLocalNode(Mockito.anyString())).thenReturn(false);
 
 		// Record channel type
 		Mockito.when(
@@ -238,11 +197,12 @@ public class UnregisterSetTest extends IQTestHandler {
 		IQ response = (IQ) queue.poll();
 		Assert.assertNull(response.getError());
 		Assert.assertEquals(Type.result, response.getType());
-		Assert.assertTrue(queue.isEmpty());
+
+		Assert.assertEquals(2, queue.size());
 	}
 
 	@Test
-	public void testNotifyDeleteLocalTopicNode() throws Exception {
+	public void notifyDeleteLocalTopicNode() throws Exception {
 		IQ request = readStanzaAsIq("/iq/unregister/local-request.stanza");
 		JID actorJid = request.getFrom();
 
@@ -275,8 +235,9 @@ public class UnregisterSetTest extends IQTestHandler {
 		Assert.assertNull(response.getError());
 		Assert.assertEquals(Type.result, response.getType());
 		Assert.assertFalse(queue.isEmpty());
-
-		int adminCount = Configuration.getInstance().getAdminUsers().size();
+		
+		// Two delete notifications, two subscription notifications
+		int adminCount = Configuration.getInstance().getAdminUsers().size() * 2;
 		Assert.assertEquals(adminCount, queue.size());
 
 		Packet deleteNodeNotification = queue.poll();
@@ -367,9 +328,14 @@ public class UnregisterSetTest extends IQTestHandler {
 				actorJid, Subscriptions.subscribed, Affiliations.member);
 		List<NodeMembership> memberships = new LinkedList<NodeMembership>();
 		memberships.add(membership);
-		Mockito.when(channelManager.getUserMemberships(actorJid)).thenReturn(
+		Mockito.when(channelManager.getUserMemberships(Mockito.eq(actorJid))).thenReturn(
 				new ResultSetImpl<NodeMembership>(memberships));
 
+		List<NodeMembership> nodeMemberships = new LinkedList<NodeMembership>();
+		nodeMemberships.add(membership);
+		Mockito.when(channelManager.getNodeMemberships(Mockito.anyString())).thenReturn(
+				new ResultSetImpl<NodeMembership>(nodeMemberships));
+		
 		unregisterSet.process(request);
 
 		IQ response = (IQ) queue.poll();

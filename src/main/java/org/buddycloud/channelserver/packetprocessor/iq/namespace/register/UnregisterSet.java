@@ -103,6 +103,10 @@ public class UnregisterSet implements PacketProcessor<IQ> {
 						addDeleteNodeNotifications(nodeId, notifications);
 					}
 				}
+				if (!isRemote) {
+					addUnsubscribeFromNodeNotifications(actorJID, 
+							userMembership.getNodeId(), notifications);
+				}
 			}
 			
 			ResultSet<NodeItem> userItems = channelManager.getUserItems(actorJID);
@@ -111,15 +115,8 @@ public class UnregisterSet implements PacketProcessor<IQ> {
 					addDeleteItemNotifications(userItem.getNodeId(), userItem.getId(), notifications);
 				}
 			}
-			channelManager.deleteUserItems(actorJID);
 			
-			ResultSet<NodeMembership> userSubscriptions = channelManager.getUserMemberships(actorJID);
-			for (NodeMembership userMembership : userMemberships) {
-				if (!isRemote) {
-					addUnsubscribeFromNodeNotifications(actorJID, 
-							userMembership.getNodeId(), notifications);
-				}
-			}
+			channelManager.deleteUserItems(actorJID);
 			channelManager.deleteUserSubscriptions(actorJID);
 			channelManager.deleteUserAffiliations(actorJID);
 			
@@ -274,13 +271,13 @@ public class UnregisterSet implements PacketProcessor<IQ> {
 	
 	
 	private boolean isSingleOwner(String nodeId, JID userJid) throws NodeStoreException {
-		ResultSet<NodeAffiliation> nodeAffiliations = channelManager.getNodeAffiliations(nodeId, false);
+		ResultSet<NodeMembership> nodeMemberships = channelManager.getNodeMemberships(nodeId);
 		int ownerCount = 0;
 		boolean isOwner = false;
-		for (NodeAffiliation nodeAffiliation : nodeAffiliations) {
-			if (nodeAffiliation.getAffiliation().equals(Affiliations.owner)) {
+		for (NodeMembership nodeMembership : nodeMemberships) {
+			if (nodeMembership.getAffiliation().equals(Affiliations.owner)) {
 				ownerCount++;
-				if (nodeAffiliation.getUser().equals(userJid)) {
+				if (nodeMembership.getUser().equals(userJid)) {
 					isOwner = true;
 				}
 			}

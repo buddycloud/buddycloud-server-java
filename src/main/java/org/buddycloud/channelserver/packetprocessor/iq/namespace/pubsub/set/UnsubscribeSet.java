@@ -87,11 +87,12 @@ public class UnsubscribeSet extends PubSubElementProcessorAbstract {
 		// XEP-0060 section 6.2.3.3		
 
 		if (!unsubscribingJid.equals(membership.getUser())) {
-			response.setType(Type.error);
-			PacketError pe = new PacketError(
-					org.xmpp.packet.PacketError.Condition.forbidden,
-					org.xmpp.packet.PacketError.Type.auth);
-			response.setError(pe);
+			createExtendedErrorReply(
+					PacketError.Type.auth,
+					PacketError.Condition.forbidden, 
+					CAN_NOT_UNSUBSCRIBE_ANOTHER_USER,
+					Buddycloud.NS
+				);
 			outQueue.put(response);
 			return;
 		}

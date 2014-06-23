@@ -49,26 +49,27 @@ public class JDBCNodeStoreNodeMembersTest extends JDBCNodeStoreAbstract {
 		HashSet<NodeMembership> expected = new HashSet<NodeMembership>() {
 			{
 				add(new NodeMembershipImpl(TEST_SERVER1_NODE1_ID,
-						TEST_SERVER1_USER1_JID, Subscriptions.subscribed, Affiliations.owner, new Date()));
-				add(new NodeMembershipImpl(TEST_SERVER1_NODE2_ID,
-						TEST_SERVER1_USER1_JID, Subscriptions.subscribed, Affiliations.publisher,
+						TEST_SERVER2_USER3_JID, TEST_SERVER2_CHANNELS_JID,
+						Subscriptions.subscribed, Affiliations.member));
+				add(new NodeMembershipImpl(TEST_SERVER1_NODE1_ID,
+						TEST_SERVER1_OUTCAST_JID, Subscriptions.subscribed, Affiliations.outcast,
 						new Date()));
-				add(new NodeMembershipImpl(TEST_SERVER1_NODE2_ID,
+				add(new NodeMembershipImpl(TEST_SERVER1_NODE1_ID,
+						TEST_SERVER2_USER1_JID, TEST_SERVER2_CHANNELS_JID,
+						Subscriptions.subscribed, Affiliations.publisher,
+						new Date()));
+				add(new NodeMembershipImpl(TEST_SERVER1_NODE1_ID,
 						TEST_SERVER1_USER2_JID, Subscriptions.subscribed, Affiliations.publisher,
 						new Date()));
-				add(new NodeMembershipImpl(TEST_SERVER1_NODE2_ID,
-						TEST_SERVER2_USER1_JID, Subscriptions.subscribed, Affiliations.publisher,
-						new Date()));
-				add(new NodeMembershipImpl(TEST_SERVER1_NODE2_ID,
-						TEST_SERVER2_USER3_JID, Subscriptions.subscribed, Affiliations.publisher,
+				add(new NodeMembershipImpl(TEST_SERVER1_NODE1_ID,
+						TEST_SERVER1_USER1_JID, Subscriptions.subscribed, Affiliations.owner,
 						new Date()));
 			}
 		};
 
 		assertEquals("Incorrect number of node memberships returned",
 				expected.size(), result.size());
-		
-		System.out.println(result.toArray().toString());
+
 		assertTrue("Incorrect node memberships returned",
 				CollectionUtils.isEqualCollection(expected, result));
 	}
@@ -84,9 +85,20 @@ public class JDBCNodeStoreNodeMembersTest extends JDBCNodeStoreAbstract {
 		HashSet<NodeMembership> expected = new HashSet<NodeMembership>() {
 			{
 				add(new NodeMembershipImpl(TEST_SERVER1_NODE1_ID,
-						TEST_SERVER1_USER1_JID, Subscriptions.subscribed, Affiliations.owner, new Date()));
-				add(new NodeMembershipImpl(TEST_SERVER1_NODE2_ID,
-						TEST_SERVER1_USER1_JID, Subscriptions.subscribed, Affiliations.publisher,
+						TEST_SERVER2_USER3_JID, TEST_SERVER2_CHANNELS_JID,
+						Subscriptions.subscribed, Affiliations.member));
+				add(new NodeMembershipImpl(TEST_SERVER1_NODE1_ID,
+						TEST_SERVER1_OUTCAST_JID, Subscriptions.subscribed, Affiliations.outcast,
+						new Date()));
+				add(new NodeMembershipImpl(TEST_SERVER1_NODE1_ID,
+						TEST_SERVER2_USER1_JID, TEST_SERVER2_CHANNELS_JID,
+						Subscriptions.subscribed, Affiliations.publisher,
+						new Date()));
+				add(new NodeMembershipImpl(TEST_SERVER1_NODE1_ID,
+						TEST_SERVER1_USER2_JID, Subscriptions.subscribed, Affiliations.publisher,
+						new Date()));
+				add(new NodeMembershipImpl(TEST_SERVER1_NODE1_ID,
+						TEST_SERVER1_USER1_JID, Subscriptions.subscribed, Affiliations.owner,
 						new Date()));
 			}
 		};

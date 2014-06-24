@@ -113,20 +113,6 @@ public class ChannelManagerImpl implements ChannelManager {
 	}
 
 	@Override
-	public ResultSet<NodeAffiliation> getNodeAffiliations(String nodeId,
-			boolean isOwnerModerator) throws NodeStoreException {
-		return nodeStore.getNodeAffiliations(nodeId, isOwnerModerator);
-	}
-
-	@Override
-	public ResultSet<NodeAffiliation> getNodeAffiliations(String nodeId,
-			boolean isOwnerModerator, String afterItemId, int maxItemsToReturn)
-			throws NodeStoreException {
-		return nodeStore.getNodeAffiliations(nodeId, isOwnerModerator,
-				afterItemId, maxItemsToReturn);
-	}
-
-	@Override
 	public ArrayList<JID> getNodeOwners(String node) throws NodeStoreException {
 		return nodeStore.getNodeOwners(node);
 	}

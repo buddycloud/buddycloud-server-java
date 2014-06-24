@@ -11,6 +11,7 @@ import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.PubSubGe
 import org.buddycloud.channelserver.pubsub.affiliation.Affiliations;
 import org.buddycloud.channelserver.pubsub.model.NodeAffiliation;
 import org.buddycloud.channelserver.pubsub.model.NodeMembership;
+import org.buddycloud.channelserver.pubsub.subscription.Subscriptions;
 import org.buddycloud.channelserver.queue.FederatedQueueManager;
 import org.buddycloud.channelserver.utils.node.item.payload.Buddycloud;
 import org.dom4j.Element;
@@ -86,29 +87,39 @@ public class AffiliationsGet implements PubSubElementProcessor {
 			makeRemoteRequest(node.split("/")[2]);
 			return false;
 		}
-		ResultSet<NodeAffiliation> nodeAffiliations;
-		nodeAffiliations = channelManager.getNodeAffiliations(node, isOwnerModerator());
+		ResultSet<NodeMembership> nodeMemberships;
+		nodeMemberships = channelManager.getNodeMemberships(node);
 		
-		if ((0 == nodeAffiliations.size())
+		if ((0 == nodeMemberships.size())
 			&& (false == channelManager.isLocalNode(node))) {
 			makeRemoteRequest(node.split("/")[2]);
 			return false;
 		}
 		
-		for (NodeAffiliation nodeAffiliation : nodeAffiliations) {
+		boolean isOwnerModerator = isOwnerModerator();
+		
+		for (NodeMembership nodeMembership : nodeMemberships) {
 
-			logger.trace("Adding affiliation for " + nodeAffiliation.getUser()
-					+ " affiliation " + nodeAffiliation.getAffiliation());
+			if (false == actorJid.toBareJID().equals(nodeMembership.getUser())) {
+				if ((false == isOwnerModerator) && nodeMembership.getAffiliation().in(Affiliations.outcast, Affiliations.none)) {
+					continue;
+				}
+				if ((false == isOwnerModerator) && !nodeMembership.getSubscription().equals(Subscriptions.subscribed)) {
+					continue;
+				}
+			}
+			logger.trace("Adding affiliation for " + nodeMembership.getUser()
+					+ " affiliation " + nodeMembership.getAffiliation());
 			
-			if (null == firstItem) firstItem = nodeAffiliation.getUser().toString();
-			lastItem = nodeAffiliation.getUser().toString();
+			if (null == firstItem) firstItem = nodeMembership.getUser().toString();
+			lastItem = nodeMembership.getUser().toString();
 			
 			affiliations
 					.addElement("affiliation")
-					.addAttribute("node", nodeAffiliation.getNodeId())
+					.addAttribute("node", nodeMembership.getNodeId())
 					.addAttribute("affiliation",
-							nodeAffiliation.getAffiliation().toString())
-					.addAttribute("jid", nodeAffiliation.getUser().toString());
+							nodeMembership.getAffiliation().toString())
+					.addAttribute("jid", nodeMembership.getUser().toString());
 		}
 		return true;
 	}
@@ -129,8 +140,18 @@ public class AffiliationsGet implements PubSubElementProcessor {
 		
 		ResultSet<NodeMembership> memberships;
 		memberships = channelManager.getUserMemberships(actorJid);
-				
+		boolean isOwnerModerator = isOwnerModerator();
+		
 		for (NodeMembership membership : memberships) {
+
+			if (false == actorJid.toBareJID().equals(membership.getUser())) {
+				if ((false == isOwnerModerator) && membership.getAffiliation().in(Affiliations.outcast, Affiliations.none)) {
+					continue;
+				}
+				if ((false == isOwnerModerator) && !membership.getSubscription().equals(Subscriptions.subscribed)) {
+					continue;
+				}
+			}
 			logger.trace("Adding affiliation for " + membership.getUser()
 					+ " affiliation " + membership.getAffiliation()
 					+ " (no node provided)");

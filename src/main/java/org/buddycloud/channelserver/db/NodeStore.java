@@ -192,28 +192,6 @@ public interface NodeStore {
 			Date endDate) throws NodeStoreException;
 
 	/**
-	 * Gets all the affiliations with the node.
-	 * 
-	 * @param nodeId
-	 *            the node id
-	 * @return
-	 */
-	ResultSet<NodeAffiliation> getNodeAffiliations(String nodeId,
-			boolean isOwnerModerator) throws NodeStoreException;
-
-	/**
-	 * Gets affiliations for a node with RSM
-	 * 
-	 * @param node
-	 * @param maxItemsToReturn
-	 * @param afterItemId
-	 * @return
-	 */
-	ResultSet<NodeAffiliation> getNodeAffiliations(String node,
-			boolean isOwnerModerator, String afterItemId, int maxItemsToReturn)
-			throws NodeStoreException;
-
-	/**
 	 * Get a list of node owners
 	 * 
 	 * @param node

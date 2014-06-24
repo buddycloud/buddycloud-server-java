@@ -217,7 +217,7 @@ public class Sql92NodeStoreDialect implements NodeStoreSQLDialect {
 	private static final String DELETE_ITEM = "DELETE FROM \"items\" WHERE \"node\" = ? AND \"id\" = ?;";
 
 	private static final String SELECT_SUBSCRIPTION_LISTENERS_FOR_NODE = "SELECT DISTINCT ON (\"listener\") \"listener\", \"node\", \"subscription\", \"updated\""
-			+ " FROM \"subscriptions\" WHERE \"node\" = ? ORDER BY \"listener\", \"updated\"";
+			+ " FROM \"subscriptions\" WHERE \"node\" = ? AND \"subscription\" = 'subscribed' ORDER BY \"listener\", \"updated\"";
 
 	private static final String SELECT_SUBSCRIPTION_LISTENERS = "SELECT DISTINCT ON (\"listener\") \"listener\", \"node\", \"subscription\", \"updated\""
 			+ " FROM \"subscriptions\" ORDER BY \"listener\", \"updated\"";

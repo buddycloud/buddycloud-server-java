@@ -12,6 +12,7 @@ import org.buddycloud.channelserver.pubsub.affiliation.Affiliations;
 import org.buddycloud.channelserver.pubsub.model.NodeAffiliation;
 import org.buddycloud.channelserver.pubsub.model.NodeMembership;
 import org.buddycloud.channelserver.pubsub.model.NodeSubscription;
+import org.buddycloud.channelserver.pubsub.subscription.Subscriptions;
 import org.buddycloud.channelserver.utils.node.item.payload.Buddycloud;
 import org.dom4j.Element;
 import org.xmpp.packet.IQ;
@@ -137,8 +138,16 @@ public class SubscriptionsGet implements PubSubElementProcessor {
 			makeRemoteRequest(actorJid.getDomain());
 			return false;
 		}
-		
+		boolean isOwnerModerator = isOwnerModerator();
 		for (NodeMembership ns : cur) {
+			if (false == actorJid.toBareJID().equals(ns.getUser())) {
+				if ((false == isOwnerModerator) && ns.getAffiliation().in(Affiliations.outcast, Affiliations.none)) {
+					continue;
+				}
+				if ((false == isOwnerModerator) && !ns.getSubscription().equals(Subscriptions.subscribed)) {
+					continue;
+				}
+			}
 			subscriptions
 					.addElement("subscription")
 					.addAttribute("node", ns.getNodeId())

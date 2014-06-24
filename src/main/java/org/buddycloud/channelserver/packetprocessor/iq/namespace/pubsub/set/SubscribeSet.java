@@ -265,14 +265,14 @@ public class SubscribeSet extends PubSubElementProcessorAbstract {
 
 		// Get all the affiliated users (so we can work out moderators)
 		// isOwnerModerator == false as we don't let outcast's know
-		ResultSet<NodeAffiliation> nodeAffiliations = channelManager
-				.getNodeAffiliations(node, false);
+		ResultSet<NodeMembership> nodeMemberships = channelManager
+				.getNodeMemberships(node);
 		HashSet<JID> moderatorOwners = new HashSet<JID>();
 
-		for (NodeAffiliation nodeAffiliation : nodeAffiliations) {
-			if (nodeAffiliation.getAffiliation().in(Affiliations.owner,
+		for (NodeMembership nodeMembership : nodeMemberships) {
+			if (nodeMembership.getAffiliation().in(Affiliations.owner,
 					Affiliations.moderator)) {
-				moderatorOwners.add(nodeAffiliation.getUser());
+				moderatorOwners.add(nodeMembership.getUser());
 			}
 		}
 
@@ -314,6 +314,19 @@ public class SubscribeSet extends PubSubElementProcessorAbstract {
 			outQueue.put(notification);
 		}
 	}
+	
+	
+	/**
+	 * 			if (false == actorJid.toBareJID().equals(membership.getUser())) {
+				if ((false == isOwnerModerator) && membership.getAffiliation().in(Affiliations.outcast, Affiliations.none)) {
+					continue;
+				}
+				if ((false == isOwnerModerator) && !membership.getSubscription().equals(Subscriptions.subscribed)) {
+					continue;
+				}
+			}
+
+	 */
 
 	private Message getPendingSubscriptionNotification(String receiver,
 			String subscriber) {

@@ -27,6 +27,7 @@ import org.buddycloud.channelserver.pubsub.subscription.Subscriptions;
 import org.buddycloud.channelserver.queue.FederatedQueueManager;
 import org.buddycloud.channelserver.utils.node.NodeAclRefuseReason;
 import org.buddycloud.channelserver.utils.node.NodeViewAcl;
+import org.buddycloud.channelserver.utils.node.item.payload.Buddycloud;
 import org.dom4j.DocumentException;
 import org.dom4j.Element;
 import org.dom4j.io.SAXReader;
@@ -113,8 +114,8 @@ public class ThreadGet extends PubSubElementProcessorAbstract {
 
 	private boolean itemExists() throws NodeStoreException {
 		if (null != (parentItem = channelManager.getNodeItem(node, parentId))) return true;
-		createExtendedErrorReply(PacketError.Type.modify,
-				PacketError.Condition.bad_request, "parent-item-not-found");
+		createExtendedErrorReply(PacketError.Type.cancel,
+				PacketError.Condition.item_not_found, "parent-item-not-found", Buddycloud.NS_ERROR);
 		return false;
 	}
 

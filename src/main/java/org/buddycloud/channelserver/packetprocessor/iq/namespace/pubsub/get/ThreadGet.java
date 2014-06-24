@@ -202,7 +202,7 @@ public class ThreadGet extends PubSubElementProcessorAbstract {
 	}
 	
 	private boolean userCanViewNode() throws NodeStoreException {
-		if (nodeViewAcl.canViewNode(node,
+		if (getNodeViewAcl().canViewNode(node,
 				channelManager.getNodeMembership(node, actor),
 				getNodeAccessModel(),
 				channelManager.isLocalJID(actor))) {

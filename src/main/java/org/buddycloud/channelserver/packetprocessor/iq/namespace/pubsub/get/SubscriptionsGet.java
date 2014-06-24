@@ -101,9 +101,16 @@ public class SubscriptionsGet implements PubSubElementProcessor {
 			makeRemoteRequest(new JID(node.split("/")[2]).getDomain());
 			return false;
 		}
-		
+		boolean isOwnerModerator = isOwnerModerator();
 		for (NodeMembership ns : cur) {
-
+			if (false == actorJid.toBareJID().equals(ns.getUser())) {
+				if ((false == isOwnerModerator) && ns.getAffiliation().in(Affiliations.outcast, Affiliations.none)) {
+					continue;
+				}
+				if ((false == isOwnerModerator) && !ns.getSubscription().equals(Subscriptions.subscribed)) {
+					continue;
+				}
+			}
 			if (null == firstItem) firstItem = ns.getUser().toBareJID();
 			lastItem = ns.getUser().toBareJID();
 			subscriptions

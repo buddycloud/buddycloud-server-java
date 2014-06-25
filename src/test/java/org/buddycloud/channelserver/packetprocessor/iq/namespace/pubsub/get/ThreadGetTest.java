@@ -29,6 +29,7 @@ import org.buddycloud.channelserver.pubsub.model.impl.NodeSubscriptionImpl;
 import org.buddycloud.channelserver.pubsub.subscription.Subscriptions;
 import org.buddycloud.channelserver.utils.node.NodeAclRefuseReason;
 import org.buddycloud.channelserver.utils.node.NodeViewAcl;
+import org.buddycloud.channelserver.utils.node.item.payload.Buddycloud;
 import org.dom4j.Element;
 import org.dom4j.Namespace;
 import org.dom4j.QName;
@@ -176,7 +177,7 @@ public class ThreadGetTest extends IQTestHandler {
 	}
 
 	@Test
-	public void testIfItemDoesNotExistErrorStanzaIsReturned() throws Exception {
+	public void ifItemDoesNotExistErrorStanzaIsReturned() throws Exception {
 		Mockito.when(
 				channelManager.getNodeItem(Mockito.anyString(),
 						Mockito.anyString())).thenReturn(null);
@@ -186,9 +187,11 @@ public class ThreadGetTest extends IQTestHandler {
 
 		PacketError error = response.getError();
 		Assert.assertNotNull(error);
-		Assert.assertEquals(PacketError.Type.modify, error.getType());
+		Assert.assertEquals(PacketError.Type.cancel, error.getType());
+		Assert.assertEquals(PacketError.Condition.item_not_found, error.getCondition());
 		Assert.assertEquals("parent-item-not-found",
 				error.getApplicationConditionName());
+		Assert.assertEquals(Buddycloud.NS_ERROR, error.getApplicationConditionNamespaceURI());
 	}
 
 	@Test

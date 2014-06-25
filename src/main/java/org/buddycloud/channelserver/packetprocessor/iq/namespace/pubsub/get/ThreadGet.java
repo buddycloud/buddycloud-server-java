@@ -202,25 +202,10 @@ public class ThreadGet extends PubSubElementProcessorAbstract {
 	}
 	
 	private boolean userCanViewNode() throws NodeStoreException {
-		NodeSubscription nodeSubscription = channelManager.getUserSubscription(
-				node, actor);
-		NodeAffiliation nodeAffiliation = channelManager.getUserAffiliation(
-				node, actor);
-
-		Affiliations possibleExistingAffiliation = Affiliations.none;
-		Subscriptions possibleExistingSubscription = Subscriptions.none;
-		if (null != nodeSubscription) {
-			if (null != nodeAffiliation.getAffiliation()) {
-				possibleExistingAffiliation = nodeAffiliation.getAffiliation();
-			}
-			if (null != nodeSubscription.getSubscription()) {
-				possibleExistingSubscription = nodeSubscription
-						.getSubscription();
-			}
-		}
-		if (true == getNodeViewAcl().canViewNode(node,
-				possibleExistingAffiliation, possibleExistingSubscription,
-				getNodeAccessModel(), channelManager.isLocalJID(actor))) {
+		if (getNodeViewAcl().canViewNode(node,
+				channelManager.getNodeMembership(node, actor),
+				getNodeAccessModel(),
+				channelManager.isLocalJID(actor))) {
 			return true;
 		}
 		NodeAclRefuseReason reason = getNodeViewAcl().getReason();

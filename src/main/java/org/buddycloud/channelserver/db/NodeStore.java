@@ -11,6 +11,7 @@ import org.buddycloud.channelserver.pubsub.affiliation.Affiliations;
 import org.buddycloud.channelserver.pubsub.model.GlobalItemID;
 import org.buddycloud.channelserver.pubsub.model.NodeAffiliation;
 import org.buddycloud.channelserver.pubsub.model.NodeItem;
+import org.buddycloud.channelserver.pubsub.model.NodeMembership;
 import org.buddycloud.channelserver.pubsub.model.NodeSubscription;
 import org.buddycloud.channelserver.pubsub.model.NodeThread;
 import org.xmpp.packet.JID;
@@ -38,23 +39,23 @@ public interface NodeStore {
 
 	/**
 	 * Delete a node
-	 *
+	 * 
 	 * @param nodeId
 	 *            the node reference
 	 * @throws NodeStoreException
 	 */
 	void deleteNode(String nodeId) throws NodeStoreException;
-	
+
 	/**
 	 * Add a remote node into the database
 	 * 
 	 * @param nodeId
-	 *          the node reference
+	 *            the node reference
 	 * @throws NodeStoreException
 	 *             if the operation could not be completed.
 	 */
 	void addRemoteNode(String node) throws NodeStoreException;
-	
+
 	/**
 	 * Sets a single configuration option on the node
 	 * 
@@ -94,15 +95,15 @@ public interface NodeStore {
 	String getNodeConfValue(String nodeId, String key)
 			throws NodeStoreException;
 
-    /**
-     * Delete the configuration for a node
-     * 
-     * @param nodeId
-     *            the node id.
-     * @throws NodeStoreException
-     */
+	/**
+	 * Delete the configuration for a node
+	 * 
+	 * @param nodeId
+	 *            the node id.
+	 * @throws NodeStoreException
+	 */
 	void deleteNodeConfiguration(String nodeId) throws NodeStoreException;
-	
+
 	/**
 	 * Retrieves a map of all all the configuration properties for the node.
 	 * 
@@ -161,37 +162,23 @@ public interface NodeStore {
 			throws NodeStoreException;
 
 	/**
-	 * Gets a user's affiliation with a node.
+	 * Get a user's node memberships (subscription + affiliation)
 	 * 
-	 * @param nodeId
-	 *            the node reference.
-	 * @param user
-	 *            the user's JID
+	 * @param jid
 	 * @return
+	 * @throws NodeStoreException
 	 */
-	NodeAffiliation getUserAffiliation(String nodeId, JID user)
-			throws NodeStoreException;
-
-	/**
-	 * Gets all the given user's affiliations.
-	 * 
-	 * @param user
-	 *            the user's JID
-	 * @return
-	 */
-	ResultSet<NodeAffiliation> getUserAffiliations(JID user)
-			throws NodeStoreException;
+	ResultSet<NodeMembership> getUserMemberships(JID jid) throws NodeStoreException;
 
     /**
-     * Get given user's affiliations using RSM
+     * Get a node's members
      * 
-     * @param actorJid
-     * @param maxItemsToReturn
-     * @param afterItemId
+     * @param nodeId
      * @return
+     * @throws NodeStoreException
      */
-	ResultSet<NodeAffiliation> getUserAffiliations(JID actorJid, 
-			String afterItemId, int maxItemsToReturn) throws NodeStoreException;
+	ResultSet<NodeMembership> getNodeMemberships(String nodeId)
+			throws NodeStoreException;
 	
 	/**
 	 * Get affiliation changes for a user
@@ -201,76 +188,16 @@ public interface NodeStore {
 	 * @param endDate
 	 * @return
 	 */
-	ResultSet<NodeAffiliation> getAffiliationChanges(JID user, Date startDate, Date endDate)
-	    throws NodeStoreException;
-	
-    /**
-     * Count the number of affiliations for a user
-     * 
-     * @param actorJid
-     * @return
-     */
-	int countUserAffiliations(JID actorJid) throws NodeStoreException;
-	
-	/**
-	 * Gets all the affiliations with the node.
-	 * 
-	 * @param nodeId
-	 *            the node id
-	 * @return
-	 */
-	ResultSet<NodeAffiliation> getNodeAffiliations(String nodeId, boolean isOwnerModerator)
-			throws NodeStoreException;
+	ResultSet<NodeAffiliation> getAffiliationChanges(JID user, Date startDate,
+			Date endDate) throws NodeStoreException;
 
-    /**
-     * Gets affiliations for a node with RSM 
-     * @param node
-     * @param maxItemsToReturn
-     * @param afterItemId
-     * @return
-     */
-	ResultSet<NodeAffiliation> getNodeAffiliations(String node, boolean isOwnerModerator,
-			String afterItemId, int maxItemsToReturn) throws NodeStoreException;
-	
 	/**
 	 * Get a list of node owners
 	 * 
 	 * @param node
-	 * @throws NodeStoreException 
+	 * @throws NodeStoreException
 	 */
 	ArrayList<JID> getNodeOwners(String node) throws NodeStoreException;
-	
-	/**
-	 * Count the number of affiliations for a node
-	 * 
-	 * @param nodeId
-	 * @return
-	 */  
-	int countNodeAffiliations(String nodeId, boolean isOwnerModerator) throws NodeStoreException;
-	
-	/**
-	 * Gets the set of nodes to which the user is subscribed.
-	 * 
-	 * @param user
-	 *            the user's JID
-	 * @param afterNodeId
-	 * @param maxItemsToReturn 
-	 * @param user 
-	 * @return
-	 */
-	ResultSet<NodeSubscription> getUserSubscriptions(JID user, String afterNodeId, int maxItemsToReturn)
-			throws NodeStoreException;
-
-	/**
-	 * Gets the set of nodes to which the user is subscribed.
-	 * 
-	 * @param user
-	 *            the user's JID
-	 * @param user 
-	 * @return
-	 */
-	ResultSet<NodeSubscription> getUserSubscriptions(JID user)
-			throws NodeStoreException;
 
 	/**
 	 * Gets subscription changes for a user
@@ -279,35 +206,12 @@ public interface NodeStore {
 	 * @param startDate
 	 * @param endDate
 	 * @return
-	 * @throws NodeStoreException 
+	 * @throws NodeStoreException
 	 */
 	ResultSet<NodeSubscription> getSubscriptionChanges(JID user,
 			Date startDate, Date endDate) throws NodeStoreException;
-	
-	/**
-	 * Gets the set of subscriptions to the node.
-	 * 
-	 * @param nodeId
-	 *            the node reference.
-	 * @param isOwnerModerator 
-	 * @return
-	 */
-	ResultSet<NodeSubscription> getNodeSubscriptions(String nodeId, boolean isOwnerModerator)
-			throws NodeStoreException;
-	
 
-	/**
-	 * Gets the set of subscriptions to the node.
-	 * 
-	 * @param nodeId
-	 *            the node reference.
-	 * @param afterItemId
-	 *            after this JID
-	 * @return
-	 */
-	ResultSet<NodeSubscription> getNodeSubscriptions(String nodeId, boolean isOwnerModerator, JID afterItemId,
-			int maxItemsToReturn) throws NodeStoreException;
-	
+
 	/**
 	 * Gets the set of listeners to the node.
 	 * 
@@ -327,29 +231,18 @@ public interface NodeStore {
 	 */
 	ResultSet<NodeSubscription> getNodeSubscriptionListeners()
 			throws NodeStoreException;
-	
-	/**
-	 * Gets the user's subscription to a certain node.
-	 * 
-	 * @param nodeId
-	 *            the node reference.
-	 * @param user
-	 *            the user's JID
-	 * @return
-	 */
-	NodeSubscription getUserSubscription(String nodeId, JID user)
-			throws NodeStoreException;
 
 	/**
-	 * Retrieves the number of user subscriptions
+	 * Gets a user's membership to a node.
 	 * 
+	 * @param nodeId
 	 * @param user
-	 *            the user's JID from which to retrieve the item count.
-	 * @return the entries count.
+	 * @return
 	 * @throws NodeStoreException
 	 */
-	int countUserSubscriptions(JID nodeId) throws NodeStoreException;
-	
+	NodeMembership getNodeMembership(String nodeId, JID user)
+			throws NodeStoreException;
+
 	/**
 	 * Retrieves an iterator of items within a node.
 	 * 
@@ -378,7 +271,7 @@ public interface NodeStore {
 	 */
 	CloseableIterator<NodeItem> getNewNodeItemsForUser(JID user,
 			Date startDate, Date endDate) throws NodeStoreException;
-	
+
 	/**
 	 * Retrieves an iterator of all items within a node.
 	 * 
@@ -389,69 +282,75 @@ public interface NodeStore {
 	 */
 	CloseableIterator<NodeItem> getNodeItems(String nodeId)
 			throws NodeStoreException;
-	
-    /**
-     * Retrieves node item replies
-     * 
-     * @param nodeId
-     * @param itemId
-     * @param afterItemId
-     * @param limit
-     * @return
-     * @throws NodeStoreException
-     */
-	ClosableIteratorImpl<NodeItem> getNodeItemReplies(String nodeId, String itemId,
-			String afterItemId, int limit) throws NodeStoreException;
 
 	/**
-	 * Get a count of the number of replies to an item 
+	 * Retrieves node item replies
 	 * 
 	 * @param nodeId
 	 * @param itemId
-	 * @throws NodeStoreException 
+	 * @param afterItemId
+	 * @param limit
+	 * @return
+	 * @throws NodeStoreException
 	 */
-	int getCountNodeItemReplies(String nodeId, String itemId) throws NodeStoreException;
-	
-    /**
-     * Retrieves node item thread
-     * 
-     * @param nodeId
-     * @param itemId
-     * @param afterItemId
-     * @param limit
-     * @return
-     * @throws NodeStoreException
-     */
-	ClosableIteratorImpl<NodeItem> getNodeItemThread(String nodeId, String itemId,
-			String afterItemId, int limit) throws NodeStoreException;
-	
+	ClosableIteratorImpl<NodeItem> getNodeItemReplies(String nodeId,
+			String itemId, String afterItemId, int limit)
+			throws NodeStoreException;
+
+	/**
+	 * Get a count of the number of replies to an item
+	 * 
+	 * @param nodeId
+	 * @param itemId
+	 * @throws NodeStoreException
+	 */
+	int getCountNodeItemReplies(String nodeId, String itemId)
+			throws NodeStoreException;
+
+	/**
+	 * Retrieves node item thread
+	 * 
+	 * @param nodeId
+	 * @param itemId
+	 * @param afterItemId
+	 * @param limit
+	 * @return
+	 * @throws NodeStoreException
+	 */
+	ClosableIteratorImpl<NodeItem> getNodeItemThread(String nodeId,
+			String itemId, String afterItemId, int limit)
+			throws NodeStoreException;
+
 	/**
 	 * Get a count of the number of items in a thread
 	 * 
 	 * @param nodeId
 	 * @param itemId
-	 * @throws NodeStoreException 
+	 * @throws NodeStoreException
 	 */
 	int getCountNodeThread(String nodeId, String itemId)
 			throws NodeStoreException;
-	
-    /**
-     * Get recent items for a user
-     * 
-     * @param user
-     * @param since
-     * @param maxPerNode
-     * @return
-     * @throws NodeStoreException
-     */
+
+	/**
+	 * Get recent items for a user
+	 * 
+	 * @param user
+	 * @param since
+	 * @param maxPerNode
+	 * @return
+	 * @throws NodeStoreException
+	 */
 	CloseableIterator<NodeItem> getRecentItems(JID user, Date since,
-			int maxPerNode, int limit, GlobalItemID afterItemId, String node, boolean parentOnly) throws NodeStoreException;
-	
+			int maxPerNode, int limit, GlobalItemID afterItemId, String node,
+			boolean parentOnly) throws NodeStoreException;
+
 	/**
 	 * Get count of recent items for a user
-	 * @throws NodeStoreException 
+	 * 
+	 * @throws NodeStoreException
 	 */
-	int getCountRecentItems(JID user, Date since, int maxPerNode, String node, boolean parentOnly) throws NodeStoreException;
+	int getCountRecentItems(JID user, Date since, int maxPerNode, String node,
+			boolean parentOnly) throws NodeStoreException;
 
 	/**
 	 * Retrieves the number of items within a node.
@@ -464,17 +363,6 @@ public interface NodeStore {
 	int countNodeItems(String nodeId) throws NodeStoreException;
 
 	/**
-	 * Retrieves the number of subscriptions to a node
-	 * 
-	 * @param nodeId
-	 *            the node id from which to retrieve the item count.
-	 * @param isOwnerModerator 
-	 * @return the entries count.
-	 * @throws NodeStoreException
-	 */
-	int countNodeSubscriptions(String nodeId, boolean isOwnerModerator) throws NodeStoreException;
-	
-	/**
 	 * Retrieves a single node item by the node item id.
 	 * 
 	 * @param nodeId
@@ -486,7 +374,7 @@ public interface NodeStore {
 	 */
 	NodeItem getNodeItem(String nodeId, String nodeItemId)
 			throws NodeStoreException;
-	
+
 	/**
 	 * Stores a new item against the node.
 	 * 
@@ -507,15 +395,16 @@ public interface NodeStore {
 	 */
 	void updateNodeItem(NodeItem item) throws NodeStoreException;
 
-    /**
-     * Updates the updated date on a thread parent
-     * 
-     * @param node
-     * @param itemId
-     * @throws NodeStoreException 
-     */
-	void updateThreadParent(String node, String itemId) throws NodeStoreException;
-	
+	/**
+	 * Updates the updated date on a thread parent
+	 * 
+	 * @param node
+	 * @param itemId
+	 * @throws NodeStoreException
+	 */
+	void updateThreadParent(String node, String itemId)
+			throws NodeStoreException;
+
 	/**
 	 * Deletes the specified node item.
 	 * 
@@ -528,7 +417,7 @@ public interface NodeStore {
 	 */
 	void deleteNodeItemById(String nodeId, String nodeItemId)
 			throws NodeStoreException;
-	
+
 	/**
 	 * Allows the server to determine if the requested node is cached locally
 	 * 
@@ -538,83 +427,91 @@ public interface NodeStore {
 	boolean isCachedNode(String nodeId) throws NodeStoreException;
 
 	/**
-	 * Allows the server to determine if the requested JID details are cached locally
+	 * Allows the server to determine if the requested JID details are cached
+	 * locally
 	 * 
 	 * @param jid
 	 *            user/node jid.
 	 */
 	boolean isCachedJID(JID jid) throws NodeStoreException;
-	
-    /**
-     * Return whether node config is cached locally
-     * 
-     * @param nodeId
-     * @return
-     * @throws NodeStoreException
-     */
-	boolean isCachedNodeConfig(String nodeId) throws NodeStoreException;
-	
+
 	/**
-	 * Allows the server to determine if the requested (subscriptions) node 
-	 * is cached locally
+	 * Return whether node config is cached locally
+	 * 
+	 * @param nodeId
+	 * @return
+	 * @throws NodeStoreException
+	 */
+	boolean isCachedNodeConfig(String nodeId) throws NodeStoreException;
+
+	/**
+	 * Allows the server to determine if the requested (subscriptions) node is
+	 * cached locally
 	 * 
 	 * @param nodeId
 	 *            the node id.
 	 */
 	boolean nodeHasSubscriptions(String nodeId) throws NodeStoreException;
-	
-    /**
-     * Purges all items from a node
-     * 
-     * @param nodeId
-     *            the node id
-     * @throws NodeStoreException 
-     */
+
+	/**
+	 * Purges all items from a node
+	 * 
+	 * @param nodeId
+	 *            the node id
+	 * @throws NodeStoreException
+	 */
 	void purgeNodeItems(String nodeId) throws NodeStoreException;
-	
+
 	/**
 	 * Retrieves a list of nodes
-	 * @throws NodeStoreException 
+	 * 
+	 * @throws NodeStoreException
 	 */
 	ArrayList<String> getNodeList() throws NodeStoreException;
-	
-    /**
-     * Search subscribed nodes for content
-     * 
-     * @param searcher  JID of user performing the search
-     * @param content   Keywords upon which to search
-     * @param author    JID of the content author
-     * @param page      Page number of results (>= 1)
-     * @param rpp       Results per page (>= 1)
-     * @return
-     * @throws NodeStoreException 
-     */
+
+	/**
+	 * Search subscribed nodes for content
+	 * 
+	 * @param searcher
+	 *            JID of user performing the search
+	 * @param content
+	 *            Keywords upon which to search
+	 * @param author
+	 *            JID of the content author
+	 * @param page
+	 *            Page number of results (>= 1)
+	 * @param rpp
+	 *            Results per page (>= 1)
+	 * @return
+	 * @throws NodeStoreException
+	 */
 	CloseableIterator<NodeItem> performSearch(JID searcher, List content,
 			JID author, int page, int rpp) throws NodeStoreException;
-	
+
 	/**
 	 * Retrieves a list of items from public channels "firehose"
-     * 
-     * @param limit
-     *            limit the number of results
-     * @param afterItemId
-     *            after item ID#
-     * @param isAdmin
-     *            show items from non-open nodes
-     * @return
-     * @throws NodeStoreException
-     */
-	CloseableIterator<NodeItem> getFirehose(int limit, String afterItemId, boolean isAdmin) throws NodeStoreException;
-	
+	 * 
+	 * @param limit
+	 *            limit the number of results
+	 * @param afterItemId
+	 *            after item ID#
+	 * @param isAdmin
+	 *            show items from non-open nodes
+	 * @return
+	 * @throws NodeStoreException
+	 */
+	CloseableIterator<NodeItem> getFirehose(int limit, String afterItemId,
+			boolean isAdmin) throws NodeStoreException;
+
 	/**
 	 * Get count of items from public channels "firehose"
 	 * 
 	 * @param isAdmin
-	 *           counts items from non-open nodes
-	 * @throws NodeStoreException 
+	 *            counts items from non-open nodes
+	 * @throws NodeStoreException
 	 */
 	int getFirehoseItemCount(boolean isAdmin) throws NodeStoreException;
-	
+
 	/**
 	 * Get a list of posts for a user
 	 * 
@@ -623,7 +520,7 @@ public interface NodeStore {
 	 * @throws NodeStoreException
 	 */
 	ResultSet<NodeItem> getUserItems(JID userJid) throws NodeStoreException;
-	
+
 	/**
 	 * Determine if a user has already rated a post
 	 * 
@@ -633,8 +530,9 @@ public interface NodeStore {
 	 * @return
 	 * @throws NodeStoreException
 	 */
-	boolean userHasRatedPost(String node, JID user, GlobalItemID id) throws NodeStoreException;
-	
+	boolean userHasRatedPost(String node, JID user, GlobalItemID id)
+			throws NodeStoreException;
+
 	/**
 	 * Delete user posts
 	 * 
@@ -642,7 +540,7 @@ public interface NodeStore {
 	 * @throws NodeStoreException
 	 */
 	void deleteUserItems(JID userJid) throws NodeStoreException;
-	
+
 	/**
 	 * Delete affiliations for a user
 	 * 
@@ -650,7 +548,7 @@ public interface NodeStore {
 	 * @throws NodeStoreException
 	 */
 	void deleteUserAffiliations(JID userJid) throws NodeStoreException;
-	
+
 	/**
 	 * Delete user subscriptions
 	 * 
@@ -658,7 +556,7 @@ public interface NodeStore {
 	 * @throws NodeStoreException
 	 */
 	void deleteUserSubscriptions(JID userJid) throws NodeStoreException;
-	
+
 	/**
 	 * Get node threads
 	 * 
@@ -668,8 +566,9 @@ public interface NodeStore {
 	 * @return
 	 * @throws NodeStoreException
 	 */
-	ResultSet<NodeThread> getNodeThreads(String node, String afterId, int limit) throws NodeStoreException;
-	
+	ResultSet<NodeThread> getNodeThreads(String node, String afterId, int limit)
+			throws NodeStoreException;
+
 	/**
 	 * Count node threads
 	 * 
@@ -678,12 +577,12 @@ public interface NodeStore {
 	 * @throws NodeStoreException
 	 */
 	int countNodeThreads(String node) throws NodeStoreException;
-	
+
 	/**
 	 * Closes this node store instance and releases any resources.
 	 */
 	void close() throws NodeStoreException;
-	
+
 	/**
 	 * Begins an atomic transaction. The transaction will include any operations
 	 * carried out on this object until either {@link #commitTransaction()} or
@@ -742,4 +641,5 @@ public interface NodeStore {
 		 */
 		void close() throws NodeStoreException;
 	}
+
 }

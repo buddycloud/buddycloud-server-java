@@ -17,6 +17,7 @@ import org.buddycloud.channelserver.pubsub.affiliation.Affiliations;
 import org.buddycloud.channelserver.pubsub.model.GlobalItemID;
 import org.buddycloud.channelserver.pubsub.model.NodeAffiliation;
 import org.buddycloud.channelserver.pubsub.model.NodeItem;
+import org.buddycloud.channelserver.pubsub.model.NodeMembership;
 import org.buddycloud.channelserver.pubsub.model.NodeSubscription;
 import org.buddycloud.channelserver.pubsub.model.impl.GlobalItemIDImpl;
 import org.buddycloud.channelserver.pubsub.subscription.Subscriptions;
@@ -280,25 +281,10 @@ public class UserItemsGet implements PubSubElementProcessor {
 	}
 
 	private boolean userCanViewNode() throws NodeStoreException {
-		NodeSubscription nodeSubscription = channelManager.getUserSubscription(
-				node, actor);
-		NodeAffiliation nodeAffiliation = channelManager.getUserAffiliation(
-				node, actor);
+		NodeMembership nodeMembership = channelManager.getNodeMembership(node,
+				actor);
 
-		Affiliations possibleExistingAffiliation = Affiliations.none;
-		Subscriptions possibleExistingSubscription = Subscriptions.none;
-		if (nodeSubscription != null) {
-			if (nodeAffiliation.getAffiliation() != null) {
-				possibleExistingAffiliation = nodeAffiliation.getAffiliation();
-			}
-			if (nodeSubscription.getSubscription() != null) {
-				possibleExistingSubscription = nodeSubscription
-						.getSubscription();
-			}
-		}
-
-		if (getNodeViewAcl().canViewNode(node,
-				possibleExistingAffiliation, possibleExistingSubscription,
+		if (getNodeViewAcl().canViewNode(node, nodeMembership,
 				getNodeAccessModel(), channelManager.isLocalJID(actor))) {
 			return true;
 		}
@@ -366,71 +352,55 @@ public class UserItemsGet implements PubSubElementProcessor {
 	private int getSubscriptionItems(Element items, int maxItemsToReturn,
 			String afterItemId) throws NodeStoreException {
 
-		ResultSet<NodeSubscription> subscribers = channelManager
-				.getNodeSubscriptions(node, isOwnerModerator());
+		ResultSet<NodeMembership> members = channelManager
+				.getNodeMemberships(node);
 		int entries = 0;
-		if (null == subscribers) {
-			return entries;
-		}
+
 		Element jidItem;
 		Element query;
 
-		for (NodeSubscription subscriber : subscribers) {
+		for (NodeMembership member : members) {
 
 			jidItem = items.addElement("item");
-			jidItem.addAttribute("id", subscriber.getUser().toString());
+			jidItem.addAttribute("id", member.getUser().toString());
 			query = jidItem.addElement("query");
 			query.addNamespace("", JabberPubsub.NS_DISCO_ITEMS);
 
-			if (firstItem == null) {
-				firstItem = subscriber.getUser().toString();
-			}
-			lastItem = subscriber.getUser().toString();
-			addSubscriptionItems(query, subscriber.getUser());
+			addSubscriptionItems(query, member.getUser());
 			entries++;
 		}
 		return entries;
 	}
 
 	private boolean isOwnerModerator() throws NodeStoreException {
-		if (null == isOwnerModerator) {
-			isOwnerModerator = channelManager.getUserAffiliation(node, actor)
-			    .getAffiliation()
-			    .in(Affiliations.moderator, Affiliations.owner);
-		}
-		return isOwnerModerator;
+		return channelManager.getNodeMembership(node, actor).getAffiliation()
+				.canAuthorize();
 	}
 
 	private void addSubscriptionItems(Element query, JID subscriber)
 			throws NodeStoreException {
 
-		ResultSet<NodeSubscription> subscriptions = channelManager
-				.getUserSubscriptions(subscriber);
+		ResultSet<NodeMembership> memberships = channelManager
+				.getUserMemberships(subscriber);
 
-		if ((null == subscriptions) || (0 == subscriptions.size())) {
+		if ((0 == memberships.size())) {
 			return;
 		}
 		Element item;
 		Namespace ns1 = new Namespace("ns1", JabberPubsub.NAMESPACE_URI);
 		Namespace ns2 = new Namespace("ns2", JabberPubsub.NAMESPACE_URI);
-		// TODO: This whole section of code is very inefficient
-		for (NodeSubscription subscription : subscriptions) {
-			// //if (false ==
-			// subscription.getNodeId().contains(fetchersJid.toBareJID())) {
-			// continue;
-			// }
-			NodeAffiliation affiliation = channelManager.getUserAffiliation(
-					subscription.getNodeId(), subscription.getUser());
+
+		for (NodeMembership membership : memberships) {
 			item = query.addElement("item");
 			item.add(ns1);
 			item.add(ns2);
-			item.addAttribute("jid", subscription.getUser().toString());
-			item.addAttribute("node", subscription.getNodeId());
+			item.addAttribute("jid", membership.getUser().toString());
+			item.addAttribute("node", membership.getNodeId());
 			QName affiliationAttribute = new QName("affiliation", ns1);
 			QName subscriptionAttribute = new QName("subscription", ns2);
-			item.addAttribute(affiliationAttribute, affiliation
+			item.addAttribute(affiliationAttribute, membership
 					.getAffiliation().toString());
-			item.addAttribute(subscriptionAttribute, subscription
+			item.addAttribute(subscriptionAttribute, membership
 					.getSubscription().toString());
 		}
 	}

@@ -10,6 +10,8 @@ import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.PubSubEl
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.PubSubGet;
 import org.buddycloud.channelserver.pubsub.affiliation.Affiliations;
 import org.buddycloud.channelserver.pubsub.model.NodeAffiliation;
+import org.buddycloud.channelserver.pubsub.model.NodeMembership;
+import org.buddycloud.channelserver.pubsub.subscription.Subscriptions;
 import org.buddycloud.channelserver.queue.FederatedQueueManager;
 import org.buddycloud.channelserver.utils.node.item.payload.Buddycloud;
 import org.dom4j.Element;
@@ -67,105 +69,67 @@ public class AffiliationsGet implements PubSubElementProcessor {
 			actorJid = requestIq.getFrom();
 		}
 
-		int maxItemsToReturn = MAX_ITEMS_TO_RETURN;
-		String afterItemId   = null;
-
-		String max_items = elm.attributeValue("max_items");
-		if (max_items != null) {
-			maxItemsToReturn = Integer.parseInt(max_items);
-		}
-
-		if (resultSetManagement != null) {
-			Element max = resultSetManagement.element("max");
-			if (max != null) {
-				maxItemsToReturn = Integer.parseInt(max.getTextTrim());
-			}
-			Element after = resultSetManagement.element("after");
-			if (after != null) {
-				afterItemId = after.getTextTrim();
-			}
-		}
 		boolean isProcessedLocally = true;
 		if (node == null) {
-			isProcessedLocally = getUserAffiliations(affiliations, maxItemsToReturn, afterItemId);
+			isProcessedLocally = getUserMemberships(affiliations);
 		} else {
-			isProcessedLocally = getNodeAffiliations(affiliations, maxItemsToReturn, afterItemId);
+			isProcessedLocally = getNodeAffiliations(affiliations);
 		}
 		if (false == isProcessedLocally) return;
-
-		if ((resultSetManagement != null)
-				|| (totalEntriesCount > maxItemsToReturn)) {
-			/*
-			 * TODO, add result set here as defined in 6.5.4 Returning Some
-			 * Items <set xmlns='http://jabber.org/protocol/rsm'> <first
-			 * index='0'>368866411b877c30064a5f62b917cffe</first>
-			 * <last>4e30f35051b7b8b42abe083742187228</last> <count>19</count>
-			 * </set>
-			 */
-			Element rsmElement = pubsub.addElement("set",
-					"http://jabber.org/protocol/rsm");
-
-			if (firstItem != null) {
-				rsmElement.addElement("first").setText(firstItem);
-				rsmElement.addElement("last").setText(lastItem);
-			}
-			rsmElement.addElement("count")
-					.setText(Integer.toString(totalEntriesCount));
-		}
 			
 		outQueue.put(result);
 	}
 
-	private boolean getNodeAffiliations(Element affiliations, int maxItemsToReturn, String afterItemId)
+	private boolean getNodeAffiliations(Element affiliations)
 			throws NodeStoreException, InterruptedException {
 		if (false == channelManager.isLocalNode(node)
 				&& (false == channelManager.isCachedNode(node))) {
 			makeRemoteRequest(node.split("/")[2]);
 			return false;
 		}
-		ResultSet<NodeAffiliation> nodeAffiliations;
-		if (null == afterItemId) {
-			nodeAffiliations = channelManager.getNodeAffiliations(node, isOwnerModerator());
-		} else {
-			nodeAffiliations = channelManager
-				.getNodeAffiliations(node, isOwnerModerator(), afterItemId, maxItemsToReturn);
-		}
-
-		if ((0 == nodeAffiliations.size())
+		ResultSet<NodeMembership> nodeMemberships;
+		nodeMemberships = channelManager.getNodeMemberships(node);
+		
+		if ((0 == nodeMemberships.size())
 			&& (false == channelManager.isLocalNode(node))) {
 			makeRemoteRequest(node.split("/")[2]);
 			return false;
 		}
 		
-		for (NodeAffiliation nodeAffiliation : nodeAffiliations) {
+		boolean isOwnerModerator = isOwnerModerator();
+		
+		for (NodeMembership nodeMembership : nodeMemberships) {
 
-			logger.trace("Adding affiliation for " + nodeAffiliation.getUser()
-					+ " affiliation " + nodeAffiliation.getAffiliation());
+			if (false == actorJid.toBareJID().equals(nodeMembership.getUser())) {
+				if ((false == isOwnerModerator) && nodeMembership.getAffiliation().in(Affiliations.outcast, Affiliations.none)) {
+					continue;
+				}
+				if ((false == isOwnerModerator) && !nodeMembership.getSubscription().equals(Subscriptions.subscribed)) {
+					continue;
+				}
+			}
+			logger.trace("Adding affiliation for " + nodeMembership.getUser()
+					+ " affiliation " + nodeMembership.getAffiliation());
 			
-			if (null == firstItem) firstItem = nodeAffiliation.getUser().toString();
-			lastItem = nodeAffiliation.getUser().toString();
+			if (null == firstItem) firstItem = nodeMembership.getUser().toString();
+			lastItem = nodeMembership.getUser().toString();
 			
 			affiliations
 					.addElement("affiliation")
-					.addAttribute("node", nodeAffiliation.getNodeId())
+					.addAttribute("node", nodeMembership.getNodeId())
 					.addAttribute("affiliation",
-							nodeAffiliation.getAffiliation().toString())
-					.addAttribute("jid", nodeAffiliation.getUser().toString());
+							nodeMembership.getAffiliation().toString())
+					.addAttribute("jid", nodeMembership.getUser().toString());
 		}
-		totalEntriesCount = channelManager.countNodeAffiliations(node, isOwnerModerator());
 		return true;
 	}
 	
 	private boolean isOwnerModerator() throws NodeStoreException {
-		if (null == isOwnerModerator) {
-			isOwnerModerator = channelManager.getUserAffiliation(node, actorJid)
-			    .getAffiliation()
-			    .in(Affiliations.moderator, Affiliations.owner);
-		}
-		return isOwnerModerator;
+		return channelManager.getNodeMembership(node,
+				actorJid).getAffiliation().canAuthorize();
 	}
 
-	private boolean getUserAffiliations(Element affiliations, int maxItemsToReturn, String afterItemId)
+	private boolean getUserMemberships(Element affiliations)
 			throws NodeStoreException, InterruptedException {
 		
 		if (false == channelManager.isLocalJID(actorJid)
@@ -174,42 +138,33 @@ public class AffiliationsGet implements PubSubElementProcessor {
 			return false;
 		}
 		
-		ResultSet<NodeAffiliation> affs;
-		if (null == afterItemId) {
-			affs = channelManager.getUserAffiliations(actorJid);
-		} else {
-			affs = channelManager
-				.getUserAffiliations(actorJid, afterItemId, maxItemsToReturn);
-		}
-
-		if ((null != resultSetManagement)
-				&& (0 == affs.size())
-				&& (false == channelManager.isLocalJID(actorJid))) {
-			makeRemoteRequest(actorJid.getDomain());
-			return false;
-		}
+		ResultSet<NodeMembership> memberships;
+		memberships = channelManager.getUserMemberships(actorJid);
+		boolean isOwnerModerator = isOwnerModerator();
 		
-		for (NodeAffiliation aff : affs) {
-			logger.trace("Adding affiliation for " + aff.getUser()
-					+ " affiliation " + aff.getAffiliation()
+		for (NodeMembership membership : memberships) {
+
+			if (false == actorJid.toBareJID().equals(membership.getUser())) {
+				if ((false == isOwnerModerator) && membership.getAffiliation().in(Affiliations.outcast, Affiliations.none)) {
+					continue;
+				}
+				if ((false == isOwnerModerator) && !membership.getSubscription().equals(Subscriptions.subscribed)) {
+					continue;
+				}
+			}
+			logger.trace("Adding affiliation for " + membership.getUser()
+					+ " affiliation " + membership.getAffiliation()
 					+ " (no node provided)");
 			
-			if (null == firstItem) firstItem = aff.getNodeId();
-			lastItem = aff.getNodeId();
+			if (null == firstItem) firstItem = membership.getNodeId();
+			lastItem = membership.getNodeId();
 			
 			affiliations
 					.addElement("affiliation")
-					.addAttribute("node", aff.getNodeId())
+					.addAttribute("node", membership.getNodeId())
 					.addAttribute("affiliation",
-							aff.getAffiliation().toString())
-					.addAttribute("jid", aff.getUser().toString());
-		}
-		try {
-		    totalEntriesCount = channelManager.countUserAffiliations(actorJid);
-		} catch (NodeStoreException e) {
-			logger.error(e);
-			e.printStackTrace();
-			totalEntriesCount = 0;
+							membership.getAffiliation().toString())
+					.addAttribute("jid", membership.getUser().toBareJID());
 		}
 		return true;
 	}

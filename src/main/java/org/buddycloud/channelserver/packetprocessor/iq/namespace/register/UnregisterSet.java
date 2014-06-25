@@ -20,6 +20,7 @@ import org.buddycloud.channelserver.pubsub.affiliation.Affiliations;
 import org.buddycloud.channelserver.pubsub.event.Event;
 import org.buddycloud.channelserver.pubsub.model.NodeAffiliation;
 import org.buddycloud.channelserver.pubsub.model.NodeItem;
+import org.buddycloud.channelserver.pubsub.model.NodeMembership;
 import org.buddycloud.channelserver.pubsub.model.NodeSubscription;
 import org.buddycloud.channelserver.pubsub.subscription.Subscriptions;
 import org.buddycloud.channelserver.utils.node.item.payload.Buddycloud;
@@ -93,14 +94,18 @@ public class UnregisterSet implements PacketProcessor<IQ> {
 			List<Packet> notifications = new LinkedList<Packet>();
 			Set<String> remoteDomains = getRemoteDomains();
 			
-			ResultSet<NodeAffiliation> userAffiliations = channelManager.getUserAffiliations(actorJID);
-			for (NodeAffiliation nodeAffiliation : userAffiliations) {
-				String nodeId = nodeAffiliation.getNodeId();
+			ResultSet<NodeMembership> userMemberships = channelManager.getUserMemberships(actorJID);
+			for (NodeMembership userMembership : userMemberships) {
+				String nodeId = userMembership.getNodeId();
 				if (isPersonal(nodeId) || isSingleOwner(nodeId, actorJID)) {
 					channelManager.deleteNode(nodeId);
 					if (channelManager.isLocalNode(nodeId)) {
 						addDeleteNodeNotifications(nodeId, notifications);
 					}
+				}
+				if (!isRemote) {
+					addUnsubscribeFromNodeNotifications(actorJID, 
+							userMembership.getNodeId(), notifications);
 				}
 			}
 			
@@ -110,15 +115,8 @@ public class UnregisterSet implements PacketProcessor<IQ> {
 					addDeleteItemNotifications(userItem.getNodeId(), userItem.getId(), notifications);
 				}
 			}
-			channelManager.deleteUserItems(actorJID);
 			
-			ResultSet<NodeSubscription> userSubscriptions = channelManager.getUserSubscriptions(actorJID);
-			for (NodeSubscription nodeSubscription : userSubscriptions) {
-				if (!isRemote) {
-					addUnsubscribeFromNodeNotifications(actorJID, 
-							nodeSubscription.getNodeId(), notifications);
-				}
-			}
+			channelManager.deleteUserItems(actorJID);
 			channelManager.deleteUserSubscriptions(actorJID);
 			channelManager.deleteUserAffiliations(actorJID);
 			
@@ -273,13 +271,13 @@ public class UnregisterSet implements PacketProcessor<IQ> {
 	
 	
 	private boolean isSingleOwner(String nodeId, JID userJid) throws NodeStoreException {
-		ResultSet<NodeAffiliation> nodeAffiliations = channelManager.getNodeAffiliations(nodeId, false);
+		ResultSet<NodeMembership> nodeMemberships = channelManager.getNodeMemberships(nodeId);
 		int ownerCount = 0;
 		boolean isOwner = false;
-		for (NodeAffiliation nodeAffiliation : nodeAffiliations) {
-			if (nodeAffiliation.getAffiliation().equals(Affiliations.owner)) {
+		for (NodeMembership nodeMembership : nodeMemberships) {
+			if (nodeMembership.getAffiliation().equals(Affiliations.owner)) {
 				ownerCount++;
-				if (nodeAffiliation.getUser().equals(userJid)) {
+				if (nodeMembership.getUser().equals(userJid)) {
 					isOwner = true;
 				}
 			}

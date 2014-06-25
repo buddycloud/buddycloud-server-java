@@ -8,7 +8,7 @@ import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.db.exception.NodeStoreException;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.JabberPubsub;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.PubSubElementProcessorAbstract;
-import org.buddycloud.channelserver.pubsub.model.NodeAffiliation;
+import org.buddycloud.channelserver.pubsub.model.NodeMembership;
 import org.buddycloud.channelserver.pubsub.model.NodeSubscription;
 import org.buddycloud.channelserver.pubsub.model.impl.NodeSubscriptionImpl;
 import org.buddycloud.channelserver.pubsub.subscription.Subscriptions;
@@ -27,7 +27,7 @@ import org.xmpp.resultsetmanagement.ResultSet;
 public class SubscriptionEvent extends PubSubElementProcessorAbstract {
 
 	Element requestedSubscription;
-	NodeSubscription currentSubscription;
+	NodeMembership currentMembership;
 
 	private static final Logger LOGGER = Logger
 			.getLogger(SubscriptionEvent.class);
@@ -68,7 +68,7 @@ public class SubscriptionEvent extends PubSubElementProcessorAbstract {
 			if ((false == nodeProvided()) || (false == validRequestStanza())
 					|| (false == checkNodeExists())
 					|| (false == actorHasPermissionToAuthorize())
-					|| (false == subscriberHasCurrentAffiliation())) {
+					|| (false == userHasCurrentSubscription())) {
 				outQueue.put(response);
 				return;
 			}
@@ -118,7 +118,7 @@ public class SubscriptionEvent extends PubSubElementProcessorAbstract {
 
 	private void saveUpdatedSubscription() throws NodeStoreException {
 		NodeSubscription newSubscription = new NodeSubscriptionImpl(node,
-				new JID(requestedSubscription.attributeValue("jid")), currentSubscription.getListener(),
+				new JID(requestedSubscription.attributeValue("jid")), currentMembership.getListener(),
 				Subscriptions.valueOf(requestedSubscription
 						.attributeValue("subscription")));
 
@@ -168,29 +168,21 @@ public class SubscriptionEvent extends PubSubElementProcessorAbstract {
 		return true;
 	}
 
-	private boolean subscriberHasCurrentAffiliation() throws NodeStoreException {
-		currentSubscription = channelManager.getUserSubscription(node, new JID(
+	private boolean userHasCurrentSubscription() throws NodeStoreException {
+		currentMembership = channelManager.getNodeMembership(node, new JID(
 				requestedSubscription.attributeValue("jid")));
-
-		if (null == currentSubscription) {
-			setErrorCondition(PacketError.Type.modify,
-					PacketError.Condition.unexpected_request);
-			return false;
+		if (!currentMembership.getSubscription().equals(Subscriptions.none)) {
+			return true;
 		}
-		return true;
+		setErrorCondition(PacketError.Type.modify, PacketError.Condition.unexpected_request);
+		return false;
 	}
 
 	private boolean actorHasPermissionToAuthorize() throws NodeStoreException {
-		NodeAffiliation affiliation = channelManager.getUserAffiliation(node,
+		NodeMembership membership = channelManager.getNodeMembership(node,
 				actor);
 
-		if (null == affiliation) {
-			setErrorCondition(PacketError.Type.auth,
-					PacketError.Condition.not_authorized);
-			return false;
-		}
-
-		if (affiliation.getAffiliation().canAuthorize()) {
+		if (membership.getAffiliation().canAuthorize()) {
 			return true;
 		}
 

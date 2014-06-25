@@ -1,7 +1,6 @@
 package org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.set;
 
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
@@ -9,14 +8,11 @@ import junit.framework.Assert;
 
 import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.packetHandler.iq.IQTestHandler;
-import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.JabberPubsub;
-import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.set.UnsubscribeSet;
 import org.buddycloud.channelserver.pubsub.affiliation.Affiliations;
 import org.buddycloud.channelserver.pubsub.event.Event;
-import org.buddycloud.channelserver.pubsub.model.NodeAffiliation;
+import org.buddycloud.channelserver.pubsub.model.NodeMembership;
 import org.buddycloud.channelserver.pubsub.model.NodeSubscription;
-import org.buddycloud.channelserver.pubsub.model.impl.NodeAffiliationImpl;
-import org.buddycloud.channelserver.pubsub.model.impl.NodeItemImpl;
+import org.buddycloud.channelserver.pubsub.model.impl.NodeMembershipImpl;
 import org.buddycloud.channelserver.pubsub.model.impl.NodeSubscriptionImpl;
 import org.buddycloud.channelserver.pubsub.subscription.Subscriptions;
 import org.buddycloud.channelserver.utils.node.item.payload.Buddycloud;
@@ -26,7 +22,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
-import org.mockito.stubbing.OngoingStubbing;
 import org.xmpp.packet.IQ;
 import org.xmpp.packet.JID;
 import org.xmpp.packet.Message;
@@ -45,8 +40,7 @@ public class UnsubscribeSetTest extends IQTestHandler {
 	private JID jid = new JID("juliet@shakespeare.lit");
 	private ChannelManager channelManager;
 
-	private NodeSubscription subscription;
-	private NodeAffiliation affiliation;
+	private NodeMembership membership;
 
 	@Before
 	public void setUp() throws Exception {
@@ -67,22 +61,17 @@ public class UnsubscribeSetTest extends IQTestHandler {
 
 		unsubscribe.setChannelManager(channelManager);
 
-		subscription = new NodeSubscriptionImpl(node, jid,
-				Subscriptions.subscribed);
-		affiliation = new NodeAffiliationImpl(node, jid,
-				Affiliations.publisher, new Date());
+		membership = new NodeMembershipImpl(node, jid, Subscriptions.subscribed,
+				Affiliations.publisher);
+		Mockito.when(
+				channelManager.getNodeMembership(Mockito.anyString(),
+						Mockito.any(JID.class))).thenReturn(membership);
 
 		ResultSet<NodeSubscription> listeners = new ResultSetImpl<NodeSubscription>(
 				new ArrayList<NodeSubscription>());
 		Mockito.when(channelManager.getNodeSubscriptionListeners(node))
 				.thenReturn(listeners);
 
-		Mockito.when(
-				channelManager.getUserSubscription(Mockito.anyString(),
-						Mockito.any(JID.class))).thenReturn(subscription);
-		Mockito.when(
-				channelManager.getUserAffiliation(Mockito.anyString(),
-						Mockito.any(JID.class))).thenReturn(affiliation);
 		Mockito.when(channelManager.getNodeOwners(Mockito.anyString()))
 				.thenReturn(new ArrayList<JID>());
 	}
@@ -200,13 +189,15 @@ public class UnsubscribeSetTest extends IQTestHandler {
 	@Test
 	public void nonMatchingSubscriptionToSenderReturnsError() throws Exception {
 
+		membership = new NodeMembershipImpl(node, new JID("juliet@capulet.lit"), Subscriptions.subscribed,
+				Affiliations.owner);
 		Mockito.when(
-				channelManager.getUserSubscription(Mockito.anyString(),
-						Mockito.any(JID.class))).thenReturn(
-				new NodeSubscriptionImpl(node, new JID("juliet@capulet.lit"),
-						Subscriptions.subscribed));
+				channelManager.getNodeMembership(Mockito.anyString(),
+						Mockito.any(JID.class))).thenReturn(membership);
+		
 		unsubscribe.process(element, jid, request, null);
 
+		
 		Assert.assertEquals(1, queue.size());
 
 		IQ response = (IQ) queue.poll();
@@ -217,22 +208,22 @@ public class UnsubscribeSetTest extends IQTestHandler {
 		Assert.assertEquals(PacketError.Condition.forbidden,
 				error.getCondition());
 		Assert.assertEquals(PacketError.Type.auth, error.getType());
-		Assert.assertEquals(Buddycloud.NS, error.getApplicationConditionNamespaceURI());
+		Assert.assertEquals(Buddycloud.NS, error.getElement().element(UnsubscribeSet.CAN_NOT_UNSUBSCRIBE_ANOTHER_USER).getNamespaceURI());
 		Assert.assertEquals(UnsubscribeSet.CAN_NOT_UNSUBSCRIBE_ANOTHER_USER, error.getApplicationConditionName());
 	}
 
 	@Test
 	public void canNotUnsubscribeAsOnlyNodeOwner() throws Exception {
 
-		affiliation = new NodeAffiliationImpl(node, jid, Affiliations.owner,
-				new Date());
+		membership = new NodeMembershipImpl(node, jid, Subscriptions.subscribed,
+				Affiliations.owner);
+		Mockito.when(
+				channelManager.getNodeMembership(Mockito.anyString(),
+						Mockito.any(JID.class))).thenReturn(membership);
 
 		ArrayList<JID> owners = new ArrayList<JID>();
 		owners.add(jid);
 
-		Mockito.when(
-				channelManager.getUserAffiliation(Mockito.anyString(),
-						Mockito.any(JID.class))).thenReturn(affiliation);
 		Mockito.when(channelManager.getNodeOwners(Mockito.anyString()))
 				.thenReturn(owners);
 
@@ -291,13 +282,12 @@ public class UnsubscribeSetTest extends IQTestHandler {
 
 	@Test
 	public void doesNotUpdateAffiliationIfOutcast() throws Exception {
-
-		affiliation = new NodeAffiliationImpl(node, jid, Affiliations.outcast,
-				new Date());
-
+		membership = new NodeMembershipImpl(node, jid, Subscriptions.subscribed,
+				Affiliations.outcast);
 		Mockito.when(
-				channelManager.getUserAffiliation(Mockito.anyString(),
-						Mockito.any(JID.class))).thenReturn(affiliation);
+				channelManager.getNodeMembership(Mockito.anyString(),
+						Mockito.any(JID.class))).thenReturn(membership);
+
 		Mockito.when(channelManager.getNodeOwners(Mockito.anyString()))
 				.thenReturn(new ArrayList<JID>());
 

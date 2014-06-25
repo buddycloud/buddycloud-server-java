@@ -12,7 +12,9 @@ import org.buddycloud.channelserver.db.exception.NodeStoreException;
 import org.buddycloud.channelserver.packetHandler.iq.IQTestHandler;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.JabberPubsub;
 import org.buddycloud.channelserver.pubsub.affiliation.Affiliations;
+import org.buddycloud.channelserver.pubsub.model.NodeMembership;
 import org.buddycloud.channelserver.pubsub.model.NodeSubscription;
+import org.buddycloud.channelserver.pubsub.model.impl.NodeMembershipImpl;
 import org.buddycloud.channelserver.pubsub.model.impl.NodeSubscriptionImpl;
 import org.buddycloud.channelserver.pubsub.subscription.Subscriptions;
 import org.dom4j.Element;
@@ -49,12 +51,12 @@ public class AffiliationProcessorTest extends IQTestHandler {
 		Mockito.when(channelManager.isLocalJID(Mockito.any(JID.class)))
 				.thenReturn(true);
 
-		ArrayList<NodeSubscription> subscribers = new ArrayList<NodeSubscription>();
-		subscribers.add(new NodeSubscriptionImpl(
+		ArrayList<NodeMembership> subscribers = new ArrayList<NodeMembership>();
+		subscribers.add(new NodeMembershipImpl(
 				"/users/romeo@shakespeare.lit/posts", jid,
-				Subscriptions.subscribed));
-		Mockito.doReturn(new ResultSetImpl<NodeSubscription>(subscribers))
-				.when(channelManager).getNodeSubscriptions(Mockito.anyString(), Mockito.anyBoolean());
+				Subscriptions.subscribed, Affiliations.member));
+		Mockito.doReturn(new ResultSetImpl<NodeMembership>(subscribers))
+				.when(channelManager).getNodeMemberships(Mockito.anyString());
 
 		affiliationProcessor = new AffiliationProcessor(queue, configuration,
 				channelManager);

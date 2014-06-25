@@ -6,18 +6,16 @@ import java.util.concurrent.BlockingQueue;
 import org.apache.log4j.Logger;
 import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.db.exception.NodeStoreException;
-import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.JabberPubsub;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.PubSubElementProcessorAbstract;
 import org.buddycloud.channelserver.pubsub.affiliation.Affiliations;
 import org.buddycloud.channelserver.pubsub.event.Event;
-import org.buddycloud.channelserver.pubsub.model.NodeAffiliation;
+import org.buddycloud.channelserver.pubsub.model.NodeMembership;
 import org.buddycloud.channelserver.pubsub.model.NodeSubscription;
 import org.buddycloud.channelserver.pubsub.model.impl.NodeSubscriptionImpl;
 import org.buddycloud.channelserver.pubsub.subscription.Subscriptions;
 import org.buddycloud.channelserver.utils.node.item.payload.Buddycloud;
 import org.dom4j.Document;
 import org.dom4j.Element;
-import org.dom4j.dom.DOMElement;
 import org.xmpp.packet.IQ;
 import org.xmpp.packet.IQ.Type;
 import org.xmpp.packet.JID;
@@ -81,15 +79,14 @@ public class UnsubscribeSet extends PubSubElementProcessorAbstract {
 			return;
 		}
 
-		NodeSubscription existingSubscription = channelManager
-				.getUserSubscription(node, unsubscribingJid);
-		NodeAffiliation existingAffiliation = channelManager
-				.getUserAffiliation(node, unsubscribingJid);
+		NodeMembership membership = channelManager.getNodeMembership(node, unsubscribingJid);
+
 		String fromJID = request.getFrom().toBareJID();
 
 		// Check that the requesting user is allowed to unsubscribe according to
 		// XEP-0060 section 6.2.3.3		
-		if (false == unsubscribingJid.equals(existingSubscription.getUser())) {
+
+		if (!unsubscribingJid.equals(membership.getUser())) {
 			createExtendedErrorReply(
 					PacketError.Type.auth,
 					PacketError.Condition.forbidden, 
@@ -100,7 +97,7 @@ public class UnsubscribeSet extends PubSubElementProcessorAbstract {
 			return;
 		}
 		
-		if ((Affiliations.owner == existingAffiliation.getAffiliation()) &&
+		if (membership.getAffiliation().equals(Affiliations.owner) &&
 			(channelManager.getNodeOwners(node).size() < 2)) {
 			
 			createExtendedErrorReply(
@@ -114,13 +111,13 @@ public class UnsubscribeSet extends PubSubElementProcessorAbstract {
 		}
 
 		NodeSubscription newSubscription = new NodeSubscriptionImpl(
-				existingSubscription.getNodeId(),
-				existingSubscription.getUser(),
-				existingSubscription.getListener(), Subscriptions.none);
+				membership.getNodeId(),
+				membership.getUser(),
+				membership.getListener(), Subscriptions.none);
 
 		channelManager.addUserSubscription(newSubscription);
-		if (false == Affiliations.outcast.toString().equals(
-				existingAffiliation.getAffiliation().toString())) {
+		if (!Affiliations.outcast.equals(
+				membership.getAffiliation())) {
 			channelManager.setUserAffiliation(node, unsubscribingJid,
 					Affiliations.none);
 		}

@@ -156,13 +156,8 @@ public class ItemDelete extends PubSubElementProcessorAbstract {
 	}
 
 	private boolean userManagesNode() throws NodeStoreException {
-		NodeAffiliation affiliation = channelManager.getUserAffiliation(node,
-				actor);
-		if (affiliation == null) {
-			return false;
-		}
-		return affiliation.getAffiliation().in(Affiliations.owner,
-				Affiliations.moderator);
+		return channelManager.getNodeMembership(node,
+				actor).getAffiliation().canAuthorize();
 	}
 
 	private boolean validPayload() {

@@ -11,12 +11,17 @@ import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.packetHandler.iq.IQTestHandler;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.JabberPubsub;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.PubSubGet;
+import org.buddycloud.channelserver.pubsub.accessmodel.AccessModels;
 import org.buddycloud.channelserver.pubsub.affiliation.Affiliations;
 import org.buddycloud.channelserver.pubsub.model.NodeItem;
+import org.buddycloud.channelserver.pubsub.model.NodeMembership;
 import org.buddycloud.channelserver.pubsub.model.impl.NodeAffiliationImpl;
 import org.buddycloud.channelserver.pubsub.model.impl.NodeItemImpl;
+import org.buddycloud.channelserver.pubsub.model.impl.NodeMembershipImpl;
 import org.buddycloud.channelserver.pubsub.model.impl.NodeSubscriptionImpl;
 import org.buddycloud.channelserver.pubsub.subscription.Subscriptions;
+import org.buddycloud.channelserver.utils.node.NodeAclRefuseReason;
+import org.buddycloud.channelserver.utils.node.NodeViewAcl;
 import org.dom4j.Element;
 import org.junit.Before;
 import org.junit.Test;
@@ -36,6 +41,7 @@ public class UserSingleItemGetTest extends IQTestHandler {
 	private String node = "/user/francisco@denmark.lit/posts";
 	private JID jid = new JID("francisco@denmark.lit");
 	private ChannelManager channelManager;
+	private NodeViewAcl nodeViewAcl;
 
 	@Before
 	public void setUp() throws Exception {
@@ -46,10 +52,22 @@ public class UserSingleItemGetTest extends IQTestHandler {
 		element = request.getElement().element("pubsub").element("items");
 
 		channelManager = Mockito.mock(ChannelManager.class);
+		
+		Mockito.when(channelManager.nodeExists(node)).thenReturn(true);
 		Mockito.when(channelManager.isLocalNode(Mockito.anyString()))
 				.thenReturn(true);
 		Mockito.when(channelManager.isLocalJID(Mockito.any(JID.class)))
 				.thenReturn(true);
+		
+		Mockito.when(channelManager.getNodeMembership(node, jid)).thenReturn(
+				new NodeMembershipImpl(node, jid, Subscriptions.subscribed, Affiliations.member));
+		nodeViewAcl = Mockito.mock(NodeViewAcl.class);
+		Mockito.doReturn(true)
+				.when(nodeViewAcl)
+				.canViewNode(Mockito.anyString(),
+						Mockito.any(NodeMembership.class),
+						Mockito.any(AccessModels.class), Mockito.anyBoolean());
+		itemsGet.setNodeViewAcl(nodeViewAcl);
 		
 		itemsGet.setChannelManager(channelManager);
 	}
@@ -63,7 +81,7 @@ public class UserSingleItemGetTest extends IQTestHandler {
 	public void testInexistentNode() throws Exception {
 		Assert.assertTrue(itemsGet.accept(element));
 		itemsGet.process(element, jid, request, null);
-		Packet response = queue.poll(100, TimeUnit.MILLISECONDS);
+		Packet response = queue.poll();
 		
 		PacketError error = response.getError();
 		Assert.assertNotNull(error);
@@ -73,13 +91,22 @@ public class UserSingleItemGetTest extends IQTestHandler {
 	}
 
 	@Test
-	public void testUnableToReadNode() throws Exception {
+	public void unableToReadNode() throws Exception {
 		
-		Mockito.when(channelManager.nodeExists(node)).thenReturn(true);
+		NodeAclRefuseReason reason = Mockito.mock(NodeAclRefuseReason.class);
+		Mockito.when(reason.getType()).thenReturn(PacketError.Type.auth);
+		Mockito.when(reason.getCondition()).thenReturn(PacketError.Condition.forbidden);
 		
+		Mockito.doReturn(false)
+		.when(nodeViewAcl)
+		.canViewNode(Mockito.anyString(),
+				Mockito.any(NodeMembership.class),
+				Mockito.any(AccessModels.class), Mockito.anyBoolean());
+		Mockito.when(nodeViewAcl.getReason()).thenReturn(reason);
+
 		itemsGet.process(element, jid, request, null);
-		Packet response = queue.poll(100, TimeUnit.MILLISECONDS);
-		
+		Packet response = queue.poll();
+
 		PacketError error = response.getError();
 		Assert.assertNotNull(error);
 		Assert.assertEquals(PacketError.Type.auth, error.getType());
@@ -88,16 +115,10 @@ public class UserSingleItemGetTest extends IQTestHandler {
 	}
 	
 	@Test
-	public void testInexistentItem() throws Exception {
-		
-		Mockito.when(channelManager.nodeExists(node)).thenReturn(true);
-		Mockito.when(channelManager.getUserSubscription(node, jid)).thenReturn(
-				new NodeSubscriptionImpl(node, jid, Subscriptions.subscribed));
-		Mockito.when(channelManager.getUserAffiliation(node, jid)).thenReturn(
-				new NodeAffiliationImpl(node, jid, Affiliations.member, new Date()));
-		
+	public void inexistentItem() throws Exception {
+
 		itemsGet.process(element, jid, request, null);
-		Packet response = queue.poll(100, TimeUnit.MILLISECONDS);
+		Packet response = queue.poll();
 		
 		PacketError error = response.getError();
 		Assert.assertNotNull(error);
@@ -107,20 +128,15 @@ public class UserSingleItemGetTest extends IQTestHandler {
 	}
 	
 	@Test
-	public void testExistentItemCheckNamespace() throws Exception {
-		
-		Mockito.when(channelManager.nodeExists(node)).thenReturn(true);
-		Mockito.when(channelManager.getUserSubscription(node, jid)).thenReturn(
-				new NodeSubscriptionImpl(node, jid, Subscriptions.subscribed));
-		Mockito.when(channelManager.getUserAffiliation(node, jid)).thenReturn(
-				new NodeAffiliationImpl(node, jid, Affiliations.member, new Date()));
+	public void existentItemCheckNamespace() throws Exception {
+
 		
 		final String itemId = "item1Id";
 		NodeItem nodeItem = new NodeItemImpl(node, itemId, new Date(), "<payload/>");
 		Mockito.when(channelManager.getNodeItem(node, itemId)).thenReturn(nodeItem);
 		
 		itemsGet.process(element, jid, request, null);
-		Packet response = queue.poll(100, TimeUnit.MILLISECONDS);
+		Packet response = queue.poll();
 		
 		Assert.assertNull(response.getError());
 		Element pubsubEl = response.getElement().element("pubsub");

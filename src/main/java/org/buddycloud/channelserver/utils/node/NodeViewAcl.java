@@ -5,6 +5,7 @@ import java.security.InvalidParameterException;
 import org.apache.log4j.Logger;
 import org.buddycloud.channelserver.pubsub.accessmodel.AccessModels;
 import org.buddycloud.channelserver.pubsub.affiliation.Affiliations;
+import org.buddycloud.channelserver.pubsub.model.NodeMembership;
 import org.buddycloud.channelserver.pubsub.subscription.Subscriptions;
 import org.xmpp.packet.PacketError;
 
@@ -19,6 +20,10 @@ public class NodeViewAcl {
 
 	private NodeAclRefuseReason reasonForRefusal;
 
+	public boolean canViewNode(String node, NodeMembership membership, AccessModels accesModel, boolean isLocalUser) {
+		return canViewNode(node, membership.getAffiliation(), membership.getSubscription(), accesModel, isLocalUser);
+	}
+	
 	public boolean canViewNode(String node, Affiliations affilliation,
 			Subscriptions subscription, AccessModels accessModel, boolean isLocalUser) {
 		LOGGER.trace("Being asked for access to " + node + " with properties "

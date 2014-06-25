@@ -17,6 +17,7 @@ import org.buddycloud.channelserver.pubsub.accessmodel.AccessModels;
 import org.buddycloud.channelserver.pubsub.affiliation.Affiliations;
 import org.buddycloud.channelserver.pubsub.event.Event;
 import org.buddycloud.channelserver.pubsub.model.NodeAffiliation;
+import org.buddycloud.channelserver.pubsub.model.NodeMembership;
 import org.buddycloud.channelserver.pubsub.model.NodeSubscription;
 import org.buddycloud.channelserver.pubsub.model.impl.NodeSubscriptionImpl;
 import org.buddycloud.channelserver.pubsub.subscription.Subscriptions;
@@ -98,18 +99,12 @@ public class SubscribeSet extends PubSubElementProcessorAbstract {
 		// Subscribe to a node.
 		try {
 
-			NodeSubscription nodeSubscription = channelManager
-					.getUserSubscription(node, subscribingJid);
-			NodeAffiliation nodeAffiliation = channelManager
-					.getUserAffiliation(node, subscribingJid);
+			NodeMembership membership = channelManager
+					.getNodeMembership(node, subscribingJid);
 
-			Affiliations possibleExistingAffiliation = nodeAffiliation
-					.getAffiliation();
-			Subscriptions possibleExistingSubscription = nodeSubscription
-					.getSubscription();
 
 			if (Affiliations.outcast.toString().equals(
-					possibleExistingAffiliation.toString())) {
+					membership.getAffiliation().toString())) {
 				/*
 				 * 6.1.3.8 Blocked <iq type='error'
 				 * from='pubsub.shakespeare.lit'
@@ -130,13 +125,13 @@ public class SubscribeSet extends PubSubElementProcessorAbstract {
 			Affiliations defaultAffiliation = Affiliations.member;
 			Subscriptions defaultSubscription = Subscriptions.none;
 
-			if (!possibleExistingSubscription.in(Subscriptions.none) && 
-					!possibleExistingAffiliation.in(Affiliations.none)) {
+			if (!membership.getSubscription().in(Subscriptions.none) && 
+					!membership.getAffiliation().in(Affiliations.none)) {
 				LOGGER.debug("User already has a '"
-						+ possibleExistingSubscription.toString()
+						+ membership.getSubscription().toString()
 						+ "' subscription");
-				defaultAffiliation = possibleExistingAffiliation;
-				defaultSubscription = possibleExistingSubscription;
+				defaultAffiliation = membership.getAffiliation();
+				defaultSubscription = membership.getSubscription();
 			} else {
 				try {
 					String nodeDefaultAffiliation = nodeConf.get(Conf.DEFAULT_AFFILIATION);
@@ -167,9 +162,8 @@ public class SubscribeSet extends PubSubElementProcessorAbstract {
 						defaultSubscription);
 				channelManager.addUserSubscription(newSubscription);
 
-				if (possibleExistingAffiliation != null && 
-						!possibleExistingAffiliation.in(Affiliations.none)) {
-					defaultAffiliation = possibleExistingAffiliation;
+				if (!membership.getAffiliation().in(Affiliations.none)) {
+					defaultAffiliation = membership.getAffiliation();
 				}
 				channelManager.setUserAffiliation(node, subscribingJid,
 						defaultAffiliation);
@@ -271,14 +265,14 @@ public class SubscribeSet extends PubSubElementProcessorAbstract {
 
 		// Get all the affiliated users (so we can work out moderators)
 		// isOwnerModerator == false as we don't let outcast's know
-		ResultSet<NodeAffiliation> nodeAffiliations = channelManager
-				.getNodeAffiliations(node, false);
+		ResultSet<NodeMembership> nodeMemberships = channelManager
+				.getNodeMemberships(node);
 		HashSet<JID> moderatorOwners = new HashSet<JID>();
 
-		for (NodeAffiliation nodeAffiliation : nodeAffiliations) {
-			if (nodeAffiliation.getAffiliation().in(Affiliations.owner,
+		for (NodeMembership nodeMembership : nodeMemberships) {
+			if (nodeMembership.getAffiliation().in(Affiliations.owner,
 					Affiliations.moderator)) {
-				moderatorOwners.add(nodeAffiliation.getUser());
+				moderatorOwners.add(nodeMembership.getUser());
 			}
 		}
 
@@ -320,6 +314,19 @@ public class SubscribeSet extends PubSubElementProcessorAbstract {
 			outQueue.put(notification);
 		}
 	}
+	
+	
+	/**
+	 * 			if (false == actorJid.toBareJID().equals(membership.getUser())) {
+				if ((false == isOwnerModerator) && membership.getAffiliation().in(Affiliations.outcast, Affiliations.none)) {
+					continue;
+				}
+				if ((false == isOwnerModerator) && !membership.getSubscription().equals(Subscriptions.subscribed)) {
+					continue;
+				}
+			}
+
+	 */
 
 	private Message getPendingSubscriptionNotification(String receiver,
 			String subscriber) {

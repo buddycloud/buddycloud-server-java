@@ -97,7 +97,7 @@ public class MessageArchiveManagementTest extends IQTestHandler {
 				.thenReturn(noItems);
 
 		NodeMembership membership = new NodeMembershipImpl(node1,
-				jid1, Subscriptions.subscribed, Affiliations.owner);
+				jid1, Subscriptions.subscribed, Affiliations.owner, null);
 		Mockito.when(
 				channelManager.getNodeMembership(Mockito.anyString(),
 						Mockito.any(JID.class))).thenReturn(
@@ -198,7 +198,7 @@ public class MessageArchiveManagementTest extends IQTestHandler {
 	public void testOutcastChangeReportedAsExpected() throws Exception {
 
 		NodeMembership membership = new NodeMembershipImpl(node1,
-				jid1, Subscriptions.subscribed, Affiliations.owner);
+				jid1, Subscriptions.subscribed, Affiliations.owner, null);
 		Mockito.when(
 				channelManager.getNodeMembership(Mockito.anyString(),
 						Mockito.any(JID.class))).thenReturn(

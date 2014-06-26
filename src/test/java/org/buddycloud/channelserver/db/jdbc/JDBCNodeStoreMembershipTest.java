@@ -47,7 +47,7 @@ public class JDBCNodeStoreMembershipTest extends JDBCNodeStoreAbstract {
 
 		NodeMembership expected = new NodeMembershipImpl(
 				TEST_SERVER1_NODE1_ID, TEST_SERVER1_USER1_JID,
-				Subscriptions.subscribed, Affiliations.owner);
+				Subscriptions.subscribed, Affiliations.owner, null);
 
 		assertEquals("An unexpected node membership was returned", expected,
 				result);
@@ -64,7 +64,7 @@ public class JDBCNodeStoreMembershipTest extends JDBCNodeStoreAbstract {
 
 		NodeMembership expected = new NodeMembershipImpl(
 				TEST_SERVER1_NODE1_ID, TEST_SERVER1_USER1_JID,
-				Subscriptions.subscribed, Affiliations.none);
+				Subscriptions.subscribed, Affiliations.none, null);
 
 		assertEquals("An unexpected node membership was returned", expected,
 				result);
@@ -81,7 +81,7 @@ public class JDBCNodeStoreMembershipTest extends JDBCNodeStoreAbstract {
 
 		NodeMembership expected = new NodeMembershipImpl(
 				TEST_SERVER1_NODE1_ID, TEST_SERVER1_USER1_JID,
-				Subscriptions.none, Affiliations.owner);
+				Subscriptions.none, Affiliations.owner, null);
 
 		assertEquals("An unexpected node membership was returned", expected,
 				result);
@@ -96,7 +96,7 @@ public class JDBCNodeStoreMembershipTest extends JDBCNodeStoreAbstract {
 
 		NodeMembership expected = new NodeMembershipImpl(
 				TEST_SERVER1_NODE1_ID, TEST_SERVER1_USER1_JID,
-				Subscriptions.none, Affiliations.none);
+				Subscriptions.none, Affiliations.none, null);
 
 		assertEquals("An unexpected node membership was returned", expected,
 				result);

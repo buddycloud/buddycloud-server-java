@@ -62,7 +62,7 @@ public class ItemDeleteTest extends IQTestHandler {
 				channelManagerMock.getNodeMembership(Mockito.anyString(), Mockito
 						.any(JID.class))).thenReturn(
 				new NodeMembershipImpl(node, jid, Subscriptions.subscribed,
-						Affiliations.member));
+						Affiliations.member, null));
 
 		payload = readStanzaAsString("/iq/pubsub/item/item.payload");
 	}

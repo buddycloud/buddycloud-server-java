@@ -59,13 +59,13 @@ public class AffiliationEventTest extends IQTestHandler {
 				channelManager.getNodeMembership(Mockito.anyString(),
 						Mockito.eq(jid))).thenReturn(
 				new NodeMembershipImpl(node, jid, Subscriptions.subscribed,
-						Affiliations.owner));
+						Affiliations.owner, null));
 		Mockito.when(
 				channelManager.getNodeMembership(Mockito.anyString(),
 						Mockito.eq(new JID("francisco@denmark.lit"))))
 				.thenReturn(
 						new NodeMembershipImpl(node, jid, Subscriptions.none,
-								Affiliations.publisher));
+								Affiliations.publisher, null));
 
 		queue = new LinkedBlockingQueue<Packet>();
 		event = new AffiliationEvent(queue, channelManager);
@@ -194,7 +194,7 @@ public class AffiliationEventTest extends IQTestHandler {
 		Mockito.when(channelManager.nodeExists(node)).thenReturn(true);
 		Mockito.when(channelManager.getNodeMembership(node, jid)).thenReturn(
 				new NodeMembershipImpl(node, jid, Subscriptions.subscribed,
-						Affiliations.none));
+						Affiliations.none, null));
 
 		event.process(element, jid, request, null);
 		Packet response = queue.poll(100, TimeUnit.MILLISECONDS);
@@ -214,7 +214,7 @@ public class AffiliationEventTest extends IQTestHandler {
 				channelManager.getNodeMembership(Mockito.anyString(),
 						Mockito.eq(jid))).thenReturn(
 				new NodeMembershipImpl(node, jid, Subscriptions.subscribed,
-						Affiliations.publisher));
+						Affiliations.publisher, null));
 		
 		event.setChannelManager(channelManager);
 
@@ -235,13 +235,13 @@ public class AffiliationEventTest extends IQTestHandler {
 				channelManager.getNodeMembership(Mockito.anyString(),
 						Mockito.eq(jid))).thenReturn(
 				new NodeMembershipImpl(node, jid, Subscriptions.subscribed,
-						Affiliations.owner));
+						Affiliations.owner, null));
 		Mockito.when(
 				channelManager.getNodeMembership(Mockito.anyString(),
 						Mockito.eq(new JID("francisco@denmark.lit"))))
 				.thenReturn(
 						new NodeMembershipImpl(node, jid, Subscriptions.none,
-								Affiliations.none));
+								Affiliations.none, null));
 
 		event.process(element, jid, request, null);
 		Packet response = queue.poll();
@@ -263,13 +263,13 @@ public class AffiliationEventTest extends IQTestHandler {
 				channelManager.getNodeMembership(Mockito.anyString(),
 						Mockito.eq(jid))).thenReturn(
 				new NodeMembershipImpl(node, jid, Subscriptions.subscribed,
-						Affiliations.owner));
+						Affiliations.owner, null));
 		Mockito.when(
 				channelManager.getNodeMembership(Mockito.anyString(),
 						Mockito.eq(new JID("francisco@denmark.lit"))))
 				.thenReturn(
 						new NodeMembershipImpl(node, jid, Subscriptions.none,
-								Affiliations.owner));
+								Affiliations.owner, null));
 
 		event.process(element, jid, request, null);
 		Packet response = queue.poll(100, TimeUnit.MILLISECONDS);

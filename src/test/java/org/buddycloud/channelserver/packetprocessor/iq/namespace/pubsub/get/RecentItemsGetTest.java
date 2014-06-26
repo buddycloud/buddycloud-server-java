@@ -329,7 +329,7 @@ public class RecentItemsGetTest extends IQTestHandler {
 		Mockito.when(channelManager.nodeExists(anyString())).thenReturn(true);
 		
 		Mockito.when(channelManager.getNodeMembership(node, jid)).thenReturn(
-				new NodeMembershipImpl(node, jid, Subscriptions.subscribed, Affiliations.member));
+				new NodeMembershipImpl(node, jid, Subscriptions.subscribed, Affiliations.member, null));
 		
 		ArrayList<NodeItem> results = new ArrayList<NodeItem>() {{
 			add(new NodeItemImpl(TEST_NODE_1, "entry1", new Date(System.currentTimeMillis()), "<entry><id>entry1</id></entry>"));
@@ -372,7 +372,7 @@ public class RecentItemsGetTest extends IQTestHandler {
 		Mockito.when(channelManager.nodeExists(anyString())).thenReturn(true);
 		
 		Mockito.when(channelManager.getNodeMembership(node, jid)).thenReturn(
-				new NodeMembershipImpl(node, jid, Subscriptions.subscribed, Affiliations.member));
+				new NodeMembershipImpl(node, jid, Subscriptions.subscribed, Affiliations.member, null));
 		
 		Mockito.when(
 				channelManager.getRecentItems(Mockito.any(JID.class),
@@ -405,7 +405,7 @@ public class RecentItemsGetTest extends IQTestHandler {
         Mockito.when(channelManager.nodeExists(anyString())).thenReturn(true);
 		
 		Mockito.when(channelManager.getNodeMembership(node, jid)).thenReturn(
-				new NodeMembershipImpl(node, jid, Subscriptions.subscribed, Affiliations.member));
+				new NodeMembershipImpl(node, jid, Subscriptions.subscribed, Affiliations.member, null));
 		
 		Mockito.when(
 				channelManager.getRecentItems(Mockito.any(JID.class),

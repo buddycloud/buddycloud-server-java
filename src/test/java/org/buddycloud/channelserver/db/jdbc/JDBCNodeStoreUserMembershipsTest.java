@@ -49,9 +49,9 @@ public class JDBCNodeStoreUserMembershipsTest extends JDBCNodeStoreAbstract {
 		HashSet<NodeMembership> expected = new HashSet<NodeMembership>() {
 			{
 				add(new NodeMembershipImpl(TEST_SERVER1_NODE1_ID,
-						TEST_SERVER1_USER1_JID, Subscriptions.subscribed, Affiliations.owner, new Date()));
+						TEST_SERVER1_USER1_JID, Subscriptions.subscribed, Affiliations.owner, null, new Date()));
 				add(new NodeMembershipImpl(TEST_SERVER1_NODE2_ID,
-						TEST_SERVER1_USER1_JID, Subscriptions.subscribed, Affiliations.publisher,
+						TEST_SERVER1_USER1_JID, Subscriptions.subscribed, Affiliations.publisher, null,
 						new Date()));
 			}
 		};
@@ -73,9 +73,9 @@ public class JDBCNodeStoreUserMembershipsTest extends JDBCNodeStoreAbstract {
 		HashSet<NodeMembership> expected = new HashSet<NodeMembership>() {
 			{
 				add(new NodeMembershipImpl(TEST_SERVER1_NODE1_ID,
-						TEST_SERVER1_USER1_JID, Subscriptions.subscribed, Affiliations.owner, new Date()));
+						TEST_SERVER1_USER1_JID, Subscriptions.subscribed, Affiliations.owner, null, new Date()));
 				add(new NodeMembershipImpl(TEST_SERVER1_NODE2_ID,
-						TEST_SERVER1_USER1_JID, Subscriptions.subscribed, Affiliations.publisher,
+						TEST_SERVER1_USER1_JID, Subscriptions.subscribed, Affiliations.publisher, null,
 						new Date()));
 			}
 		};
@@ -94,7 +94,7 @@ public class JDBCNodeStoreUserMembershipsTest extends JDBCNodeStoreAbstract {
 		ResultSet<NodeMembership> result = store.getUserMemberships(TEST_SERVER1_USER1_JID);
 
 		NodeMembership expected = new NodeMembershipImpl(TEST_SERVER1_NODE1_ID, TEST_SERVER1_USER1_JID,
-				Subscriptions.subscribed, Affiliations.none);
+				Subscriptions.subscribed, Affiliations.none, null);
 
 		assertEquals("An unexpected user membership was returned", expected,
 				result.get(0));
@@ -110,7 +110,7 @@ public class JDBCNodeStoreUserMembershipsTest extends JDBCNodeStoreAbstract {
 
 		NodeMembership expected = new NodeMembershipImpl(
 				TEST_SERVER1_NODE1_ID, TEST_SERVER1_USER1_JID,
-				Subscriptions.none, Affiliations.owner);
+				Subscriptions.none, Affiliations.owner, null);
 
 		assertEquals("An unexpected user membership was returned", expected,
 				result.get(0));

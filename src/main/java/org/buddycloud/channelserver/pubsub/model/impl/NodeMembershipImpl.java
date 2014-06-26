@@ -17,25 +17,26 @@ public class NodeMembershipImpl implements NodeMembership {
 	private final String nodeId;
 	private Date lastUpdated;
 	private Affiliations affiliation;
+	private JID inviter;
 
 
 	public NodeMembershipImpl(final String nodeId, final JID user,
-			final Subscriptions subscription, final Affiliations affiliation) {
-		this(nodeId, user, user, subscription, affiliation, new Date());
+			final Subscriptions subscription, final Affiliations affiliation, JID inviter) {
+		this(nodeId, user, user, subscription, affiliation, inviter, new Date());
 	}
 	
 	public NodeMembershipImpl(final String nodeId, final JID user,
-			final Subscriptions subscription, Affiliations affiliation, Date lastUpdated) {
-		this(nodeId, user, user, subscription, affiliation, lastUpdated);
+			final Subscriptions subscription, Affiliations affiliation, JID inviter, Date lastUpdated) {
+		this(nodeId, user, user, subscription, affiliation, inviter, lastUpdated);
 	}
 
 	public NodeMembershipImpl(final String nodeId, final JID user,
-			JID listener, final Subscriptions subscription, final Affiliations affiliation) {
-		this(nodeId, user, listener, subscription, affiliation, new Date());
+			JID listener, final Subscriptions subscription, final Affiliations affiliation, JID inviter) {
+		this(nodeId, user, listener, subscription, affiliation, inviter, new Date());
 	}
 	
 	public NodeMembershipImpl(final String nodeId, final JID user,
-			JID listener, final Subscriptions subscription, final Affiliations affiliation, Date lastUpdated) {
+			JID listener, final Subscriptions subscription, final Affiliations affiliation, JID inviter, Date lastUpdated) {
 		this.nodeId = nodeId;
 		if (user.getResource() == null) {
 			this.user = user;
@@ -46,6 +47,7 @@ public class NodeMembershipImpl implements NodeMembership {
 		setListener(listener);
 		this.subscription = subscription;
 		this.affiliation = affiliation;
+		this.inviter = inviter;
 	}
 
 	private void setListener(JID listener) {
@@ -83,6 +85,11 @@ public class NodeMembershipImpl implements NodeMembership {
 	@Override
 	public String getNodeId() {
 		return nodeId;
+	}
+	
+	@Override
+	public JID getInviter() {
+		return inviter;
 	}
 
 	@Override

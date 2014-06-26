@@ -92,7 +92,7 @@ public class RepliesGetTest extends IQTestHandler {
 
 		NodeMembershipImpl membership = new NodeMembershipImpl(node,
 				request.getFrom(), Subscriptions.subscribed,
-				Affiliations.member);
+				Affiliations.member, null);
 		Mockito.when(
 				channelManager.getNodeMembership(Mockito.anyString(),
 						Mockito.any(JID.class))).thenReturn(membership);

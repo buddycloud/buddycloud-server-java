@@ -425,9 +425,13 @@ public class JDBCNodeStore implements NodeStore {
 
 			ArrayList<NodeMembership> result = new ArrayList<NodeMembership>();
 			while (rs.next()) {
+				JID inviter = null;
+				if (null != rs.getString(6)) {
+					inviter = new JID(rs.getString(6));
+				}
 				NodeMembershipImpl membership = new NodeMembershipImpl(
 						rs.getString(1), new JID(rs.getString(2)), new JID(rs.getString(3)), Subscriptions.valueOf(rs.getString(4)), Affiliations.valueOf(rs
-								.getString(5)), rs.getTimestamp(6));
+								.getString(5)), inviter, rs.getTimestamp(7));
 				result.add(membership);
 			}
 
@@ -480,14 +484,18 @@ public class JDBCNodeStore implements NodeStore {
 			java.sql.ResultSet rs = selectStatement.executeQuery();
 
 			if (rs.next()) {
+				JID inviter = null;
+				if (null != rs.getString(6)) {
+					inviter = new JID(rs.getString(6));
+				}
 				membership = new NodeMembershipImpl(nodeId, new JID(
 						rs.getString(2)), new JID(rs.getString(3)),
 						Subscriptions.valueOf(rs.getString(4)),
 						Affiliations.valueOf(rs.getString(5)),
-						rs.getTimestamp(6));
+						inviter, rs.getTimestamp(7));
 			} else {
 				membership = new NodeMembershipImpl(nodeId, user, user,
-						Subscriptions.none, Affiliations.none);
+						Subscriptions.none, Affiliations.none, null);
 			}
 
 			return membership;
@@ -514,9 +522,13 @@ public class JDBCNodeStore implements NodeStore {
 
 			ArrayList<NodeMembership> result = new ArrayList<NodeMembership>();
 			while (rs.next()) {
+				JID inviter = null;
+				if (null != rs.getString(6)) {
+					inviter = new JID(rs.getString(6));
+				}
 				NodeMembershipImpl membership = new NodeMembershipImpl(
 						rs.getString(1), new JID(rs.getString(2)), new JID(rs.getString(3)), Subscriptions.valueOf(rs.getString(4)), Affiliations.valueOf(rs
-								.getString(5)), rs.getTimestamp(6));
+								.getString(5)), inviter, rs.getTimestamp(7));
 				result.add(membership);
 			}
 

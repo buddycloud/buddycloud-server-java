@@ -66,7 +66,7 @@ public class SubscribeSetTest extends IQTestHandler {
 		Mockito.when(channelManager.isLocalJID(Mockito.any(JID.class)))
 		.thenReturn(true);
 
-		membership = new NodeMembershipImpl(node, jid, Subscriptions.none, Affiliations.none);
+		membership = new NodeMembershipImpl(node, jid, Subscriptions.none, Affiliations.none, null);
 
 		Mockito.when(
 				channelManager.getNodeMembership(Mockito.anyString(),
@@ -75,7 +75,7 @@ public class SubscribeSetTest extends IQTestHandler {
 
 		ArrayList<NodeMembership> members = new ArrayList<NodeMembership>();
 		members.add(new NodeMembershipImpl(node, jid,
-				Subscriptions.subscribed, Affiliations.member));
+				Subscriptions.subscribed, Affiliations.member, null));
 
 		Mockito.doReturn(new ResultSetImpl<NodeMembership>(members))
 				.when(channelManager)

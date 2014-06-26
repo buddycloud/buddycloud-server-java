@@ -52,7 +52,7 @@ public class DeleteProcessorTest extends IQTestHandler {
 		ArrayList<NodeMembership> members = new ArrayList<NodeMembership>();
 		members.add(new NodeMembershipImpl(
 				"/users/romeo@shakespeare.lit/posts", jid,
-				Subscriptions.subscribed, Affiliations.member));
+				Subscriptions.subscribed, Affiliations.member, null));
 		Mockito.doReturn(new ResultSetImpl<NodeMembership>(members))
 				.when(channelManager).getNodeMemberships(Mockito.anyString());
 

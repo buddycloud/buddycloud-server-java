@@ -60,7 +60,7 @@ public class UserSingleItemGetTest extends IQTestHandler {
 				.thenReturn(true);
 		
 		Mockito.when(channelManager.getNodeMembership(node, jid)).thenReturn(
-				new NodeMembershipImpl(node, jid, Subscriptions.subscribed, Affiliations.member));
+				new NodeMembershipImpl(node, jid, Subscriptions.subscribed, Affiliations.member, null));
 		nodeViewAcl = Mockito.mock(NodeViewAcl.class);
 		Mockito.doReturn(true)
 				.when(nodeViewAcl)

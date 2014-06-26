@@ -181,7 +181,7 @@ public class SubscriptionEventTest extends IQTestHandler {
 				dataStore.getNodeMembership(Mockito.anyString(),
 						Mockito.any(JID.class))).thenReturn(
 				new NodeMembershipImpl(node, jid, Subscriptions.none,
-						Affiliations.none));
+						Affiliations.none, null));
 		event.setChannelManager(dataStore);
 
 		event.process(element, jid, request, null);
@@ -201,7 +201,7 @@ public class SubscriptionEventTest extends IQTestHandler {
 				dataStore.getNodeMembership(Mockito.anyString(),
 						Mockito.any(JID.class))).thenReturn(
 				new NodeMembershipImpl(node, jid, Subscriptions.subscribed,
-						Affiliations.member));
+						Affiliations.member, null));
 
 		event.setChannelManager(dataStore);
 
@@ -223,7 +223,7 @@ public class SubscriptionEventTest extends IQTestHandler {
 				.thenReturn(true);
 
 		NodeMembership membership = new NodeMembershipImpl(node, new JID(
-				subscriber), Subscriptions.none, Affiliations.owner);
+				subscriber), Subscriptions.none, Affiliations.owner, null);
 		Mockito.when(
 				dataStore.getNodeMembership(Mockito.anyString(),
 						Mockito.any(JID.class))).thenReturn(membership);
@@ -258,7 +258,7 @@ public class SubscriptionEventTest extends IQTestHandler {
 				dataStore.getNodeMembership(Mockito.anyString(),
 						Mockito.any(JID.class))).thenReturn(
 				new NodeMembershipImpl(node, jid, Subscriptions.subscribed,
-						Affiliations.owner));
+						Affiliations.owner, null));
 
 		ArrayList<NodeSubscription> subscribers = new ArrayList<NodeSubscription>();
 
@@ -286,7 +286,7 @@ public class SubscriptionEventTest extends IQTestHandler {
 		Mockito.when(dataStore.nodeExists(node)).thenReturn(true);
 
 		NodeMembership membership = new NodeMembershipImpl(node, new JID(
-				subscriber), Subscriptions.subscribed, Affiliations.moderator);
+				subscriber), Subscriptions.subscribed, Affiliations.moderator, null);
 		Mockito.when(
 				dataStore.getNodeMembership(Mockito.eq(node),
 						Mockito.any(JID.class))).thenReturn(membership);

@@ -50,7 +50,7 @@ public class RetractItemProcessorTest extends IQTestHandler {
 		ArrayList<NodeMembership> subscribers = new ArrayList<NodeMembership>();
 		subscribers.add(new NodeMembershipImpl(
 				"/users/romeo@shakespeare.lit/posts", jid,
-				Subscriptions.subscribed, Affiliations.member));
+				Subscriptions.subscribed, Affiliations.member, null));
 		Mockito.doReturn(new ResultSetImpl<NodeMembership>(subscribers))
 				.when(channelManager).getNodeMemberships(Mockito.anyString());
 		Mockito.when(channelManager.isLocalNode(Mockito.anyString()))

@@ -299,6 +299,7 @@ public class Sql92NodeStoreDialect implements NodeStoreSQLDialect {
 		         "THEN \"affiliations\".\"affiliation\" " +
 		         "ELSE 'none' " +
 		    "END AS \"affiliation\", " +
+		    "\"subscriptions\".\"invited_by\" AS \"invited_by\"," +
 		    "CASE WHEN \"affiliations\".\"updated\" > \"subscriptions\".\"updated\" " +
 		         "THEN \"affiliations\".\"updated\" " +
 		         "ELSE \"subscriptions\".\"updated\" " +
@@ -334,6 +335,7 @@ public class Sql92NodeStoreDialect implements NodeStoreSQLDialect {
 		         "THEN \"affiliations\".\"affiliation\" " +
 		         "ELSE 'none' " +
 		    "END AS \"affiliation\", " +
+		    "\"subscriptions\".\"invited_by\" AS \"invited_by\"," +
 		    "CASE WHEN \"affiliations\".\"updated\" > \"subscriptions\".\"updated\" " +
 		         "THEN \"affiliations\".\"updated\" " +
 		         "ELSE \"subscriptions\".\"updated\" " +
@@ -369,6 +371,7 @@ public class Sql92NodeStoreDialect implements NodeStoreSQLDialect {
 		         "THEN \"affiliations\".\"affiliation\" " +
 		         "ELSE 'none' " +
 		    "END AS \"affiliation\", " +
+		    "\"subscriptions\".\"invited_by\" AS \"invited_by\"," +
 		    "CASE WHEN \"affiliations\".\"updated\" > \"subscriptions\".\"updated\" " +
 		         "THEN \"affiliations\".\"updated\" " +
 		         "ELSE \"subscriptions\".\"updated\" " +

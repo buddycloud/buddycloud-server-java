@@ -47,4 +47,11 @@ public interface NodeMembership extends Result {
      * @return
      */
     Date getLastUpdated();
+
+    /**
+     * Get the inviter
+     * 
+     * @return
+     */
+	JID getInviter();
 }

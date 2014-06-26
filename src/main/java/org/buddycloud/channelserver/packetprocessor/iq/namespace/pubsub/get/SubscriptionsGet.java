@@ -57,14 +57,11 @@ public class SubscriptionsGet implements PubSubElementProcessor {
 		requestIq = reqIQ;
 		resultSetManagement = rsm;
 		
-		if (false == channelManager.isLocalJID(requestIq.getFrom())) {
-        	result.getElement().addAttribute("remote-server-discover", "false");
-        }
 		Element pubsub = result.setChildElement(PubSubGet.ELEMENT_NAME,
-				elm.getNamespaceURI());
+				JabberPubsub.NAMESPACE_URI);
 		Element subscriptions = pubsub.addElement("subscriptions");
 
-		node = elm.attributeValue("node");
+		node = reqIQ.getChildElement().element("subscriptions").attributeValue("node");
 
 		if (null == actorJid) {
 			actorJid = reqIQ.getFrom();
@@ -75,6 +72,9 @@ public class SubscriptionsGet implements PubSubElementProcessor {
 		if (node == null) {
 			isProcessedLocally = getUserMemberships(subscriptions);
 		} else {
+			if (false == channelManager.isLocalNode(node)) {
+	        	result.getElement().addAttribute("remote-server-discover", "false");
+	        }
 			isProcessedLocally = getNodeMemberships(subscriptions);
 		}
 		if (false == isProcessedLocally) return;
@@ -129,12 +129,6 @@ public class SubscriptionsGet implements PubSubElementProcessor {
 
 	private boolean getUserMemberships(Element subscriptions)
 			throws NodeStoreException, InterruptedException {
-		if (false == channelManager.isLocalJID(actorJid) 
-		    && (false == channelManager.isCachedJID(actorJid))
-		) {
-			makeRemoteRequest(actorJid.getDomain());
-			return false;
-		}
 		// let's get all subscriptions.
 		ResultSet<NodeMembership> cur;
 		cur = channelManager.getUserMemberships(actorJid);
@@ -148,31 +142,33 @@ public class SubscriptionsGet implements PubSubElementProcessor {
 		boolean isOwnerModerator = isOwnerModerator();
 		for (NodeMembership ns : cur) {
 			if (false == actorJid.toBareJID().equals(ns.getUser())) {
-				if ((false == isOwnerModerator) && ns.getAffiliation().in(Affiliations.outcast, Affiliations.none)) {
-					continue;
-				}
 				if ((false == isOwnerModerator) && !ns.getSubscription().equals(Subscriptions.subscribed)) {
 					continue;
 				}
 			}
-			subscriptions
-					.addElement("subscription")
+			Element subscription = subscriptions
+					.addElement("subscription");
+			subscription
 					.addAttribute("node", ns.getNodeId())
 					.addAttribute("subscription",
 							ns.getSubscription().toString())
 					.addAttribute("jid", ns.getUser().toBareJID());
+		    if (null != ns.getInvitedBy()) {
+		    	subscription.addAttribute("invited-by", ns.getInvitedBy().toBareJID());
+		    }
 		}
 		return true;
 	}
 	
 	private void makeRemoteRequest(String to) throws InterruptedException {
-		requestIq.setTo(to);
-		if (null == requestIq.getElement().element("pubsub").element("actor")) {
-		    Element actor = requestIq.getElement().element("pubsub")
+		IQ forwarder = requestIq.createCopy();
+		forwarder.setTo(to);
+		if (null == forwarder.getElement().element("pubsub").element("actor")) {
+		    Element actor = forwarder.getElement().element("pubsub")
 				.addElement("actor", Buddycloud.NS);
 		    actor.addText(requestIq.getFrom().toBareJID());
 		}
-	    outQueue.put(requestIq);
+	    outQueue.put(forwarder);
 	}
 	
 	@Override

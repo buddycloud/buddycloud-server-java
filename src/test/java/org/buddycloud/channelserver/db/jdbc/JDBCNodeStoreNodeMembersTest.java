@@ -154,4 +154,9 @@ public class JDBCNodeStoreNodeMembersTest extends JDBCNodeStoreAbstract {
 
 		assertTrue(newDate.after(originalDate));
 	}
+	
+	//@Test
+	//public void getNodeMembershipReturnsInvitedByDetails() throws Exception {
+	//	NodeSubscription = new NodeSubscriptionImpl(TEST_SERVER1_NODE1_ID, TEST_SERVER1_USER1_JID, Subscription.in)
+	//}
 }

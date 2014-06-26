@@ -116,8 +116,8 @@ public class Sql92NodeStoreDialect implements NodeStoreSQLDialect {
 			+ "\"updated\" > (SELECT \"updated\" FROM \"subscriptions\" WHERE \"node\" = ? AND \"user\" = ?) "
 			+ "ORDER BY \"updated\" ASC LIMIT ?";
 
-	private static final String INSERT_SUBSCRIPTION = "INSERT INTO \"subscriptions\" ( \"node\", \"user\", \"listener\", \"subscription\", \"updated\" )"
-			+ " VALUES ( ?, ?, ?, ?, now() )";
+	private static final String INSERT_SUBSCRIPTION = "INSERT INTO \"subscriptions\" ( \"node\", \"user\", \"listener\", \"subscription\", \"invited_by\", \"updated\" )"
+			+ " VALUES ( ?, ?, ?, ?, ?, now() )";
 
 	private static final String UPDATE_SUBSCRIPTION = "UPDATE \"subscriptions\""
 			+ " SET \"subscription\" = ?, \"updated\" = now(), \"listener\" = ?"

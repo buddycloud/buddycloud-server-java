@@ -363,6 +363,7 @@ public class JDBCNodeStore implements NodeStore {
 							.toString());
 					addStatement.setString(4, subscription.getSubscription()
 							.toString());
+					addStatement.setString(5, subscription.getInvitedBy().toBareJID());
 					addStatement.executeUpdate();
 					addStatement.close();
 				}

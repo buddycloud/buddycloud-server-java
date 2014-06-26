@@ -5,6 +5,7 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
+import java.sql.Types;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Date;
@@ -363,7 +364,11 @@ public class JDBCNodeStore implements NodeStore {
 							.toString());
 					addStatement.setString(4, subscription.getSubscription()
 							.toString());
-					addStatement.setString(5, subscription.getInvitedBy().toBareJID());
+					if (null == subscription.getInvitedBy()) {
+						addStatement.setNull(5, Types.NULL);
+					} else {
+					    addStatement.setString(5, subscription.getInvitedBy().toBareJID());
+					}
 					addStatement.executeUpdate();
 					addStatement.close();
 				}

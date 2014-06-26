@@ -72,10 +72,11 @@ public class SubscriptionsGetTest extends IQTestHandler {
 		Element element = new BaseElement("not-subscriptions");
 		Assert.assertFalse(subscriptionsGet.accept(element));
 	}
-
+	
 	@Test
-	public void doesntAddInvitedByToUserSubscriptionsListIfNotUserOwnerModerator() throws Exception {
+	public void addsInvitedByToUserSubscriptionsList() throws Exception {
 
+		
 		ArrayList<NodeMembership> members = new ArrayList<NodeMembership>();
 		members.add(new NodeMembershipImpl(node, jid, Subscriptions.invited, Affiliations.publisher, invitedBy));
 		
@@ -90,11 +91,52 @@ public class SubscriptionsGetTest extends IQTestHandler {
 		Assert.assertEquals(userRequest.getTo(), response.getFrom());
 		Assert.assertEquals(userRequest.getFrom(), response.getTo());
 		Assert.assertEquals(userRequest.getID(), response.getID());
+		Assert.assertEquals(1, response.getChildElement().element("subscriptions").elements("subscription").size());
+
+	}
+	
+	// ------------- node subscripton tests
+	
+	@Test
+	public void remoteNodeForwardsStanza() throws Exception {
+
+		Mockito.when(channelManager.isLocalNode(Mockito.anyString()))
+				.thenReturn(false);
+		Mockito.when(channelManager.isCachedNode(Mockito.anyString()))
+		.thenReturn(false);
+
+		subscriptionsGet.process(element, jid, nodeRequest, null);
+
+		IQ response = (IQ) queue.poll();
+
+		Assert.assertEquals(IQ.Type.get, response.getType());
+		Assert.assertEquals(new JID("denmark.lit"), response.getTo());
+		Assert.assertEquals(userRequest.getID(), response.getID());
+	}
+	
+
+	@Test
+	public void doesntAddInvitedByToNodeSubscriptionsListIfNotUserOrOwnerOrModerator() throws Exception {
+
+		ArrayList<NodeMembership> members = new ArrayList<NodeMembership>();
+		members.add(new NodeMembershipImpl(node, jid, Subscriptions.invited, Affiliations.publisher, invitedBy));
+		
+		Mockito.when(channelManager.getNodeMemberships(Mockito.anyString())).thenReturn(new ResultSetImpl<NodeMembership>(members));
+		
+		subscriptionsGet.process(element, jid, nodeRequest, null);
+
+		Assert.assertEquals(1, queue.size());
+
+		IQ response = (IQ) queue.poll();
+		Assert.assertEquals(IQ.Type.result, response.getType());
+		Assert.assertEquals(userRequest.getTo(), response.getFrom());
+		Assert.assertEquals(userRequest.getFrom(), response.getTo());
+		Assert.assertEquals(userRequest.getID(), response.getID());
 		Assert.assertEquals(0, response.getChildElement().element("subscriptions").elements("subscription").size());
 	}
 	
 	@Test
-	public void addsInvitedByToUserSubscriptionsListIfOwner() throws Exception {
+	public void addsInvitedByToNodeSubscriptionsList() throws Exception {
 
 		NodeMembership nodeMembership = new NodeMembershipImpl(node, jid,
 				Subscriptions.subscribed, Affiliations.owner, null);
@@ -105,9 +147,9 @@ public class SubscriptionsGetTest extends IQTestHandler {
 		ArrayList<NodeMembership> members = new ArrayList<NodeMembership>();
 		members.add(new NodeMembershipImpl(node, jid, Subscriptions.invited, Affiliations.publisher, invitedBy));
 		
-		Mockito.when(channelManager.getUserMemberships(Mockito.any(JID.class))).thenReturn(new ResultSetImpl<NodeMembership>(members));
+		Mockito.when(channelManager.getNodeMemberships(Mockito.anyString())).thenReturn(new ResultSetImpl<NodeMembership>(members));
 		
-		subscriptionsGet.process(element, jid, userRequest, null);
+		subscriptionsGet.process(element, jid, nodeRequest, null);
 
 		Assert.assertEquals(1, queue.size());
 
@@ -126,7 +168,7 @@ public class SubscriptionsGetTest extends IQTestHandler {
 	}	
 	
 	@Test
-	public void addsInvitedByToUserSubscriptionsListIfModerator() throws Exception {
+	public void addsInvitedByToNodeSubscriptionsListIfModerator() throws Exception {
 
 		NodeMembership nodeMembership = new NodeMembershipImpl(node, jid,
 				Subscriptions.subscribed, Affiliations.moderator, null);
@@ -137,9 +179,9 @@ public class SubscriptionsGetTest extends IQTestHandler {
 		ArrayList<NodeMembership> members = new ArrayList<NodeMembership>();
 		members.add(new NodeMembershipImpl(node, jid, Subscriptions.invited, Affiliations.publisher, invitedBy));
 		
-		Mockito.when(channelManager.getUserMemberships(Mockito.any(JID.class))).thenReturn(new ResultSetImpl<NodeMembership>(members));
+		Mockito.when(channelManager.getNodeMemberships(Mockito.anyString())).thenReturn(new ResultSetImpl<NodeMembership>(members));
 		
-		subscriptionsGet.process(element, jid, userRequest, null);
+		subscriptionsGet.process(element, jid, nodeRequest, null);
 
 		Assert.assertEquals(1, queue.size());
 
@@ -164,9 +206,9 @@ public class SubscriptionsGetTest extends IQTestHandler {
 		ArrayList<NodeMembership> members = new ArrayList<NodeMembership>();
 		members.add(new NodeMembershipImpl(node, jid, Subscriptions.invited, Affiliations.publisher, invitedBy));
 		
-		Mockito.when(channelManager.getUserMemberships(Mockito.any(JID.class))).thenReturn(new ResultSetImpl<NodeMembership>(members));
+		Mockito.when(channelManager.getNodeMemberships(Mockito.anyString())).thenReturn(new ResultSetImpl<NodeMembership>(members));
 		
-		subscriptionsGet.process(element, jid, userRequest, null);
+		subscriptionsGet.process(element, jid, nodeRequest, null);
 
 		Assert.assertEquals(1, queue.size());
 
@@ -177,22 +219,5 @@ public class SubscriptionsGetTest extends IQTestHandler {
 		Assert.assertEquals(userRequest.getID(), response.getID());
 		Assert.assertEquals(1, response.getChildElement().element("subscriptions").elements("subscription").size());
 
-	}
-	
-	@Test
-	public void remoteNodeForwardsStanza() throws Exception {
-
-		Mockito.when(channelManager.isLocalNode(Mockito.anyString()))
-				.thenReturn(false);
-		Mockito.when(channelManager.isCachedNode(Mockito.anyString()))
-		.thenReturn(false);
-
-		subscriptionsGet.process(element, jid, nodeRequest, null);
-
-		IQ response = (IQ) queue.poll();
-
-		Assert.assertEquals(IQ.Type.get, response.getType());
-		Assert.assertEquals(new JID("denmark.lit"), response.getTo());
-		Assert.assertEquals(userRequest.getID(), response.getID());
 	}
 }

@@ -111,14 +111,16 @@ public class SubscriptionsGet implements PubSubElementProcessor {
 					continue;
 				}
 			}
-			if (null == firstItem) firstItem = ns.getUser().toBareJID();
-			lastItem = ns.getUser().toBareJID();
-			subscriptions
-					.addElement("subscription")
+			Element subscription = subscriptions
+					.addElement("subscription");
+			subscription
 					.addAttribute("node", ns.getNodeId())
 					.addAttribute("subscription",
 							ns.getSubscription().toString())
 					.addAttribute("jid", ns.getUser().toBareJID());
+		    if (null != ns.getInvitedBy()) {
+		    	subscription.addAttribute("invited-by", ns.getInvitedBy().toBareJID());
+		    }
 		}
 		return true;
 	}
@@ -139,13 +141,7 @@ public class SubscriptionsGet implements PubSubElementProcessor {
 			makeRemoteRequest(actorJid.getDomain());
 			return false;
 		}
-		boolean isOwnerModerator = isOwnerModerator();
 		for (NodeMembership ns : cur) {
-			if (false == actorJid.toBareJID().equals(ns.getUser())) {
-				if ((false == isOwnerModerator) && !ns.getSubscription().equals(Subscriptions.subscribed)) {
-					continue;
-				}
-			}
 			Element subscription = subscriptions
 					.addElement("subscription");
 			subscription

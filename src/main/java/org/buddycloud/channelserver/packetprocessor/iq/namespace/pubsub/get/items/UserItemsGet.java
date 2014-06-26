@@ -13,21 +13,15 @@ import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.JabberPu
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.PubSubElementProcessor;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.PubSubGet;
 import org.buddycloud.channelserver.pubsub.accessmodel.AccessModels;
-import org.buddycloud.channelserver.pubsub.affiliation.Affiliations;
 import org.buddycloud.channelserver.pubsub.model.GlobalItemID;
-import org.buddycloud.channelserver.pubsub.model.NodeAffiliation;
 import org.buddycloud.channelserver.pubsub.model.NodeItem;
 import org.buddycloud.channelserver.pubsub.model.NodeMembership;
-import org.buddycloud.channelserver.pubsub.model.NodeSubscription;
 import org.buddycloud.channelserver.pubsub.model.impl.GlobalItemIDImpl;
-import org.buddycloud.channelserver.pubsub.subscription.Subscriptions;
 import org.buddycloud.channelserver.utils.node.NodeAclRefuseReason;
 import org.buddycloud.channelserver.utils.node.NodeViewAcl;
 import org.buddycloud.channelserver.utils.node.item.payload.Buddycloud;
 import org.dom4j.DocumentException;
 import org.dom4j.Element;
-import org.dom4j.Namespace;
-import org.dom4j.QName;
 import org.dom4j.dom.DOMElement;
 import org.dom4j.io.SAXReader;
 import org.xmpp.packet.IQ;
@@ -36,7 +30,6 @@ import org.xmpp.packet.Packet;
 import org.xmpp.packet.PacketError;
 import org.xmpp.packet.PacketError.Condition;
 import org.xmpp.packet.PacketError.Type;
-import org.xmpp.resultsetmanagement.ResultSet;
 
 public class UserItemsGet implements PubSubElementProcessor {
 	private static final Logger logger = Logger.getLogger(UserItemsGet.class);
@@ -56,8 +49,6 @@ public class UserItemsGet implements PubSubElementProcessor {
 
 	private NodeViewAcl nodeViewAcl;
 	private Map<String, String> nodeDetails;
-
-	private boolean isSubscriptionsNode;
 
 	private int rsmEntriesCount;
 
@@ -98,15 +89,7 @@ public class UserItemsGet implements PubSubElementProcessor {
 			reply.getElement().addAttribute("remote-server-discover", "false");
 		}
 
-		isSubscriptionsNode = node.substring(node.length() - 13).equals(
-				"subscriptions");
-
-		boolean isCached = false;
-		if (isSubscriptionsNode) {
-			isCached = channelManager.nodeHasSubscriptions(node);
-		} else {
-			isCached = channelManager.isCachedNode(node);
-		}
+		boolean isCached = channelManager.isCachedNode(node);
 
 		this.actor = actorJID;
 		if (null == this.actor) {
@@ -239,15 +222,8 @@ public class UserItemsGet implements PubSubElementProcessor {
 		items.addAttribute("node", node);
 
 		entry = null;
-		int totalEntriesCount = 0;
-
-		if (true == isSubscriptionsNode) {
-			totalEntriesCount = getSubscriptionItems(items, maxItemsToReturn,
+		int totalEntriesCount = getNodeItems(items, maxItemsToReturn,
 					afterItemId);
-		} else {
-			totalEntriesCount = getNodeItems(items, maxItemsToReturn,
-					afterItemId);
-		}
 
 		if ((false == channelManager.isLocalNode(node))
 				&& (0 == rsmEntriesCount)) {
@@ -303,7 +279,7 @@ public class UserItemsGet implements PubSubElementProcessor {
 	}
 
 	/**
-	 * Get items for !/subscriptions nodes
+	 * Get items nodes
 	 */
 	private int getNodeItems(Element items, int maxItemsToReturn,
 			String afterItemId) throws NodeStoreException {
@@ -346,63 +322,9 @@ public class UserItemsGet implements PubSubElementProcessor {
 		}
 	}
 
-	/**
-	 * Get items for the /subscriptions node
-	 */
-	private int getSubscriptionItems(Element items, int maxItemsToReturn,
-			String afterItemId) throws NodeStoreException {
-
-		ResultSet<NodeMembership> members = channelManager
-				.getNodeMemberships(node);
-		int entries = 0;
-
-		Element jidItem;
-		Element query;
-
-		for (NodeMembership member : members) {
-
-			jidItem = items.addElement("item");
-			jidItem.addAttribute("id", member.getUser().toString());
-			query = jidItem.addElement("query");
-			query.addNamespace("", JabberPubsub.NS_DISCO_ITEMS);
-
-			addSubscriptionItems(query, member.getUser());
-			entries++;
-		}
-		return entries;
-	}
-
 	private boolean isOwnerModerator() throws NodeStoreException {
 		return channelManager.getNodeMembership(node, actor).getAffiliation()
 				.canAuthorize();
-	}
-
-	private void addSubscriptionItems(Element query, JID subscriber)
-			throws NodeStoreException {
-
-		ResultSet<NodeMembership> memberships = channelManager
-				.getUserMemberships(subscriber);
-
-		if ((0 == memberships.size())) {
-			return;
-		}
-		Element item;
-		Namespace ns1 = new Namespace("ns1", JabberPubsub.NAMESPACE_URI);
-		Namespace ns2 = new Namespace("ns2", JabberPubsub.NAMESPACE_URI);
-
-		for (NodeMembership membership : memberships) {
-			item = query.addElement("item");
-			item.add(ns1);
-			item.add(ns2);
-			item.addAttribute("jid", membership.getUser().toString());
-			item.addAttribute("node", membership.getNodeId());
-			QName affiliationAttribute = new QName("affiliation", ns1);
-			QName subscriptionAttribute = new QName("subscription", ns2);
-			item.addAttribute(affiliationAttribute, membership
-					.getAffiliation().toString());
-			item.addAttribute(subscriptionAttribute, membership
-					.getSubscription().toString());
-		}
 	}
 
 	private void createExtendedErrorReply(Type type, Condition condition,

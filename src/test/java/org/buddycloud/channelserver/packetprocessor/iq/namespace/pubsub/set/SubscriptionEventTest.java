@@ -20,6 +20,7 @@ import org.buddycloud.channelserver.pubsub.subscription.Subscriptions;
 import org.dom4j.Element;
 import org.dom4j.tree.BaseElement;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
@@ -77,7 +78,7 @@ public class SubscriptionEventTest extends IQTestHandler {
 			throws Exception {
 		BaseElement element = new BaseElement("subscriptions");
 		event.process(element, jid, request, null);
-		Packet response = queue.poll(100, TimeUnit.MILLISECONDS);
+		Packet response = queue.poll();
 
 		PacketError error = response.getError();
 		Assert.assertNotNull(error);
@@ -97,7 +98,7 @@ public class SubscriptionEventTest extends IQTestHandler {
 						""));
 
 		event.process(element, jid, request, null);
-		Packet response = queue.poll(100, TimeUnit.MILLISECONDS);
+		Packet response = queue.poll();
 
 		PacketError error = response.getError();
 		Assert.assertNotNull(error);
@@ -113,7 +114,7 @@ public class SubscriptionEventTest extends IQTestHandler {
 				"/iq/pubsub/subscribe/authorizationPendingGrantReply.stanza")
 				.replaceFirst("jid='francisco@denmark.lit'", ""));
 		event.process(element, jid, request, null);
-		Packet response = queue.poll(100, TimeUnit.MILLISECONDS);
+		Packet response = queue.poll();
 
 		PacketError error = response.getError();
 		Assert.assertNotNull(error);
@@ -129,7 +130,7 @@ public class SubscriptionEventTest extends IQTestHandler {
 				"/iq/pubsub/subscribe/authorizationPendingGrantReply.stanza")
 				.replaceFirst("subscription='subscribed'", ""));
 		event.process(element, jid, request, null);
-		Packet response = queue.poll(100, TimeUnit.MILLISECONDS);
+		Packet response = queue.poll();
 
 		PacketError error = response.getError();
 		Assert.assertNotNull(error);
@@ -145,7 +146,7 @@ public class SubscriptionEventTest extends IQTestHandler {
 				NodeStoreException.class);
 
 		event.process(element, jid, request, null);
-		Packet response = queue.poll(100, TimeUnit.MILLISECONDS);
+		Packet response = queue.poll();
 
 		PacketError error = response.getError();
 		Assert.assertNotNull(error);
@@ -161,7 +162,7 @@ public class SubscriptionEventTest extends IQTestHandler {
 		event.setChannelManager(dataStore);
 
 		event.process(element, jid, request, null);
-		Packet response = queue.poll(100, TimeUnit.MILLISECONDS);
+		Packet response = queue.poll();
 
 		PacketError error = response.getError();
 		Assert.assertNotNull(error);
@@ -181,7 +182,7 @@ public class SubscriptionEventTest extends IQTestHandler {
 		event.setChannelManager(dataStore);
 
 		event.process(element, jid, request, null);
-		Packet response = queue.poll(100, TimeUnit.MILLISECONDS);
+		Packet response = queue.poll();
 
 		PacketError error = response.getError();
 		Assert.assertNotNull(error);
@@ -202,7 +203,7 @@ public class SubscriptionEventTest extends IQTestHandler {
 		event.setChannelManager(dataStore);
 
 		event.process(element, jid, request, null);
-		Packet response = queue.poll(100, TimeUnit.MILLISECONDS);
+		Packet response = queue.poll();
 
 		PacketError error = response.getError();
 		Assert.assertNotNull(error);
@@ -330,5 +331,26 @@ public class SubscriptionEventTest extends IQTestHandler {
 				subscriber,
 				notification.getElement().element("event")
 						.element("subscription").attributeValue("jid"));
+	}
+	
+	@Ignore("Not implemented yet")
+	public void userCanInviteAnotherUserToNode() throws Exception {
+		IQ request = readStanzaAsIq("/iq/pubsub/subscribe/invite.stanza");
+		
+	}
+	
+	@Ignore("Not implemented yet")
+	public void userCanNotInviteAnotherUserIfTheyDontHaveValidSubscription() throws Exception {
+		
+	}
+	
+	@Ignore("Not implemented yet")
+	public void notificationsAreOnlySentToInviteeOwnersAndModerators() throws Exception {
+		
+	}
+	
+	@Ignore("Not implemented yet")
+	public void invitedByIsSetAsActorJid() throws Exception {
+		
 	}
 }

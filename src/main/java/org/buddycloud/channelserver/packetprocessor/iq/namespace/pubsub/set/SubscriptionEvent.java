@@ -28,6 +28,7 @@ public class SubscriptionEvent extends PubSubElementProcessorAbstract {
 
 	Element requestedSubscription;
 	NodeMembership currentMembership;
+	JID invitedBy = null;
 
 	private static final Logger LOGGER = Logger
 			.getLogger(SubscriptionEvent.class);
@@ -120,7 +121,7 @@ public class SubscriptionEvent extends PubSubElementProcessorAbstract {
 		NodeSubscription newSubscription = new NodeSubscriptionImpl(node,
 				new JID(requestedSubscription.attributeValue("jid")), currentMembership.getListener(),
 				Subscriptions.valueOf(requestedSubscription
-						.attributeValue("subscription")), null);
+						.attributeValue("subscription")), invitedBy);
 
 		channelManager.addUserSubscription(newSubscription);
 	}

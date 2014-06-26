@@ -10,6 +10,7 @@ import junit.framework.Assert;
 import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.channel.ValidatePayload;
 import org.buddycloud.channelserver.channel.validate.AtomEntry;
+import org.buddycloud.channelserver.channel.validate.PayloadValidator;
 import org.buddycloud.channelserver.channel.validate.UnknownContentTypeException;
 import org.buddycloud.channelserver.db.exception.NodeStoreException;
 import org.buddycloud.channelserver.packetHandler.iq.IQTestHandler;
@@ -433,6 +434,9 @@ public class PublishTest extends IQTestHandler {
 		Mockito.when(validateEntry.getPayload()).thenReturn(
 				request.getChildElement().element("publish").element("item")
 						.element("entry"));
+
+		Mockito.when(validateEntry.getInReplyTo())
+			.thenReturn("fc362eb42085f017ed9ccd9c4004b095");
 
 		publish.process(element, jid, request, null);
 

@@ -229,6 +229,7 @@ public class AtomEntry implements PayloadValidator {
 			}
 			mediaElement.setName(Buddycloud.NS_MEDIA_PREFIX + ":media");
 			entry.add(mediaElement);
+		}
 
         if (null != targetId) {
             GlobalItemIDImpl globalTargetId = new GlobalItemIDImpl(new JID(

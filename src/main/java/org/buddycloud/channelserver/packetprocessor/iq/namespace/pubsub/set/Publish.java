@@ -119,10 +119,10 @@ public class Publish extends PubSubElementProcessorAbstract {
     }
 
 	private void updateThreadParent() throws NodeStoreException {
-		if (null == inReplyTo) {
+		if (null == this.validator.getInReplyTo()) {
 			return;
 		}
-		channelManager.updateThreadParent(node, inReplyTo);
+		channelManager.updateThreadParent(node, this.validator.getInReplyTo());
 	}
 
     private void saveNodeItem() throws NodeStoreException {

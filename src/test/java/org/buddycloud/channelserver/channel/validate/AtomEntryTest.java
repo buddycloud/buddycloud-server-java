@@ -10,6 +10,7 @@ import org.buddycloud.channelserver.pubsub.model.GlobalItemID;
 import org.buddycloud.channelserver.pubsub.model.NodeItem;
 import org.buddycloud.channelserver.pubsub.model.impl.NodeItemImpl;
 import org.buddycloud.channelserver.utils.node.item.payload.ActivityStreams;
+import org.buddycloud.channelserver.pubsub.model.impl.GlobalItemIDImpl;
 import org.buddycloud.channelserver.utils.node.item.payload.Buddycloud;
 import org.dom4j.Element;
 import org.junit.Before;
@@ -705,11 +706,11 @@ public class AtomEntryTest extends TestHandler {
     
     @Test
 	public void addsMediaNamespace() throws Exception {
-		Element entry = (Element) this.ratingEntry.clone();
-		entry.element("target").element("id").setText("1");
-		entry.addElement("media").addElement("item").addAttribute("channel", "marty@mcfly.com");
+		Element item = (Element) this.ratingEntry.clone();
+		item.element("entry").element("target").element("id").setText("1");
+		item.element("entry").addElement("media").addElement("item").addAttribute("channel", "marty@mcfly.com");
 
-		validator = getEntryObject(entry);
+		validator = getEntryObject(item);
 		Assert.assertTrue(validator.isValid());
 		Element payload = validator.getPayload();
 		Assert.assertEquals(
@@ -720,18 +721,18 @@ public class AtomEntryTest extends TestHandler {
 	
 	@Test
 	public void existingMediaNamespaceDoesntCauseConflict() throws Exception {
-		Element entry = (Element) this.ratingEntry.clone();
-		entry.element("target").element("id").setText("1");
-		entry.addNamespace(Buddycloud.NS_MEDIA_PREFIX, Buddycloud.NS_MEDIA);
-		Element media = entry.addElement(Buddycloud.NS_MEDIA_PREFIX + ":media");
+		Element item = (Element) this.ratingEntry.clone();
+		item.element("entry").element("target").element("id").setText("1");
+		item.element("entry").addNamespace(Buddycloud.NS_MEDIA_PREFIX, Buddycloud.NS_MEDIA);
+		Element media = item.element("entry").addElement(Buddycloud.NS_MEDIA_PREFIX + ":media");
 		media.addElement("item").addAttribute("channel", "marty@mcfly.com");
 
-		validator = getEntryObject(entry);
+		validator = getEntryObject(item);
 		Assert.assertTrue(validator.isValid());
 		Element payload = validator.getPayload();
 		Assert.assertEquals(
 			Buddycloud.NS_MEDIA,
-			entry.getNamespaceForPrefix(Buddycloud.NS_MEDIA_PREFIX).getText()
+			item.element("entry").getNamespaceForPrefix(Buddycloud.NS_MEDIA_PREFIX).getText()
 		);
 		Assert.assertNotNull(payload.element(Buddycloud.NS_MEDIA_PREFIX + ":media"));
 	}

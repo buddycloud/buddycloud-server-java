@@ -83,7 +83,7 @@ public class SubscribeSetTest extends IQTestHandler {
 		
 		ArrayList<NodeSubscription> subscribers = new ArrayList<NodeSubscription>();
 		subscribers.add(new NodeSubscriptionImpl(node, jid,
-				Subscriptions.subscribed));
+				Subscriptions.subscribed, null));
 
 		Mockito.doReturn(new ResultSetImpl<NodeSubscription>(subscribers))
 				.when(channelManager)

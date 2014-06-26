@@ -57,7 +57,7 @@ public class SubscriptionProcessor extends AbstractMessageProcessor {
 
 	private void storeNewSubscription() throws NodeStoreException {
 		NodeSubscriptionImpl newSubscription = new NodeSubscriptionImpl(node,
-				jid, subscription);
+				jid, subscription, null);
 		addRemoteNode();
 		channelManager.addUserSubscription(newSubscription);
 	}

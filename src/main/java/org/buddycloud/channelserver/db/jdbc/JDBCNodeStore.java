@@ -85,7 +85,7 @@ public class JDBCNodeStore implements NodeStore {
 				setNodeConf(nodeId, nodeConf);
 			}
 			NodeSubscriptionImpl subscription = new NodeSubscriptionImpl(
-					nodeId, owner, Subscriptions.subscribed);
+					nodeId, owner, Subscriptions.subscribed, null);
 			addUserSubscription(subscription);
 			setUserAffiliation(nodeId, owner, Affiliations.owner);
 		} catch (SQLException e) {
@@ -556,10 +556,14 @@ public class JDBCNodeStore implements NodeStore {
 			ArrayList<NodeSubscription> result = new ArrayList<NodeSubscription>();
 
 			while (rs.next()) {
+				JID invitedBy = null;
+				if (null != rs.getString(5)) {
+					invitedBy = new JID(rs.getString(5));
+				}
 				NodeSubscriptionImpl nodeSub = new NodeSubscriptionImpl(
 						rs.getString(1), new JID(rs.getString(2)), new JID(
 								rs.getString(3)), Subscriptions.valueOf(rs
-								.getString(4)), rs.getTimestamp(5));
+								.getString(4)), invitedBy, rs.getTimestamp(6));
 				result.add(nodeSub);
 			}
 
@@ -588,7 +592,7 @@ public class JDBCNodeStore implements NodeStore {
 			while (rs.next()) {
 				NodeSubscriptionImpl nodeSub = new NodeSubscriptionImpl(
 						rs.getString(2), new JID(rs.getString(1)),
-						Subscriptions.valueOf(rs.getString(3)),
+						Subscriptions.valueOf(rs.getString(3)), null,
 						rs.getTimestamp(4));
 				result.add(nodeSub);
 			}
@@ -617,7 +621,7 @@ public class JDBCNodeStore implements NodeStore {
 			while (rs.next()) {
 				NodeSubscriptionImpl nodeSub = new NodeSubscriptionImpl(
 						rs.getString(2), new JID(rs.getString(1)),
-						Subscriptions.valueOf(rs.getString(3)),
+						Subscriptions.valueOf(rs.getString(3)), null,
 						rs.getTimestamp(4));
 				result.add(nodeSub);
 			}

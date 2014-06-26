@@ -215,7 +215,7 @@ public class RegisterSetTest extends IQTestHandler {
 		// localPrivateChannel.
 		verify(channelManagerMock).addUserSubscription(
 				new NodeSubscriptionImpl(localPrivateChannelNode,
-						REGISTER_REQUEST_FROM, Subscriptions.subscribed));
+						REGISTER_REQUEST_FROM, Subscriptions.subscribed, null));
 		verify(channelManagerMock).setUserAffiliation(localPrivateChannelNode,
 				REGISTER_REQUEST_FROM, Affiliations.moderator);
 	}
@@ -259,7 +259,7 @@ public class RegisterSetTest extends IQTestHandler {
 		// localPrivateChannel.
 		verify(channelManagerMock, never()).addUserSubscription(
 				new NodeSubscriptionImpl(localPrivateChannelNode,
-						REGISTER_REQUEST_FROM, Subscriptions.subscribed));
+						REGISTER_REQUEST_FROM, Subscriptions.subscribed, null));
 	}
 
 	private void assertPacketsContainsSubscribe(

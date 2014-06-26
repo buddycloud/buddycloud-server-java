@@ -41,7 +41,7 @@ public class JDBCNodeStoreSubscriptionsTest extends JDBCNodeStoreAbstract {
 
 		NodeSubscriptionImpl nodeSubscription = new NodeSubscriptionImpl(
 				TEST_SERVER1_NODE1_ID, TEST_SERVER1_USER1_JID,
-				Subscriptions.subscribed);
+				Subscriptions.subscribed, null);
 
 		store.addUserSubscription(nodeSubscription);
 
@@ -62,7 +62,7 @@ public class JDBCNodeStoreSubscriptionsTest extends JDBCNodeStoreAbstract {
 
 		NodeSubscriptionImpl nodeSubscription = new NodeSubscriptionImpl(
 				TEST_SERVER1_NODE1_ID, TEST_SERVER2_USER1_JID,
-				TEST_SERVER2_CHANNELS_JID, Subscriptions.subscribed);
+				TEST_SERVER2_CHANNELS_JID, Subscriptions.subscribed, null);
 
 		store.addUserSubscription(nodeSubscription);
 
@@ -84,7 +84,7 @@ public class JDBCNodeStoreSubscriptionsTest extends JDBCNodeStoreAbstract {
 
 		NodeSubscriptionImpl nodeSubscription = new NodeSubscriptionImpl(
 				TEST_SERVER1_NODE1_ID, TEST_SERVER2_USER1_JID,
-				TEST_SERVER2_CHANNELS_JID, Subscriptions.subscribed);
+				TEST_SERVER2_CHANNELS_JID, Subscriptions.subscribed, null);
 
 		store.addUserSubscription(nodeSubscription);
 
@@ -106,7 +106,7 @@ public class JDBCNodeStoreSubscriptionsTest extends JDBCNodeStoreAbstract {
 
 		NodeSubscriptionImpl nodeSubscription = new NodeSubscriptionImpl(
 				TEST_SERVER1_NODE1_ID, TEST_SERVER1_USER1_JID,
-				Subscriptions.none);
+				Subscriptions.none, null);
 
 		store.addUserSubscription(nodeSubscription);
 
@@ -126,7 +126,7 @@ public class JDBCNodeStoreSubscriptionsTest extends JDBCNodeStoreAbstract {
 
 		NodeSubscriptionImpl nodeSubscription = new NodeSubscriptionImpl(
 				TEST_SERVER1_NODE1_ID, TEST_SERVER1_USER1_JID, new JID(
-						"randomlistener"), Subscriptions.none);
+						"randomlistener"), Subscriptions.none, null);
 
 		store.addUserSubscription(nodeSubscription);
 
@@ -145,7 +145,7 @@ public class JDBCNodeStoreSubscriptionsTest extends JDBCNodeStoreAbstract {
 		dbTester.loadData("node_1");
 
 		NodeSubscriptionImpl nodeSubscription = new NodeSubscriptionImpl(
-				TEST_SERVER1_NODE1_ID, TEST_SERVER1_USER1_JID, null);
+				TEST_SERVER1_NODE1_ID, TEST_SERVER1_USER1_JID, null, null);
 
 		store.addUserSubscription(nodeSubscription);
 	}
@@ -156,7 +156,7 @@ public class JDBCNodeStoreSubscriptionsTest extends JDBCNodeStoreAbstract {
 
 		NodeSubscriptionImpl nodeSubscription = new NodeSubscriptionImpl(
 				TEST_SERVER1_NODE1_ID, TEST_SERVER1_USER1_JID,
-				Subscriptions.unconfigured);
+				Subscriptions.unconfigured, null);
 
 		store.addUserSubscription(nodeSubscription);
 
@@ -186,7 +186,7 @@ public class JDBCNodeStoreSubscriptionsTest extends JDBCNodeStoreAbstract {
 
 		NodeSubscriptionImpl nodeSubscription = new NodeSubscriptionImpl(
 				TEST_SERVER1_NODE1_ID, TEST_SERVER1_USER1_JID_WITH_RESOURCE,
-				Subscriptions.subscribed);
+				Subscriptions.subscribed, null);
 
 		store.addUserSubscription(nodeSubscription);
 
@@ -211,11 +211,11 @@ public class JDBCNodeStoreSubscriptionsTest extends JDBCNodeStoreAbstract {
 		HashSet<NodeSubscription> expected = new HashSet<NodeSubscription>() {
 			{
 				add(new NodeSubscriptionImpl(TEST_SERVER1_NODE1_ID,
-						TEST_SERVER1_USER1_JID, Subscriptions.subscribed));
+						TEST_SERVER1_USER1_JID, Subscriptions.subscribed, null));
 				add(new NodeSubscriptionImpl(TEST_SERVER1_NODE1_ID,
-						TEST_SERVER1_USER2_JID, Subscriptions.subscribed));
+						TEST_SERVER1_USER2_JID, Subscriptions.subscribed, null));
 				add(new NodeSubscriptionImpl(TEST_SERVER1_NODE1_ID,
-						TEST_SERVER2_CHANNELS_JID, Subscriptions.subscribed));
+						TEST_SERVER2_CHANNELS_JID, Subscriptions.subscribed, null));
 			}
 		};
 
@@ -231,10 +231,10 @@ public class JDBCNodeStoreSubscriptionsTest extends JDBCNodeStoreAbstract {
 
 		store.addUserSubscription(new NodeSubscriptionImpl(
 				TEST_SERVER1_NODE1_ID, TEST_SERVER1_USER2_JID,
-				Subscriptions.subscribed));
+				Subscriptions.subscribed, null));
 		store.addUserSubscription(new NodeSubscriptionImpl(
 				TEST_SERVER1_NODE1_ID, TEST_SERVER1_USER3_JID,
-				Subscriptions.pending));
+				Subscriptions.pending, null));
 
 		ResultSet<NodeSubscription> changes = store.getSubscriptionChanges(
 				TEST_SERVER1_USER1_JID, new Date(0), new Date());
@@ -247,10 +247,10 @@ public class JDBCNodeStoreSubscriptionsTest extends JDBCNodeStoreAbstract {
 
 		store.addUserSubscription(new NodeSubscriptionImpl(
 				TEST_SERVER1_NODE1_ID, TEST_SERVER1_USER2_JID,
-				Subscriptions.subscribed));
+				Subscriptions.subscribed, null));
 		store.addUserSubscription(new NodeSubscriptionImpl(
 				TEST_SERVER1_NODE1_ID, TEST_SERVER1_USER3_JID,
-				Subscriptions.pending));
+				Subscriptions.pending, null));
 		store.setUserAffiliation(TEST_SERVER1_NODE1_ID, TEST_SERVER1_USER1_JID,
 				Affiliations.outcast);
 

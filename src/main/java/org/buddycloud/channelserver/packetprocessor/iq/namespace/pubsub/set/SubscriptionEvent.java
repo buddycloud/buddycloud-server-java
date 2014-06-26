@@ -120,7 +120,7 @@ public class SubscriptionEvent extends PubSubElementProcessorAbstract {
 		NodeSubscription newSubscription = new NodeSubscriptionImpl(node,
 				new JID(requestedSubscription.attributeValue("jid")), currentMembership.getListener(),
 				Subscriptions.valueOf(requestedSubscription
-						.attributeValue("subscription")));
+						.attributeValue("subscription")), null);
 
 		channelManager.addUserSubscription(newSubscription);
 	}

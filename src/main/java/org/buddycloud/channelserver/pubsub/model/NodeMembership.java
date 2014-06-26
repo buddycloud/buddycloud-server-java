@@ -53,5 +53,5 @@ public interface NodeMembership extends Result {
      * 
      * @return
      */
-	JID getInviter();
+	JID getInvitedBy();
 }

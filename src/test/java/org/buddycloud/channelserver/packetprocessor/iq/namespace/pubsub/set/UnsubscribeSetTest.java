@@ -308,7 +308,7 @@ public class UnsubscribeSetTest extends IQTestHandler {
 		JID listener = new JID("channels.example.com");
 		ArrayList<NodeSubscription> listeners = new ArrayList<NodeSubscription>();
 		listeners.add(new NodeSubscriptionImpl(node, jid, listener,
-				Subscriptions.subscribed));
+				Subscriptions.subscribed, null));
 
 		ResultSet<NodeSubscription> nodeListeners = new ResultSetImpl<NodeSubscription>(
 				listeners);

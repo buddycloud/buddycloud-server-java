@@ -159,7 +159,7 @@ public class SubscribeSet extends PubSubElementProcessorAbstract {
 
 				NodeSubscription newSubscription = new NodeSubscriptionImpl(
 						node, subscribingJid, request.getFrom(),
-						defaultSubscription);
+						defaultSubscription, null);
 				channelManager.addUserSubscription(newSubscription);
 
 				if (!membership.getAffiliation().in(Affiliations.none)) {

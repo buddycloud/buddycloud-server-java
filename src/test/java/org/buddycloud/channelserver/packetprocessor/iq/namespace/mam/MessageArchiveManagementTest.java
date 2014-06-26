@@ -278,9 +278,9 @@ public class MessageArchiveManagementTest extends IQTestHandler {
 
 		ArrayList<NodeSubscription> subscriptions = new ArrayList<NodeSubscription>();
 		subscriptions.add(new NodeSubscriptionImpl(node1, jid1,
-				Subscriptions.subscribed, date1));
+				Subscriptions.subscribed, null, date1));
 		subscriptions.add(new NodeSubscriptionImpl(node2, jid2,
-				Subscriptions.pending, date2));
+				Subscriptions.pending, null, date2));
 
 		Mockito.when(
 				channelManager.getSubscriptionChanges(Mockito.any(JID.class),

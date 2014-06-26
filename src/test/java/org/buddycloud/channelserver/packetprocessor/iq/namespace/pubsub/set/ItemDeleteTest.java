@@ -319,9 +319,9 @@ public class ItemDeleteTest extends IQTestHandler {
 
 		ArrayList<NodeSubscription> subscriptions = new ArrayList<NodeSubscription>();
 		NodeSubscriptionImpl subscription1 = new NodeSubscriptionImpl(node,
-				new JID("romeo@shakespeare.lit"), Subscriptions.pending);
+				new JID("romeo@shakespeare.lit"), Subscriptions.pending, null);
 		NodeSubscriptionImpl subscription2 = new NodeSubscriptionImpl(node,
-				new JID("juliet@shakespeare.lit"), Subscriptions.subscribed);
+				new JID("juliet@shakespeare.lit"), Subscriptions.subscribed, null);
 		subscriptions.add(subscription1);
 		subscriptions.add(subscription2);
 
@@ -365,9 +365,9 @@ public class ItemDeleteTest extends IQTestHandler {
 
 		ArrayList<NodeSubscription> subscriptions = new ArrayList<NodeSubscription>();
 		NodeSubscriptionImpl subscription1 = new NodeSubscriptionImpl(node,
-				new JID("romeo@shakespeare.lit"), Subscriptions.pending);
+				new JID("romeo@shakespeare.lit"), Subscriptions.pending, null);
 		NodeSubscriptionImpl subscription2 = new NodeSubscriptionImpl(node,
-				new JID("juliet@shakespeare.lit"), Subscriptions.subscribed);
+				new JID("juliet@shakespeare.lit"), Subscriptions.subscribed, null);
 		subscriptions.add(subscription1);
 		subscriptions.add(subscription2);
 

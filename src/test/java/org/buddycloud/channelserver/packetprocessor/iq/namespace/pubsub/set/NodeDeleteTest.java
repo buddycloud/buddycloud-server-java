@@ -269,7 +269,7 @@ public class NodeDeleteTest extends IQTestHandler {
 
 		JID subscriberJid = new JID("subscriber@shakespeare.lit");
 		NodeSubscriptionImpl subscription = new NodeSubscriptionImpl(node,
-				subscriberJid, subscriberJid, Subscriptions.subscribed);
+				subscriberJid, subscriberJid, Subscriptions.subscribed, null);
 		List<NodeSubscription> subscriptions = new LinkedList<NodeSubscription>();
 		subscriptions.add(subscription);
 

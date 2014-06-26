@@ -90,7 +90,7 @@ public class Sql92NodeStoreDialect implements NodeStoreSQLDialect {
 			+ "ORDER BY \"updated\" ASC LIMIT ?";
 
 	private static final String SELECT_SUBSCRIPTION_CHANGES = ""
-			+ "SELECT \"node\", \"user\", \"listener\", \"subscription\", \"updated\" "
+			+ "SELECT \"node\", \"user\", \"listener\", \"subscription\", \"invited_by\", \"updated\" "
 			+ "FROM \"subscriptions\" "
 			+ "WHERE \"updated\" >= ? AND \"updated\" <= ? AND \"node\" IN "
 			+ "(SELECT \"subscriptions\".\"node\" FROM \"subscriptions\", \"affiliations\" "

@@ -339,13 +339,13 @@ public class PublishTest extends IQTestHandler {
 	public void sendsOutExpectedNotifications() throws Exception {
 
 		NodeSubscription subscriber1 = new NodeSubscriptionImpl(node, new JID(
-				"romeo@shakespeare.lit"), Subscriptions.subscribed);
+				"romeo@shakespeare.lit"), Subscriptions.subscribed, null);
 		// Expect not to see this user (subscription: 'pending')
 		NodeSubscription subscriber2 = new NodeSubscriptionImpl(node, new JID(
-				"titania@shakespeare.lit"), Subscriptions.pending);
+				"titania@shakespeare.lit"), Subscriptions.pending, null);
 		NodeSubscription subscriber3 = new NodeSubscriptionImpl(node, new JID(
 				"faustus@marlowe.lit"), new JID("channels.marlowe.lit"),
-				Subscriptions.subscribed);
+				Subscriptions.subscribed, null);
 
 		ArrayList<NodeSubscription> subscribers = new ArrayList<NodeSubscription>();
 		subscribers.add(subscriber1);

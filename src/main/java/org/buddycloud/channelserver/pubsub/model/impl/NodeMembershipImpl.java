@@ -17,26 +17,26 @@ public class NodeMembershipImpl implements NodeMembership {
 	private final String nodeId;
 	private Date lastUpdated;
 	private Affiliations affiliation;
-	private JID inviter;
+	private JID invitedBy;
 
 
 	public NodeMembershipImpl(final String nodeId, final JID user,
-			final Subscriptions subscription, final Affiliations affiliation, JID inviter) {
-		this(nodeId, user, user, subscription, affiliation, inviter, new Date());
+			final Subscriptions subscription, final Affiliations affiliation, JID invitedBy) {
+		this(nodeId, user, user, subscription, affiliation, invitedBy, new Date());
 	}
 	
 	public NodeMembershipImpl(final String nodeId, final JID user,
-			final Subscriptions subscription, Affiliations affiliation, JID inviter, Date lastUpdated) {
-		this(nodeId, user, user, subscription, affiliation, inviter, lastUpdated);
+			final Subscriptions subscription, Affiliations affiliation, JID invitedBy, Date lastUpdated) {
+		this(nodeId, user, user, subscription, affiliation, invitedBy, lastUpdated);
 	}
 
 	public NodeMembershipImpl(final String nodeId, final JID user,
-			JID listener, final Subscriptions subscription, final Affiliations affiliation, JID inviter) {
-		this(nodeId, user, listener, subscription, affiliation, inviter, new Date());
+			JID listener, final Subscriptions subscription, final Affiliations affiliation, JID invitedBy) {
+		this(nodeId, user, listener, subscription, affiliation, invitedBy, new Date());
 	}
 	
 	public NodeMembershipImpl(final String nodeId, final JID user,
-			JID listener, final Subscriptions subscription, final Affiliations affiliation, JID inviter, Date lastUpdated) {
+			JID listener, final Subscriptions subscription, final Affiliations affiliation, JID invitedBy, Date lastUpdated) {
 		this.nodeId = nodeId;
 		if (user.getResource() == null) {
 			this.user = user;
@@ -47,7 +47,7 @@ public class NodeMembershipImpl implements NodeMembership {
 		setListener(listener);
 		this.subscription = subscription;
 		this.affiliation = affiliation;
-		this.inviter = inviter;
+		this.invitedBy = invitedBy;
 	}
 
 	private void setListener(JID listener) {
@@ -88,8 +88,8 @@ public class NodeMembershipImpl implements NodeMembership {
 	}
 	
 	@Override
-	public JID getInviter() {
-		return inviter;
+	public JID getInvitedBy() {
+		return invitedBy;
 	}
 
 	@Override

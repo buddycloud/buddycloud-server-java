@@ -156,11 +156,20 @@ public class JDBCNodeStoreNodeMembersTest extends JDBCNodeStoreAbstract {
 	}
 	
 	@Test
-	public void getUserMembershipsReturnsInvitedByDetails() throws Exception {
+	public void getNodeMembershipsReturnsInvitedByDetails() throws Exception {
 		store.addRemoteNode(TEST_SERVER1_NODE1_ID);
 		NodeSubscription newSubscription = new NodeSubscriptionImpl(TEST_SERVER1_NODE1_ID, TEST_SERVER1_USER1_JID, Subscriptions.invited, TEST_SERVER2_USER2_JID);
 		store.addUserSubscription(newSubscription);
 		NodeMembership membership = store.getNodeMemberships(TEST_SERVER1_NODE1_ID).get(0);
+		Assert.assertEquals(newSubscription.getInvitedBy(), membership.getInvitedBy());
+	}
+	
+	@Test
+	public void getUserMembershipsReturnsInvitedByDetails() throws Exception {
+		store.addRemoteNode(TEST_SERVER1_NODE1_ID);
+		NodeSubscription newSubscription = new NodeSubscriptionImpl(TEST_SERVER1_NODE1_ID, TEST_SERVER1_USER1_JID, Subscriptions.invited, TEST_SERVER2_USER2_JID);
+		store.addUserSubscription(newSubscription);
+		NodeMembership membership = store.getUserMemberships(TEST_SERVER1_USER1_JID).get(0);
 		Assert.assertEquals(newSubscription.getInvitedBy(), membership.getInvitedBy());
 	}
 }

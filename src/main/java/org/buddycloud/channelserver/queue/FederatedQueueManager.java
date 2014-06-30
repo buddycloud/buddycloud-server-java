@@ -6,6 +6,8 @@ import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.apache.log4j.Logger;
 import org.buddycloud.channelserver.ChannelsEngine;
@@ -20,7 +22,7 @@ import org.xmpp.packet.IQ;
 import org.xmpp.packet.JID;
 import org.xmpp.packet.Packet;
 import org.xmpp.packet.PacketError;
-import org.xbill.DNS.PTRRecord;
+import org.xbill.DNS.TXTRecord;
 import org.xbill.DNS.Record;
 import org.xbill.DNS.Type;
 import org.xbill.DNS.Lookup;
@@ -38,7 +40,7 @@ public class FederatedQueueManager {
 	public static final String IDENTITY_TYPE_CHANNELS = "channels";
 	public static final String BUDDYCLOUD_SERVER = "buddycloud-server";
 
-	public static final String PTR_PREFIX = "_buddycloud-server._tcp.";
+	public static final String TXT_PREFIX = "_bcloud-server._tcp.";
 
 	private int id = 1;
 
@@ -242,15 +244,24 @@ public class FederatedQueueManager {
 			throws ComponentException {
 		if (false == performDnsDiscovery) return false;
 		try {
-			String query = PTR_PREFIX + originatingServer;
-			Record[] records = new Lookup(query, Type.PTR).run();
+			String query = TXT_PREFIX + originatingServer;
+			Record[] records = new Lookup(query, Type.TXT).run();
 			if ((null == records) || (0 == records.length)) {
 				logger.debug("No appropriate DNS entry found for "
 						+ originatingServer);
 				return false;
 			}
-			PTRRecord record = (PTRRecord) records[0];
-			String targetServer = record.getTarget().toString(true);
+			String targetServer = null;
+			TXTRecord record = (TXTRecord) records[0];
+			List<String> txtStrings = record.getStrings();
+			Pattern p = Pattern.compile("host=([^ ]*)");
+			for (String txtString : txtStrings) {
+				Matcher m = p.matcher(txtString);
+				if (!m.find()) continue;
+				targetServer = m.group(1);
+			}
+			
+			if (null == targetServer) return false;
 			setDiscoveredServer(originatingServer, targetServer);
 			logger.info("DNS discovery complete for buddycloud server @ "
 					+ originatingServer + " (" + targetServer + ")");

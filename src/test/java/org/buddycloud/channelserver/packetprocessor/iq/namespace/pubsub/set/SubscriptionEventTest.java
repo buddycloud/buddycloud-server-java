@@ -1,12 +1,17 @@
 package org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.set;
 
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.TimeUnit;
 
 import junit.framework.Assert;
 
@@ -23,10 +28,8 @@ import org.buddycloud.channelserver.pubsub.subscription.Subscriptions;
 import org.dom4j.Element;
 import org.dom4j.tree.BaseElement;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
-import org.mockito.Mockito;
 import org.xmpp.packet.IQ;
 import org.xmpp.packet.JID;
 import org.xmpp.packet.Message;
@@ -56,14 +59,14 @@ public class SubscriptionEventTest extends IQTestHandler {
 		element = new BaseElement("subscriptions");
 		element.addAttribute("node", node);
 
-		dataStore = Mockito.mock(ChannelManager.class);
-		Mockito.when(dataStore.isLocalNode(Mockito.anyString())).thenReturn(
+		dataStore = mock(ChannelManager.class);
+		when(dataStore.isLocalNode(anyString())).thenReturn(
 				true);
-		Mockito.when(dataStore.nodeExists(Mockito.anyString()))
+		when(dataStore.nodeExists(anyString()))
 				.thenReturn(true);
 		
 		NodeMembership membership = new NodeMembershipImpl(node, jid, Subscriptions.subscribed, Affiliations.member, null);
-		Mockito.when(dataStore.getNodeMembership(Mockito.anyString(), Mockito.any(JID.class))).thenReturn(membership);
+		when(dataStore.getNodeMembership(anyString(), any(JID.class))).thenReturn(membership);
 
 		ArrayList<NodeSubscription> subscribers = new ArrayList<NodeSubscription>();
 		subscribers.add(new NodeSubscriptionMock(new JID(
@@ -71,9 +74,9 @@ public class SubscriptionEventTest extends IQTestHandler {
 		subscribers.add(new NodeSubscriptionMock(new JID(
 				"hamlet@shakespeare.lit")));
 
-		Mockito.doReturn(new ResultSetImpl<NodeSubscription>(subscribers))
+		doReturn(new ResultSetImpl<NodeSubscription>(subscribers))
 				.when(dataStore)
-				.getNodeSubscriptionListeners(Mockito.anyString());
+				.getNodeSubscriptionListeners(anyString());
 		
 		event.setChannelManager(dataStore);
 	}
@@ -159,7 +162,7 @@ public class SubscriptionEventTest extends IQTestHandler {
 	@Test
 	public void testNodeStoreExceptionResultsInInternalServerErrorStanza()
 			throws Exception {
-		Mockito.when(dataStore.nodeExists(Mockito.anyString())).thenThrow(
+		when(dataStore.nodeExists(anyString())).thenThrow(
 				NodeStoreException.class);
 
 		event.process(element, jid, request, null);
@@ -175,7 +178,7 @@ public class SubscriptionEventTest extends IQTestHandler {
 	@Test
 	public void testNonExistantNodeRetunsErrorStanza() throws Exception {
 
-		Mockito.when(dataStore.nodeExists(node)).thenReturn(false);
+		when(dataStore.nodeExists(node)).thenReturn(false);
 
 		event.process(element, jid, request, null);
 		Packet response = queue.poll();
@@ -190,9 +193,9 @@ public class SubscriptionEventTest extends IQTestHandler {
 	@Test
 	public void userWithoutSubscriptionReturnsErrorStanza() throws Exception {
 
-		Mockito.when(
-				dataStore.getNodeMembership(Mockito.anyString(),
-						Mockito.any(JID.class))).thenReturn(
+		when(
+				dataStore.getNodeMembership(anyString(),
+						any(JID.class))).thenReturn(
 				new NodeMembershipImpl(node, jid, Subscriptions.none,
 						Affiliations.none, null));
 
@@ -209,9 +212,9 @@ public class SubscriptionEventTest extends IQTestHandler {
 	@Test
 	public void userWhoIsntOwnerOrModeratorCantUpdateSubscription()
 			throws Exception {
-		Mockito.when(
-				dataStore.getNodeMembership(Mockito.anyString(),
-						Mockito.any(JID.class))).thenReturn(
+		when(
+				dataStore.getNodeMembership(anyString(),
+						any(JID.class))).thenReturn(
 				new NodeMembershipImpl(node, jid, Subscriptions.subscribed,
 						Affiliations.member, null));
 
@@ -231,15 +234,15 @@ public class SubscriptionEventTest extends IQTestHandler {
 
 		NodeMembership membership = new NodeMembershipImpl(node, new JID(
 				subscriber), Subscriptions.none, Affiliations.owner, null);
-		Mockito.when(
-				dataStore.getNodeMembership(Mockito.anyString(),
-						Mockito.any(JID.class))).thenReturn(membership);
+		when(
+				dataStore.getNodeMembership(anyString(),
+						any(JID.class))).thenReturn(membership);
 		
 		NodeMembership inviteeMemebership = new NodeMembershipImpl(node, new JID(
 				subscriber), Subscriptions.none, Affiliations.owner, null);
-		Mockito.when(
-				dataStore.getNodeMembership(Mockito.anyString(),
-						Mockito.eq(jid))).thenReturn(inviteeMemebership);
+		when(
+				dataStore.getNodeMembership(anyString(),
+						eq(jid))).thenReturn(inviteeMemebership);
 
 		event.process(element, jid, request, null);
 		Packet response = queue.poll();
@@ -263,21 +266,21 @@ public class SubscriptionEventTest extends IQTestHandler {
 		ArgumentCaptor<NodeSubscription> argument = ArgumentCaptor
 				.forClass(NodeSubscription.class);
 
-		Mockito.when(
-				dataStore.getNodeMembership(Mockito.anyString(),
-						Mockito.any(JID.class))).thenReturn(
+		when(
+				dataStore.getNodeMembership(anyString(),
+						any(JID.class))).thenReturn(
 				new NodeMembershipImpl(node, jid, Subscriptions.subscribed,
 						Affiliations.owner, null));
 
 		ArrayList<NodeSubscription> subscribers = new ArrayList<NodeSubscription>();
 
-		Mockito.doReturn(new ResultSetImpl<NodeSubscription>(subscribers))
+		doReturn(new ResultSetImpl<NodeSubscription>(subscribers))
 				.when(dataStore)
-				.getNodeSubscriptionListeners(Mockito.anyString());
+				.getNodeSubscriptionListeners(anyString());
 		
 		event.process(element, jid, request, null);
 
-		Mockito.verify(dataStore, Mockito.times(1)).addUserSubscription(
+		verify(dataStore, times(1)).addUserSubscription(
 				argument.capture());
 		NodeSubscription subscription = argument.getValue();
 		Assert.assertEquals(Subscriptions.none, subscription.getSubscription());
@@ -294,9 +297,9 @@ public class SubscriptionEventTest extends IQTestHandler {
 
 		NodeMembership membership = new NodeMembershipImpl(node, new JID(
 				subscriber), Subscriptions.subscribed, Affiliations.moderator, null);
-		Mockito.when(
-				dataStore.getNodeMembership(Mockito.eq(node),
-						Mockito.any(JID.class))).thenReturn(membership);
+		when(
+				dataStore.getNodeMembership(eq(node),
+						any(JID.class))).thenReturn(membership);
 
 		event.process(element, jid, request, null);
 
@@ -335,7 +338,7 @@ public class SubscriptionEventTest extends IQTestHandler {
 
 		JID invitee = new JID("francisco@denmark.lit");
 		NodeMembership membership = new NodeMembershipImpl(node, invitee, Subscriptions.none, Affiliations.none, null);
-		Mockito.when(dataStore.getNodeMembership(Mockito.eq(node), Mockito.eq(invitee))).thenReturn(membership);
+		when(dataStore.getNodeMembership(eq(node), eq(invitee))).thenReturn(membership);
 		
 		IQ request = readStanzaAsIq("/iq/pubsub/subscribe/invite.stanza");
 		
@@ -358,7 +361,7 @@ public class SubscriptionEventTest extends IQTestHandler {
 	public void userCanNotInviteAnotherUserIfTheyDontHaveValidSubscription() throws Exception {
 		
 		NodeMembership membership = new NodeMembershipImpl(node, jid, Subscriptions.pending, Affiliations.member, null);
-		Mockito.when(dataStore.getNodeMembership(Mockito.anyString(), Mockito.any(JID.class))).thenReturn(membership);
+		when(dataStore.getNodeMembership(anyString(), any(JID.class))).thenReturn(membership);
 		
 		IQ request = readStanzaAsIq("/iq/pubsub/subscribe/invite.stanza");
 		
@@ -375,7 +378,7 @@ public class SubscriptionEventTest extends IQTestHandler {
 		
 		JID invitee = new JID("francisco@denmark.lit");
 		NodeMembership membership = new NodeMembershipImpl(node, invitee, Subscriptions.none, Affiliations.none, null);
-		Mockito.when(dataStore.getNodeMembership(Mockito.eq(node), Mockito.eq(invitee))).thenReturn(membership);
+		when(dataStore.getNodeMembership(eq(node), eq(invitee))).thenReturn(membership);
 		
 		IQ request = readStanzaAsIq("/iq/pubsub/subscribe/invite.stanza");
 		
@@ -400,12 +403,11 @@ public class SubscriptionEventTest extends IQTestHandler {
 				subscriber), Subscriptions.subscribed, Affiliations.moderator, null);
 		
 		JID invitee = new JID("francisco@denmark.lit");
-		Mockito.when(dataStore.getNodeMembership(Mockito.eq(node), Mockito.any(JID.class))).thenReturn(membership);
+		when(dataStore.getNodeMembership(eq(node), any(JID.class))).thenReturn(membership);
 		
 		event.process(element, jid, request, null);
 		
 		IQ result = (IQ) queue.poll();
-		System.out.println(result.toXML());
 		Assert.assertEquals(IQ.Type.result, result.getType());
 		
 		ArgumentCaptor<NodeSubscription> subscription = ArgumentCaptor.forClass(NodeSubscription.class);

@@ -186,9 +186,9 @@ public class SubscribeSetTest extends IQTestHandler {
 		Assert.assertEquals(IQ.Type.result, response.getType());
 		Assert.assertNull(response.getError());
 
-		Assert.assertEquals(Subscriptions.subscribed.toString(),
-				response.getChildElement().element("subscription")
-						.attributeValue("subscription"));
+		Assert.assertEquals(Subscriptions.subscribed,
+				Subscriptions.valueOf(response.getChildElement().element("subscription")
+						.attributeValue("subscription")));
 
 	}
 
@@ -279,7 +279,33 @@ public class SubscribeSetTest extends IQTestHandler {
 		Assert.assertEquals(Subscriptions.subscribed, Subscriptions
 				.valueOf(response.getChildElement().element("subscription")
 						.attributeValue("subscription")));
+	}
 
+	@Test
+	public void canSubscribeIfInvited() throws Exception {
+		System.out.println("\n\n\n***** this test");
+		Map<String, String> configuration = new HashMap<String, String>();
+		configuration.put(Conf.ACCESS_MODEL, AccessModel.local.toString());
+		configuration.put(Conf.DEFAULT_AFFILIATION,
+				Affiliations.member.toString());
+
+		Mockito.when(channelManager.getNodeConf(Mockito.anyString()))
+				.thenReturn(configuration);
+		
+		membership = new NodeMembershipImpl(node, jid,
+				Subscriptions.invited, Affiliations.none, null);
+
+		Mockito.when(
+				channelManager.getNodeMembership(Mockito.anyString(),
+						Mockito.any(JID.class))).thenReturn(membership);
+
+		subscribe.process(element, new JID("francisco@denmark.lit"), request,
+				null);
+		IQ response = (IQ) queue.poll();
+		Assert.assertEquals(IQ.Type.result, response.getType());
+		Assert.assertEquals(Subscriptions.subscribed, Subscriptions
+				.valueOf(response.getChildElement().element("subscription")
+						.attributeValue("subscription")));
 	}
 
 }

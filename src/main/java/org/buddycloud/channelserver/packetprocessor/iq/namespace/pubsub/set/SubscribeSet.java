@@ -99,9 +99,8 @@ public class SubscribeSet extends PubSubElementProcessorAbstract {
 		// Subscribe to a node.
 		try {
 
-			NodeMembership membership = channelManager
-					.getNodeMembership(node, subscribingJid);
-
+			NodeMembership membership = channelManager.getNodeMembership(node,
+					subscribingJid);
 
 			if (Affiliations.outcast.toString().equals(
 					membership.getAffiliation().toString())) {
@@ -124,9 +123,10 @@ public class SubscribeSet extends PubSubElementProcessorAbstract {
 
 			Affiliations defaultAffiliation = Affiliations.member;
 			Subscriptions defaultSubscription = Subscriptions.none;
-
-			if (!membership.getSubscription().in(Subscriptions.none) && 
-					!membership.getAffiliation().in(Affiliations.none)) {
+			
+			if (!membership.getSubscription().equals(Subscriptions.invited)
+					&& !membership.getSubscription().in(Subscriptions.none)
+					&& !membership.getAffiliation().in(Affiliations.none)) {
 				LOGGER.debug("User already has a '"
 						+ membership.getSubscription().toString()
 						+ "' subscription");
@@ -134,10 +134,14 @@ public class SubscribeSet extends PubSubElementProcessorAbstract {
 				defaultSubscription = membership.getSubscription();
 			} else {
 				try {
-					String nodeDefaultAffiliation = nodeConf.get(Conf.DEFAULT_AFFILIATION);
-					LOGGER.debug("Node default affiliation: '" + nodeDefaultAffiliation + "'");
-					if (!Affiliations.none.equals(Affiliations.createFromString(nodeDefaultAffiliation))) {
-						defaultAffiliation = Affiliations.createFromString(nodeDefaultAffiliation);
+					String nodeDefaultAffiliation = nodeConf
+							.get(Conf.DEFAULT_AFFILIATION);
+					LOGGER.debug("Node default affiliation: '"
+							+ nodeDefaultAffiliation + "'");
+					if (!Affiliations.none.equals(Affiliations
+							.createFromString(nodeDefaultAffiliation))) {
+						defaultAffiliation = Affiliations
+								.createFromString(nodeDefaultAffiliation);
 					}
 				} catch (NullPointerException e) {
 					LOGGER.error("Could not create affiliation.", e);
@@ -314,18 +318,14 @@ public class SubscribeSet extends PubSubElementProcessorAbstract {
 			outQueue.put(notification);
 		}
 	}
-	
-	
-	/**
-	 * 			if (false == actorJid.toBareJID().equals(membership.getUser())) {
-				if ((false == isOwnerModerator) && membership.getAffiliation().in(Affiliations.outcast, Affiliations.none)) {
-					continue;
-				}
-				if ((false == isOwnerModerator) && !membership.getSubscription().equals(Subscriptions.subscribed)) {
-					continue;
-				}
-			}
 
+	/**
+	 * if (false == actorJid.toBareJID().equals(membership.getUser())) { if
+	 * ((false == isOwnerModerator) &&
+	 * membership.getAffiliation().in(Affiliations.outcast, Affiliations.none))
+	 * { continue; } if ((false == isOwnerModerator) &&
+	 * !membership.getSubscription().equals(Subscriptions.subscribed)) {
+	 * continue; } }
 	 */
 
 	private Message getPendingSubscriptionNotification(String receiver,

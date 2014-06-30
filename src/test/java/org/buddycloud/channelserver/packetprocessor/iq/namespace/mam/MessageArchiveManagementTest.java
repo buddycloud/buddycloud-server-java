@@ -60,6 +60,7 @@ public class MessageArchiveManagementTest extends IQTestHandler {
 
 	private JID jid1 = new JID("user@server1.com");
 	private JID jid2 = new JID("user@server2.com");
+	private JID invitedBy = new JID("romeo@shakespeare.lit");
 
 	@Before
 	public void setUp() throws Exception {
@@ -96,12 +97,11 @@ public class MessageArchiveManagementTest extends IQTestHandler {
 						Mockito.any(Date.class), Mockito.any(Date.class)))
 				.thenReturn(noItems);
 
-		NodeMembership membership = new NodeMembershipImpl(node1,
-				jid1, Subscriptions.subscribed, Affiliations.owner, null);
+		NodeMembership membership = new NodeMembershipImpl(node1, jid1,
+				Subscriptions.subscribed, Affiliations.owner, null);
 		Mockito.when(
 				channelManager.getNodeMembership(Mockito.anyString(),
-						Mockito.any(JID.class))).thenReturn(
-								membership);
+						Mockito.any(JID.class))).thenReturn(membership);
 	}
 
 	@Test
@@ -197,13 +197,12 @@ public class MessageArchiveManagementTest extends IQTestHandler {
 	@Test
 	public void testOutcastChangeReportedAsExpected() throws Exception {
 
-		NodeMembership membership = new NodeMembershipImpl(node1,
-				jid1, Subscriptions.subscribed, Affiliations.owner, null);
+		NodeMembership membership = new NodeMembershipImpl(node1, jid1,
+				Subscriptions.subscribed, Affiliations.owner, null);
 		Mockito.when(
 				channelManager.getNodeMembership(Mockito.anyString(),
-						Mockito.any(JID.class))).thenReturn(
-								membership);
-		
+						Mockito.any(JID.class))).thenReturn(membership);
+
 		ArrayList<NodeAffiliation> affiliations = new ArrayList<NodeAffiliation>();
 
 		affiliations.add(new NodeAffiliationImpl(node1, jid1,
@@ -274,13 +273,21 @@ public class MessageArchiveManagementTest extends IQTestHandler {
 	}
 
 	@Test
-	public void testTwoSubscriptionChangesReportAsExpected() throws Exception {
+	public void testThreeSubscriptionChangesReportAsExpected() throws Exception {
 
+		NodeMembership publisher = new NodeMembershipImpl(node1, jid1,
+				Subscriptions.subscribed, Affiliations.publisher, null);
+		Mockito.when(
+				channelManager.getNodeMembership(Mockito.anyString(),
+						Mockito.any(JID.class))).thenReturn(publisher);
+		
 		ArrayList<NodeSubscription> subscriptions = new ArrayList<NodeSubscription>();
 		subscriptions.add(new NodeSubscriptionImpl(node1, jid1,
 				Subscriptions.subscribed, null, date1));
 		subscriptions.add(new NodeSubscriptionImpl(node2, jid2,
-				Subscriptions.pending, null, date2));
+				Subscriptions.invited, invitedBy, date2));
+		subscriptions.add(new NodeSubscriptionImpl(node2, jid2,
+				Subscriptions.pending, invitedBy, date2));
 
 		Mockito.when(
 				channelManager.getSubscriptionChanges(Mockito.any(JID.class),
@@ -291,17 +298,55 @@ public class MessageArchiveManagementTest extends IQTestHandler {
 
 		Assert.assertEquals(3, queue.size());
 		checkSubscriptionStanza(queue.poll(), jid1, date1, node1,
-				Subscriptions.subscribed);
+				Subscriptions.subscribed, null);
 		checkSubscriptionStanza(queue.poll(), jid2, date2, node2,
-				Subscriptions.pending);
+				Subscriptions.pending, null);
+
+		IQ result = (IQ) queue.poll();
+		Assert.assertEquals("result", result.getType().toString());
+	}
+
+	@Test
+	public void ownerModeratorAreShownInvites() throws Exception {
+
+		NodeMembership owner = new NodeMembershipImpl(node1, jid1,
+				Subscriptions.subscribed, Affiliations.owner, null);
+		Mockito.when(
+				channelManager.getNodeMembership(Mockito.anyString(),
+						Mockito.any(JID.class))).thenReturn(owner);
+		
+		JID invitedBy = new JID("romeo@shakespeare.lit");
+
+		ArrayList<NodeSubscription> subscriptions = new ArrayList<NodeSubscription>();
+		subscriptions.add(new NodeSubscriptionImpl(node1, jid1,
+				Subscriptions.subscribed, null, date1));
+		subscriptions.add(new NodeSubscriptionImpl(node2, jid2,
+				Subscriptions.invited, invitedBy, date2));
+		subscriptions.add(new NodeSubscriptionImpl(node2, jid2,
+				Subscriptions.pending, invitedBy, date2));
+
+		Mockito.when(
+				channelManager.getSubscriptionChanges(Mockito.any(JID.class),
+						Mockito.any(Date.class), Mockito.any(Date.class)))
+				.thenReturn(new ResultSetImpl<NodeSubscription>(subscriptions));
+
+		mam.process(request);
+
+		Assert.assertEquals(4, queue.size());
+		checkSubscriptionStanza(queue.poll(), jid1, date1, node1,
+				Subscriptions.subscribed, null);
+		checkSubscriptionStanza(queue.poll(), jid2, date2, node2,
+				Subscriptions.invited, invitedBy);
+		checkSubscriptionStanza(queue.poll(), jid2, date2, node2,
+				Subscriptions.pending, invitedBy);
 
 		IQ result = (IQ) queue.poll();
 		Assert.assertEquals("result", result.getType().toString());
 	}
 
 	private void checkSubscriptionStanza(Packet result, JID jid, Date date,
-			String node, Subscriptions subscription) throws ParseException {
-
+			String node, Subscriptions subscription, JID invitedBy)
+			throws ParseException {
 		Element message = result.getElement();
 		Assert.assertEquals(MessageArchiveManagement.NAMESPACE_MAM, message
 				.element("result").getNamespaceURI());
@@ -316,7 +361,12 @@ public class MessageArchiveManagementTest extends IQTestHandler {
 		Assert.assertEquals(jid.toBareJID(), sub.attributeValue("jid"));
 		Assert.assertEquals(subscription,
 				Subscriptions.valueOf(sub.attributeValue("subscription")));
-
+		if (null == invitedBy) {
+			Assert.assertNull(sub.attributeValue("invited-by"));
+		} else {
+			Assert.assertEquals(invitedBy.toBareJID(),
+					sub.attributeValue("invited-by"));
+		}
 		Assert.assertEquals(date, Conf.parseDate(delay.attributeValue("stamp")));
 	}
 

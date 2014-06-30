@@ -1,5 +1,8 @@
 package org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.set;
 
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+
 import java.util.ArrayList;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -26,6 +29,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 import org.xmpp.packet.IQ;
 import org.xmpp.packet.JID;
+import org.xmpp.packet.Message;
 import org.xmpp.packet.Packet;
 import org.xmpp.packet.PacketError;
 import org.xmpp.resultsetmanagement.ResultSetImpl;
@@ -57,7 +61,20 @@ public class SubscriptionEventTest extends IQTestHandler {
 				true);
 		Mockito.when(dataStore.nodeExists(Mockito.anyString()))
 				.thenReturn(true);
+		
+		NodeMembership membership = new NodeMembershipImpl(node, jid, Subscriptions.subscribed, Affiliations.member, null);
+		Mockito.when(dataStore.getNodeMembership(Mockito.anyString(), Mockito.any(JID.class))).thenReturn(membership);
 
+		ArrayList<NodeSubscription> subscribers = new ArrayList<NodeSubscription>();
+		subscribers.add(new NodeSubscriptionMock(new JID(
+				"romeo@shakespeare.lit")));
+		subscribers.add(new NodeSubscriptionMock(new JID(
+				"hamlet@shakespeare.lit")));
+
+		Mockito.doReturn(new ResultSetImpl<NodeSubscription>(subscribers))
+				.when(dataStore)
+				.getNodeSubscriptionListeners(Mockito.anyString());
+		
 		event.setChannelManager(dataStore);
 	}
 
@@ -159,7 +176,6 @@ public class SubscriptionEventTest extends IQTestHandler {
 	public void testNonExistantNodeRetunsErrorStanza() throws Exception {
 
 		Mockito.when(dataStore.nodeExists(node)).thenReturn(false);
-		event.setChannelManager(dataStore);
 
 		event.process(element, jid, request, null);
 		Packet response = queue.poll();
@@ -179,7 +195,6 @@ public class SubscriptionEventTest extends IQTestHandler {
 						Mockito.any(JID.class))).thenReturn(
 				new NodeMembershipImpl(node, jid, Subscriptions.none,
 						Affiliations.none, null));
-		event.setChannelManager(dataStore);
 
 		event.process(element, jid, request, null);
 		Packet response = queue.poll();
@@ -187,7 +202,7 @@ public class SubscriptionEventTest extends IQTestHandler {
 		PacketError error = response.getError();
 		Assert.assertNotNull(error);
 		Assert.assertEquals(PacketError.Type.auth, error.getType());
-		Assert.assertEquals(PacketError.Condition.not_authorized,
+		Assert.assertEquals(PacketError.Condition.forbidden,
 				error.getCondition());
 	}
 
@@ -200,15 +215,13 @@ public class SubscriptionEventTest extends IQTestHandler {
 				new NodeMembershipImpl(node, jid, Subscriptions.subscribed,
 						Affiliations.member, null));
 
-		event.setChannelManager(dataStore);
-
 		event.process(element, jid, request, null);
 		Packet response = queue.poll();
 
 		PacketError error = response.getError();
 		Assert.assertNotNull(error);
 		Assert.assertEquals(PacketError.Type.auth, error.getType());
-		Assert.assertEquals(PacketError.Condition.not_authorized,
+		Assert.assertEquals(PacketError.Condition.forbidden,
 				error.getCondition());
 	}
 
@@ -216,16 +229,17 @@ public class SubscriptionEventTest extends IQTestHandler {
 	public void subscribingUserMustHaveExistingSubscriptionToUpdate()
 			throws Exception {
 
-		Mockito.when(dataStore.nodeExists(Mockito.anyString()))
-				.thenReturn(true);
-
 		NodeMembership membership = new NodeMembershipImpl(node, new JID(
 				subscriber), Subscriptions.none, Affiliations.owner, null);
 		Mockito.when(
 				dataStore.getNodeMembership(Mockito.anyString(),
 						Mockito.any(JID.class))).thenReturn(membership);
-
-		event.setChannelManager(dataStore);
+		
+		NodeMembership inviteeMemebership = new NodeMembershipImpl(node, new JID(
+				subscriber), Subscriptions.none, Affiliations.owner, null);
+		Mockito.when(
+				dataStore.getNodeMembership(Mockito.anyString(),
+						Mockito.eq(jid))).thenReturn(inviteeMemebership);
 
 		event.process(element, jid, request, null);
 		Packet response = queue.poll();
@@ -248,8 +262,6 @@ public class SubscriptionEventTest extends IQTestHandler {
 
 		ArgumentCaptor<NodeSubscription> argument = ArgumentCaptor
 				.forClass(NodeSubscription.class);
-
-		Mockito.when(dataStore.nodeExists(node)).thenReturn(true);
 
 		Mockito.when(
 				dataStore.getNodeMembership(Mockito.anyString(),
@@ -280,30 +292,15 @@ public class SubscriptionEventTest extends IQTestHandler {
 				.replaceFirst("subscription='subscribed'",
 						"subscription='subscribed'"));
 
-		Mockito.when(dataStore.nodeExists(node)).thenReturn(true);
-
 		NodeMembership membership = new NodeMembershipImpl(node, new JID(
 				subscriber), Subscriptions.subscribed, Affiliations.moderator, null);
 		Mockito.when(
 				dataStore.getNodeMembership(Mockito.eq(node),
 						Mockito.any(JID.class))).thenReturn(membership);
 
-		event.setChannelManager(dataStore);
-
-		ArrayList<NodeSubscription> subscribers = new ArrayList<NodeSubscription>();
-		subscribers.add(new NodeSubscriptionMock(new JID(
-				"romeo@shakespeare.lit")));
-		subscribers.add(new NodeSubscriptionMock(new JID(
-				"hamlet@shakespeare.lit")));
-
-		Mockito.doReturn(new ResultSetImpl<NodeSubscription>(subscribers))
-				.when(dataStore)
-				.getNodeSubscriptionListeners(Mockito.anyString());
-
-		event.setChannelManager(dataStore);
 		event.process(element, jid, request, null);
 
-		// Assert.assertEquals(5, queue.size());
+		Assert.assertEquals(5, queue.size());
 		Packet notification = queue.poll();
 
 		Assert.assertEquals("francisco@denmark.lit/barracks", notification
@@ -333,24 +330,91 @@ public class SubscriptionEventTest extends IQTestHandler {
 						.element("subscription").attributeValue("jid"));
 	}
 	
-	@Ignore("Not implemented yet")
+	@Test
 	public void userCanInviteAnotherUserToNode() throws Exception {
+
+		JID invitee = new JID("francisco@denmark.lit");
+		NodeMembership membership = new NodeMembershipImpl(node, invitee, Subscriptions.none, Affiliations.none, null);
+		Mockito.when(dataStore.getNodeMembership(Mockito.eq(node), Mockito.eq(invitee))).thenReturn(membership);
+		
 		IQ request = readStanzaAsIq("/iq/pubsub/subscribe/invite.stanza");
 		
+		event.process(element, jid, request, null);
+		
+		IQ result = (IQ) queue.poll();
+		
+		Assert.assertEquals(IQ.Type.result, result.getType());
+		
+		Assert.assertEquals(4, queue.size());
+		
+		Message notification = (Message) queue.poll();
+		
+		Element subscription = notification.getElement().element("event").element("subscription");
+		Assert.assertEquals(Subscriptions.invited, Subscriptions.valueOf(subscription.attributeValue("subscription")));
+		Assert.assertEquals(invitee, new JID(subscription.attributeValue("jid")));
 	}
 	
-	@Ignore("Not implemented yet")
+	@Test
 	public void userCanNotInviteAnotherUserIfTheyDontHaveValidSubscription() throws Exception {
 		
+		NodeMembership membership = new NodeMembershipImpl(node, jid, Subscriptions.pending, Affiliations.member, null);
+		Mockito.when(dataStore.getNodeMembership(Mockito.anyString(), Mockito.any(JID.class))).thenReturn(membership);
+		
+		IQ request = readStanzaAsIq("/iq/pubsub/subscribe/invite.stanza");
+		
+		event.process(element, jid, request, null);
+		
+		IQ result = (IQ) queue.poll();
+		Assert.assertEquals(IQ.Type.error, result.getType());
+		Assert.assertEquals(PacketError.Type.auth, result.getError().getType());
+		Assert.assertEquals(PacketError.Condition.forbidden, result.getError().getCondition());
 	}
+
+	@Test
+	public void invitedByIsSetAsActorJid() throws Exception {
+		
+		JID invitee = new JID("francisco@denmark.lit");
+		NodeMembership membership = new NodeMembershipImpl(node, invitee, Subscriptions.none, Affiliations.none, null);
+		Mockito.when(dataStore.getNodeMembership(Mockito.eq(node), Mockito.eq(invitee))).thenReturn(membership);
+		
+		IQ request = readStanzaAsIq("/iq/pubsub/subscribe/invite.stanza");
+		
+		event.process(element, jid, request, null);
+		
+		IQ result = (IQ) queue.poll();
+		
+		ArgumentCaptor<NodeSubscription> subscription = ArgumentCaptor.forClass(NodeSubscription.class);
 	
-	@Ignore("Not implemented yet")
-	public void notificationsAreOnlySentToInviteeOwnersAndModerators() throws Exception {
+		verify(dataStore, times(1)).addUserSubscription(subscription.capture());
+		
+		Assert.assertEquals(request.getFrom().toBareJID(), subscription.getValue().getInvitedBy().toString());
+		Assert.assertEquals(Subscriptions.invited, subscription.getValue().getSubscription());
+		Assert.assertEquals(node, subscription.getValue().getNodeId());
 		
 	}
+
+	@Test
+	public void standardSubscribeDoesNotSetInvitedBy() throws Exception {
+		
+		NodeMembership membership = new NodeMembershipImpl(node, new JID(
+				subscriber), Subscriptions.subscribed, Affiliations.moderator, null);
+		
+		JID invitee = new JID("francisco@denmark.lit");
+		Mockito.when(dataStore.getNodeMembership(Mockito.eq(node), Mockito.any(JID.class))).thenReturn(membership);
+		
+		event.process(element, jid, request, null);
+		
+		IQ result = (IQ) queue.poll();
+		System.out.println(result.toXML());
+		Assert.assertEquals(IQ.Type.result, result.getType());
+		
+		ArgumentCaptor<NodeSubscription> subscription = ArgumentCaptor.forClass(NodeSubscription.class);
 	
-	@Ignore("Not implemented yet")
-	public void invitedByIsSetAsActorJid() throws Exception {
+		verify(dataStore, times(1)).addUserSubscription(subscription.capture());
+		
+		Assert.assertNull(subscription.getValue().getInvitedBy());
+		Assert.assertEquals(Subscriptions.subscribed, subscription.getValue().getSubscription());
+		Assert.assertEquals(node, subscription.getValue().getNodeId());
 		
 	}
 }

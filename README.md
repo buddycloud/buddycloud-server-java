@@ -50,3 +50,20 @@ Now we're done, but we must test that we can connect to the database and that th
 psql -h 127.0.0.1 --username buddycloud_server -d buddycloud_server -c "select * from nodes;"
 ~~~~
 If you got an output similar to (or exactly like) this, you're good to go. 
+
+## Additional content-type plugins
+The buddycloud server supports validation of custom content types by means of a plugin system. By default the buddycloud server supports Atom content. Additional content types can be supported by creating an appropriate validator and packaging it as a plugin.
+
+The plugin system is not invoked if the content type is not supplied or is the default, Atom. If the plugin manager is queried then it locates an appropriate plugin based on the capabilities reported by each plugin. So we are able to directly request a plugin capable of validating a specific payload type.
+
+### Plugin Creation
+The buddycloud plugin system is based on [JSPF](https://code.google.com/p/jspf/). Plugins are added to the main application as JAR files, dropped into the `plugins/` directory.
+
+Creating new validator plugins is simple, there are a few simple rules to follow. Validator plugins must implement the `PayloadValidator` interface and be annotated with `@PluginImplementation`. To publish the capabilities of your plugin you must include a `capabilities()` method and annotate it with `@Override`
+
+Two example plugins are available. One provides support for [validating IODEF](https://github.com/surevine/buddycloud-iodef-validator) payloads while the other is based on the default [Atom validator](https://github.com/surevine/buddycloud-atom-validator). Note that Atom support is built into buddycloud server so there is no need to add the Atom plugin to your installation, it merely serves as an example.
+
+### Plugin Installation
+1. Create a `plugins` directory in the root of your buddycloud installation, e.g. `target/plugins/`.
+2. Drop your plugin JAR into the `plugins` directory you created in step 1.
+3. Restart your Buddycloud server.

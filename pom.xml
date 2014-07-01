@@ -133,6 +133,11 @@
             <artifactId>joda-time</artifactId>
             <version>2.3</version>
          </dependency>
+        <dependency>
+            <groupId>net.xeoh</groupId>
+            <artifactId>jspf.core</artifactId>
+            <version>1.0.2</version>
+        </dependency>
     </dependencies>
     <repositories>
         <repository>

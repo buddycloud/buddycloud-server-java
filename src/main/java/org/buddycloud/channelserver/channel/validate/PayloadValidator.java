@@ -1,13 +1,16 @@
 package org.buddycloud.channelserver.channel.validate;
 
+import net.xeoh.plugins.base.Plugin;
+import net.xeoh.plugins.base.annotations.Capabilities;
+
 import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.db.exception.NodeStoreException;
 import org.dom4j.Element;
 import org.xmpp.packet.JID;
 
-public interface ValidateEntry {
+public interface PayloadValidator extends Plugin {
 
-	public abstract void setEntry(Element entry);
+	public abstract void setPayload(Element payload);
 
 	public abstract String getErrorMessage();
 
@@ -27,4 +30,20 @@ public interface ValidateEntry {
 
 	public abstract void setTo(String channelServerDomain);
 
+    public abstract String getLocalItemId();
+
+    public abstract String getGlobalItemId();
+
+    public abstract String getInReplyTo();
+
+    /**
+     * Indicate the capabilities of this plugin
+     *
+     * Should return an array of content types that can be
+     * validated by this plugin
+     *
+     * @return
+     */
+    @Capabilities
+    public abstract String[] capabilities();
 }

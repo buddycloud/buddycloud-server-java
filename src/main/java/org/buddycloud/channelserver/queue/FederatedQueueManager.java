@@ -88,6 +88,10 @@ public class FederatedQueueManager {
 			idMap.put(uniqueId, packet.getID());
 			packet.setID(uniqueId);
 		}
+		
+		if (null == packet.getID()) {
+			packet.setID(generateUniqueId(packet));
+		}
 
 		sentRemotePackets.put(uniqueId, packet.getFrom());
 		try {

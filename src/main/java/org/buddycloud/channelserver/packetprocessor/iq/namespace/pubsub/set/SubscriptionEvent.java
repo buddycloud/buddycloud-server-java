@@ -119,10 +119,13 @@ public class SubscriptionEvent extends PubSubElementProcessorAbstract {
 			outQueue.put(notification);
 		}
 		
-		if (Subscriptions.valueOf(subscriptionElement.attributeValue("subscription")).equals(Subscriptions.invited)
-			&& channelManager.isLocalJID(jid)) {
+		if (Subscriptions.valueOf(subscriptionElement.attributeValue("subscription")).equals(Subscriptions.invited)) {
 			Message alertInvitedUser = rootElement.createCopy();
-			alertInvitedUser.setTo(jid);
+		    JID to = jid;
+		    if (!channelManager.isLocalJID(jid)) {
+		    	to = new JID(jid.getDomain());
+		    }
+			alertInvitedUser.setTo(to);
 			outQueue.put(alertInvitedUser);
 		}
 	}

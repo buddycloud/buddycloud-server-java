@@ -351,7 +351,7 @@ public class SubscriptionEventTest extends IQTestHandler {
 		
 		Assert.assertEquals(IQ.Type.result, result.getType());
 		
-		Assert.assertEquals(4, queue.size());
+		Assert.assertEquals(5, queue.size());
 		
 		Message notification = (Message) queue.poll();
 		
@@ -425,6 +425,7 @@ public class SubscriptionEventTest extends IQTestHandler {
 	
 	@Test
 	public void sendsNotificationToInvitedUserIfTheyAreLocal() throws Exception {
+		
 		Mockito.when(dataStore.isLocalJID(Mockito.any(JID.class))).thenReturn(true);
 		
 		JID invitee = new JID("francisco@denmark.lit");
@@ -452,5 +453,35 @@ public class SubscriptionEventTest extends IQTestHandler {
 		queue.poll();
 		queue.poll();
 		Assert.assertEquals(invitee, queue.poll().getTo());
+	}
+	
+	@Test
+	public void sendsNotificationToInvitedUsersServerIfTheyAreNotLocal() throws Exception {
+
+		JID invitee = new JID("francisco@denmark.lit");
+		
+		NodeMembership membership = new NodeMembershipImpl(node, invitee, Subscriptions.none, Affiliations.none, null);
+		when(dataStore.getNodeMembership(eq(node), eq(invitee))).thenReturn(membership);
+		
+		IQ request = readStanzaAsIq("/iq/pubsub/subscribe/invite.stanza");
+		
+		event.process(element, jid, request, null);
+		
+		IQ result = (IQ) queue.poll();
+		
+		Assert.assertEquals(IQ.Type.result, result.getType());
+		
+		Assert.assertEquals(5, queue.size());
+		
+		Message notification = (Message) queue.poll();
+		
+		Element subscription = notification.getElement().element("event").element("subscription");
+		Assert.assertEquals(Subscriptions.invited, Subscriptions.valueOf(subscription.attributeValue("subscription")));
+		Assert.assertEquals(invitee, new JID(subscription.attributeValue("jid")));
+		
+		queue.poll();
+		queue.poll();
+		queue.poll();
+		Assert.assertEquals(invitee.getDomain(), queue.poll().getTo().toString());
 	}
 }

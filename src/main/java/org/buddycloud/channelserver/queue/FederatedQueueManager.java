@@ -254,7 +254,7 @@ public class FederatedQueueManager {
 			String targetServer = null;
 			TXTRecord record = (TXTRecord) records[0];
 			List<String> txtStrings = record.getStrings();
-			Pattern p = Pattern.compile("host=([^ ]*)");
+			Pattern p = Pattern.compile("server=([^ ]*)");
 			for (String txtString : txtStrings) {
 				Matcher m = p.matcher(txtString);
 				if (!m.find()) continue;

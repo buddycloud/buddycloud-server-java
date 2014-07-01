@@ -33,9 +33,10 @@ public class SubscriptionProcessor extends AbstractMessageProcessor {
 
 		handleSubscriptionElement();
 
-		if (false == channelManager.isLocalNode(node)) {
-			sendLocalNotifications();
+		if (true == channelManager.isLocalNode(node)) {
+			return;
 		}
+		sendLocalNotifications();
 	}
 
 	private void handleSubscriptionElement() throws NodeStoreException {

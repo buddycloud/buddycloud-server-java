@@ -30,6 +30,7 @@ public class SubscriptionEvent extends PubSubElementProcessorAbstract {
 	NodeMembership currentMembership;
 	JID invitedBy = null;
 	private Subscriptions requestedSubscription;
+	private JID jid;
 
 	private static final Logger LOGGER = Logger
 			.getLogger(SubscriptionEvent.class);
@@ -117,14 +118,22 @@ public class SubscriptionEvent extends PubSubElementProcessorAbstract {
 			notification.setTo(admin);
 			outQueue.put(notification);
 		}
+		
+		if (Subscriptions.valueOf(subscriptionElement.attributeValue("subscription")).equals(Subscriptions.invited)
+			&& channelManager.isLocalJID(jid)) {
+			Message alertInvitedUser = rootElement.createCopy();
+			alertInvitedUser.setTo(jid);
+			outQueue.put(alertInvitedUser);
+		}
 	}
 
 	private void saveUpdatedSubscription() throws NodeStoreException {
 		if (requestedSubscription.equals(Subscriptions.invited)) {
 			invitedBy = actor;
 		}
+		jid = new JID(subscriptionElement.attributeValue("jid"));
 		NodeSubscription newSubscription = new NodeSubscriptionImpl(node,
-				new JID(subscriptionElement.attributeValue("jid")),
+				jid,
 				currentMembership.getListener(),
 				Subscriptions.valueOf(subscriptionElement
 						.attributeValue("subscription")), invitedBy);

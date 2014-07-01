@@ -30,6 +30,7 @@ import org.dom4j.tree.BaseElement;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
+import org.mockito.Mockito;
 import org.xmpp.packet.IQ;
 import org.xmpp.packet.JID;
 import org.xmpp.packet.Message;
@@ -77,6 +78,8 @@ public class SubscriptionEventTest extends IQTestHandler {
 		doReturn(new ResultSetImpl<NodeSubscription>(subscribers))
 				.when(dataStore)
 				.getNodeSubscriptionListeners(anyString());
+		
+		Mockito.when(dataStore.isLocalJID(Mockito.any(JID.class))).thenReturn(false);
 		
 		event.setChannelManager(dataStore);
 	}
@@ -418,5 +421,36 @@ public class SubscriptionEventTest extends IQTestHandler {
 		Assert.assertEquals(Subscriptions.subscribed, subscription.getValue().getSubscription());
 		Assert.assertEquals(node, subscription.getValue().getNodeId());
 		
+	}
+	
+	@Test
+	public void sendsNotificationToInvitedUserIfTheyAreLocal() throws Exception {
+		Mockito.when(dataStore.isLocalJID(Mockito.any(JID.class))).thenReturn(true);
+		
+		JID invitee = new JID("francisco@denmark.lit");
+		
+		NodeMembership membership = new NodeMembershipImpl(node, invitee, Subscriptions.none, Affiliations.none, null);
+		when(dataStore.getNodeMembership(eq(node), eq(invitee))).thenReturn(membership);
+		
+		IQ request = readStanzaAsIq("/iq/pubsub/subscribe/invite.stanza");
+		
+		event.process(element, jid, request, null);
+		
+		IQ result = (IQ) queue.poll();
+		
+		Assert.assertEquals(IQ.Type.result, result.getType());
+		
+		Assert.assertEquals(5, queue.size());
+		
+		Message notification = (Message) queue.poll();
+		
+		Element subscription = notification.getElement().element("event").element("subscription");
+		Assert.assertEquals(Subscriptions.invited, Subscriptions.valueOf(subscription.attributeValue("subscription")));
+		Assert.assertEquals(invitee, new JID(subscription.attributeValue("jid")));
+		
+		queue.poll();
+		queue.poll();
+		queue.poll();
+		Assert.assertEquals(invitee, queue.poll().getTo());
 	}
 }

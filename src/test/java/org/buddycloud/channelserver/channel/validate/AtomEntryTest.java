@@ -10,6 +10,7 @@ import org.buddycloud.channelserver.pubsub.model.GlobalItemID;
 import org.buddycloud.channelserver.pubsub.model.NodeItem;
 import org.buddycloud.channelserver.pubsub.model.impl.NodeItemImpl;
 import org.buddycloud.channelserver.utils.node.item.payload.ActivityStreams;
+import org.buddycloud.channelserver.pubsub.model.impl.GlobalItemIDImpl;
 import org.buddycloud.channelserver.utils.node.item.payload.Buddycloud;
 import org.dom4j.Element;
 import org.junit.Before;
@@ -45,17 +46,19 @@ public class AtomEntryTest extends TestHandler {
 	String node = "/users/romeo@shakespeare.lit/posts";
 	String server = "channels.shakespeare.lit";
 
+    private Element emptyEntry;
+
 	@Before
 	public void setUp() throws Exception {
 		publishRequest = readStanzaAsIq("/iq/pubsub/publish/request.stanza");
 		publishEntry = publishRequest.getChildElement().element("publish")
-				.element("item").element("entry");
+                .element("item");
 		replyRequest = readStanzaAsIq("/iq/pubsub/publish/reply.stanza");
 		replyEntry = replyRequest.getChildElement().element("publish")
-				.element("item").element("entry");
+                .element("item");
 		ratingRequest = readStanzaAsIq("/iq/pubsub/publish/rating.stanza");
 		ratingEntry = ratingRequest.getChildElement().element("publish")
-				.element("item").element("entry");
+                .element("item");
 
 		channelManager = Mockito.mock(ChannelManager.class);
 
@@ -66,8 +69,8 @@ public class AtomEntryTest extends TestHandler {
 
 	}
 
-	private AtomEntry getEntryObject(Element entry) {
-		AtomEntry validate = new AtomEntry(entry);
+    private AtomEntry getEntryObject(Element item) {
+        AtomEntry validate = new AtomEntry(item);
 		validate.setNode(node);
 		validate.setTo(server);
 		validate.setUser(jid);
@@ -80,21 +83,21 @@ public class AtomEntryTest extends TestHandler {
 
 		validator = new AtomEntry(null);
 		Assert.assertFalse(validator.isValid());
-		Assert.assertEquals(validator.MISSING_ENTRY_ELEMENT,
+        Assert.assertEquals(AtomEntry.MISSING_ENTRY_ELEMENT,
 				validator.getErrorMessage());
 	}
 
 	@Test
 	public void missingIdAttributeGetsAdded() throws Exception {
 
-		Assert.assertEquals("96da02ee1baef61e767742844207bec4",
-				publishEntry.elementText("id"));
+        Assert.assertEquals("96da02ee1baef61e767742844207bec4", publishEntry
+                .element("entry").elementText("id"));
 
-		Element entry = (Element) this.publishEntry.clone();
-		entry.element("id").detach();
-		validator = getEntryObject(entry);
+        Element item = (Element) this.publishEntry.clone();
+        item.element("entry").element("id").detach();
+        validator = getEntryObject(item);
 		Assert.assertTrue(validator.isValid());
-		entry = validator.getPayload();
+        Element entry = validator.getPayload();
 		Assert.assertTrue(entry.elementText("id").contains(
 				"tag:" + server + "," + node + ","));
 	}
@@ -102,16 +105,16 @@ public class AtomEntryTest extends TestHandler {
 	@Test
 	public void emptyIdElementHasValueAdded() throws Exception {
 
-		Assert.assertEquals("96da02ee1baef61e767742844207bec4",
-				publishEntry.elementText("id"));
+        Assert.assertEquals("96da02ee1baef61e767742844207bec4", publishEntry
+                .element("entry").elementText("id"));
 
-		Element entry = (Element) this.publishEntry.clone();
-		entry.element("id").detach();
-		entry.addElement("id");
+        Element item = (Element) this.publishEntry.clone();
+        item.element("entry").element("id").detach();
+        item.element("entry").addElement("id");
 
-		validator = getEntryObject(entry);
+        validator = getEntryObject(item);
 		Assert.assertTrue(validator.isValid());
-		entry = validator.getPayload();
+        Element entry = validator.getPayload();
 		Assert.assertTrue(entry.elementText("id").contains(
 				"tag:" + server + "," + node + ","));
 	}
@@ -119,12 +122,12 @@ public class AtomEntryTest extends TestHandler {
 	@Test
 	public void idElementIsIgnored() throws Exception {
 		String id = "96da02ee1baef61e767742844207bec4";
-		Assert.assertEquals(id, publishEntry.elementText("id"));
+        Assert.assertEquals(id, publishEntry.element("entry").elementText("id"));
 
-		Element entry = (Element) this.publishEntry.clone();
-		validator = getEntryObject(entry);
+        Element item = (Element) this.publishEntry.clone();
+        validator = getEntryObject(item);
 		Assert.assertTrue(validator.isValid());
-		entry = validator.getPayload();
+        Element entry = validator.getPayload();
 		Assert.assertFalse(entry.elementText("id").contains(id));
 
 	}
@@ -132,26 +135,27 @@ public class AtomEntryTest extends TestHandler {
 	@Test
 	public void missingTitleElementIsAdded() throws Exception {
 
-		Assert.assertEquals("Post title", publishEntry.elementText("title"));
+        Assert.assertEquals("Post title", publishEntry.element("entry")
+                .elementText("title"));
 
-		Element entry = (Element) this.publishEntry.clone();
-		entry.element("title").detach();
-		validator = getEntryObject(entry);
+        Element item = (Element) this.publishEntry.clone();
+        item.element("entry").element("title").detach();
+        validator = getEntryObject(item);
 		Assert.assertTrue(validator.isValid());
-		entry = validator.getPayload();
+        Element entry = validator.getPayload();
 		Assert.assertEquals("Post", entry.elementText("title"));
 	}
 
 	@Test
 	public void missingContentElementReturnsInvalid() throws Exception {
 
-		Assert.assertNotNull(publishEntry.element("content"));
+        Assert.assertNotNull(publishEntry.element("entry").element("content"));
 
-		Element entry = (Element) this.publishEntry.clone();
-		entry.element("content").detach();
-		validator = getEntryObject(entry);
+        Element item = (Element) this.publishEntry.clone();
+        item.element("entry").element("content").detach();
+        validator = getEntryObject(item);
 		Assert.assertFalse(validator.isValid());
-		Assert.assertEquals(validator.MISSING_CONTENT_ELEMENT,
+        Assert.assertEquals(AtomEntry.MISSING_CONTENT_ELEMENT,
 				validator.getErrorMessage());
 	}
 
@@ -159,13 +163,13 @@ public class AtomEntryTest extends TestHandler {
 	public void missingUpdatedElementHasValueAdded() throws Exception {
 
 		Assert.assertEquals("2014-01-01T00:00:00.000Z",
-				publishEntry.elementText("updated"));
+                publishEntry.element("entry").elementText("updated"));
 
-		Element entry = (Element) this.publishEntry.clone();
-		entry.element("updated").detach();
-		validator = getEntryObject(entry);
+        Element item = (Element) this.publishEntry.clone();
+        item.element("entry").element("updated").detach();
+        validator = getEntryObject(item);
 		Assert.assertTrue(validator.isValid());
-		entry = validator.getPayload();
+        Element entry = validator.getPayload();
 		Assert.assertTrue(entry
 				.elementText("updated")
 				.matches(
@@ -175,42 +179,43 @@ public class AtomEntryTest extends TestHandler {
 	@Test
 	public void updateDateIsIgnored() throws Exception {
 		String dateString = "2014-01-01T00:00:00.000Z";
-		Assert.assertEquals(dateString, publishEntry.elementText("updated"));
+        Assert.assertEquals(dateString, publishEntry.element("entry")
+                .elementText("updated"));
 
-		Element entry = (Element) this.publishEntry.clone();
-		validator = getEntryObject(entry);
+        Element item = (Element) this.publishEntry.clone();
+        validator = getEntryObject(item);
 		Assert.assertTrue(validator.isValid());
-		entry = validator.getPayload();
+        Element entry = validator.getPayload();
 		Assert.assertFalse(entry.elementText("updated").equals(dateString));
 	}
 
 	@Test
 	public void authorEntryIsAdded() throws Exception {
-		Element entry = (Element) this.publishEntry.clone();
-		validator = getEntryObject(entry);
+        Element item = (Element) this.publishEntry.clone();
+        validator = getEntryObject(item);
 		Assert.assertTrue(validator.isValid());
-		entry = validator.getPayload();
+        Element entry = validator.getPayload();
 
 		Element author = entry.element("author");
 		Assert.assertNotNull(author);
-		Assert.assertEquals(validator.AUTHOR_URI_PREFIX + jid.toBareJID(),
+        Assert.assertEquals(AtomEntry.AUTHOR_URI_PREFIX + jid.toBareJID(),
 				author.elementText("uri"));
 		Assert.assertEquals(jid.toBareJID(), author.elementText("name"));
-		Assert.assertEquals(validator.AUTHOR_TYPE,
+        Assert.assertEquals(AtomEntry.AUTHOR_TYPE,
 				author.elementText("object-type"));
 	}
 
 	@Test
 	public void geolocationEntryIsAdded() throws Exception {
-		Element entry = (Element) this.publishEntry.clone();
-		validator = getEntryObject(entry);
+        Element item = (Element) this.publishEntry.clone();
+        validator = getEntryObject(item);
 		Assert.assertTrue(validator.isValid());
-		entry = validator.getPayload();
+        Element entry = validator.getPayload();
 
 		Assert.assertNotNull(entry.element("geoloc"));
 
-		entry = (Element) this.replyEntry.clone();
-		validator = getEntryObject(entry);
+        item = (Element) this.replyEntry.clone();
+        validator = getEntryObject(item);
 		Assert.assertTrue(validator.isValid());
 		entry = validator.getPayload();
 
@@ -222,12 +227,13 @@ public class AtomEntryTest extends TestHandler {
 
 		Assert.assertEquals(
 				"tag:channels.shakespeare.lit,/users/romeo@shakespeare.lit/posts,fc362eb42085f017ed9ccd9c4004b095",
-				replyEntry.element("in-reply-to").attributeValue("ref"));
+                replyEntry.element("entry").element("in-reply-to")
+                        .attributeValue("ref"));
 
-		Element entry = (Element) this.replyEntry.clone();
-		validator = getEntryObject(entry);
+        Element item = (Element) this.replyEntry.clone();
+        validator = getEntryObject(item);
 		Assert.assertTrue(validator.isValid());
-		entry = validator.getPayload();
+        Element entry = validator.getPayload();
 		Assert.assertEquals("fc362eb42085f017ed9ccd9c4004b095",
 				entry.element("in-reply-to").attributeValue("ref"));
 	}
@@ -235,65 +241,66 @@ public class AtomEntryTest extends TestHandler {
 	@Test
 	public void postGetsNoteTypeReplyGetsCommentType() throws Exception {
 
-		Element entry = (Element) this.publishEntry.clone();
-		validator = getEntryObject(entry);
+        Element item = (Element) this.publishEntry.clone();
+        validator = getEntryObject(item);
 		Assert.assertTrue(validator.isValid());
-		entry = validator.getPayload();
+        Element entry = validator.getPayload();
 
-		Assert.assertEquals(validator.POST_TYPE_NOTE, entry.element("object")
+        Assert.assertEquals(AtomEntry.POST_TYPE_NOTE, entry.element("object")
 				.elementText("object-type"));
 
-		entry = (Element) this.replyEntry.clone();
-		validator = getEntryObject(entry);
+        item = (Element) this.replyEntry.clone();
+        validator = getEntryObject(item);
 		Assert.assertTrue(validator.isValid());
 		entry = validator.getPayload();
 
-		Assert.assertEquals(validator.POST_TYPE_COMMENT, entry
+        Assert.assertEquals(AtomEntry.POST_TYPE_COMMENT, entry
 				.element("object").elementText("object-type"));
 	}
 
 	@Test
 	public void badContentTypeReturnsError() throws Exception {
-		Element entry = (Element) this.publishEntry.clone();
-		entry.element("content").attribute("type").setText("emojis");
-		validator = getEntryObject(entry);
+        Element item = (Element) this.publishEntry.clone();
+        item.element("entry").element("content").attribute("type")
+                .setText("emojis");
+        validator = getEntryObject(item);
 		Assert.assertFalse(validator.isValid());
-		Assert.assertEquals(validator.UNSUPPORTED_CONTENT_TYPE,
+        Assert.assertEquals(AtomEntry.UNSUPPORTED_CONTENT_TYPE,
 				validator.getErrorMessage());
 	}
 
 	@Test
 	public void noContentTypeGetsDefaultedToText() throws Exception {
-		Element entry = (Element) this.publishEntry.clone();
-		entry.element("content").attribute("type").detach();
-		validator = getEntryObject(entry);
+        Element item = (Element) this.publishEntry.clone();
+        item.element("entry").element("content").attribute("type").detach();
+        validator = getEntryObject(item);
 		Assert.assertTrue(validator.isValid());
-		entry = validator.getPayload();
-		Assert.assertEquals(validator.CONTENT_TEXT, entry.element("content")
+        Element entry = validator.getPayload();
+        Assert.assertEquals(AtomEntry.CONTENT_TEXT, entry.element("content")
 				.attributeValue("type"));
 
 	}
 
 	@Test
 	public void contentTypeGetsAddedAsRequired() throws Exception {
-		Element entry = (Element) this.publishEntry.clone();
-		entry.element("content").attribute("type")
-				.setText(validator.CONTENT_XHTML);
-		validator = getEntryObject(entry);
+        Element item = (Element) this.publishEntry.clone();
+        item.element("entry").element("content").attribute("type")
+                .setText(AtomEntry.CONTENT_XHTML);
+        validator = getEntryObject(item);
 		Assert.assertTrue(validator.isValid());
-		entry = validator.getPayload();
-		Assert.assertEquals(validator.CONTENT_XHTML, entry.element("content")
+        Element entry = validator.getPayload();
+        Assert.assertEquals(AtomEntry.CONTENT_XHTML, entry.element("content")
 				.attributeValue("type"));
 	}
 
 	@Test
 	public void activityVerbIsAdded() throws Exception {
-		Element entry = (Element) this.publishEntry.clone();
-		validator = getEntryObject(entry);
+        Element item = (Element) this.publishEntry.clone();
+        validator = getEntryObject(item);
 		Assert.assertTrue(validator.isValid());
-		entry = validator.getPayload();
+        Element entry = validator.getPayload();
 
-		Assert.assertEquals(validator.ACTIVITY_VERB_POST,
+        Assert.assertEquals(AtomEntry.ACTIVITY_VERB_POST,
 				entry.elementText("verb"));
 	}
 
@@ -304,129 +311,130 @@ public class AtomEntryTest extends TestHandler {
 				channelManager.getNodeItem(Mockito.eq(node),
 						Mockito.anyString())).thenReturn(null);
 
-		Element entry = (Element) this.replyEntry.clone();
-		validator = getEntryObject(entry);
+        Element item = (Element) this.replyEntry.clone();
+        validator = getEntryObject(item);
 
 		Assert.assertFalse(validator.isValid());
-		Assert.assertEquals(validator.PARENT_ITEM_NOT_FOUND,
+        Assert.assertEquals(AtomEntry.PARENT_ITEM_NOT_FOUND,
 				validator.getErrorMessage());
 	}
 
 	@Test
 	public void canNotReplyToAReply() throws Exception {
 
-		NodeItem item = new NodeItemImpl(node, "2", new Date(), "<entry/>", "1");
+        NodeItem nodeItem = new NodeItemImpl(node, "2", new Date(), "<entry/>", "1");
+
 		Mockito.when(
 				channelManager.getNodeItem(Mockito.eq(node),
-						Mockito.anyString())).thenReturn(item);
+                        Mockito.anyString())).thenReturn(nodeItem);
 
-		Element entry = (Element) this.replyEntry.clone();
-		validator = getEntryObject(entry);
+        Element item = (Element) this.replyEntry.clone();
+        validator = getEntryObject(item);
 
 		Assert.assertFalse(validator.isValid());
-		Assert.assertEquals(validator.MAX_THREAD_DEPTH_EXCEEDED,
+        Assert.assertEquals(AtomEntry.MAX_THREAD_DEPTH_EXCEEDED,
 				validator.getErrorMessage());
 	}
 
 	@Test
 	public void targetElementWithoutInReplyToReturnsError() throws Exception {
 
-		NodeItem item = new NodeItemImpl(node, "2", new Date(), "<entry/>", "1");
+        NodeItem nodeItem = new NodeItemImpl(node, "2", new Date(), "<entry/>", "1");
 		Mockito.when(
 				channelManager.getNodeItem(Mockito.eq(node), Mockito.eq("1")))
-				.thenReturn(item);
+                .thenReturn(nodeItem);
 		Mockito.when(
 				channelManager.getNodeItem(Mockito.eq(node), Mockito.eq("2")))
 				.thenReturn(null);
 
-		Element entry = (Element) this.ratingEntry.clone();
+        Element item = (Element) this.ratingEntry.clone();
 
-		entry.element("in-reply-to").detach();
-		validator = getEntryObject(entry);
+        item.element("entry").element("in-reply-to").detach();
+        validator = getEntryObject(item);
 
 		Assert.assertFalse(validator.isValid());
-		Assert.assertEquals(validator.IN_REPLY_TO_MISSING,
+        Assert.assertEquals(AtomEntry.IN_REPLY_TO_MISSING,
 				validator.getErrorMessage());
 	}
 
 	@Test
 	public void missingTargetIdElementReturnsError() throws Exception {
 
-		NodeItem item = new NodeItemImpl(node, "2", new Date(), "<entry/>");
+        NodeItem nodeItem = new NodeItemImpl(node, "2", new Date(), "<entry/>");
 		Mockito.when(
 				channelManager.getNodeItem(Mockito.eq(node), Mockito.eq("1")))
-				.thenReturn(item);
+                .thenReturn(nodeItem);
 		Mockito.when(
 				channelManager.getNodeItem(Mockito.eq(node), Mockito.eq("2")))
 				.thenReturn(null);
 
-		Element entry = (Element) this.ratingEntry.clone();
+        Element item = (Element) this.ratingEntry.clone();
 
-		entry.element("target").element("id").detach();
-		validator = getEntryObject(entry);
+        item.element("entry").element("target").element("id").detach();
+        validator = getEntryObject(item);
 
 		Assert.assertFalse(validator.isValid());
-		Assert.assertEquals(validator.MISSING_TARGET_ID,
+        Assert.assertEquals(AtomEntry.MISSING_TARGET_ID,
 				validator.getErrorMessage());
 	}
 
 	@Test
 	public void emptyTargetIdElementReturnsError() throws Exception {
 
-		NodeItem item = new NodeItemImpl(node, "2", new Date(), "<entry/>");
+        NodeItem nodeItem = new NodeItemImpl(node, "2", new Date(), "<entry/>");
 		Mockito.when(
 				channelManager.getNodeItem(Mockito.eq(node), Mockito.eq("1")))
-				.thenReturn(item);
+                .thenReturn(nodeItem);
 		Mockito.when(
 				channelManager.getNodeItem(Mockito.eq(node), Mockito.eq("2")))
 				.thenReturn(null);
 
-		Element entry = (Element) this.ratingEntry.clone();
+        Element item = (Element) this.ratingEntry.clone();
 
-		entry.element("target").element("id").detach();
-		entry.element("target").addElement("id");
-		validator = getEntryObject(entry);
+        item.element("entry").element("target").element("id").detach();
+        item.element("entry").element("target").addElement("id");
+        validator = getEntryObject(item);
 
 		Assert.assertFalse(validator.isValid());
-		Assert.assertEquals(validator.MISSING_TARGET_ID,
+        Assert.assertEquals(AtomEntry.MISSING_TARGET_ID,
 				validator.getErrorMessage());
 	}
 
 	@Test
 	public void ifTargetedPostDoesntExistErrorIsReturned() throws Exception {
 
-		NodeItem item = new NodeItemImpl(node, "1", new Date(), "<entry/>");
+        NodeItem nodeItem = new NodeItemImpl(node, "1", new Date(), "<entry/>");
 		Mockito.when(
 				channelManager.getNodeItem(Mockito.eq(node), Mockito.eq("1")))
-				.thenReturn(item);
+                .thenReturn(nodeItem);
 		Mockito.when(
 				channelManager.getNodeItem(Mockito.eq(node), Mockito.eq("2")))
 				.thenReturn(null);
 
-		Element entry = (Element) this.ratingEntry.clone();
-		validator = getEntryObject(entry);
+        Element item = (Element) this.ratingEntry.clone();
+        validator = getEntryObject(item);
 
 		Assert.assertFalse(validator.isValid());
-		Assert.assertEquals(validator.TARGETED_ITEM_NOT_FOUND,
+        Assert.assertEquals(AtomEntry.TARGETED_ITEM_NOT_FOUND,
 				validator.getErrorMessage());
 	}
 
 	@Test
 	public void ifTargetedPostIsntInSameThreadErrorIsReturnedParentCheck()
 			throws Exception {
-		NodeItem item = new NodeItemImpl(node, "1", new Date(), "<entry/>");
+        NodeItem nodeItem = new NodeItemImpl(node, "1", new Date(), "<entry/>");
 		Mockito.when(
 				channelManager.getNodeItem(Mockito.eq(node), Mockito.eq("1")))
-				.thenReturn(item);
+                .thenReturn(nodeItem);
 		Mockito.when(
 				channelManager.getNodeItem(Mockito.eq(node), Mockito.eq("2")))
-				.thenReturn(item);
+                .thenReturn(nodeItem);
 
-		Element entry = (Element) this.ratingEntry.clone();
-		validator = getEntryObject(entry);
+        Element item = (Element) this.ratingEntry.clone();
+        validator = getEntryObject(item);
 
 		Assert.assertFalse(validator.isValid());
-		Assert.assertEquals(validator.TARGET_MUST_BE_IN_SAME_THREAD,
+        Assert.assertEquals(AtomEntry.TARGET_MUST_BE_IN_SAME_THREAD,
 				validator.getErrorMessage());
 	}
 
@@ -434,37 +442,37 @@ public class AtomEntryTest extends TestHandler {
 	public void ifTargetedPostIsntInSameThreadErrorIsReturnedThreadCheck()
 			throws Exception {
 
-		NodeItem item1 = new NodeItemImpl(node, "1", new Date(), "<entry/>");
-		NodeItem item2 = new NodeItemImpl(node, "B", new Date(), "<entry/>",
+        NodeItem nodeItem1 = new NodeItemImpl(node, "1", new Date(), "<entry/>");
+        NodeItem nodeItem2 = new NodeItemImpl(node, "B", new Date(), "<entry/>",
 				"A");
 		Mockito.when(
 				channelManager.getNodeItem(Mockito.eq(node), Mockito.eq("1")))
-				.thenReturn(item1);
+                .thenReturn(nodeItem1);
 		Mockito.when(
 				channelManager.getNodeItem(Mockito.eq(node), Mockito.eq("2")))
-				.thenReturn(item2);
+                .thenReturn(nodeItem2);
 
-		Element entry = (Element) this.ratingEntry.clone();
-		entry.element("target").element("id").setText("B");
-		validator = getEntryObject(entry);
+        Element item = (Element) this.ratingEntry.clone();
+        item.element("entry").element("target").element("id").setText("B");
+        validator = getEntryObject(item);
 
 		Assert.assertFalse(validator.isValid());
-		Assert.assertEquals(validator.TARGET_MUST_BE_IN_SAME_THREAD,
+        Assert.assertEquals(AtomEntry.TARGET_MUST_BE_IN_SAME_THREAD,
 				validator.getErrorMessage());
 	}
 
 	@Test
 	public void ifTargetedIdIsSameAsReplyToIdOnlyOneDatabaseLookupPerformed()
 			throws Exception {
-		NodeItem item = new NodeItemImpl(node, "1", new Date(), "<entry/>");
+        NodeItem nodeItem = new NodeItemImpl(node, "1", new Date(), "<entry/>");
 		Mockito.when(
 				channelManager.getNodeItem(Mockito.eq(node), Mockito.eq("1")))
-				.thenReturn(item);
+                .thenReturn(nodeItem);
 
-		Element entry = (Element) this.ratingEntry.clone();
-		entry.element("target").element("id").setText("1");
+        Element item = (Element) this.ratingEntry.clone();
+        item.element("entry").element("target").element("id").setText("1");
 
-		validator = getEntryObject(entry);
+        validator = getEntryObject(item);
 
 		validator.isValid();
 
@@ -475,10 +483,10 @@ public class AtomEntryTest extends TestHandler {
 	@Test
 	public void targetElementGetsAddedAsExpected() throws Exception {
 
-		Element entry = (Element) this.ratingEntry.clone();
-		entry.element("target").element("id").setText("1");
+        Element item = (Element) this.ratingEntry.clone();
+        item.element("entry").element("target").element("id").setText("1");
 
-		validator = getEntryObject(entry);
+        validator = getEntryObject(item);
 
 		Assert.assertTrue(validator.isValid());
 
@@ -494,63 +502,63 @@ public class AtomEntryTest extends TestHandler {
 	@Test
 	public void missingInReplyToErrorsIfRatingElementPresent() throws Exception {
 
-		Element entry = (Element) this.ratingEntry.clone();
-		entry.element("in-reply-to").detach();
-		validator = getEntryObject(entry);
+        Element item = (Element) this.ratingEntry.clone();
+        item.element("entry").element("in-reply-to").detach();
+        validator = getEntryObject(item);
 
 		Assert.assertFalse(validator.isValid());
-		Assert.assertEquals(validator.IN_REPLY_TO_MISSING,
+        Assert.assertEquals(AtomEntry.IN_REPLY_TO_MISSING,
 				validator.getErrorMessage());
 	}
 
 	@Test
 	public void missingTargetErrorsIfRatingElementPresent() throws Exception {
 
-		Element entry = (Element) this.ratingEntry.clone();
-		entry.element("target").element("id").setText("1");
-		entry.element("target").detach();
-		validator = getEntryObject(entry);
+        Element item = (Element) this.ratingEntry.clone();
+        item.element("entry").element("target").element("id").setText("1");
+        item.element("entry").element("target").detach();
+        validator = getEntryObject(item);
 
 		Assert.assertFalse(validator.isValid());
-		Assert.assertEquals(validator.TARGET_ELEMENT_MISSING,
+        Assert.assertEquals(AtomEntry.TARGET_ELEMENT_MISSING,
 				validator.getErrorMessage());
 	}
 
 	@Test
 	public void invalidRatingValueReturnsError() throws Exception {
 
-		Element entry = (Element) this.ratingEntry.clone();
-		entry.element("target").element("id").setText("1");
-		entry.element("rating").setText("awesome");
-		validator = getEntryObject(entry);
+        Element item = (Element) this.ratingEntry.clone();
+        item.element("entry").element("target").element("id").setText("1");
+        item.element("entry").element("rating").setText("awesome");
+        validator = getEntryObject(item);
 
 		Assert.assertFalse(validator.isValid());
-		Assert.assertEquals(validator.INVALID_RATING_VALUE,
+        Assert.assertEquals(AtomEntry.INVALID_RATING_VALUE,
 				validator.getErrorMessage());
 	}
 
 	@Test
 	public void outOfRangeRatingReturnsError() throws Exception {
 
-		Element entry = (Element) this.ratingEntry.clone();
-		entry.element("rating").setText("6.0");
-		entry.element("target").element("id").setText("1");
-		validator = getEntryObject(entry);
+        Element item = (Element) this.ratingEntry.clone();
+        item.element("entry").element("rating").setText("6.0");
+        item.element("entry").element("target").element("id").setText("1");
+        validator = getEntryObject(item);
 
 		Assert.assertFalse(validator.isValid());
-		Assert.assertEquals(validator.RATING_OUT_OF_RANGE,
+        Assert.assertEquals(AtomEntry.RATING_OUT_OF_RANGE,
 				validator.getErrorMessage());
 	}
 
 	@Test
 	public void nonWholeNumberRatingReturnsError() throws Exception {
-		Element entry = (Element) this.ratingEntry.clone();
-		entry.element("rating").setText("4.1");
-		entry.element("target").element("id").setText("1");
-		validator = getEntryObject(entry);
+        Element item = (Element) this.ratingEntry.clone();
+        item.element("entry").element("rating").setText("4.1");
+        item.element("entry").element("target").element("id").setText("1");
+        validator = getEntryObject(item);
 
 		Assert.assertFalse(validator.isValid());
-		Assert.assertEquals(validator.INVALID_RATING_VALUE,
+        Assert.assertEquals(AtomEntry.INVALID_RATING_VALUE,
 				validator.getErrorMessage());
 	}
 
@@ -559,10 +567,10 @@ public class AtomEntryTest extends TestHandler {
 
 		String rating = "4";
 
-		Element entry = (Element) this.ratingEntry.clone();
-		entry.element("rating").setText(rating);
-		entry.element("target").element("id").setText("1");
-		validator = getEntryObject(entry);
+        Element item = (Element) this.ratingEntry.clone();
+        item.element("entry").element("rating").setText(rating);
+        item.element("entry").element("target").element("id").setText("1");
+        validator = getEntryObject(item);
 
 		Assert.assertTrue(validator.isValid());
 		Element payload = validator.getPayload();
@@ -576,9 +584,9 @@ public class AtomEntryTest extends TestHandler {
 	@Test
 	public void postTitleIsSetToRatingWhenRated() throws Exception {
 
-		Element entry = (Element) this.ratingEntry.clone();
-		entry.element("target").element("id").setText("1");
-		validator = getEntryObject(entry);
+        Element item = (Element) this.ratingEntry.clone();
+        item.element("entry").element("target").element("id").setText("1");
+        validator = getEntryObject(item);
 
 		Assert.assertTrue(validator.isValid());
 		Element payload = validator.getPayload();
@@ -590,26 +598,27 @@ public class AtomEntryTest extends TestHandler {
 
 	@Test
 	public void postVerbGetsSwitchedToRated() throws Exception {
-		Element entry = (Element) this.ratingEntry.clone();
-		entry.element("target").element("id").setText("1");
-		validator = getEntryObject(entry);
+        Element item = (Element) this.ratingEntry.clone();
+        item.element("entry").element("target").element("id").setText("1");
+        validator = getEntryObject(item);
 
 		Assert.assertTrue(validator.isValid());
 		Element payload = validator.getPayload();
 
-		Assert.assertEquals(validator.ACTIVITY_VERB_RATED,
+        Assert.assertEquals(AtomEntry.ACTIVITY_VERB_RATED,
 				payload.elementText("verb"));
 	}
 
 	@Test
 	public void postContentGetsReplacedWithRating() throws Exception {
-		Element entry = (Element) this.ratingEntry.clone();
-		entry.element("target").element("id").setText("1");
+        Element item = (Element) this.ratingEntry.clone();
+        item.element("entry").element("target").element("id").setText("1");
 
 		String expectedContent = "rating:5.0";
-		Assert.assertFalse(entry.elementText("content").equals(expectedContent));
+        Assert.assertFalse(item.element("entry").elementText("content")
+                .equals(expectedContent));
 
-		validator = getEntryObject(entry);
+        validator = getEntryObject(item);
 
 		Assert.assertTrue(validator.isValid());
 		Element payload = validator.getPayload();
@@ -619,47 +628,89 @@ public class AtomEntryTest extends TestHandler {
 
 	@Test
 	public void canNotRateARating() throws Exception {
+
 		String testPayload = "<entry xmlns=\"http://www.w3.org/2005/Atom\" "
 				+ "xmlns:review=\"http://activitystrea.ms/schema/1.0/review\">"
 				+ "<review:rating>5.0</review:rating></entry>";
-		NodeItem item = new NodeItemImpl(node, "1", new Date(), testPayload);
+        NodeItem nodeItem = new NodeItemImpl(node, "1", new Date(), testPayload);
+
 		Mockito.when(
 				channelManager.getNodeItem(Mockito.eq(node),
-						Mockito.anyString())).thenReturn(item);
+                        Mockito.anyString())).thenReturn(nodeItem);
 
-		Element entry = (Element) this.ratingEntry.clone();
-		entry.element("target").element("id").setText("1");
-		validator = getEntryObject(entry);
+        Element item = (Element) this.ratingEntry.clone();
+        item.element("entry").element("target").element("id").setText("1");
+        validator = getEntryObject(item);
 
 		Assert.assertFalse(validator.isValid());
-		Assert.assertEquals(validator.CAN_ONLY_RATE_A_POST,
+        Assert.assertEquals(AtomEntry.CAN_ONLY_RATE_A_POST,
 				validator.getErrorMessage());
 	}
 
 	@Test
 	public void onlyAllowsSingleRatingPerPersonPerPost() throws Exception {
-		String testPayload = "<entry xmlns=\"http://www.w3.org/2005/Atom\"/>";
-		NodeItem item = new NodeItemImpl(node, "1", new Date(), testPayload);
 		Mockito.when(
-			channelManager.userHasRatedPost(Mockito.anyString(), Mockito.any(JID.class), Mockito.any(GlobalItemID.class))
-		).thenReturn(true);
+                channelManager.userHasRatedPost(Mockito.anyString(),
+                        Mockito.any(JID.class), Mockito.any(GlobalItemID.class)))
+                .thenReturn(true);
 
-		Element entry = (Element) this.ratingEntry.clone();
-		entry.element("target").element("id").setText("1");
-		validator = getEntryObject(entry);
+        Element item = (Element) this.ratingEntry.clone();
+        item.element("entry").element("target").element("id").setText("1");
+        validator = getEntryObject(item);
 
 		Assert.assertFalse(validator.isValid());
-		Assert.assertEquals(validator.ITEM_ALREADY_RATED,
+        Assert.assertEquals(AtomEntry.ITEM_ALREADY_RATED,
 				validator.getErrorMessage());
 	}
-	
-	@Test
-	public void addsMediaNamespace() throws Exception {
-		Element entry = (Element) this.ratingEntry.clone();
-		entry.element("target").element("id").setText("1");
-		entry.addElement("media").addElement("item").addAttribute("channel", "marty@mcfly.com");
 
-		validator = getEntryObject(entry);
+    @Test
+    public void suppliesLocalItemId() throws Exception {
+        Element item = (Element) this.publishEntry.clone();
+        validator = getEntryObject(item);
+
+        String localItemId = validator.getLocalItemId();
+
+        Assert.assertNotNull(localItemId);
+    }
+
+    @Test
+    public void suppliesGlobalItemId() throws Exception {
+        Element item = (Element) this.publishEntry.clone();
+        validator = getEntryObject(item);
+
+        String globalItemId = validator.getGlobalItemId();
+
+        Assert.assertNotNull(globalItemId);
+        Assert.assertTrue(GlobalItemIDImpl.isGlobalId(globalItemId));
+    }
+
+    @Test
+    public void suppliesInReplyTo() throws Exception {
+        Assert.assertEquals(
+                "tag:channels.shakespeare.lit,/users/romeo@shakespeare.lit/posts,fc362eb42085f017ed9ccd9c4004b095",
+                replyEntry.element("entry").element("in-reply-to")
+                        .attributeValue("ref"));
+
+        NodeItem nodeItem = new NodeItemImpl(node, "2", new Date(), "<entry/>");
+
+        Mockito.when(
+                channelManager.getNodeItem(Mockito.eq(node),
+                        Mockito.anyString())).thenReturn(nodeItem);
+
+        Element item = (Element) this.replyEntry.clone();
+        validator = getEntryObject(item);
+
+        Assert.assertEquals("fc362eb42085f017ed9ccd9c4004b095",
+                validator.getInReplyTo());
+    }
+    
+    @Test
+	public void addsMediaNamespace() throws Exception {
+		Element item = (Element) this.ratingEntry.clone();
+		item.element("entry").element("target").element("id").setText("1");
+		item.element("entry").addElement("media").addElement("item").addAttribute("channel", "marty@mcfly.com");
+
+		validator = getEntryObject(item);
 		Assert.assertTrue(validator.isValid());
 		Element payload = validator.getPayload();
 		Assert.assertEquals(
@@ -670,18 +721,18 @@ public class AtomEntryTest extends TestHandler {
 	
 	@Test
 	public void existingMediaNamespaceDoesntCauseConflict() throws Exception {
-		Element entry = (Element) this.ratingEntry.clone();
-		entry.element("target").element("id").setText("1");
-		entry.addNamespace(Buddycloud.NS_MEDIA_PREFIX, Buddycloud.NS_MEDIA);
-		Element media = entry.addElement(Buddycloud.NS_MEDIA_PREFIX + ":media");
+		Element item = (Element) this.ratingEntry.clone();
+		item.element("entry").element("target").element("id").setText("1");
+		item.element("entry").addNamespace(Buddycloud.NS_MEDIA_PREFIX, Buddycloud.NS_MEDIA);
+		Element media = item.element("entry").addElement(Buddycloud.NS_MEDIA_PREFIX + ":media");
 		media.addElement("item").addAttribute("channel", "marty@mcfly.com");
 
-		validator = getEntryObject(entry);
+		validator = getEntryObject(item);
 		Assert.assertTrue(validator.isValid());
 		Element payload = validator.getPayload();
 		Assert.assertEquals(
 			Buddycloud.NS_MEDIA,
-			entry.getNamespaceForPrefix(Buddycloud.NS_MEDIA_PREFIX).getText()
+			item.element("entry").getNamespaceForPrefix(Buddycloud.NS_MEDIA_PREFIX).getText()
 		);
 		Assert.assertNotNull(payload.element(Buddycloud.NS_MEDIA_PREFIX + ":media"));
 	}

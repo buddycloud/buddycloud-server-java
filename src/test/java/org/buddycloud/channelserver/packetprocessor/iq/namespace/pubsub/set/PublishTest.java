@@ -10,6 +10,7 @@ import junit.framework.Assert;
 import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.channel.ValidatePayload;
 import org.buddycloud.channelserver.channel.validate.AtomEntry;
+import org.buddycloud.channelserver.channel.validate.PayloadValidator;
 import org.buddycloud.channelserver.channel.validate.UnknownContentTypeException;
 import org.buddycloud.channelserver.db.exception.NodeStoreException;
 import org.buddycloud.channelserver.packetHandler.iq.IQTestHandler;
@@ -88,6 +89,13 @@ public class PublishTest extends IQTestHandler {
 						new ResultSetImpl<NodeSubscription>(
 								new ArrayList<NodeSubscription>()));
 
+        validateEntry.setPayload(request.getChildElement().element("publish")
+                .element("item").createCopy());
+        Mockito.when(validateEntry.getGlobalItemId()).thenReturn(
+                new GlobalItemIDImpl(new JID(request.getTo().toBareJID()),
+                        node, entry.elementText("id")).toString());
+
+		Mockito.when(validateEntry.getLocalItemId()).thenCallRealMethod();
 		Mockito.when(validateEntry.isValid()).thenReturn(true);
 
 		Mockito.when(validateEntry.getPayload()).thenReturn(entry);
@@ -400,6 +408,11 @@ public class PublishTest extends IQTestHandler {
 				request.getChildElement().element("publish").element("item")
 						.element("entry"));
 
+        Mockito.when(validateEntry.getInReplyTo()).thenReturn(
+                GlobalItemIDImpl.toLocalId(request.getChildElement()
+                        .element("publish").element("item").element("entry")
+                        .element("in-reply-to").attributeValue("ref")));
+
 		publish.process(element, jid, request, null);
 
 		Assert.assertEquals(IQ.Type.result, ((IQ) queue.poll()).getType());
@@ -421,6 +434,9 @@ public class PublishTest extends IQTestHandler {
 		Mockito.when(validateEntry.getPayload()).thenReturn(
 				request.getChildElement().element("publish").element("item")
 						.element("entry"));
+
+		Mockito.when(validateEntry.getInReplyTo())
+			.thenReturn("fc362eb42085f017ed9ccd9c4004b095");
 
 		publish.process(element, jid, request, null);
 

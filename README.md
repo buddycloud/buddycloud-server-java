@@ -67,3 +67,19 @@ Two example plugins are available. One provides support for [validating IODEF](h
 1. Create a `plugins` directory in the root of your buddycloud installation, e.g. `target/plugins/`.
 2. Drop your plugin JAR into the `plugins` directory you created in step 1.
 3. Restart your Buddycloud server.
+
+### Setting the content-type for a node
+To declare the content type for a node you must add a record to the `node_config` database table. The structure of this table is:
+
+| node                         | key           | value                            | updated             |
+| ---------------------------- |---------------| ---------------------------------| ------------------- |
+| /user/in@example.com/iodef   | pubsub#type   | urn:ietf:params:xml:ns:iodef-1.0 | 2014-06-30 08:31:47 |
+| /user/bo@example.com/cats    | pubsub#type   | my-cat-content-type              | 2014-06-30 08:33:47 |
+
+You will observe in the IODEF example that the value of the content-type configuration entry is usually the namespace for that content-type. Note that as Atom is the default content-type it is not necessary to explicitly add a record for Atom.
+
+The following command sets the content-type of the `/user/in@example.com/iodef` node to IODEF by inserting a record using the IODEF namespace as the content-type value:
+
+```
+psql -h 127.0.0.1 -U buddycloud_server -d buddycloud_server -c "insert into node_config VALUES('/user/in@example.com/iodef', 'pubsub#type', 'urn:ietf:params:xml:ns:iodef-1.0', NOW());"
+```

@@ -98,6 +98,7 @@ public class SubscriptionEvent extends PubSubElementProcessorAbstract {
 
 		Document document = getDocumentHelper();
 		Element message = document.addElement("message");
+		message.addAttribute("type", "headline");
 		message.addAttribute("remote-server-discover", "false");
 		Element event = message.addElement("event",
 				JabberPubsub.NS_PUBSUB_EVENT);
@@ -130,6 +131,7 @@ public class SubscriptionEvent extends PubSubElementProcessorAbstract {
 		if (Subscriptions.valueOf(subscriptionElement.attributeValue("subscription")).equals(Subscriptions.invited)) {
 			Message alertInvitedUser = rootElement.createCopy();
 		    JID to = jid;
+		    alertInvitedUser.getElement().attribute("remote-server-discover").detach();
 		    if (!channelManager.isLocalJID(jid)) {
 		    	to = invitedUsersDomain;
 		    }

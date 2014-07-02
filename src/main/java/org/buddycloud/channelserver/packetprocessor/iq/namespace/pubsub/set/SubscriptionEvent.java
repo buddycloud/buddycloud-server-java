@@ -88,6 +88,9 @@ public class SubscriptionEvent extends PubSubElementProcessorAbstract {
 
 	private void sendNotifications() throws Exception {
 
+		boolean hasNotifiedInviteesServer = false;
+		JID invitedUsersDomain = new JID(jid.getDomain());
+		
 		outQueue.put(response);
 
 		ResultSet<NodeSubscription> subscribers = channelManager
@@ -109,7 +112,10 @@ public class SubscriptionEvent extends PubSubElementProcessorAbstract {
 
 		for (NodeSubscription subscriber : subscribers) {
 			Message notification = rootElement.createCopy();
-			notification.setTo(subscriber.getUser());
+			notification.setTo(subscriber.getListener());
+			if (subscriber.getUser().getDomain().equals(invitedUsersDomain.getDomain())) {
+				hasNotifiedInviteesServer = true;
+			}
 			outQueue.put(notification);
 		}
 		Collection<JID> admins = getAdminUsers();
@@ -119,11 +125,13 @@ public class SubscriptionEvent extends PubSubElementProcessorAbstract {
 			outQueue.put(notification);
 		}
 		
+		if (hasNotifiedInviteesServer) return;
+		
 		if (Subscriptions.valueOf(subscriptionElement.attributeValue("subscription")).equals(Subscriptions.invited)) {
 			Message alertInvitedUser = rootElement.createCopy();
 		    JID to = jid;
 		    if (!channelManager.isLocalJID(jid)) {
-		    	to = new JID(jid.getDomain());
+		    	to = invitedUsersDomain;
 		    }
 			alertInvitedUser.setTo(to);
 			outQueue.put(alertInvitedUser);

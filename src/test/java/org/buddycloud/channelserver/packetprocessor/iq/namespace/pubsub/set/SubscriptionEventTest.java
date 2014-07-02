@@ -478,6 +478,7 @@ public class SubscriptionEventTest extends IQTestHandler {
 		Element subscription = notification.getElement().element("event").element("subscription");
 		Assert.assertEquals(Subscriptions.invited, Subscriptions.valueOf(subscription.attributeValue("subscription")));
 		Assert.assertEquals(invitee, new JID(subscription.attributeValue("jid")));
+		Assert.assertEquals(jid, new JID(subscription.attributeValue("invited-by")));
 		
 		queue.poll();
 		queue.poll();

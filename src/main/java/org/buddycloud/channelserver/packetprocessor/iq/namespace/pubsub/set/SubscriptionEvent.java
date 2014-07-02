@@ -110,6 +110,14 @@ public class SubscriptionEvent extends PubSubElementProcessorAbstract {
 		subscription.addAttribute("subscription",
 				subscriptionElement.attributeValue("subscription"));
 		Message rootElement = new Message(message);
+		
+		Subscriptions newSubscription = Subscriptions.valueOf(
+				subscriptionElement.attributeValue("subscription")
+		);
+		
+		if (newSubscription.equals(Subscriptions.invited)) {
+			subscription.addAttribute("invited-by", actor.toBareJID());
+		}
 
 		for (NodeSubscription subscriber : subscribers) {
 			Message notification = rootElement.createCopy();
@@ -128,7 +136,7 @@ public class SubscriptionEvent extends PubSubElementProcessorAbstract {
 		
 		if (hasNotifiedInviteesServer) return;
 		
-		if (Subscriptions.valueOf(subscriptionElement.attributeValue("subscription")).equals(Subscriptions.invited)) {
+		if (newSubscription.equals(Subscriptions.invited)) {
 			Message alertInvitedUser = rootElement.createCopy();
 		    JID to = jid;
 		    alertInvitedUser.getElement().attribute("remote-server-discover").detach();

@@ -319,15 +319,6 @@ public class SubscribeSet extends PubSubElementProcessorAbstract {
 		}
 	}
 
-	/**
-	 * if (false == actorJid.toBareJID().equals(membership.getUser())) { if
-	 * ((false == isOwnerModerator) &&
-	 * membership.getAffiliation().in(Affiliations.outcast, Affiliations.none))
-	 * { continue; } if ((false == isOwnerModerator) &&
-	 * !membership.getSubscription().equals(Subscriptions.subscribed)) {
-	 * continue; } }
-	 */
-
 	private Message getPendingSubscriptionNotification(String receiver,
 			String subscriber) {
 

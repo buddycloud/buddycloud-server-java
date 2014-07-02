@@ -283,7 +283,6 @@ public class SubscribeSetTest extends IQTestHandler {
 
 	@Test
 	public void canSubscribeIfInvited() throws Exception {
-		System.out.println("\n\n\n***** this test");
 		Map<String, String> configuration = new HashMap<String, String>();
 		configuration.put(Conf.ACCESS_MODEL, AccessModel.local.toString());
 		configuration.put(Conf.DEFAULT_AFFILIATION,

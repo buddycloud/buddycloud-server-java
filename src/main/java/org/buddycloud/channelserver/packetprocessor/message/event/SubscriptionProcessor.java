@@ -16,6 +16,7 @@ import org.xmpp.packet.Packet;
 public class SubscriptionProcessor extends AbstractMessageProcessor {
 
 	private JID jid;
+	private JID invitedBy = null;
 	private Subscriptions subscription;
 
 	private static final Logger logger = Logger
@@ -32,9 +33,10 @@ public class SubscriptionProcessor extends AbstractMessageProcessor {
 
 		handleSubscriptionElement();
 
-		if (false == channelManager.isLocalNode(node)) {
-			sendLocalNotifications();
+		if (true == channelManager.isLocalNode(node)) {
+			return;
 		}
+		sendLocalNotifications();
 	}
 
 	private void handleSubscriptionElement() throws NodeStoreException {
@@ -48,6 +50,9 @@ public class SubscriptionProcessor extends AbstractMessageProcessor {
 		node = subscriptionElement.attributeValue("node");
 		subscription = Subscriptions.valueOf(subscriptionElement
 				.attributeValue("subscription"));
+		if (null != subscriptionElement.attributeValue("invited-by")) {
+		    invitedBy = new JID(subscriptionElement.attributeValue("invited-by"));
+		}
 
 		if (true == channelManager.isLocalNode(node)) {
 			return;
@@ -57,7 +62,7 @@ public class SubscriptionProcessor extends AbstractMessageProcessor {
 
 	private void storeNewSubscription() throws NodeStoreException {
 		NodeSubscriptionImpl newSubscription = new NodeSubscriptionImpl(node,
-				jid, subscription);
+				jid, subscription, invitedBy);
 		addRemoteNode();
 		channelManager.addUserSubscription(newSubscription);
 	}

@@ -5,6 +5,7 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
+import java.sql.Types;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Date;
@@ -85,7 +86,7 @@ public class JDBCNodeStore implements NodeStore {
 				setNodeConf(nodeId, nodeConf);
 			}
 			NodeSubscriptionImpl subscription = new NodeSubscriptionImpl(
-					nodeId, owner, Subscriptions.subscribed);
+					nodeId, owner, Subscriptions.subscribed, null);
 			addUserSubscription(subscription);
 			setUserAffiliation(nodeId, owner, Affiliations.owner);
 		} catch (SQLException e) {
@@ -363,6 +364,11 @@ public class JDBCNodeStore implements NodeStore {
 							.toString());
 					addStatement.setString(4, subscription.getSubscription()
 							.toString());
+					if (null == subscription.getInvitedBy()) {
+						addStatement.setNull(5, Types.NULL);
+					} else {
+					    addStatement.setString(5, subscription.getInvitedBy().toBareJID());
+					}
 					addStatement.executeUpdate();
 					addStatement.close();
 				}
@@ -425,9 +431,13 @@ public class JDBCNodeStore implements NodeStore {
 
 			ArrayList<NodeMembership> result = new ArrayList<NodeMembership>();
 			while (rs.next()) {
+				JID inviter = null;
+				if (null != rs.getString(6)) {
+					inviter = new JID(rs.getString(6));
+				}
 				NodeMembershipImpl membership = new NodeMembershipImpl(
 						rs.getString(1), new JID(rs.getString(2)), new JID(rs.getString(3)), Subscriptions.valueOf(rs.getString(4)), Affiliations.valueOf(rs
-								.getString(5)), rs.getTimestamp(6));
+								.getString(5)), inviter, rs.getTimestamp(7));
 				result.add(membership);
 			}
 
@@ -480,14 +490,18 @@ public class JDBCNodeStore implements NodeStore {
 			java.sql.ResultSet rs = selectStatement.executeQuery();
 
 			if (rs.next()) {
+				JID inviter = null;
+				if (null != rs.getString(6)) {
+					inviter = new JID(rs.getString(6));
+				}
 				membership = new NodeMembershipImpl(nodeId, new JID(
 						rs.getString(2)), new JID(rs.getString(3)),
 						Subscriptions.valueOf(rs.getString(4)),
 						Affiliations.valueOf(rs.getString(5)),
-						rs.getTimestamp(6));
+						inviter, rs.getTimestamp(7));
 			} else {
 				membership = new NodeMembershipImpl(nodeId, user, user,
-						Subscriptions.none, Affiliations.none);
+						Subscriptions.none, Affiliations.none, null);
 			}
 
 			return membership;
@@ -514,9 +528,13 @@ public class JDBCNodeStore implements NodeStore {
 
 			ArrayList<NodeMembership> result = new ArrayList<NodeMembership>();
 			while (rs.next()) {
+				JID inviter = null;
+				if (null != rs.getString(6)) {
+					inviter = new JID(rs.getString(6));
+				}
 				NodeMembershipImpl membership = new NodeMembershipImpl(
 						rs.getString(1), new JID(rs.getString(2)), new JID(rs.getString(3)), Subscriptions.valueOf(rs.getString(4)), Affiliations.valueOf(rs
-								.getString(5)), rs.getTimestamp(6));
+								.getString(5)), inviter, rs.getTimestamp(7));
 				result.add(membership);
 			}
 
@@ -544,10 +562,14 @@ public class JDBCNodeStore implements NodeStore {
 			ArrayList<NodeSubscription> result = new ArrayList<NodeSubscription>();
 
 			while (rs.next()) {
+				JID invitedBy = null;
+				if (null != rs.getString(5)) {
+					invitedBy = new JID(rs.getString(5));
+				}
 				NodeSubscriptionImpl nodeSub = new NodeSubscriptionImpl(
 						rs.getString(1), new JID(rs.getString(2)), new JID(
 								rs.getString(3)), Subscriptions.valueOf(rs
-								.getString(4)), rs.getTimestamp(5));
+								.getString(4)), invitedBy, rs.getTimestamp(6));
 				result.add(nodeSub);
 			}
 
@@ -576,7 +598,7 @@ public class JDBCNodeStore implements NodeStore {
 			while (rs.next()) {
 				NodeSubscriptionImpl nodeSub = new NodeSubscriptionImpl(
 						rs.getString(2), new JID(rs.getString(1)),
-						Subscriptions.valueOf(rs.getString(3)),
+						Subscriptions.valueOf(rs.getString(3)), null,
 						rs.getTimestamp(4));
 				result.add(nodeSub);
 			}
@@ -605,7 +627,7 @@ public class JDBCNodeStore implements NodeStore {
 			while (rs.next()) {
 				NodeSubscriptionImpl nodeSub = new NodeSubscriptionImpl(
 						rs.getString(2), new JID(rs.getString(1)),
-						Subscriptions.valueOf(rs.getString(3)),
+						Subscriptions.valueOf(rs.getString(3)), null,
 						rs.getTimestamp(4));
 				result.add(nodeSub);
 			}

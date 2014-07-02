@@ -11,6 +11,7 @@ public class NodeSubscriptionMock implements NodeSubscription {
 	private Affiliations affiliation;
 	private Subscriptions subscription;
 	private String foreignChannelServer;
+	private JID invitedBy;
 
 	public void setBareJID(JID jid) {
 		this.subscriber = jid;
@@ -64,5 +65,10 @@ public class NodeSubscriptionMock implements NodeSubscription {
 	@Override
 	public Date getLastUpdated() {
 		return new Date();
+	}
+
+	@Override
+	public JID getInvitedBy() {
+		return invitedBy;
 	}
 }

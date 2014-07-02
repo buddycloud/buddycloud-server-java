@@ -40,7 +40,7 @@ public class OutQueueConsumer extends QueueConsumer {
 	protected void consume(Packet p) {
 
 		try {
-			if (isRemoteServer(p.getTo())) {
+			if (true == isRemoteServer(p.getTo())) {
 				// i.e. a remote server
 				if (null == p.getElement().attributeValue(
 						"remote-server-discover")) {
@@ -100,7 +100,7 @@ public class OutQueueConsumer extends QueueConsumer {
 		if (LocalDomainChecker.isLocal(domain, conf)) {
 			return false;
 		}
-		
+		logger.debug("Dealing with remote server " + domain);
 		return true;
 	}
 

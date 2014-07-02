@@ -1065,7 +1065,7 @@ public class JDBCNodeStoreTest extends JDBCNodeStoreAbstract {
 	public void testNodeOwnersReturnsExpectedList() throws Exception {
 		dbTester.loadData("node_1");
 		
-		store.addUserSubscription(new NodeSubscriptionImpl(TEST_SERVER1_NODE1_ID, TEST_SERVER1_USER2_JID, Subscriptions.subscribed));
+		store.addUserSubscription(new NodeSubscriptionImpl(TEST_SERVER1_NODE1_ID, TEST_SERVER1_USER2_JID, Subscriptions.subscribed, null));
 		store.setUserAffiliation(TEST_SERVER1_NODE1_ID, TEST_SERVER1_USER2_JID, Affiliations.owner);
 		
 		assertEquals(2, store.getNodeOwners(TEST_SERVER1_NODE1_ID).size());

@@ -169,7 +169,7 @@ public class OnlineResourceManagerTest extends IQTestHandler {
 		JID jid = new JID("user@server.com");
 		LinkedList<NodeSubscription> subscriptions = new LinkedList<NodeSubscription>();
 		subscriptions.add(new NodeSubscriptionImpl("nodeId", jid, 
-				Subscriptions.subscribed));
+				Subscriptions.subscribed, null));
 		Mockito.when(channelManager.getNodeSubscriptionListeners()).thenReturn(
 				new ResultSetImpl<NodeSubscription>(subscriptions));
 		

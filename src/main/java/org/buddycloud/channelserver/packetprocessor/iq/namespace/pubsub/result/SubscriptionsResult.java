@@ -65,10 +65,14 @@ public class SubscriptionsResult extends PubSubElementProcessorAbstract {
 		if (channelManager.isLocalJID(jid)) {
 			listener = jid;
 		}
+		JID invitedBy = null;
+		if (null != subscription.attributeValue("invited-by")) {
+			invitedBy = new JID(subscription.attributeValue("invited-by"));
+		}
 		
 		NodeSubscription nodeSubscription = new NodeSubscriptionImpl(node, jid,
 				listener, Subscriptions.createFromString(subscription
-						.attributeValue("subscription")));
+						.attributeValue("subscription")), invitedBy);
 		channelManager.addUserSubscription(nodeSubscription);
 		lastNode = node;
 	}

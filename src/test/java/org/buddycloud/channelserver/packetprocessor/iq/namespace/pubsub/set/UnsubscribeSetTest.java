@@ -62,7 +62,7 @@ public class UnsubscribeSetTest extends IQTestHandler {
 		unsubscribe.setChannelManager(channelManager);
 
 		membership = new NodeMembershipImpl(node, jid, Subscriptions.subscribed,
-				Affiliations.publisher);
+				Affiliations.publisher, null);
 		Mockito.when(
 				channelManager.getNodeMembership(Mockito.anyString(),
 						Mockito.any(JID.class))).thenReturn(membership);
@@ -190,7 +190,7 @@ public class UnsubscribeSetTest extends IQTestHandler {
 	public void nonMatchingSubscriptionToSenderReturnsError() throws Exception {
 
 		membership = new NodeMembershipImpl(node, new JID("juliet@capulet.lit"), Subscriptions.subscribed,
-				Affiliations.owner);
+				Affiliations.owner, null);
 		Mockito.when(
 				channelManager.getNodeMembership(Mockito.anyString(),
 						Mockito.any(JID.class))).thenReturn(membership);
@@ -216,7 +216,7 @@ public class UnsubscribeSetTest extends IQTestHandler {
 	public void canNotUnsubscribeAsOnlyNodeOwner() throws Exception {
 
 		membership = new NodeMembershipImpl(node, jid, Subscriptions.subscribed,
-				Affiliations.owner);
+				Affiliations.owner, null);
 		Mockito.when(
 				channelManager.getNodeMembership(Mockito.anyString(),
 						Mockito.any(JID.class))).thenReturn(membership);
@@ -283,7 +283,7 @@ public class UnsubscribeSetTest extends IQTestHandler {
 	@Test
 	public void doesNotUpdateAffiliationIfOutcast() throws Exception {
 		membership = new NodeMembershipImpl(node, jid, Subscriptions.subscribed,
-				Affiliations.outcast);
+				Affiliations.outcast, null);
 		Mockito.when(
 				channelManager.getNodeMembership(Mockito.anyString(),
 						Mockito.any(JID.class))).thenReturn(membership);
@@ -308,7 +308,7 @@ public class UnsubscribeSetTest extends IQTestHandler {
 		JID listener = new JID("channels.example.com");
 		ArrayList<NodeSubscription> listeners = new ArrayList<NodeSubscription>();
 		listeners.add(new NodeSubscriptionImpl(node, jid, listener,
-				Subscriptions.subscribed));
+				Subscriptions.subscribed, null));
 
 		ResultSet<NodeSubscription> nodeListeners = new ResultSetImpl<NodeSubscription>(
 				listeners);

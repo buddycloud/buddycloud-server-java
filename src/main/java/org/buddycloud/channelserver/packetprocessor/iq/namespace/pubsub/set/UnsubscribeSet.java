@@ -113,7 +113,7 @@ public class UnsubscribeSet extends PubSubElementProcessorAbstract {
 		NodeSubscription newSubscription = new NodeSubscriptionImpl(
 				membership.getNodeId(),
 				membership.getUser(),
-				membership.getListener(), Subscriptions.none);
+				membership.getListener(), Subscriptions.none, null);
 
 		channelManager.addUserSubscription(newSubscription);
 		if (!Affiliations.outcast.equals(

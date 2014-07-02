@@ -1,15 +1,18 @@
 package org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.result;
 
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import junit.framework.Assert;
 
 import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.packetHandler.iq.IQTestHandler;
-import org.buddycloud.channelserver.pubsub.affiliation.Affiliations;
 import org.buddycloud.channelserver.pubsub.model.NodeSubscription;
+import org.buddycloud.channelserver.pubsub.subscription.Subscriptions;
 import org.dom4j.Element;
 import org.dom4j.tree.BaseElement;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 import org.xmpp.packet.IQ;
 import org.xmpp.packet.JID;
@@ -24,6 +27,7 @@ public class SubscriptionsResultTest extends IQTestHandler {
 	private String node = "/user/pamela@denmark.lit/posts";
 	private JID jid = new JID("juliet@shakespeare.lit");
 	private ChannelManager channelManager;
+	private IQ resultInvite;
 
 	@Before
 	public void setUp() throws Exception {
@@ -33,6 +37,7 @@ public class SubscriptionsResultTest extends IQTestHandler {
 		subscriptionsResult = new SubscriptionsResult(channelManager);
 		resultWithNode = readStanzaAsIq("/iq/pubsub/subscriptions/reply-with-node.stanza");
 		resultNoNode = readStanzaAsIq("/iq/pubsub/subscriptions/reply-no-node.stanza");
+		resultInvite = readStanzaAsIq("/iq/pubsub/subscriptions/reply-with-invite.stanza");
 
 		element = new BaseElement("subscriptions");
 		element.addAttribute("node", node);
@@ -94,5 +99,18 @@ public class SubscriptionsResultTest extends IQTestHandler {
 
 		Mockito.verify(channelManager, Mockito.times(7)).addUserSubscription(
 				Mockito.any(NodeSubscription.class));
+	}
+	
+	@Test
+	public void addsInvitedByDetails() throws Exception {
+		subscriptionsResult.process(element, jid, resultInvite, null);
+
+		ArgumentCaptor<NodeSubscription> subscription = ArgumentCaptor.forClass(NodeSubscription.class);
+		
+		verify(channelManager, times(1)).addUserSubscription(subscription.capture());
+		
+		Assert.assertEquals(new JID("romeo@shakespeare.lit"), subscription.getValue().getInvitedBy());
+		Assert.assertEquals(Subscriptions.invited, subscription.getValue().getSubscription());
+		Assert.assertEquals(node, subscription.getValue().getNodeId());
 	}
 }

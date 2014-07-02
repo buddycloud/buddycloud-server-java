@@ -157,7 +157,7 @@ public class RegisterSet implements PacketProcessor<IQ> {
 					channelManager
 							.addUserSubscription(new NodeSubscriptionImpl(
 									channelNodeId, from,
-									Subscriptions.subscribed));
+									Subscriptions.subscribed, null));
 
 					channelManager.setUserAffiliation(channelNodeId, from,
 							channelManager

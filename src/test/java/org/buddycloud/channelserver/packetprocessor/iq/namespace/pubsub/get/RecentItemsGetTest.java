@@ -25,10 +25,8 @@ import org.buddycloud.channelserver.pubsub.affiliation.Affiliations;
 import org.buddycloud.channelserver.pubsub.model.GlobalItemID;
 import org.buddycloud.channelserver.pubsub.model.NodeItem;
 import org.buddycloud.channelserver.pubsub.model.impl.GlobalItemIDImpl;
-import org.buddycloud.channelserver.pubsub.model.impl.NodeAffiliationImpl;
 import org.buddycloud.channelserver.pubsub.model.impl.NodeItemImpl;
 import org.buddycloud.channelserver.pubsub.model.impl.NodeMembershipImpl;
-import org.buddycloud.channelserver.pubsub.model.impl.NodeSubscriptionImpl;
 import org.buddycloud.channelserver.pubsub.subscription.Subscriptions;
 import org.dom4j.Element;
 import org.dom4j.Namespace;
@@ -329,7 +327,7 @@ public class RecentItemsGetTest extends IQTestHandler {
 		Mockito.when(channelManager.nodeExists(anyString())).thenReturn(true);
 		
 		Mockito.when(channelManager.getNodeMembership(node, jid)).thenReturn(
-				new NodeMembershipImpl(node, jid, Subscriptions.subscribed, Affiliations.member));
+				new NodeMembershipImpl(node, jid, Subscriptions.subscribed, Affiliations.member, null));
 		
 		ArrayList<NodeItem> results = new ArrayList<NodeItem>() {{
 			add(new NodeItemImpl(TEST_NODE_1, "entry1", new Date(System.currentTimeMillis()), "<entry><id>entry1</id></entry>"));
@@ -372,7 +370,7 @@ public class RecentItemsGetTest extends IQTestHandler {
 		Mockito.when(channelManager.nodeExists(anyString())).thenReturn(true);
 		
 		Mockito.when(channelManager.getNodeMembership(node, jid)).thenReturn(
-				new NodeMembershipImpl(node, jid, Subscriptions.subscribed, Affiliations.member));
+				new NodeMembershipImpl(node, jid, Subscriptions.subscribed, Affiliations.member, null));
 		
 		Mockito.when(
 				channelManager.getRecentItems(Mockito.any(JID.class),
@@ -405,7 +403,7 @@ public class RecentItemsGetTest extends IQTestHandler {
         Mockito.when(channelManager.nodeExists(anyString())).thenReturn(true);
 		
 		Mockito.when(channelManager.getNodeMembership(node, jid)).thenReturn(
-				new NodeMembershipImpl(node, jid, Subscriptions.subscribed, Affiliations.member));
+				new NodeMembershipImpl(node, jid, Subscriptions.subscribed, Affiliations.member, null));
 		
 		Mockito.when(
 				channelManager.getRecentItems(Mockito.any(JID.class),

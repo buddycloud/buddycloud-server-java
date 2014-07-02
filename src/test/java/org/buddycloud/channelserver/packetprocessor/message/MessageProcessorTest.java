@@ -56,4 +56,9 @@ public class MessageProcessorTest extends IQTestHandler {
 		
 		messageProcessor.process(message);
 	}
+	
+	@Test
+	public void sendsExceptedNotifications() throws Exception {
+		
+	}
 }

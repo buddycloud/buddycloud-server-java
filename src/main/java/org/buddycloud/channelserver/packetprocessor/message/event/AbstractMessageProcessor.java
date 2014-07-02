@@ -3,10 +3,12 @@ package org.buddycloud.channelserver.packetprocessor.message.event;
 import java.util.Properties;
 import java.util.concurrent.BlockingQueue;
 
+import org.buddycloud.channelserver.Configuration;
 import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.packetprocessor.PacketProcessor;
 import org.buddycloud.channelserver.pubsub.model.NodeMembership;
 import org.buddycloud.channelserver.pubsub.model.NodeSubscription;
+import org.buddycloud.channelserver.pubsub.subscription.Subscriptions;
 import org.xmpp.packet.JID;
 import org.xmpp.packet.Message;
 import org.xmpp.packet.Packet;
@@ -37,9 +39,12 @@ abstract public class AbstractMessageProcessor implements PacketProcessor<Messag
 				.getNodeMemberships(node);
 		for (NodeMembership member : members) {
 			if (false == channelManager.isLocalJID(member.getUser())) continue;
+			
+			if (Subscriptions.none.equals(member.getSubscription())) continue;
+			
 			message.setTo(member.getUser());
 			message.setFrom(new JID(configuration
-					.getProperty("server.domain.channels")));
+					.getProperty(Configuration.CONFIGURATION_SERVER_CHANNELS_DOMAIN)));
 			outQueue.put(message.createCopy());
 		}
 	}

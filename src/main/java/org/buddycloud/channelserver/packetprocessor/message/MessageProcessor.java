@@ -17,15 +17,10 @@ import org.dom4j.Element;
 import org.xmpp.packet.Message;
 import org.xmpp.packet.Packet;
 
-public class MessageProcessor implements PacketProcessor<Message> {
+public class MessageProcessor extends AbstractMessageProcessor {
 
 	private static final Logger logger = Logger
 			.getLogger(MessageProcessor.class);
-
-	private final BlockingQueue<Packet> outQueue;
-	private ChannelManager channelManager;
-	private Message message;
-	private Properties configuration;
 
 	private Element event;
 
@@ -37,12 +32,9 @@ public class MessageProcessor implements PacketProcessor<Message> {
 
 	public MessageProcessor(BlockingQueue<Packet> outQueue, Properties conf,
 			ChannelManager channelManager) {
-		this.outQueue = outQueue;
-		this.channelManager = channelManager;
-		this.configuration = conf;
+		super(channelManager, conf, outQueue);
 	}
 
-	@Override
 	public void process(Message packet) throws Exception {
 
 		message = packet;

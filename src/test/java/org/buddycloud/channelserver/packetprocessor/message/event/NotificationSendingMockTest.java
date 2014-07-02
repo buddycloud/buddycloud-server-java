@@ -69,6 +69,13 @@ public class NotificationSendingMockTest extends IQTestHandler {
 		notificationSending.process(message);
 		Assert.assertEquals(0, queue.size());
 	}
+	
+	@Test
+	public void doNotSendNotificationToOutcast() throws Exception {
+		registerUserResponse(Subscriptions.subscribed, Affiliations.outcast);
+		notificationSending.process(message);
+		Assert.assertEquals(0, queue.size());
+	}
 
 	private void registerUserResponse(Subscriptions subscription, Affiliations affiliation) throws Exception {
 		ArrayList<NodeMembership> members = new ArrayList<NodeMembership>();

@@ -6,6 +6,7 @@ import java.util.concurrent.BlockingQueue;
 import org.buddycloud.channelserver.Configuration;
 import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.packetprocessor.PacketProcessor;
+import org.buddycloud.channelserver.pubsub.affiliation.Affiliations;
 import org.buddycloud.channelserver.pubsub.model.NodeMembership;
 import org.buddycloud.channelserver.pubsub.model.NodeSubscription;
 import org.buddycloud.channelserver.pubsub.subscription.Subscriptions;
@@ -41,6 +42,7 @@ abstract public class AbstractMessageProcessor implements PacketProcessor<Messag
 			if (false == channelManager.isLocalJID(member.getUser())) continue;
 			
 			if (Subscriptions.none.equals(member.getSubscription())) continue;
+			if (Affiliations.outcast.equals(member.getAffiliation())) continue;
 			
 			message.setTo(member.getUser());
 			message.setFrom(new JID(configuration

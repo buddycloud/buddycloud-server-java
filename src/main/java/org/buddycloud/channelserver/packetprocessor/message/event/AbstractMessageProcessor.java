@@ -17,11 +17,17 @@ import org.xmpp.resultsetmanagement.ResultSet;
 
 abstract public class AbstractMessageProcessor implements PacketProcessor<Message> {
 
+	private static final String UNSUPPORTED_SCHEME = "Unsupported notification scheme type";
+	
 	protected Message message;
 	protected String node;
 	protected ChannelManager channelManager;
 	protected Properties configuration;
 	protected BlockingQueue<Packet> outQueue;
+	
+	public final int SCHEME_VALID_SUBSCRIBERS = 1;
+	public final int SCHEME_VALID_OWNER_MODERATOR = 2;
+	
 	
 	public AbstractMessageProcessor(ChannelManager channelManager, Properties configuration, BlockingQueue<Packet> outQueue) {
 		this.channelManager = channelManager;
@@ -35,19 +41,62 @@ abstract public class AbstractMessageProcessor implements PacketProcessor<Messag
 	
 	abstract public void process(Message packet) throws Exception;
 	
-	void sendLocalNotifications() throws Exception {
+	void sendLocalNotifications(int scheme) throws Exception {
+	    sendLocalNotifications(scheme, null);	
+	}
+	
+	void sendLocalNotifications(int scheme, JID user) throws Exception {
 		ResultSet<NodeMembership> members = channelManager
 				.getNodeMemberships(node);
+		message.setFrom(new JID(configuration
+				.getProperty(Configuration.CONFIGURATION_SERVER_CHANNELS_DOMAIN)));
+		
 		for (NodeMembership member : members) {
 			if (false == channelManager.isLocalJID(member.getUser())) continue;
 			
-			if (Subscriptions.none.equals(member.getSubscription())) continue;
-			if (Affiliations.outcast.equals(member.getAffiliation())) continue;
+			switch (scheme) {
+			    case SCHEME_VALID_SUBSCRIBERS: 
+				    if (false == userIsValidSubscriber(member)) {
+				    	continue;
+				    }
+				    break;
+			    case SCHEME_VALID_OWNER_MODERATOR:
+			    	if (false == userIsOwnerOrModerator(member)) {
+			    		continue;
+			    	}
+			    	break;
+			    default:
+			    	throw new UnsupportedOperationException(UNSUPPORTED_SCHEME);
+			}
+
 			
 			message.setTo(member.getUser());
-			message.setFrom(new JID(configuration
-					.getProperty(Configuration.CONFIGURATION_SERVER_CHANNELS_DOMAIN)));
 			outQueue.put(message.createCopy());
 		}
+		
+		if (null != user) {
+			message.setTo(user.toBareJID());
+			outQueue.put(message.createCopy());
+		}
+	}
+
+	private boolean userIsOwnerOrModerator(NodeMembership member) {
+		if (false == Subscriptions.subscribed.equals(member.getSubscription())) {
+			return false;
+		}
+		if (false == member.getAffiliation().canAuthorize()) {
+			return false;
+		}
+		return true;
+	}
+
+	private boolean userIsValidSubscriber(NodeMembership member) {
+		if (false == Subscriptions.subscribed.equals(member.getSubscription())) {
+			return false;
+		}
+		if (Affiliations.outcast.equals(member.getAffiliation())) {
+			return false;
+		}
+		return true;
 	}
 }

@@ -11,6 +11,7 @@ import org.buddycloud.channelserver.db.exception.ItemNotFoundException;
 import org.buddycloud.channelserver.db.exception.NodeStoreException;
 import org.buddycloud.channelserver.pubsub.model.impl.GlobalItemIDImpl;
 import org.buddycloud.channelserver.pubsub.model.impl.NodeItemImpl;
+import org.buddycloud.channelserver.utils.NotificationScheme;
 import org.dom4j.Element;
 import org.xmpp.packet.Message;
 import org.xmpp.packet.Packet;
@@ -33,7 +34,7 @@ public class ItemsProcessor extends AbstractMessageProcessor {
 
 		if (true == channelManager.isLocalNode(node))
 			return;
-		sendLocalNotifications(SCHEME_VALID_SUBSCRIBERS);
+		sendLocalNotifications(NotificationScheme.SCHEME_VALID_SUBSCRIBERS);
 		handleItem();
 	}
 

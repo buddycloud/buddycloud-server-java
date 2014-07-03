@@ -8,6 +8,7 @@ import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.db.exception.NodeStoreException;
 import org.buddycloud.channelserver.pubsub.model.impl.NodeSubscriptionImpl;
 import org.buddycloud.channelserver.pubsub.subscription.Subscriptions;
+import org.buddycloud.channelserver.utils.NotificationScheme;
 import org.dom4j.Element;
 import org.xmpp.packet.JID;
 import org.xmpp.packet.Message;
@@ -40,13 +41,13 @@ public class SubscriptionProcessor extends AbstractMessageProcessor {
 		if (null == subscription) {
 			return;
 		} else if (subscription.equals(Subscriptions.pending)) {
-			sendLocalNotifications(SCHEME_OWNER_MODERATOR, jid);
+			sendLocalNotifications(NotificationScheme.SCHEME_OWNER_MODERATOR, jid);
 		} else if (subscription.equals(Subscriptions.invited)) {
-			sendLocalNotifications(SCHEME_OWNER_MODERATOR, jid);
+			sendLocalNotifications(NotificationScheme.SCHEME_OWNER_MODERATOR, jid);
 		} else if (subscription.equals(Subscriptions.subscribed)) {
-			sendLocalNotifications(SCHEME_VALID_SUBSCRIBERS, null);
+			sendLocalNotifications(NotificationScheme.SCHEME_VALID_SUBSCRIBERS, null);
 		} else if (subscription.equals(Subscriptions.none)) {
-			sendLocalNotifications(SCHEME_VALID_SUBSCRIBERS, jid);
+			sendLocalNotifications(NotificationScheme.SCHEME_VALID_SUBSCRIBERS, jid);
 		}
 	}
 

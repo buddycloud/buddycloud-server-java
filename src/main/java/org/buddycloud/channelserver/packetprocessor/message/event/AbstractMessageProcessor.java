@@ -10,6 +10,7 @@ import org.buddycloud.channelserver.pubsub.affiliation.Affiliations;
 import org.buddycloud.channelserver.pubsub.model.NodeMembership;
 import org.buddycloud.channelserver.pubsub.model.NodeSubscription;
 import org.buddycloud.channelserver.pubsub.subscription.Subscriptions;
+import org.buddycloud.channelserver.utils.NotificationScheme;
 import org.xmpp.packet.JID;
 import org.xmpp.packet.Message;
 import org.xmpp.packet.Packet;
@@ -17,17 +18,13 @@ import org.xmpp.resultsetmanagement.ResultSet;
 
 abstract public class AbstractMessageProcessor implements PacketProcessor<Message> {
 
-	private static final String UNSUPPORTED_SCHEME = "Unsupported notification scheme type";
+	
 	
 	protected Message message;
 	protected String node;
 	protected ChannelManager channelManager;
 	protected Properties configuration;
 	protected BlockingQueue<Packet> outQueue;
-	
-	public static final int SCHEME_VALID_SUBSCRIBERS = 1;
-	public static final int SCHEME_OWNER_MODERATOR = 2;
-	
 	
 	public AbstractMessageProcessor(ChannelManager channelManager, Properties configuration, BlockingQueue<Packet> outQueue) {
 		this.channelManager = channelManager;
@@ -41,11 +38,11 @@ abstract public class AbstractMessageProcessor implements PacketProcessor<Messag
 	
 	abstract public void process(Message packet) throws Exception;
 	
-	void sendLocalNotifications(int scheme) throws Exception {
+	void sendLocalNotifications(NotificationScheme scheme) throws Exception {
 	    sendLocalNotifications(scheme, null);	
 	}
 	
-	void sendLocalNotifications(int scheme, JID user) throws Exception {
+	void sendLocalNotifications(NotificationScheme scheme, JID user) throws Exception {
 		ResultSet<NodeMembership> members = channelManager
 				.getNodeMemberships(node);
 		message.setFrom(new JID(configuration
@@ -66,7 +63,7 @@ abstract public class AbstractMessageProcessor implements PacketProcessor<Messag
 			    	}
 			    	break;
 			    default:
-			    	throw new UnsupportedOperationException(UNSUPPORTED_SCHEME);
+			    	throw new UnsupportedOperationException(NotificationScheme.UNSUPPORTED_SCHEME);
 			}
 
 			

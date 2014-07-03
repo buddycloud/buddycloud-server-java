@@ -25,8 +25,8 @@ abstract public class AbstractMessageProcessor implements PacketProcessor<Messag
 	protected Properties configuration;
 	protected BlockingQueue<Packet> outQueue;
 	
-	public final int SCHEME_VALID_SUBSCRIBERS = 1;
-	public final int SCHEME_VALID_OWNER_MODERATOR = 2;
+	public static final int SCHEME_VALID_SUBSCRIBERS = 1;
+	public static final int SCHEME_OWNER_MODERATOR = 2;
 	
 	
 	public AbstractMessageProcessor(ChannelManager channelManager, Properties configuration, BlockingQueue<Packet> outQueue) {
@@ -60,7 +60,7 @@ abstract public class AbstractMessageProcessor implements PacketProcessor<Messag
 				    	continue;
 				    }
 				    break;
-			    case SCHEME_VALID_OWNER_MODERATOR:
+			    case SCHEME_OWNER_MODERATOR:
 			    	if (false == userIsOwnerOrModerator(member)) {
 			    		continue;
 			    	}

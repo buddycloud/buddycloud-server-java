@@ -33,6 +33,11 @@ public class SubscriptionProcessor extends AbstractMessageProcessor {
 		handleSubscriptionElement();
 
 		if (false == channelManager.isLocalNode(node)) {
+			if (subscription.equals(Subscriptions.pending)) {
+				sendLocalNotifications(SCHEME_OWNER_MODERATOR, jid);
+			} else if (subscription.equals(Subscriptions.invited)) {
+				sendLocalNotifications(SCHEME_OWNER_MODERATOR, jid);
+			}
 			sendLocalNotifications();
 		}
 	}

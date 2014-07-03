@@ -51,22 +51,12 @@ abstract public class AbstractMessageProcessor implements PacketProcessor<Messag
 		for (NodeMembership member : members) {
 			if (false == channelManager.isLocalJID(member.getUser())) continue;
 			
-			switch (scheme) {
-			    case SCHEME_VALID_SUBSCRIBERS: 
-				    if (false == userIsValidSubscriber(member)) {
-				    	continue;
-				    }
-				    break;
-			    case SCHEME_OWNER_MODERATOR:
-			    	if (false == userIsOwnerOrModerator(member)) {
-			    		continue;
-			    	}
-			    	break;
-			    default:
-			    	throw new UnsupportedOperationException(NotificationScheme.UNSUPPORTED_SCHEME);
+			if (scheme.equals(NotificationScheme.SCHEME_VALID_SUBSCRIBERS) && !userIsValidSubscriber(member)) {
+				continue;
+			} else if (scheme.equals(NotificationScheme.SCHEME_OWNER_MODERATOR) && !userIsOwnerOrModerator(member)) {
+				continue;
 			}
 
-			
 			message.setTo(member.getUser());
 			outQueue.put(message.createCopy());
 		}

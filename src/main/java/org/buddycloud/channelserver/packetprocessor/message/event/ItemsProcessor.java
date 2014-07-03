@@ -34,7 +34,7 @@ public class ItemsProcessor extends AbstractMessageProcessor {
 
 		if (true == channelManager.isLocalNode(node))
 			return;
-		sendLocalNotifications(NotificationScheme.SCHEME_VALID_SUBSCRIBERS);
+		sendLocalNotifications(NotificationScheme.validSubscribers);
 		handleItem();
 	}
 

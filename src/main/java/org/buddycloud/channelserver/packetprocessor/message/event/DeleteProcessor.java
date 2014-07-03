@@ -22,7 +22,7 @@ public class DeleteProcessor extends AbstractMessageProcessor  {
 		message = packet;
 		deleteNode();
 		if (!channelManager.isLocalNode(node)) {
-			sendLocalNotifications(NotificationScheme.SCHEME_VALID_SUBSCRIBERS);
+			sendLocalNotifications(NotificationScheme.validSubscribers);
 		}
 	}
 

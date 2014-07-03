@@ -41,13 +41,13 @@ public class SubscriptionProcessor extends AbstractMessageProcessor {
 		if (null == subscription) {
 			return;
 		} else if (subscription.equals(Subscriptions.pending)) {
-			sendLocalNotifications(NotificationScheme.SCHEME_OWNER_MODERATOR, jid);
+			sendLocalNotifications(NotificationScheme.ownerOrModerator, jid);
 		} else if (subscription.equals(Subscriptions.invited)) {
-			sendLocalNotifications(NotificationScheme.SCHEME_OWNER_MODERATOR, jid);
+			sendLocalNotifications(NotificationScheme.ownerOrModerator, jid);
 		} else if (subscription.equals(Subscriptions.subscribed)) {
-			sendLocalNotifications(NotificationScheme.SCHEME_VALID_SUBSCRIBERS, null);
+			sendLocalNotifications(NotificationScheme.validSubscribers, null);
 		} else if (subscription.equals(Subscriptions.none)) {
-			sendLocalNotifications(NotificationScheme.SCHEME_VALID_SUBSCRIBERS, jid);
+			sendLocalNotifications(NotificationScheme.validSubscribers, jid);
 		}
 	}
 

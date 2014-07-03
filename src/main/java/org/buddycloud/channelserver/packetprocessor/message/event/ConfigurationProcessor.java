@@ -37,7 +37,7 @@ public class ConfigurationProcessor extends AbstractMessageProcessor  {
 		if ((null == node) || (true == channelManager.isLocalNode(node))) {
 			return;
 		}
-		sendLocalNotifications(NotificationScheme.SCHEME_VALID_SUBSCRIBERS);
+		sendLocalNotifications(NotificationScheme.validSubscribers);
 		handleDataForm();
 	}
 

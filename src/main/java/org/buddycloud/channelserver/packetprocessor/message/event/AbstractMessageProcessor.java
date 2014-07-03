@@ -51,9 +51,9 @@ abstract public class AbstractMessageProcessor implements PacketProcessor<Messag
 		for (NodeMembership member : members) {
 			if (false == channelManager.isLocalJID(member.getUser())) continue;
 			
-			if (scheme.equals(NotificationScheme.SCHEME_VALID_SUBSCRIBERS) && !userIsValidSubscriber(member)) {
+			if (scheme.equals(NotificationScheme.validSubscribers) && !userIsValidSubscriber(member)) {
 				continue;
-			} else if (scheme.equals(NotificationScheme.SCHEME_OWNER_MODERATOR) && !userIsOwnerOrModerator(member)) {
+			} else if (scheme.equals(NotificationScheme.ownerOrModerator) && !userIsOwnerOrModerator(member)) {
 				continue;
 			}
 

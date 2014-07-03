@@ -40,9 +40,9 @@ public class AffiliationProcessor extends AbstractMessageProcessor {
 			return;
 		}
 		if (affiliation.equals(Affiliations.outcast)) {
-			sendLocalNotifications(NotificationScheme.SCHEME_OWNER_MODERATOR, jid);
+			sendLocalNotifications(NotificationScheme.ownerOrModerator, jid);
 		} else {
-			sendLocalNotifications(NotificationScheme.SCHEME_VALID_SUBSCRIBERS);
+			sendLocalNotifications(NotificationScheme.validSubscribers);
 		}
 	}
 

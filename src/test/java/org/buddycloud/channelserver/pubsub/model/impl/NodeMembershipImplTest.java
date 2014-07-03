@@ -13,7 +13,7 @@ public class NodeMembershipImplTest {
 	public void nodeDomainListenerReturnsAsExpected() {
 		NodeMembershipImpl membership = new NodeMembershipImpl("node",
 				new JID("user@domain.com"), new JID("channels.domain.com"),
-				Subscriptions.subscribed, Affiliations.none);
+				Subscriptions.subscribed, Affiliations.none, null);
 	    assertEquals(new JID("channels.domain.com"), membership.getListener());
 	}
 
@@ -21,7 +21,7 @@ public class NodeMembershipImplTest {
 	public void listenerWithResourceHasThisRemovedOnRetrieval() {
 		NodeMembershipImpl membership = new NodeMembershipImpl("node",
 				new JID("user@domain.com"), new JID("user@domain.com/resource"),
-				Subscriptions.subscribed, Affiliations.none);
+				Subscriptions.subscribed, Affiliations.none, null);
 	    assertEquals(new JID("user@domain.com"), membership.getListener());
 	}
 	
@@ -29,7 +29,7 @@ public class NodeMembershipImplTest {
 	public void subscriptionReturnsAsExpected() {
 		NodeMembershipImpl membership = new NodeMembershipImpl("node",
 				new JID("user@domain.com"), new JID("channels.domain.com"),
-				Subscriptions.subscribed, Affiliations.none);
+				Subscriptions.subscribed, Affiliations.none, null);
 	    assertEquals(Subscriptions.subscribed, membership.getSubscription());
 	}
 	
@@ -37,7 +37,7 @@ public class NodeMembershipImplTest {
 	public void affiliationReturnsAsExpected() {
 		NodeMembershipImpl membership = new NodeMembershipImpl("node",
 				new JID("user@domain.com"), new JID("channels.domain.com"),
-				Subscriptions.subscribed, Affiliations.none);
+				Subscriptions.subscribed, Affiliations.none, null);
 	    assertEquals(Affiliations.none, membership.getAffiliation());
 	}
 }

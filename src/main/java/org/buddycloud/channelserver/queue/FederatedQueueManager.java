@@ -82,6 +82,12 @@ public class FederatedQueueManager {
 		String to = packet.getTo().toString();
 		String uniqueId = packet.getID();
 
+		
+		if (null == packet.getID()) {
+			uniqueId = generateUniqueId(packet);
+			packet.setID(uniqueId);
+		}
+		
 		if (true == performIdMapping(packet)) {
 
 			uniqueId = generateUniqueId(packet);

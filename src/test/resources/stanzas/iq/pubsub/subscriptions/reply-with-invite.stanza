@@ -1,0 +1,13 @@
+<iq type="result"
+    id="subscriptions1"
+    from="channels.shakespeare.lit"
+    to="francisco@denmark.lit/barracks">
+   <pubsub xmlns="http://jabber.org/protocol/pubsub">
+      <subscriptions node="/user/francisco@denmark.lit/posts">
+         <subscription node="/user/pamela@denmark.lit/posts" 
+             subscription="invited" 
+             jid="francisco@denmark.lit" 
+             invited-by="romeo@shakespeare.lit" />
+      </subscriptions>
+   </pubsub>
+</iq>

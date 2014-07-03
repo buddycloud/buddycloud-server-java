@@ -81,7 +81,7 @@ public class NotificationSendingMockTest extends IQTestHandler {
 		ArrayList<NodeMembership> members = new ArrayList<NodeMembership>();
 		members.add(new NodeMembershipImpl(
 				"/users/romeo@shakespeare.lit/posts", jid,
-				subscription, affiliation));
+				subscription, affiliation, null));
 		Mockito.doReturn(new ResultSetImpl<NodeMembership>(members))
 				.when(channelManager).getNodeMemberships(Mockito.anyString());
 	}

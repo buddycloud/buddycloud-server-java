@@ -62,28 +62,27 @@ public class SubscribeSetTest extends IQTestHandler {
 		element.addAttribute("node", node);
 
 		subscribe.setChannelManager(channelManager);
-		
-		Mockito.when(channelManager.isLocalJID(Mockito.any(JID.class)))
-		.thenReturn(true);
 
-		membership = new NodeMembershipImpl(node, jid, Subscriptions.none, Affiliations.none);
+		Mockito.when(channelManager.isLocalJID(Mockito.any(JID.class)))
+				.thenReturn(true);
+
+		membership = new NodeMembershipImpl(node, jid, Subscriptions.none,
+				Affiliations.none, null);
 
 		Mockito.when(
 				channelManager.getNodeMembership(Mockito.anyString(),
 						Mockito.any(JID.class))).thenReturn(membership);
 
-
 		ArrayList<NodeMembership> members = new ArrayList<NodeMembership>();
-		members.add(new NodeMembershipImpl(node, jid,
-				Subscriptions.subscribed, Affiliations.member));
+		members.add(new NodeMembershipImpl(node, jid, Subscriptions.subscribed,
+				Affiliations.member, null));
 
 		Mockito.doReturn(new ResultSetImpl<NodeMembership>(members))
-				.when(channelManager)
-				.getNodeMemberships(Mockito.anyString());
-		
+				.when(channelManager).getNodeMemberships(Mockito.anyString());
+
 		ArrayList<NodeSubscription> subscribers = new ArrayList<NodeSubscription>();
 		subscribers.add(new NodeSubscriptionImpl(node, jid,
-				Subscriptions.subscribed));
+				Subscriptions.subscribed, null));
 
 		Mockito.doReturn(new ResultSetImpl<NodeSubscription>(subscribers))
 				.when(channelManager)
@@ -187,9 +186,9 @@ public class SubscribeSetTest extends IQTestHandler {
 		Assert.assertEquals(IQ.Type.result, response.getType());
 		Assert.assertNull(response.getError());
 
-		Assert.assertEquals(Subscriptions.subscribed.toString(),
-				response.getChildElement().element("subscription")
-						.attributeValue("subscription"));
+		Assert.assertEquals(Subscriptions.subscribed,
+				Subscriptions.valueOf(response.getChildElement().element("subscription")
+						.attributeValue("subscription")));
 
 	}
 
@@ -260,6 +259,52 @@ public class SubscribeSetTest extends IQTestHandler {
 		IQ response = (IQ) queue.poll();
 		Assert.assertEquals(IQ.Type.result, response.getType());
 
+	}
+
+	@Test
+	public void ifAlreadySubscribedThenSubscriptionDetailsAreReturned()
+			throws Exception {
+		membership = new NodeMembershipImpl(node, jid,
+				Subscriptions.subscribed, Affiliations.owner, null);
+
+		Mockito.when(
+				channelManager.getNodeMembership(Mockito.anyString(),
+						Mockito.any(JID.class))).thenReturn(membership);
+
+		subscribe.process(element, new JID("francisco@denmark.lit"), request,
+				null);
+
+		IQ response = (IQ) queue.poll();
+		Assert.assertEquals(IQ.Type.result, response.getType());
+		Assert.assertEquals(Subscriptions.subscribed, Subscriptions
+				.valueOf(response.getChildElement().element("subscription")
+						.attributeValue("subscription")));
+	}
+
+	@Test
+	public void canSubscribeIfInvited() throws Exception {
+		Map<String, String> configuration = new HashMap<String, String>();
+		configuration.put(Conf.ACCESS_MODEL, AccessModel.local.toString());
+		configuration.put(Conf.DEFAULT_AFFILIATION,
+				Affiliations.member.toString());
+
+		Mockito.when(channelManager.getNodeConf(Mockito.anyString()))
+				.thenReturn(configuration);
+		
+		membership = new NodeMembershipImpl(node, jid,
+				Subscriptions.invited, Affiliations.none, null);
+
+		Mockito.when(
+				channelManager.getNodeMembership(Mockito.anyString(),
+						Mockito.any(JID.class))).thenReturn(membership);
+
+		subscribe.process(element, new JID("francisco@denmark.lit"), request,
+				null);
+		IQ response = (IQ) queue.poll();
+		Assert.assertEquals(IQ.Type.result, response.getType());
+		Assert.assertEquals(Subscriptions.subscribed, Subscriptions
+				.valueOf(response.getChildElement().element("subscription")
+						.attributeValue("subscription")));
 	}
 
 }

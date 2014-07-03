@@ -16,6 +16,7 @@ import org.xmpp.packet.Packet;
 public class SubscriptionProcessor extends AbstractMessageProcessor {
 
 	private JID jid;
+	private JID invitedBy = null;
 	private Subscriptions subscription;
 
 	private static final Logger logger = Logger
@@ -32,13 +33,20 @@ public class SubscriptionProcessor extends AbstractMessageProcessor {
 
 		handleSubscriptionElement();
 
-		if (false == channelManager.isLocalNode(node)) {
-			if (subscription.equals(Subscriptions.pending)) {
-				sendLocalNotifications(SCHEME_OWNER_MODERATOR, jid);
-			} else if (subscription.equals(Subscriptions.invited)) {
-				sendLocalNotifications(SCHEME_OWNER_MODERATOR, jid);
-			}
-			sendLocalNotifications();
+		if (true == channelManager.isLocalNode(node)) {
+			return;
+		}
+		
+		if (null == subscription) {
+			return;
+		} else if (subscription.equals(Subscriptions.pending)) {
+			sendLocalNotifications(SCHEME_OWNER_MODERATOR, jid);
+		} else if (subscription.equals(Subscriptions.invited)) {
+			sendLocalNotifications(SCHEME_OWNER_MODERATOR, jid);
+		} else if (subscription.equals(Subscriptions.subscribed)) {
+			sendLocalNotifications(SCHEME_VALID_SUBSCRIBERS, null);
+		} else if (subscription.equals(Subscriptions.none)) {
+			sendLocalNotifications(SCHEME_VALID_SUBSCRIBERS, jid);
 		}
 	}
 
@@ -53,6 +61,9 @@ public class SubscriptionProcessor extends AbstractMessageProcessor {
 		node = subscriptionElement.attributeValue("node");
 		subscription = Subscriptions.valueOf(subscriptionElement
 				.attributeValue("subscription"));
+		if (null != subscriptionElement.attributeValue("invited-by")) {
+		    invitedBy = new JID(subscriptionElement.attributeValue("invited-by"));
+		}
 
 		if (true == channelManager.isLocalNode(node)) {
 			return;
@@ -62,7 +73,7 @@ public class SubscriptionProcessor extends AbstractMessageProcessor {
 
 	private void storeNewSubscription() throws NodeStoreException {
 		NodeSubscriptionImpl newSubscription = new NodeSubscriptionImpl(node,
-				jid, subscription);
+				jid, subscription, invitedBy);
 		addRemoteNode();
 		channelManager.addUserSubscription(newSubscription);
 	}

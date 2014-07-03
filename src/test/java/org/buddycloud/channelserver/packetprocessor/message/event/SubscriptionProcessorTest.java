@@ -1,5 +1,8 @@
 package org.buddycloud.channelserver.packetprocessor.message.event;
 
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+
 import java.util.ArrayList;
 import java.util.Properties;
 import java.util.concurrent.BlockingQueue;
@@ -15,11 +18,11 @@ import org.buddycloud.channelserver.pubsub.affiliation.Affiliations;
 import org.buddycloud.channelserver.pubsub.model.NodeMembership;
 import org.buddycloud.channelserver.pubsub.model.NodeSubscription;
 import org.buddycloud.channelserver.pubsub.model.impl.NodeMembershipImpl;
-import org.buddycloud.channelserver.pubsub.model.impl.NodeSubscriptionImpl;
 import org.buddycloud.channelserver.pubsub.subscription.Subscriptions;
 import org.dom4j.Element;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 import org.xmpp.packet.JID;
 import org.xmpp.packet.Message;
@@ -30,19 +33,18 @@ public class SubscriptionProcessorTest extends IQTestHandler {
 	private Message message;
 	private SubscriptionProcessor subscriptionProcessor;
 	private Element subscription;
-	private Element affiliation;
-
 	private BlockingQueue<Packet> queue = new LinkedBlockingQueue<Packet>();
 	private ChannelManager channelManager;
 
 	private JID jid = new JID("juliet@shakespeare.lit");
+	private String node = "/users/juliet@shakespeare.lit/posts";
 
 	@Before
 	public void setUp() throws Exception {
 
 		Properties configuration = new Properties();
 		configuration.setProperty("server.domain.channels",
-				"chgnnels.shakespeare.lit");
+				"channels.shakespeare.lit");
 
 		channelManager = Mockito.mock(ChannelManager.class);
 		Mockito.when(channelManager.isLocalNode(Mockito.anyString()))
@@ -53,7 +55,7 @@ public class SubscriptionProcessorTest extends IQTestHandler {
 		ArrayList<NodeMembership> members = new ArrayList<NodeMembership>();
 		members.add(new NodeMembershipImpl(
 				"/users/romeo@shakespeare.lit/posts", jid,
-				Subscriptions.subscribed, Affiliations.member));
+				Subscriptions.subscribed, Affiliations.member, null));
 		Mockito.doReturn(new ResultSetImpl<NodeMembership>(members)).when(channelManager)
 				.getNodeMemberships(Mockito.anyString());
 
@@ -68,7 +70,7 @@ public class SubscriptionProcessorTest extends IQTestHandler {
 		subscription = event.addElement("subscription");
 		subscription.addAttribute("jid", "romeo@shakespeare.lit");
 		subscription
-				.addAttribute("node", "/users/juliet@shakespeare.lit/posts");
+				.addAttribute("node", node );
 		subscription.addAttribute("subscription",
 				Subscriptions.subscribed.toString());
 	}
@@ -116,5 +118,25 @@ public class SubscriptionProcessorTest extends IQTestHandler {
 		Assert.assertEquals(1, queue.size());
 		message.setTo(jid.toString());
 		Assert.assertEquals(message.toString(), queue.poll().toString());
+	}
+	
+	@Test
+	public void setsInvitedByIfProvided() throws Exception {
+		
+		Message invite = message.createCopy();
+		Element subscription = invite.getElement().element("event").element("subscription");
+		subscription.attribute("subscription").detach();
+		subscription.addAttribute("subscription", "invited");
+		subscription.addAttribute("invited-by", "juliet@shakespeare.lit");
+		
+		subscriptionProcessor.process(invite);
+		
+		ArgumentCaptor<NodeSubscription> newSubscription = ArgumentCaptor.forClass(NodeSubscription.class);
+		
+		verify(channelManager, times(1)).addUserSubscription(newSubscription.capture());
+		
+		Assert.assertEquals(new JID("juliet@shakespeare.lit"), newSubscription.getValue().getInvitedBy());
+		Assert.assertEquals(Subscriptions.invited, newSubscription.getValue().getSubscription());
+		Assert.assertEquals(node, newSubscription.getValue().getNodeId());
 	}
 }

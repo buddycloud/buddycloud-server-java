@@ -7,6 +7,7 @@ import org.apache.log4j.Logger;
 import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.db.exception.NodeStoreException;
 import org.buddycloud.channelserver.pubsub.affiliation.Affiliations;
+import org.buddycloud.channelserver.pubsub.subscription.Subscriptions;
 import org.dom4j.Element;
 import org.xmpp.packet.JID;
 import org.xmpp.packet.Message;
@@ -31,8 +32,16 @@ public class AffiliationProcessor extends AbstractMessageProcessor {
 
 		handleAffiliationElement();
 
-		if (false == channelManager.isLocalNode(node)) {
-			sendLocalNotifications();
+		if (true == channelManager.isLocalNode(node)) {
+			return;
+		}
+		if (null == affiliation) {
+			return;
+		}
+		if (affiliation.equals(Affiliations.outcast)) {
+			sendLocalNotifications(SCHEME_OWNER_MODERATOR, jid);
+		} else {
+			sendLocalNotifications(SCHEME_VALID_SUBSCRIBERS);
 		}
 	}
 

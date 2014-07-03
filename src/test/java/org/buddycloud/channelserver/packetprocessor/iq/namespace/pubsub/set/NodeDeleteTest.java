@@ -157,7 +157,7 @@ public class NodeDeleteTest extends IQTestHandler {
 		Mockito.when(channelManager.nodeExists(node)).thenReturn(true);
 		Mockito.when(channelManager.getNodeMembership(node, jid)).thenReturn(
 				new NodeMembershipImpl(node, jid, Subscriptions.subscribed,
-						Affiliations.none));
+						Affiliations.none, null));
 
 		nodeDelete.process(deleteEl, jid, request, null);
 		Packet response = queue.poll();
@@ -180,7 +180,7 @@ public class NodeDeleteTest extends IQTestHandler {
 
 		Mockito.when(channelManager.getNodeMembership(node, jid)).thenReturn(
 				new NodeMembershipImpl(node, jid, Subscriptions.subscribed,
-						Affiliations.moderator));
+						Affiliations.moderator, null));
 
 		nodeDelete.process(deleteEl, jid, request, null);
 		Packet response = queue.poll();
@@ -241,7 +241,7 @@ public class NodeDeleteTest extends IQTestHandler {
 
 		Mockito.when(channelManager.getNodeMembership(node, jid)).thenReturn(
 				new NodeMembershipImpl(node, jid, Subscriptions.subscribed,
-						Affiliations.owner));
+						Affiliations.owner, null));
 
 		nodeDelete.process(deleteEl, jid, request, null);
 		IQ response = (IQ) queue.poll();
@@ -265,11 +265,11 @@ public class NodeDeleteTest extends IQTestHandler {
 
 		Mockito.when(channelManager.getNodeMembership(node, jid)).thenReturn(
 				new NodeMembershipImpl(node, jid, Subscriptions.subscribed,
-						Affiliations.owner));
+						Affiliations.owner, null));
 
 		JID subscriberJid = new JID("subscriber@shakespeare.lit");
 		NodeSubscriptionImpl subscription = new NodeSubscriptionImpl(node,
-				subscriberJid, subscriberJid, Subscriptions.subscribed);
+				subscriberJid, subscriberJid, Subscriptions.subscribed, null);
 		List<NodeSubscription> subscriptions = new LinkedList<NodeSubscription>();
 		subscriptions.add(subscription);
 

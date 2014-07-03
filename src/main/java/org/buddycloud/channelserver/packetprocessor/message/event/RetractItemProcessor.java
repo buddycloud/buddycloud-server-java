@@ -26,7 +26,7 @@ public class RetractItemProcessor extends AbstractMessageProcessor {
 				.attributeValue("node");
 		if (true == channelManager.isLocalNode(node))
 			return;
-		sendLocalNotifications();
+		sendLocalNotifications(SCHEME_VALID_SUBSCRIBERS);
 		handleItem();
 	}
 

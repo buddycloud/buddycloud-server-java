@@ -1,6 +1,6 @@
 package org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.set;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
 import java.util.concurrent.BlockingQueue;
@@ -10,15 +10,12 @@ import java.util.concurrent.TimeUnit;
 import junit.framework.Assert;
 
 import org.buddycloud.channelserver.channel.ChannelManager;
-import org.buddycloud.channelserver.db.NodeStore;
 import org.buddycloud.channelserver.db.exception.NodeStoreException;
 import org.buddycloud.channelserver.packetHandler.iq.IQTestHandler;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.JabberPubsub;
 import org.buddycloud.channelserver.pubsub.affiliation.Affiliations;
-import org.buddycloud.channelserver.pubsub.model.NodeAffiliation;
 import org.buddycloud.channelserver.pubsub.model.NodeSubscription;
 import org.buddycloud.channelserver.pubsub.model.impl.NodeMembershipImpl;
-import org.buddycloud.channelserver.pubsub.model.impl.NodeSubscriptionImpl;
 import org.buddycloud.channelserver.pubsub.subscription.NodeSubscriptionMock;
 import org.buddycloud.channelserver.pubsub.subscription.Subscriptions;
 import org.dom4j.Element;
@@ -59,13 +56,13 @@ public class AffiliationEventTest extends IQTestHandler {
 				channelManager.getNodeMembership(Mockito.anyString(),
 						Mockito.eq(jid))).thenReturn(
 				new NodeMembershipImpl(node, jid, Subscriptions.subscribed,
-						Affiliations.owner));
+						Affiliations.owner, null));
 		Mockito.when(
 				channelManager.getNodeMembership(Mockito.anyString(),
 						Mockito.eq(new JID("francisco@denmark.lit"))))
 				.thenReturn(
 						new NodeMembershipImpl(node, jid, Subscriptions.none,
-								Affiliations.publisher));
+								Affiliations.publisher, null));
 
 		queue = new LinkedBlockingQueue<Packet>();
 		event = new AffiliationEvent(queue, channelManager);
@@ -194,7 +191,7 @@ public class AffiliationEventTest extends IQTestHandler {
 		Mockito.when(channelManager.nodeExists(node)).thenReturn(true);
 		Mockito.when(channelManager.getNodeMembership(node, jid)).thenReturn(
 				new NodeMembershipImpl(node, jid, Subscriptions.subscribed,
-						Affiliations.none));
+						Affiliations.none, null));
 
 		event.process(element, jid, request, null);
 		Packet response = queue.poll(100, TimeUnit.MILLISECONDS);
@@ -214,7 +211,7 @@ public class AffiliationEventTest extends IQTestHandler {
 				channelManager.getNodeMembership(Mockito.anyString(),
 						Mockito.eq(jid))).thenReturn(
 				new NodeMembershipImpl(node, jid, Subscriptions.subscribed,
-						Affiliations.publisher));
+						Affiliations.publisher, null));
 		
 		event.setChannelManager(channelManager);
 
@@ -235,13 +232,13 @@ public class AffiliationEventTest extends IQTestHandler {
 				channelManager.getNodeMembership(Mockito.anyString(),
 						Mockito.eq(jid))).thenReturn(
 				new NodeMembershipImpl(node, jid, Subscriptions.subscribed,
-						Affiliations.owner));
+						Affiliations.owner, null));
 		Mockito.when(
 				channelManager.getNodeMembership(Mockito.anyString(),
 						Mockito.eq(new JID("francisco@denmark.lit"))))
 				.thenReturn(
 						new NodeMembershipImpl(node, jid, Subscriptions.none,
-								Affiliations.none));
+								Affiliations.none, null));
 
 		event.process(element, jid, request, null);
 		Packet response = queue.poll();
@@ -263,13 +260,13 @@ public class AffiliationEventTest extends IQTestHandler {
 				channelManager.getNodeMembership(Mockito.anyString(),
 						Mockito.eq(jid))).thenReturn(
 				new NodeMembershipImpl(node, jid, Subscriptions.subscribed,
-						Affiliations.owner));
+						Affiliations.owner, null));
 		Mockito.when(
 				channelManager.getNodeMembership(Mockito.anyString(),
 						Mockito.eq(new JID("francisco@denmark.lit"))))
 				.thenReturn(
 						new NodeMembershipImpl(node, jid, Subscriptions.none,
-								Affiliations.owner));
+								Affiliations.owner, null));
 
 		event.process(element, jid, request, null);
 		Packet response = queue.poll(100, TimeUnit.MILLISECONDS);

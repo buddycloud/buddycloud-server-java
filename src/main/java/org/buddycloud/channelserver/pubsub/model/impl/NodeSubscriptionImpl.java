@@ -15,25 +15,26 @@ public class NodeSubscriptionImpl implements NodeSubscription {
 	private JID listener; // If different from user
 	private final String nodeId;
 	private Date lastUpdated;
+	private JID invitedBy;
 
 
 	public NodeSubscriptionImpl(final String nodeId, final JID user,
-			final Subscriptions subscription) {
-		this(nodeId, user, user, subscription, new Date());
+			final Subscriptions subscription, JID invitedBy) {
+		this(nodeId, user, user, subscription, invitedBy, new Date());
 	}
 	
 	public NodeSubscriptionImpl(final String nodeId, final JID user,
-			final Subscriptions subscription, Date lastUpdated) {
-		this(nodeId, user, user, subscription, lastUpdated);
+			final Subscriptions subscription, JID invitedBy, Date lastUpdated) {
+		this(nodeId, user, user, subscription, invitedBy, lastUpdated);
 	}
 
 	public NodeSubscriptionImpl(final String nodeId, final JID user,
-			JID listener, final Subscriptions subscription) {
-		this(nodeId, user, listener, subscription, new Date());
+			JID listener, final Subscriptions subscription, JID invitedBy) {
+		this(nodeId, user, listener, subscription, invitedBy, new Date());
 	}
 	
 	public NodeSubscriptionImpl(final String nodeId, final JID user,
-			JID listener, final Subscriptions subscription, Date lastUpdated) {
+			JID listener, final Subscriptions subscription, JID invitedBy, Date lastUpdated) {
 		this.nodeId = nodeId;
 		if (user.getResource() == null) {
 			this.user = user;
@@ -43,6 +44,7 @@ public class NodeSubscriptionImpl implements NodeSubscription {
 		this.lastUpdated = lastUpdated;
 		setListener(listener);
 		this.subscription = subscription;
+		this.invitedBy = invitedBy;
 	}
 
 	private void setListener(JID listener) {
@@ -75,6 +77,11 @@ public class NodeSubscriptionImpl implements NodeSubscription {
 	@Override
 	public String getNodeId() {
 		return nodeId;
+	}
+	
+	@Override
+	public JID getInvitedBy() {
+		return invitedBy;
 	}
 
 	@Override

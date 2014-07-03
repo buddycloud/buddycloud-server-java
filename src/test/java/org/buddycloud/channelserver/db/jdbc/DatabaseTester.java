@@ -115,8 +115,6 @@ public class DatabaseTester {
 	private void createSchema(final Connection conn) throws SQLException, IOException {
 		executeDDL(conn, "SET DATABASE SQL SYNTAX PGS TRUE;");
 		loadData("base");
-		//loadData("upgrade-1");
-		//loadData("upgrade-2");
 	}
 
 	public void loadData(final String scriptName) throws SQLException, IOException {

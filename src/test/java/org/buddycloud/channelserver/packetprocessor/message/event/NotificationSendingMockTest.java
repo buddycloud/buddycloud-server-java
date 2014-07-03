@@ -49,6 +49,7 @@ public class NotificationSendingMockTest extends IQTestHandler {
 
 		message = new Message();
 		message.setType(Message.Type.headline);
+		message.getElement().addAttribute("scheme", Integer.toString(1));
 	}
 
 	@Test
@@ -64,19 +65,21 @@ public class NotificationSendingMockTest extends IQTestHandler {
 	}
 	
 	@Test
-	public void doesNotSendNotificationToUnsubscribedUser() throws Exception {
-		registerUserResponse(Subscriptions.none, Affiliations.none);
+	public void sendsNotificationToSpecifiedUser() throws Exception {
+		ArrayList<NodeMembership> members = new ArrayList<NodeMembership>();
+		Mockito.doReturn(new ResultSetImpl<NodeMembership>(members))
+		.when(channelManager).getNodeMemberships(Mockito.anyString());
+		
+		String user = "user@example.com";
+		Message message = this.message.createCopy();
+		message.getElement().addAttribute("jid", user);
+		
 		notificationSending.process(message);
-		Assert.assertEquals(0, queue.size());
+		Assert.assertEquals(1, queue.size());
+		Assert.assertEquals(user, queue.poll().getElement().attributeValue("to"));
 	}
 	
-	@Test
-	public void doNotSendNotificationToOutcast() throws Exception {
-		registerUserResponse(Subscriptions.subscribed, Affiliations.outcast);
-		notificationSending.process(message);
-		Assert.assertEquals(0, queue.size());
-	}
-
+	
 	private void registerUserResponse(Subscriptions subscription, Affiliations affiliation) throws Exception {
 		ArrayList<NodeMembership> members = new ArrayList<NodeMembership>();
 		members.add(new NodeMembershipImpl(

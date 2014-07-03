@@ -20,9 +20,11 @@ public class NotificationSendingMock extends AbstractMessageProcessor {
 		message = packet;
 		
 		JID jid = null;
-		if (null != message.getElement().attributeValue("jid")) {
-			jid = new JID(message.getElement().attributeValue("jid"));
+		if (null == message.getElement().attributeValue("jid")) {
+			sendLocalNotifications(Integer.parseInt(message.getElement().attributeValue("scheme")));
+			return;
 		}
+		jid = new JID(message.getElement().attributeValue("jid"));
 		sendLocalNotifications(Integer.parseInt(message.getElement().attributeValue("scheme")), jid);
 	}
 

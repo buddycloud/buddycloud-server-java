@@ -41,7 +41,7 @@ public class AffiliationProcessorTest extends IQTestHandler {
 
 		Properties configuration = new Properties();
 		configuration.setProperty("server.domain.channels",
-				"chgnnels.shakespeare.lit");
+				"channels.shakespeare.lit");
 
 		channelManager = Mockito.mock(ChannelManager.class);
 		Mockito.when(channelManager.isLocalNode(Mockito.anyString()))
@@ -116,6 +116,7 @@ public class AffiliationProcessorTest extends IQTestHandler {
 
 		Assert.assertEquals(1, queue.size());
 		message.setTo(jid.toString());
-		Assert.assertEquals(message.toString(), queue.poll().toString());
+		Message received = (Message) queue.poll();
+		Assert.assertEquals(message.toString(), received.toString());
 	}
 }

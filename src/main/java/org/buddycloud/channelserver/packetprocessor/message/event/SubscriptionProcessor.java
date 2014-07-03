@@ -8,6 +8,7 @@ import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.db.exception.NodeStoreException;
 import org.buddycloud.channelserver.pubsub.model.impl.NodeSubscriptionImpl;
 import org.buddycloud.channelserver.pubsub.subscription.Subscriptions;
+import org.buddycloud.channelserver.utils.NotificationScheme;
 import org.dom4j.Element;
 import org.xmpp.packet.JID;
 import org.xmpp.packet.Message;
@@ -36,7 +37,18 @@ public class SubscriptionProcessor extends AbstractMessageProcessor {
 		if (true == channelManager.isLocalNode(node)) {
 			return;
 		}
-		sendLocalNotifications();
+		
+		if (null == subscription) {
+			return;
+		} else if (subscription.equals(Subscriptions.pending)) {
+			sendLocalNotifications(NotificationScheme.ownerOrModerator, jid);
+		} else if (subscription.equals(Subscriptions.invited)) {
+			sendLocalNotifications(NotificationScheme.ownerOrModerator, jid);
+		} else if (subscription.equals(Subscriptions.subscribed)) {
+			sendLocalNotifications(NotificationScheme.validSubscribers, null);
+		} else if (subscription.equals(Subscriptions.none)) {
+			sendLocalNotifications(NotificationScheme.validSubscribers, jid);
+		}
 	}
 
 	private void handleSubscriptionElement() throws NodeStoreException {

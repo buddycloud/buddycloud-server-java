@@ -79,6 +79,38 @@ public class NotificationSendingMockTest extends IQTestHandler {
 		Assert.assertEquals(user, queue.poll().getElement().attributeValue("to"));
 	}
 	
+	@Test
+	public void onlySendsToValidSubscribers() throws Exception {
+		registerUserResponse(Subscriptions.none, Affiliations.none);
+		notificationSending.process(message);
+		Assert.assertEquals(0, queue.size());
+		registerUserResponse(Subscriptions.none, Affiliations.outcast);
+		notificationSending.process(message);
+		Assert.assertEquals(0, queue.size());
+		registerUserResponse(Subscriptions.pending, Affiliations.none);
+		notificationSending.process(message);
+		Assert.assertEquals(0, queue.size());
+		registerUserResponse(Subscriptions.pending, Affiliations.owner);
+		notificationSending.process(message);
+		Assert.assertEquals(0, queue.size());
+		registerUserResponse(Subscriptions.invited, Affiliations.owner);
+		notificationSending.process(message);
+		Assert.assertEquals(0, queue.size());
+		registerUserResponse(Subscriptions.unconfigured, Affiliations.owner);
+		notificationSending.process(message);
+		Assert.assertEquals(0, queue.size());
+		registerUserResponse(Subscriptions.subscribed, Affiliations.outcast);
+		notificationSending.process(message);
+		Assert.assertEquals(0, queue.size());
+		registerUserResponse(Subscriptions.subscribed, Affiliations.none);
+		notificationSending.process(message);
+		Assert.assertEquals(1, queue.size());
+		queue.clear();
+		registerUserResponse(Subscriptions.subscribed, Affiliations.member);
+		notificationSending.process(message);
+		Assert.assertEquals(1, queue.size());
+	}
+	
 	
 	private void registerUserResponse(Subscriptions subscription, Affiliations affiliation) throws Exception {
 		ArrayList<NodeMembership> members = new ArrayList<NodeMembership>();

@@ -78,7 +78,7 @@ public class PublishTest extends IQTestHandler {
 		Mockito.when(channelManager.nodeExists(node)).thenReturn(true);
 
 		NodeMembership membership = new NodeMembershipImpl(node, jid,
-				Subscriptions.subscribed, Affiliations.publisher);
+				Subscriptions.subscribed, Affiliations.publisher, null);
 		Mockito.when(
 				channelManager.getNodeMembership(Mockito.eq(node),
 						Mockito.eq(jid))).thenReturn(membership);
@@ -182,7 +182,7 @@ public class PublishTest extends IQTestHandler {
 	@Test
 	public void unsubscribedUserCanNotPublish() throws Exception {
 		NodeMembership membership = new NodeMembershipImpl(node, jid,
-				Subscriptions.none, Affiliations.publisher);
+				Subscriptions.none, Affiliations.publisher, null);
 		Mockito.when(
 				channelManager.getNodeMembership(Mockito.eq(node),
 						Mockito.eq(jid))).thenReturn(membership);
@@ -201,7 +201,7 @@ public class PublishTest extends IQTestHandler {
 	@Test
 	public void pendingSubscriptionCanNotPublish() throws Exception {
 		NodeMembership membership = new NodeMembershipImpl(node, jid,
-				Subscriptions.pending, Affiliations.publisher);
+				Subscriptions.pending, Affiliations.publisher, null);
 		Mockito.when(
 				channelManager.getNodeMembership(Mockito.eq(node),
 						Mockito.eq(jid))).thenReturn(membership);
@@ -220,7 +220,7 @@ public class PublishTest extends IQTestHandler {
 	@Test
 	public void noAffiliationCanNotPublish() throws Exception {
 		NodeMembership membership = new NodeMembershipImpl(node, jid,
-				Subscriptions.subscribed, Affiliations.none);
+				Subscriptions.subscribed, Affiliations.none, null);
 		Mockito.when(
 				channelManager.getNodeMembership(Mockito.eq(node),
 						Mockito.eq(jid))).thenReturn(membership);
@@ -239,7 +239,7 @@ public class PublishTest extends IQTestHandler {
 	@Test
 	public void memberAffiliationCanNotPublish() throws Exception {
 		NodeMembership membership = new NodeMembershipImpl(node, jid,
-				Subscriptions.subscribed, Affiliations.member);
+				Subscriptions.subscribed, Affiliations.member, null);
 		Mockito.when(
 				channelManager.getNodeMembership(Mockito.eq(node),
 						Mockito.eq(jid))).thenReturn(membership);
@@ -258,7 +258,7 @@ public class PublishTest extends IQTestHandler {
 	@Test
 	public void outcastAffiliationCanNotPublish() throws Exception {
 		NodeMembership membership = new NodeMembershipImpl(node, jid,
-				Subscriptions.subscribed, Affiliations.outcast);
+				Subscriptions.subscribed, Affiliations.outcast, null);
 		Mockito.when(
 				channelManager.getNodeMembership(Mockito.eq(node),
 						Mockito.eq(jid))).thenReturn(membership);
@@ -347,13 +347,13 @@ public class PublishTest extends IQTestHandler {
 	public void sendsOutExpectedNotifications() throws Exception {
 
 		NodeSubscription subscriber1 = new NodeSubscriptionImpl(node, new JID(
-				"romeo@shakespeare.lit"), Subscriptions.subscribed);
+				"romeo@shakespeare.lit"), Subscriptions.subscribed, null);
 		// Expect not to see this user (subscription: 'pending')
 		NodeSubscription subscriber2 = new NodeSubscriptionImpl(node, new JID(
-				"titania@shakespeare.lit"), Subscriptions.pending);
+				"titania@shakespeare.lit"), Subscriptions.pending, null);
 		NodeSubscription subscriber3 = new NodeSubscriptionImpl(node, new JID(
 				"faustus@marlowe.lit"), new JID("channels.marlowe.lit"),
-				Subscriptions.subscribed);
+				Subscriptions.subscribed, null);
 
 		ArrayList<NodeSubscription> subscribers = new ArrayList<NodeSubscription>();
 		subscribers.add(subscriber1);

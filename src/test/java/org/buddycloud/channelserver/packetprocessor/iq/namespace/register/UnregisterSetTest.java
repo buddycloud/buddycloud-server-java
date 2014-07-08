@@ -15,14 +15,10 @@ import org.buddycloud.channelserver.db.NodeStore.Transaction;
 import org.buddycloud.channelserver.db.exception.NodeStoreException;
 import org.buddycloud.channelserver.packetHandler.iq.IQTestHandler;
 import org.buddycloud.channelserver.pubsub.affiliation.Affiliations;
-import org.buddycloud.channelserver.pubsub.model.NodeAffiliation;
 import org.buddycloud.channelserver.pubsub.model.NodeItem;
 import org.buddycloud.channelserver.pubsub.model.NodeMembership;
-import org.buddycloud.channelserver.pubsub.model.NodeSubscription;
-import org.buddycloud.channelserver.pubsub.model.impl.NodeAffiliationImpl;
 import org.buddycloud.channelserver.pubsub.model.impl.NodeItemImpl;
 import org.buddycloud.channelserver.pubsub.model.impl.NodeMembershipImpl;
-import org.buddycloud.channelserver.pubsub.model.impl.NodeSubscriptionImpl;
 import org.buddycloud.channelserver.pubsub.subscription.Subscriptions;
 import org.dom4j.Element;
 import org.junit.Before;
@@ -130,7 +126,7 @@ public class UnregisterSetTest extends IQTestHandler {
 		// Record affiliations
 		NodeMembership membership = new NodeMembershipImpl(personalNode,
 				actorJid, actorJid, Subscriptions.subscribed,
-				Affiliations.owner);
+				Affiliations.owner, null);
 		List<NodeMembership> memberships = new LinkedList<NodeMembership>();
 		memberships.add(membership);
 		Mockito.when(channelManager.getUserMemberships(Mockito.eq(actorJid))).thenReturn(
@@ -173,7 +169,7 @@ public class UnregisterSetTest extends IQTestHandler {
 
 		// Record affiliations
 		NodeMembership membership = new NodeMembershipImpl(topicNode,
-				actorJid, actorJid, Subscriptions.subscribed, Affiliations.owner, new Date());
+				actorJid, actorJid, Subscriptions.subscribed, Affiliations.owner, null, new Date());
 		
 		List<NodeMembership> memberships = new LinkedList<NodeMembership>();
 		memberships.add(membership);
@@ -212,7 +208,7 @@ public class UnregisterSetTest extends IQTestHandler {
 
 		// Record affiliations
 		NodeMembership membership = new NodeMembershipImpl(topicNode,
-				actorJid, actorJid, Subscriptions.subscribed, Affiliations.owner, new Date());
+				actorJid, actorJid, Subscriptions.subscribed, Affiliations.owner, null, new Date());
 		List<NodeMembership> memberships = new LinkedList<NodeMembership>();
 		memberships.add(membership);
 		Mockito.when(channelManager.getUserMemberships(actorJid)).thenReturn(
@@ -325,7 +321,7 @@ public class UnregisterSetTest extends IQTestHandler {
 
 		// Record subscriptions
 		NodeMembership membership = new NodeMembershipImpl(topicNode,
-				actorJid, Subscriptions.subscribed, Affiliations.member);
+				actorJid, Subscriptions.subscribed, Affiliations.member, null);
 		List<NodeMembership> memberships = new LinkedList<NodeMembership>();
 		memberships.add(membership);
 		Mockito.when(channelManager.getUserMemberships(Mockito.eq(actorJid))).thenReturn(

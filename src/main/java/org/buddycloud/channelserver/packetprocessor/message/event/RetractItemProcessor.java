@@ -6,6 +6,7 @@ import java.util.concurrent.BlockingQueue;
 import org.apache.log4j.Logger;
 import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.db.exception.NodeStoreException;
+import org.buddycloud.channelserver.utils.NotificationScheme;
 import org.xmpp.packet.Message;
 import org.xmpp.packet.Packet;
 
@@ -26,7 +27,7 @@ public class RetractItemProcessor extends AbstractMessageProcessor {
 				.attributeValue("node");
 		if (true == channelManager.isLocalNode(node))
 			return;
-		sendLocalNotifications();
+		sendLocalNotifications(NotificationScheme.validSubscribers);
 		handleItem();
 	}
 

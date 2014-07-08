@@ -30,19 +30,19 @@ public class NodeViewAcl {
 				+ affilliation + " :: " + subscription + " :: " + accessModel + " :: local user (" + String.valueOf(isLocalUser) + ")");
 		reasonForRefusal = null;
 
-		if (Affiliations.outcast.toString().equals(affilliation.toString())) {
+		if (Affiliations.outcast.equals(affilliation)) {
 			reasonForRefusal = new NodeAclRefuseReason(PacketError.Type.auth,
 					PacketError.Condition.forbidden, null);
 			return false;
 		}
 
-		if (accessModel.toString().equals(AccessModels.open.toString())) {
+		if (accessModel.equals(AccessModels.open)) {
 			return openChannelAcl(node, subscription, affilliation);
-		} else if (accessModel.toString().equals(AccessModels.authorize.toString())) {
+		} else if (accessModel.equals(AccessModels.authorize)) {
 			return privateChannelAcl(node, subscription, affilliation);
-		} else if (accessModel.toString().equals(AccessModels.whitelist.toString())) {
+		} else if (accessModel.equals(AccessModels.whitelist)) {
             return whitelistAcl(node, subscription, affilliation);
-        } else if (accessModel.toString().equals(AccessModels.local.toString())) {
+        } else if (accessModel.equals(AccessModels.local)) {
         	if (true == isLocalUser) {
         		return openChannelAcl(node, subscription, affilliation); 
         	}
@@ -58,20 +58,24 @@ public class NodeViewAcl {
 
     private boolean privateChannelAcl(String node, Subscriptions subscription,
 			Affiliations affilliation) {
-		if (Subscriptions.none.toString().equals(subscription.toString())) {
+		if (Subscriptions.none.equals(subscription)) {
 			reasonForRefusal = new NodeAclRefuseReason(PacketError.Type.auth,
 					PacketError.Condition.forbidden, CLOSED_NODE);
 			return false;
-		} else if (Subscriptions.pending.toString().equals(subscription.toString())) {
+		} else if (Subscriptions.pending.equals(subscription)) {
 			reasonForRefusal = new NodeAclRefuseReason(PacketError.Type.auth,
 					PacketError.Condition.not_authorized, PENDING_SUBSCRIPTION);
 			return false;
-		} else if (Subscriptions.unconfigured.toString().equals(subscription.toString())) {
+		} else if (Subscriptions.unconfigured.equals(subscription)) {
 			reasonForRefusal = new NodeAclRefuseReason(PacketError.Type.auth,
 					PacketError.Condition.not_authorized,
 					CONFIGURATION_REQUIRED);
 			return false;
-		} else if (Affiliations.none.toString().equals(affilliation.toString())) {
+		} else if (Subscriptions.invited.equals(subscription)) {
+			reasonForRefusal = new NodeAclRefuseReason(PacketError.Type.auth,
+					PacketError.Condition.forbidden, CLOSED_NODE);
+			return false;
+		} else if (Affiliations.none.equals(affilliation)) {
 			reasonForRefusal = new NodeAclRefuseReason(PacketError.Type.auth,
 					PacketError.Condition.not_authorized, CLOSED_NODE);
 			return false;

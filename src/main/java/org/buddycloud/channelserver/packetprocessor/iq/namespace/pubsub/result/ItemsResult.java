@@ -97,7 +97,7 @@ public class ItemsResult extends PubSubElementProcessorAbstract {
 		Affiliations aff = Affiliations.createFromString(item
 				.attributeValue("affiliation"));
 		NodeSubscription subscription = new NodeSubscriptionImpl(node, user,
-				listener, sub);
+				listener, sub, null);
 
 		if (false == channelManager.nodeExists(node))
 			channelManager.addRemoteNode(node);

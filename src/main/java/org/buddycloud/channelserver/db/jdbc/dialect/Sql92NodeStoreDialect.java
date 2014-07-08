@@ -90,7 +90,7 @@ public class Sql92NodeStoreDialect implements NodeStoreSQLDialect {
 			+ "ORDER BY \"updated\" ASC LIMIT ?";
 
 	private static final String SELECT_SUBSCRIPTION_CHANGES = ""
-			+ "SELECT \"node\", \"user\", \"listener\", \"subscription\", \"updated\" "
+			+ "SELECT \"node\", \"user\", \"listener\", \"subscription\", \"invited_by\", \"updated\" "
 			+ "FROM \"subscriptions\" "
 			+ "WHERE \"updated\" >= ? AND \"updated\" <= ? AND \"node\" IN "
 			+ "(SELECT \"subscriptions\".\"node\" FROM \"subscriptions\", \"affiliations\" "
@@ -116,8 +116,8 @@ public class Sql92NodeStoreDialect implements NodeStoreSQLDialect {
 			+ "\"updated\" > (SELECT \"updated\" FROM \"subscriptions\" WHERE \"node\" = ? AND \"user\" = ?) "
 			+ "ORDER BY \"updated\" ASC LIMIT ?";
 
-	private static final String INSERT_SUBSCRIPTION = "INSERT INTO \"subscriptions\" ( \"node\", \"user\", \"listener\", \"subscription\", \"updated\" )"
-			+ " VALUES ( ?, ?, ?, ?, now() )";
+	private static final String INSERT_SUBSCRIPTION = "INSERT INTO \"subscriptions\" ( \"node\", \"user\", \"listener\", \"subscription\", \"invited_by\", \"updated\" )"
+			+ " VALUES ( ?, ?, ?, ?, ?, now() )";
 
 	private static final String UPDATE_SUBSCRIPTION = "UPDATE \"subscriptions\""
 			+ " SET \"subscription\" = ?, \"updated\" = now(), \"listener\" = ?"
@@ -299,6 +299,7 @@ public class Sql92NodeStoreDialect implements NodeStoreSQLDialect {
 		         "THEN \"affiliations\".\"affiliation\" " +
 		         "ELSE 'none' " +
 		    "END AS \"affiliation\", " +
+		    "\"subscriptions\".\"invited_by\" AS \"invited_by\"," +
 		    "CASE WHEN \"affiliations\".\"updated\" > \"subscriptions\".\"updated\" " +
 		         "THEN \"affiliations\".\"updated\" " +
 		         "ELSE \"subscriptions\".\"updated\" " +
@@ -333,6 +334,7 @@ public class Sql92NodeStoreDialect implements NodeStoreSQLDialect {
 		         "THEN \"affiliations\".\"affiliation\" " +
 		         "ELSE 'none' " +
 		    "END AS \"affiliation\", " +
+		    "\"subscriptions\".\"invited_by\" AS \"invited_by\"," +
 		    "CASE WHEN \"affiliations\".\"updated\" > \"subscriptions\".\"updated\" " +
 		         "THEN \"affiliations\".\"updated\" " +
 		         "ELSE \"subscriptions\".\"updated\" " +
@@ -367,6 +369,7 @@ public class Sql92NodeStoreDialect implements NodeStoreSQLDialect {
 		         "THEN \"affiliations\".\"affiliation\" " +
 		         "ELSE 'none' " +
 		    "END AS \"affiliation\", " +
+		    "\"subscriptions\".\"invited_by\" AS \"invited_by\"," +
 		    "CASE WHEN \"affiliations\".\"updated\" > \"subscriptions\".\"updated\" " +
 		         "THEN \"affiliations\".\"updated\" " +
 		         "ELSE \"subscriptions\".\"updated\" " +

@@ -180,6 +180,17 @@ public class NodeViewAclTest extends TestCase {
 				AccessModels.authorize, NodeViewAcl.CONFIGURATION_REQUIRED,
 				PacketError.Type.auth, PacketError.Condition.not_authorized);
 	}
+	
+	@Test
+	public void invitedUserCanNotViewAuthorzieNode() { 
+		checkForBlockedAccess(Affiliations.none, Subscriptions.invited,
+				AccessModels.authorize, NodeViewAcl.CLOSED_NODE,
+				PacketError.Type.auth, PacketError.Condition.not_authorized);
+		checkForAllowedAccess(Affiliations.none, Subscriptions.invited,
+				AccessModels.local);
+		checkForAllowedAccess(Affiliations.none, Subscriptions.invited,
+				AccessModels.open);
+	}
 
 	@Test
 	public void testPrivateNodeWithSubscriptionAllowsPostsToBeRetrieved() {

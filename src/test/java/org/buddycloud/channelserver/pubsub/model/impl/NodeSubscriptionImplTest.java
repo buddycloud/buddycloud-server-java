@@ -13,7 +13,7 @@ public class NodeSubscriptionImplTest {
 	public void testChannelDomainListenerReturnsAsExpected() {
 		NodeSubscriptionImpl subscription = new NodeSubscriptionImpl("node",
 				new JID("user@domain.com"), new JID("channels.domain.com"),
-				Subscriptions.subscribed);
+				Subscriptions.subscribed, null);
 	    assertEquals(new JID("channels.domain.com"), subscription.getListener());
 	}
 
@@ -21,7 +21,7 @@ public class NodeSubscriptionImplTest {
 	public void testListenerWithResourceHasThisRemovedOnRetrieval() {
 		NodeSubscriptionImpl subscription = new NodeSubscriptionImpl("node",
 				new JID("user@domain.com"), new JID("user@domain.com/resource"),
-				Subscriptions.subscribed);
+				Subscriptions.subscribed, null);
 	    assertEquals(new JID("user@domain.com"), subscription.getListener());
 	}
 }

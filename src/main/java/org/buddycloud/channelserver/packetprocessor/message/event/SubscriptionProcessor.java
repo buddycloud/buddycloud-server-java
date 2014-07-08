@@ -8,6 +8,7 @@ import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.db.exception.NodeStoreException;
 import org.buddycloud.channelserver.pubsub.model.impl.NodeSubscriptionImpl;
 import org.buddycloud.channelserver.pubsub.subscription.Subscriptions;
+import org.buddycloud.channelserver.utils.NotificationScheme;
 import org.dom4j.Element;
 import org.xmpp.packet.JID;
 import org.xmpp.packet.Message;
@@ -16,6 +17,7 @@ import org.xmpp.packet.Packet;
 public class SubscriptionProcessor extends AbstractMessageProcessor {
 
 	private JID jid;
+	private JID invitedBy = null;
 	private Subscriptions subscription;
 
 	private static final Logger logger = Logger
@@ -32,8 +34,20 @@ public class SubscriptionProcessor extends AbstractMessageProcessor {
 
 		handleSubscriptionElement();
 
-		if (false == channelManager.isLocalNode(node)) {
-			sendLocalNotifications();
+		if (true == channelManager.isLocalNode(node)) {
+			return;
+		}
+		
+		if (null == subscription) {
+			return;
+		} else if (subscription.equals(Subscriptions.pending)) {
+			sendLocalNotifications(NotificationScheme.ownerOrModerator, jid);
+		} else if (subscription.equals(Subscriptions.invited)) {
+			sendLocalNotifications(NotificationScheme.ownerOrModerator, jid);
+		} else if (subscription.equals(Subscriptions.subscribed)) {
+			sendLocalNotifications(NotificationScheme.validSubscribers, null);
+		} else if (subscription.equals(Subscriptions.none)) {
+			sendLocalNotifications(NotificationScheme.validSubscribers, jid);
 		}
 	}
 
@@ -48,6 +62,9 @@ public class SubscriptionProcessor extends AbstractMessageProcessor {
 		node = subscriptionElement.attributeValue("node");
 		subscription = Subscriptions.valueOf(subscriptionElement
 				.attributeValue("subscription"));
+		if (null != subscriptionElement.attributeValue("invited-by")) {
+		    invitedBy = new JID(subscriptionElement.attributeValue("invited-by"));
+		}
 
 		if (true == channelManager.isLocalNode(node)) {
 			return;
@@ -57,7 +74,7 @@ public class SubscriptionProcessor extends AbstractMessageProcessor {
 
 	private void storeNewSubscription() throws NodeStoreException {
 		NodeSubscriptionImpl newSubscription = new NodeSubscriptionImpl(node,
-				jid, subscription);
+				jid, subscription, invitedBy);
 		addRemoteNode();
 		channelManager.addUserSubscription(newSubscription);
 	}

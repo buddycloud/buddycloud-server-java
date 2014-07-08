@@ -16,9 +16,10 @@ CREATE INDEX "items_in_reply_to" ON "items" ("node", "in_reply_to");
 CREATE TABLE "subscriptions" ("node" TEXT REFERENCES "nodes" ("node") ON DELETE CASCADE,
        	     		    "user" TEXT,
 			    "listener" TEXT,
-			    "subscription" TEXT,
+			    "subscription" TEXT,          
  			    "updated" TIMESTAMP,
  			    "temporary" BOOLEAN DEFAULT FALSE,
+                "invited_by" TEXT,
 			    PRIMARY KEY ("node", "user"));
 CREATE INDEX "subscriptions_updated" ON "subscriptions" ("updated");
 CREATE TABLE "affiliations" ("node" TEXT REFERENCES "nodes" ("node") ON DELETE CASCADE,
@@ -28,7 +29,20 @@ CREATE TABLE "affiliations" ("node" TEXT REFERENCES "nodes" ("node") ON DELETE C
 			   PRIMARY KEY ("node", "user"));
 CREATE INDEX "affiliations_updated" ON "affiliations" ("updated");
 
+
 CREATE VIEW "open_nodes" AS
        SELECT DISTINCT "node" FROM "node_config"
        	      WHERE "key"='accessModel'
 	        AND "value"='open';
+
+-- Upgrade 2
+
+-- MIXED IN ABOVE
+
+-- Upgrade 3
+
+-- MIXED IN ABOVE
+
+-- Upgrade 4
+
+-- MIXED IN ABOVE

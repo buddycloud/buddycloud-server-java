@@ -13,9 +13,7 @@ import org.buddycloud.channelserver.packetHandler.iq.IQTestHandler;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.JabberPubsub;
 import org.buddycloud.channelserver.pubsub.affiliation.Affiliations;
 import org.buddycloud.channelserver.pubsub.model.NodeMembership;
-import org.buddycloud.channelserver.pubsub.model.NodeSubscription;
 import org.buddycloud.channelserver.pubsub.model.impl.NodeMembershipImpl;
-import org.buddycloud.channelserver.pubsub.model.impl.NodeSubscriptionImpl;
 import org.buddycloud.channelserver.pubsub.subscription.Subscriptions;
 import org.dom4j.Element;
 import org.junit.Before;
@@ -43,7 +41,7 @@ public class AffiliationProcessorTest extends IQTestHandler {
 
 		Properties configuration = new Properties();
 		configuration.setProperty("server.domain.channels",
-				"chgnnels.shakespeare.lit");
+				"channels.shakespeare.lit");
 
 		channelManager = Mockito.mock(ChannelManager.class);
 		Mockito.when(channelManager.isLocalNode(Mockito.anyString()))
@@ -54,7 +52,7 @@ public class AffiliationProcessorTest extends IQTestHandler {
 		ArrayList<NodeMembership> subscribers = new ArrayList<NodeMembership>();
 		subscribers.add(new NodeMembershipImpl(
 				"/users/romeo@shakespeare.lit/posts", jid,
-				Subscriptions.subscribed, Affiliations.member));
+				Subscriptions.subscribed, Affiliations.member, null));
 		Mockito.doReturn(new ResultSetImpl<NodeMembership>(subscribers))
 				.when(channelManager).getNodeMemberships(Mockito.anyString());
 
@@ -118,6 +116,7 @@ public class AffiliationProcessorTest extends IQTestHandler {
 
 		Assert.assertEquals(1, queue.size());
 		message.setTo(jid.toString());
-		Assert.assertEquals(message.toString(), queue.poll().toString());
+		Message received = (Message) queue.poll();
+		Assert.assertEquals(message.toString(), received.toString());
 	}
 }

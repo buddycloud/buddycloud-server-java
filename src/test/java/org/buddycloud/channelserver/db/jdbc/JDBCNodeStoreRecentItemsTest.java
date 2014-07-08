@@ -33,7 +33,7 @@ public class JDBCNodeStoreRecentItemsTest extends JDBCNodeStoreAbstract {
 		store.addRemoteNode(TEST_SERVER1_NODE2_ID);
 		store.addUserSubscription(new NodeSubscriptionImpl(
 				TEST_SERVER1_NODE2_ID, TEST_SERVER1_USER1_JID,
-				Subscriptions.subscribed));
+				Subscriptions.subscribed, null));
 
 		NodeItem nodeItem1 = new NodeItemImpl(TEST_SERVER1_NODE1_ID, "123",
 				new Date(), "payload");
@@ -62,7 +62,7 @@ public class JDBCNodeStoreRecentItemsTest extends JDBCNodeStoreAbstract {
 		store.addRemoteNode(TEST_SERVER1_NODE2_ID);
 		store.addUserSubscription(new NodeSubscriptionImpl(
 				TEST_SERVER1_NODE2_ID, TEST_SERVER1_USER1_JID,
-				Subscriptions.subscribed));
+				Subscriptions.subscribed, null));
 
 		long now = System.currentTimeMillis();
 
@@ -100,7 +100,7 @@ public class JDBCNodeStoreRecentItemsTest extends JDBCNodeStoreAbstract {
 		store.addRemoteNode(TEST_SERVER1_NODE2_ID);
 		store.addUserSubscription(new NodeSubscriptionImpl(
 				TEST_SERVER1_NODE2_ID, TEST_SERVER1_USER1_JID,
-				Subscriptions.subscribed));
+				Subscriptions.subscribed, null));
 
 		NodeItem nodeItem1 = new NodeItemImpl(TEST_SERVER1_NODE1_ID, "1",
 				new Date(), "payload");
@@ -128,7 +128,7 @@ public class JDBCNodeStoreRecentItemsTest extends JDBCNodeStoreAbstract {
 		store.addRemoteNode(TEST_SERVER1_NODE2_ID);
 		store.addUserSubscription(new NodeSubscriptionImpl(
 				TEST_SERVER1_NODE2_ID, TEST_SERVER1_USER1_JID,
-				Subscriptions.subscribed));
+				Subscriptions.subscribed, null));
 
 		store.addNodeItem(new NodeItemImpl(TEST_SERVER1_NODE1_ID, "123",
 				new Date(), "payload"));
@@ -152,7 +152,7 @@ public class JDBCNodeStoreRecentItemsTest extends JDBCNodeStoreAbstract {
 		store.addRemoteNode(TEST_SERVER1_NODE2_ID);
 		store.addUserSubscription(new NodeSubscriptionImpl(
 				TEST_SERVER1_NODE2_ID, TEST_SERVER1_USER1_JID,
-				Subscriptions.subscribed));
+				Subscriptions.subscribed, null));
 
 		for (int i = 1; i < 20; i++) {
 			Thread.sleep(10);
@@ -187,7 +187,7 @@ public class JDBCNodeStoreRecentItemsTest extends JDBCNodeStoreAbstract {
 		store.addRemoteNode(TEST_SERVER1_NODE2_ID);
 		store.addUserSubscription(new NodeSubscriptionImpl(
 				TEST_SERVER1_NODE2_ID, TEST_SERVER1_USER1_JID,
-				Subscriptions.subscribed));
+				Subscriptions.subscribed, null));
 		Thread.sleep(1);
 		store.addNodeItem(new NodeItemImpl(TEST_SERVER1_NODE1_ID, "123",
 				new Date(), "payload"));
@@ -207,7 +207,7 @@ public class JDBCNodeStoreRecentItemsTest extends JDBCNodeStoreAbstract {
 		store.addRemoteNode(TEST_SERVER1_NODE2_ID);
 		store.addUserSubscription(new NodeSubscriptionImpl(
 				TEST_SERVER1_NODE2_ID, TEST_SERVER1_USER1_JID,
-				Subscriptions.subscribed));
+				Subscriptions.subscribed, null));
 
 		NodeItem nodeItem1 = new NodeItemImpl(TEST_SERVER1_NODE1_ID, "12-node1",
 				new Date(), "payload");
@@ -241,7 +241,7 @@ public class JDBCNodeStoreRecentItemsTest extends JDBCNodeStoreAbstract {
 		store.purgeNodeItems(TEST_SERVER1_NODE1_ID);
 		store.addUserSubscription(new NodeSubscriptionImpl(
 				TEST_SERVER1_NODE2_ID, TEST_SERVER1_USER1_JID,
-				Subscriptions.subscribed));
+				Subscriptions.subscribed, null));
 
 		NodeItem nodeItem1 = new NodeItemImpl(TEST_SERVER1_NODE1_ID, "12-node1",
 				new Date(), "payload");

@@ -15,6 +15,7 @@ import org.buddycloud.channelserver.pubsub.affiliation.Affiliations;
 import org.buddycloud.channelserver.pubsub.model.NodeAffiliation;
 import org.buddycloud.channelserver.pubsub.model.NodeItem;
 import org.buddycloud.channelserver.pubsub.model.NodeSubscription;
+import org.buddycloud.channelserver.pubsub.subscription.Subscriptions;
 import org.dom4j.DocumentException;
 import org.dom4j.Element;
 import org.dom4j.io.SAXReader;
@@ -201,10 +202,19 @@ public class MessageArchiveManagement implements PacketProcessor<IQ> {
 			Element subscription = event.addElement("subscription");
 
 			for (NodeSubscription change : changes) {
+				if ((false == isOwnerModerator(change.getNodeId()))
+						&& (true == Subscriptions.invited.equals(change
+								.getSubscription()))) {
+					continue;
+				}
 				subscription.addAttribute("node", change.getNodeId());
 				subscription.addAttribute("jid", change.getUser().toBareJID());
 				subscription.addAttribute("subscription", change
 						.getSubscription().toString());
+				if ((null != change.getInvitedBy()) && Subscriptions.invited.equals(change.getSubscription())) {
+					subscription.addAttribute("invited-by", change
+							.getInvitedBy().toBareJID());
+				}
 				forwarded.element("delay").addAttribute("stamp",
 						Conf.formatDate(change.getLastUpdated()));
 				outQueue.put(notification.createCopy());

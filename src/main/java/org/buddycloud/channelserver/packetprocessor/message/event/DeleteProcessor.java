@@ -5,6 +5,7 @@ import java.util.concurrent.BlockingQueue;
 
 import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.db.exception.NodeStoreException;
+import org.buddycloud.channelserver.utils.NotificationScheme;
 import org.dom4j.Element;
 import org.xmpp.packet.Message;
 import org.xmpp.packet.Packet;
@@ -21,7 +22,7 @@ public class DeleteProcessor extends AbstractMessageProcessor  {
 		message = packet;
 		deleteNode();
 		if (!channelManager.isLocalNode(node)) {
-			sendLocalNotifications();
+			sendLocalNotifications(NotificationScheme.validSubscribers);
 		}
 	}
 

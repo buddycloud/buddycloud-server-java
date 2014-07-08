@@ -40,4 +40,11 @@ public interface NodeSubscription extends Result {
      * @return
      */
     Date getLastUpdated();
+
+    /**
+     * Get invited by
+     * 
+     * @return
+     */
+	JID getInvitedBy();
 }

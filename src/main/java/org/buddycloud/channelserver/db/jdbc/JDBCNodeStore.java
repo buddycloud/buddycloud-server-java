@@ -425,7 +425,6 @@ public class JDBCNodeStore implements NodeStore {
 			stmt = conn.prepareStatement(dialect
 					.selectUserMemberships());
 			stmt.setString(1, jid.toBareJID());
-			stmt.setString(2, jid.toBareJID());
 
 			java.sql.ResultSet rs = stmt.executeQuery();
 
@@ -484,8 +483,6 @@ public class JDBCNodeStore implements NodeStore {
 					.selectMembership());
 			selectStatement.setString(2, nodeId);
 			selectStatement.setString(1, user.toBareJID());
-			selectStatement.setString(4, nodeId);
-			selectStatement.setString(3, user.toBareJID());
 			
 			java.sql.ResultSet rs = selectStatement.executeQuery();
 
@@ -522,7 +519,6 @@ public class JDBCNodeStore implements NodeStore {
 			stmt = conn.prepareStatement(dialect
 					.selectNodeMemberships());
 			stmt.setString(1, nodeId);
-			stmt.setString(2, nodeId);
 
 			java.sql.ResultSet rs = stmt.executeQuery();
 

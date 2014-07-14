@@ -305,11 +305,10 @@ public class Sql92NodeStoreDialect implements NodeStoreSQLDialect {
 		         "ELSE \"subscriptions\".\"updated\" " +
 		    "END AS \"updated\" " +
 		"FROM \"subscriptions\" " +
-		"FULL JOIN \"affiliations\" " +
+		"LEFT JOIN \"affiliations\" " +
 		    "ON \"subscriptions\".\"node\" = \"affiliations\".\"node\" AND \"affiliations\".\"user\" = \"subscriptions\".\"user\" " +
 		"WHERE " +
 		    "(\"subscriptions\".\"user\" = ? AND \"subscriptions\".\"node\" =  ?) " +
-		    "OR (\"affiliations\".\"user\" = ? AND \"affiliations\".\"node\" = ?) " +
 		"ORDER BY \"updated\" DESC; ";
 	
 	private static final String SELECT_USER_MEMBERSHIPS = "" +
@@ -341,11 +340,10 @@ public class Sql92NodeStoreDialect implements NodeStoreSQLDialect {
 		         "ELSE \"subscriptions\".\"updated\" " +
 		    "END AS \"updated\" " +
 		"FROM \"subscriptions\" " +
-		"FULL JOIN \"affiliations\" " +
+		"LEFT JOIN \"affiliations\" " +
 		    "ON \"subscriptions\".\"node\" = \"affiliations\".\"node\" AND \"affiliations\".\"user\" = \"subscriptions\".\"user\" " +
 		"WHERE " +
 		    "(\"subscriptions\".\"user\" = ?) " +
-		    "OR (\"affiliations\".\"user\" = ?) " +
 		"ORDER BY \"updated\" DESC; ";
 	
 	private static final String SELECT_NODE_MEMBERSHIPS = "" +
@@ -381,7 +379,6 @@ public class Sql92NodeStoreDialect implements NodeStoreSQLDialect {
 		    "ON \"subscriptions\".\"node\" = \"affiliations\".\"node\" AND \"affiliations\".\"user\" = \"subscriptions\".\"user\" " +
 		"WHERE " +
 		    "(\"subscriptions\".\"node\" = ?) " +
-		    "OR (\"affiliations\".\"node\" = ?) " +
 		"ORDER BY \"updated\" DESC; ";
 	
     @Override

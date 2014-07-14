@@ -88,22 +88,6 @@ public class JDBCNodeStoreUserMembershipsTest extends JDBCNodeStoreAbstract {
 	}
 	
 	@Test
-	public void canGetUserMembershipWhereTheresOnlyAffiliation() throws Exception {
-		dbTester.loadData("node_1");
-
-		store.deleteUserSubscriptions(TEST_SERVER1_USER1_JID);
-		
-		ResultSet<NodeMembership> result = store.getUserMemberships(TEST_SERVER1_USER1_JID);
-
-		NodeMembership expected = new NodeMembershipImpl(
-				TEST_SERVER1_NODE1_ID, TEST_SERVER1_USER1_JID,
-				Subscriptions.none, Affiliations.owner, null);
-
-		assertEquals("An unexpected user membership was returned", expected,
-				result.get(0));
-	}
-	
-	@Test
 	public void querySelectsTheMostRecentUpdatedDate() throws Exception {
 		dbTester.loadData("node_1");
 		Date originalDate = store.getUserMemberships(TEST_SERVER1_USER1_JID).get(0).getLastUpdated();

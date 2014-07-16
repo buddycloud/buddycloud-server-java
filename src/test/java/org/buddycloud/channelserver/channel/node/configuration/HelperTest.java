@@ -48,15 +48,6 @@ public class HelperTest extends IQTestHandler {
 		parser.setFieldFactory(new Factory());
 	}
 
-	@Test(expected = NodeConfigurationException.class)
-	public void testPassingPacketWhichDoesntContainConfigureElementThrowsException() {
-		Element iq = new DOMElement("iq");
-		iq.addElement("pubsub", JabberPubsub.NS_PUBSUB_OWNER);
-		IQ request = new IQ(iq);
-
-		parser.parse(request);
-	}
-
 	@Test
 	public void testNotProvidingAnyConfigurationFieldsReturnsOnlyLastUpdatedDate()
 			throws NodeStoreException {
@@ -381,5 +372,36 @@ public class HelperTest extends IQTestHandler {
         Assert.assertEquals(Affiliation.DEFAULT_VALUE, configurationValues.get(Affiliation.FIELD_NAME));
         Assert.assertNotNull(configurationValues.get(LastUpdatedDate.FIELD_NAME));
         
+	}
+	
+	/**
+	 * We expect this to <b>not</b> throw a {@link NodeConfigurationException}
+	 * 
+	 * @see https://github.com/buddycloud/buddycloud-server-java/issues/200
+	 */
+	@Test
+	public void testParseIQWithMissingForm() {
+		Element iq = new DOMElement("iq");
+		Element pubsub = iq.addElement("pubsub");
+		pubsub.addAttribute("xmlns", JabberPubsub.NS_PUBSUB_OWNER);
+		pubsub.addElement("configure");
+		
+		IQ request = new IQ(iq);
+		parser.parse(request);
+	}
+	
+	/**
+	 * We expect this to <b>not</b> throw a {@link NodeConfigurationException}
+	 * 
+	 * @see https://github.com/buddycloud/buddycloud-server-java/issues/200
+	 */
+	@Test
+	public void testParseIQWithMissingConfigure() {
+		Element iq = new DOMElement("iq");
+		Element pubsub = iq.addElement("pubsub");
+		pubsub.addAttribute("xmlns", JabberPubsub.NS_PUBSUB_OWNER);
+		
+		IQ request = new IQ(iq);
+		parser.parse(request);
 	}
 }

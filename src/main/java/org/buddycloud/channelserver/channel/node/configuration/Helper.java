@@ -1,6 +1,7 @@
 package org.buddycloud.channelserver.channel.node.configuration;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map.Entry;
@@ -123,8 +124,18 @@ public class Helper {
 	}
 
 	private List<FormField> getConfigurationValues(IQ request) {
-		Element element = request.getElement().element("pubsub")
-				.element("configure").element("x");
+		Element configure = request.getElement().element("pubsub").element("configure");
+		
+		if(configure == null) {
+			return Collections.emptyList();
+		}
+		
+		Element element = configure.element("x");
+
+		if(element == null) {
+			return Collections.emptyList();
+		}
+		
 		DataForm dataForm = new DataForm(element);
 		List<FormField> fields = dataForm.getFields();
 		return fields;

@@ -34,7 +34,8 @@ public class SubscriptionEvent extends PubSubElementProcessorAbstract {
 
 	private static final Logger LOGGER = Logger
 			.getLogger(SubscriptionEvent.class);
-	private static final String CAN_NOT_MODIFY_OWN_SUBSCRIPTION = "can-not-modify-own-subscription";
+	
+	public static final String CAN_NOT_MODIFY_OWN_SUBSCRIPTION = "can-not-modify-own-subscription";
 
 	/**
 	 * Constructor

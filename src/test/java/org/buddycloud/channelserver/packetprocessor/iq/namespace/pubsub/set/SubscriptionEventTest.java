@@ -25,6 +25,7 @@ import org.buddycloud.channelserver.pubsub.model.NodeSubscription;
 import org.buddycloud.channelserver.pubsub.model.impl.NodeMembershipImpl;
 import org.buddycloud.channelserver.pubsub.subscription.NodeSubscriptionMock;
 import org.buddycloud.channelserver.pubsub.subscription.Subscriptions;
+import org.buddycloud.channelserver.utils.node.item.payload.Buddycloud;
 import org.dom4j.Element;
 import org.dom4j.tree.BaseElement;
 import org.junit.Before;
@@ -309,7 +310,7 @@ public class SubscriptionEventTest extends IQTestHandler {
 		Assert.assertEquals(5, queue.size());
 		Packet notification = queue.poll();
 
-		Assert.assertEquals("francisco@denmark.lit/barracks", notification
+		Assert.assertEquals(request.getFrom().toString(), notification
 				.getTo().toString());
 		notification = queue.poll();
 		Assert.assertEquals("romeo@shakespeare.lit", notification.getTo()
@@ -484,5 +485,26 @@ public class SubscriptionEventTest extends IQTestHandler {
 		queue.poll();
 		queue.poll();
 		Assert.assertEquals(invitee.getDomain(), queue.poll().getTo().toString());
+	}
+	
+	@Test
+	public void userCanNotModifyOwnSubscription() throws Exception {
+		
+		IQ request = this.request.createCopy();
+		
+		NodeMembership membership = new NodeMembershipImpl(node, new JID(
+				subscriber), Subscriptions.subscribed, Affiliations.moderator, null);
+
+		when(dataStore.getNodeMembership(eq(node), any(JID.class))).thenReturn(membership);
+		
+		event.process(element, new JID("francisco@denmark.lit"), request, null);
+		
+		IQ result = (IQ) queue.poll();
+		Assert.assertEquals(IQ.Type.error, result.getType());
+		PacketError error = result.getError();
+		Assert.assertEquals(PacketError.Type.cancel, error.getType());
+		Assert.assertEquals(PacketError.Condition.not_allowed, error.getCondition());
+		Assert.assertEquals(event.CAN_NOT_MODIFY_OWN_SUBSCRIPTION, error.getApplicationConditionName());
+		Assert.assertEquals(Buddycloud.NS_ERROR, error.getApplicationConditionNamespaceURI());
 	}
 }

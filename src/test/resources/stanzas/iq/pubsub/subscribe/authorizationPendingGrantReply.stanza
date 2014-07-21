@@ -1,4 +1,4 @@
-<iq from='francisco@denmark.lit/barracks' 
+<iq from='juliet@shakespeare.lit/balcony' 
     to='channels.denmark.lit' type='set' id='7475:pubsubsubscriptions' xmlns='jabber:client'>
     <pubsub xmlns='http://jabber.org/protocol/pubsub#owner'>
         <subscriptions node='/user/pamela@denmark.lit/posts'>

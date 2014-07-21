@@ -213,7 +213,7 @@ public class AffiliationEventTest extends IQTestHandler {
 						Mockito.eq(jid))).thenReturn(
 				new NodeMembershipImpl(node, jid, Subscriptions.subscribed,
 						Affiliations.publisher, null));
-		
+
 		event.setChannelManager(channelManager);
 
 		event.process(element, jid, request, null);
@@ -252,8 +252,7 @@ public class AffiliationEventTest extends IQTestHandler {
 	}
 
 	@Test
-	public void notPossibleToChangeTheAffiliationOfNodeOwner()
-			throws Exception {
+	public void notPossibleToChangeTheAffiliationOfNodeOwner() throws Exception {
 
 		Mockito.when(channelManager.nodeExists(node)).thenReturn(true);
 
@@ -287,7 +286,6 @@ public class AffiliationEventTest extends IQTestHandler {
 				"/iq/pubsub/affiliation/affiliationChange.stanza")
 				.replaceFirst("affiliation='member'",
 						"affiliation='i-can-haz-all-the-items'"));
-
 
 		ResultSet<NodeSubscription> subscriptions = new ResultSetImpl(
 				new ArrayList<NodeSubscription>());
@@ -407,20 +405,20 @@ public class AffiliationEventTest extends IQTestHandler {
 		assertTrue("Notification to hamlet@shakespeare.lit not sent",
 				hasNotification2);
 	}
-	
+
 	public void canNotUpdateOwnAffiliation() throws Exception {
 
 		event.process(element, jid, request, null);
-		
+
 		IQ response = (IQ) queue.poll();
 		Assert.assertEquals(IQ.Type.error, response.getType());
 		PacketError error = response.getError();
 		Assert.assertEquals(PacketError.Type.cancel, error.getType());
 		Assert.assertEquals(PacketError.Condition.not_allowed,
-		 				error.getCondition());
+				error.getCondition());
 		Assert.assertEquals(event.CAN_NOT_MODIFY_OWN_AFFILIATION,
-		 				error.getApplicationConditionName());
+				error.getApplicationConditionName());
 		Assert.assertEquals(Buddycloud.NS_ERROR,
-		 				error.getApplicationConditionNamespaceURI());
+				error.getApplicationConditionNamespaceURI());
 	}
 }

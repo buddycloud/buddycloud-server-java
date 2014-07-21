@@ -18,6 +18,7 @@ import org.buddycloud.channelserver.pubsub.model.NodeSubscription;
 import org.buddycloud.channelserver.pubsub.model.impl.NodeMembershipImpl;
 import org.buddycloud.channelserver.pubsub.subscription.NodeSubscriptionMock;
 import org.buddycloud.channelserver.pubsub.subscription.Subscriptions;
+import org.buddycloud.channelserver.utils.node.item.payload.Buddycloud;
 import org.dom4j.Element;
 import org.dom4j.tree.BaseElement;
 import org.junit.Before;
@@ -216,7 +217,7 @@ public class AffiliationEventTest extends IQTestHandler {
 		event.setChannelManager(channelManager);
 
 		event.process(element, jid, request, null);
-		Packet response = queue.poll(100, TimeUnit.MILLISECONDS);
+		Packet response = queue.poll();
 
 		PacketError error = response.getError();
 		Assert.assertNotNull(error);
@@ -269,7 +270,7 @@ public class AffiliationEventTest extends IQTestHandler {
 								Affiliations.owner, null));
 
 		event.process(element, jid, request, null);
-		Packet response = queue.poll(100, TimeUnit.MILLISECONDS);
+		Packet response = queue.poll();
 		PacketError error = response.getError();
 		Assert.assertNotNull(error);
 		Assert.assertEquals(PacketError.Type.modify, error.getType());
@@ -405,5 +406,21 @@ public class AffiliationEventTest extends IQTestHandler {
 				hasNotification1);
 		assertTrue("Notification to hamlet@shakespeare.lit not sent",
 				hasNotification2);
+	}
+	
+	public void canNotUpdateOwnAffiliation() throws Exception {
+
+		event.process(element, jid, request, null);
+		
+		IQ response = (IQ) queue.poll();
+		Assert.assertEquals(IQ.Type.error, response.getType());
+		PacketError error = response.getError();
+		Assert.assertEquals(PacketError.Type.cancel, error.getType());
+		Assert.assertEquals(PacketError.Condition.not_allowed,
+		 				error.getCondition());
+		Assert.assertEquals(event.CAN_NOT_MODIFY_OWN_AFFILIATION,
+		 				error.getApplicationConditionName());
+		Assert.assertEquals(Buddycloud.NS_ERROR,
+		 				error.getApplicationConditionNamespaceURI());
 	}
 }

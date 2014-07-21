@@ -31,6 +31,8 @@ public class AffiliationEvent extends PubSubElementProcessorAbstract {
 
 	private static final Logger LOGGER = Logger
 			.getLogger(AffiliationEvent.class);
+	
+	public static final String CAN_NOT_MODIFY_OWN_AFFILIATION = "can-not-modify-own-affiliation";
 
 	/**
 	 * Constructor
@@ -71,6 +73,7 @@ public class AffiliationEvent extends PubSubElementProcessorAbstract {
 					|| (false == checkNodeExists())
 					|| (false == actorHasPermissionToAuthorize())
 					|| (false == subscriberHasCurrentAffiliation())
+					|| (true == userIsModifyingTheirAffiliation())
 					|| (false == attemptToChangeAffiliationOfNodeOwner())) {
 				outQueue.put(response);
 				return;
@@ -84,6 +87,14 @@ public class AffiliationEvent extends PubSubElementProcessorAbstract {
 			outQueue.put(response);
 			return;
 		}
+	}
+	
+	private boolean userIsModifyingTheirAffiliation() {
+		if (actor.toBareJID().equals(requestedAffiliation.attributeValue("jid"))) {
+			createExtendedErrorReply(PacketError.Type.cancel, PacketError.Condition.not_allowed, CAN_NOT_MODIFY_OWN_AFFILIATION, Buddycloud.NS_ERROR);
+			return true;
+		}
+		return false;
 	}
 
 	private boolean attemptToChangeAffiliationOfNodeOwner() {

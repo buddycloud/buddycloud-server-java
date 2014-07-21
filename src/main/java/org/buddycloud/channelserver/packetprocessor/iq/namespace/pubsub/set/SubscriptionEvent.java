@@ -34,6 +34,7 @@ public class SubscriptionEvent extends PubSubElementProcessorAbstract {
 
 	private static final Logger LOGGER = Logger
 			.getLogger(SubscriptionEvent.class);
+	private static final String CAN_NOT_MODIFY_OWN_SUBSCRIPTION = "can-not-modify-own-subscription";
 
 	/**
 	 * Constructor
@@ -71,6 +72,7 @@ public class SubscriptionEvent extends PubSubElementProcessorAbstract {
 			if ((false == nodeProvided()) || (false == validRequestStanza())
 					|| (false == checkNodeExists())
 					|| (false == actorHasPermissionToAuthorize())
+					|| (true == actorIsModifyingTheirSubscription())
 					|| (false == userIsSubscribable())) {
 				outQueue.put(response);
 				return;
@@ -84,6 +86,14 @@ public class SubscriptionEvent extends PubSubElementProcessorAbstract {
 			outQueue.put(response);
 			return;
 		}
+	}
+
+	private boolean actorIsModifyingTheirSubscription() {
+		if (actor.toBareJID().equals(subscriptionElement.attributeValue("jid"))) {
+			createExtendedErrorReply(PacketError.Type.cancel, PacketError.Condition.not_allowed, CAN_NOT_MODIFY_OWN_SUBSCRIPTION, Buddycloud.NS_ERROR);
+			return true;
+		}
+		return false;
 	}
 
 	private void sendNotifications() throws Exception {

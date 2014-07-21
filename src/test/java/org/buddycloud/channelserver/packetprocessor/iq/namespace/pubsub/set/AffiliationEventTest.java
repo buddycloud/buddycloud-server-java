@@ -91,7 +91,7 @@ public class AffiliationEventTest extends IQTestHandler {
 			throws Exception {
 		BaseElement element = new BaseElement("affiliations");
 		event.process(element, jid, request, null);
-		Packet response = queue.poll(100, TimeUnit.MILLISECONDS);
+		Packet response = queue.poll();
 
 		PacketError error = response.getError();
 		Assert.assertNotNull(error);
@@ -111,7 +111,7 @@ public class AffiliationEventTest extends IQTestHandler {
 						""));
 
 		event.process(element, jid, request, null);
-		Packet response = queue.poll(100, TimeUnit.MILLISECONDS);
+		Packet response = queue.poll();
 
 		PacketError error = response.getError();
 		Assert.assertNotNull(error);
@@ -127,7 +127,7 @@ public class AffiliationEventTest extends IQTestHandler {
 				"/iq/pubsub/affiliation/affiliationChange.stanza")
 				.replaceFirst("jid='francisco@denmark.lit'", ""));
 		event.process(element, jid, request, null);
-		Packet response = queue.poll(100, TimeUnit.MILLISECONDS);
+		Packet response = queue.poll();
 
 		PacketError error = response.getError();
 		Assert.assertNotNull(error);
@@ -143,7 +143,7 @@ public class AffiliationEventTest extends IQTestHandler {
 				"/iq/pubsub/affiliation/affiliationChange.stanza")
 				.replaceFirst("affiliation='member'", ""));
 		event.process(element, jid, request, null);
-		Packet response = queue.poll(100, TimeUnit.MILLISECONDS);
+		Packet response = queue.poll();
 
 		PacketError error = response.getError();
 		Assert.assertNotNull(error);
@@ -161,7 +161,7 @@ public class AffiliationEventTest extends IQTestHandler {
 		event.setChannelManager(channelManager);
 
 		event.process(element, jid, request, null);
-		Packet response = queue.poll(100, TimeUnit.MILLISECONDS);
+		Packet response = queue.poll();
 
 		PacketError error = response.getError();
 		Assert.assertNotNull(error);
@@ -177,7 +177,7 @@ public class AffiliationEventTest extends IQTestHandler {
 		event.setChannelManager(channelManager);
 
 		event.process(element, jid, request, null);
-		Packet response = queue.poll(100, TimeUnit.MILLISECONDS);
+		Packet response = queue.poll();
 
 		PacketError error = response.getError();
 		Assert.assertNotNull(error);
@@ -195,7 +195,7 @@ public class AffiliationEventTest extends IQTestHandler {
 						Affiliations.none, null));
 
 		event.process(element, jid, request, null);
-		Packet response = queue.poll(100, TimeUnit.MILLISECONDS);
+		Packet response = queue.poll();
 
 		PacketError error = response.getError();
 		Assert.assertNotNull(error);
@@ -354,7 +354,7 @@ public class AffiliationEventTest extends IQTestHandler {
 		boolean hasNotification2 = false;
 
 		for (int i = 0; i < 3; ++i) {
-			Packet packet = queue.poll(100, TimeUnit.MILLISECONDS);
+			Packet packet = queue.poll();
 
 			if (packet.getElement().getName().equals("iq")
 					&& packet.getTo().equals(

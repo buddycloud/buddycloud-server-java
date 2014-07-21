@@ -62,13 +62,13 @@ public class SubscriptionEventTest extends IQTestHandler {
 		element.addAttribute("node", node);
 
 		dataStore = mock(ChannelManager.class);
-		when(dataStore.isLocalNode(anyString())).thenReturn(
-				true);
-		when(dataStore.nodeExists(anyString()))
-				.thenReturn(true);
-		
-		NodeMembership membership = new NodeMembershipImpl(node, jid, Subscriptions.subscribed, Affiliations.member, null);
-		when(dataStore.getNodeMembership(anyString(), any(JID.class))).thenReturn(membership);
+		when(dataStore.isLocalNode(anyString())).thenReturn(true);
+		when(dataStore.nodeExists(anyString())).thenReturn(true);
+
+		NodeMembership membership = new NodeMembershipImpl(node, jid,
+				Subscriptions.subscribed, Affiliations.member, null);
+		when(dataStore.getNodeMembership(anyString(), any(JID.class)))
+				.thenReturn(membership);
 
 		ArrayList<NodeSubscription> subscribers = new ArrayList<NodeSubscription>();
 		subscribers.add(new NodeSubscriptionMock(new JID(
@@ -76,12 +76,12 @@ public class SubscriptionEventTest extends IQTestHandler {
 		subscribers.add(new NodeSubscriptionMock(new JID(
 				"hamlet@shakespeare.lit")));
 
-		doReturn(new ResultSetImpl<NodeSubscription>(subscribers))
-				.when(dataStore)
-				.getNodeSubscriptionListeners(anyString());
-		
-		Mockito.when(dataStore.isLocalJID(Mockito.any(JID.class))).thenReturn(false);
-		
+		doReturn(new ResultSetImpl<NodeSubscription>(subscribers)).when(
+				dataStore).getNodeSubscriptionListeners(anyString());
+
+		Mockito.when(dataStore.isLocalJID(Mockito.any(JID.class))).thenReturn(
+				false);
+
 		event.setChannelManager(dataStore);
 	}
 
@@ -197,11 +197,10 @@ public class SubscriptionEventTest extends IQTestHandler {
 	@Test
 	public void userWithoutSubscriptionReturnsErrorStanza() throws Exception {
 
-		when(
-				dataStore.getNodeMembership(anyString(),
-						any(JID.class))).thenReturn(
-				new NodeMembershipImpl(node, jid, Subscriptions.none,
-						Affiliations.none, null));
+		when(dataStore.getNodeMembership(anyString(), any(JID.class)))
+				.thenReturn(
+						new NodeMembershipImpl(node, jid, Subscriptions.none,
+								Affiliations.none, null));
 
 		event.process(element, jid, request, null);
 		Packet response = queue.poll();
@@ -216,11 +215,11 @@ public class SubscriptionEventTest extends IQTestHandler {
 	@Test
 	public void userWhoIsntOwnerOrModeratorCantUpdateSubscription()
 			throws Exception {
-		when(
-				dataStore.getNodeMembership(anyString(),
-						any(JID.class))).thenReturn(
-				new NodeMembershipImpl(node, jid, Subscriptions.subscribed,
-						Affiliations.member, null));
+		when(dataStore.getNodeMembership(anyString(), any(JID.class)))
+				.thenReturn(
+						new NodeMembershipImpl(node, jid,
+								Subscriptions.subscribed, Affiliations.member,
+								null));
 
 		event.process(element, jid, request, null);
 		Packet response = queue.poll();
@@ -238,15 +237,14 @@ public class SubscriptionEventTest extends IQTestHandler {
 
 		NodeMembership membership = new NodeMembershipImpl(node, new JID(
 				subscriber), Subscriptions.none, Affiliations.owner, null);
-		when(
-				dataStore.getNodeMembership(anyString(),
-						any(JID.class))).thenReturn(membership);
-		
-		NodeMembership inviteeMemebership = new NodeMembershipImpl(node, new JID(
-				subscriber), Subscriptions.none, Affiliations.owner, null);
-		when(
-				dataStore.getNodeMembership(anyString(),
-						eq(jid))).thenReturn(inviteeMemebership);
+		when(dataStore.getNodeMembership(anyString(), any(JID.class)))
+				.thenReturn(membership);
+
+		NodeMembership inviteeMemebership = new NodeMembershipImpl(node,
+				new JID(subscriber), Subscriptions.none, Affiliations.owner,
+				null);
+		when(dataStore.getNodeMembership(anyString(), eq(jid))).thenReturn(
+				inviteeMemebership);
 
 		event.process(element, jid, request, null);
 		Packet response = queue.poll();
@@ -270,22 +268,20 @@ public class SubscriptionEventTest extends IQTestHandler {
 		ArgumentCaptor<NodeSubscription> argument = ArgumentCaptor
 				.forClass(NodeSubscription.class);
 
-		when(
-				dataStore.getNodeMembership(anyString(),
-						any(JID.class))).thenReturn(
-				new NodeMembershipImpl(node, jid, Subscriptions.subscribed,
-						Affiliations.owner, null));
+		when(dataStore.getNodeMembership(anyString(), any(JID.class)))
+				.thenReturn(
+						new NodeMembershipImpl(node, jid,
+								Subscriptions.subscribed, Affiliations.owner,
+								null));
 
 		ArrayList<NodeSubscription> subscribers = new ArrayList<NodeSubscription>();
 
-		doReturn(new ResultSetImpl<NodeSubscription>(subscribers))
-				.when(dataStore)
-				.getNodeSubscriptionListeners(anyString());
-		
+		doReturn(new ResultSetImpl<NodeSubscription>(subscribers)).when(
+				dataStore).getNodeSubscriptionListeners(anyString());
+
 		event.process(element, jid, request, null);
 
-		verify(dataStore, times(1)).addUserSubscription(
-				argument.capture());
+		verify(dataStore, times(1)).addUserSubscription(argument.capture());
 		NodeSubscription subscription = argument.getValue();
 		Assert.assertEquals(Subscriptions.none, subscription.getSubscription());
 	}
@@ -300,18 +296,18 @@ public class SubscriptionEventTest extends IQTestHandler {
 						"subscription='subscribed'"));
 
 		NodeMembership membership = new NodeMembershipImpl(node, new JID(
-				subscriber), Subscriptions.subscribed, Affiliations.moderator, null);
-		when(
-				dataStore.getNodeMembership(eq(node),
-						any(JID.class))).thenReturn(membership);
+				subscriber), Subscriptions.subscribed, Affiliations.moderator,
+				null);
+		when(dataStore.getNodeMembership(eq(node), any(JID.class))).thenReturn(
+				membership);
 
 		event.process(element, jid, request, null);
 
 		Assert.assertEquals(5, queue.size());
 		Packet notification = queue.poll();
 
-		Assert.assertEquals(request.getFrom().toString(), notification
-				.getTo().toString());
+		Assert.assertEquals(request.getFrom().toString(), notification.getTo()
+				.toString());
 		notification = queue.poll();
 		Assert.assertEquals("romeo@shakespeare.lit", notification.getTo()
 				.toString());
@@ -336,175 +332,212 @@ public class SubscriptionEventTest extends IQTestHandler {
 				notification.getElement().element("event")
 						.element("subscription").attributeValue("jid"));
 	}
-	
+
 	@Test
 	public void userCanInviteAnotherUserToNode() throws Exception {
 
 		JID invitee = new JID("francisco@denmark.lit");
-		NodeMembership membership = new NodeMembershipImpl(node, invitee, Subscriptions.none, Affiliations.none, null);
-		when(dataStore.getNodeMembership(eq(node), eq(invitee))).thenReturn(membership);
-		
+		NodeMembership membership = new NodeMembershipImpl(node, invitee,
+				Subscriptions.none, Affiliations.none, null);
+		when(dataStore.getNodeMembership(eq(node), eq(invitee))).thenReturn(
+				membership);
+
 		IQ request = readStanzaAsIq("/iq/pubsub/subscribe/invite.stanza");
-		
+
 		event.process(element, jid, request, null);
-		
+
 		IQ result = (IQ) queue.poll();
-		
+
 		Assert.assertEquals(IQ.Type.result, result.getType());
-		
+
 		Assert.assertEquals(5, queue.size());
-		
+
 		Message notification = (Message) queue.poll();
-		
-		Element subscription = notification.getElement().element("event").element("subscription");
-		Assert.assertEquals(Subscriptions.invited, Subscriptions.valueOf(subscription.attributeValue("subscription")));
-		Assert.assertEquals(invitee, new JID(subscription.attributeValue("jid")));
+
+		Element subscription = notification.getElement().element("event")
+				.element("subscription");
+		Assert.assertEquals(Subscriptions.invited, Subscriptions
+				.valueOf(subscription.attributeValue("subscription")));
+		Assert.assertEquals(invitee,
+				new JID(subscription.attributeValue("jid")));
 	}
-	
+
 	@Test
-	public void userCanNotInviteAnotherUserIfTheyDontHaveValidSubscription() throws Exception {
-		
-		NodeMembership membership = new NodeMembershipImpl(node, jid, Subscriptions.pending, Affiliations.member, null);
-		when(dataStore.getNodeMembership(anyString(), any(JID.class))).thenReturn(membership);
-		
+	public void userCanNotInviteAnotherUserIfTheyDontHaveValidSubscription()
+			throws Exception {
+
+		NodeMembership membership = new NodeMembershipImpl(node, jid,
+				Subscriptions.pending, Affiliations.member, null);
+		when(dataStore.getNodeMembership(anyString(), any(JID.class)))
+				.thenReturn(membership);
+
 		IQ request = readStanzaAsIq("/iq/pubsub/subscribe/invite.stanza");
-		
+
 		event.process(element, jid, request, null);
-		
+
 		IQ result = (IQ) queue.poll();
 		Assert.assertEquals(IQ.Type.error, result.getType());
 		Assert.assertEquals(PacketError.Type.auth, result.getError().getType());
-		Assert.assertEquals(PacketError.Condition.forbidden, result.getError().getCondition());
+		Assert.assertEquals(PacketError.Condition.forbidden, result.getError()
+				.getCondition());
 	}
 
 	@Test
 	public void invitedByIsSetAsActorJid() throws Exception {
-		
+
 		JID invitee = new JID("francisco@denmark.lit");
-		NodeMembership membership = new NodeMembershipImpl(node, invitee, Subscriptions.none, Affiliations.none, null);
-		when(dataStore.getNodeMembership(eq(node), eq(invitee))).thenReturn(membership);
-		
+		NodeMembership membership = new NodeMembershipImpl(node, invitee,
+				Subscriptions.none, Affiliations.none, null);
+		when(dataStore.getNodeMembership(eq(node), eq(invitee))).thenReturn(
+				membership);
+
 		IQ request = readStanzaAsIq("/iq/pubsub/subscribe/invite.stanza");
-		
+
 		event.process(element, jid, request, null);
-		
+
 		IQ result = (IQ) queue.poll();
-		
-		ArgumentCaptor<NodeSubscription> subscription = ArgumentCaptor.forClass(NodeSubscription.class);
-	
+
+		ArgumentCaptor<NodeSubscription> subscription = ArgumentCaptor
+				.forClass(NodeSubscription.class);
+
 		verify(dataStore, times(1)).addUserSubscription(subscription.capture());
-		
-		Assert.assertEquals(request.getFrom().toBareJID(), subscription.getValue().getInvitedBy().toString());
-		Assert.assertEquals(Subscriptions.invited, subscription.getValue().getSubscription());
+
+		Assert.assertEquals(request.getFrom().toBareJID(), subscription
+				.getValue().getInvitedBy().toString());
+		Assert.assertEquals(Subscriptions.invited, subscription.getValue()
+				.getSubscription());
 		Assert.assertEquals(node, subscription.getValue().getNodeId());
-		
+
 	}
 
 	@Test
 	public void standardSubscribeDoesNotSetInvitedBy() throws Exception {
-		
+
 		NodeMembership membership = new NodeMembershipImpl(node, new JID(
-				subscriber), Subscriptions.subscribed, Affiliations.moderator, null);
-		
+				subscriber), Subscriptions.subscribed, Affiliations.moderator,
+				null);
+
 		JID invitee = new JID("francisco@denmark.lit");
-		when(dataStore.getNodeMembership(eq(node), any(JID.class))).thenReturn(membership);
-		
+		when(dataStore.getNodeMembership(eq(node), any(JID.class))).thenReturn(
+				membership);
+
 		event.process(element, jid, request, null);
-		
+
 		IQ result = (IQ) queue.poll();
 		Assert.assertEquals(IQ.Type.result, result.getType());
-		
-		ArgumentCaptor<NodeSubscription> subscription = ArgumentCaptor.forClass(NodeSubscription.class);
-	
+
+		ArgumentCaptor<NodeSubscription> subscription = ArgumentCaptor
+				.forClass(NodeSubscription.class);
+
 		verify(dataStore, times(1)).addUserSubscription(subscription.capture());
-		
+
 		Assert.assertNull(subscription.getValue().getInvitedBy());
-		Assert.assertEquals(Subscriptions.subscribed, subscription.getValue().getSubscription());
+		Assert.assertEquals(Subscriptions.subscribed, subscription.getValue()
+				.getSubscription());
 		Assert.assertEquals(node, subscription.getValue().getNodeId());
-		
+
 	}
-	
+
 	@Test
 	public void sendsNotificationToInvitedUserIfTheyAreLocal() throws Exception {
-		
-		Mockito.when(dataStore.isLocalJID(Mockito.any(JID.class))).thenReturn(true);
-		
+
+		Mockito.when(dataStore.isLocalJID(Mockito.any(JID.class))).thenReturn(
+				true);
+
 		JID invitee = new JID("francisco@denmark.lit");
-		
-		NodeMembership membership = new NodeMembershipImpl(node, invitee, Subscriptions.none, Affiliations.none, null);
-		when(dataStore.getNodeMembership(eq(node), eq(invitee))).thenReturn(membership);
-		
+
+		NodeMembership membership = new NodeMembershipImpl(node, invitee,
+				Subscriptions.none, Affiliations.none, null);
+		when(dataStore.getNodeMembership(eq(node), eq(invitee))).thenReturn(
+				membership);
+
 		IQ request = readStanzaAsIq("/iq/pubsub/subscribe/invite.stanza");
-		
+
 		event.process(element, jid, request, null);
-		
+
 		IQ result = (IQ) queue.poll();
-		
+
 		Assert.assertEquals(IQ.Type.result, result.getType());
-		
+
 		Assert.assertEquals(5, queue.size());
-		
+
 		Message notification = (Message) queue.poll();
-		
-		Element subscription = notification.getElement().element("event").element("subscription");
-		Assert.assertEquals(Subscriptions.invited, Subscriptions.valueOf(subscription.attributeValue("subscription")));
-		Assert.assertEquals(invitee, new JID(subscription.attributeValue("jid")));
-		
+
+		Element subscription = notification.getElement().element("event")
+				.element("subscription");
+		Assert.assertEquals(Subscriptions.invited, Subscriptions
+				.valueOf(subscription.attributeValue("subscription")));
+		Assert.assertEquals(invitee,
+				new JID(subscription.attributeValue("jid")));
+
 		queue.poll();
 		queue.poll();
 		queue.poll();
 		Assert.assertEquals(invitee, queue.poll().getTo());
 	}
-	
+
 	@Test
-	public void sendsNotificationToInvitedUsersServerIfTheyAreNotLocal() throws Exception {
+	public void sendsNotificationToInvitedUsersServerIfTheyAreNotLocal()
+			throws Exception {
 
 		JID invitee = new JID("francisco@denmark.lit");
-		
-		NodeMembership membership = new NodeMembershipImpl(node, invitee, Subscriptions.none, Affiliations.none, null);
-		when(dataStore.getNodeMembership(eq(node), eq(invitee))).thenReturn(membership);
-		
+
+		NodeMembership membership = new NodeMembershipImpl(node, invitee,
+				Subscriptions.none, Affiliations.none, null);
+		when(dataStore.getNodeMembership(eq(node), eq(invitee))).thenReturn(
+				membership);
+
 		IQ request = readStanzaAsIq("/iq/pubsub/subscribe/invite.stanza");
-		
+
 		event.process(element, jid, request, null);
-		
+
 		IQ result = (IQ) queue.poll();
-		
+
 		Assert.assertEquals(IQ.Type.result, result.getType());
-		
+
 		Assert.assertEquals(5, queue.size());
-		
+
 		Message notification = (Message) queue.poll();
-		
-		Element subscription = notification.getElement().element("event").element("subscription");
-		Assert.assertEquals(Subscriptions.invited, Subscriptions.valueOf(subscription.attributeValue("subscription")));
-		Assert.assertEquals(invitee, new JID(subscription.attributeValue("jid")));
-		Assert.assertEquals(jid, new JID(subscription.attributeValue("invited-by")));
-		
+
+		Element subscription = notification.getElement().element("event")
+				.element("subscription");
+		Assert.assertEquals(Subscriptions.invited, Subscriptions
+				.valueOf(subscription.attributeValue("subscription")));
+		Assert.assertEquals(invitee,
+				new JID(subscription.attributeValue("jid")));
+		Assert.assertEquals(jid,
+				new JID(subscription.attributeValue("invited-by")));
+
 		queue.poll();
 		queue.poll();
 		queue.poll();
-		Assert.assertEquals(invitee.getDomain(), queue.poll().getTo().toString());
+		Assert.assertEquals(invitee.getDomain(), queue.poll().getTo()
+				.toString());
 	}
-	
+
 	@Test
 	public void userCanNotModifyOwnSubscription() throws Exception {
-		
-		IQ request = this.request.createCopy();
-		
-		NodeMembership membership = new NodeMembershipImpl(node, new JID(
-				subscriber), Subscriptions.subscribed, Affiliations.moderator, null);
 
-		when(dataStore.getNodeMembership(eq(node), any(JID.class))).thenReturn(membership);
-		
+		IQ request = this.request.createCopy();
+
+		NodeMembership membership = new NodeMembershipImpl(node, new JID(
+				subscriber), Subscriptions.subscribed, Affiliations.moderator,
+				null);
+
+		when(dataStore.getNodeMembership(eq(node), any(JID.class))).thenReturn(
+				membership);
+
 		event.process(element, new JID("francisco@denmark.lit"), request, null);
-		
+
 		IQ result = (IQ) queue.poll();
 		Assert.assertEquals(IQ.Type.error, result.getType());
 		PacketError error = result.getError();
 		Assert.assertEquals(PacketError.Type.cancel, error.getType());
-		Assert.assertEquals(PacketError.Condition.not_allowed, error.getCondition());
-		Assert.assertEquals(event.CAN_NOT_MODIFY_OWN_SUBSCRIPTION, error.getApplicationConditionName());
-		Assert.assertEquals(Buddycloud.NS_ERROR, error.getApplicationConditionNamespaceURI());
+		Assert.assertEquals(PacketError.Condition.not_allowed,
+				error.getCondition());
+		Assert.assertEquals(event.CAN_NOT_MODIFY_OWN_SUBSCRIPTION,
+				error.getApplicationConditionName());
+		Assert.assertEquals(Buddycloud.NS_ERROR,
+				error.getApplicationConditionNamespaceURI());
 	}
 }

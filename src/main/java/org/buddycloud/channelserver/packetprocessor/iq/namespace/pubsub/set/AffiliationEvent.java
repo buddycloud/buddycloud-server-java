@@ -32,6 +32,8 @@ public class AffiliationEvent extends PubSubElementProcessorAbstract {
 	private static final Logger LOGGER = Logger
 			.getLogger(AffiliationEvent.class);
 
+	public static final String CAN_NOT_MODIFY_OWN_AFFILIATION = "can-not-modify-own-affiliation";
+
 	/**
 	 * Constructor
 	 * 
@@ -64,13 +66,13 @@ public class AffiliationEvent extends PubSubElementProcessorAbstract {
 			makeRemoteRequest();
 			return;
 		}
-		
+
 		try {
-			if ((false == nodeProvided())
-					|| (false == validRequestStanza())
+			if ((false == nodeProvided()) || (false == validRequestStanza())
 					|| (false == checkNodeExists())
 					|| (false == actorHasPermissionToAuthorize())
 					|| (false == subscriberHasCurrentAffiliation())
+					|| (true == userIsModifyingTheirAffiliation())
 					|| (false == attemptToChangeAffiliationOfNodeOwner())) {
 				outQueue.put(response);
 				return;
@@ -86,9 +88,19 @@ public class AffiliationEvent extends PubSubElementProcessorAbstract {
 		}
 	}
 
+	private boolean userIsModifyingTheirAffiliation() {
+		if (actor.toBareJID()
+				.equals(requestedAffiliation.attributeValue("jid"))) {
+			createExtendedErrorReply(PacketError.Type.cancel,
+					PacketError.Condition.not_allowed,
+					CAN_NOT_MODIFY_OWN_AFFILIATION, Buddycloud.NS_ERROR);
+			return true;
+		}
+		return false;
+	}
+
 	private boolean attemptToChangeAffiliationOfNodeOwner() {
-		if (!usersCurrentMembership.getAffiliation().equals(
-				Affiliations.owner)) {
+		if (!usersCurrentMembership.getAffiliation().equals(Affiliations.owner)) {
 			return true;
 		}
 		setErrorCondition(PacketError.Type.modify,
@@ -97,19 +109,19 @@ public class AffiliationEvent extends PubSubElementProcessorAbstract {
 	}
 
 	private void sendNotifications() throws Exception {
-		
+
 		outQueue.put(response);
-		
+
 		ResultSet<NodeSubscription> subscribers = channelManager
 				.getNodeSubscriptionListeners(node);
-		
+
 		Document document = getDocumentHelper();
 		Element message = document.addElement("message");
 		Element pubsub = message.addElement("event");
 		message.addAttribute("remote-server-discover", "false");
 		Element affiliations = pubsub.addElement("affiliations");
-		Element affiliation  = affiliations.addElement("affiliation");
-		
+		Element affiliation = affiliations.addElement("affiliation");
+
 		pubsub.addNamespace("", JabberPubsub.NS_PUBSUB_EVENT);
 		message.addAttribute("from", request.getTo().toString());
 		message.addAttribute("type", "headline");
@@ -126,7 +138,7 @@ public class AffiliationEvent extends PubSubElementProcessorAbstract {
 			notification.setTo(subscriber.getListener());
 			outQueue.put(notification);
 		}
-		
+
 		Collection<JID> admins = getAdminUsers();
 		for (JID admin : admins) {
 			Message notification = rootElement.createCopy();
@@ -186,11 +198,10 @@ public class AffiliationEvent extends PubSubElementProcessorAbstract {
 	}
 
 	private boolean subscriberHasCurrentAffiliation() throws NodeStoreException {
-		usersCurrentMembership = channelManager.getNodeMembership(node, new JID(
-				requestedAffiliation.attributeValue("jid")));
+		usersCurrentMembership = channelManager.getNodeMembership(node,
+				new JID(requestedAffiliation.attributeValue("jid")));
 
-		if (usersCurrentMembership.getAffiliation()
-						.equals(Affiliations.none)) {
+		if (usersCurrentMembership.getAffiliation().equals(Affiliations.none)) {
 			setErrorCondition(PacketError.Type.modify,
 					PacketError.Condition.unexpected_request);
 			return false;
@@ -221,13 +232,12 @@ public class AffiliationEvent extends PubSubElementProcessorAbstract {
 
 	private void makeRemoteRequest() throws InterruptedException {
 		request.setTo(new JID(node.split("/")[2]).getDomain());
-		Element actor = request.getElement()
-		    .element("pubsub")
-		    .addElement("actor", Buddycloud.NS);
+		Element actor = request.getElement().element("pubsub")
+				.addElement("actor", Buddycloud.NS);
 		actor.addText(request.getFrom().toBareJID());
-	    outQueue.put(request);
+		outQueue.put(request);
 	}
-	
+
 	/**
 	 * Determine if this class is capable of processing incoming stanza
 	 */

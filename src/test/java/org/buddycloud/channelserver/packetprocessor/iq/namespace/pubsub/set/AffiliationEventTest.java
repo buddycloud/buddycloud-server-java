@@ -18,6 +18,7 @@ import org.buddycloud.channelserver.pubsub.model.NodeSubscription;
 import org.buddycloud.channelserver.pubsub.model.impl.NodeMembershipImpl;
 import org.buddycloud.channelserver.pubsub.subscription.NodeSubscriptionMock;
 import org.buddycloud.channelserver.pubsub.subscription.Subscriptions;
+import org.buddycloud.channelserver.utils.node.item.payload.Buddycloud;
 import org.dom4j.Element;
 import org.dom4j.tree.BaseElement;
 import org.junit.Before;
@@ -90,7 +91,7 @@ public class AffiliationEventTest extends IQTestHandler {
 			throws Exception {
 		BaseElement element = new BaseElement("affiliations");
 		event.process(element, jid, request, null);
-		Packet response = queue.poll(100, TimeUnit.MILLISECONDS);
+		Packet response = queue.poll();
 
 		PacketError error = response.getError();
 		Assert.assertNotNull(error);
@@ -110,7 +111,7 @@ public class AffiliationEventTest extends IQTestHandler {
 						""));
 
 		event.process(element, jid, request, null);
-		Packet response = queue.poll(100, TimeUnit.MILLISECONDS);
+		Packet response = queue.poll();
 
 		PacketError error = response.getError();
 		Assert.assertNotNull(error);
@@ -126,7 +127,7 @@ public class AffiliationEventTest extends IQTestHandler {
 				"/iq/pubsub/affiliation/affiliationChange.stanza")
 				.replaceFirst("jid='francisco@denmark.lit'", ""));
 		event.process(element, jid, request, null);
-		Packet response = queue.poll(100, TimeUnit.MILLISECONDS);
+		Packet response = queue.poll();
 
 		PacketError error = response.getError();
 		Assert.assertNotNull(error);
@@ -142,7 +143,7 @@ public class AffiliationEventTest extends IQTestHandler {
 				"/iq/pubsub/affiliation/affiliationChange.stanza")
 				.replaceFirst("affiliation='member'", ""));
 		event.process(element, jid, request, null);
-		Packet response = queue.poll(100, TimeUnit.MILLISECONDS);
+		Packet response = queue.poll();
 
 		PacketError error = response.getError();
 		Assert.assertNotNull(error);
@@ -160,7 +161,7 @@ public class AffiliationEventTest extends IQTestHandler {
 		event.setChannelManager(channelManager);
 
 		event.process(element, jid, request, null);
-		Packet response = queue.poll(100, TimeUnit.MILLISECONDS);
+		Packet response = queue.poll();
 
 		PacketError error = response.getError();
 		Assert.assertNotNull(error);
@@ -176,7 +177,7 @@ public class AffiliationEventTest extends IQTestHandler {
 		event.setChannelManager(channelManager);
 
 		event.process(element, jid, request, null);
-		Packet response = queue.poll(100, TimeUnit.MILLISECONDS);
+		Packet response = queue.poll();
 
 		PacketError error = response.getError();
 		Assert.assertNotNull(error);
@@ -194,7 +195,7 @@ public class AffiliationEventTest extends IQTestHandler {
 						Affiliations.none, null));
 
 		event.process(element, jid, request, null);
-		Packet response = queue.poll(100, TimeUnit.MILLISECONDS);
+		Packet response = queue.poll();
 
 		PacketError error = response.getError();
 		Assert.assertNotNull(error);
@@ -212,11 +213,11 @@ public class AffiliationEventTest extends IQTestHandler {
 						Mockito.eq(jid))).thenReturn(
 				new NodeMembershipImpl(node, jid, Subscriptions.subscribed,
 						Affiliations.publisher, null));
-		
+
 		event.setChannelManager(channelManager);
 
 		event.process(element, jid, request, null);
-		Packet response = queue.poll(100, TimeUnit.MILLISECONDS);
+		Packet response = queue.poll();
 
 		PacketError error = response.getError();
 		Assert.assertNotNull(error);
@@ -251,8 +252,7 @@ public class AffiliationEventTest extends IQTestHandler {
 	}
 
 	@Test
-	public void notPossibleToChangeTheAffiliationOfNodeOwner()
-			throws Exception {
+	public void notPossibleToChangeTheAffiliationOfNodeOwner() throws Exception {
 
 		Mockito.when(channelManager.nodeExists(node)).thenReturn(true);
 
@@ -269,7 +269,7 @@ public class AffiliationEventTest extends IQTestHandler {
 								Affiliations.owner, null));
 
 		event.process(element, jid, request, null);
-		Packet response = queue.poll(100, TimeUnit.MILLISECONDS);
+		Packet response = queue.poll();
 		PacketError error = response.getError();
 		Assert.assertNotNull(error);
 		Assert.assertEquals(PacketError.Type.modify, error.getType());
@@ -286,7 +286,6 @@ public class AffiliationEventTest extends IQTestHandler {
 				"/iq/pubsub/affiliation/affiliationChange.stanza")
 				.replaceFirst("affiliation='member'",
 						"affiliation='i-can-haz-all-the-items'"));
-
 
 		ResultSet<NodeSubscription> subscriptions = new ResultSetImpl(
 				new ArrayList<NodeSubscription>());
@@ -355,7 +354,7 @@ public class AffiliationEventTest extends IQTestHandler {
 		boolean hasNotification2 = false;
 
 		for (int i = 0; i < 3; ++i) {
-			Packet packet = queue.poll(100, TimeUnit.MILLISECONDS);
+			Packet packet = queue.poll();
 
 			if (packet.getElement().getName().equals("iq")
 					&& packet.getTo().equals(
@@ -405,5 +404,21 @@ public class AffiliationEventTest extends IQTestHandler {
 				hasNotification1);
 		assertTrue("Notification to hamlet@shakespeare.lit not sent",
 				hasNotification2);
+	}
+
+	public void canNotUpdateOwnAffiliation() throws Exception {
+
+		event.process(element, jid, request, null);
+
+		IQ response = (IQ) queue.poll();
+		Assert.assertEquals(IQ.Type.error, response.getType());
+		PacketError error = response.getError();
+		Assert.assertEquals(PacketError.Type.cancel, error.getType());
+		Assert.assertEquals(PacketError.Condition.not_allowed,
+				error.getCondition());
+		Assert.assertEquals(event.CAN_NOT_MODIFY_OWN_AFFILIATION,
+				error.getApplicationConditionName());
+		Assert.assertEquals(Buddycloud.NS_ERROR,
+				error.getApplicationConditionNamespaceURI());
 	}
 }

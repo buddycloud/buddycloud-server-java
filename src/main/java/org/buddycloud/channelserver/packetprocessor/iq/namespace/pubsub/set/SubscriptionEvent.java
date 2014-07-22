@@ -35,6 +35,8 @@ public class SubscriptionEvent extends PubSubElementProcessorAbstract {
 	private static final Logger LOGGER = Logger
 			.getLogger(SubscriptionEvent.class);
 
+	public static final String CAN_NOT_MODIFY_OWN_SUBSCRIPTION = "can-not-modify-own-subscription";
+
 	/**
 	 * Constructor
 	 * 
@@ -71,6 +73,7 @@ public class SubscriptionEvent extends PubSubElementProcessorAbstract {
 			if ((false == nodeProvided()) || (false == validRequestStanza())
 					|| (false == checkNodeExists())
 					|| (false == actorHasPermissionToAuthorize())
+					|| (true == actorIsModifyingTheirSubscription())
 					|| (false == userIsSubscribable())) {
 				outQueue.put(response);
 				return;
@@ -86,11 +89,21 @@ public class SubscriptionEvent extends PubSubElementProcessorAbstract {
 		}
 	}
 
+	private boolean actorIsModifyingTheirSubscription() {
+		if (actor.toBareJID().equals(subscriptionElement.attributeValue("jid"))) {
+			createExtendedErrorReply(PacketError.Type.cancel,
+					PacketError.Condition.not_allowed,
+					CAN_NOT_MODIFY_OWN_SUBSCRIPTION, Buddycloud.NS_ERROR);
+			return true;
+		}
+		return false;
+	}
+
 	private void sendNotifications() throws Exception {
 
 		boolean hasNotifiedInviteesServer = false;
 		JID invitedUsersDomain = new JID(jid.getDomain());
-		
+
 		outQueue.put(response);
 
 		ResultSet<NodeSubscription> subscribers = channelManager
@@ -110,11 +123,10 @@ public class SubscriptionEvent extends PubSubElementProcessorAbstract {
 		subscription.addAttribute("subscription",
 				subscriptionElement.attributeValue("subscription"));
 		Message rootElement = new Message(message);
-		
-		Subscriptions newSubscription = Subscriptions.valueOf(
-				subscriptionElement.attributeValue("subscription")
-		);
-		
+
+		Subscriptions newSubscription = Subscriptions
+				.valueOf(subscriptionElement.attributeValue("subscription"));
+
 		if (newSubscription.equals(Subscriptions.invited)) {
 			subscription.addAttribute("invited-by", actor.toBareJID());
 		}
@@ -122,7 +134,8 @@ public class SubscriptionEvent extends PubSubElementProcessorAbstract {
 		for (NodeSubscription subscriber : subscribers) {
 			Message notification = rootElement.createCopy();
 			notification.setTo(subscriber.getListener());
-			if (subscriber.getUser().getDomain().equals(invitedUsersDomain.getDomain())) {
+			if (subscriber.getUser().getDomain()
+					.equals(invitedUsersDomain.getDomain())) {
 				hasNotifiedInviteesServer = true;
 			}
 			outQueue.put(notification);
@@ -133,16 +146,18 @@ public class SubscriptionEvent extends PubSubElementProcessorAbstract {
 			notification.setTo(admin);
 			outQueue.put(notification);
 		}
-		
-		if (hasNotifiedInviteesServer) return;
-		
+
+		if (hasNotifiedInviteesServer)
+			return;
+
 		if (newSubscription.equals(Subscriptions.invited)) {
 			Message alertInvitedUser = rootElement.createCopy();
-		    JID to = jid;
-		    alertInvitedUser.getElement().attribute("remote-server-discover").detach();
-		    if (!channelManager.isLocalJID(jid)) {
-		    	to = invitedUsersDomain;
-		    }
+			JID to = jid;
+			alertInvitedUser.getElement().attribute("remote-server-discover")
+					.detach();
+			if (!channelManager.isLocalJID(jid)) {
+				to = invitedUsersDomain;
+			}
 			alertInvitedUser.setTo(to);
 			outQueue.put(alertInvitedUser);
 		}
@@ -153,8 +168,7 @@ public class SubscriptionEvent extends PubSubElementProcessorAbstract {
 			invitedBy = actor;
 		}
 		jid = new JID(subscriptionElement.attributeValue("jid"));
-		NodeSubscription newSubscription = new NodeSubscriptionImpl(node,
-				jid,
+		NodeSubscription newSubscription = new NodeSubscriptionImpl(node, jid,
 				currentMembership.getListener(),
 				Subscriptions.valueOf(subscriptionElement
 						.attributeValue("subscription")), invitedBy);

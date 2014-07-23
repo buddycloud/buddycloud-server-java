@@ -187,8 +187,8 @@ public class SubscribeSetTest extends IQTestHandler {
 		Assert.assertEquals(IQ.Type.result, response.getType());
 		Assert.assertNull(response.getError());
 
-		Assert.assertEquals(Subscriptions.subscribed,
-				Subscriptions.valueOf(response.getChildElement().element("subscription")
+		Assert.assertEquals(Subscriptions.subscribed, Subscriptions
+				.valueOf(response.getChildElement().element("subscription")
 						.attributeValue("subscription")));
 
 	}
@@ -291,9 +291,9 @@ public class SubscribeSetTest extends IQTestHandler {
 
 		Mockito.when(channelManager.getNodeConf(Mockito.anyString()))
 				.thenReturn(configuration);
-		
-		membership = new NodeMembershipImpl(node, jid,
-				Subscriptions.invited, Affiliations.none, null);
+
+		membership = new NodeMembershipImpl(node, jid, Subscriptions.invited,
+				Affiliations.none, null);
 
 		Mockito.when(
 				channelManager.getNodeMembership(Mockito.anyString(),
@@ -307,20 +307,24 @@ public class SubscribeSetTest extends IQTestHandler {
 				.valueOf(response.getChildElement().element("subscription")
 						.attributeValue("subscription")));
 	}
-	
+
 	@Test
 	public void illegalNodeFormatReturnsAppropriateError() throws Exception {
-		Mockito.doThrow(new IllegalArgumentException()).when(channelManager).isLocalNode(Mockito.anyString());
+		Mockito.doThrow(new IllegalArgumentException()).when(channelManager)
+				.isLocalNode(Mockito.anyString());
 		subscribe.process(element, new JID("francisco@denmark.lit"), request,
 				null);
 		IQ response = (IQ) queue.poll();
 		Assert.assertEquals(IQ.Type.error, response.getType());
 		PacketError error = response.getError();
 		Assert.assertEquals(PacketError.Type.modify, error.getType());
-		Assert.assertEquals(PacketError.Condition.bad_request, error.getCondition());
-		Assert.assertEquals(subscribe.INVALID_NODE_FORMAT, error.getApplicationConditionName());
-		Assert.assertEquals(Buddycloud.NS_ERROR, error.getApplicationConditionNamespaceURI());
-		
+		Assert.assertEquals(PacketError.Condition.bad_request,
+				error.getCondition());
+		Assert.assertEquals(subscribe.INVALID_NODE_FORMAT,
+				error.getApplicationConditionName());
+		Assert.assertEquals(Buddycloud.NS_ERROR,
+				error.getApplicationConditionNamespaceURI());
+
 	}
 
 }

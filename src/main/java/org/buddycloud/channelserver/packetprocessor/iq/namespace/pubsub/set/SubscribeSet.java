@@ -125,7 +125,7 @@ public class SubscribeSet extends PubSubElementProcessorAbstract {
 
 			Affiliations defaultAffiliation = Affiliations.member;
 			Subscriptions defaultSubscription = Subscriptions.none;
-			
+
 			if (!membership.getSubscription().equals(Subscriptions.invited)
 					&& !membership.getSubscription().in(Subscriptions.none)
 					&& !membership.getAffiliation().in(Affiliations.none)) {
@@ -210,7 +210,9 @@ public class SubscribeSet extends PubSubElementProcessorAbstract {
 			isLocalNode = channelManager.isLocalNode(node);
 		} catch (IllegalArgumentException e) {
 			LOGGER.debug(e);
-			createExtendedErrorReply(PacketError.Type.modify, PacketError.Condition.bad_request, INVALID_NODE_FORMAT, Buddycloud.NS_ERROR);
+			createExtendedErrorReply(PacketError.Type.modify,
+					PacketError.Condition.bad_request, INVALID_NODE_FORMAT,
+					Buddycloud.NS_ERROR);
 			outQueue.put(response);
 			return false;
 		}

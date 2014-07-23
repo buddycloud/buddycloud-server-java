@@ -43,6 +43,8 @@ public class SubscribeSet extends PubSubElementProcessorAbstract {
 	public static final String MISSING_NODE_ID = "nodeid-required";
 	public static final String INVALID_JID = "invalid-jid";
 
+	public static final String INVALID_NODE_FORMAT = "invalid-node-format";
+
 	private final BlockingQueue<Packet> outQueue;
 	private final ChannelManager channelManager;
 
@@ -203,7 +205,16 @@ public class SubscribeSet extends PubSubElementProcessorAbstract {
 
 	private boolean handleNodeSubscription(Element elm, JID actorJID,
 			JID subscribingJid) throws NodeStoreException, InterruptedException {
-		if ((!channelManager.isLocalNode(node)) && (!node.equals("/firehose"))) {
+		boolean isLocalNode = false;
+		try {
+			isLocalNode = channelManager.isLocalNode(node);
+		} catch (IllegalArgumentException e) {
+			LOGGER.debug(e);
+			createExtendedErrorReply(PacketError.Type.modify, PacketError.Condition.bad_request, INVALID_NODE_FORMAT, Buddycloud.NS_ERROR);
+			outQueue.put(response);
+			return false;
+		}
+		if (!isLocalNode && !node.equals("/firehose")) {
 			makeRemoteRequest();
 			return false;
 		}

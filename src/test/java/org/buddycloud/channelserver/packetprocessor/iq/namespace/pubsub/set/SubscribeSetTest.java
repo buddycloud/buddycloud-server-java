@@ -21,6 +21,7 @@ import org.buddycloud.channelserver.pubsub.model.impl.NodeAffiliationImpl;
 import org.buddycloud.channelserver.pubsub.model.impl.NodeMembershipImpl;
 import org.buddycloud.channelserver.pubsub.model.impl.NodeSubscriptionImpl;
 import org.buddycloud.channelserver.pubsub.subscription.Subscriptions;
+import org.buddycloud.channelserver.utils.node.item.payload.Buddycloud;
 import org.dom4j.Element;
 import org.dom4j.tree.BaseElement;
 import org.junit.Before;
@@ -305,6 +306,21 @@ public class SubscribeSetTest extends IQTestHandler {
 		Assert.assertEquals(Subscriptions.subscribed, Subscriptions
 				.valueOf(response.getChildElement().element("subscription")
 						.attributeValue("subscription")));
+	}
+	
+	@Test
+	public void illegalNodeFormatReturnsAppropriateError() throws Exception {
+		Mockito.doThrow(new IllegalArgumentException()).when(channelManager).isLocalNode(Mockito.anyString());
+		subscribe.process(element, new JID("francisco@denmark.lit"), request,
+				null);
+		IQ response = (IQ) queue.poll();
+		Assert.assertEquals(IQ.Type.error, response.getType());
+		PacketError error = response.getError();
+		Assert.assertEquals(PacketError.Type.modify, error.getType());
+		Assert.assertEquals(PacketError.Condition.bad_request, error.getCondition());
+		Assert.assertEquals(subscribe.INVALID_NODE_FORMAT, error.getApplicationConditionName());
+		Assert.assertEquals(Buddycloud.NS_ERROR, error.getApplicationConditionNamespaceURI());
+		
 	}
 
 }

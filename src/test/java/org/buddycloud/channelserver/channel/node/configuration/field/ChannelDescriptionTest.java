@@ -9,13 +9,13 @@ import org.buddycloud.channelserver.packetHandler.iq.IQTestHandler;
 import org.junit.Before;
 import org.junit.Test;
 
-public class ChannelTitleTest extends IQTestHandler {
+public class ChannelDescriptionTest extends IQTestHandler {
 	
-	private ChannelTitle field;
+	private ChannelDescription field;
 
 	@Before
 	public void setUp() {
-		field = new ChannelTitle();
+		field = new ChannelDescription();
 
 	}
 
@@ -23,14 +23,15 @@ public class ChannelTitleTest extends IQTestHandler {
 	public void longestTitleIs128Characters()
 			throws NodeStoreException {
 		
-		String testTitle = StringUtils.repeat("Doc, you built a time machine? Out of a delorean?!", ChannelTitle.MAX_TITLE_LENGTH);
+		String testTitle = StringUtils.repeat("Whoa. This is heavy.", ChannelTitle.MAX_TITLE_LENGTH);
 		field.setValue(testTitle);
-		Assert.assertEquals(field.MAX_TITLE_LENGTH, field.getValue().length());
+		Assert.assertEquals(field.MAX_DESCRIPTION_LENGTH, field.getValue().length());
 	}
 	
 	@Test
 	public void doesNotTrucateShorterStrings() {
-		String testTitle = "Hi, my name's George, George McFly";
+		String testTitle = "The way I see it, if you're gonna build a " +
+	        "time machine into a car, why not do it with some *style?*";
 		field.setValue(testTitle);
 		Assert.assertEquals(testTitle, field.getValue());
 	}

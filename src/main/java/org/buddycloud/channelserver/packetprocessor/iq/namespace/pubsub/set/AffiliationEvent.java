@@ -26,8 +26,9 @@ import org.xmpp.resultsetmanagement.ResultSet;
 
 public class AffiliationEvent extends PubSubElementProcessorAbstract {
 
-	Element requestedAffiliation;
+	Element requestedAffiliationElement;
 	NodeMembership usersCurrentMembership;
+	private Affiliations requestedAffiliation;
 
 	private static final Logger LOGGER = Logger
 			.getLogger(AffiliationEvent.class);
@@ -90,7 +91,7 @@ public class AffiliationEvent extends PubSubElementProcessorAbstract {
 
 	private boolean userIsModifyingTheirAffiliation() {
 		if (actor.toBareJID()
-				.equals(requestedAffiliation.attributeValue("jid"))) {
+				.equals(requestedAffiliationElement.attributeValue("jid"))) {
 			createExtendedErrorReply(PacketError.Type.cancel,
 					PacketError.Condition.not_allowed,
 					CAN_NOT_MODIFY_OWN_AFFILIATION, Buddycloud.NS_ERROR);
@@ -128,9 +129,9 @@ public class AffiliationEvent extends PubSubElementProcessorAbstract {
 
 		affiliations.addAttribute("node", node);
 		affiliation.addAttribute("jid",
-				requestedAffiliation.attributeValue("jid"));
+				requestedAffiliationElement.attributeValue("jid"));
 		affiliation.addAttribute("affiliation",
-				requestedAffiliation.attributeValue("affiliation"));
+				requestedAffiliationElement.attributeValue("affiliation"));
 		Message rootElement = new Message(message);
 
 		for (NodeSubscription subscriber : subscribers) {
@@ -148,8 +149,8 @@ public class AffiliationEvent extends PubSubElementProcessorAbstract {
 	}
 
 	private void saveUpdatedAffiliation() throws NodeStoreException {
-		JID jid = new JID(requestedAffiliation.attributeValue("jid"));
-		Affiliations affiliation = Affiliations.valueOf(requestedAffiliation
+		JID jid = new JID(requestedAffiliationElement.attributeValue("jid"));
+		Affiliations affiliation = Affiliations.valueOf(requestedAffiliationElement
 				.attributeValue("affiliation"));
 		channelManager.setUserAffiliation(node, jid, affiliation);
 	}
@@ -174,32 +175,32 @@ public class AffiliationEvent extends PubSubElementProcessorAbstract {
 
 	private boolean validRequestStanza() {
 		try {
-			requestedAffiliation = request.getElement().element("pubsub")
+			requestedAffiliationElement = request.getElement().element("pubsub")
 					.element("affiliations").element("affiliation");
-			if ((null == requestedAffiliation)
-					|| (null == requestedAffiliation.attribute("jid"))
-					|| (null == requestedAffiliation.attribute("affiliation"))) {
+			if ((null == requestedAffiliationElement)
+					|| (null == requestedAffiliationElement.attribute("jid"))
+					|| (null == requestedAffiliationElement.attribute("affiliation"))) {
 				setErrorCondition(PacketError.Type.modify,
 						PacketError.Condition.bad_request);
 				return false;
 			}
+			requestedAffiliation = Affiliations.createFromString(
+					requestedAffiliationElement.attributeValue("affiliation"));
 		} catch (NullPointerException e) {
 			LOGGER.error(e);
 			setErrorCondition(PacketError.Type.modify,
 					PacketError.Condition.bad_request);
 			return false;
 		}
-		requestedAffiliation.addAttribute(
+		requestedAffiliationElement.addAttribute(
 				"affiliation",
-				Affiliations.createFromString(
-						requestedAffiliation.attributeValue("affiliation"))
-						.toString());
+				requestedAffiliation.toString());
 		return true;
 	}
 
 	private boolean subscriberHasCurrentAffiliation() throws NodeStoreException {
 		usersCurrentMembership = channelManager.getNodeMembership(node,
-				new JID(requestedAffiliation.attributeValue("jid")));
+				new JID(requestedAffiliationElement.attributeValue("jid")));
 
 		if (usersCurrentMembership.getAffiliation().equals(Affiliations.none)) {
 			setErrorCondition(PacketError.Type.modify,
@@ -213,12 +214,18 @@ public class AffiliationEvent extends PubSubElementProcessorAbstract {
 
 		NodeMembership membership = channelManager.getNodeMembership(node,
 				actor);
-		if (membership.getAffiliation().canAuthorize()) {
-			return true;
+		if (!membership.getAffiliation().canAuthorize()) {
+			setErrorCondition(PacketError.Type.auth,
+					PacketError.Condition.not_authorized);
+			return false;
 		}
-		setErrorCondition(PacketError.Type.auth,
-				PacketError.Condition.not_authorized);
-		return false;
+		if (membership.getAffiliation().equals(Affiliations.owner)) return true;
+	    if (requestedAffiliation.equals(Affiliations.moderator) || requestedAffiliation.equals(Affiliations.owner)) {
+			setErrorCondition(PacketError.Type.cancel,
+					PacketError.Condition.not_allowed);
+	    	return false;
+	    }
+	    return true;
 	}
 
 	private boolean checkNodeExists() throws NodeStoreException {

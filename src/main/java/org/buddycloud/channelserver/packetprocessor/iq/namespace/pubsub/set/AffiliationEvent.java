@@ -221,8 +221,8 @@ public class AffiliationEvent extends PubSubElementProcessorAbstract {
 		}
 		if (membership.getAffiliation().equals(Affiliations.owner)) return true;
 	    if (requestedAffiliation.equals(Affiliations.moderator) || requestedAffiliation.equals(Affiliations.owner)) {
-			setErrorCondition(PacketError.Type.cancel,
-					PacketError.Condition.not_allowed);
+			setErrorCondition(PacketError.Type.auth,
+					PacketError.Condition.forbidden);
 	    	return false;
 	    }
 	    return true;

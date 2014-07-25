@@ -439,8 +439,8 @@ public class AffiliationEventTest extends IQTestHandler {
 		IQ response = (IQ) queue.poll();
 		Assert.assertEquals(IQ.Type.error, response.getType());
 		PacketError error = response.getError();
-		Assert.assertEquals(PacketError.Type.cancel, error.getType());
-		Assert.assertEquals(PacketError.Condition.not_allowed,
+		Assert.assertEquals(PacketError.Type.auth, error.getType());
+		Assert.assertEquals(PacketError.Condition.forbidden,
 				error.getCondition());
 	}
 }

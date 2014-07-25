@@ -421,4 +421,26 @@ public class AffiliationEventTest extends IQTestHandler {
 		Assert.assertEquals(Buddycloud.NS_ERROR,
 				error.getApplicationConditionNamespaceURI());
 	}
+	
+	@Test
+	public void moderatorsCantCreateOtherModerators() throws Exception {
+		IQ request = toIq(readStanzaAsString(
+				"/iq/pubsub/affiliation/affiliationChange.stanza")
+				.replaceFirst("affiliation='member'", "affiliation='moderator'"));
+		
+		Mockito.when(
+				channelManager.getNodeMembership(Mockito.anyString(),
+						Mockito.eq(jid))).thenReturn(
+				new NodeMembershipImpl(node, jid, Subscriptions.subscribed,
+						Affiliations.moderator, null));
+		
+		event.process(element, jid, request, null);
+
+		IQ response = (IQ) queue.poll();
+		Assert.assertEquals(IQ.Type.error, response.getType());
+		PacketError error = response.getError();
+		Assert.assertEquals(PacketError.Type.cancel, error.getType());
+		Assert.assertEquals(PacketError.Condition.not_allowed,
+				error.getCondition());
+	}
 }

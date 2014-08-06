@@ -1,8 +1,6 @@
 package org.buddycloud.channelserver.queue;
 
 import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Timer;
@@ -10,10 +8,13 @@ import java.util.TimerTask;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.log4j.Logger;
-import org.buddycloud.channelserver.ChannelsEngine;
 
 abstract public class ExpiringQueueAbstract extends ConcurrentHashMap<Object, Object> {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 	private static Logger logger = Logger.getLogger(ExpiringQueueAbstract.class);
 	private ConcurrentHashMap<Long, ArrayList> addedTime = new ConcurrentHashMap<Long, ArrayList>();
 	

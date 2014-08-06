@@ -430,5 +430,17 @@ public class ChannelManagerImpl implements ChannelManager {
 	    throws NodeStoreException {
 		return nodeStore.getNodeMemberships(nodeId);
 	}
+	
+	@Override
+	public CloseableIterator<NodeItem> getUserFeedItems(JID user, Date since,
+		 int limit, GlobalItemID afterItemId, boolean parentOnly) throws NodeStoreException {
+		return nodeStore.getUserFeedItems(user, since, limit, afterItemId, parentOnly);
+	}
+	
+	@Override
+	public int getCountUserFeedItems(JID user, Date since,
+			boolean parentOnly) throws NodeStoreException {
+		return nodeStore.getCountUserFeedItems(user, since, parentOnly);
+	}
 
 }

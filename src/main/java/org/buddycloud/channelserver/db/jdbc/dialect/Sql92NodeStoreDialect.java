@@ -381,6 +381,18 @@ public class Sql92NodeStoreDialect implements NodeStoreSQLDialect {
 		    "(\"subscriptions\".\"node\" = ?) " +
 		"ORDER BY \"updated\" DESC; ";
 	
+	private static final String SELECT_USER_FEED_ITEMS = ""
+	    + "SELECT \"node\", \"id\", \"updated\", \"xml\", \"in_reply_to\" "
+		+ "FROM \"items\" "
+	    + "WHERE \"node\" IN (SELECT \"node\" FROM \"subscriptions\" WHERE \"subscription\" = 'subscribed' AND \"user\" = ?) "
+		+ "ORDER BY \"updated\" DESC, \"id\" DESC";
+	
+	private static final String SELECT_COUNT_USER_FEED_ITEMS = ""
+		    + "SELECT COUNT(\"id\") AS 'count' "
+			+ "FROM \"items\" "
+		    + "WHERE \"node\" IN (SELECT \"node\" FROM \"subscriptions\" WHERE \"subscription\" = 'subscribed' AND \"user\" = ?) "
+			+ "ORDER BY \"updated\" DESC, \"id\" DESC";
+	
     @Override
 	public String insertNode() {
 		return INSERT_NODE;
@@ -713,6 +725,16 @@ public class Sql92NodeStoreDialect implements NodeStoreSQLDialect {
 	@Override
 	public String countNodeThreads() {
 		return COUNT_NODE_THREADS;
+	}
+
+	@Override
+	public String selectUserFeedItems() {
+		return SELECT_USER_FEED_ITEMS;
+	}
+
+	@Override
+	public String selectCountUserFeedItems() {
+		return SELECT_COUNT_USER_FEED_ITEMS;
 	}
 
 }

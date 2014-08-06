@@ -806,6 +806,20 @@ public class JDBCNodeStore implements NodeStore {
 							// required
 		}
 	}
+	
+
+	@Override
+	public CloseableIterator<NodeItem> getUserFeedItems(JID user, Date since,
+			int limit, GlobalItemID afterItemId, boolean parentOnly)
+			throws NodeStoreException {
+		return null;
+	}
+
+	@Override
+	public int getCountUserFeedItems(JID user, Date since, 
+			boolean parentOnly) throws NodeStoreException {
+		return 0;
+	}
 
 	@Override
 	public int getCountRecentItems(JID user, Date since, int maxPerNode,
@@ -1827,6 +1841,10 @@ public class JDBCNodeStore implements NodeStore {
 		String countNodeThreads();
 
 		String selectUserRatingsForAPost();
+		
+		String selectUserFeedItems();
+		
+		String selectCountUserFeedItems();
 	
 	}
 

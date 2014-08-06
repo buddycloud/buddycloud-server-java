@@ -369,9 +369,9 @@ public class ChannelManagerImpl implements ChannelManager {
 	}
 
 	@Override
-	public ResultSet<NodeItem> selectUserPublishedItems(JID userJid)
+	public ResultSet<NodeItem> getUserPublishedItems(JID userJid)
 			throws NodeStoreException {
-		return nodeStore.selectUserPublishedItems(userJid);
+		return nodeStore.getUserPublishedItems(userJid);
 	}
 
 	@Override

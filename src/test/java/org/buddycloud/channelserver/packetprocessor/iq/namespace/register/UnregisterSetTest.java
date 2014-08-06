@@ -55,7 +55,7 @@ public class UnregisterSetTest extends IQTestHandler {
 		Mockito.when(channelManager.getUserMemberships(Mockito.eq(actorJid))).thenReturn(
 				new ResultSetImpl<NodeMembership>(
 						new LinkedList<NodeMembership>()));
-		Mockito.when(channelManager.getUserItems(Mockito.eq(actorJid))).thenReturn(
+		Mockito.when(channelManager.selectUserPublishedItems(Mockito.eq(actorJid))).thenReturn(
 				new ResultSetImpl<NodeItem>(new LinkedList<NodeItem>()));
 		Mockito.when(channelManager.beginTransaction()).thenReturn(
 				Mockito.mock(Transaction.class));
@@ -259,7 +259,7 @@ public class UnregisterSetTest extends IQTestHandler {
 				"<payload/>");
 		List<NodeItem> nodeItems = new LinkedList<NodeItem>();
 		nodeItems.add(nodeItem);
-		Mockito.when(channelManager.getUserItems(actorJid)).thenReturn(
+		Mockito.when(channelManager.selectUserPublishedItems(actorJid)).thenReturn(
 				new ResultSetImpl<NodeItem>(nodeItems));
 
 		unregisterSet.process(request);
@@ -288,7 +288,7 @@ public class UnregisterSetTest extends IQTestHandler {
 				"<payload/>");
 		List<NodeItem> nodeItems = new LinkedList<NodeItem>();
 		nodeItems.add(nodeItem);
-		Mockito.when(channelManager.getUserItems(actorJid)).thenReturn(
+		Mockito.when(channelManager.selectUserPublishedItems(actorJid)).thenReturn(
 				new ResultSetImpl<NodeItem>(nodeItems));
 
 		unregisterSet.process(request);

@@ -519,7 +519,7 @@ public interface NodeStore {
 	 * @return
 	 * @throws NodeStoreException
 	 */
-	ResultSet<NodeItem> getUserItems(JID userJid) throws NodeStoreException;
+	ResultSet<NodeItem> selectUserPublishedItems(JID userJid) throws NodeStoreException;
 
 	/**
 	 * Determine if a user has already rated a post

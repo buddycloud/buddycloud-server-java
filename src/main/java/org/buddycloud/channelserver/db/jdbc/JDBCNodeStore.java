@@ -1439,7 +1439,7 @@ public class JDBCNodeStore implements NodeStore {
 	}
 
 	@Override
-	public ResultSet<NodeItem> getUserItems(JID userJid) throws NodeStoreException {
+	public ResultSet<NodeItem> selectUserPublishedItems(JID userJid) throws NodeStoreException {
 		PreparedStatement stmt = null;
 		try {
 			stmt = conn.prepareStatement(dialect.getUserItems());

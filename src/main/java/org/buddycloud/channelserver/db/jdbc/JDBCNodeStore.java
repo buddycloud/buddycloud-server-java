@@ -818,7 +818,7 @@ public class JDBCNodeStore implements NodeStore {
 		String limitSQL = "";
 		String afterSQL = "";
 		String parentSQL = "";
-		NodeItem afterItem = null;
+		Date afterItemDate = null;
 
 		if (limit > -1) {
 			limitSQL = " LIMIT " + limit;
@@ -832,8 +832,8 @@ public class JDBCNodeStore implements NodeStore {
 		}
 		
 		if (afterItemId != null) {
-			afterItem = getNodeItem(afterItemId);
-			afterSQL = " AND \"id\" < ? ";
+			afterItemDate = getNodeItem(afterItemId).getUpdated();
+			afterSQL = " AND \"updated\" < ? ";
 		}
 
 		try {
@@ -846,7 +846,7 @@ public class JDBCNodeStore implements NodeStore {
 			stmt.setString(1, user.toBareJID());
 			stmt.setObject(2, new java.sql.Timestamp(since.getTime()));
 			if (afterItemId != null) {
-				stmt.setString(3, afterItemId.getItemID());
+				stmt.setTimestamp(3, new java.sql.Timestamp(afterItemDate.getTime()));
 			}
 			java.sql.ResultSet rs = stmt.executeQuery();
 

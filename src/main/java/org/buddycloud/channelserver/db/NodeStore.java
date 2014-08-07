@@ -393,6 +393,14 @@ public interface NodeStore {
 	 */
 	NodeItem getNodeItem(String nodeId, String nodeItemId)
 			throws NodeStoreException;
+	
+    /**
+     * Retrieves a single node item from a global item ID
+     * 
+     * @param itemId
+     * @return
+     */
+	NodeItem getNodeItem(GlobalItemID itemId) throws NodeStoreException;
 
 	/**
 	 * Stores a new item against the node.

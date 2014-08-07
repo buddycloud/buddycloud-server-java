@@ -191,6 +191,11 @@ public class ChannelManagerImpl implements ChannelManager {
 			throws NodeStoreException {
 		return nodeStore.getNodeItem(nodeId, nodeItemId);
 	}
+	
+	@Override
+	public NodeItem getNodeItem(GlobalItemID item) throws NodeStoreException {
+		return nodeStore.getNodeItem(item);
+	}
 
 	@Override
 	public void addNodeItem(NodeItem item) throws NodeStoreException {

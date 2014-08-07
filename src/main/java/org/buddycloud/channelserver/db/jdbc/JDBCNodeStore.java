@@ -812,7 +812,61 @@ public class JDBCNodeStore implements NodeStore {
 	public CloseableIterator<NodeItem> getUserFeedItems(JID user, Date since,
 			int limit, GlobalItemID afterItemId, boolean parentOnly)
 			throws NodeStoreException {
-		return null;
+		
+		PreparedStatement stmt = null;
+
+		String limitSQL = "";
+		String afterSQL = "";
+		String parentSQL = "";
+		NodeItem afterItem = null;
+
+		if (limit > -1) {
+			limitSQL = " LIMIT " + limit;
+		} else if (limit < -1) {
+			throw new IllegalArgumentException(
+					"Invalid value for parameter count: " + limit);
+		}
+		
+		if (true == parentOnly) {
+			parentSQL = " AND \"in_reply_to\" IS NULL ";
+		}
+		
+		if (afterItemId != null) {
+			afterItem = getNodeItem(afterItemId);
+			afterSQL = " AND \"id\" < ? ";
+		}
+
+		try {
+			stmt = conn.prepareStatement(
+				dialect.selectUserFeedItems()
+				    .replace("%limit%", limitSQL)
+				    .replace("%after%", afterSQL)
+				    .replace("%parent%", parentSQL)
+			);
+			stmt.setString(1, user.toBareJID());
+			stmt.setObject(2, new java.sql.Timestamp(since.getTime()));
+			if (afterItemId != null) {
+				stmt.setString(3, afterItemId.getItemID());
+			}
+			java.sql.ResultSet rs = stmt.executeQuery();
+
+			stmt = null; // Prevent the finally block from closing the
+							// statement
+
+			return new ResultSetIterator<NodeItem>(rs,
+					new ResultSetIterator.RowConverter<NodeItem>() {
+						@Override
+						public NodeItem convertRow(java.sql.ResultSet rs)
+								throws SQLException {
+							return new NodeItemImpl(rs.getString(1),
+									rs.getString(2), rs.getTimestamp(3),
+									rs.getString(4), rs.getString(5));
+						}
+					});
+
+		} catch (SQLException e) {
+			throw new NodeStoreException(e);
+		}
 	}
 
 	@Override
@@ -1175,6 +1229,11 @@ public class JDBCNodeStore implements NodeStore {
 			close(selectStatement); // Will implicitly close the resultset if
 									// required
 		}
+	}
+	
+	@Override
+	public NodeItem getNodeItem(GlobalItemID itemId) throws NodeStoreException {
+		return getNodeItem(itemId.getNodeID(), itemId.getItemID());
 	}
 
 	@Override

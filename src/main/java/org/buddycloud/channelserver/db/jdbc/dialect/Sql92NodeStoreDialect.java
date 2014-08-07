@@ -385,12 +385,18 @@ public class Sql92NodeStoreDialect implements NodeStoreSQLDialect {
 	    + "SELECT \"node\", \"id\", \"updated\", \"xml\", \"in_reply_to\" "
 		+ "FROM \"items\" "
 	    + "WHERE \"node\" IN (SELECT \"node\" FROM \"subscriptions\" WHERE \"subscription\" = 'subscribed' AND \"user\" = ?) "
-		+ "ORDER BY \"updated\" DESC, \"id\" DESC";
+		+ "AND \"updated\" > ?"
+	    + "%parent%"
+		+ "%after%"
+		+ "ORDER BY \"updated\" DESC, \"id\" DESC"
+	    + "%limit%;";
 	
 	private static final String SELECT_COUNT_USER_FEED_ITEMS = ""
 		    + "SELECT COUNT(\"id\") AS 'count' "
 			+ "FROM \"items\" "
 		    + "WHERE \"node\" IN (SELECT \"node\" FROM \"subscriptions\" WHERE \"subscription\" = 'subscribed' AND \"user\" = ?) "
+			+ "AND \"updated\" > ?"
+		    + "%parent%"
 			+ "ORDER BY \"updated\" DESC, \"id\" DESC";
 	
     @Override

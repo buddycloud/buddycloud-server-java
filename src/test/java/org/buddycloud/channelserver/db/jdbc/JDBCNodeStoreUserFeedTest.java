@@ -115,27 +115,18 @@ public class JDBCNodeStoreUserFeedTest extends JDBCNodeStoreAbstract {
 		assertEquals(false, items.hasNext());
 	}
 		
-	@Ignore("Not implemented yet")
+	@Test
 	public void getUserFeedItemCount() throws Exception {
 
-		Date since = new Date();
+		
 		dbTester.loadData("node_1");
-		store.addRemoteNode(TEST_SERVER1_NODE2_ID);
-		store.addUserSubscription(new NodeSubscriptionImpl(
-				TEST_SERVER1_NODE2_ID, TEST_SERVER1_USER1_JID,
-				Subscriptions.subscribed, null));
-		Thread.sleep(1);
-		store.addNodeItem(new NodeItemImpl(TEST_SERVER1_NODE1_ID, "123",
-				new Date(), "payload"));
-		store.addNodeItem(new NodeItemImpl(TEST_SERVER1_NODE2_ID, "123",
-				new Date(), "payload2"));
-
+		
 		int itemCount = store.getCountUserFeedItems(
-				TEST_SERVER1_USER1_JID, since, true);
-		assertEquals(2, itemCount);
+				TEST_SERVER1_USER1_JID, new Date(0), true);
+		assertEquals(5, itemCount);
 	}
 	
-	@Ignore("Not implemented yet")
+	@Test
 	public void getZeroUserFeedCountIfSinceDateIsSetToNow() throws Exception {
 
 		dbTester.loadData("node_1");
@@ -145,33 +136,19 @@ public class JDBCNodeStoreUserFeedTest extends JDBCNodeStoreAbstract {
 		assertEquals(0, itemCount);
 	}
 
-	@Ignore("Not implemented yet")
+	@Test
 	public void settingParentOnlyReturnsThreadParentsForGetUserFeedCount() throws Exception {
-		Date since = new Date();
-		since.setTime(0);
+
 		dbTester.loadData("node_1");
-		store.addRemoteNode(TEST_SERVER1_NODE2_ID);
-		store.purgeNodeItems(TEST_SERVER1_NODE1_ID);
-		store.addUserSubscription(new NodeSubscriptionImpl(
-				TEST_SERVER1_NODE2_ID, TEST_SERVER1_USER1_JID,
-				Subscriptions.subscribed, null));
+		
+		store.addNodeItem(new NodeItemImpl(TEST_SERVER1_NODE1_ID, "a5-1", new Date(), "payload-a5-1", "a5"));
+		store.addNodeItem(new NodeItemImpl(TEST_SERVER1_NODE1_ID, "a4-1", new Date(), "payload-a4-1", "a4"));
+		store.addNodeItem(new NodeItemImpl(TEST_SERVER1_NODE1_ID, "a4-2", new Date(), "payload-a4-2", "a4"));
 
-		NodeItem nodeItem1 = new NodeItemImpl(TEST_SERVER1_NODE1_ID, "12-node1",
-				new Date(), "payload");
-		store.addNodeItem(nodeItem1);
-		Thread.sleep(1);
-		NodeItem nodeItem2 = new NodeItemImpl(TEST_SERVER1_NODE2_ID, "123-node2",
-				new Date(), "payload2", "123");
-		store.addNodeItem(nodeItem2);
-		Thread.sleep(1);
-		NodeItem nodeItem3 = new NodeItemImpl(TEST_SERVER1_NODE2_ID, "124-node1",
-				new Date(), "payload3");
-		store.addNodeItem(nodeItem3);
-		Thread.sleep(20);
+		assertEquals(5, store.getCountUserFeedItems(
+				TEST_SERVER1_USER1_JID, new Date(0), true));
 
-		int itemCount = store.getCountUserFeedItems(
-				TEST_SERVER1_USER1_JID, since, true);
-
-		assertEquals(2, itemCount);
+		assertEquals(8, store.getCountUserFeedItems(
+				TEST_SERVER1_USER1_JID, new Date(0), false));
 	}
 }

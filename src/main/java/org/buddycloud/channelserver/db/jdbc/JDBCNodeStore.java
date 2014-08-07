@@ -872,7 +872,37 @@ public class JDBCNodeStore implements NodeStore {
 	@Override
 	public int getCountUserFeedItems(JID user, Date since, 
 			boolean parentOnly) throws NodeStoreException {
-		return 0;
+		
+		PreparedStatement stmt = null;
+
+		String parentSQL = "";
+		NodeItem afterItem = null;
+
+		
+		if (true == parentOnly) {
+			parentSQL = " AND \"in_reply_to\" IS NULL ";
+		}
+
+		try {
+			stmt = conn.prepareStatement(
+				dialect.selectCountUserFeedItems()
+				    .replace("%parent%", parentSQL)
+			);
+			stmt.setString(1, user.toBareJID());
+			stmt.setObject(2, new java.sql.Timestamp(since.getTime()));
+
+			java.sql.ResultSet rs = stmt.executeQuery();
+
+			stmt = null; // Prevent the finally block from closing the
+							// statement
+
+			rs.next();
+			return rs.getInt("count");
+
+		} catch (SQLException e) {
+			logger.error(e);
+			throw new NodeStoreException(e);
+		}
 	}
 
 	@Override

@@ -240,7 +240,7 @@ public class Sql92NodeStoreDialect implements NodeStoreSQLDialect {
 		+ "AND \"node\" IN (SELECT \"node\" FROM \"node_config\" WHERE \"key\" = ? AND \"value\" LIKE ? AND (\"node\" LIKE ? OR \"node\" LIKE ?)) "
 		+ "ORDER BY \"updated\" DESC, \"id\" ASC LIMIT ?";
 
-	private static final String SELECT_USER_ITEMS = "SELECT \"node\", \"id\", \"updated\", \"xml\", \"in_reply_to\"" +
+	private static final String SELECT_USER_PUBLISHED_ITEMS = "SELECT \"node\", \"id\", \"updated\", \"xml\", \"in_reply_to\"" +
 			" FROM \"items\" WHERE (CAST(xpath('//atom:author/atom:name/text()', xmlparse(document \"xml\")," +
 			" ARRAY[ARRAY['atom', 'http://www.w3.org/2005/Atom']]) AS TEXT[]))[1] = ?";
 
@@ -380,6 +380,23 @@ public class Sql92NodeStoreDialect implements NodeStoreSQLDialect {
 		"WHERE " +
 		    "(\"subscriptions\".\"node\" = ?) " +
 		"ORDER BY \"updated\" DESC; ";
+	
+	private static final String SELECT_USER_FEED_ITEMS = ""
+	    + "SELECT \"node\", \"id\", \"updated\", \"xml\", \"in_reply_to\" "
+		+ "FROM \"items\" "
+	    + "WHERE \"node\" IN (SELECT \"node\" FROM \"subscriptions\" WHERE \"subscription\" = 'subscribed' AND \"user\" = ?) "
+		+ "AND \"updated\" > ?"
+	    + "%parent%"
+		+ "%after%"
+		+ "ORDER BY \"updated\" DESC, \"id\" DESC"
+	    + "%limit%;";
+	
+	private static final String SELECT_COUNT_USER_FEED_ITEMS = ""
+		    + "SELECT COUNT(\"id\") AS \"count\" "
+			+ "FROM \"items\" "
+		    + "WHERE \"node\" IN (SELECT \"node\" FROM \"subscriptions\" WHERE \"subscription\" = 'subscribed' AND \"user\" = ?) "
+			+ "AND \"updated\" > ?"
+		    + "%parent%;";
 	
     @Override
 	public String insertNode() {
@@ -672,7 +689,7 @@ public class Sql92NodeStoreDialect implements NodeStoreSQLDialect {
 
 	@Override
 	public String getUserItems() {
-		return SELECT_USER_ITEMS;
+		return SELECT_USER_PUBLISHED_ITEMS;
 	}
 
 	@Override
@@ -713,6 +730,16 @@ public class Sql92NodeStoreDialect implements NodeStoreSQLDialect {
 	@Override
 	public String countNodeThreads() {
 		return COUNT_NODE_THREADS;
+	}
+
+	@Override
+	public String selectUserFeedItems() {
+		return SELECT_USER_FEED_ITEMS;
+	}
+
+	@Override
+	public String selectCountUserFeedItems() {
+		return SELECT_COUNT_USER_FEED_ITEMS;
 	}
 
 }

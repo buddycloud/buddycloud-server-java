@@ -31,8 +31,8 @@ import org.xmpp.packet.PacketError;
 import org.xmpp.packet.PacketError.Condition;
 import org.xmpp.packet.PacketError.Type;
 
-public class UserItemsGet implements PubSubElementProcessor {
-	private static final Logger logger = Logger.getLogger(UserItemsGet.class);
+public class NodeItemsGet implements PubSubElementProcessor {
+	private static final Logger logger = Logger.getLogger(NodeItemsGet.class);
 
 	private final BlockingQueue<Packet> outQueue;
 
@@ -55,7 +55,7 @@ public class UserItemsGet implements PubSubElementProcessor {
 	private JID actor;
 	private Boolean isOwnerModerator;
 
-	public UserItemsGet(BlockingQueue<Packet> outQueue,
+	public NodeItemsGet(BlockingQueue<Packet> outQueue,
 			ChannelManager channelManager) {
 		this.outQueue = outQueue;
 		setChannelManager(channelManager);

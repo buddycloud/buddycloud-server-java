@@ -1,12 +1,12 @@
 package org.buddycloud.channelserver.channel.node.configuration.field;
 
-public class ChannelTitle extends Field
+public class NodeTitle extends Field
 {
 	public static final String FIELD_NAME    = "pubsub#title";
 	public static final String DEFAULT_VALUE = "buddycloud channel title";
 	public static final int MAX_TITLE_LENGTH = 128;
 
-	public ChannelTitle()
+	public NodeTitle()
 	{
 		name = FIELD_NAME;
 	}

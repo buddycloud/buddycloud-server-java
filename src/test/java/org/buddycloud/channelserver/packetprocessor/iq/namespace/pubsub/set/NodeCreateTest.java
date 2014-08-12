@@ -11,7 +11,7 @@ import junit.framework.Assert;
 import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.channel.node.configuration.Helper;
 import org.buddycloud.channelserver.channel.node.configuration.NodeConfigurationException;
-import org.buddycloud.channelserver.channel.node.configuration.field.ChannelTitle;
+import org.buddycloud.channelserver.channel.node.configuration.field.NodeTitle;
 import org.buddycloud.channelserver.db.exception.NodeStoreException;
 import org.buddycloud.channelserver.packetHandler.iq.IQTestHandler;
 import org.dom4j.Element;
@@ -210,7 +210,7 @@ public class NodeCreateTest extends IQTestHandler {
 		String channelTitle = "test-channel-name";
 
 		HashMap<String, String> configurationProperties = new HashMap<String, String>();
-		configurationProperties.put(ChannelTitle.FIELD_NAME, channelTitle);
+		configurationProperties.put(NodeTitle.FIELD_NAME, channelTitle);
 
 		Helper helper = Mockito.mock(Helper.class);
 		Mockito.when(helper.getValues())
@@ -220,7 +220,7 @@ public class NodeCreateTest extends IQTestHandler {
 		ChannelManager channelManager = Mockito.mock(ChannelManager.class);
 		
 		HashMap<String, String> conf = new HashMap<String, String>();
-		conf.put(ChannelTitle.FIELD_NAME, channelTitle);
+		conf.put(NodeTitle.FIELD_NAME, channelTitle);
 		
 		Mockito.when(channelManager.getNodeConf(Mockito.anyString())).thenReturn(conf);
 		nodeCreate.setChannelManager(channelManager);
@@ -239,7 +239,7 @@ public class NodeCreateTest extends IQTestHandler {
 		Map<String, String> nodeConfiguration = channelManager
 				.getNodeConf(node);
 		Assert.assertEquals(channelTitle,
-				nodeConfiguration.get(ChannelTitle.FIELD_NAME));
+				nodeConfiguration.get(NodeTitle.FIELD_NAME));
 	}
 
 	@Test
@@ -248,7 +248,7 @@ public class NodeCreateTest extends IQTestHandler {
 		String channelTitle = "test-channel-name";
 
 		HashMap<String, String> configurationProperties = new HashMap<String, String>();
-		configurationProperties.put(ChannelTitle.FIELD_NAME, channelTitle);
+		configurationProperties.put(NodeTitle.FIELD_NAME, channelTitle);
 
 		Helper helper = Mockito.mock(Helper.class);
 		Mockito.doThrow(new NodeConfigurationException()).when(helper)

@@ -12,12 +12,12 @@ public class Factory
     		Creator field = new Creator();
     	    setValue(field, value);
     	    return field;
-    	} else if (type.equals(ChannelTitle.FIELD_NAME)) {
-    	    ChannelTitle field = new ChannelTitle();
+    	} else if (type.equals(NodeTitle.FIELD_NAME)) {
+    	    NodeTitle field = new NodeTitle();
     	    setValue(field, value);
     	    return field;
-    	} else if (type.equals(ChannelDescription.FIELD_NAME)) {
-    		ChannelDescription field = new ChannelDescription();
+    	} else if (type.equals(NodeDescription.FIELD_NAME)) {
+    		NodeDescription field = new NodeDescription();
     		setValue(field, value);
     		return field;
     	} else if (type.equals(AccessModel.FIELD_NAME)) {

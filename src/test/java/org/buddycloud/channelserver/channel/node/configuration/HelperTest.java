@@ -10,8 +10,8 @@ import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.channel.Conf;
 import org.buddycloud.channelserver.channel.node.configuration.field.AccessModel;
 import org.buddycloud.channelserver.channel.node.configuration.field.Affiliation;
-import org.buddycloud.channelserver.channel.node.configuration.field.ChannelDescription;
-import org.buddycloud.channelserver.channel.node.configuration.field.ChannelTitle;
+import org.buddycloud.channelserver.channel.node.configuration.field.NodeDescription;
+import org.buddycloud.channelserver.channel.node.configuration.field.NodeTitle;
 import org.buddycloud.channelserver.channel.node.configuration.field.ChannelType;
 import org.buddycloud.channelserver.channel.node.configuration.field.ConfigurationFieldException;
 import org.buddycloud.channelserver.channel.node.configuration.field.ContentType;
@@ -85,7 +85,7 @@ public class HelperTest extends IQTestHandler {
 		Element configure = pubsub.addElement("configure");
 		Element x = configure.addElement("x");
 		Element field = x.addElement("field");
-		field.addAttribute("var", ChannelTitle.FIELD_NAME);
+		field.addAttribute("var", NodeTitle.FIELD_NAME);
 		IQ request = new IQ(iq);
 
 		parser.parse(request);
@@ -347,12 +347,12 @@ public class HelperTest extends IQTestHandler {
 		contentType.addElement("value").addText(ContentType.DEFAULT_VALUE);
 
 		Element channelTitle = x.addElement("field");
-		channelTitle.addAttribute("var", ChannelTitle.FIELD_NAME);
-		channelTitle.addElement("value").addText(ChannelTitle.DEFAULT_VALUE);
+		channelTitle.addAttribute("var", NodeTitle.FIELD_NAME);
+		channelTitle.addElement("value").addText(NodeTitle.DEFAULT_VALUE);
 
 		Element channelDescription = x.addElement("field");
-		channelDescription.addAttribute("var", ChannelDescription.FIELD_NAME);
-		channelDescription.addElement("value").addText(ChannelDescription.DEFAULT_VALUE);
+		channelDescription.addAttribute("var", NodeDescription.FIELD_NAME);
+		channelDescription.addElement("value").addText(NodeDescription.DEFAULT_VALUE);
 
 		Element accessModel = x.addElement("field");
 		accessModel.addAttribute("var", AccessModel.FIELD_NAME);
@@ -375,8 +375,8 @@ public class HelperTest extends IQTestHandler {
         Assert.assertEquals(CreationDate.DEFAULT_VALUE, configurationValues.get(CreationDate.FIELD_NAME));
         Assert.assertEquals(ChannelType.DEFAULT_VALUE, configurationValues.get(ChannelType.FIELD_NAME));
         Assert.assertEquals(ContentType.DEFAULT_VALUE, configurationValues.get(ContentType.FIELD_NAME));
-        Assert.assertEquals(ChannelTitle.DEFAULT_VALUE, configurationValues.get(ChannelTitle.FIELD_NAME));
-        Assert.assertEquals(ChannelDescription.DEFAULT_VALUE, configurationValues.get(ChannelDescription.FIELD_NAME));
+        Assert.assertEquals(NodeTitle.DEFAULT_VALUE, configurationValues.get(NodeTitle.FIELD_NAME));
+        Assert.assertEquals(NodeDescription.DEFAULT_VALUE, configurationValues.get(NodeDescription.FIELD_NAME));
         Assert.assertEquals(AccessModel.DEFAULT_VALUE, configurationValues.get(AccessModel.FIELD_NAME));
         Assert.assertEquals(Affiliation.DEFAULT_VALUE, configurationValues.get(Affiliation.FIELD_NAME));
         Assert.assertNotNull(configurationValues.get(LastUpdatedDate.FIELD_NAME));

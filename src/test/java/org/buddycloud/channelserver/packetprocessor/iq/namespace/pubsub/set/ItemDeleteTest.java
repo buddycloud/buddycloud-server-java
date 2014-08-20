@@ -369,26 +369,53 @@ public class ItemDeleteTest extends IQTestHandler {
 		NodeSubscriptionImpl subscription1 = new NodeSubscriptionImpl(node,
 				new JID("romeo@shakespeare.lit"), Subscriptions.pending, null);
 		NodeSubscriptionImpl subscription2 = new NodeSubscriptionImpl(node,
-				new JID("juliet@shakespeare.lit"), Subscriptions.subscribed, null);
+				new JID("juliet@shakespeare.lit"), Subscriptions.subscribed,
+				null);
 		subscriptions.add(subscription1);
 		subscriptions.add(subscription2);
 
-		Mockito.when(channelManagerMock.isLocalNode(node)).thenReturn(true);
-		Mockito.when(channelManagerMock.nodeExists(node)).thenReturn(true);
-		Mockito.when(channelManagerMock.getNodeItem(node, "item-id"))
-				.thenReturn(nodeItem);
+		Mockito.when(channelManager.isLocalNode(node)).thenReturn(true);
+		Mockito.when(channelManager.nodeExists(node)).thenReturn(true);
+		Mockito.when(channelManager.getNodeItem(node, "item-id")).thenReturn(
+				nodeItem);
 
 		Mockito.doReturn(new ResultSetImpl<NodeSubscription>(subscriptions))
-				.when(channelManagerMock).getNodeSubscriptionListeners(node);
+				.when(channelManager).getNodeSubscriptionListeners(node);
 
-		itemDelete.setChannelManager(channelManagerMock);
+		itemDelete.setChannelManager(channelManager);
 
 		itemDelete.process(element, jid, request, null);
 
-		Mockito.verify(channelManagerMock).deleteNodeItemById(node, "item-id");
+		Mockito.verify(channelManager).deleteNodeItemById(node, "item-id");
 
 		// Check that one notification is sent (on subscriber + 2 admins)
 		Assert.assertEquals(4, queue.size());
 
+	}
+
+	@Test
+	public void doesNotRequestThreadWhenDealingWithReply() throws Exception {
+		NodeItem nodeItem = new NodeItemImpl(node, "item-id", new Date(),
+				payload, "12345");
+
+		ArrayList<NodeSubscription> subscriptions = new ArrayList<NodeSubscription>();
+		NodeSubscriptionImpl subscription1 = new NodeSubscriptionImpl(node,
+				new JID("romeo@shakespeare.lit"), Subscriptions.pending, null);
+		subscriptions.add(subscription1);
+
+		Mockito.when(channelManager.isLocalNode(node)).thenReturn(true);
+		Mockito.when(channelManager.nodeExists(node)).thenReturn(true);
+		Mockito.when(channelManager.getNodeItem(node, "item-id")).thenReturn(
+				nodeItem);
+		Mockito.doThrow(Exception.class)
+				.when(channelManager)
+				.getNodeItemReplies(Mockito.anyString(), Mockito.anyString(),
+						Mockito.anyString(), Mockito.anyInt());
+
+		Mockito.doReturn(new ResultSetImpl<NodeSubscription>(subscriptions))
+				.when(channelManager).getNodeSubscriptionListeners(node);
+		itemDelete.setChannelManager(channelManager);
+
+		itemDelete.process(element, jid, request, null);
 	}
 }

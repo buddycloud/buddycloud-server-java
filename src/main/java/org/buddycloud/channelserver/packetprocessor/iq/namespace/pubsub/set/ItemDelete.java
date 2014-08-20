@@ -65,6 +65,7 @@ public class ItemDelete extends PubSubElementProcessorAbstract {
 				outQueue.put(response);
 				return;
 			}
+			deleteReplies();
 			deleteItem();
 			outQueue.put(response);
 			sendNotifications();
@@ -82,6 +83,12 @@ public class ItemDelete extends PubSubElementProcessorAbstract {
 			setErrorCondition(PacketError.Type.modify, PacketError.Condition.bad_request);
 		}
 		outQueue.put(response);
+	}
+
+	private void deleteReplies() {
+		if (null == nodeItem.getInReplyTo()) {
+			return;
+		}
 	}
 
 	private void sendNotifications() throws NodeStoreException {

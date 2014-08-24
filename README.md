@@ -77,10 +77,10 @@ Please see [the example configuration file](https://github.com/buddycloud/buddyc
 | channels.autosubscribe.autoapprove        |                |            | If any of the 'channels.autosubscribe' channels are private local channels, then whether to automatically approve the user. __Note:__ This will only work on local private channels |
 | channel.configuration.default.accessmodel | open           |            | The default access model for new nodes        |
 | channel.configuration.default.affiliation | member         |            | The default affiliation for new nodes         |
-| channel.configuration.[**posts**|**status**|**geo.next**|etc].accessmodel | | | Override default access model on the node type |
-| channel.configuration.[**posts**|**status**|**geo.next**|etc].affiliation | | | Override default affiliation on the node type |
-| channel.configuration.[**posts**|**status**|**geo.next**|etc].title       | %jid%'s status  |            | Override default node title on the node type |
-| channel.configuration.[**posts**|**status**|**geo.next**|etc].description | %jid%'s status  |            | Override default node description on the node type |
+| channel.configuration.[**posts**\|**status**\|**geo.next**\|etc].accessmodel | | | Override default access model on the node type |
+| channel.configuration.[**posts**\|**status**\|**geo.next**\|etc].affiliation | | | Override default affiliation on the node type |
+| channel.configuration.[**posts**\|**status**\|**geo.next**\|etc].title       | %jid%'s status  |            | Override default node title on the node type |
+| channel.configuration.[**posts**\|**status**\|**geo.next**\|etc].description | %jid%'s status  |            | Override default node description on the node type |
 | discovery.dns.enabled                     | true           |            | Allow DNS discovery of other channel servers  |
 | sync.purge-on-start                       | false          |            | Purge remote data on server start             |
 

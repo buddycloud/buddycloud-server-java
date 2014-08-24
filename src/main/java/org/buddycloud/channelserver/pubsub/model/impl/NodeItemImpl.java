@@ -12,16 +12,20 @@ public class NodeItemImpl implements NodeItem {
 	private final Date updated;
 	private final Date created;
 	private final String inReplyTo;
-	
-	public NodeItemImpl(final String nodeId, final String id, final Date updated, final String payload) {
+
+	public NodeItemImpl(final String nodeId, final String id,
+			final Date updated, final String payload) {
 		this(nodeId, id, updated, payload, null);
 	}
-	
-	public NodeItemImpl(final String nodeId, final String id, final Date updated, final String payload, final String inReplyTo) {
+
+	public NodeItemImpl(final String nodeId, final String id,
+			final Date updated, final String payload, final String inReplyTo) {
 		this(nodeId, id, updated, payload, null, null);
 	}
-	
-	public NodeItemImpl(final String nodeId, final String id, final Date updated, final String payload, final String inReplyTo, final Date created) {
+
+	public NodeItemImpl(final String nodeId, final String id,
+			final Date updated, final String payload, final String inReplyTo,
+			final Date created) {
 		this.nodeId = nodeId;
 		this.id = id;
 		this.updated = updated;
@@ -34,7 +38,7 @@ public class NodeItemImpl implements NodeItem {
 	public String getNodeId() {
 		return nodeId;
 	}
-	
+
 	@Override
 	public String getId() {
 		return id;
@@ -54,7 +58,7 @@ public class NodeItemImpl implements NodeItem {
 	public String getUID() {
 		return id;
 	}
-	
+
 	@Override
 	public String getInReplyTo() {
 		return inReplyTo;

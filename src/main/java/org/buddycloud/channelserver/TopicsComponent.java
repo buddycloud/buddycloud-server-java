@@ -16,7 +16,7 @@ public class TopicsComponent {
 	
 	public TopicsComponent(Properties configuration, String domain) {
 		hostname = configuration.getProperty("xmpp.host");
-		socket = Integer.valueOf(configuration.getProperty("xmpp.port"));
+		socket = Integer.valueOf(configuration.getComponentPort());
 		this.domain = domain;
 		password = configuration.getProperty("xmpp.secretkey");
 		topicsEngine = new TopicsEngine(configuration);

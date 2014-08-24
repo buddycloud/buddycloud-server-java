@@ -43,6 +43,8 @@ public class Configuration extends Properties {
 
 	public static final String PURGE_REMOTE_ON_START = "sync.purge-on-start";
 
+	public static final String XMPP_PORT = "xmpp.port";
+
 	private static Configuration instance = null;
 
 	private Collection<JID> adminUsers = new ArrayList<JID>();
@@ -172,5 +174,9 @@ public class Configuration extends Properties {
 		}
 
 		return defaultValue;
+	}
+
+	public String getComponentPort() {
+		return this.getProperty(XMPP_PORT, "5347");
 	}
 }

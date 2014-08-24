@@ -5,7 +5,9 @@ import java.util.Collection;
 import java.util.concurrent.BlockingQueue;
 
 import org.apache.log4j.Logger;
+import org.buddycloud.channelserver.Configuration;
 import org.buddycloud.channelserver.channel.ChannelManager;
+import org.buddycloud.channelserver.db.ClosableIteratorImpl;
 import org.buddycloud.channelserver.db.exception.NodeStoreException;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.JabberPubsub;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.PubSubElementProcessorAbstract;
@@ -51,22 +53,23 @@ public class ItemDelete extends PubSubElementProcessorAbstract {
 		response = IQ.createResultIQ(request);
 		node = element.attributeValue("node");
 		this.actor = actor;
-		if (null == this.actor) this.actor = request.getFrom();
-		
+		if (null == this.actor)
+			this.actor = request.getFrom();
+
 		if (!channelManager.isLocalNode(node)) {
 			makeRemoteRequest();
 			return;
 		}
 
 		try {
-			if (!validNodeProvided() || !nodeExists() || !itemIdProvided() 
+			if (!validNodeProvided() || !nodeExists() || !itemIdProvided()
 					|| !itemExists() || !validPayload() || !canDelete()) {
 				outQueue.put(response);
 				return;
 			}
-			deleteReplies();
 			deleteItem();
 			outQueue.put(response);
+			deleteReplies();
 			sendNotifications(node, itemId);
 			return;
 		} catch (NodeStoreException e) {
@@ -79,23 +82,38 @@ public class ItemDelete extends PubSubElementProcessorAbstract {
 					PacketError.Condition.bad_request);
 		} catch (IllegalArgumentException e) {
 			logger.error(e);
-			setErrorCondition(PacketError.Type.modify, PacketError.Condition.bad_request);
+			setErrorCondition(PacketError.Type.modify,
+					PacketError.Condition.bad_request);
 		}
 		outQueue.put(response);
 	}
 
-	private void deleteReplies() {
-		if (null == nodeItem.getInReplyTo()) {
+	private void deleteReplies() throws NodeStoreException {
+		if (null != nodeItem.getInReplyTo()) {
 			return;
+		}
+		ClosableIteratorImpl<NodeItem> replies = channelManager
+				.getNodeItemReplies(node, itemId.getItemID(), null, -1);
+		NodeItem reply = null;
+		while (replies.hasNext()) {
+			reply = replies.next();
+			channelManager.deleteNodeItemById(reply.getNodeId(), reply.getId());
+
+			sendNotifications(
+					node,
+					new GlobalItemIDImpl(new JID(this.getServerDomain()), reply
+							.getNodeId(), reply.getId()));
 		}
 	}
 
-	private void sendNotifications(String node, GlobalItemID itemId) throws NodeStoreException {
+	private void sendNotifications(String node, GlobalItemID itemId)
+			throws NodeStoreException {
 		try {
 			String notify = request.getElement().element("pubsub")
 					.element("retract").attributeValue("notify");
 
-			if ((notify != null) && (notify.equals("false") || notify.equals("0"))) {
+			if ((notify != null)
+					&& (notify.equals("false") || notify.equals("0"))) {
 				return;
 			}
 			ResultSet<NodeSubscription> subscriptions = channelManager
@@ -103,15 +121,17 @@ public class ItemDelete extends PubSubElementProcessorAbstract {
 			Message notification = getNotificationMessage(node, itemId);
 
 			for (NodeSubscription subscription : subscriptions) {
-				logger.debug("Subscription [node: " + subscription.getNodeId() + ", listener: " 
-						+ subscription.getListener() + ", subscription: " + subscription.getSubscription() + "]");
+				logger.debug("Subscription [node: " + subscription.getNodeId()
+						+ ", listener: " + subscription.getListener()
+						+ ", subscription: " + subscription.getSubscription()
+						+ "]");
 				if (subscription.getSubscription().equals(
 						Subscriptions.subscribed)) {
 					notification.setTo(subscription.getListener());
 					outQueue.put(notification.createCopy());
 				}
 			}
-			
+
 			Collection<JID> admins = getAdminUsers();
 			for (JID admin : admins) {
 				notification.setTo(admin);
@@ -129,7 +149,8 @@ public class ItemDelete extends PubSubElementProcessorAbstract {
 	private Message getNotificationMessage(String node, GlobalItemID itemId) {
 		Message notification = new Message();
 		notification.setType(Message.Type.headline);
-		notification.getElement().addAttribute("remote-server-discover", "false");
+		notification.getElement().addAttribute("remote-server-discover",
+				"false");
 		Element event = notification.addChildElement("event",
 				JabberPubsub.NS_PUBSUB_EVENT);
 		Element items = event.addElement("items");
@@ -162,8 +183,8 @@ public class ItemDelete extends PubSubElementProcessorAbstract {
 	}
 
 	private boolean userManagesNode() throws NodeStoreException {
-		return channelManager.getNodeMembership(node,
-				actor).getAffiliation().canAuthorize();
+		return channelManager.getNodeMembership(node, actor).getAffiliation()
+				.canAuthorize();
 	}
 
 	private boolean validPayload() {
@@ -197,12 +218,13 @@ public class ItemDelete extends PubSubElementProcessorAbstract {
 	private boolean itemIdProvided() {
 		String id = request.getElement().element("pubsub").element("retract")
 				.element("item").attributeValue("id");
-		
+
 		if ((id != null) && !id.equals("")) {
 			if (true == GlobalItemIDImpl.isGlobalId(id)) {
 				itemId = GlobalItemIDImpl.fromBuddycloudString(id);
 			} else {
-				itemId = new GlobalItemIDImpl(new JID(this.getServerDomain()), node, id);
+				itemId = new GlobalItemIDImpl(new JID(this.getServerDomain()),
+						node, id);
 			}
 			return true;
 		}
@@ -247,14 +269,12 @@ public class ItemDelete extends PubSubElementProcessorAbstract {
 		response.setChildElement(error);
 		return false;
 	}
-	
+
 	private void makeRemoteRequest() throws InterruptedException {
 		request.setTo(new JID(node.split("/")[2]).getDomain());
-		request.getElement()
-		    .element("pubsub")
-		    .addElement("actor", Buddycloud.NS)
-            .addText(actor.toBareJID());
-	    outQueue.put(request);
+		request.getElement().element("pubsub")
+				.addElement("actor", Buddycloud.NS).addText(actor.toBareJID());
+		outQueue.put(request);
 	}
 
 	public boolean accept(Element elm) {

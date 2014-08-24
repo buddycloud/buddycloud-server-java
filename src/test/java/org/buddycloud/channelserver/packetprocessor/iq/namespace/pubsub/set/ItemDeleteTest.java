@@ -9,6 +9,7 @@ import java.util.concurrent.TimeUnit;
 import junit.framework.Assert;
 
 import org.buddycloud.channelserver.channel.ChannelManager;
+import org.buddycloud.channelserver.db.ClosableIteratorImpl;
 import org.buddycloud.channelserver.db.exception.NodeStoreException;
 import org.buddycloud.channelserver.packetHandler.iq.IQTestHandler;
 import org.buddycloud.channelserver.pubsub.affiliation.Affiliations;
@@ -35,7 +36,7 @@ public class ItemDeleteTest extends IQTestHandler {
 	private IQ request;
 	private ChannelManager channelManager;
 	private ItemDelete itemDelete;
-	private JID jid;
+	private JID jid = new JID("juliet@shakespeare.lit");
 	private Element element;
 	private BlockingQueue<Packet> queue = new LinkedBlockingQueue<Packet>();
 	private String node = "/user/capulet@shakespeare.lit/posts";
@@ -49,11 +50,9 @@ public class ItemDeleteTest extends IQTestHandler {
 
 		queue = new LinkedBlockingQueue<Packet>();
 		itemDelete = new ItemDelete(queue, channelManager);
-		jid = new JID("juliet@shakespeare.lit");
 		request = readStanzaAsIq("/iq/pubsub/item/delete/request.stanza");
 
 		itemDelete.setServerDomain("shakespeare.lit");
-		itemDelete.setChannelManager(channelManager);
 
 		element = new BaseElement("retract");
 		element.addAttribute("node", node);
@@ -417,5 +416,88 @@ public class ItemDeleteTest extends IQTestHandler {
 		itemDelete.setChannelManager(channelManager);
 
 		itemDelete.process(element, jid, request, null);
+	}
+	
+	@Test
+	public void requestsThreadWhenDeletingParentPost() throws Exception {
+		
+		Mockito.when(
+				channelManager.getNodeMembership(Mockito.anyString(),
+						Mockito.any(JID.class))).thenReturn(
+				new NodeMembershipImpl(node, jid, Subscriptions.subscribed,
+						Affiliations.owner, null));
+		
+		NodeItem nodeItem = new NodeItemImpl(node, "item-id", new Date(),
+				payload);
+
+		ArrayList<NodeSubscription> subscriptions = new ArrayList<NodeSubscription>();
+
+		
+		ArrayList<NodeItem> replies = new ArrayList<NodeItem>();
+		replies.add(new NodeItemImpl(node, "2", new Date(),
+				payload));
+		replies.add(new NodeItemImpl(node, "1", new Date(),
+				payload));
+		
+
+		Mockito.when(channelManager.isLocalNode(node)).thenReturn(true);
+		Mockito.when(channelManager.nodeExists(node)).thenReturn(true);
+		Mockito.when(channelManager.getNodeItem(node, "item-id")).thenReturn(
+				nodeItem);
+		Mockito.when(channelManager.getNodeItemReplies(Mockito.eq(node), Mockito.eq("item-id"),
+						Mockito.anyString(), Mockito.eq(-1))).thenReturn(new ClosableIteratorImpl<NodeItem>(replies
+								.iterator()));
+
+		Mockito.doReturn(new ResultSetImpl<NodeSubscription>(subscriptions))
+				.when(channelManager).getNodeSubscriptionListeners(node);
+
+		itemDelete.process(element, jid, request, null);
+		
+		Assert.assertEquals(7, queue.size());
+		
+		Assert.assertEquals(IQ.Type.result, ((IQ) queue.poll()).getType());
+		
+		Packet notification = queue.poll();
+
+		Assert.assertNotNull(notification);
+		Assert.assertEquals("message", notification.getElement().getName());
+		Assert.assertEquals("user1@server1", notification.getTo().toString());
+		Assert.assertEquals("2",
+				notification.getElement().element("event").element("items")
+						.element("retract").attributeValue("id"));
+		notification = queue.poll();
+		Assert.assertNotNull(notification);
+		Assert.assertEquals("2",
+				notification.getElement().element("event").element("items")
+						.element("retract").attributeValue("id"));
+		
+		notification = queue.poll();
+		Assert.assertNotNull(notification);
+		Assert.assertEquals("message", notification.getElement().getName());
+		Assert.assertEquals("user1@server1", notification.getTo().toString());
+		Assert.assertEquals("1",
+				notification.getElement().element("event").element("items")
+						.element("retract").attributeValue("id"));
+		notification = queue.poll();
+		Assert.assertNotNull(notification);
+		Assert.assertEquals("message", notification.getElement().getName());
+		Assert.assertEquals("user2@server1", notification.getTo().toString());
+		Assert.assertEquals("1",
+				notification.getElement().element("event").element("items")
+						.element("retract").attributeValue("id"));
+		
+		/* Lastly the originally deleted post */
+		notification = queue.poll();
+		Assert.assertNotNull(notification);
+		Assert.assertEquals("message", notification.getElement().getName());
+		Assert.assertEquals("user1@server1", notification.getTo().toString());
+		Assert.assertEquals("item-id",
+				notification.getElement().element("event").element("items")
+						.element("retract").attributeValue("id"));
+		notification = queue.poll();
+		Assert.assertNotNull(notification);
+		Assert.assertEquals("item-id",
+				notification.getElement().element("event").element("items")
+						.element("retract").attributeValue("id"));
 	}
 }

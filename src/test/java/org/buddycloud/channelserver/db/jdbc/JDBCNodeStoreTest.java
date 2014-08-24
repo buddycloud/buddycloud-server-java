@@ -384,10 +384,10 @@ public class JDBCNodeStoreTest extends JDBCNodeStoreAbstract {
 	}
 
 	@Test
-	public void testCanGetItemReplies() throws Exception {
+	public void canGetItemReplies() throws Exception {
 		dbTester.loadData("node_1");
 		NodeItem testItem = new NodeItemImpl(TEST_SERVER1_NODE1_ID, "a6",
-				new Date(), "<entry>payload</entry>", "a5");
+				new Date(), "<entry>payload</entry>", "a5", new Date());
 		store.addNodeItem(testItem);
 
 		ClosableIteratorImpl<NodeItem> items = store.getNodeItemReplies(
@@ -405,16 +405,16 @@ public class JDBCNodeStoreTest extends JDBCNodeStoreAbstract {
 	}
 
 	@Test
-	public void testCanGetItemRepliesWithResultSetManagement() throws Exception {
+	public void canGetItemRepliesWithResultSetManagement() throws Exception {
 		dbTester.loadData("node_1");
 		NodeItem testItem1 = new NodeItemImpl(TEST_SERVER1_NODE1_ID, "a6",
-				new Date(), "<entry>payload</entry>", "a5");
+				new Date(), "<entry>payload</entry>", "a5", new Date());
 		NodeItem testItem2 = new NodeItemImpl(TEST_SERVER1_NODE1_ID, "a7",
-				new Date(0), "<entry>payload</entry>", "a5");
+				new Date(0), "<entry>payload</entry>", "a5", new Date());
 		NodeItem testItem3 = new NodeItemImpl(TEST_SERVER1_NODE1_ID, "a8",
-				new Date(100), "<entry>payload</entry>", "a5");
+				new Date(100), "<entry>payload</entry>", "a5", new Date());
 		NodeItem testItem4 = new NodeItemImpl(TEST_SERVER1_NODE1_ID, "a9",
-				new Date(200), "<entry>payload</entry>", "/full-node-item-id-ref/a5");
+				new Date(200), "<entry>payload</entry>", "/full-node-item-id-ref/a5", new Date());
 		store.addNodeItem(testItem1);
 		store.addNodeItem(testItem2);
 		store.addNodeItem(testItem3);

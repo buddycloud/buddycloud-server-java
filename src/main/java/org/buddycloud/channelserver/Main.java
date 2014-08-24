@@ -19,23 +19,23 @@ public class Main {
 		PropertyConfigurator.configure("log4j.properties");
         LOGGER.info("Starting Buddycloud channel mockup version...");
 
-    	Configuration conf = Configuration.getInstance(); 
+    	Configuration configuration = Configuration.getInstance(); 
 
-        LOGGER.info("Connecting to '" + conf.getProperty("xmpp.host") + ":" 
-            + conf.getProperty("xmpp.port") 
+        LOGGER.info("Connecting to '" + configuration.getProperty("xmpp.host") + ":" 
+            + configuration.getComponentPort()
             + "' and trying to claim address '" 
-            + conf.getProperty("server.domain") + "'.");
+            + configuration.getProperty("server.domain") + "'.");
 
-        String channelDomain = conf.getProperty("server.domain.channels");
-        String topicDomain = conf.getProperty("server.domain.topics");
+        String channelDomain = configuration.getProperty(Configuration.CONFIGURATION_SERVER_CHANNELS_DOMAIN);
+        String topicDomain = configuration.getProperty(Configuration.CONFIGURATION_SERVER_TOPICS_DOMAIN);
         
         if (channelDomain == null) {
         	throw new IllegalArgumentException("Property server.domain.channels is mandatory.");
         }
-        new XmppComponent(conf, channelDomain).run();
+        new XmppComponent(configuration, channelDomain).run();
         
         if (topicDomain != null) {
-            new TopicsComponent(conf, topicDomain).run();
+            new TopicsComponent(configuration, topicDomain).run();
         }	
         hang();
 	}

@@ -15,12 +15,12 @@ public class NodeItemImpl implements NodeItem {
 
 	public NodeItemImpl(final String nodeId, final String id,
 			final Date updated, final String payload) {
-		this(nodeId, id, updated, payload, null);
+		this(nodeId, id, updated, payload, null, null);
 	}
 
 	public NodeItemImpl(final String nodeId, final String id,
 			final Date updated, final String payload, final String inReplyTo) {
-		this(nodeId, id, updated, payload, null, null);
+		this(nodeId, id, updated, payload, inReplyTo, null);
 	}
 
 	public NodeItemImpl(final String nodeId, final String id,

@@ -10,9 +10,11 @@ import org.buddycloud.channelserver.db.exception.NodeStoreException;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.JabberPubsub;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.PubSubElementProcessorAbstract;
 import org.buddycloud.channelserver.pubsub.affiliation.Affiliations;
+import org.buddycloud.channelserver.pubsub.model.GlobalItemID;
 import org.buddycloud.channelserver.pubsub.model.NodeAffiliation;
 import org.buddycloud.channelserver.pubsub.model.NodeItem;
 import org.buddycloud.channelserver.pubsub.model.NodeSubscription;
+import org.buddycloud.channelserver.pubsub.model.impl.GlobalItemIDImpl;
 import org.buddycloud.channelserver.pubsub.subscription.Subscriptions;
 import org.buddycloud.channelserver.utils.node.item.payload.Buddycloud;
 import org.dom4j.Element;
@@ -30,17 +32,14 @@ public class ItemDelete extends PubSubElementProcessorAbstract {
 
 	private static final Logger LOGGER = Logger.getLogger(ItemDelete.class);
 
-	private final BlockingQueue<Packet> outQueue;
-	private final ChannelManager channelManager;
-
-	private String itemId;
+	private GlobalItemID itemId;
 	private NodeItem nodeItem;
 	private Element parsedPayload;
 
 	public ItemDelete(BlockingQueue<Packet> outQueue,
 			ChannelManager channelManager) {
-		this.outQueue = outQueue;
-		this.channelManager = channelManager;
+		this.setOutQueue(outQueue);
+		this.setChannelManager(channelManager);
 	}
 
 	@Override
@@ -68,7 +67,7 @@ public class ItemDelete extends PubSubElementProcessorAbstract {
 			deleteReplies();
 			deleteItem();
 			outQueue.put(response);
-			sendNotifications();
+			sendNotifications(node, itemId);
 			return;
 		} catch (NodeStoreException e) {
 			logger.error(e);
@@ -91,7 +90,7 @@ public class ItemDelete extends PubSubElementProcessorAbstract {
 		}
 	}
 
-	private void sendNotifications() throws NodeStoreException {
+	private void sendNotifications(String node, GlobalItemID itemId) throws NodeStoreException {
 		try {
 			String notify = request.getElement().element("pubsub")
 					.element("retract").attributeValue("notify");
@@ -101,7 +100,7 @@ public class ItemDelete extends PubSubElementProcessorAbstract {
 			}
 			ResultSet<NodeSubscription> subscriptions = channelManager
 					.getNodeSubscriptionListeners(node);
-			Message notification = getNotificationMessage();
+			Message notification = getNotificationMessage(node, itemId);
 
 			for (NodeSubscription subscription : subscriptions) {
 				logger.debug("Subscription [node: " + subscription.getNodeId() + ", listener: " 
@@ -127,7 +126,7 @@ public class ItemDelete extends PubSubElementProcessorAbstract {
 		}
 	}
 
-	private Message getNotificationMessage() {
+	private Message getNotificationMessage(String node, GlobalItemID itemId) {
 		Message notification = new Message();
 		notification.setType(Message.Type.headline);
 		notification.getElement().addAttribute("remote-server-discover", "false");
@@ -136,12 +135,12 @@ public class ItemDelete extends PubSubElementProcessorAbstract {
 		Element items = event.addElement("items");
 		items.addAttribute("node", node);
 		Element retract = items.addElement("retract");
-		retract.addAttribute("id", itemId);
+		retract.addAttribute("id", itemId.getItemID());
 		return notification;
 	}
 
 	private void deleteItem() throws NodeStoreException {
-		channelManager.deleteNodeItemById(node, itemId);
+		channelManager.deleteNodeItemById(node, itemId.getItemID());
 	}
 
 	private boolean canDelete() throws NodeStoreException {
@@ -186,7 +185,7 @@ public class ItemDelete extends PubSubElementProcessorAbstract {
 	}
 
 	private boolean itemExists() throws NodeStoreException {
-		nodeItem = channelManager.getNodeItem(node, itemId);
+		nodeItem = channelManager.getNodeItem(node, itemId.getItemID());
 		if (nodeItem != null) {
 			return true;
 		}
@@ -196,9 +195,15 @@ public class ItemDelete extends PubSubElementProcessorAbstract {
 	}
 
 	private boolean itemIdProvided() {
-		itemId = request.getElement().element("pubsub").element("retract")
+		String id = request.getElement().element("pubsub").element("retract")
 				.element("item").attributeValue("id");
-		if (itemId != null && !itemId.equals("")) {
+		
+		if ((id != null) && !id.equals("")) {
+			if (true == GlobalItemIDImpl.isGlobalId(id)) {
+				itemId = GlobalItemIDImpl.fromBuddycloudString(id);
+			} else {
+				itemId = new GlobalItemIDImpl(new JID(this.getServerDomain()), node, id);
+			}
 			return true;
 		}
 		response.setType(IQ.Type.error);

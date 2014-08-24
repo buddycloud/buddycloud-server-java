@@ -21,7 +21,7 @@ public class Main {
 
     	Configuration configuration = Configuration.getInstance(); 
 
-        LOGGER.info("Connecting to '" + configuration.getProperty("xmpp.host") + ":" 
+        LOGGER.info("Connecting to '" + configuration.getXmppHost() + ":" 
             + configuration.getComponentPort()
             + "' and trying to claim address '" 
             + configuration.getProperty("server.domain") + "'.");

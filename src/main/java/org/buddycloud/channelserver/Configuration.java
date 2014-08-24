@@ -45,6 +45,8 @@ public class Configuration extends Properties {
 
 	public static final String XMPP_PORT = "xmpp.port";
 
+	public static final String XMPP_HOST = "xmpp.host";
+
 	private static Configuration instance = null;
 
 	private Collection<JID> adminUsers = new ArrayList<JID>();
@@ -178,5 +180,9 @@ public class Configuration extends Properties {
 
 	public String getComponentPort() {
 		return this.getProperty(XMPP_PORT, "5347");
+	}
+
+	public String getXmppHost() {
+		return this.getProperty(XMPP_HOST, "127.0.0.1");
 	}
 }

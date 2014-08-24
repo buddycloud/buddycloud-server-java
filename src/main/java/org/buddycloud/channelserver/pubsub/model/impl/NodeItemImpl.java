@@ -10,6 +10,7 @@ public class NodeItemImpl implements NodeItem {
 	private final String id;
 	private final String payload;
 	private final Date updated;
+	private final Date created;
 	private final String inReplyTo;
 	
 	public NodeItemImpl(final String nodeId, final String id, final Date updated, final String payload) {
@@ -17,9 +18,14 @@ public class NodeItemImpl implements NodeItem {
 	}
 	
 	public NodeItemImpl(final String nodeId, final String id, final Date updated, final String payload, final String inReplyTo) {
+		this(nodeId, id, updated, payload, null, null);
+	}
+	
+	public NodeItemImpl(final String nodeId, final String id, final Date updated, final String payload, final String inReplyTo, final Date created) {
 		this.nodeId = nodeId;
 		this.id = id;
 		this.updated = updated;
+		this.created = created;
 		this.payload = payload;
 		this.inReplyTo = inReplyTo;
 	}
@@ -58,7 +64,7 @@ public class NodeItemImpl implements NodeItem {
 	public String toString() {
 		return "NodeItemImpl [nodeId=" + nodeId + ", id=" + id + ", payload="
 				+ payload + ", updated=" + updated + ", inReplyTo=" + inReplyTo
-				+ "]";
+				+ ", created=" + created + "]";
 	}
 
 	@Override
@@ -90,5 +96,10 @@ public class NodeItemImpl implements NodeItem {
 		} else if (!nodeId.equals(other.getNodeId()))
 			return false;
 		return true;
+	}
+
+	@Override
+	public Date getCreated() {
+		return created;
 	}
 }

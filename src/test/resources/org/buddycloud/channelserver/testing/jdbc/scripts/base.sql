@@ -9,6 +9,7 @@ CREATE TABLE "items" ("node" TEXT REFERENCES "nodes" ("node") ON DELETE CASCADE,
 		    "updated" TIMESTAMP,
 		    "xml" TEXT,
 		    "in_reply_to" TEXT,
+            "created" TIMESTAMP,
 		    PRIMARY KEY ("node", "id"));
 CREATE INDEX "items_updated" ON "items" ("updated");
 CREATE INDEX "items_in_reply_to" ON "items" ("node", "in_reply_to");
@@ -44,5 +45,9 @@ CREATE VIEW "open_nodes" AS
 -- MIXED IN ABOVE
 
 -- Upgrade 4
+
+-- MIXED IN ABOVE
+
+-- Upgrade 6
 
 -- MIXED IN ABOVE

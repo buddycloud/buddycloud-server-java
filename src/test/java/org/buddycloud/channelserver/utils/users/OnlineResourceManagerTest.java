@@ -35,6 +35,7 @@ public class OnlineResourceManagerTest extends IQTestHandler {
 	private JID localUserDesktop    = new JID("user@server1.com/desktop");
 	private JID localUserNoResource = new JID("user@server1.com");
 	private JID remoteBuddycloudServer = new JID("channels.buddycloud.org");
+	private ChannelManager channelManager;
 	
 	private JID remoteUser = new JID("user@server2.com/remote");
 
@@ -46,7 +47,9 @@ public class OnlineResourceManagerTest extends IQTestHandler {
 						.getProperty(Configuration.CONFIGURATION_SERVER_DOMAIN))
 				.thenReturn("server1.com");
 		
-		onlineUser = new OnlineResourceManager(configuration);
+		ChannelManager channelManager = Mockito.mock(ChannelManager.class);
+		
+		onlineUser = new OnlineResourceManager(configuration, channelManager);
 	}
 
 	@Test(expected=NullPointerException.class)
@@ -56,7 +59,7 @@ public class OnlineResourceManagerTest extends IQTestHandler {
 				configuration
 						.getProperty(Configuration.CONFIGURATION_SERVER_DOMAIN))
 				.thenReturn(null);
-		onlineUser = new OnlineResourceManager(configuration);
+		onlineUser = new OnlineResourceManager(configuration, channelManager);
 	}
 	
 	@Test

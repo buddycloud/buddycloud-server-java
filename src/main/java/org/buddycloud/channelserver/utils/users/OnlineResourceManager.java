@@ -24,13 +24,16 @@ public class OnlineResourceManager {
 	
 	private HashMap<String, ArrayList<JID>> users = new HashMap<String, ArrayList<JID>>();
 	private Properties configuration;
+	private ChannelManager channelManager;
 
-	public OnlineResourceManager(Properties configuration) {
+	public OnlineResourceManager(Properties configuration, ChannelManager channelManager) {
 		if (configuration.getProperty(Configuration.CONFIGURATION_SERVER_DOMAIN) == null && 
 				configuration.getProperty(Configuration.CONFIGURATION_LOCAL_DOMAIN_CHECKER) == null) {
 			throw new NullPointerException("Missing server domain configuration");
+			
 		}
 		this.configuration = configuration;
+		this.channelManager = channelManager;
 	}
 
 	public void subscribeToNodeListeners(ChannelManagerFactory channelManagerFactory, 

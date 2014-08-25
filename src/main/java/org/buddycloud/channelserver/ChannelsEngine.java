@@ -113,7 +113,7 @@ public class ChannelsEngine implements Component {
 				nodeStoreFactory);
 		federatedQueueManager = new FederatedQueueManager(this,
 				configuration);
-		onlineUsers = new OnlineResourceManager(configuration);
+		onlineUsers = new OnlineResourceManager(configuration, channelManagerFactory.create());
 	}
 
 	@Override

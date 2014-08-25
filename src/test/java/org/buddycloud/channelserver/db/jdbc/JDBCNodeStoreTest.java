@@ -384,10 +384,10 @@ public class JDBCNodeStoreTest extends JDBCNodeStoreAbstract {
 	}
 
 	@Test
-	public void testCanGetItemReplies() throws Exception {
+	public void canGetItemReplies() throws Exception {
 		dbTester.loadData("node_1");
 		NodeItem testItem = new NodeItemImpl(TEST_SERVER1_NODE1_ID, "a6",
-				new Date(), "<entry>payload</entry>", "a5");
+				new Date(), "<entry>payload</entry>", "a5", new Date());
 		store.addNodeItem(testItem);
 
 		ClosableIteratorImpl<NodeItem> items = store.getNodeItemReplies(
@@ -405,16 +405,16 @@ public class JDBCNodeStoreTest extends JDBCNodeStoreAbstract {
 	}
 
 	@Test
-	public void testCanGetItemRepliesWithResultSetManagement() throws Exception {
+	public void canGetItemRepliesWithResultSetManagement() throws Exception {
 		dbTester.loadData("node_1");
 		NodeItem testItem1 = new NodeItemImpl(TEST_SERVER1_NODE1_ID, "a6",
-				new Date(), "<entry>payload</entry>", "a5");
+				new Date(), "<entry>payload</entry>", "a5", new Date());
 		NodeItem testItem2 = new NodeItemImpl(TEST_SERVER1_NODE1_ID, "a7",
-				new Date(0), "<entry>payload</entry>", "a5");
+				new Date(0), "<entry>payload</entry>", "a5", new Date());
 		NodeItem testItem3 = new NodeItemImpl(TEST_SERVER1_NODE1_ID, "a8",
-				new Date(100), "<entry>payload</entry>", "a5");
+				new Date(100), "<entry>payload</entry>", "a5", new Date());
 		NodeItem testItem4 = new NodeItemImpl(TEST_SERVER1_NODE1_ID, "a9",
-				new Date(200), "<entry>payload</entry>", "/full-node-item-id-ref/a5");
+				new Date(200), "<entry>payload</entry>", "/full-node-item-id-ref/a5", new Date());
 		store.addNodeItem(testItem1);
 		store.addNodeItem(testItem2);
 		store.addNodeItem(testItem3);
@@ -436,10 +436,10 @@ public class JDBCNodeStoreTest extends JDBCNodeStoreAbstract {
 	}
 
 	@Test
-	public void testCanGetCountOfItemReplies() throws Exception {
+	public void canGetCountOfItemReplies() throws Exception {
 		dbTester.loadData("node_1");
 		NodeItem testItem = new NodeItemImpl(TEST_SERVER1_NODE1_ID, "a6",
-				new Date(), "<entry>payload</entry>", "/full-node-item-id-ref/a5");
+				new Date(), "<entry>payload</entry>", "/full-node-item-id-ref/a5", new Date());
 		store.addNodeItem(testItem);
 
 		int items = store.getCountNodeItemReplies(TEST_SERVER1_NODE1_ID, "a5");
@@ -447,10 +447,10 @@ public class JDBCNodeStoreTest extends JDBCNodeStoreAbstract {
 	}
 
 	@Test
-	public void testCanGetItemThread() throws Exception {
+	public void canGetItemThread() throws Exception {
 		dbTester.loadData("node_1");
 		NodeItem testItem = new NodeItemImpl(TEST_SERVER1_NODE1_ID, "a6",
-				new Date(), "<entry>payload</entry>", "/full-node-item-id-ref/a5");
+				new Date(), "<entry>payload</entry>", "/full-node-item-id-ref/a5", new Date());
 		store.addNodeItem(testItem);
 
 		ClosableIteratorImpl<NodeItem> items = store.getNodeItemThread(
@@ -469,18 +469,18 @@ public class JDBCNodeStoreTest extends JDBCNodeStoreAbstract {
 	
 
 	@Test
-	public void testCanGetItemThreadWithResultSetManagement() throws Exception {
+	public void canGetItemThreadWithResultSetManagement() throws Exception {
 		dbTester.loadData("node_1");
 		NodeItem testItemParent = new NodeItemImpl(TEST_SERVER1_NODE1_ID,
-				"a100", new Date(100), "<entry>payload parent</entry>");
+				"a100", new Date(100), "<entry>payload parent</entry>", null, new Date());
 		NodeItem testItem1 = new NodeItemImpl(TEST_SERVER1_NODE1_ID, "a6",
-				new Date(20), "<entry>payload</entry>", "a100");
+				new Date(20), "<entry>payload</entry>", "a100", new Date());
 		NodeItem testItem2 = new NodeItemImpl(TEST_SERVER1_NODE1_ID, "a7",
-				new Date(40), "<entry>payload</entry>", "a100");
+				new Date(40), "<entry>payload</entry>", "a100", new Date());
 		NodeItem testItem3 = new NodeItemImpl(TEST_SERVER1_NODE1_ID, "/full-node-item-id-ref/a8",
-				new Date(80), "<entry>payload</entry>", "a100");
+				new Date(80), "<entry>payload</entry>", "a100", new Date());
 		NodeItem testItem4 = new NodeItemImpl(TEST_SERVER1_NODE1_ID, "a9",
-				new Date(160), "<entry>payload</entry>", "a100");
+				new Date(160), "<entry>payload</entry>", "a100", new Date());
 		store.addNodeItem(testItemParent);
 		store.addNodeItem(testItem1);
 		store.addNodeItem(testItem2);
@@ -503,10 +503,10 @@ public class JDBCNodeStoreTest extends JDBCNodeStoreAbstract {
 	}
 
 	@Test
-	public void testCanGetCountOfItemThread() throws Exception {
+	public void canGetCountOfItemThread() throws Exception {
 		dbTester.loadData("node_1");
 		NodeItem testItem = new NodeItemImpl(TEST_SERVER1_NODE1_ID, "a6",
-				new Date(), "<entry>payload</entry>", "/full-node-item-id-ref/a5");
+				new Date(), "<entry>payload</entry>", "/full-node-item-id-ref/a5", new Date());
 		store.addNodeItem(testItem);
 
 		int items = store.getCountNodeThread(TEST_SERVER1_NODE1_ID, "a5");
@@ -537,7 +537,7 @@ public class JDBCNodeStoreTest extends JDBCNodeStoreAbstract {
 	}
 
 	@Test
-	public void testAddNoteItemWithInReplyTo() throws Exception {
+	public void addNoteItemWithInReplyTo() throws Exception {
 		dbTester.loadData("node_1");
 
 		final String itemId = "test-item-id";
@@ -546,7 +546,7 @@ public class JDBCNodeStoreTest extends JDBCNodeStoreAbstract {
 		final String inReplyTo = "a5";
 
 		NodeItem item = new NodeItemImpl(TEST_SERVER1_NODE1_ID, itemId,
-				updated, testContent, "a5");
+				updated, testContent, "a5", new Date());
 		store.addNodeItem(item);
 
 		dbTester.assertions().assertTableContains("items",

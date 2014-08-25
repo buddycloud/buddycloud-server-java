@@ -33,4 +33,9 @@ public interface NodeItem extends Result {
 	 * Not a reply == null
 	 */
 	String getInReplyTo();
+	
+	/**
+	 * Retrieves the datestamp when the record was first published
+	 */
+	Date getCreated();
 }

@@ -80,6 +80,7 @@ Please see [the example configuration file](https://github.com/buddycloud/buddyc
 | channel.configuration.[**posts** or **status** or **geo.next**, etc].description | %jid%'s status  |            | Override default node description on the node type |
 | discovery.dns.enabled                     | true           |            | Allow DNS discovery of other channel servers  |
 | sync.purge-on-start                       | false          |            | Purge remote data on server start             |
+| users.presence.perist | false | | If **true** then user presence status is stored in the database rather than in memory |
 
 ## Additional content-type plugins
 The buddycloud server supports validation of custom content types by means of a plugin system. By default the buddycloud server supports Atom content. Additional content types can be supported by creating an appropriate validator and packaging it as a plugin.

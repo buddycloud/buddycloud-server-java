@@ -5,6 +5,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import org.apache.log4j.Logger;
+import org.buddycloud.channelserver.db.exception.NodeStoreException;
 import org.xmpp.packet.Packet;
 
 public abstract class QueueConsumer {
@@ -28,12 +29,15 @@ public abstract class QueueConsumer {
                         consume(packet);
                     } catch (InterruptedException e) {
                         LOGGER.error(e);
-                    }
+                    } catch (NodeStoreException e) {
+						// TODO Auto-generated catch block
+						LOGGER.error(e);
+					}
                 }
             }
         });
     }
     
-    protected abstract void consume(Packet p);
+    protected abstract void consume(Packet p) throws NodeStoreException;
     
 }

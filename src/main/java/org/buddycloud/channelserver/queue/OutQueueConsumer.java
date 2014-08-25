@@ -7,6 +7,7 @@ import org.apache.log4j.Logger;
 import org.buddycloud.channelserver.ChannelsEngine;
 import org.buddycloud.channelserver.Configuration;
 import org.buddycloud.channelserver.channel.LocalDomainChecker;
+import org.buddycloud.channelserver.db.exception.NodeStoreException;
 import org.buddycloud.channelserver.utils.users.OnlineResourceManager;
 import org.dom4j.Attribute;
 import org.xmpp.component.ComponentException;
@@ -37,7 +38,7 @@ public class OutQueueConsumer extends QueueConsumer {
 	}
 
 	@Override
-	protected void consume(Packet p) {
+	protected void consume(Packet p) throws NodeStoreException {
 
 		try {
 			if (true == isRemoteServer(p.getTo())) {

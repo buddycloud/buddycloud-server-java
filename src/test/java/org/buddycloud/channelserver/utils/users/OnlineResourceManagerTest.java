@@ -158,7 +158,7 @@ public class OnlineResourceManagerTest extends IQTestHandler {
 				new ResultSetImpl<NodeSubscription>(new LinkedList<NodeSubscription>()));
 		
 		BlockingQueue<Packet> outQueue = new LinkedBlockingQueue<Packet>();
-		onlineUser.subscribeToNodeListeners(factory, outQueue);
+		onlineUser.subscribeToNodeListeners(outQueue);
 		
 		Assert.assertTrue(outQueue.isEmpty());
 	}
@@ -177,7 +177,7 @@ public class OnlineResourceManagerTest extends IQTestHandler {
 				new ResultSetImpl<NodeSubscription>(subscriptions));
 		
 		BlockingQueue<Packet> outQueue = new LinkedBlockingQueue<Packet>();
-		onlineUser.subscribeToNodeListeners(factory, outQueue);
+		onlineUser.subscribeToNodeListeners(outQueue);
 		
 		Assert.assertFalse(outQueue.isEmpty());
 		Presence presence = (Presence) outQueue.poll();

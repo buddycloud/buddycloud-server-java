@@ -1565,6 +1565,61 @@ public class JDBCNodeStore implements NodeStore {
 			close(selectStatement);
 		}
 	}
+
+	@Override
+	public void jidOnline(JID jid) throws NodeStoreException {
+		PreparedStatement addStatement = null;
+		try {
+			jidOffline(jid);
+			addStatement = conn.prepareStatement(dialect.addOnlineJid());
+			addStatement.setString(1, jid.toFullJID());
+			addStatement.executeUpdate();
+			addStatement.close();
+		} catch (SQLException e) {
+			throw new NodeStoreException(e);
+		} finally {
+			close(addStatement);
+		}
+	}
+	
+	@Override
+	public void jidOffline(JID jid) throws NodeStoreException {
+		PreparedStatement stmt = null;
+		try {
+			stmt = conn.prepareStatement(dialect.deleteOnlineJid());
+			stmt.setString(1, jid.toFullJID());
+			stmt.executeUpdate();
+		} catch (SQLException e) {
+			throw new NodeStoreException(e);
+		} finally {
+			close(stmt); // Will implicitly close the resultset if required
+		}
+	}
+	
+	@Override
+	public ArrayList<JID> onlineJids(JID jid) throws NodeStoreException {
+		PreparedStatement stmt = null;
+
+		try {
+			stmt = conn.prepareStatement(dialect.selectOnlineResources());
+
+			stmt.setString(1, jid.toBareJID() + "%");
+
+			java.sql.ResultSet rs = stmt.executeQuery();
+
+			ArrayList<JID> result = new ArrayList<JID>();
+
+			while (rs.next()) {
+				result.add(new JID(rs.getString(1)));
+			}
+
+			return result;
+		} catch (SQLException e) {
+			throw new NodeStoreException(e);
+		} finally {
+			close(stmt); // Will implicitly close the resultset if required
+		}
+	}
 	
 	@Override
 	public Transaction beginTransaction() throws NodeStoreException {
@@ -1695,6 +1750,12 @@ public class JDBCNodeStore implements NodeStore {
 
 	public interface NodeStoreSQLDialect {
 		String insertNode();
+
+		String addOnlineJid();
+
+		String deleteOnlineJid();
+
+		String selectOnlineResources();
 
 		String selectNodeMemberships();
 
@@ -1827,7 +1888,6 @@ public class JDBCNodeStore implements NodeStore {
 		String countNodeThreads();
 
 		String selectUserRatingsForAPost();
-	
 	}
 
 }

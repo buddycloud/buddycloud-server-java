@@ -36,9 +36,7 @@ public class OnlineResourceManager {
 		this.channelManager = channelManager;
 	}
 
-	public void subscribeToNodeListeners(ChannelManagerFactory channelManagerFactory, 
-			BlockingQueue<Packet> outQueue) {
-		ChannelManager channelManager = channelManagerFactory.create();
+	public void subscribeToNodeListeners(BlockingQueue<Packet> outQueue) {
 		try {
 			ResultSet<NodeSubscription> subscriptions = channelManager.getNodeSubscriptionListeners();
 			for (NodeSubscription subscription : subscriptions) {

@@ -23,14 +23,14 @@ public class OnlineResourceManager {
 	private static final Logger LOGGER = Logger.getLogger(OnlineResourceManager.class);
 	
 	private HashMap<String, ArrayList<JID>> users = new HashMap<String, ArrayList<JID>>();
-	private Properties conf;
+	private Properties configuration;
 
-	public OnlineResourceManager(Properties conf) {
-		if (conf.getProperty(Configuration.CONFIGURATION_SERVER_DOMAIN) == null && 
-				conf.getProperty(Configuration.CONFIGURATION_LOCAL_DOMAIN_CHECKER) == null) {
+	public OnlineResourceManager(Properties configuration) {
+		if (configuration.getProperty(Configuration.CONFIGURATION_SERVER_DOMAIN) == null && 
+				configuration.getProperty(Configuration.CONFIGURATION_LOCAL_DOMAIN_CHECKER) == null) {
 			throw new NullPointerException("Missing server domain configuration");
 		}
-		this.conf = conf;
+		this.configuration = configuration;
 	}
 
 	public void subscribeToNodeListeners(ChannelManagerFactory channelManagerFactory, 
@@ -61,7 +61,7 @@ public class OnlineResourceManager {
 	}
 
 	public void updateStatus(JID jid, String type) {
-		if (!LocalDomainChecker.isLocal(jid.getDomain(), conf)) {
+		if (!LocalDomainChecker.isLocal(jid.getDomain(), configuration)) {
 			return;
 		}
 		if (type != null && type.equals(UNAVAILABLE)) {

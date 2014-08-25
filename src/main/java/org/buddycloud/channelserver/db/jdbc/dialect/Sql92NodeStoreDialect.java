@@ -127,22 +127,22 @@ public class Sql92NodeStoreDialect implements NodeStoreSQLDialect {
 
 	private static final String NODE_EXISTS = "SELECT \"node\" FROM \"nodes\" WHERE \"node\" = ?";
 
-	private static final String SELECT_SINGLE_ITEM = "SELECT \"node\", \"id\", \"updated\", \"xml\", \"in_reply_to\""
+	private static final String SELECT_SINGLE_ITEM = "SELECT \"node\", \"id\", \"updated\", \"xml\", \"in_reply_to\", \"created\""
 			+ " FROM \"items\" WHERE \"node\" = ? AND \"id\" = ?";
 
-	private static final String SELECT_ITEMS_FOR_NODE = "SELECT \"node\", \"id\", \"updated\", \"xml\", \"in_reply_to\""
+	private static final String SELECT_ITEMS_FOR_NODE = "SELECT \"node\", \"id\", \"updated\", \"xml\", \"in_reply_to\", \"created\""
 			+ " FROM \"items\" WHERE \"node\" = ? ORDER BY \"updated\" DESC, \"id\" ASC";
 
-	private static final String SELECT_ITEMS_FOR_NODE_AFTER_DATE = "SELECT \"node\", \"id\", \"updated\", \"xml\", \"in_reply_to\""
+	private static final String SELECT_ITEMS_FOR_NODE_AFTER_DATE = "SELECT \"node\", \"id\", \"updated\", \"xml\", \"in_reply_to\", \"created\""
 			+ " FROM \"items\" WHERE \"node\" = ? AND ( \"updated\" > ? OR ( \"updated\" = ? AND \"id\" > ? ) )"
 			+ " ORDER BY \"updated\" ASC, \"id\" DESC";
 
-	private static final String SELECT_ITEMS_FOR_NODE_BEFORE_DATE = "SELECT \"node\", \"id\", \"updated\", \"xml\", \"in_reply_to\""
+	private static final String SELECT_ITEMS_FOR_NODE_BEFORE_DATE = "SELECT \"node\", \"id\", \"updated\", \"xml\", \"in_reply_to\", \"created\""
 			+ " FROM \"items\" WHERE \"node\" = ? AND ( \"updated\" < ? OR ( \"updated\" = ? AND \"id\" < ? ) )"
 			+ " ORDER BY \"updated\" DESC, \"id\" ASC";
 	
 	private static final String SELECT_ITEMS_FOR_USER_BETWEEN_DATES = ""
-	        + "SELECT \"node\", \"id\", \"updated\", \"xml\", \"in_reply_to\""
+	        + "SELECT \"node\", \"id\", \"updated\", \"xml\", \"in_reply_to\", \"created\""
 			+ " FROM \"items\" "
 			+ "WHERE \"updated\" >= ? AND \"updated\" <= ? AND \"node\" IN "
 			+ "(SELECT \"subscriptions\".\"node\" FROM \"subscriptions\", \"affiliations\" "
@@ -155,7 +155,7 @@ public class Sql92NodeStoreDialect implements NodeStoreSQLDialect {
 			+ "ORDER BY \"updated\" ASC;";
 
 	private static final String SELECT_RECENT_ITEM_PARTS = ""
-	    + "(SELECT \"id\", \"node\", \"xml\", \"updated\", \"in_reply_to\" "
+	    + "(SELECT \"id\", \"node\", \"xml\", \"updated\", \"in_reply_to\", \"created\" "
 		+ "FROM \"items\" "
 		+ "WHERE \"node\" = ? "
         + "AND \"updated\" > ? "
@@ -174,12 +174,12 @@ public class Sql92NodeStoreDialect implements NodeStoreSQLDialect {
 			+ " FROM \"items\" WHERE \"node\" = ?";
 
 	private static final String SELECT_ITEM_REPLIES = ""
-			+ "SELECT \"id\", \"node\", \"xml\", \"updated\", \"in_reply_to\" "
+			+ "SELECT \"id\", \"node\", \"xml\", \"updated\", \"in_reply_to\", \"created\" "
 			+ "FROM \"items\" WHERE \"node\" = ? AND \"in_reply_to\" LIKE ? "
 			+ "AND \"updated\" > ? ORDER BY \"updated\" DESC";
 	
 	private static final String SELECT_ITEM_THREAD = ""
-			+ "SELECT \"id\", \"node\", \"xml\", \"updated\", \"in_reply_to\" "
+			+ "SELECT \"id\", \"node\", \"xml\", \"updated\", \"in_reply_to\", \"created\" "
 			+ "FROM \"items\" WHERE \"node\" = ? "
 			+ "AND (\"in_reply_to\" LIKE ? OR \"id\" = ?) "
 			+ "AND \"updated\" > ? ORDER BY \"updated\" DESC";
@@ -206,8 +206,8 @@ public class Sql92NodeStoreDialect implements NodeStoreSQLDialect {
 	private static final String COUNT_ITEMS_FOR_JID = "SELECT COUNT(*)"
 			+ " FROM \"subscriptions\" WHERE \"user\" = ?";
 
-	private static final String INSERT_ITEM = "INSERT INTO \"items\" ( \"node\", \"id\", \"updated\", \"xml\", \"in_reply_to\" )"
-			+ " VALUES ( ?, ?, ?, ?, ? )";
+	private static final String INSERT_ITEM = "INSERT INTO \"items\" ( \"node\", \"id\", \"updated\", \"xml\", \"in_reply_to\", \"created\" )"
+			+ " VALUES ( ?, ?, ?, ?, ?, NOW() )";
 
 	private static final String UPDATE_ITEM = "UPDATE \"items\" SET \"updated\" = ?, \"xml\" = ?"
 			+ " WHERE \"node\" = ? AND \"id\" = ?";
@@ -235,12 +235,12 @@ public class Sql92NodeStoreDialect implements NodeStoreSQLDialect {
 		+ "AND (\"node\" LIKE ? OR \"node\" LIKE ?))";
 
 	private static final String SELECT_ITEMS_FROM_LOCAL_NODES_BEFORE_DATE = ""
-		+ "SELECT \"node\", \"id\", \"updated\", \"xml\", \"in_reply_to\" "
+		+ "SELECT \"node\", \"id\", \"updated\", \"xml\", \"in_reply_to\", \"created\" "
 		+ "FROM \"items\" WHERE \"updated\" < ? "
 		+ "AND \"node\" IN (SELECT \"node\" FROM \"node_config\" WHERE \"key\" = ? AND \"value\" LIKE ? AND (\"node\" LIKE ? OR \"node\" LIKE ?)) "
 		+ "ORDER BY \"updated\" DESC, \"id\" ASC LIMIT ?";
 
-	private static final String SELECT_USER_PUBLISHED_ITEMS = "SELECT \"node\", \"id\", \"updated\", \"xml\", \"in_reply_to\"" +
+	private static final String SELECT_USER_ITEMS = "SELECT \"node\", \"id\", \"updated\", \"xml\", \"in_reply_to\", \"created\"" +
 			" FROM \"items\" WHERE (CAST(xpath('//atom:author/atom:name/text()', xmlparse(document \"xml\")," +
 			" ARRAY[ARRAY['atom', 'http://www.w3.org/2005/Atom']]) AS TEXT[]))[1] = ?";
 
@@ -254,7 +254,7 @@ public class Sql92NodeStoreDialect implements NodeStoreSQLDialect {
 	
 	private static final String SELECT_NODE_THREADS = 
 			"SELECT \"node\", \"id\", \"updated\", \"xml\", \"in_reply_to\", " +
-			"\"thread_id\", \"thread_updated\" FROM \"items\"," +
+			"\"thread_id\", \"thread_updated\", \"created\" FROM \"items\"," +
 			  "(SELECT MAX(\"updated\") AS \"thread_updated\", \"thread_id\" FROM " +
 			  "(SELECT \"updated\", " +
 			    "(CASE WHEN (\"in_reply_to\" IS NULL) THEN \"id\" ELSE \"in_reply_to\" END) AS \"thread_id\" " +

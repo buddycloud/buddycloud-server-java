@@ -674,7 +674,7 @@ public class JDBCNodeStore implements NodeStore {
 									throws SQLException {
 								return new NodeItemImpl(rs.getString(1),
 										rs.getString(2), rs.getTimestamp(3),
-										rs.getString(4), rs.getString(5));
+										rs.getString(4), rs.getString(5), rs.getTimestamp(6));
 							}
 						});
 			} else {
@@ -696,7 +696,7 @@ public class JDBCNodeStore implements NodeStore {
 									throws SQLException {
 								return new NodeItemImpl(rs.getString(1),
 										rs.getString(2), rs.getTimestamp(3),
-										rs.getString(4), rs.getString(5));
+										rs.getString(4), rs.getString(5), rs.getTimestamp(6));
 							}
 						});
 			}
@@ -755,7 +755,7 @@ public class JDBCNodeStore implements NodeStore {
 
 			while (rs.next()) {
 				results.push(new NodeItemImpl(rs.getString(1), rs.getString(2),
-						rs.getTimestamp(3), rs.getString(4), rs.getString(5)));
+						rs.getTimestamp(3), rs.getString(4), rs.getString(5), rs.getTimestamp(6)));
 			}
 
 			return new ClosableIteratorImpl<NodeItem>(results.iterator());
@@ -1059,7 +1059,7 @@ public class JDBCNodeStore implements NodeStore {
 			ArrayList<NodeItem> results = new ArrayList<NodeItem>();
 			while (rs.next()) {
 				results.add(new NodeItemImpl(rs.getString(2), rs.getString(1),
-						rs.getTimestamp(4), rs.getString(3), rs.getString(5)));
+						rs.getTimestamp(4), rs.getString(3), rs.getString(5), rs.getTimestamp(6)));
 			}
 			return new ClosableIteratorImpl<NodeItem>(results.iterator());
 		} catch (SQLException e) {
@@ -1104,7 +1104,7 @@ public class JDBCNodeStore implements NodeStore {
 
 			while (rs.next()) {
 				results.push(new NodeItemImpl(rs.getString(2), rs.getString(1),
-						rs.getTimestamp(4), rs.getString(3), rs.getString(5)));
+						rs.getTimestamp(4), rs.getString(3), rs.getString(5), rs.getTimestamp(6)));
 			}
 
 			return new ClosableIteratorImpl<NodeItem>(results.iterator());
@@ -1169,7 +1169,7 @@ public class JDBCNodeStore implements NodeStore {
 
 			while (rs.next()) {
 				results.push(new NodeItemImpl(rs.getString(2), rs.getString(1),
-						rs.getTimestamp(4), rs.getString(3), rs.getString(5)));
+						rs.getTimestamp(4), rs.getString(3), rs.getString(5), rs.getTimestamp(6)));
 			}
 
 			return new ClosableIteratorImpl<NodeItem>(results.iterator());
@@ -1226,7 +1226,7 @@ public class JDBCNodeStore implements NodeStore {
 
 			while (rs.next()) {
 				results.push(new NodeItemImpl(rs.getString(1), rs.getString(2),
-						rs.getTimestamp(3), rs.getString(4), rs.getString(5)));
+						rs.getTimestamp(3), rs.getString(4), rs.getString(5), rs.getTimestamp(6)));
 			}
 
 			return new ClosableIteratorImpl<NodeItem>(results.iterator());
@@ -1281,7 +1281,7 @@ public class JDBCNodeStore implements NodeStore {
 
 			if (rs.next()) {
 				return new NodeItemImpl(rs.getString(1), rs.getString(2),
-						rs.getTimestamp(3), rs.getString(4), rs.getString(5));
+						rs.getTimestamp(3), rs.getString(4), rs.getString(5), rs.getTimestamp(6));
 			}
 			return null;
 		} catch (SQLException e) {
@@ -1442,7 +1442,7 @@ public class JDBCNodeStore implements NodeStore {
 								throws SQLException {
 							return new NodeItemImpl(rs.getString(1),
 									rs.getString(2), rs.getTimestamp(3),
-									rs.getString(4), rs.getString(5));
+									rs.getString(4), rs.getString(5), rs.getTimestamp(6));
 						}
 					});
 		} catch (SQLException e) {
@@ -1552,7 +1552,7 @@ public class JDBCNodeStore implements NodeStore {
 			while (rs.next()) {
 				NodeItem nodeItem = new NodeItemImpl(rs.getString(1),
 						rs.getString(2), rs.getTimestamp(3),
-						rs.getString(4), rs.getString(5));
+						rs.getString(4), rs.getString(5), rs.getTimestamp(6));
 				result.add(nodeItem);
 			}
 			return new ResultSetImpl<NodeItem>(result);
@@ -1631,7 +1631,7 @@ public class JDBCNodeStore implements NodeStore {
 			while (rs.next()) {
 				NodeItem nodeItem = new NodeItemImpl(rs.getString(1),
 						rs.getString(2), rs.getTimestamp(3),
-						rs.getString(4), rs.getString(5));
+						rs.getString(4), rs.getString(5), rs.getTimestamp(8));
 				String threadId = rs.getString(6);
 				Date threadUpdated = rs.getTimestamp(7);
 				if (currentThread == null || !threadId.equals(currentThread.getId())) {

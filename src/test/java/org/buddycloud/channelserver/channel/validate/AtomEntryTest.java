@@ -322,7 +322,7 @@ public class AtomEntryTest extends TestHandler {
 	@Test
 	public void canNotReplyToAReply() throws Exception {
 
-        NodeItem nodeItem = new NodeItemImpl(node, "2", new Date(), "<entry/>", "1");
+        NodeItem nodeItem = new NodeItemImpl(node, "2", new Date(), "<entry/>", "1", new Date());
 
 		Mockito.when(
 				channelManager.getNodeItem(Mockito.eq(node),

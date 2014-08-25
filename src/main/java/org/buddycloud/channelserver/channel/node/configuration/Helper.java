@@ -9,8 +9,8 @@ import org.apache.log4j.Logger;
 import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.channel.node.configuration.field.AccessModel;
 import org.buddycloud.channelserver.channel.node.configuration.field.Affiliation;
-import org.buddycloud.channelserver.channel.node.configuration.field.ChannelDescription;
-import org.buddycloud.channelserver.channel.node.configuration.field.ChannelTitle;
+import org.buddycloud.channelserver.channel.node.configuration.field.NodeDescription;
+import org.buddycloud.channelserver.channel.node.configuration.field.NodeTitle;
 import org.buddycloud.channelserver.channel.node.configuration.field.ChannelType;
 import org.buddycloud.channelserver.channel.node.configuration.field.ConfigurationFieldException;
 import org.buddycloud.channelserver.channel.node.configuration.field.ContentType;
@@ -59,8 +59,8 @@ public class Helper {
 	}
 
 	private void setupRequiredFields() {
-		requiredFields.add(ChannelTitle.FIELD_NAME);
-		requiredFields.add(ChannelDescription.FIELD_NAME);
+		requiredFields.add(NodeTitle.FIELD_NAME);
+		requiredFields.add(NodeDescription.FIELD_NAME);
 		requiredFields.add(AccessModel.FIELD_NAME);
 		requiredFields.add(Creator.FIELD_NAME);
 		requiredFields.add(Affiliation.FIELD_NAME);
@@ -207,8 +207,8 @@ public class Helper {
 		preventOverwrite(data, Creator.FIELD_NAME);
 		preventOverwrite(data, ContentType.FIELD_NAME);
 
-		ensurePresent(data, ChannelTitle.FIELD_NAME);
-		ensurePresent(data, ChannelDescription.FIELD_NAME);
+		ensurePresent(data, NodeTitle.FIELD_NAME);
+		ensurePresent(data, NodeDescription.FIELD_NAME);
 		ensurePresent(data, AccessModel.FIELD_NAME);
 		ensurePresent(data, Affiliation.FIELD_NAME);
 

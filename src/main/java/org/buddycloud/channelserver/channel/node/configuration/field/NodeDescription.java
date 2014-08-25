@@ -1,12 +1,12 @@
 package org.buddycloud.channelserver.channel.node.configuration.field;
 
-public class ChannelDescription extends Field
+public class NodeDescription extends Field
 {
 	public static final String FIELD_NAME    = "pubsub#description";
 	public static final String DEFAULT_VALUE = "Channel description";
 	public static final int MAX_DESCRIPTION_LENGTH = 1024;
 
-	public ChannelDescription()
+	public NodeDescription()
 	{
 		name = FIELD_NAME;
 	}

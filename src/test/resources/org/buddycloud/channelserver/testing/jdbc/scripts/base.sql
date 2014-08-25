@@ -36,7 +36,7 @@ CREATE VIEW "open_nodes" AS
        	      WHERE "key"='accessModel'
 	        AND "value"='open';
 
-CREATE TABLE online_users ("user" TEXT NOT NULL REFERENCES nodes (node),
+CREATE TABLE online_users ("user" TEXT NOT NULL,
 			  updated TIMESTAMP);
 
 -- Upgrade 2

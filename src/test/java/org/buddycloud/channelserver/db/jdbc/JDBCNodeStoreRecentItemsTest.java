@@ -210,15 +210,15 @@ public class JDBCNodeStoreRecentItemsTest extends JDBCNodeStoreAbstract {
 				Subscriptions.subscribed, null));
 
 		NodeItem nodeItem1 = new NodeItemImpl(TEST_SERVER1_NODE1_ID, "12-node1",
-				new Date(), "payload");
+				new Date(), "payload", null, new Date());
 		store.addNodeItem(nodeItem1);
 		Thread.sleep(1);
 		NodeItem nodeItem2 = new NodeItemImpl(TEST_SERVER1_NODE2_ID, "123-node2",
-				new Date(), "payload2", "123");
+				new Date(), "payload2", "123", new Date());
 		store.addNodeItem(nodeItem2);
 		Thread.sleep(1);
 		NodeItem nodeItem3 = new NodeItemImpl(TEST_SERVER1_NODE2_ID, "124-node1",
-				new Date(), "payload3");
+				new Date(), "payload3", null, new Date());
 		store.addNodeItem(nodeItem3);
 		Thread.sleep(20);
 
@@ -244,15 +244,15 @@ public class JDBCNodeStoreRecentItemsTest extends JDBCNodeStoreAbstract {
 				Subscriptions.subscribed, null));
 
 		NodeItem nodeItem1 = new NodeItemImpl(TEST_SERVER1_NODE1_ID, "12-node1",
-				new Date(), "payload");
+				new Date(), "payload", null, new Date());
 		store.addNodeItem(nodeItem1);
 		Thread.sleep(1);
 		NodeItem nodeItem2 = new NodeItemImpl(TEST_SERVER1_NODE2_ID, "123-node2",
-				new Date(), "payload2", "123");
+				new Date(), "payload2", "123", new Date());
 		store.addNodeItem(nodeItem2);
 		Thread.sleep(1);
 		NodeItem nodeItem3 = new NodeItemImpl(TEST_SERVER1_NODE2_ID, "124-node1",
-				new Date(), "payload3");
+				new Date(), "payload3", null, new Date());
 		store.addNodeItem(nodeItem3);
 		Thread.sleep(20);
 

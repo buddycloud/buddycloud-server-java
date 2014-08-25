@@ -689,7 +689,7 @@ public class Sql92NodeStoreDialect implements NodeStoreSQLDialect {
 
 	@Override
 	public String getUserItems() {
-		return SELECT_USER_PUBLISHED_ITEMS;
+		return SELECT_USER_ITEMS;
 	}
 
 	@Override

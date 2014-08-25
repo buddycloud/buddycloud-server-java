@@ -13,6 +13,7 @@ import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.get.Rece
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.get.RepliesGet;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.get.SubscriptionsGet;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.get.ThreadGet;
+import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.get.UserItemsGet;
 import org.dom4j.Element;
 import org.dom4j.Namespace;
 import org.dom4j.QName;
@@ -41,6 +42,7 @@ public class PubSubGet implements PacketProcessor<IQ> {
         elementProcessors.add(new AffiliationsGet(outQueue, channelManager));
         elementProcessors.add(new ItemsGet(outQueue, channelManager));
         elementProcessors.add(new ThreadGet(outQueue, channelManager));
+        elementProcessors.add(new UserItemsGet(outQueue, channelManager));
         elementProcessors.add(new RecentItemsGet(outQueue, channelManager));
         elementProcessors.add(new NodeConfigureGet(outQueue, channelManager));
         elementProcessors.add(new NodeThreadsGet(outQueue, channelManager));

@@ -806,6 +806,104 @@ public class JDBCNodeStore implements NodeStore {
 							// required
 		}
 	}
+	
+
+	@Override
+	public CloseableIterator<NodeItem> getUserFeedItems(JID user, Date since,
+			int limit, GlobalItemID afterItemId, boolean parentOnly)
+			throws NodeStoreException {
+		
+		PreparedStatement stmt = null;
+
+		String limitSQL = "";
+		String afterSQL = "";
+		String parentSQL = "";
+		Date afterItemDate = null;
+
+		if (limit > -1) {
+			limitSQL = " LIMIT " + limit;
+		} else if (limit < -1) {
+			throw new IllegalArgumentException(
+					"Invalid value for parameter count: " + limit);
+		}
+		
+		if (true == parentOnly) {
+			parentSQL = " AND \"in_reply_to\" IS NULL ";
+		}
+		
+		if (afterItemId != null) {
+			afterItemDate = getNodeItem(afterItemId).getUpdated();
+			afterSQL = " AND \"updated\" < ? ";
+		}
+
+		try {
+			stmt = conn.prepareStatement(
+				dialect.selectUserFeedItems()
+				    .replace("%limit%", limitSQL)
+				    .replace("%after%", afterSQL)
+				    .replace("%parent%", parentSQL)
+			);
+			stmt.setString(1, user.toBareJID());
+			stmt.setObject(2, new java.sql.Timestamp(since.getTime()));
+			if (afterItemId != null) {
+				stmt.setTimestamp(3, new java.sql.Timestamp(afterItemDate.getTime()));
+			}
+			java.sql.ResultSet rs = stmt.executeQuery();
+
+			stmt = null; // Prevent the finally block from closing the
+							// statement
+
+			return new ResultSetIterator<NodeItem>(rs,
+					new ResultSetIterator.RowConverter<NodeItem>() {
+						@Override
+						public NodeItem convertRow(java.sql.ResultSet rs)
+								throws SQLException {
+							return new NodeItemImpl(rs.getString(1),
+									rs.getString(2), rs.getTimestamp(3),
+									rs.getString(4), rs.getString(5));
+						}
+					});
+
+		} catch (SQLException e) {
+			throw new NodeStoreException(e);
+		}
+	}
+
+	@Override
+	public int getCountUserFeedItems(JID user, Date since, 
+			boolean parentOnly) throws NodeStoreException {
+		
+		PreparedStatement stmt = null;
+
+		String parentSQL = "";
+		NodeItem afterItem = null;
+
+		
+		if (true == parentOnly) {
+			parentSQL = " AND \"in_reply_to\" IS NULL ";
+		}
+
+		try {
+			stmt = conn.prepareStatement(
+				dialect.selectCountUserFeedItems()
+				    .replace("%parent%", parentSQL)
+			);
+			stmt.setString(1, user.toBareJID());
+			stmt.setObject(2, new java.sql.Timestamp(since.getTime()));
+
+			java.sql.ResultSet rs = stmt.executeQuery();
+
+			stmt = null; // Prevent the finally block from closing the
+							// statement
+
+			rs.next();
+			return rs.getInt("count");
+
+		} catch (SQLException e) {
+			logger.error(e);
+			throw new NodeStoreException(e);
+		}
+	}
 
 	@Override
 	public int getCountRecentItems(JID user, Date since, int maxPerNode,
@@ -1162,6 +1260,11 @@ public class JDBCNodeStore implements NodeStore {
 									// required
 		}
 	}
+	
+	@Override
+	public NodeItem getNodeItem(GlobalItemID itemId) throws NodeStoreException {
+		return getNodeItem(itemId.getNodeID(), itemId.getItemID());
+	}
 
 	@Override
 	public NodeItem getNodeItem(String nodeId, String nodeItemId)
@@ -1439,7 +1542,7 @@ public class JDBCNodeStore implements NodeStore {
 	}
 
 	@Override
-	public ResultSet<NodeItem> getUserItems(JID userJid) throws NodeStoreException {
+	public ResultSet<NodeItem> getUserPublishedItems(JID userJid) throws NodeStoreException {
 		PreparedStatement stmt = null;
 		try {
 			stmt = conn.prepareStatement(dialect.getUserItems());
@@ -1888,6 +1991,11 @@ public class JDBCNodeStore implements NodeStore {
 		String countNodeThreads();
 
 		String selectUserRatingsForAPost();
+		
+		String selectUserFeedItems();
+		
+		String selectCountUserFeedItems();
+
 	}
 
 }

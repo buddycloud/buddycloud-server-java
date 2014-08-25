@@ -387,6 +387,23 @@ public class Sql92NodeStoreDialect implements NodeStoreSQLDialect {
 
 	private static final String SELECT_ONLINE_RESOURCES = "SELECT \"user\", \"updated\" FROM \"online_users\" WHERE \"user\" LIKE ? ORDER BY \"updated\" DESC;";
 	
+	private static final String SELECT_USER_FEED_ITEMS = ""
+	    + "SELECT \"node\", \"id\", \"updated\", \"xml\", \"in_reply_to\" "
+		+ "FROM \"items\" "
+	    + "WHERE \"node\" IN (SELECT \"node\" FROM \"subscriptions\" WHERE \"subscription\" = 'subscribed' AND \"user\" = ?) "
+		+ "AND \"updated\" > ?"
+	    + "%parent%"
+		+ "%after%"
+		+ "ORDER BY \"updated\" DESC, \"id\" DESC"
+	    + "%limit%;";
+	
+	private static final String SELECT_COUNT_USER_FEED_ITEMS = ""
+		    + "SELECT COUNT(\"id\") AS \"count\" "
+			+ "FROM \"items\" "
+		    + "WHERE \"node\" IN (SELECT \"node\" FROM \"subscriptions\" WHERE \"subscription\" = 'subscribed' AND \"user\" = ?) "
+			+ "AND \"updated\" > ?"
+		    + "%parent%;";
+	
     @Override
 	public String insertNode() {
 		return INSERT_NODE;
@@ -734,6 +751,15 @@ public class Sql92NodeStoreDialect implements NodeStoreSQLDialect {
 	@Override
 	public String addOnlineJid() {
 		return INSERT_ONLINE_JID;
+	}
+	
+	public String selectUserFeedItems() {
+		return SELECT_USER_FEED_ITEMS;
+	}
+
+	@Override
+	public String selectCountUserFeedItems() {
+		return SELECT_COUNT_USER_FEED_ITEMS;
 	}
 
 }

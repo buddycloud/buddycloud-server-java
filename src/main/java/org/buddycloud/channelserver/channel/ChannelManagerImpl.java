@@ -191,6 +191,11 @@ public class ChannelManagerImpl implements ChannelManager {
 			throws NodeStoreException {
 		return nodeStore.getNodeItem(nodeId, nodeItemId);
 	}
+	
+	@Override
+	public NodeItem getNodeItem(GlobalItemID item) throws NodeStoreException {
+		return nodeStore.getNodeItem(item);
+	}
 
 	@Override
 	public void addNodeItem(NodeItem item) throws NodeStoreException {
@@ -369,9 +374,9 @@ public class ChannelManagerImpl implements ChannelManager {
 	}
 
 	@Override
-	public ResultSet<NodeItem> getUserItems(JID userJid)
+	public ResultSet<NodeItem> getUserPublishedItems(JID userJid)
 			throws NodeStoreException {
-		return nodeStore.getUserItems(userJid);
+		return nodeStore.getUserPublishedItems(userJid);
 	}
 
 	@Override
@@ -429,6 +434,18 @@ public class ChannelManagerImpl implements ChannelManager {
 	public ResultSet<NodeMembership> getNodeMemberships(String nodeId)
 	    throws NodeStoreException {
 		return nodeStore.getNodeMemberships(nodeId);
+	}
+	
+	@Override
+	public CloseableIterator<NodeItem> getUserFeedItems(JID user, Date since,
+		 int limit, GlobalItemID afterItemId, boolean parentOnly) throws NodeStoreException {
+		return nodeStore.getUserFeedItems(user, since, limit, afterItemId, parentOnly);
+	}
+	
+	@Override
+	public int getCountUserFeedItems(JID user, Date since,
+			boolean parentOnly) throws NodeStoreException {
+		return nodeStore.getCountUserFeedItems(user, since, parentOnly);
 	}
 
 }

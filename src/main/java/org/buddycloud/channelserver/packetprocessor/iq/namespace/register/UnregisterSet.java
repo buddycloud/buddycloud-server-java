@@ -109,7 +109,7 @@ public class UnregisterSet implements PacketProcessor<IQ> {
 				}
 			}
 			
-			ResultSet<NodeItem> userItems = channelManager.getUserItems(actorJID);
+			ResultSet<NodeItem> userItems = channelManager.getUserPublishedItems(actorJID);
 			for (NodeItem userItem : userItems) {
 				if (channelManager.isLocalNode(userItem.getNodeId())) {
 					addDeleteItemNotifications(userItem.getNodeId(), userItem.getId(), notifications);

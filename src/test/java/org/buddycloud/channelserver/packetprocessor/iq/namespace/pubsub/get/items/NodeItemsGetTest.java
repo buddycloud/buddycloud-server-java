@@ -18,7 +18,7 @@ import org.buddycloud.channelserver.db.CloseableIterator;
 import org.buddycloud.channelserver.db.exception.NodeStoreException;
 import org.buddycloud.channelserver.packetHandler.iq.IQTestHandler;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.JabberPubsub;
-import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.get.items.UserItemsGet;
+import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.get.items.NodeItemsGet;
 import org.buddycloud.channelserver.pubsub.accessmodel.AccessModels;
 import org.buddycloud.channelserver.pubsub.affiliation.Affiliations;
 import org.buddycloud.channelserver.pubsub.model.NodeItem;
@@ -44,10 +44,10 @@ import org.xmpp.packet.Packet;
 import org.xmpp.packet.PacketError;
 import org.xmpp.resultsetmanagement.ResultSetImpl;
 
-public class UserItemsGetTest extends IQTestHandler {
+public class NodeItemsGetTest extends IQTestHandler {
 
 	private IQ request;
-	private UserItemsGet itemsGet;
+	private NodeItemsGet itemsGet;
 	private Element element;
 	private BlockingQueue<Packet> queue = new LinkedBlockingQueue<Packet>();
 
@@ -60,7 +60,7 @@ public class UserItemsGetTest extends IQTestHandler {
 	public void setUp() throws Exception {
 
 		queue = new LinkedBlockingQueue<Packet>();
-		itemsGet = new UserItemsGet(queue, channelManager);
+		itemsGet = new NodeItemsGet(queue, channelManager);
 		request = readStanzaAsIq("/iq/pubsub/items/request.stanza");
 		element = new BaseElement("items");
 

@@ -351,6 +351,25 @@ public interface NodeStore {
 	 */
 	int getCountRecentItems(JID user, Date since, int maxPerNode, String node,
 			boolean parentOnly) throws NodeStoreException;
+	
+	/**
+	 * Get feed items for a user
+	 * 
+	 * @param user
+	 * @param since
+	 * @return
+	 * @throws NodeStoreException
+	 */
+	CloseableIterator<NodeItem> getUserFeedItems(JID user, Date since,
+		 int limit, GlobalItemID afterItemId, boolean parentOnly) throws NodeStoreException;
+
+	/**
+	 * Get count of recent items for a user
+	 * 
+	 * @throws NodeStoreException
+	 */
+	int getCountUserFeedItems(JID user, Date since,
+			boolean parentOnly) throws NodeStoreException;
 
 	/**
 	 * Retrieves the number of items within a node.
@@ -374,6 +393,14 @@ public interface NodeStore {
 	 */
 	NodeItem getNodeItem(String nodeId, String nodeItemId)
 			throws NodeStoreException;
+	
+    /**
+     * Retrieves a single node item from a global item ID
+     * 
+     * @param itemId
+     * @return
+     */
+	NodeItem getNodeItem(GlobalItemID itemId) throws NodeStoreException;
 
 	/**
 	 * Stores a new item against the node.
@@ -519,7 +546,7 @@ public interface NodeStore {
 	 * @return
 	 * @throws NodeStoreException
 	 */
-	ResultSet<NodeItem> getUserItems(JID userJid) throws NodeStoreException;
+	ResultSet<NodeItem> getUserPublishedItems(JID userJid) throws NodeStoreException;
 
 	/**
 	 * Determine if a user has already rated a post

@@ -4,7 +4,7 @@ import java.util.concurrent.BlockingQueue;
 
 import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.get.items.SpecialItemsGet;
-import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.get.items.UserItemsGet;
+import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.get.items.NodeItemsGet;
 import org.dom4j.Element;
 import org.xmpp.packet.IQ;
 import org.xmpp.packet.JID;
@@ -13,14 +13,14 @@ import org.xmpp.packet.PacketError;
 
 public class ItemsGet extends PubSubElementProcessorAbstract {
 
-	private UserItemsGet userItems;
+	private NodeItemsGet userItems;
 	private SpecialItemsGet specialItems;
 
 	public ItemsGet(BlockingQueue<Packet> outQueue,
 			ChannelManager channelManager) {
 		setOutQueue(outQueue);
 		setChannelManager(channelManager);
-		userItems = new UserItemsGet(outQueue, channelManager);
+		userItems = new NodeItemsGet(outQueue, channelManager);
 		specialItems = new SpecialItemsGet(outQueue, channelManager);
 	}
 

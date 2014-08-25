@@ -117,10 +117,16 @@ public abstract class JDBCNodeStoreAbstract {
 		}
 	}
 	
-	protected void assertSameNodeItem(NodeItem actual, NodeItem expected) {
+	protected void assertSameNodeItem(NodeItem actual, NodeItem expected, boolean checkPayload) {
 		assertEquals(expected.getId(), actual.getId());
 		assertEquals(expected.getNodeId(), actual.getNodeId());
-		assertEquals(expected.getPayload(), actual.getPayload());
+		if (true == checkPayload) {
+			assertEquals(expected.getPayload(), actual.getPayload());
+		}
 		assertEquals(expected.getInReplyTo(), actual.getInReplyTo());
+	}
+	
+	protected void assertSameNodeItem(NodeItem actual, NodeItem expected) {
+		assertSameNodeItem(actual, expected, true);
 	}
 }

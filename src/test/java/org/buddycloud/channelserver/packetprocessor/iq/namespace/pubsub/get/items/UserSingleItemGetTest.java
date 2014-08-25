@@ -30,7 +30,7 @@ import org.xmpp.packet.PacketError;
 public class UserSingleItemGetTest extends IQTestHandler {
 
 	private IQ request;
-	private UserItemsGet itemsGet;
+	private NodeItemsGet itemsGet;
 	private Element element;
 	private BlockingQueue<Packet> queue = new LinkedBlockingQueue<Packet>();
 
@@ -43,7 +43,7 @@ public class UserSingleItemGetTest extends IQTestHandler {
 	public void setUp() throws Exception {
 
 		queue = new LinkedBlockingQueue<Packet>();
-		itemsGet = new UserItemsGet(queue, channelManager);
+		itemsGet = new NodeItemsGet(queue, channelManager);
 		request = readStanzaAsIq("/iq/pubsub/items/requestSingleItem.stanza");
 		element = request.getElement().element("pubsub").element("items");
 

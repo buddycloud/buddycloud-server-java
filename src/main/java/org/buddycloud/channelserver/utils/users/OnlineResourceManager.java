@@ -34,6 +34,8 @@ public class OnlineResourceManager {
 		}
 		this.configuration = configuration;
 		this.channelManager = channelManager;
+		
+		this.useDatabaseStorage = Boolean.valueOf(configuration.getProperty(Configuration.PERSIST_PRESENCE_DATA, "false"));
 	}
 
 	public void subscribeToNodeListeners(BlockingQueue<Packet> outQueue) {

@@ -78,3 +78,8 @@ The Buddycloud server can serve multiple domains in a single instance. For this 
 This executable will be passed the domain name as its single argument and should exit with 0 if this domain is local, with any other exit value otherwise. A good example of such an executable is the [external-domain-checker](https://github.com/buddycloud/hosting/blob/develop/external-domain-checker) of the hosting platform, that checks whether the domain exists on a SQL database.
 
 A multiple domain deployment is not expected to have the **server.domain** property on its configuration.
+
+## Node Configuration
+
+* Title: Max length 128 characters
+* Description: Max length 1024 characters

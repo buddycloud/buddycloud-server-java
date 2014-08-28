@@ -385,7 +385,10 @@ public class Sql92NodeStoreDialect implements NodeStoreSQLDialect {
 	
 	private static final String INSERT_ONLINE_JID = "INSERT INTO \"online_users\" (\"user\", \"updated\") VALUES (?, NOW());";
 
-	private static final String SELECT_ONLINE_RESOURCES = "SELECT \"user\", \"updated\" FROM \"online_users\" WHERE \"user\" LIKE ? ORDER BY \"updated\" DESC;";
+	private static final String SELECT_ONLINE_RESOURCES = "SELECT \"user\", \"updated\" "
+            + "FROM \"online_users\" "
+            + "WHERE \"user\" LIKE ? "
+            + "ORDER BY \"updated\" DESC;";
 	
 	private static final String SELECT_USER_FEED_ITEMS = ""
 	    + "SELECT \"node\", \"id\", \"updated\", \"xml\", \"in_reply_to\" "

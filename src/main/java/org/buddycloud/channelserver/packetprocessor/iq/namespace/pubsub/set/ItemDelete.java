@@ -219,7 +219,7 @@ public class ItemDelete extends PubSubElementProcessorAbstract {
 		String id = request.getElement().element("pubsub").element("retract")
 				.element("item").attributeValue("id");
 
-		if ((id != null) && !id.equals("")) {
+		if ((id != null) && !id.isEmpty()) {
 			if (true == GlobalItemIDImpl.isGlobalId(id)) {
 				itemId = GlobalItemIDImpl.fromBuddycloudString(id);
 			} else {

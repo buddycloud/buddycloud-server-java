@@ -67,7 +67,6 @@ public class Configuration extends Properties {
 			}
 		} catch (Exception e) {
 			LOGGER.error("Could not load " + CONFIGURATION_FILE + "!");
-			System.out.println(e.getLocalizedMessage());
 			System.exit(1);
 		}
 	}

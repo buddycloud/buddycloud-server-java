@@ -380,6 +380,15 @@ public class Sql92NodeStoreDialect implements NodeStoreSQLDialect {
 		"WHERE " +
 		    "(\"subscriptions\".\"node\" = ?) " +
 		"ORDER BY \"updated\" DESC; ";
+
+	private static final String DELETE_ONLINE_JID = "DELETE FROM \"online_users\" WHERE \"user\" = ?;";
+	
+	private static final String INSERT_ONLINE_JID = "INSERT INTO \"online_users\" (\"user\", \"updated\") VALUES (?, NOW());";
+
+	private static final String SELECT_ONLINE_RESOURCES = "SELECT \"user\", \"updated\" "
+            + "FROM \"online_users\" "
+            + "WHERE \"user\" LIKE ? "
+            + "ORDER BY \"updated\" DESC;";
 	
 	private static final String SELECT_USER_FEED_ITEMS = ""
 	    + "SELECT \"node\", \"id\", \"updated\", \"xml\", \"in_reply_to\" "
@@ -733,6 +742,20 @@ public class Sql92NodeStoreDialect implements NodeStoreSQLDialect {
 	}
 
 	@Override
+	public String deleteOnlineJid() {
+		return DELETE_ONLINE_JID;
+	}
+
+	@Override
+	public String selectOnlineResources() {
+		return SELECT_ONLINE_RESOURCES;
+	}
+
+	@Override
+	public String addOnlineJid() {
+		return INSERT_ONLINE_JID;
+	}
+	
 	public String selectUserFeedItems() {
 		return SELECT_USER_FEED_ITEMS;
 	}

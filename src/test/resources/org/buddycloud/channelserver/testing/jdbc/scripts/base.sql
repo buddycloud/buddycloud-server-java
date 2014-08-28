@@ -36,6 +36,9 @@ CREATE VIEW "open_nodes" AS
        	      WHERE "key"='accessModel'
 	        AND "value"='open';
 
+CREATE TABLE "online_users" ("user" TEXT NOT NULL,
+			  "updated" TIMESTAMP);
+
 -- Upgrade 2
 
 -- MIXED IN ABOVE
@@ -49,5 +52,9 @@ CREATE VIEW "open_nodes" AS
 -- MIXED IN ABOVE
 
 -- Upgrade 6
+
+-- MIXED IN ABOVE
+
+-- Upgrade 7
 
 -- MIXED IN ABOVE

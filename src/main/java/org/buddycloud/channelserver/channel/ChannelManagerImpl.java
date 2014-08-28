@@ -448,4 +448,19 @@ public class ChannelManagerImpl implements ChannelManager {
 		return nodeStore.getCountUserFeedItems(user, since, parentOnly);
 	}
 
+	@Override
+	public void jidOnline(JID jid) throws NodeStoreException {
+		nodeStore.jidOnline(jid);
+	}
+
+	@Override
+	public void jidOffline(JID jid) throws NodeStoreException {
+		nodeStore.jidOffline(jid);
+	}
+
+	@Override
+	public ArrayList<JID> onlineJids(JID jid) throws NodeStoreException {
+		return nodeStore.onlineJids(jid);
+	}
+
 }

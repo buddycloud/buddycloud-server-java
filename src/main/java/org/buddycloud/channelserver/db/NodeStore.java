@@ -595,6 +595,31 @@ public interface NodeStore {
 	 */
 	ResultSet<NodeThread> getNodeThreads(String node, String afterId, int limit)
 			throws NodeStoreException;
+	
+	/**
+	 * A JID has come online
+	 * 
+	 * @param jid
+	 * @throws NodeStoreException 
+	 */
+	void jidOnline(JID jid) throws NodeStoreException;
+	
+	/**
+	 * A JID has gone offline
+	 * 
+	 * @param jid
+	 * @throws NodeStoreException 
+	 */
+	void jidOffline(JID jid) throws NodeStoreException;
+	
+	/**
+	 * Get online resources
+	 * @return 
+	 * @throws NodeStoreException 
+	 * 
+	 * @params jid
+	 */
+	ArrayList<JID> onlineJids(JID jid) throws NodeStoreException;
 
 	/**
 	 * Count node threads

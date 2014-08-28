@@ -9,6 +9,7 @@ import java.util.concurrent.TimeUnit;
 import junit.framework.Assert;
 
 import org.buddycloud.channelserver.channel.ChannelManager;
+import org.buddycloud.channelserver.db.ClosableIteratorImpl;
 import org.buddycloud.channelserver.db.exception.NodeStoreException;
 import org.buddycloud.channelserver.packetHandler.iq.IQTestHandler;
 import org.buddycloud.channelserver.pubsub.affiliation.Affiliations;
@@ -33,9 +34,9 @@ import org.xmpp.resultsetmanagement.ResultSetImpl;
 
 public class ItemDeleteTest extends IQTestHandler {
 	private IQ request;
-	private ChannelManager channelManagerMock;
+	private ChannelManager channelManager;
 	private ItemDelete itemDelete;
-	private JID jid;
+	private JID jid = new JID("juliet@shakespeare.lit");
 	private Element element;
 	private BlockingQueue<Packet> queue = new LinkedBlockingQueue<Packet>();
 	private String node = "/user/capulet@shakespeare.lit/posts";
@@ -43,24 +44,22 @@ public class ItemDeleteTest extends IQTestHandler {
 
 	@Before
 	public void setUp() throws Exception {
-		channelManagerMock = Mockito.mock(ChannelManager.class);
-		Mockito.when(channelManagerMock.isLocalNode(Mockito.anyString()))
+		channelManager = Mockito.mock(ChannelManager.class);
+		Mockito.when(channelManager.isLocalNode(Mockito.anyString()))
 				.thenReturn(true);
 
 		queue = new LinkedBlockingQueue<Packet>();
-		itemDelete = new ItemDelete(queue, channelManagerMock);
-		jid = new JID("juliet@shakespeare.lit");
+		itemDelete = new ItemDelete(queue, channelManager);
 		request = readStanzaAsIq("/iq/pubsub/item/delete/request.stanza");
 
 		itemDelete.setServerDomain("shakespeare.lit");
-		itemDelete.setChannelManager(channelManagerMock);
 
 		element = new BaseElement("retract");
 		element.addAttribute("node", node);
 
 		Mockito.when(
-				channelManagerMock.getNodeMembership(Mockito.anyString(), Mockito
-						.any(JID.class))).thenReturn(
+				channelManager.getNodeMembership(Mockito.anyString(),
+						Mockito.any(JID.class))).thenReturn(
 				new NodeMembershipImpl(node, jid, Subscriptions.subscribed,
 						Affiliations.member, null));
 
@@ -95,8 +94,8 @@ public class ItemDeleteTest extends IQTestHandler {
 
 	@Test
 	public void testNodeStoreExceptionReturnsErrorStanza() throws Exception {
-		Mockito.when(channelManagerMock.isLocalNode(node)).thenReturn(true);
-		Mockito.doThrow(new NodeStoreException()).when(channelManagerMock)
+		Mockito.when(channelManager.isLocalNode(node)).thenReturn(true);
+		Mockito.doThrow(new NodeStoreException()).when(channelManager)
 				.nodeExists(node);
 
 		itemDelete.process(element, jid, request, null);
@@ -114,9 +113,9 @@ public class ItemDeleteTest extends IQTestHandler {
 	@Test
 	public void testProvidingNodeWhichDoesntExistReturnsError()
 			throws Exception {
-		Mockito.when(channelManagerMock.isLocalNode(node)).thenReturn(true);
-		Mockito.when(channelManagerMock.nodeExists(node)).thenReturn(false);
-		itemDelete.setChannelManager(channelManagerMock);
+		Mockito.when(channelManager.isLocalNode(node)).thenReturn(true);
+		Mockito.when(channelManager.nodeExists(node)).thenReturn(false);
+		itemDelete.setChannelManager(channelManager);
 
 		itemDelete.process(element, jid, request, null);
 
@@ -131,9 +130,9 @@ public class ItemDeleteTest extends IQTestHandler {
 
 	@Test
 	public void testProvidingInvalidStanzaReturnsError() throws Exception {
-		Mockito.when(channelManagerMock.isLocalNode(node)).thenReturn(true);
-		Mockito.when(channelManagerMock.nodeExists(node)).thenReturn(true);
-		itemDelete.setChannelManager(channelManagerMock);
+		Mockito.when(channelManager.isLocalNode(node)).thenReturn(true);
+		Mockito.when(channelManager.nodeExists(node)).thenReturn(true);
+		itemDelete.setChannelManager(channelManager);
 
 		IQ request = toIq(readStanzaAsString("/iq/pubsub/item/delete/request.stanza"));
 		request.getChildElement().element("retract").element("item").detach();
@@ -150,9 +149,9 @@ public class ItemDeleteTest extends IQTestHandler {
 
 	@Test
 	public void testNotProvidingItemIdReturnsError() throws Exception {
-		Mockito.when(channelManagerMock.isLocalNode(node)).thenReturn(true);
-		Mockito.when(channelManagerMock.nodeExists(node)).thenReturn(true);
-		itemDelete.setChannelManager(channelManagerMock);
+		Mockito.when(channelManager.isLocalNode(node)).thenReturn(true);
+		Mockito.when(channelManager.nodeExists(node)).thenReturn(true);
+		itemDelete.setChannelManager(channelManager);
 
 		IQ request = toIq(readStanzaAsString("/iq/pubsub/item/delete/request.stanza"));
 		request.getChildElement().element("retract").element("item")
@@ -170,9 +169,9 @@ public class ItemDeleteTest extends IQTestHandler {
 
 	@Test
 	public void testProvidingEmptyItemIdReturnsError() throws Exception {
-		Mockito.when(channelManagerMock.isLocalNode(node)).thenReturn(true);
-		Mockito.when(channelManagerMock.nodeExists(node)).thenReturn(true);
-		itemDelete.setChannelManager(channelManagerMock);
+		Mockito.when(channelManager.isLocalNode(node)).thenReturn(true);
+		Mockito.when(channelManager.nodeExists(node)).thenReturn(true);
+		itemDelete.setChannelManager(channelManager);
 
 		request = toIq(readStanzaAsString(
 				"/iq/pubsub/item/delete/request.stanza").replaceFirst(
@@ -191,11 +190,11 @@ public class ItemDeleteTest extends IQTestHandler {
 	@Test
 	public void testItemWhichDoesntExistReturnsItemNotFoundError()
 			throws Exception {
-		Mockito.when(channelManagerMock.isLocalNode(node)).thenReturn(true);
-		Mockito.when(channelManagerMock.nodeExists(node)).thenReturn(true);
-		Mockito.when(channelManagerMock.getNodeItem(node, "item-id"))
-				.thenReturn(null);
-		itemDelete.setChannelManager(channelManagerMock);
+		Mockito.when(channelManager.isLocalNode(node)).thenReturn(true);
+		Mockito.when(channelManager.nodeExists(node)).thenReturn(true);
+		Mockito.when(channelManager.getNodeItem(node, "item-id")).thenReturn(
+				null);
+		itemDelete.setChannelManager(channelManager);
 
 		itemDelete.process(element, jid, request, null);
 
@@ -211,13 +210,14 @@ public class ItemDeleteTest extends IQTestHandler {
 	@Test
 	public void testInvalidPayloadMessageReturnsErrorStanza() throws Exception {
 		NodeItem nodeItem = new NodeItemImpl(node, "item-id", new Date(),
-				payload.replaceFirst("<content>", ""));
-		Mockito.when(channelManagerMock.isLocalNode(node)).thenReturn(true);
-		Mockito.when(channelManagerMock.nodeExists(node)).thenReturn(true);
-		Mockito.when(channelManagerMock.getNodeItem(node, "item-id"))
-				.thenReturn(nodeItem);
+				payload.replaceFirst("<content>", ""), "12345") {
+		};
+		Mockito.when(channelManager.isLocalNode(node)).thenReturn(true);
+		Mockito.when(channelManager.nodeExists(node)).thenReturn(true);
+		Mockito.when(channelManager.getNodeItem(node, "item-id")).thenReturn(
+				nodeItem);
 
-		itemDelete.setChannelManager(channelManagerMock);
+		itemDelete.setChannelManager(channelManager);
 
 		itemDelete.process(element, jid, request, null);
 
@@ -237,13 +237,13 @@ public class ItemDeleteTest extends IQTestHandler {
 
 		NodeItem nodeItem = new NodeItemImpl(node, "item-id", new Date(),
 				payload.replace("juliet@shakespeare.lit",
-						"romeo@shakespeare.lit"));
-		Mockito.when(channelManagerMock.isLocalNode(node)).thenReturn(true);
-		Mockito.when(channelManagerMock.nodeExists(node)).thenReturn(true);
-		Mockito.when(channelManagerMock.getNodeItem(node, "item-id"))
-				.thenReturn(nodeItem);
+						"romeo@shakespeare.lit"), "12345");
+		Mockito.when(channelManager.isLocalNode(node)).thenReturn(true);
+		Mockito.when(channelManager.nodeExists(node)).thenReturn(true);
+		Mockito.when(channelManager.getNodeItem(node, "item-id")).thenReturn(
+				nodeItem);
 
-		itemDelete.setChannelManager(channelManagerMock);
+		itemDelete.setChannelManager(channelManager);
 
 		itemDelete.process(element, jid, request, null);
 
@@ -260,11 +260,11 @@ public class ItemDeleteTest extends IQTestHandler {
 	public void testUserDoesNotOwnNodeCanNotDelete() throws Exception {
 
 		NodeItem nodeItem = new NodeItemImpl(node, "item-id", new Date(),
-				payload);
+				payload, "12345");
 
-		Mockito.when(channelManagerMock.nodeExists(node)).thenReturn(true);
+		Mockito.when(channelManager.nodeExists(node)).thenReturn(true);
 		Mockito.when(
-				channelManagerMock.getNodeItem(Mockito.anyString(),
+				channelManager.getNodeItem(Mockito.anyString(),
 						Mockito.anyString())).thenReturn(nodeItem);
 
 		itemDelete.process(element, jid, request, null);
@@ -283,19 +283,19 @@ public class ItemDeleteTest extends IQTestHandler {
 
 		NodeItem nodeItem = new NodeItemImpl(node, "item-id", new Date(),
 				payload.replaceAll("romeo@shakespeare.lit",
-						"juliet@shakespeare.lit"));
+						"juliet@shakespeare.lit"), "12345");
 
-		Mockito.when(channelManagerMock.isLocalNode(node)).thenReturn(true);
-		Mockito.when(channelManagerMock.nodeExists(node)).thenReturn(true);
+		Mockito.when(channelManager.isLocalNode(node)).thenReturn(true);
+		Mockito.when(channelManager.nodeExists(node)).thenReturn(true);
 		Mockito.when(
-				channelManagerMock.getNodeItem(Mockito.anyString(),
+				channelManager.getNodeItem(Mockito.anyString(),
 						Mockito.anyString())).thenReturn(nodeItem);
 
-		itemDelete.setChannelManager(channelManagerMock);
+		itemDelete.setChannelManager(channelManager);
 
 		itemDelete.process(element, jid, request, null);
 
-		Mockito.verify(channelManagerMock).deleteNodeItemById(node, "item-id");
+		Mockito.verify(channelManager).deleteNodeItemById(node, "item-id");
 		IQ response = (IQ) queue.poll(100, TimeUnit.MILLISECONDS);
 
 		Assert.assertEquals(IQ.Type.result.toString(), response.getElement()
@@ -311,7 +311,7 @@ public class ItemDeleteTest extends IQTestHandler {
 
 		NodeItem nodeItem = new NodeItemImpl(node, "item-id", new Date(),
 				payload.replaceAll("romeo@shakespeare.lit",
-						"juliet@shakespeare.lit"));
+						"juliet@shakespeare.lit"), "12345");
 
 		request = toIq(readStanzaAsString(
 				"/iq/pubsub/item/delete/request.stanza").replaceFirst(
@@ -321,23 +321,24 @@ public class ItemDeleteTest extends IQTestHandler {
 		NodeSubscriptionImpl subscription1 = new NodeSubscriptionImpl(node,
 				new JID("romeo@shakespeare.lit"), Subscriptions.pending, null);
 		NodeSubscriptionImpl subscription2 = new NodeSubscriptionImpl(node,
-				new JID("juliet@shakespeare.lit"), Subscriptions.subscribed, null);
+				new JID("juliet@shakespeare.lit"), Subscriptions.subscribed,
+				null);
 		subscriptions.add(subscription1);
 		subscriptions.add(subscription2);
 
-		Mockito.when(channelManagerMock.isLocalNode(node)).thenReturn(true);
-		Mockito.when(channelManagerMock.nodeExists(node)).thenReturn(true);
-		Mockito.when(channelManagerMock.getNodeItem(node, "item-id"))
-				.thenReturn(nodeItem);
+		Mockito.when(channelManager.isLocalNode(node)).thenReturn(true);
+		Mockito.when(channelManager.nodeExists(node)).thenReturn(true);
+		Mockito.when(channelManager.getNodeItem(node, "item-id")).thenReturn(
+				nodeItem);
 
 		Mockito.doReturn(new ResultSetImpl<NodeSubscription>(subscriptions))
-				.when(channelManagerMock).getNodeSubscriptionListeners(node);
+				.when(channelManager).getNodeSubscriptionListeners(node);
 
-		itemDelete.setChannelManager(channelManagerMock);
+		itemDelete.setChannelManager(channelManager);
 
 		itemDelete.process(element, jid, request, null);
 
-		Mockito.verify(channelManagerMock).deleteNodeItemById(node, "item-id");
+		Mockito.verify(channelManager).deleteNodeItemById(node, "item-id");
 		IQ response = (IQ) queue.poll();
 
 		Assert.assertEquals(IQ.Type.result.toString(), response.getElement()
@@ -357,7 +358,7 @@ public class ItemDeleteTest extends IQTestHandler {
 
 		NodeItem nodeItem = new NodeItemImpl(node, "item-id", new Date(),
 				payload.replaceAll("romeo@shakespeare.lit",
-						"juliet@shakespeare.lit"));
+						"juliet@shakespeare.lit"), "12345");
 
 		IQ request = toIq(readStanzaAsString("/iq/pubsub/item/delete/request.stanza"));
 		request.getChildElement().element("retract").element("item")
@@ -367,26 +368,136 @@ public class ItemDeleteTest extends IQTestHandler {
 		NodeSubscriptionImpl subscription1 = new NodeSubscriptionImpl(node,
 				new JID("romeo@shakespeare.lit"), Subscriptions.pending, null);
 		NodeSubscriptionImpl subscription2 = new NodeSubscriptionImpl(node,
-				new JID("juliet@shakespeare.lit"), Subscriptions.subscribed, null);
+				new JID("juliet@shakespeare.lit"), Subscriptions.subscribed,
+				null);
 		subscriptions.add(subscription1);
 		subscriptions.add(subscription2);
 
-		Mockito.when(channelManagerMock.isLocalNode(node)).thenReturn(true);
-		Mockito.when(channelManagerMock.nodeExists(node)).thenReturn(true);
-		Mockito.when(channelManagerMock.getNodeItem(node, "item-id"))
-				.thenReturn(nodeItem);
+		Mockito.when(channelManager.isLocalNode(node)).thenReturn(true);
+		Mockito.when(channelManager.nodeExists(node)).thenReturn(true);
+		Mockito.when(channelManager.getNodeItem(node, "item-id")).thenReturn(
+				nodeItem);
 
 		Mockito.doReturn(new ResultSetImpl<NodeSubscription>(subscriptions))
-				.when(channelManagerMock).getNodeSubscriptionListeners(node);
+				.when(channelManager).getNodeSubscriptionListeners(node);
 
-		itemDelete.setChannelManager(channelManagerMock);
+		itemDelete.setChannelManager(channelManager);
 
 		itemDelete.process(element, jid, request, null);
 
-		Mockito.verify(channelManagerMock).deleteNodeItemById(node, "item-id");
+		Mockito.verify(channelManager).deleteNodeItemById(node, "item-id");
 
 		// Check that one notification is sent (on subscriber + 2 admins)
 		Assert.assertEquals(4, queue.size());
 
+	}
+
+	@Test
+	public void doesNotRequestThreadWhenDealingWithReply() throws Exception {
+		NodeItem nodeItem = new NodeItemImpl(node, "item-id", new Date(),
+				payload, "12345");
+
+		ArrayList<NodeSubscription> subscriptions = new ArrayList<NodeSubscription>();
+		NodeSubscriptionImpl subscription1 = new NodeSubscriptionImpl(node,
+				new JID("romeo@shakespeare.lit"), Subscriptions.pending, null);
+		subscriptions.add(subscription1);
+
+		Mockito.when(channelManager.isLocalNode(node)).thenReturn(true);
+		Mockito.when(channelManager.nodeExists(node)).thenReturn(true);
+		Mockito.when(channelManager.getNodeItem(node, "item-id")).thenReturn(
+				nodeItem);
+		Mockito.doThrow(Exception.class)
+				.when(channelManager)
+				.getNodeItemReplies(Mockito.anyString(), Mockito.anyString(),
+						Mockito.anyString(), Mockito.anyInt());
+
+		Mockito.doReturn(new ResultSetImpl<NodeSubscription>(subscriptions))
+				.when(channelManager).getNodeSubscriptionListeners(node);
+		itemDelete.setChannelManager(channelManager);
+
+		itemDelete.process(element, jid, request, null);
+	}
+	
+	@Test
+	public void requestsThreadWhenDeletingParentPost() throws Exception {
+		
+		Mockito.when(
+				channelManager.getNodeMembership(Mockito.anyString(),
+						Mockito.any(JID.class))).thenReturn(
+				new NodeMembershipImpl(node, jid, Subscriptions.subscribed,
+						Affiliations.owner, null));
+		
+		NodeItem nodeItem = new NodeItemImpl(node, "item-id", new Date(),
+				payload);
+
+		ArrayList<NodeSubscription> subscriptions = new ArrayList<NodeSubscription>();
+
+		
+		ArrayList<NodeItem> replies = new ArrayList<NodeItem>();
+		replies.add(new NodeItemImpl(node, "2", new Date(),
+				payload));
+		replies.add(new NodeItemImpl(node, "1", new Date(),
+				payload));
+		
+
+		Mockito.when(channelManager.isLocalNode(node)).thenReturn(true);
+		Mockito.when(channelManager.nodeExists(node)).thenReturn(true);
+		Mockito.when(channelManager.getNodeItem(node, "item-id")).thenReturn(
+				nodeItem);
+		Mockito.when(channelManager.getNodeItemReplies(Mockito.eq(node), Mockito.eq("item-id"),
+						Mockito.anyString(), Mockito.eq(-1))).thenReturn(new ClosableIteratorImpl<NodeItem>(replies
+								.iterator()));
+
+		Mockito.doReturn(new ResultSetImpl<NodeSubscription>(subscriptions))
+				.when(channelManager).getNodeSubscriptionListeners(node);
+
+		itemDelete.process(element, jid, request, null);
+		
+		Assert.assertEquals(7, queue.size());
+		
+		Assert.assertEquals(IQ.Type.result, ((IQ) queue.poll()).getType());
+		
+		Packet notification = queue.poll();
+
+		Assert.assertNotNull(notification);
+		Assert.assertEquals("message", notification.getElement().getName());
+		Assert.assertEquals("user1@server1", notification.getTo().toString());
+		Assert.assertEquals("2",
+				notification.getElement().element("event").element("items")
+						.element("retract").attributeValue("id"));
+		notification = queue.poll();
+		Assert.assertNotNull(notification);
+		Assert.assertEquals("2",
+				notification.getElement().element("event").element("items")
+						.element("retract").attributeValue("id"));
+		
+		notification = queue.poll();
+		Assert.assertNotNull(notification);
+		Assert.assertEquals("message", notification.getElement().getName());
+		Assert.assertEquals("user1@server1", notification.getTo().toString());
+		Assert.assertEquals("1",
+				notification.getElement().element("event").element("items")
+						.element("retract").attributeValue("id"));
+		notification = queue.poll();
+		Assert.assertNotNull(notification);
+		Assert.assertEquals("message", notification.getElement().getName());
+		Assert.assertEquals("user2@server1", notification.getTo().toString());
+		Assert.assertEquals("1",
+				notification.getElement().element("event").element("items")
+						.element("retract").attributeValue("id"));
+		
+		/* Lastly the originally deleted post */
+		notification = queue.poll();
+		Assert.assertNotNull(notification);
+		Assert.assertEquals("message", notification.getElement().getName());
+		Assert.assertEquals("user1@server1", notification.getTo().toString());
+		Assert.assertEquals("item-id",
+				notification.getElement().element("event").element("items")
+						.element("retract").attributeValue("id"));
+		notification = queue.poll();
+		Assert.assertNotNull(notification);
+		Assert.assertEquals("item-id",
+				notification.getElement().element("event").element("items")
+						.element("retract").attributeValue("id"));
 	}
 }

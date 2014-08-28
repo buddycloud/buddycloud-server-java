@@ -10,6 +10,7 @@ import java.util.concurrent.BlockingQueue;
 
 import org.buddycloud.channelserver.ChannelsEngine;
 import org.buddycloud.channelserver.Configuration;
+import org.buddycloud.channelserver.db.exception.NodeStoreException;
 import org.buddycloud.channelserver.utils.users.OnlineResourceManager;
 import org.junit.After;
 import org.junit.Before;
@@ -66,7 +67,7 @@ public class OutQueueConsumerTest {
 	}
 
 	@Test
-	public void testConsumeForRemoteServerRequestForDiscover() {
+	public void testConsumeForRemoteServerRequestForDiscover() throws Exception {
 		JID remoteServer = new JID("server2");
 		
 		Message message = new Message();

@@ -36,12 +36,13 @@ public class Configuration extends Properties {
 	
 	public static final String DISCOVERY_USE_DNS = "discovery.dns.enabled";
 
+	public static final String PERSIST_PRESENCE_DATA = "users.presence.persist";
+	
 	public static final String NOTIFICATIONS_SENDTO = "notifications.sendTo";
 	public static final String NOTIFICATIONS_CONNECTED = "notifications.connected";
 	
 	private static final String CONFIGURATION_FILE = "configuration.properties";
 
-	public static final String PURGE_REMOTE_ON_START = "sync.purge-on-start";
 
 	private static Configuration instance = null;
 

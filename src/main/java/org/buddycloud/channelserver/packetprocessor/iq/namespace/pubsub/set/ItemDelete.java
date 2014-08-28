@@ -53,9 +53,9 @@ public class ItemDelete extends PubSubElementProcessorAbstract {
 		response = IQ.createResultIQ(request);
 		node = element.attributeValue("node");
 		this.actor = actor;
-		if (null == this.actor)
+		if (null == this.actor) {
 			this.actor = request.getFrom();
-
+                }
 		if (!channelManager.isLocalNode(node)) {
 			makeRemoteRequest();
 			return;

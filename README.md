@@ -57,19 +57,16 @@ Please see [the example configuration file](https://github.com/buddycloud/buddyc
 
 | Property                                  | Default value  |  Required  | Description                                   |
 | ----------------------------------------- | -------------- | :--------: |---------------------------------------------- |
-| xmpp.host                                 |                |      ✓     | The XMPP server host (IP address or hostname) |
-| xmpp.port                                 |                |      ✓     | XMPP server component port                    |
+| xmpp.host                                 |  127.0.0.1     |            | The XMPP server host (IP address or hostname) |
+| xmpp.port                                 |  5347          |            | XMPP server component port                    |
 | xmpp.secretkey                            |                |      ✓     | Component secret                              |
 | server.domain                             |                |      ✓     | XMPP server domain                            |
 | server.domain.channels                    |                |      ✓     | Buddycloud server domain / Component address  |
 | server.domain.topics                      |                |            | Topics component address                      |
-| jdbc.proxool.alias                        |                |      ✓     | Database connection name                      |
 | jdbc.proxool.driver-url                   |                |      ✓     | Database connection string                    |
-| jdbc.proxool.driver-class                 |                |      ✓     | Database connection class                     |
 | jdbc.user                                 |                |      ✓     | Database username                             |
 | jdbc.password                             |                |      ✓     | Database password                             |
 | jdbc.proxool.maximum-connection-count     |                |      ✓     | Database connection pool size                 |
-| jdbc.proxool.house-keeping-test-sql       |                |      ✓     | Database house keeping test                   |
 | users.admin                               |                |            | Admin users (list of jids). Are sent all notifications and are able to see everything in **/firehose** |
 | notifications.sendTo                      |                |            | List of JIDs to send event messages to        |
 | notifications.connected                   |                |            | Send event of component connecting to XMPP server |
@@ -83,6 +80,7 @@ Please see [the example configuration file](https://github.com/buddycloud/buddyc
 | channel.configuration.[**posts** or **status** or **geo.next**, etc].description | %jid%'s status  |            | Override default node description on the node type |
 | discovery.dns.enabled                     | true           |            | Allow DNS discovery of other channel servers  |
 | sync.purge-on-start                       | false          |            | Purge remote data on server start             |
+| users.presence.persist | false | | If **true** then user presence status is stored in the database rather than in memory |
 
 ## Additional content-type plugins
 The buddycloud server supports validation of custom content types by means of a plugin system. By default the buddycloud server supports Atom content. Additional content types can be supported by creating an appropriate validator and packaging it as a plugin.

@@ -64,7 +64,6 @@ public class Configuration extends Properties {
 			}
 		} catch (Exception e) {
 			LOGGER.error("Could not load " + CONFIGURATION_FILE + "!");
-			System.out.println(e.getLocalizedMessage());
 			System.exit(1);
 		}
 	}
@@ -92,6 +91,10 @@ public class Configuration extends Properties {
 	public String getProperty(String key) {
 		return conf.getProperty(key);
 	}
+    
+    public void clear() {
+        conf.clear();
+    }
 
 	public String getProperty(String key, String defaultValue) {
 		return conf.getProperty(key, defaultValue);
@@ -113,12 +116,17 @@ public class Configuration extends Properties {
 	}
 
 	private Collection<JID> getJIDArrayProperty(String key) {
+        System.out.println(conf.getProperty(CONFIGURATION_CHANNELS_AUTOSUBSCRIBE));
 		Collection<String> props = getStringArrayProperty(key);
 
 		Collection<JID> jids = new ArrayList<JID>(props.size());
 
 		for (String prop : props) {
-			jids.add(new JID(prop));
+            try {
+			    jids.add(new JID(prop));
+            } catch (IllegalArgumentException e) {
+                LOGGER.error(e);
+            }
 		}
 
 		return jids;

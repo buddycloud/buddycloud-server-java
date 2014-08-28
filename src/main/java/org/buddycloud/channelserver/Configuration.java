@@ -43,6 +43,11 @@ public class Configuration extends Properties {
 	
 	private static final String CONFIGURATION_FILE = "configuration.properties";
 
+        public static final String PURGE_REMOTE_ON_START = "sync.purge-on-start";
+
+	public static final String XMPP_PORT = "xmpp.port";
+
+	public static final String XMPP_HOST = "xmpp.host";
 
 	private static Configuration instance = null;
 
@@ -181,5 +186,13 @@ public class Configuration extends Properties {
 		}
 
 		return defaultValue;
+	}
+
+        public String getComponentPort() {
+		return this.getProperty(XMPP_PORT, "5347");
+	}
+
+	public String getXmppHost() {
+		return this.getProperty(XMPP_HOST, "127.0.0.1");
 	}
 }

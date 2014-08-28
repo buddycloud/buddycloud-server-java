@@ -80,13 +80,17 @@ public class OnlineResourceManager {
 		if (!LocalDomainChecker.isLocal(jid.getDomain(), configuration)) {
 			return;
 		}
+		
+		ArrayList<JID> user = null;
+		if (users.containsKey(jid.toBareJID())) {
+			user = users.get(jid.toBareJID());
+		}
 		if ((type != null) && type.equals(UNAVAILABLE)) {
 			LOGGER.info("User going offline: " + jid.toString());
 			if (true == useDatabaseStorage) {
 				channelManager.jidOffline(jid);
 			} else {
-				if (users.containsKey(jid.toBareJID())) {
-					ArrayList<JID> user = users.get(jid.toBareJID());
+				if (null != user) {
 					user.remove(jid);
 				}
 			}
@@ -95,7 +99,7 @@ public class OnlineResourceManager {
 		if (true == useDatabaseStorage) {
 			channelManager.jidOnline(jid);
 		} else {
-			if (!users.containsKey(jid.toBareJID())) {
+			if (null == user) {
 				users.put(jid.toBareJID(), new ArrayList<JID>());
 			}
 			ArrayList<JID> entry = users.get(jid.toBareJID());

@@ -84,7 +84,7 @@ public class ChannelsEngine implements Component {
 	}
 
 	private void serverSync() {
-		serverSync = new ServerSync(channelManagerFactory, inQueue, outQueue);
+		serverSync = new ServerSync(channelManagerFactory, inQueue, outQueue, configuration);
 		serverSync.start();
 	}
 

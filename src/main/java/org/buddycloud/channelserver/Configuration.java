@@ -41,6 +41,8 @@ public class Configuration extends Properties {
 	
 	private static final String CONFIGURATION_FILE = "configuration.properties";
 
+	public static final String PURGE_REMOTE_ON_START = "sync.purge-on-start";
+
 	private static Configuration instance = null;
 
 	private Collection<JID> adminUsers = new ArrayList<JID>();

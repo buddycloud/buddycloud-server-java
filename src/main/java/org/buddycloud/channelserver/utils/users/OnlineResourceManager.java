@@ -61,14 +61,14 @@ public class OnlineResourceManager {
 	}
 
 	public ArrayList<JID> getResources(JID jid) throws NodeStoreException {
-		if (true == useDatabaseStorage) {
-			return channelManager.onlineJids(jid);
-		}
 		if ((jid.getResource() != null)
 				|| ((jid.getResource() == null) && (jid.getNode() == null))) {
 			ArrayList<JID> user = new ArrayList<JID>();
 			user.add(jid);
 			return user;
+		}
+		if (true == useDatabaseStorage) {
+			ArrayList<JID> jids = channelManager.onlineJids(jid);
 		}
 		if (!users.containsKey(jid.toBareJID())) {
 			return new ArrayList<JID>();

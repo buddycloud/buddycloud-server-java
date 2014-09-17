@@ -108,6 +108,11 @@ public abstract class PubSubElementProcessorAbstract implements
 
 	protected void createExtendedErrorReply(Type type, Condition condition,
 			String additionalElement) {
+		if ((null != additionalElement) && (additionalElement.indexOf(" ") > -1)) {
+			// Its probably an error message!
+			createExtendedErrorReply(type, condition, null, null, additionalElement);
+			return;
+		}
 		createExtendedErrorReply(type, condition, additionalElement,
 				JabberPubsub.NS_PUBSUB_ERROR);
 	}

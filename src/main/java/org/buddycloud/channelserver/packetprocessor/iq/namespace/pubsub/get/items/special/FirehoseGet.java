@@ -102,14 +102,17 @@ public class FirehoseGet extends PubSubElementProcessorAbstract {
 
 	private void parseRsmElement() {
 		Element rsmElement = pubsub.element("set");
-		if (null == rsmElement)
+		if (null == rsmElement) {
 			return;
+		}
 		Element max;
 		Element after;
-		if (null != (max = rsmElement.element("max")))
+		if (null != (max = rsmElement.element("max"))) {
 			maxResults = Integer.parseInt(max.getTextTrim());
-		if (null != (after = rsmElement.element("after")))
+		}
+		if (null != (after = rsmElement.element("after"))) {
 			afterItemId = after.getTextTrim();
+		}
 	}
 
 	private void addRsmElement() throws NodeStoreException {

@@ -73,10 +73,10 @@ public class UserItemsGet extends PubSubElementProcessorAbstract {
 		pubsub = response.getElement().addElement("pubsub",
 				JabberPubsub.NAMESPACE_URI);
 		try {
-			parseRsmElement();
-			addRecentItems();
-			addRsmElement();
-			outQueue.put(response);
+			if (true == parseRsmElement()) {
+				addRecentItems();
+				addRsmElement();
+			}
 		} catch (NodeStoreException e) {
 			LOGGER.error(e);
 			response.getElement().remove(pubsub);
@@ -87,9 +87,9 @@ public class UserItemsGet extends PubSubElementProcessorAbstract {
 
 	}
 
-	private void parseRsmElement() {
+	private boolean parseRsmElement() {
 		if (null == resultSetManagement) {
-			return;
+			return true;
 		}
 
 		Element max = null;
@@ -104,11 +104,12 @@ public class UserItemsGet extends PubSubElementProcessorAbstract {
 						.getTextTrim());
 			} catch (IllegalArgumentException e) {
 				LOGGER.error(e);
-				createExtendedErrorReply(Type.modify, Condition.bad_request,
-						"Could not parse the 'after' id: " + after);
-				return;
+				createExtendedErrorReply(Type.modify, Condition.bad_request, null, null,
+						"Could not parse the 'after' id: " + after.getTextTrim());
+				return false;
 			}
 		}
+		return true;
 	}
 
 	private void addRsmElement() throws NodeStoreException {

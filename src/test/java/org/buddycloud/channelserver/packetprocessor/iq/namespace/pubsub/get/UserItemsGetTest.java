@@ -412,4 +412,44 @@ public class UserItemsGetTest extends IQTestHandler {
 				Mockito.anyInt(), Mockito.any(GlobalItemID.class),
 				Mockito.eq(true));
 	}
+	
+	/**
+	 * Issue #230
+	 */
+	@Test
+	public void badRsmValueReturnsValidError() throws Exception {
+		
+		String after = "/user/demo@buddycloud.com/posts/example.com|94948";
+		Element rsm = new BaseElement(new QName("set", new Namespace("",
+				"http://jabber.org/protocol/rsm")));
+		rsm.addElement("after")
+		    .setText(after);
+		
+		String stanza = "<iq type=\"get\" to=\"channels.buddycloud.org\" " +
+		    "from=\"test.user@buddycloud.org/resource\" id=\"id:1\">" +
+			"<pubsub xmlns=\"http://jabber.org/protocol/pubsub\">" +
+		    "<user-items xmlns=\"http://buddycloud.org/v1\" parent-only=\"true\" " +
+			"since=\"2000-01-01T00:00:00.000Z\"/>" +
+		    "<set xmlns=\"http://jabber.org/protocol/rsm\">" +
+                "<max>10</max>" +
+                "<after>/user/demo@buddycloud.com/posts/example.com|94948</after>" +
+            "</set>" +
+            "</pubsub>" +
+        "</iq>";
+		IQ request = this.toIq(stanza);
+		
+		userItemsGet.process(element, jid, request, rsm);
+		Assert.assertEquals(1, queue.size());
+		
+		IQ response = (IQ) queue.poll();
+		PacketError errorPacket = response.getError();
+		Assert.assertEquals(
+			"Could not parse the 'after' id: " + after,
+			errorPacket.getText()
+		);
+		Assert.assertEquals(PacketError.Condition.bad_request, errorPacket.getCondition());
+		Assert.assertEquals(PacketError.Type.modify, errorPacket.getType());
+		
+		
+	}
 }

@@ -104,8 +104,11 @@ public class UserItemsGet extends PubSubElementProcessorAbstract {
 						.getTextTrim());
 			} catch (IllegalArgumentException e) {
 				LOGGER.error(e);
-				createExtendedErrorReply(Type.modify, Condition.bad_request, null, null,
-						"Could not parse the 'after' id: " + after.getTextTrim());
+				createExtendedErrorReply(
+						Type.modify,
+						Condition.bad_request,
+						"Could not parse the 'after' id: "
+								+ after.getTextTrim());
 				return false;
 			}
 		}

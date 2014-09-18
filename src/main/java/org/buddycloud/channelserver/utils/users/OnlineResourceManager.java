@@ -65,11 +65,10 @@ public class OnlineResourceManager {
 		boolean isBareJid = (jid.getResource() == null);
 		boolean isServerJid = ((jid.getResource() == null) && (jid.getNode() == null));
 
-		JID bareJid = new JID(jid.toBareJID());
+		String bareJid = jid.toBareJID();
 
 		ArrayList<JID> user = new ArrayList<JID>();
-
-		if (!isBareJid || isServerJid) {
+        if (!isBareJid || isServerJid) {
 			user.add(jid);
 			return user;
 		}

@@ -131,8 +131,9 @@ public class FirehoseGet extends PubSubElementProcessorAbstract {
 						.getRootElement();
 				Element itemElement = itemsElement.addElement("item");
 				itemElement.addAttribute("id", item.getId());
-				if (null == firstItemId)
+				if (null == firstItemId) {
 					firstItemId = item.getId();
+				}
 				lastItemId = item.getId();
 				itemElement.add(entry);
 			} catch (DocumentException e) {

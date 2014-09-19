@@ -1,11 +1,9 @@
 package org.buddycloud.channelserver.db.jdbc;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.net.URL;
@@ -114,6 +112,7 @@ public class DatabaseTester {
 
 	private void createSchema(final Connection conn) throws SQLException, IOException {
 		executeDDL(conn, "SET DATABASE SQL SYNTAX PGS TRUE;");
+		executeDDL(conn, "SET DATABASE SQL REFERENCES TRUE;");
 		loadData("base");
 	}
 

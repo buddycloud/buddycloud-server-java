@@ -228,17 +228,21 @@ public class Sql92NodeStoreDialect implements NodeStoreSQLDialect {
 
 	private static final String DELETE_ITEMS = "DELETE FROM \"items\" WHERE \"node\" = ?;";
 
-	private static final String COUNT_ITEMS_FROM_LOCAL_NODES = ""
-        + "SELECT COUNT(\"id\") FROM \"items\" "
-		+ "WHERE \"node\" IN (SELECT \"node\" FROM \"node_config\" "
-        + "WHERE \"key\" = ? AND \"value\" LIKE ? "
-		+ "AND (\"node\" LIKE ? OR \"node\" LIKE ?))";
+	private static final String COUNT_ITEMS_FROM_LOCAL_NODES = 	
+			"SELECT COUNT(\"id\") " +
+			"FROM \"items\", \"node_config\" " +
+			"WHERE \"items\".\"node\" = \"node_config\".\"node\" " +
+			"AND \"key\" = ? AND \"value\" LIKE ? " +
+			"AND (\"items\".\"node\" LIKE ? OR \"items\".\"node\" LIKE ?)";
 
-	private static final String SELECT_ITEMS_FROM_LOCAL_NODES_BEFORE_DATE = ""
-		+ "SELECT \"node\", \"id\", \"updated\", \"xml\", \"in_reply_to\", \"created\" "
-		+ "FROM \"items\" WHERE \"updated\" < ? "
-		+ "AND \"node\" IN (SELECT \"node\" FROM \"node_config\" WHERE \"key\" = ? AND \"value\" LIKE ? AND (\"node\" LIKE ? OR \"node\" LIKE ?)) "
-		+ "ORDER BY \"updated\" DESC, \"id\" ASC LIMIT ?";
+	private static final String SELECT_ITEMS_FROM_LOCAL_NODES_BEFORE_DATE = 
+			"SELECT \"items\".\"node\", \"id\", \"items\".\"updated\", \"xml\", \"in_reply_to\", \"created\" " +
+			"FROM \"items\", \"node_config\" " +
+			"WHERE \"items\".\"updated\" < ? " +
+			"AND \"items\".\"node\" = \"node_config\".\"node\" " +
+			"AND \"key\" = ? AND \"value\" LIKE ? " +
+			"AND (\"items\".\"node\" LIKE ? OR \"items\".\"node\" LIKE ?) " +
+			"ORDER BY \"updated\" DESC, \"id\" ASC LIMIT ?";
 
 	private static final String SELECT_USER_ITEMS = "SELECT \"node\", \"id\", \"updated\", \"xml\", \"in_reply_to\", \"created\"" +
 			" FROM \"items\" WHERE (CAST(xpath('//atom:author/atom:name/text()', xmlparse(document \"xml\")," +

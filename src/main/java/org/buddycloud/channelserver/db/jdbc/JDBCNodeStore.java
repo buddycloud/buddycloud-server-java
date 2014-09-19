@@ -733,20 +733,14 @@ public class JDBCNodeStore implements NodeStore {
 			stmt.setTimestamp(1, new java.sql.Timestamp(beforeDate.getTime()));
 			stmt.setString(2, Conf.ACCESS_MODEL);
 			stmt.setString(3, accessModel);
-			stmt.setString(
-					4,
-					"%@"
-							+ Configuration.getInstance().getProperty(
-									Configuration.CONFIGURATION_SERVER_DOMAIN)
-							+ "%");
-			stmt.setString(
-					5,
-					"%@"
-							+ Configuration
-									.getInstance()
-									.getProperty(
-											Configuration.CONFIGURATION_SERVER_TOPICS_DOMAIN)
-							+ "%");
+			
+			String serverDomain = Configuration.getInstance().getProperty(
+					Configuration.CONFIGURATION_SERVER_DOMAIN);
+			String serverTopicsDomain = Configuration.getInstance().getProperty(
+					Configuration.CONFIGURATION_SERVER_TOPICS_DOMAIN);
+			stmt.setString(4, serverDomain == null ? "%" : "%@" + serverDomain + "%");
+			stmt.setString(5, serverTopicsDomain == null ? "%" : "%@" + serverTopicsDomain + "%");
+			
 			stmt.setInt(6, limit);
 
 			java.sql.ResultSet rs = stmt.executeQuery();
@@ -773,32 +767,22 @@ public class JDBCNodeStore implements NodeStore {
 		String accessModel = "open";
 		if (true == isAdmin)
 			accessModel = "%";
-
 		try {
 			stmt = conn.prepareStatement(dialect.countItemsForLocalNodes());
 			stmt.setString(1, Conf.ACCESS_MODEL);
 			stmt.setString(2, accessModel);
-			stmt.setString(
-					3,
-					"%@"
-							+ Configuration.getInstance().getProperty(
-									Configuration.CONFIGURATION_SERVER_DOMAIN)
-							+ "%");
-			stmt.setString(
-					4,
-					"%@"
-							+ Configuration
-									.getInstance()
-									.getProperty(
-											Configuration.CONFIGURATION_SERVER_TOPICS_DOMAIN)
-							+ "%");
+			String serverDomain = Configuration.getInstance().getProperty(
+					Configuration.CONFIGURATION_SERVER_DOMAIN);
+			String serverTopicsDomain = Configuration.getInstance().getProperty(
+					Configuration.CONFIGURATION_SERVER_TOPICS_DOMAIN);
+			stmt.setString(3, serverDomain == null ? "%" : "%@" + serverDomain + "%");
+			stmt.setString(4, serverTopicsDomain == null ? "%" : "%@" + serverTopicsDomain + "%");
+			
 			java.sql.ResultSet rs = stmt.executeQuery();
-
-			if (rs.next()) {
-				return rs.getInt(1);
-			} else {
+			if (!rs.next()) {
 				return 0; // This really shouldn't happen!
 			}
+			return rs.getInt(1);
 		} catch (SQLException e) {
 			throw new NodeStoreException(e);
 		} finally {

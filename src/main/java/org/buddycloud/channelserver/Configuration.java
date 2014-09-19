@@ -75,7 +75,7 @@ public class Configuration extends Properties {
 			System.exit(1);
 		}
 	}
-
+	
 	private void setupCollections() {
 		adminUsers = getJIDArrayProperty(CONFIGURATION_ADMIN_USERS);
 		autosubscribeChannels = getJIDArrayProperty(CONFIGURATION_CHANNELS_AUTOSUBSCRIBE);
@@ -98,6 +98,11 @@ public class Configuration extends Properties {
 
 	public String getProperty(String key) {
 		return conf.getProperty(key);
+	}
+	
+	@Override
+	public synchronized Object remove(Object key) {
+		return conf.remove(key);
 	}
     
     public void clear() {

@@ -13,6 +13,7 @@ import org.buddycloud.channelserver.db.ClosableIteratorImpl;
 import org.buddycloud.channelserver.db.exception.NodeStoreException;
 import org.buddycloud.channelserver.packetHandler.iq.IQTestHandler;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.JabberPubsub;
+import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.get.RecentItemsGet;
 import org.buddycloud.channelserver.pubsub.model.NodeItem;
 import org.buddycloud.channelserver.pubsub.model.impl.NodeItemImpl;
 import org.dom4j.Element;
@@ -32,15 +33,11 @@ public class FirehoseGetTest extends IQTestHandler {
 	private Element element;
 	private BlockingQueue<Packet> queue = new LinkedBlockingQueue<Packet>();
 
-	private String node = "/user/pamela@denmark.lit/posts";
 	private JID jid = new JID("user1@server1");
 	private ChannelManager channelManager;
 
 	private String TEST_NODE_1 = "node1";
 	private String TEST_NODE_2 = "node2";
-
-	private JID TEST_JID_1 = new JID("user1@server1");
-	private JID TEST_JID_2 = new JID("user2@server1");
 
 	@Before
 	public void setUp() throws Exception {
@@ -103,6 +100,7 @@ public class FirehoseGetTest extends IQTestHandler {
 				pubsub.getNamespaceURI());
 	}
 
+	@SuppressWarnings("unchecked")
 	@Test
 	public void testOutgoingStanzaFormattedAsExpected() throws Exception {
 
@@ -169,6 +167,7 @@ public class FirehoseGetTest extends IQTestHandler {
 				.elements("item").size());
 	}
 
+	@SuppressWarnings("unchecked")
 	@Test
 	public void testCanControlGatheredEntriesUsingRsm() throws Exception {
 
@@ -188,7 +187,7 @@ public class FirehoseGetTest extends IQTestHandler {
 				channelManager.getFirehoseItemCount(Mockito.anyBoolean())).thenReturn(2);
 
 		Element rsm = request.getElement().addElement("rsm");
-		rsm.addNamespace("", recentItemsGet.NS_RSM);
+		rsm.addNamespace("", RecentItemsGet.NS_RSM);
 		rsm.addElement("max").addText("2");
 		rsm.addElement("after").addText("node1:1");
 

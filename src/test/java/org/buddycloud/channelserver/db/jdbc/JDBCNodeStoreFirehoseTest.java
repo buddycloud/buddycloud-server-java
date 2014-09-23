@@ -83,6 +83,19 @@ public class JDBCNodeStoreFirehoseTest extends JDBCNodeStoreAbstract {
 	}
 	
 	@Test
+	public void testGetFirehoseRSM() throws Exception {
+		store.setNodeConfValue(TEST_SERVER1_NODE1_ID, Conf.ACCESS_MODEL, "open");
+		CloseableIterator<NodeItem> firehose = store.getFirehose(
+				Integer.MAX_VALUE, TEST_SERVER1_NODE1_ITEM4_GLOBAL_ID, false);
+		int itemCount = 0;
+		while (firehose.hasNext()) {
+			firehose.next();
+			itemCount++;
+		}
+		assertEquals(3, itemCount);
+	}
+	
+	@Test
 	public void testCountFirehoseItemsOpenNode() throws Exception {
 		store.setNodeConfValue(TEST_SERVER1_NODE1_ID, Conf.ACCESS_MODEL, "open");
 		int firehoseItemCount = store.getFirehoseItemCount(false);

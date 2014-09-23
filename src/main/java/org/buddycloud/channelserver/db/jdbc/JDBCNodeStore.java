@@ -712,12 +712,12 @@ public class JDBCNodeStore implements NodeStore {
 		PreparedStatement stmt = null;
 		Date beforeDate = null;
 
-//		if (afterItemId != null) {
-//			beforeDate = getNodeItemById(afterItemId).getUpdated();
-//		} else {
+		if (afterItemId != null) {
+			beforeDate = getNodeItem(GlobalItemIDImpl.fromBuddycloudString(
+					afterItemId)).getUpdated();
+		} else {
 			beforeDate = new Date();
-			afterItemId = "";
-//		}
+		}
 
 		if (limit < 0) {
 			throw new IllegalArgumentException(

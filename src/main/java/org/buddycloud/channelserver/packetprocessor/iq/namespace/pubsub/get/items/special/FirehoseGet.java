@@ -86,15 +86,14 @@ public class FirehoseGet extends PubSubElementProcessorAbstract {
 	}
 
 	private void parseRsmElement() {
-		Element rsmElement = pubsub.element("set");
-		if (null == rsmElement) {
+		if (null == resultSetManagement) {
 			return;
 		}
-		Element max = rsmElement.element("max");
+		Element max = resultSetManagement.element("max");
 		if (max != null) {
 			maxResults = Integer.parseInt(max.getTextTrim());
 		}
-		Element after = rsmElement.element("after");
+		Element after = resultSetManagement.element("after");
 		if (after != null) {
 			afterItemId = after.getTextTrim();
 		}

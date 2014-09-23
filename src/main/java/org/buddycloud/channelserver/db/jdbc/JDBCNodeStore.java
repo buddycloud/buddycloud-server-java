@@ -734,10 +734,8 @@ public class JDBCNodeStore implements NodeStore {
 			stmt.setString(2, Conf.ACCESS_MODEL);
 			stmt.setString(3, accessModel);
 			
-			String serverDomain = Configuration.getInstance().getProperty(
-					Configuration.CONFIGURATION_SERVER_DOMAIN);
-			String serverTopicsDomain = Configuration.getInstance().getProperty(
-					Configuration.CONFIGURATION_SERVER_TOPICS_DOMAIN);
+			String serverDomain = Configuration.getInstance().getServerDomain();
+			String serverTopicsDomain = Configuration.getInstance().getServerTopicsDomain();
 			stmt.setString(4, serverDomain == null ? "%" : "%@" + serverDomain + "%");
 			stmt.setString(5, serverTopicsDomain == null ? "%" : "%@" + serverTopicsDomain + "%");
 			
@@ -771,10 +769,8 @@ public class JDBCNodeStore implements NodeStore {
 			stmt = conn.prepareStatement(dialect.countItemsForLocalNodes());
 			stmt.setString(1, Conf.ACCESS_MODEL);
 			stmt.setString(2, accessModel);
-			String serverDomain = Configuration.getInstance().getProperty(
-					Configuration.CONFIGURATION_SERVER_DOMAIN);
-			String serverTopicsDomain = Configuration.getInstance().getProperty(
-					Configuration.CONFIGURATION_SERVER_TOPICS_DOMAIN);
+			String serverDomain = Configuration.getInstance().getServerDomain();
+			String serverTopicsDomain = Configuration.getInstance().getServerTopicsDomain();
 			stmt.setString(3, serverDomain == null ? "%" : "%@" + serverDomain + "%");
 			stmt.setString(4, serverTopicsDomain == null ? "%" : "%@" + serverTopicsDomain + "%");
 			

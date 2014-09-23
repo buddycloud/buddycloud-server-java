@@ -20,7 +20,7 @@ import org.xmpp.packet.PacketError;
 
 public class FirehoseGet extends PubSubElementProcessorAbstract {
 
-	private static final int DEF_MAX_RESULTS = 50;
+	private static final int DEFAULT_MAX_RESULTS = 50;
 	private static final Logger LOGGER = Logger.getLogger(FirehoseGet.class);
 	
 	private Element pubsub;
@@ -113,7 +113,7 @@ public class FirehoseGet extends PubSubElementProcessorAbstract {
 
 	private void addItems() throws NodeStoreException {
 		if (-1 == maxResults) {
-			maxResults = DEF_MAX_RESULTS;
+			maxResults = DEFAULT_MAX_RESULTS;
 		}
 		CloseableIterator<NodeItem> items = channelManager.getFirehose(maxResults, afterItemId, isAdmin);
 		String lastNode = "";

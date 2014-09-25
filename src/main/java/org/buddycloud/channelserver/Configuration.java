@@ -129,7 +129,6 @@ public class Configuration extends Properties {
 	}
 
 	private Collection<JID> getJIDArrayProperty(String key) {
-        System.out.println(conf.getProperty(CONFIGURATION_CHANNELS_AUTOSUBSCRIBE));
 		Collection<String> props = getStringArrayProperty(key);
 
 		Collection<JID> jids = new ArrayList<JID>(props.size());

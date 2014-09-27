@@ -19,6 +19,9 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import org.apache.log4j.Logger;
+import org.mockito.Mockito;
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.stubbing.Answer;
 
 public class DatabaseTester {
 	private static Logger log = Logger.getLogger(DatabaseTester.class);
@@ -104,7 +107,17 @@ public class DatabaseTester {
 
 	public Connection getConnection() throws SQLException {
 		if (conn == null) {
-			conn = DriverManager.getConnection("jdbc:log4jdbc:hsqldb:mem:test", "sa", "");
+			final Connection originalConn = DriverManager.getConnection("jdbc:log4jdbc:hsqldb:mem:test", "sa", "");
+			conn = Mockito.spy(originalConn);
+			Mockito.doAnswer(new Answer<PreparedStatement>() {
+				@Override
+				public PreparedStatement answer(InvocationOnMock invocation)
+						throws Throwable {
+					String originalSQL = (String) invocation.getArguments()[0];
+					String replacedSQL = originalSQL.replaceFirst("(\\S+) ~ \\?", "regexp_matches($1, ?)");
+					return originalConn.prepareStatement(replacedSQL);
+				}
+			}).when(conn).prepareStatement(Mockito.anyString());
 			executeDDL(conn, "drop schema public cascade;");
 		}
 		return conn;

@@ -64,7 +64,7 @@ public class LocalDomainChecker {
 			
 			String csvDomains = IOUtils.toString(inputStream);
 			for (String eachDomain : csvDomains.split(COMMA)) {
-				localDomains.add(eachDomain);
+				localDomains.add(eachDomain.trim());
 			}
 			inputStream.close();
 		} catch (Exception e) {

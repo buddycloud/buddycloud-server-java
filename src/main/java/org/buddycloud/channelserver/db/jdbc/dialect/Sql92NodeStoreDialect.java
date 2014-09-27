@@ -239,7 +239,8 @@ public class Sql92NodeStoreDialect implements NodeStoreSQLDialect {
 			"FROM \"items\", \"node_config\" " +
 			"WHERE \"items\".\"node\" = \"node_config\".\"node\" " +
 			"AND \"key\" = ? AND \"value\" LIKE ? " +
-			"AND regexp_matches(\"items\".\"node\", ?)";
+			"AND \"items\".\"node\" ~ ? ";
+//			"AND regexp_matches(\"items\".\"node\", ?)";
 
 	private static final String SELECT_ITEMS_FROM_LOCAL_NODES_BEFORE_DATE = 
 			"SELECT \"items\".\"node\", \"id\", \"items\".\"updated\", \"xml\", \"in_reply_to\", \"created\" " +
@@ -247,7 +248,9 @@ public class Sql92NodeStoreDialect implements NodeStoreSQLDialect {
 			"WHERE \"items\".\"updated\" < ? " +
 			"AND \"items\".\"node\" = \"node_config\".\"node\" " +
 			"AND \"key\" = ? AND \"value\" LIKE ? " +
-			"AND regexp_matches(\"items\".\"node\", ?) " +
+//			"AND regexp_matches(\"items\".\"node\", ?) " +
+//			"AND \"items\".\"node\" SIMILAR TO ? " +
+			"AND \"items\".\"node\" ~ ? " +
 			"ORDER BY \"updated\" DESC, \"id\" ASC LIMIT ?";
 
 	private static final String SELECT_USER_ITEMS = "SELECT \"node\", \"id\", \"updated\", \"xml\", \"in_reply_to\", \"created\"" +

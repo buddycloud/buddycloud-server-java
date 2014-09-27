@@ -730,27 +730,11 @@ public class JDBCNodeStore implements NodeStore {
 		if (true == isAdmin)
 			accessModel = "%";
 		try {
-			String serverDomain = Configuration.getInstance().getServerDomain();
-			String serverTopicsDomain = Configuration.getInstance().getServerTopicsDomain();
-			List<String> localDomains = new LinkedList<String>();
-			if (serverDomain != null) {
-				localDomains.add(Pattern.quote(serverDomain));
-			}
-			if (serverTopicsDomain != null) {
-				localDomains.add(Pattern.quote(serverTopicsDomain));
-			}
-			for (String localDomain : LocalDomainChecker.getLocalDomains(Configuration.getInstance())) {
-				localDomains.add(Pattern.quote(localDomain));
-			}
-			
-			String domainRegex = localDomains.isEmpty() ? ".*" : 
-				".*@(" + StringUtils.join(localDomains, "|") + ")\\/.*";
-			
 			stmt = conn.prepareStatement(dialect.selectItemsForLocalNodesBeforeDate());
 			stmt.setTimestamp(1, new java.sql.Timestamp(beforeDate.getTime()));
 			stmt.setString(2, Conf.ACCESS_MODEL);
 			stmt.setString(3, accessModel);
-			stmt.setString(4, domainRegex);
+			stmt.setString(4, getLocalDomainRegex());
 			stmt.setInt(5, limit);
 
 			java.sql.ResultSet rs = stmt.executeQuery();
@@ -778,26 +762,10 @@ public class JDBCNodeStore implements NodeStore {
 		if (true == isAdmin)
 			accessModel = "%";
 		try {
-			String serverDomain = Configuration.getInstance().getServerDomain();
-			String serverTopicsDomain = Configuration.getInstance().getServerTopicsDomain();
-			List<String> localDomains = new LinkedList<String>();
-			if (serverDomain != null) {
-				localDomains.add(Pattern.quote(serverDomain));
-			}
-			if (serverTopicsDomain != null) {
-				localDomains.add(Pattern.quote(serverTopicsDomain));
-			}
-			for (String localDomain : LocalDomainChecker.getLocalDomains(Configuration.getInstance())) {
-				localDomains.add(Pattern.quote(localDomain));
-			}
-			
-			String domainRegex = localDomains.isEmpty() ? ".*" : 
-				".*@(" + StringUtils.join(localDomains, "|") + ")\\/.*";
-			
 			stmt = conn.prepareStatement(dialect.countItemsForLocalNodes());
 			stmt.setString(1, Conf.ACCESS_MODEL);
 			stmt.setString(2, accessModel);
-			stmt.setString(3, domainRegex);
+			stmt.setString(3, getLocalDomainRegex());
 			
 			java.sql.ResultSet rs = stmt.executeQuery();
 			if (!rs.next()) {
@@ -812,6 +780,33 @@ public class JDBCNodeStore implements NodeStore {
 		}
 	}
 	
+	private static final String POSIX_SPECIAL_CHARS = "\\.^$*+?()[{|"; 
+	
+	private static String posixRegexQuote(String str) {
+		for (Character p : POSIX_SPECIAL_CHARS.toCharArray()) {
+			str = str.replace(p.toString(), "\\" + p.toString());
+		}
+		return str;
+	}
+
+	private static String getLocalDomainRegex() {
+		String serverDomain = Configuration.getInstance().getServerDomain();
+		String serverTopicsDomain = Configuration.getInstance().getServerTopicsDomain();
+		List<String> localDomains = new LinkedList<String>();
+		if (serverDomain != null) {
+			localDomains.add(posixRegexQuote(serverDomain));
+		}
+		if (serverTopicsDomain != null) {
+			localDomains.add(posixRegexQuote(serverTopicsDomain));
+		}
+		for (String localDomain : LocalDomainChecker.getLocalDomains(Configuration.getInstance())) {
+			localDomains.add(posixRegexQuote(localDomain));
+		}
+		
+		String domainRegex = localDomains.isEmpty() ? ".*" : 
+			".*@(" + StringUtils.join(localDomains, "|") + ")\\/.*";
+		return domainRegex;
+	}
 
 	@Override
 	public CloseableIterator<NodeItem> getUserFeedItems(JID user, Date since,

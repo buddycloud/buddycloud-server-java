@@ -2,12 +2,14 @@ package org.buddycloud.channelserver.packetprocessor.iq.namespace.discoitems;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 
 import org.apache.log4j.Logger;
 import org.buddycloud.channelserver.Configuration;
 import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.channel.Conf;
+import org.buddycloud.channelserver.channel.LocalDomainChecker;
 import org.buddycloud.channelserver.db.exception.NodeStoreException;
 import org.buddycloud.channelserver.packetprocessor.PacketProcessor;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.discoinfo.DiscoInfoGet;
@@ -71,17 +73,20 @@ public class DiscoItemsGet implements PacketProcessor<IQ> {
 		
 		Element query = response.getElement().addElement("query");
 		query.addNamespace("", JabberDiscoItems.NAMESPACE_URI);
+		Set<String> localDomains = channelManager.getLocalDomains();
 		for (String node : nodes) {
-			if (false == isLocalNode(node)) continue;
+			if (false == isLocalNode(node, localDomains)) {
+				continue;
+			}
 			Element item = query.addElement("item");
 			item.addAttribute("node", node);
 			item.addAttribute("jid", jid);
 		}
 	}
 
-	private boolean isLocalNode(String node) throws NodeStoreException {
+	private boolean isLocalNode(String node, Set<String> localDomains) throws NodeStoreException {
 		try {
-			return channelManager.isLocalNode(node);
+			return channelManager.isLocalNode(node, localDomains);
 		} catch (IllegalArgumentException e) {
 			logger.error(e);
 			return false;

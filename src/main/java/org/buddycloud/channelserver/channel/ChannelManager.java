@@ -1,15 +1,14 @@
 package org.buddycloud.channelserver.channel;
 
 import java.util.List;
+import java.util.Set;
 
 import org.buddycloud.channelserver.db.CloseableIterator;
 import org.buddycloud.channelserver.db.NodeStore;
 import org.buddycloud.channelserver.db.exception.NodeStoreException;
 import org.buddycloud.channelserver.pubsub.affiliation.Affiliations;
 import org.buddycloud.channelserver.pubsub.model.NodeItem;
-import org.buddycloud.channelserver.pubsub.model.NodeMembership;
 import org.xmpp.packet.JID;
-import org.xmpp.resultsetmanagement.ResultSet;
 
 public interface ChannelManager extends NodeStore {
 
@@ -86,5 +85,12 @@ public interface ChannelManager extends NodeStore {
 	 */
 	CloseableIterator<NodeItem> performSearch(JID searcher, List content, JID author, int page,
 			int rpp) throws NodeStoreException;
+
+	/**
+	 * @return
+	 */
+	Set<String> getLocalDomains();
+
+	boolean isLocalNode(String nodeId, Set<String> localDomains);
 
 }

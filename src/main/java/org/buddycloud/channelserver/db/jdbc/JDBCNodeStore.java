@@ -15,11 +15,13 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.regex.Pattern;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.buddycloud.channelserver.Configuration;
 import org.buddycloud.channelserver.channel.Conf;
+import org.buddycloud.channelserver.channel.LocalDomainChecker;
 import org.buddycloud.channelserver.db.ClosableIteratorImpl;
 import org.buddycloud.channelserver.db.CloseableIterator;
 import org.buddycloud.channelserver.db.NodeStore;
@@ -728,18 +730,28 @@ public class JDBCNodeStore implements NodeStore {
 		if (true == isAdmin)
 			accessModel = "%";
 		try {
-			stmt = conn.prepareStatement(dialect
-					.selectItemsForLocalNodesBeforeDate());
+			String serverDomain = Configuration.getInstance().getServerDomain();
+			String serverTopicsDomain = Configuration.getInstance().getServerTopicsDomain();
+			List<String> localDomains = new LinkedList<String>();
+			if (serverDomain != null) {
+				localDomains.add(Pattern.quote(serverDomain));
+			}
+			if (serverTopicsDomain != null) {
+				localDomains.add(Pattern.quote(serverTopicsDomain));
+			}
+			for (String localDomain : LocalDomainChecker.getLocalDomains(Configuration.getInstance())) {
+				localDomains.add(Pattern.quote(localDomain));
+			}
+			
+			String domainRegex = localDomains.isEmpty() ? ".*" : 
+				".*@(" + StringUtils.join(localDomains, "|") + ")\\/.*";
+			
+			stmt = conn.prepareStatement(dialect.selectItemsForLocalNodesBeforeDate());
 			stmt.setTimestamp(1, new java.sql.Timestamp(beforeDate.getTime()));
 			stmt.setString(2, Conf.ACCESS_MODEL);
 			stmt.setString(3, accessModel);
-			
-			String serverDomain = Configuration.getInstance().getServerDomain();
-			String serverTopicsDomain = Configuration.getInstance().getServerTopicsDomain();
-			stmt.setString(4, serverDomain == null ? "%" : "%@" + serverDomain + "%");
-			stmt.setString(5, serverTopicsDomain == null ? "%" : "%@" + serverTopicsDomain + "%");
-			
-			stmt.setInt(6, limit);
+			stmt.setString(4, domainRegex);
+			stmt.setInt(5, limit);
 
 			java.sql.ResultSet rs = stmt.executeQuery();
 
@@ -766,13 +778,26 @@ public class JDBCNodeStore implements NodeStore {
 		if (true == isAdmin)
 			accessModel = "%";
 		try {
+			String serverDomain = Configuration.getInstance().getServerDomain();
+			String serverTopicsDomain = Configuration.getInstance().getServerTopicsDomain();
+			List<String> localDomains = new LinkedList<String>();
+			if (serverDomain != null) {
+				localDomains.add(Pattern.quote(serverDomain));
+			}
+			if (serverTopicsDomain != null) {
+				localDomains.add(Pattern.quote(serverTopicsDomain));
+			}
+			for (String localDomain : LocalDomainChecker.getLocalDomains(Configuration.getInstance())) {
+				localDomains.add(Pattern.quote(localDomain));
+			}
+			
+			String domainRegex = localDomains.isEmpty() ? ".*" : 
+				".*@(" + StringUtils.join(localDomains, "|") + ")\\/.*";
+			
 			stmt = conn.prepareStatement(dialect.countItemsForLocalNodes());
 			stmt.setString(1, Conf.ACCESS_MODEL);
 			stmt.setString(2, accessModel);
-			String serverDomain = Configuration.getInstance().getServerDomain();
-			String serverTopicsDomain = Configuration.getInstance().getServerTopicsDomain();
-			stmt.setString(3, serverDomain == null ? "%" : "%@" + serverDomain + "%");
-			stmt.setString(4, serverTopicsDomain == null ? "%" : "%@" + serverTopicsDomain + "%");
+			stmt.setString(3, domainRegex);
 			
 			java.sql.ResultSet rs = stmt.executeQuery();
 			if (!rs.next()) {

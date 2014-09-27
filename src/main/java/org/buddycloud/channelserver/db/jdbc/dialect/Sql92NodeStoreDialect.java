@@ -1,5 +1,11 @@
 package org.buddycloud.channelserver.db.jdbc.dialect;
 
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+
+import org.apache.commons.lang.StringUtils;
 import org.buddycloud.channelserver.db.jdbc.JDBCNodeStore.NodeStoreSQLDialect;
 
 public class Sql92NodeStoreDialect implements NodeStoreSQLDialect {
@@ -233,7 +239,7 @@ public class Sql92NodeStoreDialect implements NodeStoreSQLDialect {
 			"FROM \"items\", \"node_config\" " +
 			"WHERE \"items\".\"node\" = \"node_config\".\"node\" " +
 			"AND \"key\" = ? AND \"value\" LIKE ? " +
-			"AND (\"items\".\"node\" LIKE ? OR \"items\".\"node\" LIKE ?)";
+			"AND regexp_matches(\"items\".\"node\", ?)";
 
 	private static final String SELECT_ITEMS_FROM_LOCAL_NODES_BEFORE_DATE = 
 			"SELECT \"items\".\"node\", \"id\", \"items\".\"updated\", \"xml\", \"in_reply_to\", \"created\" " +
@@ -241,7 +247,7 @@ public class Sql92NodeStoreDialect implements NodeStoreSQLDialect {
 			"WHERE \"items\".\"updated\" < ? " +
 			"AND \"items\".\"node\" = \"node_config\".\"node\" " +
 			"AND \"key\" = ? AND \"value\" LIKE ? " +
-			"AND (\"items\".\"node\" LIKE ? OR \"items\".\"node\" LIKE ?) " +
+			"AND regexp_matches(\"items\".\"node\", ?) " +
 			"ORDER BY \"updated\" DESC, \"id\" ASC LIMIT ?";
 
 	private static final String SELECT_USER_ITEMS = "SELECT \"node\", \"id\", \"updated\", \"xml\", \"in_reply_to\", \"created\"" +

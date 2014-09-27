@@ -1,15 +1,22 @@
 package org.buddycloud.channelserver.channel;
 
-import java.io.IOException;
+import java.io.InputStream;
+import java.util.HashSet;
 import java.util.Properties;
+import java.util.Set;
 
+import org.apache.commons.io.IOUtils;
 import org.buddycloud.channelserver.Configuration;
 
 public class LocalDomainChecker {
 
-	private static final int IS_LOCAL_EXIT_VALUE = 0;
+	private static final String COMMA = ",";
 	
 	public static boolean isLocal(String domain, Properties configuration) {
+		return isLocal(domain, configuration, null);
+	}
+	
+	public static boolean isLocal(String domain, Properties configuration, Set<String> localDomains) {
 		if (configuration == null) {
 			return false;
 		}
@@ -27,22 +34,44 @@ public class LocalDomainChecker {
 					|| domain.equals(channelDomain));
 		}
 		
-		int exitValue;
-		try {
-			exitValue = runChecker(command, domain);
-		} catch (Exception e) {
-			return false;
+		if (command.equals(Boolean.TRUE.toString())) {
+			return true;
 		}
-		return exitValue == IS_LOCAL_EXIT_VALUE;
+		
+		if (localDomains == null) {
+			try {
+				localDomains = getLocalDomains(configuration);
+			} catch (Exception e) {
+				return false;
+			}
+		}
+		return localDomains.contains(domain);
 	}
 
-	private static int runChecker(String command, String domain) throws IOException,
-			InterruptedException {
-		if (command.equals(Boolean.TRUE.toString())) {
-			return IS_LOCAL_EXIT_VALUE;
+	public static Set<String> getLocalDomains(Properties configuration) {
+		HashSet<String> localDomains = new HashSet<String>();
+		String command = configuration.getProperty(
+				Configuration.CONFIGURATION_LOCAL_DOMAIN_CHECKER);
+		if (command == null) {
+			return localDomains;
 		}
-		ProcessBuilder processBuilder = new ProcessBuilder(command, domain);
-		Process process = processBuilder.start();
-		return process.waitFor();
+		
+		try {
+			ProcessBuilder processBuilder = new ProcessBuilder(command);
+			Process process = processBuilder.start();
+			process.waitFor();
+			InputStream inputStream = process.getInputStream();
+			
+			String csvDomains = IOUtils.toString(inputStream);
+			for (String eachDomain : csvDomains.split(COMMA)) {
+				localDomains.add(eachDomain);
+			}
+			inputStream.close();
+		} catch (Exception e) {
+			// Return empty set
+			e.printStackTrace();
+		}
+		
+		return localDomains;
 	}
 }

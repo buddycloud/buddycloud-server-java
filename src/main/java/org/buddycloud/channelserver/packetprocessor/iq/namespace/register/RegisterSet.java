@@ -51,7 +51,7 @@ public class RegisterSet implements PacketProcessor<IQ> {
 		LOGGER.debug("Processing register request from " + request.getFrom());
 
 		String domain = reqIQ.getFrom().getDomain();
-		if (!LocalDomainChecker.isLocal(domain, configuration)) {
+		if (!channelManager.isLocalDomain(domain)) {
 			notThisDomain(reqIQ);
 			return;
 		}

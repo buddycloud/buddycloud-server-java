@@ -5,6 +5,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
 
 import org.apache.log4j.Logger;
 import org.buddycloud.channelserver.db.ClosableIteratorImpl;
@@ -250,20 +251,34 @@ public class ChannelManagerImpl implements ChannelManager {
 	}
 
 	@Override
-	public boolean isLocalNode(String nodeId) {
+	public boolean isLocalNode(String nodeId, Set<String> localDomains) {
 		if (false == nodeId.matches("/user/.+@.+/.+")) {
 			logger.debug("Node " + nodeId + " has an invalid format");
 			throw new IllegalArgumentException(INVALID_NODE);
 		}
 		String domain = new JID(nodeId.split("/")[2]).getDomain();
-		return isLocalDomain(domain);
+		return isLocalDomain(domain, localDomains);
 	}
 
 	@Override
 	public boolean isLocalDomain(String domain) {
 		return LocalDomainChecker.isLocal(domain, configuration);
 	}
+	
+	private boolean isLocalDomain(String domain, Set<String> localDomains) {
+		return LocalDomainChecker.isLocal(domain, configuration, localDomains);
+	}
+	
+	@Override
+	public boolean isLocalNode(String nodeId) {
+		return isLocalNode(nodeId, null);
+	}
 
+	@Override
+	public Set<String> getLocalDomains() {
+		return LocalDomainChecker.getLocalDomains(configuration);
+	}
+	
 	@Override
 	public boolean isLocalJID(JID jid) {
 		String domain = jid.getDomain();
@@ -300,12 +315,15 @@ public class ChannelManagerImpl implements ChannelManager {
 	@Override
 	public void deleteRemoteData() throws NodeStoreException {
 		ArrayList<String> nodes = this.getNodeList();
+		Set<String> localDomains = LocalDomainChecker.getLocalDomains(configuration);
 		for (String node : nodes) {
 			try {
-				if (true == node.equals(("/firehose")))
-					return;
-				if (false == this.isLocalNode(node))
+				if (true == node.equals(("/firehose"))) {
+					continue;
+				}
+				if (false == this.isLocalNode(node, localDomains)) {
 					nodeStore.purgeNodeItems(node);
+				}
 			} catch (IllegalArgumentException e) {
 				logger.error("Invalid remote node in datastore " + node, e);
 			}

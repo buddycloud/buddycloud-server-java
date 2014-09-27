@@ -7,6 +7,7 @@ import java.util.concurrent.BlockingQueue;
 import org.apache.log4j.Logger;
 import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.channel.Conf;
+import org.buddycloud.channelserver.channel.LocalDomainChecker;
 import org.buddycloud.channelserver.channel.node.configuration.NodeConfigurationException;
 import org.buddycloud.channelserver.channel.node.configuration.field.Creator;
 import org.buddycloud.channelserver.db.exception.NodeStoreException;
@@ -44,6 +45,7 @@ public class NodeCreate extends PubSubElementProcessorAbstract {
 		if (null == actorJID) {
 			actor = request.getFrom();
 		}
+		
 		if (false == channelManager.isLocalNode(node)) {
 			makeRemoteRequest();
 			return;

@@ -42,6 +42,7 @@ public class DiscoItemsGetTest extends IQTestHandler {
 		requestWithNode = readStanzaAsIq("/iq/discoitems/requestWithNode.stanza");
 	}
 
+	@SuppressWarnings("unchecked")
 	@Test
 	public void testReturnsListOfNodes() throws Exception {
 		ArrayList<String> nodes = new ArrayList<String>();
@@ -52,6 +53,8 @@ public class DiscoItemsGetTest extends IQTestHandler {
 		Mockito.when(channelManager.getNodeList()).thenReturn(nodes);
 		Mockito.when(channelManager.isLocalNode(Mockito.anyString()))
 		    .thenReturn(true);
+		Mockito.when(channelManager.isLocalNode(Mockito.anyString(), Mockito.anySet()))
+	    	.thenReturn(true);
 		
 		discoItems.process(request);
 		
@@ -61,7 +64,6 @@ public class DiscoItemsGetTest extends IQTestHandler {
 		String jid = Configuration.getInstance()
 		    .getProperty(Configuration.CONFIGURATION_SERVER_CHANNELS_DOMAIN);
 		
-		@SuppressWarnings("unchecked")
 		List<Element> items = iq.getElement().element("query").elements("item");
 		Assert.assertEquals(3, items.size());
 		Assert.assertEquals(jid, items.get(0).attributeValue("jid"));

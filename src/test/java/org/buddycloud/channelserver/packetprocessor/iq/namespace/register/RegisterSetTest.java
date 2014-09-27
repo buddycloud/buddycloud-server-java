@@ -92,6 +92,8 @@ public class RegisterSetTest extends IQTestHandler {
 				.thenReturn(true);
 		when(channelManagerMock.isLocalJID(new JID("channel2@server1")))
 				.thenReturn(true);
+		when(channelManagerMock.isLocalDomain("server1"))
+				.thenReturn(true);
 
 		registerSet.process(request);
 
@@ -125,6 +127,8 @@ public class RegisterSetTest extends IQTestHandler {
 				.thenReturn(false);
 		when(channelManagerMock.isLocalJID(new JID("channel2@server2")))
 				.thenReturn(false);
+		when(channelManagerMock.isLocalDomain("server1"))
+				.thenReturn(true);
 
 		registerSet.process(request);
 
@@ -175,6 +179,11 @@ public class RegisterSetTest extends IQTestHandler {
 		
 		final JID localOpenChannel = new JID("channel2@server1");
 		final JID remoteChannel = new JID("channel1@server2");
+		
+		when(channelManagerMock.isLocalDomain("server1"))
+				.thenReturn(true);
+		when(channelManagerMock.isLocalDomain("server2"))
+				.thenReturn(false);
 		
 		when(channelManagerMock.nodeExists(anyString())).thenReturn(false);
 

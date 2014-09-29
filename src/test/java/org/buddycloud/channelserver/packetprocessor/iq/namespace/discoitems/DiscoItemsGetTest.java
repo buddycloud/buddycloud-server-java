@@ -45,16 +45,12 @@ public class DiscoItemsGetTest extends IQTestHandler {
 	@SuppressWarnings("unchecked")
 	@Test
 	public void testReturnsListOfNodes() throws Exception {
-		ArrayList<String> nodes = new ArrayList<String>();
+		List<String> nodes = new ArrayList<String>();
 		nodes.add("/user/user1@server1.com/posts");
 		nodes.add("/user/topic@topics.server1.com/posts");
 		nodes.add("/user/user2@server1.com/posts");
 		
-		Mockito.when(channelManager.getNodeList()).thenReturn(nodes);
-		Mockito.when(channelManager.isLocalNode(Mockito.anyString()))
-		    .thenReturn(true);
-		Mockito.when(channelManager.isLocalNode(Mockito.anyString(), Mockito.anySet()))
-	    	.thenReturn(true);
+		Mockito.when(channelManager.getLocalNodesList()).thenReturn(nodes);
 		
 		discoItems.process(request);
 		
@@ -93,7 +89,7 @@ public class DiscoItemsGetTest extends IQTestHandler {
 	
 	@Test
 	public void testReturnsErrorIfDataStoreException() throws Exception {
-		Mockito.when(channelManager.getNodeList()).thenThrow(new NodeStoreException());
+		Mockito.when(channelManager.getLocalNodesList()).thenThrow(new NodeStoreException());
 		
 		discoItems.process(request);
 		Packet response = queue.poll();

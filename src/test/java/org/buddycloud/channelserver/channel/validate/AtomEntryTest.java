@@ -170,7 +170,6 @@ public class AtomEntryTest extends TestHandler {
         validator = getEntryObject(item);
 		Assert.assertTrue(validator.isValid());
         Element entry = validator.getPayload();
-        System.out.println(entry.elementText("updated"));
 		Assert.assertTrue(entry.elementText("updated").matches(ISO_8601_REGEX));
 	}
 

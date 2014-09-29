@@ -115,6 +115,7 @@ public class DatabaseTester {
 						throws Throwable {
 					String originalSQL = (String) invocation.getArguments()[0];
 					String replacedSQL = originalSQL.replaceFirst("(\\S+) ~ \\?", "regexp_matches($1, ?)");
+					replacedSQL = replacedSQL.replaceFirst("(\\S+) !~ \\?", "not regexp_matches($1, ?)");
 					return originalConn.prepareStatement(replacedSQL);
 				}
 			}).when(conn).prepareStatement(Mockito.anyString());

@@ -495,7 +495,21 @@ public interface NodeStore {
 	 * @throws NodeStoreException
 	 */
 	ArrayList<String> getNodeList() throws NodeStoreException;
+	
+	/**
+	 * Retrieves a list of local nodes
+	 * 
+	 * @throws NodeStoreException
+	 */
+	List<String> getLocalNodesList() throws NodeStoreException;
 
+	/**
+	 * Retrieves a list of remote nodes
+	 * 
+	 * @throws NodeStoreException
+	 */
+	List<String> getRemoteNodesList() throws NodeStoreException;
+	
 	/**
 	 * Search subscribed nodes for content
 	 * 

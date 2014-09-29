@@ -8,6 +8,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import org.buddycloud.channelserver.Configuration;
 import org.buddycloud.channelserver.db.NodeStore;
@@ -132,34 +133,17 @@ public class ChannelManagerImplTest {
 	@Test
 	public void testDeleteRemoteDataDeletesRemoteData() throws Exception {
 		
-		ArrayList<String> nodes = new ArrayList<String>();
-		nodes.add(user2);
-		nodes.add(user3);
-		nodes.add(user5);
+		List<String> remoteNodes = new ArrayList<String>();
+		remoteNodes.add(user2);
+		remoteNodes.add(user3);
+		remoteNodes.add(user5);
 		
-		when(nodeStore.getNodeList()).thenReturn(nodes);
+		when(nodeStore.getRemoteNodesList()).thenReturn(remoteNodes);
 		
 		channelManager.deleteRemoteData();
 		
-		verify(nodeStore).getNodeList();
+		verify(nodeStore).getRemoteNodesList();
 		verify(nodeStore, Mockito.times(3)).purgeNodeItems(Mockito.anyString());
-	}
-	
-	@Test
-	public void testDeleteRemoteDoesNotPurgeLocalNodes() throws Exception {
-				
-		ArrayList<String> nodes = new ArrayList<String>();
-		nodes.add(user1);
-		nodes.add(user2);
-		nodes.add(user3);
-		nodes.add(user4);
-		
-		when(nodeStore.getNodeList()).thenReturn(nodes);
-		
-		channelManager.deleteRemoteData();
-		
-		verify(nodeStore).getNodeList();
-		verify(nodeStore, Mockito.times(2)).purgeNodeItems(Mockito.anyString());
 	}
 	
 	@Test

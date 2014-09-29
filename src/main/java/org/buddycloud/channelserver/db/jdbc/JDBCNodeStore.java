@@ -1725,6 +1725,44 @@ public class JDBCNodeStore implements NodeStore {
 	}
 	
 	@Override
+	public List<String> getLocalNodesList() throws NodeStoreException {
+		PreparedStatement stmt = null;
+		try {
+			stmt = conn.prepareStatement(dialect.selectLocalNodes());
+			stmt.setString(1, getLocalDomainRegex());
+			java.sql.ResultSet rs = stmt.executeQuery();
+			List<String> result = new ArrayList<String>();
+			while (rs.next()) {
+				result.add(rs.getString(1));
+			}
+			return result;
+		} catch (SQLException e) {
+			throw new NodeStoreException(e);
+		} finally {
+			close(stmt); // Will implicitly close the resultset if required
+		}
+	}
+
+	@Override
+	public List<String> getRemoteNodesList() throws NodeStoreException {
+		PreparedStatement stmt = null;
+		try {
+			stmt = conn.prepareStatement(dialect.selectRemoteNodes());
+			stmt.setString(1, getLocalDomainRegex());
+			java.sql.ResultSet rs = stmt.executeQuery();
+			List<String> result = new ArrayList<String>();
+			while (rs.next()) {
+				result.add(rs.getString(1));
+			}
+			return result;
+		} catch (SQLException e) {
+			throw new NodeStoreException(e);
+		} finally {
+			close(stmt); // Will implicitly close the resultset if required
+		}
+	}
+	
+	@Override
 	public Transaction beginTransaction() throws NodeStoreException {
 		if (transactionHasBeenRolledBack) {
 			throw new IllegalStateException(
@@ -1853,6 +1891,10 @@ public class JDBCNodeStore implements NodeStore {
 
 	public interface NodeStoreSQLDialect {
 		String insertNode();
+
+		String selectRemoteNodes();
+
+		String selectLocalNodes();
 
 		String addOnlineJid();
 

@@ -240,7 +240,17 @@ public class Sql92NodeStoreDialect implements NodeStoreSQLDialect {
 			"WHERE \"items\".\"node\" = \"node_config\".\"node\" " +
 			"AND \"key\" = ? AND \"value\" LIKE ? " +
 			"AND \"items\".\"node\" ~ ? ";
-
+	
+	private static final String SELECT_LOCAL_NODES = 	
+			"SELECT \"node\" " +
+			"FROM \"items\" " +
+			"WHERE \"items\".\"node\" ~ ? ";
+	
+	private static final String SELECT_REMOTE_NODES = 	
+			"SELECT \"node\" " +
+			"FROM \"items\" " +
+			"WHERE \"items\".\"node\" !~ ? ";
+	
 	private static final String SELECT_ITEMS_FROM_LOCAL_NODES_BEFORE_DATE = 
 			"SELECT \"items\".\"node\", \"id\", \"items\".\"updated\", \"xml\", \"in_reply_to\", \"created\" " +
 			"FROM \"items\", \"node_config\" " +
@@ -773,6 +783,16 @@ public class Sql92NodeStoreDialect implements NodeStoreSQLDialect {
 	@Override
 	public String selectCountUserFeedItems() {
 		return SELECT_COUNT_USER_FEED_ITEMS;
+	}
+
+	@Override
+	public String selectRemoteNodes() {
+		return SELECT_REMOTE_NODES;
+	}
+
+	@Override
+	public String selectLocalNodes() {
+		return SELECT_LOCAL_NODES;
 	}
 
 }

@@ -61,26 +61,32 @@ public class OnlineResourceManager {
 	}
 
 	public ArrayList<JID> getResources(JID jid) throws NodeStoreException {
-		if (true == useDatabaseStorage) {
-			return channelManager.onlineJids(jid);
-		}
-		if ((jid.getResource() != null)
-				|| ((jid.getResource() == null) && (jid.getNode() == null))) {
-			ArrayList<JID> user = new ArrayList<JID>();
+
+		boolean isBareJid = (jid.getResource() == null);
+		boolean isServerJid = ((jid.getResource() == null) && (jid.getNode() == null));
+
+		String bareJid = jid.toBareJID();
+
+		ArrayList<JID> user = new ArrayList<JID>();
+        if (!isBareJid || isServerJid) {
 			user.add(jid);
 			return user;
 		}
-		if (!users.containsKey(jid.toBareJID())) {
-			return new ArrayList<JID>();
+
+		if (true == useDatabaseStorage) {
+			return channelManager.onlineJids(jid);
 		}
-		return users.get(jid.toBareJID());
+		if (users.containsKey(bareJid)) {
+			return users.get(bareJid);
+		}
+		return user;
 	}
 
 	public void updateStatus(JID jid, String type) throws NodeStoreException {
 		if (!LocalDomainChecker.isLocal(jid.getDomain(), configuration)) {
 			return;
 		}
-		
+
 		ArrayList<JID> user = null;
 		if (users.containsKey(jid.toBareJID())) {
 			user = users.get(jid.toBareJID());

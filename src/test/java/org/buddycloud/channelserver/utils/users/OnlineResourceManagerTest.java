@@ -211,9 +211,9 @@ public class OnlineResourceManagerTest extends IQTestHandler {
 
 		channelManager = Mockito.mock(ChannelManager.class);
 		onlineUser = new OnlineResourceManager(configuration, channelManager);
-		onlineUser.getResources(localUserLaptop);
+		onlineUser.getResources(localUserNoResource);
 		Mockito.verify(channelManager, Mockito.times(1)).onlineJids(
-				Mockito.eq(localUserLaptop));
+				Mockito.eq(localUserNoResource));
 	}
 
 	@Test

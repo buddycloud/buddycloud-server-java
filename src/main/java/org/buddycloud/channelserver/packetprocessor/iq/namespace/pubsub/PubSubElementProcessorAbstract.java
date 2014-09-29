@@ -108,13 +108,25 @@ public abstract class PubSubElementProcessorAbstract implements
 
 	protected void createExtendedErrorReply(Type type, Condition condition,
 			String additionalElement) {
+		if ((null != additionalElement) && (additionalElement.indexOf(" ") > -1)) {
+			// Its probably an error message!
+			createExtendedErrorReply(type, condition, null, null, additionalElement);
+			return;
+		}
 		createExtendedErrorReply(type, condition, additionalElement,
 				JabberPubsub.NS_PUBSUB_ERROR);
 	}
 
 	protected void createExtendedErrorReply(Type type, Condition condition,
 			String additionalElement, String additionalNamespace) {
-		
+		createExtendedErrorReply(type, condition, additionalElement,
+				additionalNamespace, null);
+	}
+	
+	
+	protected void createExtendedErrorReply(Type type, Condition condition,
+			String additionalElement, String additionalNamespace, String text) {
+	
 		if (null == response) {
 			response = IQ.createResultIQ(request);
 		}
@@ -127,6 +139,14 @@ public abstract class PubSubElementProcessorAbstract implements
 		error.addAttribute("type", type.toXMPP());
 		error.add(standardError);
 		error.add(extraError);
+		if (null != text) {
+			Element description = new DOMElement(
+				"text",
+				new org.dom4j.Namespace("", "urn:ietf:params:xml:ns:xmpp-stanzas")
+			);
+			description.setText(text);
+			error.add(description);
+		}
 		response.setChildElement(error);
 	}
 

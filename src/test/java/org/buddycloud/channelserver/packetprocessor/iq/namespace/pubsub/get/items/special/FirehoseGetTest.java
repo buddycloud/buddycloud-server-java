@@ -69,7 +69,8 @@ public class FirehoseGetTest extends IQTestHandler {
 
 		Mockito.when(
 				channelManager.getFirehose(Mockito.anyInt(),
-						Mockito.anyString(), Mockito.anyBoolean())).thenThrow(
+						Mockito.anyString(), Mockito.anyBoolean(), 
+						Mockito.anyString())).thenThrow(
 				new NodeStoreException());
 
 		recentItemsGet.process(element, jid, request, null);
@@ -86,7 +87,8 @@ public class FirehoseGetTest extends IQTestHandler {
 	public void testItemsReturnsEmptyStanza() throws Exception {
 
 		Mockito.when(
-				channelManager.getFirehose(Mockito.anyInt(), Mockito.anyString(), Mockito.anyBoolean())).thenReturn(
+				channelManager.getFirehose(Mockito.anyInt(), Mockito.anyString(), 
+						Mockito.anyBoolean(), Mockito.anyString())).thenReturn(
 				new ClosableIteratorImpl<NodeItem>(new ArrayList<NodeItem>()
 						.iterator()));
 
@@ -120,10 +122,10 @@ public class FirehoseGetTest extends IQTestHandler {
 		results.add(item4);
 
 		Mockito.when(
-				channelManager.getFirehose(Mockito.anyInt(), Mockito.anyString(), Mockito.anyBoolean())).thenReturn(
+				channelManager.getFirehose(Mockito.anyInt(), Mockito.anyString(), Mockito.anyBoolean(), Mockito.anyString())).thenReturn(
 				new ClosableIteratorImpl<NodeItem>(results.iterator()));
 		Mockito.when(
-				channelManager.getFirehoseItemCount(Mockito.anyBoolean())).thenReturn(4);
+				channelManager.getFirehoseItemCount(Mockito.anyBoolean(), Mockito.anyString())).thenReturn(4);
 
 		recentItemsGet.process(element, jid, request, null);
 		IQ response = (IQ) queue.poll();
@@ -158,7 +160,7 @@ public class FirehoseGetTest extends IQTestHandler {
 		results.add(item2);
 
 		Mockito.when(
-				channelManager.getFirehose(Mockito.anyInt(), Mockito.anyString(), Mockito.anyBoolean())).thenReturn(
+				channelManager.getFirehose(Mockito.anyInt(), Mockito.anyString(), Mockito.anyBoolean(), Mockito.anyString())).thenReturn(
 				new ClosableIteratorImpl<NodeItem>(results.iterator()));
 
 		recentItemsGet.process(element, jid, request, null);
@@ -181,10 +183,12 @@ public class FirehoseGetTest extends IQTestHandler {
 		results.add(item3);
 
 		Mockito.when(
-				channelManager.getFirehose(Mockito.anyInt(), Mockito.anyString(), Mockito.anyBoolean())).thenReturn(
+				channelManager.getFirehose(Mockito.anyInt(), Mockito.anyString(), 
+						Mockito.anyBoolean(), Mockito.anyString())).thenReturn(
 				new ClosableIteratorImpl<NodeItem>(results.iterator()));
 		Mockito.when(
-				channelManager.getFirehoseItemCount(Mockito.anyBoolean())).thenReturn(2);
+				channelManager.getFirehoseItemCount(Mockito.anyBoolean(), 
+						Mockito.anyString())).thenReturn(2);
 
 		Element rsm = request.getElement().addElement("rsm");
 		rsm.addNamespace("", RecentItemsGet.NS_RSM);
@@ -220,7 +224,8 @@ public class FirehoseGetTest extends IQTestHandler {
 		ArrayList<NodeItem> results = new ArrayList<NodeItem>();
 
 		Mockito.when(
-				channelManager.getFirehose(Mockito.anyInt(), Mockito.anyString(), Mockito.eq(true))).thenReturn(
+				channelManager.getFirehose(Mockito.anyInt(), Mockito.anyString(), Mockito.eq(true), 
+						Mockito.anyString())).thenReturn(
 				new ClosableIteratorImpl<NodeItem>(results.iterator()));
 
 		recentItemsGet.process(element, jid, request, null);

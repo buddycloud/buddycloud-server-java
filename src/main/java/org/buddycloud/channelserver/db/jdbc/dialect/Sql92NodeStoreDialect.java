@@ -1,11 +1,5 @@
 package org.buddycloud.channelserver.db.jdbc.dialect;
 
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
-
-import org.apache.commons.lang.StringUtils;
 import org.buddycloud.channelserver.db.jdbc.JDBCNodeStore.NodeStoreSQLDialect;
 
 public class Sql92NodeStoreDialect implements NodeStoreSQLDialect {
@@ -83,9 +77,6 @@ public class Sql92NodeStoreDialect implements NodeStoreSQLDialect {
 			+ " WHERE \"node\" = ? AND \"user\" = ?";
 
 	private static final String DELETE_AFFILIATION = "DELETE FROM \"affiliations\" WHERE \"node\" = ? AND \"user\" = ?;";
-
-	private static final String SELECT_SUBSCRIPTION = "SELECT \"node\", \"user\", \"listener\", \"subscription\", \"updated\""
-			+ " FROM \"subscriptions\" WHERE \"node\" = ? AND (\"user\" = ? OR \"listener\" = ? ) ORDER BY \"updated\" ASC";
 
 	private static final String SELECT_SUBSCRIPTIONS_FOR_USER = "SELECT \"node\", \"user\", \"listener\", \"subscription\", \"updated\""
 			+ " FROM \"subscriptions\" WHERE \"user\" = ? OR \"listener\" = ? ORDER BY \"updated\" ASC";
@@ -234,32 +225,42 @@ public class Sql92NodeStoreDialect implements NodeStoreSQLDialect {
 
 	private static final String DELETE_ITEMS = "DELETE FROM \"items\" WHERE \"node\" = ?;";
 
-	private static final String COUNT_ITEMS_FROM_LOCAL_NODES = 	
-			"SELECT COUNT(\"id\") " +
-			"FROM \"items\", \"node_config\" " +
-			"WHERE \"items\".\"node\" = \"node_config\".\"node\" " +
-			"AND \"key\" = ? AND \"value\" LIKE ? " +
-			"AND \"items\".\"node\" ~ ? ";
-	
 	private static final String SELECT_LOCAL_NODES = 	
 			"SELECT \"node\" " +
-			"FROM \"items\" " +
-			"WHERE \"items\".\"node\" ~ ? ";
+			"FROM \"nodes\" " +
+			"WHERE \"node\" ~ ? ";
 	
 	private static final String SELECT_REMOTE_NODES = 	
 			"SELECT \"node\" " +
-			"FROM \"items\" " +
-			"WHERE \"items\".\"node\" !~ ? ";
+			"FROM \"nodes\" " +
+			"WHERE \"node\" !~ ?";
 	
 	private static final String SELECT_ITEMS_FROM_LOCAL_NODES_BEFORE_DATE = 
 			"SELECT \"items\".\"node\", \"id\", \"items\".\"updated\", \"xml\", \"in_reply_to\", \"created\" " +
 			"FROM \"items\", \"node_config\" " +
 			"WHERE \"items\".\"updated\" < ? " +
-			"AND \"items\".\"node\" = \"node_config\".\"node\" " +
-			"AND \"key\" = ? AND \"value\" LIKE ? " +
+			"AND \"items\".\"node\" = \"node_config\".\"node\" "+
+			"AND \"key\" = ? " +
+			"AND ((" +
+			  "NOT ? AND " +
+			    "(\"value\" LIKE ?) OR " +
+			    "(\"value\" LIKE ? AND \"items\".\"node\" ~ ?)) " +
+			"OR ?) " +
 			"AND \"items\".\"node\" ~ ? " +
 			"ORDER BY \"updated\" DESC, \"id\" ASC LIMIT ?";
 
+	private static final String COUNT_ITEMS_FROM_LOCAL_NODES = 	
+			"SELECT COUNT(\"id\") " +
+			"FROM \"items\", \"node_config\" " +
+			"WHERE \"items\".\"node\" = \"node_config\".\"node\" "+
+			"AND \"key\" = ? " +
+			"AND ((" +
+			  "NOT ? AND " +
+			    "(\"value\" LIKE ?) OR " +
+			    "(\"value\" LIKE ? AND \"items\".\"node\" ~ ?)) " +
+			"OR ?) " +
+			"AND \"items\".\"node\" ~ ?";
+	
 	private static final String SELECT_USER_ITEMS = "SELECT \"node\", \"id\", \"updated\", \"xml\", \"in_reply_to\", \"created\"" +
 			" FROM \"items\" WHERE (CAST(xpath('//atom:author/atom:name/text()', xmlparse(document \"xml\")," +
 			" ARRAY[ARRAY['atom', 'http://www.w3.org/2005/Atom']]) AS TEXT[]))[1] = ?";

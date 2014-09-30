@@ -45,7 +45,7 @@ public class LocalDomainChecker {
 				return false;
 			}
 		}
-		return localDomains.contains(domain);
+		return localDomains.contains(domain.toLowerCase());
 	}
 
 	public static Set<String> getLocalDomains(Properties configuration) {
@@ -64,12 +64,11 @@ public class LocalDomainChecker {
 			
 			String csvDomains = IOUtils.toString(inputStream);
 			for (String eachDomain : csvDomains.split(COMMA)) {
-				localDomains.add(eachDomain.trim());
+				localDomains.add(eachDomain.trim().toLowerCase());
 			}
 			inputStream.close();
 		} catch (Exception e) {
 			// Return empty set
-			e.printStackTrace();
 		}
 		
 		return localDomains;

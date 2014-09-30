@@ -671,7 +671,7 @@ public class JDBCNodeStoreTest extends JDBCNodeStoreAbstract {
 	@Test(expected = IllegalArgumentException.class)
 	public void testFirehoseItemsThrowsExceptionIfNegativeLimitRequested()
 			throws Exception {
-		store.getFirehose(-1, null, false);
+		store.getFirehose(-1, null, false, TEST_SERVER1_HOSTNAME);
 	}
 
 	@Test
@@ -695,7 +695,8 @@ public class JDBCNodeStoreTest extends JDBCNodeStoreAbstract {
 		store.addNodeItem(new NodeItemImpl(TEST_SERVER1_NODE3_ID, "1111",
 				new Date(), "<entry/>"));
 		Thread.sleep(4);
-		CloseableIterator<NodeItem> items = store.getFirehose(50, null, false);
+		CloseableIterator<NodeItem> items = store.getFirehose(50, null, 
+				false, TEST_SERVER1_HOSTNAME);
 		NodeItem item = null;
 		int count = 0;
 		while (items.hasNext()) {
@@ -727,7 +728,8 @@ public class JDBCNodeStoreTest extends JDBCNodeStoreAbstract {
 		store.addRemoteNode(TEST_SERVER2_NODE1_ID);
 		store.setNodeConf(TEST_SERVER2_NODE1_ID, remoteNodeConf);
 
-		CloseableIterator<NodeItem> items = store.getFirehose(50, null, true);
+		CloseableIterator<NodeItem> items = store.getFirehose(50, null, 
+				true, TEST_SERVER1_HOSTNAME);
 		NodeItem item = null;
 		int count = 0;
 		while (items.hasNext()) {
@@ -760,7 +762,8 @@ public class JDBCNodeStoreTest extends JDBCNodeStoreAbstract {
 		store.addRemoteNode(TEST_SERVER2_NODE1_ID);
 		store.setNodeConf(TEST_SERVER2_NODE1_ID, remoteNodeConf);
 
-		CloseableIterator<NodeItem> items = store.getFirehose(2, "a3", false);
+		CloseableIterator<NodeItem> items = store.getFirehose(2, "a3", 
+				false, TEST_SERVER1_HOSTNAME);
 		NodeItem item1 = items.next();
 		NodeItem item2 = items.next();
 		assertFalse(items.hasNext());
@@ -790,7 +793,7 @@ public class JDBCNodeStoreTest extends JDBCNodeStoreAbstract {
 		remoteNodeConf.put("pubsub#access_model", "open");
 		store.addRemoteNode(TEST_SERVER2_NODE1_ID);
 		store.setNodeConf(TEST_SERVER2_NODE1_ID, remoteNodeConf);
-		assertEquals(6, store.getFirehoseItemCount(false));
+		assertEquals(6, store.getFirehoseItemCount(false, TEST_SERVER1_HOSTNAME));
 	}
 
 	@Test
@@ -814,7 +817,7 @@ public class JDBCNodeStoreTest extends JDBCNodeStoreAbstract {
 		remoteNodeConf.put("pubsub#access_model", "open");
 		store.addRemoteNode(TEST_SERVER2_NODE1_ID);
 		store.setNodeConf(TEST_SERVER2_NODE1_ID, remoteNodeConf);
-		assertEquals(7, store.getFirehoseItemCount(true));
+		assertEquals(7, store.getFirehoseItemCount(true, TEST_SERVER1_HOSTNAME));
 	}
 	
 	@Test

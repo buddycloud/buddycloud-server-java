@@ -526,6 +526,7 @@ public interface NodeStore {
 	 * @return
 	 * @throws NodeStoreException
 	 */
+	@SuppressWarnings("rawtypes")
 	CloseableIterator<NodeItem> performSearch(JID searcher, List content,
 			JID author, int page, int rpp) throws NodeStoreException;
 
@@ -538,20 +539,24 @@ public interface NodeStore {
 	 *            after item ID#
 	 * @param isAdmin
 	 *            show items from non-open nodes
+	 * @param actorDomain
+	 * 			  the domain of the actor
 	 * @return
 	 * @throws NodeStoreException
 	 */
 	CloseableIterator<NodeItem> getFirehose(int limit, String afterItemId,
-			boolean isAdmin) throws NodeStoreException;
+			boolean isAdmin, String actorDomain) throws NodeStoreException;
 
 	/**
 	 * Get count of items from public channels "firehose"
 	 * 
 	 * @param isAdmin
 	 *            counts items from non-open nodes
+	 * @param actorDomain
+	 * 			  the domain of the actor
 	 * @throws NodeStoreException
 	 */
-	int getFirehoseItemCount(boolean isAdmin) throws NodeStoreException;
+	int getFirehoseItemCount(boolean isAdmin, String actorDomain) throws NodeStoreException;
 
 	/**
 	 * Get a list of posts for a user

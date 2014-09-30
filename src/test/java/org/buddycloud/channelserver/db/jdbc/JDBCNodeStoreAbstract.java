@@ -9,7 +9,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import org.apache.bcel.generic.NEW;
 import org.buddycloud.channelserver.db.jdbc.dialect.Sql92NodeStoreDialect;
 import org.buddycloud.channelserver.packetHandler.iq.IQTestHandler;
 import org.buddycloud.channelserver.pubsub.model.NodeItem;

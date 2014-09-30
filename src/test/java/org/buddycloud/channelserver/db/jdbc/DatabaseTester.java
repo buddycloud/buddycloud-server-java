@@ -18,13 +18,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import org.apache.log4j.Logger;
 import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 
 public class DatabaseTester {
-	private static Logger log = Logger.getLogger(DatabaseTester.class);
 	
 	public class Assertions {
 		private DatabaseTester tester;
@@ -114,8 +112,8 @@ public class DatabaseTester {
 				public PreparedStatement answer(InvocationOnMock invocation)
 						throws Throwable {
 					String originalSQL = (String) invocation.getArguments()[0];
-					String replacedSQL = originalSQL.replaceFirst("(\\S+) ~ \\?", "regexp_matches($1, ?)");
-					replacedSQL = replacedSQL.replaceFirst("(\\S+) !~ \\?", "not regexp_matches($1, ?)");
+					String replacedSQL = originalSQL.replaceAll("(\\S+) ~ \\?", "regexp_matches($1, ?)");
+					replacedSQL = replacedSQL.replaceAll("(\\S+) !~ \\?", "regexp_matches($1, ?) = FALSE");
 					return originalConn.prepareStatement(replacedSQL);
 				}
 			}).when(conn).prepareStatement(Mockito.anyString());

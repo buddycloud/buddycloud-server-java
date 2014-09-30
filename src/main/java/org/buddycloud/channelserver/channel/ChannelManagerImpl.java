@@ -339,13 +339,13 @@ public class ChannelManagerImpl implements ChannelManager {
 
 	@Override
 	public CloseableIterator<NodeItem> getFirehose(int limit,
-			String afterItemId, boolean isAdmin) throws NodeStoreException {
-		return nodeStore.getFirehose(limit, afterItemId, isAdmin);
+			String afterItemId, boolean isAdmin, String actorDomain) throws NodeStoreException {
+		return nodeStore.getFirehose(limit, afterItemId, isAdmin, actorDomain);
 	}
 
 	@Override
-	public int getFirehoseItemCount(boolean isAdmin) throws NodeStoreException {
-		return nodeStore.getFirehoseItemCount(isAdmin);
+	public int getFirehoseItemCount(boolean isAdmin, String actorDomain) throws NodeStoreException {
+		return nodeStore.getFirehoseItemCount(isAdmin, actorDomain);
 	}
 
 	@Override
@@ -366,6 +366,7 @@ public class ChannelManagerImpl implements ChannelManager {
 		return Affiliations.member;
 	}
 
+	@SuppressWarnings("rawtypes")
 	@Override
 	public CloseableIterator<NodeItem> performSearch(JID searcher,
 			List content, JID author, int page, int rpp)

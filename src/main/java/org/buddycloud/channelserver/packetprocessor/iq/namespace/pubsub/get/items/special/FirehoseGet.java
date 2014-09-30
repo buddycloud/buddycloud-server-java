@@ -108,14 +108,16 @@ public class FirehoseGet extends PubSubElementProcessorAbstract {
 		rsm.addElement("first").setText(firstItemId);
 		rsm.addElement("last").setText(lastItemId);
 		rsm.addElement("count").setText(
-				String.valueOf(channelManager.getFirehoseItemCount(isAdmin)));
+				String.valueOf(channelManager.getFirehoseItemCount(
+						isAdmin, actor.getDomain())));
 	}
 
 	private void addItems() throws NodeStoreException {
 		if (-1 == maxResults) {
 			maxResults = DEFAULT_MAX_RESULTS;
 		}
-		CloseableIterator<NodeItem> items = channelManager.getFirehose(maxResults, afterItemId, isAdmin);
+		CloseableIterator<NodeItem> items = channelManager.getFirehose(
+				maxResults, afterItemId, isAdmin, actor.getDomain());
 		String lastNode = "";
 		Element itemsElement = null;
 		while (items.hasNext()) {

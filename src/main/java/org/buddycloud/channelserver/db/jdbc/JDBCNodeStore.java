@@ -15,7 +15,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.regex.Pattern;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
@@ -27,6 +26,7 @@ import org.buddycloud.channelserver.db.CloseableIterator;
 import org.buddycloud.channelserver.db.NodeStore;
 import org.buddycloud.channelserver.db.exception.ItemNotFoundException;
 import org.buddycloud.channelserver.db.exception.NodeStoreException;
+import org.buddycloud.channelserver.pubsub.accessmodel.AccessModels;
 import org.buddycloud.channelserver.pubsub.affiliation.Affiliations;
 import org.buddycloud.channelserver.pubsub.model.GlobalItemID;
 import org.buddycloud.channelserver.pubsub.model.NodeAffiliation;
@@ -709,7 +709,7 @@ public class JDBCNodeStore implements NodeStore {
 
 	@Override
 	public CloseableIterator<NodeItem> getFirehose(int limit,
-			String afterItemId, boolean isAdmin) throws NodeStoreException {
+			String afterItemId, boolean isAdmin, String actorDomain) throws NodeStoreException {
 
 		PreparedStatement stmt = null;
 		Date beforeDate = null;
@@ -726,16 +726,17 @@ public class JDBCNodeStore implements NodeStore {
 					"Invalid value for parameter count: " + limit);
 		}
 
-		String accessModel = "open";
-		if (true == isAdmin)
-			accessModel = "%";
 		try {
 			stmt = conn.prepareStatement(dialect.selectItemsForLocalNodesBeforeDate());
 			stmt.setTimestamp(1, new java.sql.Timestamp(beforeDate.getTime()));
 			stmt.setString(2, Conf.ACCESS_MODEL);
-			stmt.setString(3, accessModel);
-			stmt.setString(4, getLocalDomainRegex());
-			stmt.setInt(5, limit);
+			stmt.setBoolean(3, isAdmin);
+			stmt.setString(4, AccessModels.open.toString());
+			stmt.setString(5, AccessModels.local.toString());
+			stmt.setString(6, getDomainRegex(actorDomain));
+			stmt.setBoolean(7, isAdmin);
+			stmt.setString(8, getLocalDomainRegex());
+			stmt.setInt(9, limit);
 
 			java.sql.ResultSet rs = stmt.executeQuery();
 
@@ -755,17 +756,19 @@ public class JDBCNodeStore implements NodeStore {
 	}
 
 	@Override
-	public int getFirehoseItemCount(boolean isAdmin) throws NodeStoreException {
+	public int getFirehoseItemCount(boolean isAdmin, String actorDomain)
+			throws NodeStoreException {
 		PreparedStatement stmt = null;
 
-		String accessModel = "open";
-		if (true == isAdmin)
-			accessModel = "%";
 		try {
 			stmt = conn.prepareStatement(dialect.countItemsForLocalNodes());
 			stmt.setString(1, Conf.ACCESS_MODEL);
-			stmt.setString(2, accessModel);
-			stmt.setString(3, getLocalDomainRegex());
+			stmt.setBoolean(2, isAdmin);
+			stmt.setString(3, AccessModels.open.toString());
+			stmt.setString(4, AccessModels.local.toString());
+			stmt.setString(5, getDomainRegex(actorDomain));
+			stmt.setBoolean(6, isAdmin);
+			stmt.setString(7, getLocalDomainRegex());
 			
 			java.sql.ResultSet rs = stmt.executeQuery();
 			if (!rs.next()) {
@@ -804,8 +807,12 @@ public class JDBCNodeStore implements NodeStore {
 		}
 		
 		String domainRegex = localDomains.isEmpty() ? ".*" : 
-			".*@(" + StringUtils.join(localDomains, "|") + ")\\/.*";
+			getDomainRegex(StringUtils.join(localDomains, "|"));
 		return domainRegex;
+	}
+
+	private static String getDomainRegex(String localDomains) {
+		return ".*@(" + localDomains  + ")\\/.*";
 	}
 
 	@Override

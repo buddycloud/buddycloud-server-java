@@ -10,7 +10,6 @@ import java.util.concurrent.BlockingQueue;
 
 import org.buddycloud.channelserver.ChannelsEngine;
 import org.buddycloud.channelserver.Configuration;
-import org.buddycloud.channelserver.db.exception.NodeStoreException;
 import org.buddycloud.channelserver.utils.users.OnlineResourceManager;
 import org.junit.After;
 import org.junit.Before;
@@ -23,136 +22,136 @@ import org.xmpp.packet.Message;
 import org.xmpp.packet.Packet;
 
 public class OutQueueConsumerTest {
-	private static final String SERVER_DOMAIN = "server1";
-	private static final String SERVER_CHANNELS_DOMAIN = "channels.server1";
-	private static final String SERVER_TOPICS_DOMAIN = "topics.server1";
-	
-	/*
-	 * Class under test
-	 */
-	private OutQueueConsumer consumer;
+    private static final String SERVER_DOMAIN = "server1";
+    private static final String SERVER_CHANNELS_DOMAIN = "channels.server1";
+    private static final String SERVER_TOPICS_DOMAIN = "topics.server1";
 
-	@Mock
-	private ChannelsEngine channelsEngine;
+    /*
+     * Class under test
+     */
+    private OutQueueConsumer consumer;
 
-	@Mock
-	private BlockingQueue<Packet> outQueue;
+    @Mock
+    private ChannelsEngine channelsEngine;
 
-	@Mock
-	private FederatedQueueManager federatedQueueManager;
+    @Mock
+    private BlockingQueue<Packet> outQueue;
 
-	@Mock
-	private Configuration configuration;
+    @Mock
+    private FederatedQueueManager federatedQueueManager;
 
-	@Mock
-	private OnlineResourceManager onlineResourceManager;
-	
-	@Mock
-	private BlockingQueue<Packet> inQueue;
+    @Mock
+    private Configuration configuration;
 
-	@Before
-	public void setUp() throws Exception {
-		MockitoAnnotations.initMocks(this);
-		
-		consumer = new OutQueueConsumer(channelsEngine, outQueue,
-				federatedQueueManager, configuration, onlineResourceManager, inQueue);
+    @Mock
+    private OnlineResourceManager onlineResourceManager;
 
-		when(configuration.getServerDomain()).thenReturn(SERVER_DOMAIN);
-		when(configuration.getServerChannelsDomain()).thenReturn(SERVER_CHANNELS_DOMAIN);
-		when(configuration.getServerTopicsDomain()).thenReturn(SERVER_TOPICS_DOMAIN);
-	}
+    @Mock
+    private BlockingQueue<Packet> inQueue;
 
-	@After
-	public void tearDown() throws Exception {
-	}
+    @Before
+    public void setUp() throws Exception {
+        MockitoAnnotations.initMocks(this);
 
-	@Test
-	public void testConsumeForRemoteServerRequestForDiscover() throws Exception {
-		JID remoteServer = new JID("server2");
-		
-		Message message = new Message();
-		
-		message.setTo(remoteServer);
-		message.getElement().addAttribute("remote-server-discover", "true");
-		
-		consumer.consume(message);
-		
-		verify(federatedQueueManager).addChannelMap(remoteServer);
-	}
+        consumer = new OutQueueConsumer(channelsEngine, outQueue, federatedQueueManager, configuration, onlineResourceManager, inQueue);
 
-	@Test
-	public void testConsumeForRemoteServerRequestForDelivery() throws Exception {
-		JID remoteServer = new JID("server2");
-		
-		Message message = new Message();
-		
-		message.setTo(remoteServer);
-		
-		consumer.consume(message);
-		
-		verify(federatedQueueManager).process(message);
-	}
+        when(configuration.getServerDomain()).thenReturn(SERVER_DOMAIN);
+        when(configuration.getServerChannelsDomain()).thenReturn(SERVER_CHANNELS_DOMAIN);
+        when(configuration.getServerTopicsDomain()).thenReturn(SERVER_TOPICS_DOMAIN);
+    }
 
-	@SuppressWarnings("serial")
-	@Test
-	public void testConsumeForRemoteUser() throws Exception {
-		JID jid = new JID("user1@server2");
-		final JID resource1 = new JID("user1@server2/resource1");
-		final JID resource2 = new JID("user1@server2/resource2");
-		
-		when(onlineResourceManager.getResources(jid)).thenReturn(new ArrayList<JID>() {{
-			add(resource1);
-			add(resource2);
-		}});
-		
-		Message message = new Message();
-		
-		message.setTo(jid);
-		
-		consumer.consume(message);
-		
-		ArgumentCaptor<Packet> packetCaptor = ArgumentCaptor.forClass(Packet.class);
-		
-		Message expected1 = message.createCopy();
-		expected1.setTo(resource1);		
-		verify(channelsEngine, times(2)).sendPacket(packetCaptor.capture());
-		assertEquals("Packet not sent to " + resource1, resource1, packetCaptor.getAllValues().get(0).getTo());
-		assertEquals("Packet not sent to " + resource2, resource2, packetCaptor.getAllValues().get(1).getTo());
-	}
-	
-	public void testConsumeForLocalServer() throws Exception {
-		JID jid = new JID(SERVER_DOMAIN);
-		
-		Message message = new Message();
-		
-		message.setTo(jid);
-		
-		consumer.consume(message);
-		
-		verify(channelsEngine).sendPacket(message);
-	}
-	
-	public void testConsumeForLocalChannelsServer() throws Exception {
-		JID jid = new JID(SERVER_CHANNELS_DOMAIN);
-		
-		Message message = new Message();
-		
-		message.setTo(jid);
-		
-		consumer.consume(message);
-		
-		verify(channelsEngine).sendPacket(message);
-	}
-	
-	public void testConsumeForLocalTopicsServer() throws Exception {
-		JID jid = new JID(SERVER_TOPICS_DOMAIN);
-		
-		Message message = new Message();
-		
-		message.setTo(jid);
-		
-		consumer.consume(message);
-		
-		verify(channelsEngine).sendPacket(message);
-	}
+    @After
+    public void tearDown() throws Exception {}
+
+    @Test
+    public void testConsumeForRemoteServerRequestForDiscover() throws Exception {
+        JID remoteServer = new JID("server2");
+
+        Message message = new Message();
+
+        message.setTo(remoteServer);
+        message.getElement().addAttribute("remote-server-discover", "true");
+
+        consumer.consume(message);
+
+        verify(federatedQueueManager).addChannelMap(remoteServer);
+    }
+
+    @Test
+    public void testConsumeForRemoteServerRequestForDelivery() throws Exception {
+        JID remoteServer = new JID("server2");
+
+        Message message = new Message();
+
+        message.setTo(remoteServer);
+
+        consumer.consume(message);
+
+        verify(federatedQueueManager).process(message);
+    }
+
+    @SuppressWarnings("serial")
+    @Test
+    public void testConsumeForRemoteUser() throws Exception {
+        JID jid = new JID("user1@server2");
+        final JID resource1 = new JID("user1@server2/resource1");
+        final JID resource2 = new JID("user1@server2/resource2");
+
+        when(onlineResourceManager.getResources(jid)).thenReturn(new ArrayList<JID>() {
+            {
+                add(resource1);
+                add(resource2);
+            }
+        });
+
+        Message message = new Message();
+
+        message.setTo(jid);
+
+        consumer.consume(message);
+
+        ArgumentCaptor<Packet> packetCaptor = ArgumentCaptor.forClass(Packet.class);
+
+        Message expected1 = message.createCopy();
+        expected1.setTo(resource1);
+        verify(channelsEngine, times(2)).sendPacket(packetCaptor.capture());
+        assertEquals("Packet not sent to " + resource1, resource1, packetCaptor.getAllValues().get(0).getTo());
+        assertEquals("Packet not sent to " + resource2, resource2, packetCaptor.getAllValues().get(1).getTo());
+    }
+
+    public void testConsumeForLocalServer() throws Exception {
+        JID jid = new JID(SERVER_DOMAIN);
+
+        Message message = new Message();
+
+        message.setTo(jid);
+
+        consumer.consume(message);
+
+        verify(channelsEngine).sendPacket(message);
+    }
+
+    public void testConsumeForLocalChannelsServer() throws Exception {
+        JID jid = new JID(SERVER_CHANNELS_DOMAIN);
+
+        Message message = new Message();
+
+        message.setTo(jid);
+
+        consumer.consume(message);
+
+        verify(channelsEngine).sendPacket(message);
+    }
+
+    public void testConsumeForLocalTopicsServer() throws Exception {
+        JID jid = new JID(SERVER_TOPICS_DOMAIN);
+
+        Message message = new Message();
+
+        message.setTo(jid);
+
+        consumer.consume(message);
+
+        verify(channelsEngine).sendPacket(message);
+    }
 }

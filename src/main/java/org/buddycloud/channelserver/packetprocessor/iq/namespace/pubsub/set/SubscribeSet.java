@@ -7,6 +7,7 @@ import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 
 import org.apache.log4j.Logger;
+import org.buddycloud.channelserver.Configuration;
 import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.channel.Conf;
 import org.buddycloud.channelserver.db.exception.NodeStoreException;
@@ -16,7 +17,6 @@ import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.PubSubSe
 import org.buddycloud.channelserver.pubsub.accessmodel.AccessModels;
 import org.buddycloud.channelserver.pubsub.affiliation.Affiliations;
 import org.buddycloud.channelserver.pubsub.event.Event;
-import org.buddycloud.channelserver.pubsub.model.NodeAffiliation;
 import org.buddycloud.channelserver.pubsub.model.NodeMembership;
 import org.buddycloud.channelserver.pubsub.model.NodeSubscription;
 import org.buddycloud.channelserver.pubsub.model.impl.NodeSubscriptionImpl;
@@ -74,7 +74,7 @@ public class SubscribeSet extends PubSubElementProcessorAbstract {
 		if (actorJID != null) {
 			subscribingJid = actorJID;
 		} else {
-			isLocalSubscriber = channelManager.isLocalJID(subscribingJid);
+			isLocalSubscriber = Configuration.getInstance().isLocalJID(subscribingJid);
 			// Check that user is registered.
 			if (!isLocalSubscriber) {
 				failAuthRequired();
@@ -158,7 +158,7 @@ public class SubscribeSet extends PubSubElementProcessorAbstract {
 								.toString()))) {
 					defaultSubscription = Subscriptions.pending;
 				} else if ((true == accessModel.equals(AccessModels.local
-						.toString()) && (false == channelManager
+						.toString()) && (false == Configuration.getInstance()
 						.isLocalJID(subscribingJid)))) {
 					defaultSubscription = Subscriptions.pending;
 				}
@@ -207,7 +207,7 @@ public class SubscribeSet extends PubSubElementProcessorAbstract {
 			JID subscribingJid) throws NodeStoreException, InterruptedException {
 		boolean isLocalNode = false;
 		try {
-			isLocalNode = channelManager.isLocalNode(node);
+			isLocalNode = Configuration.getInstance().isLocalNode(node);
 		} catch (IllegalArgumentException e) {
 			LOGGER.debug(e);
 			createExtendedErrorReply(PacketError.Type.modify,

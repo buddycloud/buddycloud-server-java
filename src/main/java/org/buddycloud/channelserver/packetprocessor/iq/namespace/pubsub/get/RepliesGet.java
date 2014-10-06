@@ -1,11 +1,11 @@
 package org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.get;
 
 import java.io.StringReader;
-import java.util.Date;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 
 import org.apache.log4j.Logger;
+import org.buddycloud.channelserver.Configuration;
 import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.channel.node.configuration.field.AccessModel;
 import org.buddycloud.channelserver.db.CloseableIterator;
@@ -13,11 +13,7 @@ import org.buddycloud.channelserver.db.exception.NodeStoreException;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.JabberPubsub;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.PubSubElementProcessorAbstract;
 import org.buddycloud.channelserver.pubsub.accessmodel.AccessModels;
-import org.buddycloud.channelserver.pubsub.affiliation.Affiliations;
-import org.buddycloud.channelserver.pubsub.model.NodeAffiliation;
 import org.buddycloud.channelserver.pubsub.model.NodeItem;
-import org.buddycloud.channelserver.pubsub.model.NodeSubscription;
-import org.buddycloud.channelserver.pubsub.subscription.Subscriptions;
 import org.buddycloud.channelserver.utils.node.NodeAclRefuseReason;
 import org.buddycloud.channelserver.utils.node.NodeViewAcl;
 import org.dom4j.DocumentException;
@@ -30,17 +26,8 @@ import org.xmpp.packet.PacketError;
 
 public class RepliesGet extends PubSubElementProcessorAbstract {
 
-	private Element resultSetManagement;
-	private String firstItem;
-	private String lastItem;
-	private int totalEntriesCount;
-
-	private Date maxAge;
-	private Integer maxItems;
-
 	private Element pubsub;
 	private SAXReader xmlReader;
-	private String nodeEnding = "/posts";
 
 	// RSM details
 	private String firstItemId = null;
@@ -79,7 +66,7 @@ public class RepliesGet extends PubSubElementProcessorAbstract {
 		}
 
 		try {
-			if (false == channelManager.isLocalJID(request.getFrom())) {
+			if (false == Configuration.getInstance().isLocalJID(request.getFrom())) {
 				response.getElement().addAttribute("remote-server-discover",
 						"false");
 			}
@@ -197,7 +184,7 @@ public class RepliesGet extends PubSubElementProcessorAbstract {
 		if (nodeViewAcl.canViewNode(node,
 				channelManager.getNodeMembership(node, actor),
 				getNodeAccessModel(),
-				channelManager.isLocalJID(actor))) {
+				Configuration.getInstance().isLocalJID(actor))) {
 			return true;
 		}
 		NodeAclRefuseReason reason = getNodeViewAcl().getReason();

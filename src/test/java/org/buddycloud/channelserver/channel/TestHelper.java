@@ -69,7 +69,8 @@ public class TestHelper {
 		};
     	
 		try {
-			channelManagerFactory = new ChannelManagerFactoryImpl(IQTestHandler.readConf(), nsFactory);
+			IQTestHandler.readConf();
+			channelManagerFactory = new ChannelManagerFactoryImpl(nsFactory);
 		} catch (FileNotFoundException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

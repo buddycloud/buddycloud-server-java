@@ -5,6 +5,7 @@ import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 
 import org.apache.log4j.Logger;
+import org.buddycloud.channelserver.Configuration;
 import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.channel.node.configuration.field.AccessModel;
 import org.buddycloud.channelserver.db.CloseableIterator;
@@ -53,7 +54,6 @@ public class NodeItemsGet implements PubSubElementProcessor {
 	private int rsmEntriesCount;
 
 	private JID actor;
-	private Boolean isOwnerModerator;
 
 	public NodeItemsGet(BlockingQueue<Packet> outQueue,
 			ChannelManager channelManager) {
@@ -85,7 +85,7 @@ public class NodeItemsGet implements PubSubElementProcessor {
 		element = elm;
 		resultSetManagement = rsm;
 
-		if (!channelManager.isLocalJID(requestIq.getFrom())) {
+		if (!Configuration.getInstance().isLocalJID(requestIq.getFrom())) {
 			reply.getElement().addAttribute("remote-server-discover", "false");
 		}
 
@@ -96,7 +96,7 @@ public class NodeItemsGet implements PubSubElementProcessor {
 			this.actor = requestIq.getFrom();
 		}
 
-		if (!channelManager.isLocalNode(node) && !isCached) {
+		if (!Configuration.getInstance().isLocalNode(node) && !isCached) {
 			logger.debug("Node " + node
 					+ " is remote and not cached, off to get some data");
 			makeRemoteRequest();
@@ -135,7 +135,7 @@ public class NodeItemsGet implements PubSubElementProcessor {
 		NodeItem nodeItem = channelManager.getNodeItem(node,
 				element.element("item").attributeValue("id"));
 		if (nodeItem == null) {
-			if (!channelManager.isLocalNode(node)) {
+			if (!Configuration.getInstance().isLocalNode(node)) {
 				makeRemoteRequest();
 				return false;
 			}
@@ -225,7 +225,7 @@ public class NodeItemsGet implements PubSubElementProcessor {
 		int totalEntriesCount = getNodeItems(items, maxItemsToReturn,
 					afterItemId);
 
-		if ((false == channelManager.isLocalNode(node))
+		if ((false == Configuration.getInstance().isLocalNode(node))
 				&& (0 == rsmEntriesCount)) {
 			logger.debug("No results in cache for remote node, so "
 					+ "we're going federated to get more");
@@ -261,7 +261,7 @@ public class NodeItemsGet implements PubSubElementProcessor {
 				actor);
 
 		if (getNodeViewAcl().canViewNode(node, nodeMembership,
-				getNodeAccessModel(), channelManager.isLocalJID(actor))) {
+				getNodeAccessModel(), Configuration.getInstance().isLocalJID(actor))) {
 			return true;
 		}
 		NodeAclRefuseReason reason = getNodeViewAcl().getReason();
@@ -320,11 +320,6 @@ public class NodeItemsGet implements PubSubElementProcessor {
 		} catch (DocumentException e) {
 			logger.error("Error parsing a node entry, ignoring. " + nodeItem);
 		}
-	}
-
-	private boolean isOwnerModerator() throws NodeStoreException {
-		return channelManager.getNodeMembership(node, actor).getAffiliation()
-				.canAuthorize();
 	}
 
 	private void createExtendedErrorReply(Type type, Condition condition,

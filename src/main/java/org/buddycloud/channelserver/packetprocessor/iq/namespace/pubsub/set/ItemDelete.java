@@ -11,9 +11,7 @@ import org.buddycloud.channelserver.db.ClosableIteratorImpl;
 import org.buddycloud.channelserver.db.exception.NodeStoreException;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.JabberPubsub;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.PubSubElementProcessorAbstract;
-import org.buddycloud.channelserver.pubsub.affiliation.Affiliations;
 import org.buddycloud.channelserver.pubsub.model.GlobalItemID;
-import org.buddycloud.channelserver.pubsub.model.NodeAffiliation;
 import org.buddycloud.channelserver.pubsub.model.NodeItem;
 import org.buddycloud.channelserver.pubsub.model.NodeSubscription;
 import org.buddycloud.channelserver.pubsub.model.impl.GlobalItemIDImpl;
@@ -55,14 +53,19 @@ public class ItemDelete extends PubSubElementProcessorAbstract {
 		this.actor = actor;
 		if (null == this.actor) {
 			this.actor = request.getFrom();
-                }
-		if (!channelManager.isLocalNode(node)) {
+        }
+		if (!validNodeProvided()) {
+			outQueue.put(response);
+			return;
+		}
+		
+		if (!Configuration.getInstance().isLocalNode(node)) {
 			makeRemoteRequest();
 			return;
 		}
 
 		try {
-			if (!validNodeProvided() || !nodeExists() || !itemIdProvided()
+			if (!nodeExists() || !itemIdProvided()
 					|| !itemExists() || !validPayload() || !canDelete()) {
 				outQueue.put(response);
 				return;
@@ -243,7 +246,7 @@ public class ItemDelete extends PubSubElementProcessorAbstract {
 	}
 
 	private boolean nodeExists() throws NodeStoreException {
-		if ((false == channelManager.isLocalNode(node))
+		if ((false == Configuration.getInstance().isLocalNode(node))
 				|| (false == channelManager.nodeExists(node))) {
 			setErrorCondition(PacketError.Type.cancel,
 					PacketError.Condition.item_not_found);

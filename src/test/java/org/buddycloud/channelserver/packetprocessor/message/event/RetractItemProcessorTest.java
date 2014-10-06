@@ -7,6 +7,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 import junit.framework.Assert;
 
+import org.buddycloud.channelserver.Configuration;
 import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.db.exception.NodeStoreException;
 import org.buddycloud.channelserver.packetHandler.iq.IQTestHandler;
@@ -31,12 +32,10 @@ public class RetractItemProcessorTest extends IQTestHandler {
 	private BlockingQueue<Packet> queue = new LinkedBlockingQueue<Packet>();
 	private ChannelManager channelManager;
 
-	private Element entry;
-
 	@Before
 	public void setUp() throws Exception {
 
-		JID jid = new JID("juliet@shakespeare.lit");
+		JID jid = new JID("juliet@denmark.lit");
 		Properties configuration = new Properties();
 		configuration.setProperty("server.domain.channels",
 				"channels.shakespeare.lit");
@@ -44,13 +43,14 @@ public class RetractItemProcessorTest extends IQTestHandler {
 
 		ArrayList<NodeMembership> subscribers = new ArrayList<NodeMembership>();
 		subscribers.add(new NodeMembershipImpl(
-				"/users/romeo@shakespeare.lit/posts", jid,
+				"/user/romeo@shakespeare.lit/posts", jid,
 				Subscriptions.subscribed, Affiliations.member, null));
 		Mockito.doReturn(new ResultSetImpl<NodeMembership>(subscribers))
 				.when(channelManager).getNodeMemberships(Mockito.anyString());
-		Mockito.when(channelManager.isLocalNode(Mockito.anyString()))
-				.thenReturn(false);
-        Mockito.when(channelManager.isLocalJID(Mockito.any(JID.class))).thenReturn(true);
+		Configuration.getInstance().remove(
+				Configuration.CONFIGURATION_LOCAL_DOMAIN_CHECKER);
+		Configuration.getInstance().putProperty(
+				Configuration.CONFIGURATION_SERVER_DOMAIN, "denmark.lit");
         
 		retractItemProcessor = new RetractItemProcessor(queue, configuration,
 				channelManager);
@@ -62,15 +62,15 @@ public class RetractItemProcessorTest extends IQTestHandler {
 		Element items = event.addElement("items");
 		Element retract = items.addElement("retract");
 
-		items.addAttribute("node", "/users/romeo@shakespeare.lit/posts");
+		items.addAttribute("node", "/user/romeo@shakespeare.lit/posts");
 		retract.addAttribute("id", "publish:1");
 
 	}
 
 	@Test
 	public void testLocalNodeEventDoesNotSendNotiifcations() throws Exception {
-		Mockito.when(channelManager.isLocalNode(Mockito.anyString()))
-				.thenReturn(true);
+		Configuration.getInstance().putProperty(
+				Configuration.CONFIGURATION_SERVER_DOMAIN, "shakespeare.lit");
 
 		retractItemProcessor.process(message);
 		Assert.assertEquals(0, queue.size());

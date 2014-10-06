@@ -4,6 +4,7 @@ import java.io.StringReader;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 
+import org.buddycloud.channelserver.Configuration;
 import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.channel.Conf;
 import org.buddycloud.channelserver.channel.node.configuration.field.AccessModel;
@@ -11,12 +12,8 @@ import org.buddycloud.channelserver.db.exception.NodeStoreException;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.JabberPubsub;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.PubSubElementProcessorAbstract;
 import org.buddycloud.channelserver.pubsub.accessmodel.AccessModels;
-import org.buddycloud.channelserver.pubsub.affiliation.Affiliations;
-import org.buddycloud.channelserver.pubsub.model.NodeAffiliation;
 import org.buddycloud.channelserver.pubsub.model.NodeItem;
-import org.buddycloud.channelserver.pubsub.model.NodeSubscription;
 import org.buddycloud.channelserver.pubsub.model.NodeThread;
-import org.buddycloud.channelserver.pubsub.subscription.Subscriptions;
 import org.buddycloud.channelserver.utils.node.NodeAclRefuseReason;
 import org.buddycloud.channelserver.utils.node.NodeViewAcl;
 import org.buddycloud.channelserver.utils.node.item.payload.Buddycloud;
@@ -54,7 +51,7 @@ public class NodeThreadsGet extends PubSubElementProcessorAbstract {
 			actor = request.getFrom();
 		}
 
-		if (!channelManager.isLocalJID(request.getFrom())) {
+		if (!Configuration.getInstance().isLocalJID(request.getFrom())) {
 			response.getElement().addAttribute("remote-server-discover",
 					"false");
 		}
@@ -64,7 +61,7 @@ public class NodeThreadsGet extends PubSubElementProcessorAbstract {
 			return;
 		}
 
-		if (!channelManager.isLocalNode(node)
+		if (!Configuration.getInstance().isLocalNode(node)
 				&& !channelManager.isCachedNode(node)) {
 			logger.debug("Node " + node
 					+ " is remote and not cached, off to get some data");
@@ -173,7 +170,7 @@ public class NodeThreadsGet extends PubSubElementProcessorAbstract {
 		if (nodeViewAcl.canViewNode(node,
 				channelManager.getNodeMembership(node, actor),
 				getNodeAccessModel(nodeConfiguration),
-				channelManager.isLocalJID(actor))) {
+				Configuration.getInstance().isLocalJID(actor))) {
 			return true;
 		}
 

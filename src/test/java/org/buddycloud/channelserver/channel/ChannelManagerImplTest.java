@@ -30,9 +30,6 @@ public class ChannelManagerImplTest {
 	@Mock
 	NodeStore nodeStore;
 	
-	@Mock
-	Configuration configuration;
-	
 	String user1 = "/user/user@" + TEST_DOMAIN + "/posts";
 	String user2 = "/user/user@server2.com/posts";
 	String user3 = "/user/user@topics.server3.com/posts";
@@ -47,11 +44,16 @@ public class ChannelManagerImplTest {
 	@Before
 	public void setUp() throws Exception {
 		MockitoAnnotations.initMocks(this);
-		channelManager = new ChannelManagerImpl(nodeStore, configuration);
+		channelManager = new ChannelManagerImpl(nodeStore);
 		
 		// This is used loads
-		when(configuration.getProperty(Configuration.CONFIGURATION_SERVER_DOMAIN)).thenReturn(TEST_DOMAIN);
-		when(configuration.getProperty(Configuration.CONFIGURATION_SERVER_TOPICS_DOMAIN)).thenReturn(TEST_TOPICS_DOMAIN);
+		Configuration.getInstance().putProperty(
+				Configuration.CONFIGURATION_SERVER_DOMAIN, TEST_DOMAIN);
+		Configuration.getInstance().putProperty(
+				Configuration.CONFIGURATION_SERVER_TOPICS_DOMAIN,
+				TEST_TOPICS_DOMAIN);
+		Configuration.getInstance().remove(
+				Configuration.CONFIGURATION_LOCAL_DOMAIN_CHECKER);
 	}
 
 	@After
@@ -82,9 +84,9 @@ public class ChannelManagerImplTest {
 
 	@Test
 	public void testCreatePersonalWorksForExternallyValidatedDomain() throws Exception {
-		when(configuration.getProperty(
-				Configuration.CONFIGURATION_LOCAL_DOMAIN_CHECKER)).thenReturn(
-						Boolean.TRUE.toString());
+		Configuration.getInstance().putProperty(
+				Configuration.CONFIGURATION_LOCAL_DOMAIN_CHECKER,
+				Boolean.TRUE.toString());
 		JID channelJID = new JID("testchannel@otherdomain.com");
 		channelManager.createPersonalChannel(channelJID);
 	}
@@ -107,27 +109,27 @@ public class ChannelManagerImplTest {
 	
 	@Test
 	public void testIsLocalNodeSuccess() throws Exception {
-		assertTrue(channelManager.isLocalNode("/user/test@domain.com/posts"));
+		assertTrue(Configuration.getInstance().isLocalNode("/user/test@domain.com/posts"));
 	}
 	
 	@Test
 	public void testIsLocalNodeFailure() throws Exception {
-		assertFalse(channelManager.isLocalNode("/user/test@otherdomain.com/posts"));		
+		assertFalse(Configuration.getInstance().isLocalNode("/user/test@otherdomain.com/posts"));		
 	}
 	
 	@Test(expected=IllegalArgumentException.class)
 	public void testIsLocalNodeWithInvalidNodeThrowsException() throws Exception {
-		channelManager.isLocalNode("somerandomnodeid");		
+		Configuration.getInstance().isLocalNode("somerandomnodeid");		
 	}
 
 	@Test
 	public void testIsLocalJidForLocaJid() throws Exception {
-		assertTrue(channelManager.isLocalJID(new JID("user@" + TEST_DOMAIN)));
+		assertTrue(Configuration.getInstance().isLocalJID(new JID("user@" + TEST_DOMAIN)));
 	}
 	
 	@Test
 	public void testIsLocalJidForNonLocaJid() throws Exception {
-		assertFalse(channelManager.isLocalJID(new JID("user@server1.com")));
+		assertFalse(Configuration.getInstance().isLocalJID(new JID("user@server1.com")));
 	}
 	
 	@Test

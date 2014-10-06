@@ -4,6 +4,7 @@ import java.io.StringReader;
 import java.util.concurrent.BlockingQueue;
 
 import org.apache.log4j.Logger;
+import org.buddycloud.channelserver.Configuration;
 import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.db.CloseableIterator;
 import org.buddycloud.channelserver.db.exception.NodeStoreException;
@@ -54,7 +55,7 @@ public class FirehoseGet extends PubSubElementProcessorAbstract {
 		}
 		determineAdminUserStatus();
 
-		if (false == channelManager.isLocalJID(request.getFrom())) {
+		if (false == Configuration.getInstance().isLocalJID(request.getFrom())) {
 			response.getElement().addAttribute("remote-server-discover",
 					"false");
 		}

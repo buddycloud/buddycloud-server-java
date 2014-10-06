@@ -4,6 +4,7 @@ import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 
 import org.apache.log4j.Logger;
+import org.buddycloud.channelserver.Configuration;
 import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.channel.node.configuration.field.AccessModel;
 import org.buddycloud.channelserver.db.exception.NodeStoreException;
@@ -52,7 +53,7 @@ public class NodeConfigureGet extends PubSubElementProcessorAbstract {
 			return;
 		}
 
-		if (!channelManager.isLocalNode(node) && !channelManager.isCachedNodeConfig(node)) {
+		if (!Configuration.getInstance().isLocalNode(node) && !channelManager.isCachedNodeConfig(node)) {
 			makeRemoteRequest();
 			return;
 		}
@@ -90,7 +91,7 @@ public class NodeConfigureGet extends PubSubElementProcessorAbstract {
 			value = nodeConf.get(key);
 			if ((true == key.equals(AccessModel.FIELD_NAME))
 					&& (value.equals(AccessModel.local.toString()))
-					&& (false == channelManager.isLocalJID(actor))) {
+					&& (false == Configuration.getInstance().isLocalJID(actor))) {
 				value = AccessModel.authorize.toString();
 			}
 			x.addField(key, null, null).addValue(value);

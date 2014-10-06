@@ -1,26 +1,21 @@
 package org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.set;
 
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
 import junit.framework.Assert;
 
+import org.buddycloud.channelserver.Configuration;
 import org.buddycloud.channelserver.channel.ChannelManager;
-import org.buddycloud.channelserver.channel.ValidatePayload;
 import org.buddycloud.channelserver.channel.validate.AtomEntry;
-import org.buddycloud.channelserver.channel.validate.PayloadValidator;
-import org.buddycloud.channelserver.channel.validate.UnknownContentTypeException;
 import org.buddycloud.channelserver.db.exception.NodeStoreException;
 import org.buddycloud.channelserver.packetHandler.iq.IQTestHandler;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.JabberPubsub;
 import org.buddycloud.channelserver.pubsub.affiliation.Affiliations;
-import org.buddycloud.channelserver.pubsub.model.NodeAffiliation;
 import org.buddycloud.channelserver.pubsub.model.NodeMembership;
 import org.buddycloud.channelserver.pubsub.model.NodeSubscription;
 import org.buddycloud.channelserver.pubsub.model.impl.GlobalItemIDImpl;
-import org.buddycloud.channelserver.pubsub.model.impl.NodeAffiliationImpl;
 import org.buddycloud.channelserver.pubsub.model.impl.NodeItemImpl;
 import org.buddycloud.channelserver.pubsub.model.impl.NodeMembershipImpl;
 import org.buddycloud.channelserver.pubsub.model.impl.NodeSubscriptionImpl;
@@ -56,8 +51,8 @@ public class PublishTest extends IQTestHandler {
 		channelManager = Mockito.mock(ChannelManager.class);
 		validateEntry = Mockito.mock(AtomEntry.class);
 
-		Mockito.when(channelManager.isLocalNode(Mockito.anyString()))
-				.thenReturn(true);
+		Configuration.getInstance().putProperty(
+				Configuration.CONFIGURATION_LOCAL_DOMAIN_CHECKER, Boolean.TRUE.toString());
 
 		queue = new LinkedBlockingQueue<Packet>();
 		publish = new Publish(queue, channelManager);
@@ -72,8 +67,6 @@ public class PublishTest extends IQTestHandler {
 				.element("entry").createCopy();
 
 		element = new BaseElement("publish");
-
-		Mockito.when(channelManager.isLocalNode(node)).thenReturn(true);
 
 		Mockito.when(channelManager.nodeExists(node)).thenReturn(true);
 
@@ -165,18 +158,23 @@ public class PublishTest extends IQTestHandler {
 
 	@Test
 	public void requestToRemoteNodeResultsInForwardedPacket() throws Exception {
-		Mockito.when(channelManager.isLocalNode(node)).thenReturn(false);
+		Configuration.getInstance().remove(
+				Configuration.CONFIGURATION_LOCAL_DOMAIN_CHECKER);
+		Configuration.getInstance().putProperty(
+				Configuration.CONFIGURATION_SERVER_DOMAIN, "shakespeare.lit");
 
 		Assert.assertEquals(new JID("channels.shakespeare.lit"),
 				request.getTo());
 
+		request.getElement().element("pubsub").element(
+				"publish").addAttribute("node", "/user/romeo@barracks.lit/posts");
 		publish.process(element, jid, request, null);
 
 		Assert.assertEquals(1, queue.size());
 
 		Packet response = queue.poll();
 
-		Assert.assertEquals(new JID("shakespeare.lit"), response.getTo());
+		Assert.assertEquals(new JID("barracks.lit"), response.getTo());
 	}
 
 	@Test

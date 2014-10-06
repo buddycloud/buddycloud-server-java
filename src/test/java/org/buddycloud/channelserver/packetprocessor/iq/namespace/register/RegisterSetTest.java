@@ -26,7 +26,6 @@ import org.dom4j.QName;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.xmpp.packet.IQ;
 import org.xmpp.packet.JID;
@@ -57,8 +56,10 @@ public class RegisterSetTest extends IQTestHandler {
 	public void setUp() throws Exception {
 		MockitoAnnotations.initMocks(this);
 
-		Mockito.when(channelManagerMock.isLocalNode(Mockito.anyString()))
-				.thenReturn(true);
+		Configuration.getInstance().remove(
+				Configuration.CONFIGURATION_LOCAL_DOMAIN_CHECKER);
+		Configuration.getInstance().putProperty(
+				Configuration.CONFIGURATION_SERVER_DOMAIN, REGISTER_REQUEST_DOMAIN);
 
 		queue = new LinkedBlockingQueue<Packet>();
 		registerSet = new RegisterSet(configuration, queue, channelManagerMock);
@@ -88,13 +89,6 @@ public class RegisterSetTest extends IQTestHandler {
 					}
 				});
 
-		when(channelManagerMock.isLocalJID(new JID("channel1@server1")))
-				.thenReturn(true);
-		when(channelManagerMock.isLocalJID(new JID("channel2@server1")))
-				.thenReturn(true);
-		when(channelManagerMock.isLocalDomain("server1"))
-				.thenReturn(true);
-
 		registerSet.process(request);
 
 		// Check that there are subscribe stanzas in the outqueue
@@ -122,13 +116,6 @@ public class RegisterSetTest extends IQTestHandler {
 						add(new JID("channel2@server2"));
 					}
 				});
-
-		when(channelManagerMock.isLocalJID(new JID("channel1@server2")))
-				.thenReturn(false);
-		when(channelManagerMock.isLocalJID(new JID("channel2@server2")))
-				.thenReturn(false);
-		when(channelManagerMock.isLocalDomain("server1"))
-				.thenReturn(true);
 
 		registerSet.process(request);
 
@@ -180,11 +167,6 @@ public class RegisterSetTest extends IQTestHandler {
 		final JID localOpenChannel = new JID("channel2@server1");
 		final JID remoteChannel = new JID("channel1@server2");
 		
-		when(channelManagerMock.isLocalDomain("server1"))
-				.thenReturn(true);
-		when(channelManagerMock.isLocalDomain("server2"))
-				.thenReturn(false);
-		
 		when(channelManagerMock.nodeExists(anyString())).thenReturn(false);
 
 		when(configuration.getAutosubscribeChannels()).thenReturn(
@@ -212,11 +194,6 @@ public class RegisterSetTest extends IQTestHandler {
 				channelManagerMock
 						.getDefaultNodeAffiliation(localPrivateChannelNode))
 				.thenReturn(Affiliations.moderator);
-
-		when(channelManagerMock.isLocalJID(localPrivateChannel)).thenReturn(
-				true);
-		when(channelManagerMock.isLocalJID(localOpenChannel)).thenReturn(true);
-		when(channelManagerMock.isLocalJID(remoteChannel)).thenReturn(false);
 
 		registerSet.process(request);
 
@@ -257,9 +234,6 @@ public class RegisterSetTest extends IQTestHandler {
 				channelManagerMock.getNodeConfValue(localPrivateChannelNode,
 						Conf.ACCESS_MODEL)).thenReturn(
 				AccessModels.authorize.toString());
-
-		when(channelManagerMock.isLocalJID(localPrivateChannel)).thenReturn(
-				true);
 
 		registerSet.process(request);
 

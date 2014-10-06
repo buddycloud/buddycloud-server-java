@@ -8,6 +8,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 import junit.framework.Assert;
 
+import org.buddycloud.channelserver.Configuration;
 import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.packetHandler.iq.IQTestHandler;
 import org.buddycloud.channelserver.pubsub.accessmodel.AccessModels;
@@ -37,6 +38,8 @@ public class NodeConfigureGetTest extends IQTestHandler {
 		element = new BaseElement("configure");
 		channelManager = Mockito.mock(ChannelManager.class);
 		configureGet.setChannelManager(channelManager);
+		Configuration.getInstance().putProperty(
+				Configuration.CONFIGURATION_LOCAL_DOMAIN_CHECKER, Boolean.TRUE.toString());
 	}
 
 	@After
@@ -75,8 +78,6 @@ public class NodeConfigureGetTest extends IQTestHandler {
 		IQ request = readStanzaAsIq("/iq/pubsub/configure/request-with-node.stanza");
 		Element configure = request.getChildElement().element("configure");
 
-		Mockito.when(channelManager.isLocalNode(Mockito.anyString()))
-				.thenReturn(true);
 		configureGet.process(configure, jid, request, null);
 
 		Packet response = queue.poll();
@@ -93,8 +94,8 @@ public class NodeConfigureGetTest extends IQTestHandler {
 		IQ request = readStanzaAsIq("/iq/pubsub/configure/request-with-node.stanza");
 		Element configure = request.getChildElement().element("configure");
 
-		String node = configure.attributeValue("node");
-		Mockito.when(channelManager.isLocalNode(node)).thenReturn(false);
+		Configuration.getInstance().putProperty(
+				Configuration.CONFIGURATION_LOCAL_DOMAIN_CHECKER, Boolean.FALSE.toString());
 		configureGet.process(configure, jid, request, null);
 
 		Packet response = queue.poll();
@@ -124,7 +125,6 @@ public class NodeConfigureGetTest extends IQTestHandler {
 		conf.put("pubsub#att2", "value2");
 
 		String node = configure.attributeValue("node");
-		Mockito.when(channelManager.isLocalNode(node)).thenReturn(true);
 		Mockito.when(channelManager.nodeExists(node)).thenReturn(true);
 		Mockito.when(channelManager.getNodeConf(node)).thenReturn(conf);
 
@@ -152,8 +152,10 @@ public class NodeConfigureGetTest extends IQTestHandler {
 	public void testLocalAccessModelGetsReportedAsAuthorizeToRemoveUsers()
 			throws Exception {
 
-		Mockito.when(channelManager.isLocalJID(Mockito.any(JID.class)))
-				.thenReturn(false);
+		Configuration.getInstance().putProperty(
+				Configuration.CONFIGURATION_SERVER_DOMAIN, "denmark.lit");
+		Configuration.getInstance().remove(
+				Configuration.CONFIGURATION_LOCAL_DOMAIN_CHECKER);
 
 		IQ request = readStanzaAsIq("/iq/pubsub/configure/request-with-node.stanza");
 		Element configure = request.getChildElement().element("configure");
@@ -162,7 +164,6 @@ public class NodeConfigureGetTest extends IQTestHandler {
 		conf.put("pubsub#access_model", AccessModels.local.toString());
 
 		String node = configure.attributeValue("node");
-		Mockito.when(channelManager.isLocalNode(node)).thenReturn(true);
 		Mockito.when(channelManager.nodeExists(node)).thenReturn(true);
 		Mockito.when(channelManager.getNodeConf(node)).thenReturn(conf);
 

@@ -7,7 +7,6 @@ import org.apache.log4j.Logger;
 import org.buddycloud.channelserver.Configuration;
 import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.channel.Conf;
-import org.buddycloud.channelserver.channel.LocalDomainChecker;
 import org.buddycloud.channelserver.db.exception.NodeStoreException;
 import org.buddycloud.channelserver.packetprocessor.PacketProcessor;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.JabberPubsub;
@@ -51,7 +50,7 @@ public class RegisterSet implements PacketProcessor<IQ> {
 		LOGGER.debug("Processing register request from " + request.getFrom());
 
 		String domain = reqIQ.getFrom().getDomain();
-		if (!channelManager.isLocalDomain(domain)) {
+		if (!Configuration.getInstance().isLocalDomain(domain)) {
 			notThisDomain(reqIQ);
 			return;
 		}
@@ -130,7 +129,7 @@ public class RegisterSet implements PacketProcessor<IQ> {
 			subscribeEl.addAttribute("jid", from.toBareJID().toString());
 
 			try {
-				if (channelManager.isLocalJID(channel)) {
+				if (Configuration.getInstance().isLocalJID(channel)) {
 					subscribe.setFrom(from);
 					subscribe.setTo(configuration.getServerChannelsDomain());
 				} else {
@@ -150,7 +149,7 @@ public class RegisterSet implements PacketProcessor<IQ> {
 				if (configuration.getBooleanProperty(
 						Configuration.CONFIGURATION_CHANNELS_AUTOSUBSCRIBE_AUTOAPPROVE,
 						false)
-						&& channelManager.isLocalJID(channel)
+						&& Configuration.getInstance().isLocalJID(channel)
 						&& AccessModels.authorize.toString().equals(
 								channelManager.getNodeConfValue(channelNodeId,
 										Conf.ACCESS_MODEL))) {

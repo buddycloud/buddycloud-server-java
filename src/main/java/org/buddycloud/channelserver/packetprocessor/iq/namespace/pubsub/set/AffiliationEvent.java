@@ -4,12 +4,12 @@ import java.util.Collection;
 import java.util.concurrent.BlockingQueue;
 
 import org.apache.log4j.Logger;
+import org.buddycloud.channelserver.Configuration;
 import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.db.exception.NodeStoreException;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.JabberPubsub;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.PubSubElementProcessorAbstract;
 import org.buddycloud.channelserver.pubsub.affiliation.Affiliations;
-import org.buddycloud.channelserver.pubsub.model.NodeAffiliation;
 import org.buddycloud.channelserver.pubsub.model.NodeMembership;
 import org.buddycloud.channelserver.pubsub.model.NodeSubscription;
 import org.buddycloud.channelserver.utils.node.item.payload.Buddycloud;
@@ -63,13 +63,19 @@ public class AffiliationEvent extends PubSubElementProcessorAbstract {
 		if (actor == null) {
 			actor = request.getFrom();
 		}
-		if (false == channelManager.isLocalNode(node)) {
+		
+		if (false == nodeProvided()) {
+			outQueue.put(response);
+			return;
+		}
+		
+		if (false == Configuration.getInstance().isLocalNode(node)) {
 			makeRemoteRequest();
 			return;
 		}
 
 		try {
-			if ((false == nodeProvided()) || (false == validRequestStanza())
+			if ((false == validRequestStanza())
 					|| (false == checkNodeExists())
 					|| (false == actorHasPermissionToAuthorize())
 					|| (false == subscriberHasCurrentAffiliation())

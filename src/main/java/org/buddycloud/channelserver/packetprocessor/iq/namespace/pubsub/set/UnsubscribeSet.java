@@ -3,7 +3,7 @@ package org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.set;
 import java.util.Collection;
 import java.util.concurrent.BlockingQueue;
 
-import org.apache.log4j.Logger;
+import org.buddycloud.channelserver.Configuration;
 import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.db.exception.NodeStoreException;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.PubSubElementProcessorAbstract;
@@ -17,7 +17,6 @@ import org.buddycloud.channelserver.utils.node.item.payload.Buddycloud;
 import org.dom4j.Document;
 import org.dom4j.Element;
 import org.xmpp.packet.IQ;
-import org.xmpp.packet.IQ.Type;
 import org.xmpp.packet.JID;
 import org.xmpp.packet.Message;
 import org.xmpp.packet.Packet;
@@ -26,7 +25,6 @@ import org.xmpp.resultsetmanagement.ResultSet;
 
 public class UnsubscribeSet extends PubSubElementProcessorAbstract {
 
-	private static final Logger logger = Logger.getLogger(UnsubscribeSet.class);
 	public static final String NODE_ID_REQUIRED = "nodeid-required";
 	public static final String CAN_NOT_UNSUBSCRIBE_ANOTHER_USER = "can-only-unsubscribe-self";
 	public static String MUST_HAVE_ONE_OWNER = "node-must-have-owner";
@@ -54,12 +52,11 @@ public class UnsubscribeSet extends PubSubElementProcessorAbstract {
 		}
 
 		JID from = request.getFrom();
-		if ((false == node.equals("/firehose")) && (false == channelManager.isLocalNode(node))) {
+		if ((false == node.equals("/firehose"))
+				&& (false == Configuration.getInstance().isLocalNode(node))) {
 			makeRemoteRequest();
 			return;
 		}
-		boolean isLocalSubscriber = false;
-
 		if (actorJID != null) {
 			from = actorJID;
 		}
@@ -80,8 +77,6 @@ public class UnsubscribeSet extends PubSubElementProcessorAbstract {
 		}
 
 		NodeMembership membership = channelManager.getNodeMembership(node, unsubscribingJid);
-
-		String fromJID = request.getFrom().toBareJID();
 
 		// Check that the requesting user is allowed to unsubscribe according to
 		// XEP-0060 section 6.2.3.3		

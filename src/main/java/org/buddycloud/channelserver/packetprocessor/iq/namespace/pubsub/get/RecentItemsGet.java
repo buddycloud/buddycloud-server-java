@@ -5,6 +5,7 @@ import java.util.Date;
 import java.util.concurrent.BlockingQueue;
 
 import org.apache.log4j.Logger;
+import org.buddycloud.channelserver.Configuration;
 import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.channel.Conf;
 import org.buddycloud.channelserver.db.CloseableIterator;
@@ -67,7 +68,7 @@ public class RecentItemsGet extends PubSubElementProcessorAbstract {
 			return;
 		}
 
-		if (!channelManager.isLocalJID(request.getFrom())) {
+		if (!Configuration.getInstance().isLocalJID(request.getFrom())) {
 			response.getElement().addAttribute("remote-server-discover",
 					"false");
 		}

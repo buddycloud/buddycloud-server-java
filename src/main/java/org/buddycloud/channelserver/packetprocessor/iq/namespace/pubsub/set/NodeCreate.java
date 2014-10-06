@@ -3,6 +3,7 @@ package org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.set;
 import java.util.HashMap;
 import java.util.concurrent.BlockingQueue;
 
+import org.buddycloud.channelserver.Configuration;
 import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.channel.Conf;
 import org.buddycloud.channelserver.channel.node.configuration.NodeConfigurationException;
@@ -36,16 +37,18 @@ public class NodeCreate extends PubSubElementProcessorAbstract {
 		request = reqIQ;
 		actor = actorJID;
 		node = element.attributeValue("node");
-
 		if (null == actorJID) {
 			actor = request.getFrom();
 		}
-		
-		if (false == channelManager.isLocalNode(node)) {
+		if (false == validateNode()) {
+			outQueue.put(response);
+			return;
+		}
+		if (false == Configuration.getInstance().isLocalNode(node)) {
 			makeRemoteRequest();
 			return;
 		}
-		if ((false == validateNode()) || (true == doesNodeExist())
+		if ((true == doesNodeExist())
 				|| (false == actorIsRegistered())
 				|| (false == nodeHandledByThisServer())) {
 			outQueue.put(response);

@@ -2,14 +2,13 @@ package org.buddycloud.channelserver.packetprocessor.iq.namespace.search;
 
 import java.util.concurrent.BlockingQueue;
 
-import org.buddycloud.channelserver.channel.ChannelManager;
+import org.buddycloud.channelserver.Configuration;
 import org.buddycloud.channelserver.packetprocessor.PacketProcessor;
 import org.dom4j.Element;
 import org.xmpp.forms.DataForm;
 import org.xmpp.packet.IQ;
 import org.xmpp.packet.Packet;
 import org.xmpp.packet.PacketError;
-import org.xmpp.packet.PacketError.Type;
 
 public class SearchGet implements PacketProcessor<IQ> {
 
@@ -21,15 +20,12 @@ public class SearchGet implements PacketProcessor<IQ> {
 	public static final String RPP_FIELD_LABEL = "Results per page";
 	public static final String PAGE_FIELD_LABEL = "Page";
 	
-	private ChannelManager channelManager;
 	private BlockingQueue<Packet> outQueue;
 	private IQ response;
 
 	private Element x;
 
-	public SearchGet(BlockingQueue<Packet> outQueue,
-			ChannelManager channelManager) {
-		this.channelManager = channelManager;
+	public SearchGet(BlockingQueue<Packet> outQueue) {
 		this.outQueue = outQueue;
 	}
 
@@ -37,7 +33,7 @@ public class SearchGet implements PacketProcessor<IQ> {
 	public void process(IQ request) throws Exception {
 		response = IQ.createResultIQ(request);
 
-		if (false == channelManager.isLocalJID(request.getFrom())) {
+		if (false == Configuration.getInstance().isLocalJID(request.getFrom())) {
 			sendErrorResponse(PacketError.Type.cancel,
 					PacketError.Condition.not_allowed);
 			return;

@@ -3,16 +3,15 @@ package org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.get;
 import java.util.concurrent.BlockingQueue;
 
 import org.apache.log4j.Logger;
+import org.buddycloud.channelserver.Configuration;
 import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.db.exception.NodeStoreException;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.JabberPubsub;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.PubSubElementProcessor;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.PubSubGet;
 import org.buddycloud.channelserver.pubsub.affiliation.Affiliations;
-import org.buddycloud.channelserver.pubsub.model.NodeAffiliation;
 import org.buddycloud.channelserver.pubsub.model.NodeMembership;
 import org.buddycloud.channelserver.pubsub.subscription.Subscriptions;
-import org.buddycloud.channelserver.queue.FederatedQueueManager;
 import org.buddycloud.channelserver.utils.node.item.payload.Buddycloud;
 import org.dom4j.Element;
 import org.xmpp.packet.IQ;
@@ -29,11 +28,7 @@ public class AffiliationsGet implements PubSubElementProcessor {
 	private String node;
 	private JID actorJid;
 	private IQ result;
-	private Element resultSetManagement;
 	private String firstItem;
-	private String lastItem;
-	private int totalEntriesCount;
-	private Boolean isOwnerModerator;
 
 	private static final Logger logger = Logger
 			.getLogger(AffiliationsGet.class);
@@ -51,9 +46,8 @@ public class AffiliationsGet implements PubSubElementProcessor {
 		requestIq = reqIQ;
 		actorJid = actorJID;
 		node = elm.attributeValue("node");
-		resultSetManagement = rsm;
 
-		if (false == channelManager.isLocalJID(requestIq.getFrom())) {
+		if (false == Configuration.getInstance().isLocalJID(requestIq.getFrom())) {
 			result.getElement().addAttribute("remote-server-discover", "false");
 		}
 		String namespace = JabberPubsub.NS_PUBSUB_OWNER;
@@ -82,7 +76,7 @@ public class AffiliationsGet implements PubSubElementProcessor {
 
 	private boolean getNodeAffiliations(Element affiliations)
 			throws NodeStoreException, InterruptedException {
-		if (false == channelManager.isLocalNode(node)
+		if (false == Configuration.getInstance().isLocalNode(node)
 				&& (false == channelManager.isCachedNode(node))) {
 			makeRemoteRequest(node.split("/")[2]);
 			return false;
@@ -91,7 +85,7 @@ public class AffiliationsGet implements PubSubElementProcessor {
 		nodeMemberships = channelManager.getNodeMemberships(node);
 		
 		if ((0 == nodeMemberships.size())
-			&& (false == channelManager.isLocalNode(node))) {
+			&& (false == Configuration.getInstance().isLocalNode(node))) {
 			makeRemoteRequest(node.split("/")[2]);
 			return false;
 		}
@@ -111,8 +105,9 @@ public class AffiliationsGet implements PubSubElementProcessor {
 			logger.trace("Adding affiliation for " + nodeMembership.getUser()
 					+ " affiliation " + nodeMembership.getAffiliation());
 			
-			if (null == firstItem) firstItem = nodeMembership.getUser().toString();
-			lastItem = nodeMembership.getUser().toString();
+			if (null == firstItem) {
+				firstItem = nodeMembership.getUser().toString();
+			}
 			
 			affiliations
 					.addElement("affiliation")
@@ -132,7 +127,7 @@ public class AffiliationsGet implements PubSubElementProcessor {
 	private boolean getUserMemberships(Element affiliations)
 			throws NodeStoreException, InterruptedException {
 		
-		if (false == channelManager.isLocalJID(actorJid)
+		if (false == Configuration.getInstance().isLocalJID(actorJid)
 				&& (false == channelManager.isCachedJID(requestIq.getFrom()))) {
 			makeRemoteRequest(actorJid.getDomain());
 			return false;
@@ -157,7 +152,6 @@ public class AffiliationsGet implements PubSubElementProcessor {
 					+ " (no node provided)");
 			
 			if (null == firstItem) firstItem = membership.getNodeId();
-			lastItem = membership.getNodeId();
 			
 			affiliations
 					.addElement("affiliation")

@@ -8,9 +8,9 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 import junit.framework.Assert;
 
+import org.buddycloud.channelserver.Configuration;
 import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.channel.node.configuration.Helper;
-import org.buddycloud.channelserver.db.exception.NodeStoreException;
 import org.buddycloud.channelserver.packetHandler.iq.IQTestHandler;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.JabberPubsub;
 import org.buddycloud.channelserver.pubsub.affiliation.Affiliations;
@@ -45,14 +45,14 @@ public class ConfigurationProcessorTest extends IQTestHandler {
 				"chgnnels.shakespeare.lit");
 
 		channelManager = Mockito.mock(ChannelManager.class);
-		Mockito.when(channelManager.isLocalNode(Mockito.anyString()))
-				.thenReturn(false);
-		Mockito.when(channelManager.isLocalJID(Mockito.any(JID.class)))
-				.thenReturn(true);
-
+		Configuration.getInstance().remove(
+				Configuration.CONFIGURATION_LOCAL_DOMAIN_CHECKER);
+		Configuration.getInstance().putProperty(
+				Configuration.CONFIGURATION_SERVER_DOMAIN, "shakespeare.lit");
+		
 		ArrayList<NodeMembership> members = new ArrayList<NodeMembership>();
 		members.add(new NodeMembershipImpl(
-				"/users/romeo@shakespeare.lit/posts", jid,
+				"/user/romeo@denmark.lit/posts", jid,
 				Subscriptions.subscribed, Affiliations.member, null));
 		Mockito.doReturn(new ResultSetImpl<NodeMembership>(members))
 				.when(channelManager).getNodeMemberships(Mockito.anyString());
@@ -75,7 +75,7 @@ public class ConfigurationProcessorTest extends IQTestHandler {
 		configurationElement = event.addElement("configuration");
 		configurationElement.addAttribute("jid", "romeo@shakespeare.lit");
 		configurationElement.addAttribute("node",
-				"/users/juliet@shakespeare.lit/posts");
+				"/user/juliet@denmark.lit/posts");
 		dataForm = configurationElement.addElement("x");
 		dataForm.addNamespace("", "jabber:x:data");
 		dataForm.addAttribute("type", "result");
@@ -87,19 +87,10 @@ public class ConfigurationProcessorTest extends IQTestHandler {
 
 	@Test
 	public void testEventForLocalNodeIsIgnored() throws Exception {
-
-		Mockito.when(channelManager.isLocalNode(Mockito.anyString()))
-				.thenReturn(true);
+		Configuration.getInstance().putProperty(
+				Configuration.CONFIGURATION_SERVER_DOMAIN, "denmark.lit");
 		configurationProcessor.process(message);
 		Assert.assertEquals(0, queue.size());
-	}
-
-	@Test(expected = NodeStoreException.class)
-	public void testNodeStoreExceptionIsThrownWhenExpected() throws Exception {
-
-		Mockito.doThrow(new NodeStoreException()).when(channelManager)
-				.isLocalNode(Mockito.anyString());
-		configurationProcessor.process(message);
 	}
 
 	@Test

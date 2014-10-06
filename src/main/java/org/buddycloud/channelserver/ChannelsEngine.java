@@ -7,7 +7,6 @@ import java.util.concurrent.LinkedBlockingQueue;
 import org.apache.log4j.Logger;
 import org.buddycloud.channelserver.channel.ChannelManagerFactory;
 import org.buddycloud.channelserver.channel.ChannelManagerFactoryImpl;
-import org.buddycloud.channelserver.channel.Conf;
 import org.buddycloud.channelserver.db.DefaultNodeStoreFactoryImpl;
 import org.buddycloud.channelserver.db.NodeStoreFactory;
 import org.buddycloud.channelserver.db.exception.NodeStoreException;
@@ -109,8 +108,7 @@ public class ChannelsEngine implements Component {
 			throw new ComponentException(e);
 		}
 
-		channelManagerFactory = new ChannelManagerFactoryImpl(configuration,
-				nodeStoreFactory);
+		channelManagerFactory = new ChannelManagerFactoryImpl(nodeStoreFactory);
 		federatedQueueManager = new FederatedQueueManager(this,
 				configuration);
 		onlineUsers = new OnlineResourceManager(configuration, channelManagerFactory.create());

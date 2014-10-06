@@ -6,6 +6,7 @@ import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 
 import org.apache.log4j.Logger;
+import org.buddycloud.channelserver.Configuration;
 import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.channel.node.configuration.NodeConfigurationException;
 import org.buddycloud.channelserver.db.exception.NodeStoreException;
@@ -13,7 +14,6 @@ import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.JabberPu
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.PubSubElementProcessorAbstract;
 import org.buddycloud.channelserver.pubsub.affiliation.Affiliations;
 import org.buddycloud.channelserver.pubsub.event.Event;
-import org.buddycloud.channelserver.pubsub.model.NodeAffiliation;
 import org.buddycloud.channelserver.pubsub.model.NodeSubscription;
 import org.buddycloud.channelserver.utils.node.item.payload.Buddycloud;
 import org.dom4j.Document;
@@ -50,12 +50,16 @@ public class NodeConfigure extends PubSubElementProcessorAbstract {
 		if (null == actor) {
 			actor = request.getFrom();
 		}
-		if (!channelManager.isLocalNode(node)) {
+		if (!nodeProvided()) {
+			outQueue.put(response);
+			return;
+		}
+		if (!Configuration.getInstance().isLocalNode(node)) {
 			makeRemoteRequest();
 			return;
 		}
 		try {
-			if (!nodeProvided() || !nodeExists() || !actorCanModify()) {
+			if (!nodeExists() || !actorCanModify()) {
 				outQueue.put(response);
 				return;
 			}

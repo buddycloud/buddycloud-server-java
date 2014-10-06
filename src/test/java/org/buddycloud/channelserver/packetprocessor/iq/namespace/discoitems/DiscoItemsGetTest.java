@@ -76,8 +76,6 @@ public class DiscoItemsGetTest extends IQTestHandler {
 		nodes.add("/user/user2@server1.com/posts");
 		
 		Mockito.when(channelManager.getNodeList()).thenReturn(nodes);
-		Mockito.when(channelManager.isLocalNode(Mockito.anyString()))
-		    .thenReturn(false);
 		
 		discoItems.process(request);
 		

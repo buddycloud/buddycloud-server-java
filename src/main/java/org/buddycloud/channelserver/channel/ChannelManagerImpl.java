@@ -4,9 +4,9 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 
 import org.apache.log4j.Logger;
+import org.buddycloud.channelserver.Configuration;
 import org.buddycloud.channelserver.db.ClosableIteratorImpl;
 import org.buddycloud.channelserver.db.CloseableIterator;
 import org.buddycloud.channelserver.db.NodeStore;
@@ -28,12 +28,10 @@ import org.xmpp.resultsetmanagement.ResultSet;
 public class ChannelManagerImpl implements ChannelManager {
 
 	private final NodeStore nodeStore;
-	private final Properties configuration;
 
 	private static final Logger logger = Logger
 			.getLogger(ChannelManagerImpl.class);
 
-	private static final String INVALID_NODE = "Illegal node format";
 	private static final String REMOTE_NODE = "Illegal remote node";
 
 	/**
@@ -42,10 +40,8 @@ public class ChannelManagerImpl implements ChannelManager {
 	 * @param nodeStore
 	 *            the backing {@link NodeStore}.
 	 */
-	public ChannelManagerImpl(final NodeStore nodeStore,
-			final Properties configuration) {
+	public ChannelManagerImpl(final NodeStore nodeStore) {
 		this.nodeStore = nodeStore;
-		this.configuration = configuration;
 	}
 
 	@Override
@@ -220,7 +216,7 @@ public class ChannelManagerImpl implements ChannelManager {
 
 	@Override
 	public void createPersonalChannel(JID owner) throws NodeStoreException {
-		if (false == isLocalJID(owner)) {
+		if (false == Configuration.getInstance().isLocalJID(owner)) {
 			throw new IllegalArgumentException(REMOTE_NODE);
 		}
 		if (!nodeExists(Conf.getPostChannelNodename(owner))) {
@@ -247,27 +243,6 @@ public class ChannelManagerImpl implements ChannelManager {
 			this.createNode(owner, Conf.getGeoNextChannelNodename(owner),
 					Conf.getDefaultGeoNextChannelConf(owner));
 		}
-	}
-
-	@Override
-	public boolean isLocalDomain(String domain) {
-		return LocalDomainChecker.isLocal(domain, configuration);
-	}
-	
-	@Override
-	public boolean isLocalNode(String nodeId) {
-		if (false == nodeId.matches("/user/.+@.+/.+")) {
-			logger.debug("Node " + nodeId + " has an invalid format");
-			throw new IllegalArgumentException(INVALID_NODE);
-		}
-		String domain = new JID(nodeId.split("/")[2]).getDomain();
-		return isLocalDomain(domain);
-	}
-	
-	@Override
-	public boolean isLocalJID(JID jid) {
-		String domain = jid.getDomain();
-		return isLocalDomain(domain);
 	}
 
 	@Override

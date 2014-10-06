@@ -3,11 +3,10 @@ package org.buddycloud.channelserver.packetprocessor.message.event;
 import java.util.Properties;
 import java.util.concurrent.BlockingQueue;
 
-import org.apache.log4j.Logger;
+import org.buddycloud.channelserver.Configuration;
 import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.db.exception.NodeStoreException;
 import org.buddycloud.channelserver.pubsub.affiliation.Affiliations;
-import org.buddycloud.channelserver.pubsub.subscription.Subscriptions;
 import org.buddycloud.channelserver.utils.NotificationScheme;
 import org.dom4j.Element;
 import org.xmpp.packet.JID;
@@ -18,9 +17,6 @@ public class AffiliationProcessor extends AbstractMessageProcessor {
 
 	private JID jid;
 	private Affiliations affiliation;
-
-	private static final Logger logger = Logger
-			.getLogger(AffiliationProcessor.class);
 
 	public AffiliationProcessor(BlockingQueue<Packet> outQueue,
 			Properties configuration, ChannelManager channelManager) {
@@ -33,7 +29,7 @@ public class AffiliationProcessor extends AbstractMessageProcessor {
 
 		handleAffiliationElement();
 
-		if (true == channelManager.isLocalNode(node)) {
+		if (true == Configuration.getInstance().isLocalNode(node)) {
 			return;
 		}
 		if (null == affiliation) {
@@ -50,14 +46,14 @@ public class AffiliationProcessor extends AbstractMessageProcessor {
 		Element affiliationsElement = message.getElement().element("event")
 				.element("affiliations");
 		Element affiliationElement = affiliationsElement.element("affiliation");
+		node = affiliationsElement.attributeValue("node");
 		if (null == affiliationElement) {
 			return;
 		}
 		jid = new JID(affiliationElement.attributeValue("jid"));
-		node = affiliationsElement.attributeValue("node");
 		affiliation = Affiliations.valueOf(affiliationElement
 				.attributeValue("affiliation"));
-		if (true == channelManager.isLocalNode(node)) {
+		if (true == Configuration.getInstance().isLocalNode(node)) {
 			return;
 		}
 		storeNewAffiliation();

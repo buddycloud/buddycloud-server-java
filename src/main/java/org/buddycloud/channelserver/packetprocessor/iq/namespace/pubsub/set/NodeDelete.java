@@ -3,13 +3,12 @@ package org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.set;
 import java.util.Collection;
 import java.util.concurrent.BlockingQueue;
 
+import org.buddycloud.channelserver.Configuration;
 import org.buddycloud.channelserver.channel.ChannelManager;
-import org.buddycloud.channelserver.channel.node.configuration.field.Affiliation;
 import org.buddycloud.channelserver.db.exception.NodeStoreException;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.JabberPubsub;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.PubSubElementProcessorAbstract;
 import org.buddycloud.channelserver.pubsub.affiliation.Affiliations;
-import org.buddycloud.channelserver.pubsub.model.NodeAffiliation;
 import org.buddycloud.channelserver.pubsub.model.NodeSubscription;
 import org.buddycloud.channelserver.utils.node.item.payload.Buddycloud;
 import org.dom4j.Element;
@@ -44,11 +43,11 @@ public class NodeDelete extends PubSubElementProcessorAbstract {
 		if (actorJID == null) {
 			actor = request.getFrom();
 		}
-		if (!validateNode()) {
+		if (!nodePresent() || !nodeValid()) {
 			outQueue.put(response);
 			return;
 		}
-		if (!channelManager.isLocalNode(node)) {
+		if (!Configuration.getInstance().isLocalNode(node)) {
 			makeRemoteRequest();
 			return;
 		}
@@ -112,7 +111,7 @@ public class NodeDelete extends PubSubElementProcessorAbstract {
 		return elm.getName().equals("delete");
 	}
 
-	private boolean validateNode() {
+	private boolean nodePresent() {
 		if (node != null && !node.trim().equals("")) {
 			return true;
 		}
@@ -161,16 +160,19 @@ public class NodeDelete extends PubSubElementProcessorAbstract {
 	}
 
 	private boolean nodeHandledByThisServer() {
-		if (!node.matches(NODE_REG_EX)) {
-			setErrorCondition(PacketError.Type.modify,
-					PacketError.Condition.bad_request);
-			return false;
-		}
-
 		if (!node.contains("@" + getServerDomain())
 				&& !node.contains("@" + getTopicsDomain())) {
 			setErrorCondition(PacketError.Type.modify,
 					PacketError.Condition.not_acceptable);
+			return false;
+		}
+		return true;
+	}
+
+	private boolean nodeValid() {
+		if (!node.matches(NODE_REG_EX)) {
+			setErrorCondition(PacketError.Type.modify,
+					PacketError.Condition.bad_request);
 			return false;
 		}
 		return true;

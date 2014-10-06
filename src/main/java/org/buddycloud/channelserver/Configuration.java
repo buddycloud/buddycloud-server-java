@@ -11,6 +11,7 @@ import java.util.Collections;
 import java.util.Properties;
 
 import org.apache.log4j.Logger;
+import org.buddycloud.channelserver.channel.LocalDomainChecker;
 import org.xmpp.packet.JID;
 
 public class Configuration extends Properties {
@@ -19,6 +20,7 @@ public class Configuration extends Properties {
 	private static final long serialVersionUID = 1L;
 
 	private static final String ARRAY_PROPERTY_SEPARATOR = ";";
+	private static final String INVALID_NODE = "Illegal node format";
 
 	public static final String CONFIGURATION_SERVER_DOMAIN = "server.domain";
 	public static final String CONFIGURATION_SERVER_CHANNELS_DOMAIN = "server.domain.channels";
@@ -95,6 +97,10 @@ public class Configuration extends Properties {
 		}
 		return instance;
 	}
+	
+	public static void reset() {
+		instance = null;
+	}
 
 	public String getProperty(String key) {
 		return conf.getProperty(key);
@@ -111,6 +117,10 @@ public class Configuration extends Properties {
 
 	public String getProperty(String key, String defaultValue) {
 		return conf.getProperty(key, defaultValue);
+	}
+	
+	public void putProperty(String key, String value) {
+		conf.put(key, value);
 	}
 
 	public void load(InputStream inputStream) throws IOException {
@@ -198,5 +208,23 @@ public class Configuration extends Properties {
 
 	public String getXmppHost() {
 		return this.getProperty(XMPP_HOST, "127.0.0.1");
+	}
+	
+	public boolean isLocalDomain(String domain) {
+		return LocalDomainChecker.isLocal(domain, this);
+	}
+	
+	public boolean isLocalNode(String nodeId) {
+		if (false == nodeId.matches("/user/.+@.+/.+")) {
+			LOGGER.debug("Node " + nodeId + " has an invalid format");
+			throw new IllegalArgumentException(INVALID_NODE);
+		}
+		String domain = new JID(nodeId.split("/")[2]).getDomain();
+		return isLocalDomain(domain);
+	}
+	
+	public boolean isLocalJID(JID jid) {
+		String domain = jid.getDomain();
+		return isLocalDomain(domain);
 	}
 }

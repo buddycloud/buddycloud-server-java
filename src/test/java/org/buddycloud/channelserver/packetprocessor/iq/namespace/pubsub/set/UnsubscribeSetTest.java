@@ -6,6 +6,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 import junit.framework.Assert;
 
+import org.buddycloud.channelserver.Configuration;
 import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.packetHandler.iq.IQTestHandler;
 import org.buddycloud.channelserver.pubsub.affiliation.Affiliations;
@@ -46,8 +47,8 @@ public class UnsubscribeSetTest extends IQTestHandler {
 	public void setUp() throws Exception {
 
 		channelManager = Mockito.mock(ChannelManager.class);
-		Mockito.when(channelManager.isLocalNode(Mockito.anyString()))
-				.thenReturn(true);
+		Configuration.getInstance().putProperty(
+				Configuration.CONFIGURATION_LOCAL_DOMAIN_CHECKER, Boolean.TRUE.toString());
 		Mockito.when(channelManager.nodeExists(Mockito.anyString()))
 				.thenReturn(true);
 
@@ -123,9 +124,9 @@ public class UnsubscribeSetTest extends IQTestHandler {
 
 	@Test
 	public void makesRemoteRequest() throws Exception {
-		Mockito.when(channelManager.isLocalNode(Mockito.anyString()))
-				.thenReturn(false);
-
+		Configuration.getInstance().remove(
+				Configuration.CONFIGURATION_LOCAL_DOMAIN_CHECKER);
+		
 		unsubscribe.process(element, jid, request, null);
 
 		Assert.assertEquals(1, queue.size());

@@ -1,18 +1,15 @@
 package org.buddycloud.channelserver.packetprocessor.iq.namespace.mam;
 
 import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.Iterator;
 import java.util.LinkedList;
-import java.util.List;
-import java.util.TimeZone;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
 import junit.framework.Assert;
 
+import org.buddycloud.channelserver.Configuration;
 import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.channel.ChannelManagerImpl;
 import org.buddycloud.channelserver.channel.Conf;
@@ -70,9 +67,6 @@ public class MessageArchiveManagementTest extends IQTestHandler {
 
 		request = readStanzaAsIq("/iq/mam/request.stanza");
 
-		Mockito.when(channelManager.isLocalJID(Mockito.any(JID.class)))
-				.thenReturn(true);
-
 		noAffiliations = new ResultSetImpl<NodeAffiliation>(
 				new ArrayList<NodeAffiliation>());
 		noSubscriptions = new ResultSetImpl<NodeSubscription>(
@@ -102,12 +96,15 @@ public class MessageArchiveManagementTest extends IQTestHandler {
 		Mockito.when(
 				channelManager.getNodeMembership(Mockito.anyString(),
 						Mockito.any(JID.class))).thenReturn(membership);
+		
+		Configuration.getInstance().putProperty(
+				Configuration.CONFIGURATION_LOCAL_DOMAIN_CHECKER, Boolean.TRUE.toString());
 	}
 
 	@Test
 	public void testRequestsOnlyHonouredForLocalUsers() throws Exception {
-		Mockito.when(channelManager.isLocalJID(Mockito.any(JID.class)))
-				.thenReturn(false);
+		Configuration.getInstance().putProperty(
+				Configuration.CONFIGURATION_LOCAL_DOMAIN_CHECKER, Boolean.FALSE.toString());
 
 		mam.process(request);
 

@@ -4,6 +4,7 @@ import java.util.Properties;
 import java.util.concurrent.BlockingQueue;
 
 import org.apache.log4j.Logger;
+import org.buddycloud.channelserver.Configuration;
 import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.db.exception.NodeStoreException;
 import org.buddycloud.channelserver.pubsub.model.impl.NodeSubscriptionImpl;
@@ -34,13 +35,13 @@ public class SubscriptionProcessor extends AbstractMessageProcessor {
 
 		handleSubscriptionElement();
 
-		if (true == channelManager.isLocalNode(node)) {
-			return;
-		}
-		
 		if (null == subscription) {
 			return;
-		} else if (subscription.equals(Subscriptions.pending)) {
+		}
+		if (true == Configuration.getInstance().isLocalNode(node)) {
+			return;
+		}
+		if (subscription.equals(Subscriptions.pending)) {
 			sendLocalNotifications(NotificationScheme.ownerOrModerator, jid);
 		} else if (subscription.equals(Subscriptions.invited)) {
 			sendLocalNotifications(NotificationScheme.ownerOrModerator, jid);
@@ -66,7 +67,7 @@ public class SubscriptionProcessor extends AbstractMessageProcessor {
 		    invitedBy = new JID(subscriptionElement.attributeValue("invited-by"));
 		}
 
-		if (true == channelManager.isLocalNode(node)) {
+		if (true == Configuration.getInstance().isLocalNode(node)) {
 			return;
 		}
 		storeNewSubscription();

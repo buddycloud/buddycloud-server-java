@@ -5,6 +5,7 @@ import java.util.Date;
 import java.util.concurrent.BlockingQueue;
 
 import org.apache.log4j.Logger;
+import org.buddycloud.channelserver.Configuration;
 import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.channel.Conf;
 import org.buddycloud.channelserver.db.CloseableIterator;
@@ -27,7 +28,6 @@ import org.xmpp.packet.PacketError.Type;
 public class UserItemsGet extends PubSubElementProcessorAbstract {
 
 	private static final Logger LOGGER = Logger.getLogger(UserItemsGet.class);
-	private static final String NODE_SUFFIX = "/posts";
 
 	private Date maxAge;
 
@@ -66,7 +66,7 @@ public class UserItemsGet extends PubSubElementProcessorAbstract {
 			return;
 		}
 
-		if (!channelManager.isLocalJID(request.getFrom())) {
+		if (!Configuration.getInstance().isLocalJID(request.getFrom())) {
 			response.getElement().addAttribute("remote-server-discover",
 					"false");
 		}

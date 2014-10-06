@@ -4,6 +4,7 @@ import java.util.Collection;
 import java.util.concurrent.BlockingQueue;
 
 import org.apache.log4j.Logger;
+import org.buddycloud.channelserver.Configuration;
 import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.db.exception.NodeStoreException;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.JabberPubsub;
@@ -65,12 +66,17 @@ public class SubscriptionEvent extends PubSubElementProcessorAbstract {
 		if (actor == null) {
 			actor = request.getFrom();
 		}
-		if (false == channelManager.isLocalNode(node)) {
+		if (false == nodeProvided()) {
+			outQueue.put(response);
+			return;
+		}
+		
+		if (false == Configuration.getInstance().isLocalNode(node)) {
 			makeRemoteRequest();
 			return;
 		}
 		try {
-			if ((false == nodeProvided()) || (false == validRequestStanza())
+			if ((false == validRequestStanza())
 					|| (false == checkNodeExists())
 					|| (false == actorHasPermissionToAuthorize())
 					|| (true == actorIsModifyingTheirSubscription())
@@ -155,7 +161,7 @@ public class SubscriptionEvent extends PubSubElementProcessorAbstract {
 			JID to = jid;
 			alertInvitedUser.getElement().attribute("remote-server-discover")
 					.detach();
-			if (!channelManager.isLocalJID(jid)) {
+			if (!Configuration.getInstance().isLocalJID(jid)) {
 				to = invitedUsersDomain;
 			}
 			alertInvitedUser.setTo(to);

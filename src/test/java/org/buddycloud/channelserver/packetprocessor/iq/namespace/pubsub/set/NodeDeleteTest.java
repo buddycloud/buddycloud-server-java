@@ -1,6 +1,5 @@
 package org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.set;
 
-import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -12,7 +11,6 @@ import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.packetHandler.iq.IQTestHandler;
 import org.buddycloud.channelserver.pubsub.affiliation.Affiliations;
 import org.buddycloud.channelserver.pubsub.model.NodeSubscription;
-import org.buddycloud.channelserver.pubsub.model.impl.NodeAffiliationImpl;
 import org.buddycloud.channelserver.pubsub.model.impl.NodeMembershipImpl;
 import org.buddycloud.channelserver.pubsub.model.impl.NodeSubscriptionImpl;
 import org.buddycloud.channelserver.pubsub.subscription.Subscriptions;
@@ -45,6 +43,8 @@ public class NodeDeleteTest extends IQTestHandler {
 		this.nodeDelete = new NodeDelete(queue, channelManager);
 		this.nodeDelete.setServerDomain("shakespeare.lit");
 		this.element = new BaseElement("delete");
+		Configuration.getInstance().putProperty(
+				Configuration.CONFIGURATION_LOCAL_DOMAIN_CHECKER, Boolean.TRUE.toString());
 	}
 
 	@After
@@ -96,8 +96,8 @@ public class NodeDeleteTest extends IQTestHandler {
 		IQ request = readStanzaAsIq("/iq/pubsub/delete/request-with-node.stanza");
 		Element deleteEl = request.getChildElement().element("delete");
 
-		String node = deleteEl.attributeValue("node");
-		Mockito.when(channelManager.isLocalNode(node)).thenReturn(false);
+		Configuration.getInstance().putProperty(
+				Configuration.CONFIGURATION_LOCAL_DOMAIN_CHECKER, Boolean.FALSE.toString());
 
 		nodeDelete.process(deleteEl, jid, request, null);
 		Packet response = queue.poll();
@@ -114,7 +114,6 @@ public class NodeDeleteTest extends IQTestHandler {
 		Element deleteEl = request.getChildElement().element("delete");
 
 		String node = deleteEl.attributeValue("node");
-		Mockito.when(channelManager.isLocalNode(node)).thenReturn(true);
 		Mockito.when(channelManager.nodeExists(node)).thenReturn(false);
 
 		nodeDelete.process(deleteEl, jid, request, null);
@@ -133,7 +132,6 @@ public class NodeDeleteTest extends IQTestHandler {
 		Element deleteEl = request.getChildElement().element("delete");
 
 		String node = deleteEl.attributeValue("node");
-		Mockito.when(channelManager.isLocalNode(node)).thenReturn(true);
 		Mockito.when(channelManager.nodeExists(node)).thenReturn(true);
 		nodeDelete.setServerDomain("fake.domain");
 
@@ -153,7 +151,6 @@ public class NodeDeleteTest extends IQTestHandler {
 		Element deleteEl = request.getChildElement().element("delete");
 
 		String node = deleteEl.attributeValue("node");
-		Mockito.when(channelManager.isLocalNode(node)).thenReturn(true);
 		Mockito.when(channelManager.nodeExists(node)).thenReturn(true);
 		Mockito.when(channelManager.getNodeMembership(node, jid)).thenReturn(
 				new NodeMembershipImpl(node, jid, Subscriptions.subscribed,
@@ -175,7 +172,6 @@ public class NodeDeleteTest extends IQTestHandler {
 		Element deleteEl = request.getChildElement().element("delete");
 
 		String node = deleteEl.attributeValue("node");
-		Mockito.when(channelManager.isLocalNode(node)).thenReturn(true);
 		Mockito.when(channelManager.nodeExists(node)).thenReturn(true);
 
 		Mockito.when(channelManager.getNodeMembership(node, jid)).thenReturn(
@@ -198,7 +194,6 @@ public class NodeDeleteTest extends IQTestHandler {
 		Element deleteEl = request.getChildElement().element("delete");
 
 		String node = deleteEl.attributeValue("node");
-		Mockito.when(channelManager.isLocalNode(node)).thenReturn(true);
 		Mockito.when(channelManager.nodeExists(node)).thenReturn(true);
 
 		nodeDelete.process(deleteEl, jid, request, null);
@@ -217,7 +212,6 @@ public class NodeDeleteTest extends IQTestHandler {
 		Element deleteEl = request.getChildElement().element("delete");
 
 		String node = deleteEl.attributeValue("node");
-		Mockito.when(channelManager.isLocalNode(node)).thenReturn(true);
 		Mockito.when(channelManager.nodeExists(node)).thenReturn(true);
 
 		nodeDelete.process(deleteEl, jid, request, null);
@@ -236,7 +230,6 @@ public class NodeDeleteTest extends IQTestHandler {
 		Element deleteEl = request.getChildElement().element("delete");
 
 		String node = deleteEl.attributeValue("node");
-		Mockito.when(channelManager.isLocalNode(node)).thenReturn(true);
 		Mockito.when(channelManager.nodeExists(node)).thenReturn(true);
 
 		Mockito.when(channelManager.getNodeMembership(node, jid)).thenReturn(
@@ -260,7 +253,6 @@ public class NodeDeleteTest extends IQTestHandler {
 		Element deleteEl = request.getChildElement().element("delete");
 
 		String node = deleteEl.attributeValue("node");
-		Mockito.when(channelManager.isLocalNode(node)).thenReturn(true);
 		Mockito.when(channelManager.nodeExists(node)).thenReturn(true);
 
 		Mockito.when(channelManager.getNodeMembership(node, jid)).thenReturn(

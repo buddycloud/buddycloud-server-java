@@ -15,6 +15,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 import junit.framework.Assert;
 
+import org.buddycloud.channelserver.Configuration;
 import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.db.exception.NodeStoreException;
 import org.buddycloud.channelserver.packetHandler.iq.IQTestHandler;
@@ -31,7 +32,6 @@ import org.dom4j.tree.BaseElement;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
-import org.mockito.Mockito;
 import org.xmpp.packet.IQ;
 import org.xmpp.packet.JID;
 import org.xmpp.packet.Message;
@@ -62,7 +62,8 @@ public class SubscriptionEventTest extends IQTestHandler {
 		element.addAttribute("node", node);
 
 		dataStore = mock(ChannelManager.class);
-		when(dataStore.isLocalNode(anyString())).thenReturn(true);
+		Configuration.getInstance().putProperty(
+				Configuration.CONFIGURATION_LOCAL_DOMAIN_CHECKER, Boolean.TRUE.toString());
 		when(dataStore.nodeExists(anyString())).thenReturn(true);
 
 		NodeMembership membership = new NodeMembershipImpl(node, jid,
@@ -78,9 +79,6 @@ public class SubscriptionEventTest extends IQTestHandler {
 
 		doReturn(new ResultSetImpl<NodeSubscription>(subscribers)).when(
 				dataStore).getNodeSubscriptionListeners(anyString());
-
-		Mockito.when(dataStore.isLocalJID(Mockito.any(JID.class))).thenReturn(
-				false);
 
 		event.setChannelManager(dataStore);
 	}
@@ -163,6 +161,7 @@ public class SubscriptionEventTest extends IQTestHandler {
 				error.getCondition());
 	}
 
+	@SuppressWarnings("unchecked")
 	@Test
 	public void testNodeStoreExceptionResultsInInternalServerErrorStanza()
 			throws Exception {
@@ -395,8 +394,6 @@ public class SubscriptionEventTest extends IQTestHandler {
 
 		event.process(element, jid, request, null);
 
-		IQ result = (IQ) queue.poll();
-
 		ArgumentCaptor<NodeSubscription> subscription = ArgumentCaptor
 				.forClass(NodeSubscription.class);
 
@@ -417,7 +414,6 @@ public class SubscriptionEventTest extends IQTestHandler {
 				subscriber), Subscriptions.subscribed, Affiliations.moderator,
 				null);
 
-		JID invitee = new JID("francisco@denmark.lit");
 		when(dataStore.getNodeMembership(eq(node), any(JID.class))).thenReturn(
 				membership);
 
@@ -440,9 +436,6 @@ public class SubscriptionEventTest extends IQTestHandler {
 
 	@Test
 	public void sendsNotificationToInvitedUserIfTheyAreLocal() throws Exception {
-
-		Mockito.when(dataStore.isLocalJID(Mockito.any(JID.class))).thenReturn(
-				true);
 
 		JID invitee = new JID("francisco@denmark.lit");
 
@@ -482,13 +475,18 @@ public class SubscriptionEventTest extends IQTestHandler {
 
 		JID invitee = new JID("francisco@denmark.lit");
 
+		Configuration.getInstance().remove(
+				Configuration.CONFIGURATION_LOCAL_DOMAIN_CHECKER);
+		Configuration.getInstance().putProperty(
+				Configuration.CONFIGURATION_SERVER_DOMAIN, "shakespeare.lit");
+		
 		NodeMembership membership = new NodeMembershipImpl(node, invitee,
 				Subscriptions.none, Affiliations.none, null);
 		when(dataStore.getNodeMembership(eq(node), eq(invitee))).thenReturn(
 				membership);
 
 		IQ request = readStanzaAsIq("/iq/pubsub/subscribe/invite.stanza");
-
+		element.addAttribute("node", "/user/pamela@shakespeare.lit/posts");
 		event.process(element, jid, request, null);
 
 		IQ result = (IQ) queue.poll();
@@ -523,7 +521,6 @@ public class SubscriptionEventTest extends IQTestHandler {
 		NodeMembership membership = new NodeMembershipImpl(node, new JID(
 				subscriber), Subscriptions.subscribed, Affiliations.moderator,
 				null);
-
 		when(dataStore.getNodeMembership(eq(node), any(JID.class))).thenReturn(
 				membership);
 
@@ -535,7 +532,7 @@ public class SubscriptionEventTest extends IQTestHandler {
 		Assert.assertEquals(PacketError.Type.cancel, error.getType());
 		Assert.assertEquals(PacketError.Condition.not_allowed,
 				error.getCondition());
-		Assert.assertEquals(event.CAN_NOT_MODIFY_OWN_SUBSCRIPTION,
+		Assert.assertEquals(SubscriptionEvent.CAN_NOT_MODIFY_OWN_SUBSCRIPTION,
 				error.getApplicationConditionName());
 		Assert.assertEquals(Buddycloud.NS_ERROR,
 				error.getApplicationConditionNamespaceURI());

@@ -12,6 +12,7 @@ import java.util.concurrent.TimeUnit;
 
 import junit.framework.Assert;
 
+import org.buddycloud.channelserver.Configuration;
 import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.db.ClosableIteratorImpl;
 import org.buddycloud.channelserver.db.CloseableIterator;
@@ -65,10 +66,8 @@ public class NodeItemsGetTest extends IQTestHandler {
 		element = new BaseElement("items");
 
 		channelManager = Mockito.mock(ChannelManager.class);
-		Mockito.when(channelManager.isLocalNode(Mockito.anyString()))
-				.thenReturn(true);
-		Mockito.when(channelManager.isLocalJID(Mockito.any(JID.class)))
-				.thenReturn(true);
+		Configuration.getInstance().putProperty(
+				Configuration.CONFIGURATION_LOCAL_DOMAIN_CHECKER, Boolean.TRUE.toString());
 		itemsGet.setChannelManager(channelManager);
 
 		ArrayList<NodeMembership> nodeMemberships = new ArrayList<NodeMembership>();
@@ -105,8 +104,8 @@ public class NodeItemsGetTest extends IQTestHandler {
 	@Test
 	public void testExternalNodeReturnsExpectedStanzaEarly() throws Exception {
 
-		Mockito.when(channelManager.isLocalNode(Mockito.anyString()))
-				.thenReturn(false);
+		Configuration.getInstance().putProperty(
+				Configuration.CONFIGURATION_LOCAL_DOMAIN_CHECKER, Boolean.FALSE.toString());
 
 		element.addAttribute("node", "/user/user@remote-server.com/posts");
 
@@ -429,8 +428,6 @@ public class NodeItemsGetTest extends IQTestHandler {
 		element.addAttribute("node", node);
 		element.addElement("item").addAttribute("id", id);
 
-		Mockito.when(channelManager.isLocalNode(Mockito.anyString()))
-				.thenReturn(true);
 		Mockito.when(channelManager.nodeExists(Mockito.anyString()))
 				.thenReturn(true);
 

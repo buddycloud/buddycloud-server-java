@@ -2,11 +2,11 @@ package org.buddycloud.channelserver.packetprocessor.iq.namespace.search;
 
 import java.io.StringReader;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
 
 import org.apache.log4j.Logger;
+import org.buddycloud.channelserver.Configuration;
 import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.db.CloseableIterator;
 import org.buddycloud.channelserver.db.exception.NodeStoreException;
@@ -17,7 +17,6 @@ import org.dom4j.Element;
 import org.dom4j.io.SAXReader;
 import org.dom4j.tree.DefaultElement;
 import org.xmpp.forms.DataForm;
-import org.xmpp.forms.FormField;
 import org.xmpp.packet.IQ;
 import org.xmpp.packet.JID;
 import org.xmpp.packet.Packet;
@@ -29,7 +28,6 @@ public class SearchSet implements PacketProcessor<IQ> {
 	private BlockingQueue<Packet> outQueue;
 	private IQ responseIq;
 	private Element x;
-	private Element query;
 	private IQ requestIq;
 	private ArrayList<String> content = new ArrayList<String>();
 	private int page = 1;
@@ -72,7 +70,7 @@ public class SearchSet implements PacketProcessor<IQ> {
 
 	private boolean isValidRequest() throws Exception {
 
-		if (false == channelManager.isLocalJID(searcher)) {
+		if (false == Configuration.getInstance().isLocalJID(searcher)) {
 			sendErrorResponse(PacketError.Type.cancel,
 					PacketError.Condition.not_allowed);
 			return false;

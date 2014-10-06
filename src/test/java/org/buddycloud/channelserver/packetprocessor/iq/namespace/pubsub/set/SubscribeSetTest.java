@@ -1,7 +1,6 @@
 package org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.set;
 
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
@@ -9,15 +8,14 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 import junit.framework.Assert;
 
+import org.buddycloud.channelserver.Configuration;
 import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.channel.Conf;
 import org.buddycloud.channelserver.channel.node.configuration.field.AccessModel;
 import org.buddycloud.channelserver.packetHandler.iq.IQTestHandler;
 import org.buddycloud.channelserver.pubsub.affiliation.Affiliations;
-import org.buddycloud.channelserver.pubsub.model.NodeAffiliation;
 import org.buddycloud.channelserver.pubsub.model.NodeMembership;
 import org.buddycloud.channelserver.pubsub.model.NodeSubscription;
-import org.buddycloud.channelserver.pubsub.model.impl.NodeAffiliationImpl;
 import org.buddycloud.channelserver.pubsub.model.impl.NodeMembershipImpl;
 import org.buddycloud.channelserver.pubsub.model.impl.NodeSubscriptionImpl;
 import org.buddycloud.channelserver.pubsub.subscription.Subscriptions;
@@ -49,8 +47,8 @@ public class SubscribeSetTest extends IQTestHandler {
 	public void setUp() throws Exception {
 
 		channelManager = Mockito.mock(ChannelManager.class);
-		Mockito.when(channelManager.isLocalNode(Mockito.anyString()))
-				.thenReturn(true);
+		Configuration.getInstance().putProperty(
+				Configuration.CONFIGURATION_LOCAL_DOMAIN_CHECKER, Boolean.TRUE.toString());
 		Mockito.when(channelManager.nodeExists(Mockito.anyString()))
 				.thenReturn(true);
 
@@ -63,9 +61,6 @@ public class SubscribeSetTest extends IQTestHandler {
 		element.addAttribute("node", node);
 
 		subscribe.setChannelManager(channelManager);
-
-		Mockito.when(channelManager.isLocalJID(Mockito.any(JID.class)))
-				.thenReturn(true);
 
 		membership = new NodeMembershipImpl(node, jid, Subscriptions.none,
 				Affiliations.none, null);
@@ -112,7 +107,7 @@ public class SubscribeSetTest extends IQTestHandler {
 		Assert.assertEquals(PacketError.Type.modify, error.getType());
 		Assert.assertEquals(PacketError.Condition.bad_request,
 				error.getCondition());
-		Assert.assertEquals(subscribe.MISSING_NODE_ID,
+		Assert.assertEquals(SubscribeSet.MISSING_NODE_ID,
 				error.getApplicationConditionName());
 
 	}
@@ -140,7 +135,7 @@ public class SubscribeSetTest extends IQTestHandler {
 		Assert.assertEquals(PacketError.Type.modify, error.getType());
 		Assert.assertEquals(PacketError.Condition.bad_request,
 				error.getCondition());
-		Assert.assertEquals(subscribe.INVALID_JID,
+		Assert.assertEquals(SubscribeSet.INVALID_JID,
 				error.getApplicationConditionName());
 
 	}
@@ -148,8 +143,8 @@ public class SubscribeSetTest extends IQTestHandler {
 	@Test
 	public void testUnRegisteedLocalUserReturnsError() throws Exception {
 
-		Mockito.when(channelManager.isLocalJID(Mockito.any(JID.class)))
-				.thenReturn(false);
+		Configuration.getInstance().remove(
+				Configuration.CONFIGURATION_LOCAL_DOMAIN_CHECKER);
 
 		IQ request = this.request.createCopy();
 
@@ -190,15 +185,16 @@ public class SubscribeSetTest extends IQTestHandler {
 		Assert.assertEquals(Subscriptions.subscribed, Subscriptions
 				.valueOf(response.getChildElement().element("subscription")
 						.attributeValue("subscription")));
-
 	}
 
 	@Test
 	public void testRemoteUserGetsPendingSubscriptionToLocalAccessModelNode()
 			throws Exception {
 
-		Mockito.when(channelManager.isLocalJID(Mockito.any(JID.class)))
-				.thenReturn(false);
+		Configuration.getInstance().remove(
+				Configuration.CONFIGURATION_LOCAL_DOMAIN_CHECKER);
+		Configuration.getInstance().putProperty(
+				Configuration.CONFIGURATION_SERVER_DOMAIN, "denmark.lit");
 
 		Map<String, String> configuration = new HashMap<String, String>();
 		configuration.put(Conf.ACCESS_MODEL, AccessModel.local.toString());
@@ -208,8 +204,10 @@ public class SubscribeSetTest extends IQTestHandler {
 		Mockito.when(channelManager.getNodeConf(Mockito.anyString()))
 				.thenReturn(configuration);
 
-		subscribe.process(element, new JID("francisco@denmark.lit"), request,
-				null);
+		request.setFrom("francisco@barracks.lit");
+		request.getElement().element("pubsub").element(
+				"subscribe").addAttribute("jid", request.getFrom().toBareJID());
+		subscribe.process(element, request.getFrom(), request, null);
 
 		IQ response = (IQ) queue.poll();
 
@@ -310,8 +308,9 @@ public class SubscribeSetTest extends IQTestHandler {
 
 	@Test
 	public void illegalNodeFormatReturnsAppropriateError() throws Exception {
-		Mockito.doThrow(new IllegalArgumentException()).when(channelManager)
-				.isLocalNode(Mockito.anyString());
+		
+		request.getElement().element("pubsub").element(
+				"subscribe").addAttribute("node", "illegalformat");
 		subscribe.process(element, new JID("francisco@denmark.lit"), request,
 				null);
 		IQ response = (IQ) queue.poll();
@@ -320,7 +319,7 @@ public class SubscribeSetTest extends IQTestHandler {
 		Assert.assertEquals(PacketError.Type.modify, error.getType());
 		Assert.assertEquals(PacketError.Condition.bad_request,
 				error.getCondition());
-		Assert.assertEquals(subscribe.INVALID_NODE_FORMAT,
+		Assert.assertEquals(SubscribeSet.INVALID_NODE_FORMAT,
 				error.getApplicationConditionName());
 		Assert.assertEquals(Buddycloud.NS_ERROR,
 				error.getApplicationConditionNamespaceURI());

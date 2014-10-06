@@ -8,7 +8,6 @@ import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.packetprocessor.PacketProcessor;
 import org.buddycloud.channelserver.pubsub.affiliation.Affiliations;
 import org.buddycloud.channelserver.pubsub.model.NodeMembership;
-import org.buddycloud.channelserver.pubsub.model.NodeSubscription;
 import org.buddycloud.channelserver.pubsub.subscription.Subscriptions;
 import org.buddycloud.channelserver.utils.NotificationScheme;
 import org.xmpp.packet.JID;
@@ -16,10 +15,8 @@ import org.xmpp.packet.Message;
 import org.xmpp.packet.Packet;
 import org.xmpp.resultsetmanagement.ResultSet;
 
-abstract public class AbstractMessageProcessor implements PacketProcessor<Message> {
+public abstract class AbstractMessageProcessor implements PacketProcessor<Message> {
 
-	
-	
 	protected Message message;
 	protected String node;
 	protected ChannelManager channelManager;
@@ -49,11 +46,13 @@ abstract public class AbstractMessageProcessor implements PacketProcessor<Messag
 				.getProperty(Configuration.CONFIGURATION_SERVER_CHANNELS_DOMAIN)));
 		
 		for (NodeMembership member : members) {
-			if (false == channelManager.isLocalJID(member.getUser())) continue;
-			
+			if (false == Configuration.getInstance().isLocalJID(member.getUser())) {
+				continue;
+			}
 			if (scheme.equals(NotificationScheme.validSubscribers) && !userIsValidSubscriber(member)) {
 				continue;
-			} else if (scheme.equals(NotificationScheme.ownerOrModerator) && !userIsOwnerOrModerator(member)) {
+			} 
+			if (scheme.equals(NotificationScheme.ownerOrModerator) && !userIsOwnerOrModerator(member)) {
 				continue;
 			}
 

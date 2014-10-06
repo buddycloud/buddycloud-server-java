@@ -6,6 +6,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 import junit.framework.Assert;
 
+import org.buddycloud.channelserver.Configuration;
 import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.packetHandler.iq.IQTestHandler;
 import org.buddycloud.channelserver.pubsub.affiliation.Affiliations;
@@ -15,7 +16,6 @@ import org.buddycloud.channelserver.pubsub.subscription.Subscriptions;
 import org.dom4j.Element;
 import org.dom4j.tree.BaseElement;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.xmpp.packet.IQ;
@@ -45,10 +45,8 @@ public class SubscriptionsGetTest extends IQTestHandler {
 		element = new BaseElement("subscriptions");
 
 		channelManager = Mockito.mock(ChannelManager.class);
-		Mockito.when(channelManager.isLocalNode(Mockito.anyString()))
-				.thenReturn(true);
-		Mockito.when(channelManager.isLocalJID(Mockito.any(JID.class)))
-				.thenReturn(true);
+		Configuration.getInstance().putProperty(
+				Configuration.CONFIGURATION_LOCAL_DOMAIN_CHECKER, Boolean.TRUE.toString());
 
 		NodeMembership nodeMembership = new NodeMembershipImpl(node, jid,
 				Subscriptions.subscribed, Affiliations.member, null);
@@ -100,10 +98,12 @@ public class SubscriptionsGetTest extends IQTestHandler {
 	@Test
 	public void remoteNodeForwardsStanza() throws Exception {
 
-		Mockito.when(channelManager.isLocalNode(Mockito.anyString()))
-				.thenReturn(false);
+		Configuration.getInstance().putProperty(
+				Configuration.CONFIGURATION_LOCAL_DOMAIN_CHECKER,
+				Boolean.FALSE.toString());
+
 		Mockito.when(channelManager.isCachedNode(Mockito.anyString()))
-		.thenReturn(false);
+				.thenReturn(false);
 
 		subscriptionsGet.process(element, jid, nodeRequest, null);
 

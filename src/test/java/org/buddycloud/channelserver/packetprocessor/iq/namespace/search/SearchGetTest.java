@@ -5,12 +5,11 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 import junit.framework.Assert;
 
-import org.buddycloud.channelserver.channel.ChannelManager;
+import org.buddycloud.channelserver.Configuration;
 import org.buddycloud.channelserver.packetHandler.iq.IQTestHandler;
 import org.dom4j.Element;
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.Mockito;
 import org.xmpp.forms.DataForm;
 import org.xmpp.packet.IQ;
 import org.xmpp.packet.JID;
@@ -20,10 +19,7 @@ import org.xmpp.packet.PacketError;
 public class SearchGetTest extends IQTestHandler {
 
 	private IQ request;
-	private Element element;
 	private BlockingQueue<Packet> queue = new LinkedBlockingQueue<Packet>();
-
-	private ChannelManager channelManager;
 
 	private SearchGet search;
 	private JID sender;
@@ -33,9 +29,8 @@ public class SearchGetTest extends IQTestHandler {
 	public void setUp() throws Exception {
 
 		queue = new LinkedBlockingQueue<Packet>();
-		channelManager = Mockito.mock(ChannelManager.class);
 
-		search = new SearchGet(queue, channelManager);
+		search = new SearchGet(queue);
 
 		sender = new JID("channels.shakespeare.lit");
 		receiver = new JID("romeo@shakespeare.lit/home");
@@ -47,15 +42,15 @@ public class SearchGetTest extends IQTestHandler {
 		Element query = request.getElement().addElement("query");
 		query.addNamespace("", Search.NAMESPACE_URI);
 
-		Mockito.when(channelManager.isLocalJID(Mockito.any(JID.class)))
-				.thenReturn(true);
+		Configuration.getInstance().putProperty(
+				Configuration.CONFIGURATION_LOCAL_DOMAIN_CHECKER, Boolean.TRUE.toString());
 	}
 
 	@Test
 	public void testOnlyAcceptsPacketsFromLocalUsers() throws Exception {
 
-		Mockito.when(channelManager.isLocalJID(Mockito.any(JID.class)))
-				.thenReturn(false);
+		Configuration.getInstance().remove(
+				Configuration.CONFIGURATION_LOCAL_DOMAIN_CHECKER);
 
 		search.process(request);
 		Packet response = queue.poll();

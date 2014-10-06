@@ -59,6 +59,8 @@ public class UnregisterSetTest extends IQTestHandler {
 				new ResultSetImpl<NodeItem>(new LinkedList<NodeItem>()));
 		Mockito.when(channelManager.beginTransaction()).thenReturn(
 				Mockito.mock(Transaction.class));
+		Configuration.getInstance().putProperty(
+				Configuration.CONFIGURATION_LOCAL_DOMAIN_CHECKER, Boolean.TRUE.toString());
 	}
 
 	@Test
@@ -132,9 +134,6 @@ public class UnregisterSetTest extends IQTestHandler {
 		Mockito.when(channelManager.getUserMemberships(Mockito.eq(actorJid))).thenReturn(
 				new ResultSetImpl<NodeMembership>(memberships));
 
-		// Record local node
-		Mockito.when(channelManager.isLocalNode(Mockito.eq(personalNode))).thenReturn(true);
-
 		// Record channel type
 		Mockito.when(
 				channelManager
@@ -181,7 +180,8 @@ public class UnregisterSetTest extends IQTestHandler {
 				channelManager.getNodeMemberships(Mockito.eq(topicNode))).thenReturn(
 				new ResultSetImpl<NodeMembership>(memberships));
 
-		Mockito.when(channelManager.isLocalNode(Mockito.anyString())).thenReturn(false);
+		Configuration.getInstance().putProperty(
+				Configuration.CONFIGURATION_LOCAL_DOMAIN_CHECKER, Boolean.FALSE.toString());
 
 		// Record channel type
 		Mockito.when(
@@ -217,9 +217,6 @@ public class UnregisterSetTest extends IQTestHandler {
 				channelManager.getNodeMemberships(Mockito.eq(topicNode))).thenReturn(
 				new ResultSetImpl<NodeMembership>(memberships));
 
-		// Record local node
-		Mockito.when(channelManager.isLocalNode(topicNode)).thenReturn(true);
-
 		// Record channel type
 		Mockito.when(
 				channelManager.getNodeConfValue(topicNode, Conf.CHANNEL_TYPE))
@@ -252,7 +249,8 @@ public class UnregisterSetTest extends IQTestHandler {
 		String topicNode = "/user/topic@shakespeare.lit/posts";
 
 		// Record remote node
-		Mockito.when(channelManager.isLocalNode(topicNode)).thenReturn(false);
+		Configuration.getInstance().putProperty(
+				Configuration.CONFIGURATION_LOCAL_DOMAIN_CHECKER, Boolean.FALSE.toString());
 
 		// Record node items
 		NodeItem nodeItem = new NodeItemImpl(topicNode, "entry1", new Date(),
@@ -278,9 +276,6 @@ public class UnregisterSetTest extends IQTestHandler {
 		recordEmptyMockResponses(actorJid);
 
 		String topicNode = "/user/topic@shakespeare.lit/posts";
-
-		// Record remote node
-		Mockito.when(channelManager.isLocalNode(topicNode)).thenReturn(true);
 
 		// Record node items
 		String itemId = "entry1";
@@ -362,6 +357,11 @@ public class UnregisterSetTest extends IQTestHandler {
 		remoteNodes.add(remoteNode);
 		Mockito.when(channelManager.getNodeList()).thenReturn(remoteNodes);
 
+		Configuration.getInstance().remove(
+				Configuration.CONFIGURATION_LOCAL_DOMAIN_CHECKER);
+		Configuration.getInstance().putProperty(
+				Configuration.CONFIGURATION_SERVER_CHANNELS_DOMAIN, "shakespeare.lit");
+		
 		unregisterSet.process(request);
 
 		IQ response = (IQ) queue.poll();

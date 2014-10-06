@@ -18,7 +18,6 @@ import org.buddycloud.channelserver.packetprocessor.PacketProcessor;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.JabberPubsub;
 import org.buddycloud.channelserver.pubsub.affiliation.Affiliations;
 import org.buddycloud.channelserver.pubsub.event.Event;
-import org.buddycloud.channelserver.pubsub.model.NodeAffiliation;
 import org.buddycloud.channelserver.pubsub.model.NodeItem;
 import org.buddycloud.channelserver.pubsub.model.NodeMembership;
 import org.buddycloud.channelserver.pubsub.model.NodeSubscription;
@@ -99,7 +98,7 @@ public class UnregisterSet implements PacketProcessor<IQ> {
 				String nodeId = userMembership.getNodeId();
 				if (isPersonal(nodeId) || isSingleOwner(nodeId, actorJID)) {
 					channelManager.deleteNode(nodeId);
-					if (channelManager.isLocalNode(nodeId)) {
+					if (Configuration.getInstance().isLocalNode(nodeId)) {
 						addDeleteNodeNotifications(nodeId, notifications);
 					}
 				}
@@ -111,7 +110,7 @@ public class UnregisterSet implements PacketProcessor<IQ> {
 			
 			ResultSet<NodeItem> userItems = channelManager.getUserPublishedItems(actorJID);
 			for (NodeItem userItem : userItems) {
-				if (channelManager.isLocalNode(userItem.getNodeId())) {
+				if (Configuration.getInstance().isLocalNode(userItem.getNodeId())) {
 					addDeleteItemNotifications(userItem.getNodeId(), userItem.getId(), notifications);
 				}
 			}
@@ -158,7 +157,7 @@ public class UnregisterSet implements PacketProcessor<IQ> {
 		Set<String> remoteDomains = new HashSet<String>();
 		for (String node : nodeList) {
 			try {
-				if (!channelManager.isLocalNode(node)) {
+				if (!Configuration.getInstance().isLocalNode(node)) {
 					remoteDomains.add(new JID(node.split("/")[2]).getDomain());
 				}
 			} catch (IllegalArgumentException e) {

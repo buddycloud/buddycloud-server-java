@@ -2,16 +2,14 @@ package org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.get;
 
 import java.util.concurrent.BlockingQueue;
 
-import org.apache.log4j.Logger;
+import org.buddycloud.channelserver.Configuration;
 import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.db.exception.NodeStoreException;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.JabberPubsub;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.PubSubElementProcessor;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.PubSubGet;
 import org.buddycloud.channelserver.pubsub.affiliation.Affiliations;
-import org.buddycloud.channelserver.pubsub.model.NodeAffiliation;
 import org.buddycloud.channelserver.pubsub.model.NodeMembership;
-import org.buddycloud.channelserver.pubsub.model.NodeSubscription;
 import org.buddycloud.channelserver.pubsub.subscription.Subscriptions;
 import org.buddycloud.channelserver.utils.node.item.payload.Buddycloud;
 import org.dom4j.Element;
@@ -29,16 +27,7 @@ public class SubscriptionsGet implements PubSubElementProcessor {
 	private String node;
 	private JID actorJid;
 	private IQ requestIq;
-	private Element resultSetManagement;
 	
-	private String firstItem;
-	private String lastItem;
-	private int totalEntriesCount;
-	private Boolean isOwnerModerator;;
-
-	private static final Logger logger = Logger
-			.getLogger(SubscriptionsGet.class);
-
 	public void setChannelManager(ChannelManager dataStore) {
 		channelManager = dataStore;
 	}
@@ -55,7 +44,6 @@ public class SubscriptionsGet implements PubSubElementProcessor {
 		result = IQ.createResultIQ(reqIQ);
 		actorJid = actorJID;
 		requestIq = reqIQ;
-		resultSetManagement = rsm;
 		
 		Element pubsub = result.setChildElement(PubSubGet.ELEMENT_NAME,
 				JabberPubsub.NAMESPACE_URI);
@@ -72,7 +60,7 @@ public class SubscriptionsGet implements PubSubElementProcessor {
 		if (node == null) {
 			isProcessedLocally = getUserMemberships(subscriptions);
 		} else {
-			if (false == channelManager.isLocalNode(node)) {
+			if (false == Configuration.getInstance().isLocalNode(node)) {
 	        	result.getElement().addAttribute("remote-server-discover", "false");
 	        }
 			isProcessedLocally = getNodeMemberships(subscriptions);
@@ -84,7 +72,7 @@ public class SubscriptionsGet implements PubSubElementProcessor {
 
 	private boolean getNodeMemberships(Element subscriptions)
 			throws NodeStoreException, InterruptedException {
-		if (false == channelManager.isLocalNode(node) 
+		if (false == Configuration.getInstance().isLocalNode(node) 
 		    && (false == channelManager.isCachedNode(node))
 		) {
 			makeRemoteRequest(new JID(node.split("/")[2]).getDomain());
@@ -97,7 +85,7 @@ public class SubscriptionsGet implements PubSubElementProcessor {
 
 		if ((null != requestIq.getElement().element("pubsub").element("set"))
 				&& (0 == cur.size())
-				&& (false == channelManager.isLocalNode(node))) {
+				&& (false == Configuration.getInstance().isLocalNode(node))) {
 			makeRemoteRequest(new JID(node.split("/")[2]).getDomain());
 			return false;
 		}
@@ -137,7 +125,7 @@ public class SubscriptionsGet implements PubSubElementProcessor {
 
 		if ((null != requestIq.getElement().element("pubsub").element("set"))
 				&& (0 == cur.size())
-				&& (false == channelManager.isLocalJID(actorJid))) {
+				&& (false == Configuration.getInstance().isLocalJID(actorJid))) {
 			makeRemoteRequest(actorJid.getDomain());
 			return false;
 		}

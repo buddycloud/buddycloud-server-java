@@ -3,6 +3,7 @@ package org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.result;
 import java.util.List;
 
 import org.apache.log4j.Logger;
+import org.buddycloud.channelserver.Configuration;
 import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.db.exception.NodeStoreException;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.PubSubElementProcessorAbstract;
@@ -62,7 +63,7 @@ public class SubscriptionsResult extends PubSubElementProcessorAbstract {
 		JID jid = new JID(subscription.attributeValue("jid"));
 		
 		JID listener = request.getFrom();
-		if (channelManager.isLocalJID(jid)) {
+		if (Configuration.getInstance().isLocalJID(jid)) {
 			listener = jid;
 		}
 		JID invitedBy = null;

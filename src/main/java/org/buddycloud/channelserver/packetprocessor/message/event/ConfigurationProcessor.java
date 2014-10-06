@@ -4,6 +4,7 @@ import java.util.Properties;
 import java.util.concurrent.BlockingQueue;
 
 import org.apache.log4j.Logger;
+import org.buddycloud.channelserver.Configuration;
 import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.channel.node.configuration.Helper;
 import org.buddycloud.channelserver.db.exception.NodeStoreException;
@@ -34,7 +35,7 @@ public class ConfigurationProcessor extends AbstractMessageProcessor  {
 		message = packet;
 		getPacketDetails();
 
-		if ((null == node) || (true == channelManager.isLocalNode(node))) {
+		if ((null == node) || (true == Configuration.getInstance().isLocalNode(node))) {
 			return;
 		}
 		sendLocalNotifications(NotificationScheme.validSubscribers);
@@ -52,8 +53,7 @@ public class ConfigurationProcessor extends AbstractMessageProcessor  {
 	}
 
 	private void handleDataForm() throws NodeStoreException {
-
-		if (true == channelManager.isLocalNode(node)) {
+		if (true == Configuration.getInstance().isLocalNode(node)) {
 			return;
 		}
         setNodeConfiguration();

@@ -3,7 +3,7 @@ package org.buddycloud.channelserver.packetprocessor.message.event;
 import java.util.Properties;
 import java.util.concurrent.BlockingQueue;
 
-import org.apache.log4j.Logger;
+import org.buddycloud.channelserver.Configuration;
 import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.db.exception.NodeStoreException;
 import org.buddycloud.channelserver.utils.NotificationScheme;
@@ -11,9 +11,6 @@ import org.xmpp.packet.Message;
 import org.xmpp.packet.Packet;
 
 public class RetractItemProcessor extends AbstractMessageProcessor {
-
-	private static final Logger logger = Logger
-			.getLogger(RetractItemProcessor.class);
 
 	public RetractItemProcessor(BlockingQueue<Packet> outQueue,
 			Properties configuration, ChannelManager channelManager) {
@@ -25,8 +22,9 @@ public class RetractItemProcessor extends AbstractMessageProcessor {
 		message = packet;
 		node = message.getElement().element("event").element("items")
 				.attributeValue("node");
-		if (true == channelManager.isLocalNode(node))
+		if (true == Configuration.getInstance().isLocalNode(node)) {
 			return;
+		}
 		sendLocalNotifications(NotificationScheme.validSubscribers);
 		handleItem();
 	}

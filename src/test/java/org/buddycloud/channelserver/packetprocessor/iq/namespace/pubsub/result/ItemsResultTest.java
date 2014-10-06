@@ -37,6 +37,10 @@ public class ItemsResultTest extends IQTestHandler {
 
 		channelManager = Mockito.mock(ChannelManager.class);
 		itemsResult.setChannelManager(channelManager);
+		
+		org.buddycloud.channelserver.Configuration.getInstance().putProperty(
+				org.buddycloud.channelserver.Configuration.CONFIGURATION_LOCAL_DOMAIN_CHECKER, 
+				Boolean.FALSE.toString());
 	}
 
 	@Test

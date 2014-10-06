@@ -3,6 +3,7 @@ package org.buddycloud.channelserver.packetprocessor.message.event;
 import java.util.Properties;
 import java.util.concurrent.BlockingQueue;
 
+import org.buddycloud.channelserver.Configuration;
 import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.db.exception.NodeStoreException;
 import org.buddycloud.channelserver.utils.NotificationScheme;
@@ -21,7 +22,7 @@ public class DeleteProcessor extends AbstractMessageProcessor  {
 	public void process(Message packet) throws Exception {
 		message = packet;
 		deleteNode();
-		if (!channelManager.isLocalNode(node)) {
+		if (!Configuration.getInstance().isLocalNode(node)) {
 			sendLocalNotifications(NotificationScheme.validSubscribers);
 		}
 	}
@@ -33,7 +34,7 @@ public class DeleteProcessor extends AbstractMessageProcessor  {
 			return;
 		}
 		node = deleteElement.attributeValue("node");
-		if (channelManager.isLocalNode(node)) {
+		if (Configuration.getInstance().isLocalNode(node)) {
 			return;
 		}
         channelManager.deleteNode(node);

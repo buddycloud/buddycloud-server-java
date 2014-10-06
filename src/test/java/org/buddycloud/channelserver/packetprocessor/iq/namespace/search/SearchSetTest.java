@@ -8,6 +8,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 import junit.framework.Assert;
 
+import org.buddycloud.channelserver.Configuration;
 import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.db.ClosableIteratorImpl;
 import org.buddycloud.channelserver.db.CloseableIterator;
@@ -28,7 +29,6 @@ import org.xmpp.packet.PacketError;
 public class SearchSetTest extends IQTestHandler {
 
 	private IQ request;
-	private Element element;
 	private BlockingQueue<Packet> queue = new LinkedBlockingQueue<Packet>();
 
 	private ChannelManager channelManager;
@@ -61,8 +61,8 @@ public class SearchSetTest extends IQTestHandler {
 		Element query = request.getElement().addElement("query");
 		query.addNamespace("", Search.NAMESPACE_URI);
 
-		Mockito.when(channelManager.isLocalJID(Mockito.any(JID.class)))
-				.thenReturn(true);
+		Configuration.getInstance().putProperty(
+				Configuration.CONFIGURATION_LOCAL_DOMAIN_CHECKER, Boolean.TRUE.toString());
 
 		setStanza = readStanzaAsIq("/iq/search/set.stanza");
 	}
@@ -70,8 +70,8 @@ public class SearchSetTest extends IQTestHandler {
 	@Test
 	public void testOnlyAcceptsPacketsFromLocalUsers() throws Exception {
 
-		Mockito.when(channelManager.isLocalJID(Mockito.any(JID.class)))
-				.thenReturn(false);
+		Configuration.getInstance().putProperty(
+				Configuration.CONFIGURATION_LOCAL_DOMAIN_CHECKER, Boolean.FALSE.toString());
 
 		search.process(request);
 		Packet response = queue.poll();

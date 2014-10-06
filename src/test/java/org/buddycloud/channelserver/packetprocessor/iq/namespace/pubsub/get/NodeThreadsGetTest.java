@@ -10,6 +10,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 import junit.framework.Assert;
 
+import org.buddycloud.channelserver.Configuration;
 import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.channel.node.configuration.field.AccessModel;
 import org.buddycloud.channelserver.packetHandler.iq.IQTestHandler;
@@ -45,9 +46,9 @@ public class NodeThreadsGetTest extends IQTestHandler {
 	public void setUp() throws Exception {
 		this.queue = new LinkedBlockingQueue<Packet>();
 		this.channelManager = Mockito.mock(ChannelManager.class);
-		Mockito.when(channelManager.isLocalNode(Mockito.anyString())).thenReturn(true);
+		Configuration.getInstance().putProperty(
+				Configuration.CONFIGURATION_LOCAL_DOMAIN_CHECKER, Boolean.TRUE.toString());
 		Mockito.when(channelManager.nodeExists(Mockito.anyString())).thenReturn(true);
-		Mockito.when(channelManager.isLocalJID(Mockito.any(JID.class))).thenReturn(true);
 		
 		request = readStanzaAsIq("/iq/pubsub/threads/request-with-node.stanza");
 		node = request.getChildElement().attributeValue("node");
@@ -73,8 +74,6 @@ public class NodeThreadsGetTest extends IQTestHandler {
 	public void testMissingNodeAttribute() throws Exception {
 		IQ request = readStanzaAsIq("/iq/pubsub/threads/request-no-node.stanza");
 
-		Mockito.when(channelManager.isLocalJID(request.getFrom())).thenReturn(true);
-		
 		threadsGet.process(element, request.getFrom(), request, null);
 		Packet response = queue.poll();
 
@@ -217,8 +216,8 @@ public class NodeThreadsGetTest extends IQTestHandler {
 	
 	@Test
 	public void testRemoteNodeNoError() throws Exception {
-
-		Mockito.when(channelManager.isLocalNode(Mockito.anyString())).thenReturn(false);
+		Configuration.getInstance().putProperty(
+				Configuration.CONFIGURATION_LOCAL_DOMAIN_CHECKER, Boolean.FALSE.toString());
 		Mockito.when(channelManager.isCachedNode(Mockito.anyString())).thenReturn(false);
 		JID from = request.getFrom();
 		threadsGet.process(element, from, request, null);
@@ -245,7 +244,10 @@ public class NodeThreadsGetTest extends IQTestHandler {
 	@Test
 	public void testRemoteRequest() throws Exception {
 		JID from = request.getFrom();
-		Mockito.when(channelManager.isLocalJID(from)).thenReturn(false);
+		Configuration.getInstance().putProperty(
+				Configuration.CONFIGURATION_SERVER_DOMAIN, "denmark.lit");
+		Configuration.getInstance().remove(
+				Configuration.CONFIGURATION_LOCAL_DOMAIN_CHECKER);
 		
 		Map<String, String> conf = new HashMap<String, String>();
 		conf.put(AccessModel.FIELD_NAME, AccessModels.open.toString());

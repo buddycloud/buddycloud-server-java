@@ -7,6 +7,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 import junit.framework.Assert;
 
+import org.buddycloud.channelserver.Configuration;
 import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.db.exception.NodeStoreException;
 import org.buddycloud.channelserver.packetHandler.iq.IQTestHandler;
@@ -27,7 +28,6 @@ import org.xmpp.resultsetmanagement.ResultSetImpl;
 public class AffiliationProcessorTest extends IQTestHandler {
 	private Message message;
 	private AffiliationProcessor affiliationProcessor;
-	private Element subscription;
 	private Element affiliation;
 	private Element affiliations;
 	
@@ -44,14 +44,12 @@ public class AffiliationProcessorTest extends IQTestHandler {
 				"channels.shakespeare.lit");
 
 		channelManager = Mockito.mock(ChannelManager.class);
-		Mockito.when(channelManager.isLocalNode(Mockito.anyString()))
-				.thenReturn(false);
-		Mockito.when(channelManager.isLocalJID(Mockito.any(JID.class)))
-				.thenReturn(true);
-
+		Configuration.getInstance().remove(
+				Configuration.CONFIGURATION_LOCAL_DOMAIN_CHECKER);
+		
 		ArrayList<NodeMembership> subscribers = new ArrayList<NodeMembership>();
 		subscribers.add(new NodeMembershipImpl(
-				"/users/romeo@shakespeare.lit/posts", jid,
+				"/user/romeo@shakespeare.lit/posts", jid,
 				Subscriptions.subscribed, Affiliations.member, null));
 		Mockito.doReturn(new ResultSetImpl<NodeMembership>(subscribers))
 				.when(channelManager).getNodeMemberships(Mockito.anyString());
@@ -65,7 +63,7 @@ public class AffiliationProcessorTest extends IQTestHandler {
 				JabberPubsub.NS_PUBSUB_EVENT);
 
 		affiliations = event.addElement("affiliations");
-		affiliations.addAttribute("node", "/users/juliet@shakespeare.lit/posts");
+		affiliations.addAttribute("node", "/user/juliet@denmark.lit/posts");
 		
 		affiliation = affiliations.addElement("affiliation");
 		affiliation.addAttribute("jid", "romeo@shakespeare.lit");
@@ -92,9 +90,8 @@ public class AffiliationProcessorTest extends IQTestHandler {
 
 	@Test
 	public void testEventForLocalNodeIsIgnored() throws Exception {
-
-		Mockito.when(channelManager.isLocalNode(Mockito.anyString()))
-				.thenReturn(true);
+		Configuration.getInstance().putProperty(
+				Configuration.CONFIGURATION_LOCAL_DOMAIN_CHECKER, Boolean.TRUE.toString());
 		affiliationProcessor.process(message);
 		Assert.assertEquals(0, queue.size());
 	}
@@ -111,7 +108,8 @@ public class AffiliationProcessorTest extends IQTestHandler {
 
 	@Test
 	public void testNotificationsAreSentOutAsExpected() throws Exception {
-
+		Configuration.getInstance().putProperty(
+				Configuration.CONFIGURATION_SERVER_DOMAIN, "shakespeare.lit");
 		affiliationProcessor.process(message);
 
 		Assert.assertEquals(1, queue.size());

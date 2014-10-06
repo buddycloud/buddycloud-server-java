@@ -39,8 +39,10 @@ public class NotificationSendingMockTest extends IQTestHandler {
 
 		channelManager = Mockito.mock(ChannelManager.class);
 
-		Mockito.when(channelManager.isLocalJID(Mockito.any(JID.class)))
-				.thenReturn(true);
+		Configuration.getInstance().remove(
+				Configuration.CONFIGURATION_LOCAL_DOMAIN_CHECKER);
+		Configuration.getInstance().putProperty(
+				Configuration.CONFIGURATION_SERVER_DOMAIN, "shakespeare.lit");
 
 		Properties configuration = new Properties();
 		configuration.setProperty(Configuration.CONFIGURATION_SERVER_CHANNELS_DOMAIN, CHANNEL_SERVER);
@@ -57,8 +59,8 @@ public class NotificationSendingMockTest extends IQTestHandler {
 
 		registerUserResponse(Subscriptions.none, Affiliations.none);
 		
-		Mockito.when(channelManager.isLocalJID(Mockito.any(JID.class)))
-		.thenReturn(false);
+		Configuration.getInstance().putProperty(
+				Configuration.CONFIGURATION_SERVER_DOMAIN, "denmark.lit");
 		
 		notificationSending.process(message);
 		Assert.assertEquals(0, queue.size());

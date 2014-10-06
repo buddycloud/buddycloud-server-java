@@ -23,6 +23,7 @@ public class TestHandler {
     public static Properties readConf() 
         throws FileNotFoundException, IOException
     {
+    	Configuration.reset();
         Configuration conf = Configuration.getInstance();
         try {
             conf.load(new FileInputStream(CONFIGURATION_PROPERTIES));

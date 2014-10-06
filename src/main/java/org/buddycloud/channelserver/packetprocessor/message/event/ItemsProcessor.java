@@ -5,6 +5,7 @@ import java.util.Properties;
 import java.util.concurrent.BlockingQueue;
 
 import org.apache.log4j.Logger;
+import org.buddycloud.channelserver.Configuration;
 import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.channel.Conf;
 import org.buddycloud.channelserver.db.exception.ItemNotFoundException;
@@ -32,8 +33,9 @@ public class ItemsProcessor extends AbstractMessageProcessor {
 		node = message.getElement().element("event").element("items")
 				.attributeValue("node");
 
-		if (true == channelManager.isLocalNode(node))
+		if (true == Configuration.getInstance().isLocalNode(node)) {
 			return;
+		}
 		sendLocalNotifications(NotificationScheme.validSubscribers);
 		handleItem();
 	}

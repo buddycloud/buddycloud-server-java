@@ -288,8 +288,8 @@
                             <configLocation>${checkstyle.config.location}</configLocation>
                             <encoding>UTF-8</encoding>
                             <consoleOutput>false</consoleOutput>
-                            <failOnViolation>false</failOnViolation>
-                            <failsOnError>false</failsOnError>
+                            <failOnViolation>true</failOnViolation>
+                            <failsOnError>true</failsOnError>
                             <linkXRef>false</linkXRef>
                         </configuration>
                         <goals>

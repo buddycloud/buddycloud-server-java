@@ -19,72 +19,64 @@ import org.xmpp.packet.Packet;
 
 public class MessageProcessor extends AbstractMessageProcessor {
 
-	private static final Logger logger = Logger
-			.getLogger(MessageProcessor.class);
+    private static final Logger logger = Logger.getLogger(MessageProcessor.class);
 
-	private Element event;
+    private Element event;
 
-	public static final String ITEMS = "items";
-	public static final String SUBSCRIPTION = "subscription";
-	private static final String AFFILIATIONS = "affiliations";
-	private static final String CONFIGURATION = "configuration";
-	private static final String DELETE = "delete";
+    public static final String ITEMS = "items";
+    public static final String SUBSCRIPTION = "subscription";
+    private static final String AFFILIATIONS = "affiliations";
+    private static final String CONFIGURATION = "configuration";
+    private static final String DELETE = "delete";
 
-	public MessageProcessor(BlockingQueue<Packet> outQueue, Properties conf,
-			ChannelManager channelManager) {
-		super(channelManager, conf, outQueue);
-	}
+    public MessageProcessor(BlockingQueue<Packet> outQueue, Properties conf, ChannelManager channelManager) {
+        super(channelManager, conf, outQueue);
+    }
 
-	public void process(Message packet) throws Exception {
+    public void process(Message packet) throws Exception {
 
-		message = packet;
-		if (false == message.getType().equals(Message.Type.headline)) {
-			return;
-		}
-		event = message.getElement().element("event");
-		if (null != event) {
-			processEventContent(((Element) event.elements().get(0)).getName());
-			return;
-		}
-		logger.debug("Unsupported message type: " + packet.toXML());
-		throw new UnsupportedOperationException("Unknown message type", null);
-	}
+        message = packet;
+        if (false == message.getType().equals(Message.Type.headline)) {
+            return;
+        }
+        event = message.getElement().element("event");
+        if (null != event) {
+            processEventContent(((Element) event.elements().get(0)).getName());
+            return;
+        }
+        logger.debug("Unsupported message type: " + packet.toXML());
+        throw new UnsupportedOperationException("Unknown message type", null);
+    }
 
-	private void processEventContent(String name) throws Exception {
+    private void processEventContent(String name) throws Exception {
 
-		logger.info("Processing event content type: '" + name + "'");
-		PacketProcessor<Message> handler = null;
-		if (name.equals(ITEMS)) {
-			handler = processItems();
-		} else if (true == name.equals(SUBSCRIPTION)) {
-			handler = new SubscriptionProcessor(outQueue, configuration,
-					channelManager);
-		} else if (true == name.equals(AFFILIATIONS)) {
-			handler = new AffiliationProcessor(outQueue, configuration,
-					channelManager);
-		} else if (true == name.equals(CONFIGURATION)) {
-			handler = new ConfigurationProcessor(outQueue, configuration,
-					channelManager);
-		} else if (true == name.equals(DELETE)) {
-			handler = new DeleteProcessor(outQueue, configuration, 
-					channelManager);
-		}
-		if (null == handler) {
-			throw new UnknownEventContentException("Unknown event content '"
-					+ name + "'");
-		}
-		handler.process(message);
-	}
+        logger.info("Processing event content type: '" + name + "'");
+        PacketProcessor<Message> handler = null;
+        if (name.equals(ITEMS)) {
+            handler = processItems();
+        } else if (true == name.equals(SUBSCRIPTION)) {
+            handler = new SubscriptionProcessor(outQueue, configuration, channelManager);
+        } else if (true == name.equals(AFFILIATIONS)) {
+            handler = new AffiliationProcessor(outQueue, configuration, channelManager);
+        } else if (true == name.equals(CONFIGURATION)) {
+            handler = new ConfigurationProcessor(outQueue, configuration, channelManager);
+        } else if (true == name.equals(DELETE)) {
+            handler = new DeleteProcessor(outQueue, configuration, channelManager);
+        }
+        if (null == handler) {
+            throw new UnknownEventContentException("Unknown event content '" + name + "'");
+        }
+        handler.process(message);
+    }
 
-	private AbstractMessageProcessor processItems() {
-		Element item = event.element("items").element("item");
-		if (null != item)
-			return new ItemsProcessor(outQueue, configuration, channelManager);
-		Element retract = event.element("items").element("retract");
-		if (null != retract)
-			return new RetractItemProcessor(outQueue, configuration,
-					channelManager);
-		return null;
-	}
-	
+    private AbstractMessageProcessor processItems() {
+        Element item = event.element("items").element("item");
+        if (null != item)
+            return new ItemsProcessor(outQueue, configuration, channelManager);
+        Element retract = event.element("items").element("retract");
+        if (null != retract)
+            return new RetractItemProcessor(outQueue, configuration, channelManager);
+        return null;
+    }
+
 }

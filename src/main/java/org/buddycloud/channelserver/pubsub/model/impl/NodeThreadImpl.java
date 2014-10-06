@@ -11,37 +11,37 @@ import org.xmpp.resultsetmanagement.ResultSetImpl;
 
 public class NodeThreadImpl implements NodeThread {
 
-	private final String threadId;
-	private final Date threadUpdated;
-	private final List<NodeItem> nodeItems = new LinkedList<NodeItem>();
+    private final String threadId;
+    private final Date threadUpdated;
+    private final List<NodeItem> nodeItems = new LinkedList<NodeItem>();
 
-	public NodeThreadImpl(String threadId, Date threadUpdated) {
-		this.threadId = threadId;
-		this.threadUpdated = threadUpdated;
-	}
-	
-	@Override
-	public String getUID() {
-		return threadId;
-	}
+    public NodeThreadImpl(String threadId, Date threadUpdated) {
+        this.threadId = threadId;
+        this.threadUpdated = threadUpdated;
+    }
 
-	@Override
-	public String getId() {
-		return threadId;
-	}
+    @Override
+    public String getUID() {
+        return threadId;
+    }
 
-	@Override
-	public Date getUpdated() {
-		return threadUpdated;
-	}
+    @Override
+    public String getId() {
+        return threadId;
+    }
 
-	public void addItem(NodeItem item) {
-		nodeItems.add(item);
-	}
-	
-	@Override
-	public ResultSet<NodeItem> getItems() {
-		return new ResultSetImpl<NodeItem>(nodeItems);
-	}
+    @Override
+    public Date getUpdated() {
+        return threadUpdated;
+    }
+
+    public void addItem(NodeItem item) {
+        nodeItems.add(item);
+    }
+
+    @Override
+    public ResultSet<NodeItem> getItems() {
+        return new ResultSetImpl<NodeItem>(nodeItems);
+    }
 
 }

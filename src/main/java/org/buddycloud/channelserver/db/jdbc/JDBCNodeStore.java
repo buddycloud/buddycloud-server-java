@@ -881,12 +881,15 @@ public class JDBCNodeStore implements NodeStore {
 
         try {
 
-            if (null == node)
+            if (null == node) {
                 node = "/posts";
-            if (-1 == limit)
+            }
+            if (-1 == limit) {
                 limit = 50;
-            if (-1 == maxPerNode)
+            }
+            if (-1 == maxPerNode) {
                 maxPerNode = Integer.MAX_VALUE;
+            }
 
             String queryPart;
             String parentOnlyReplacement;
@@ -898,10 +901,12 @@ public class JDBCNodeStore implements NodeStore {
 
             int counter = 1;
             for (NodeMembership subscription : subscriptions) {
-                if (false == subscription.getSubscription().equals(Subscriptions.subscribed))
+                if (false == subscription.getSubscription().equals(Subscriptions.subscribed)) {
                     continue;
-                if (false == subscription.getNodeId().endsWith(node))
+                }
+                if (false == subscription.getNodeId().endsWith(node)) {
                     continue;
+                }
                 queryPart = dialect.selectRecentItemParts();
                 parentOnlyReplacement = "";
                 if (true == parentOnly) {
@@ -969,8 +974,9 @@ public class JDBCNodeStore implements NodeStore {
 
         try {
             Date since = new Date(0);
-            if (null != afterItemId)
+            if (null != afterItemId) {
                 since = getNodeItem(nodeId, afterItemId).getUpdated();
+            }
 
             String query = dialect.selectItemReplies();
             if (-1 != limit) {
@@ -980,8 +986,9 @@ public class JDBCNodeStore implements NodeStore {
             stmt.setString(1, nodeId);
             stmt.setString(2, "%" + getLocalId(itemId));
             stmt.setTimestamp(3, new java.sql.Timestamp(since.getTime()));
-            if (-1 != limit)
+            if (-1 != limit) {
                 stmt.setInt(4, limit);
+            }
 
             java.sql.ResultSet rs = stmt.executeQuery();
 
@@ -1028,8 +1035,9 @@ public class JDBCNodeStore implements NodeStore {
 
         try {
             Date since = new Date(0);
-            if (null != afterItemId)
+            if (null != afterItemId) {
                 since = getNodeItem(nodeId, afterItemId).getUpdated();
+            }
 
             String query = dialect.selectItemThread();
             if (-1 != limit) {
@@ -1041,8 +1049,9 @@ public class JDBCNodeStore implements NodeStore {
             stmt.setString(2, "%" + itemId);
             stmt.setString(3, itemId);
             stmt.setTimestamp(4, new java.sql.Timestamp(since.getTime()));
-            if (-1 != limit)
+            if (-1 != limit) {
                 stmt.setInt(5, limit);
+            }
 
             java.sql.ResultSet rs = stmt.executeQuery();
 
@@ -1596,9 +1605,10 @@ public class JDBCNodeStore implements NodeStore {
     private void close(final Statement stmt) {
         if (stmt != null) {
             try {
-                if (false == stmt.isClosed())
+                if (false == stmt.isClosed()) {
                     stmt.close();
-                // stmt.getConnection().close();
+                    // stmt.getConnection().close();
+                }
             } catch (SQLException e) {
                 logger.error("SQLException thrown while trying to close a statement", e);
             }

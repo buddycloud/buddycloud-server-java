@@ -11,33 +11,32 @@ import org.xmpp.packet.JID;
 import org.xmpp.packet.Presence;
 
 public class PresenceProcessor implements PacketProcessor<Presence> {
-	
-	private static final Logger LOGGER = Logger.getLogger(PresenceProcessor.class);
 
-	private final Properties configuration;
-	private OnlineResourceManager onlineUsers;
+    private static final Logger LOGGER = Logger.getLogger(PresenceProcessor.class);
 
-	public PresenceProcessor(Properties configuration, OnlineResourceManager onlineUsers) {
-		this.configuration = configuration;
-		this.onlineUsers = onlineUsers;
-		
-		if (configuration.getProperty(Configuration.CONFIGURATION_SERVER_DOMAIN) == null && 
-				configuration.getProperty(Configuration.CONFIGURATION_LOCAL_DOMAIN_CHECKER) == null) {
-			throw new NullPointerException("Missing server domain configuration");
-		}
-	}
-	
-	@Override
-	public void process(Presence packet) throws Exception {
-		JID from = packet.getFrom();
-        if (from == null || 
-        		!LocalDomainChecker.isLocal(from.getDomain(), configuration)) {
-        	return;
+    private final Properties configuration;
+    private OnlineResourceManager onlineUsers;
+
+    public PresenceProcessor(Properties configuration, OnlineResourceManager onlineUsers) {
+        this.configuration = configuration;
+        this.onlineUsers = onlineUsers;
+
+        if (configuration.getProperty(Configuration.CONFIGURATION_SERVER_DOMAIN) == null
+                && configuration.getProperty(Configuration.CONFIGURATION_LOCAL_DOMAIN_CHECKER) == null) {
+            throw new NullPointerException("Missing server domain configuration");
         }
-        
+    }
+
+    @Override
+    public void process(Presence packet) throws Exception {
+        JID from = packet.getFrom();
+        if (from == null || !LocalDomainChecker.isLocal(from.getDomain(), configuration)) {
+            return;
+        }
+
         LOGGER.debug("Processing presence from " + from.toString());
-        
+
         String type = packet.getElement().attributeValue("type");
         onlineUsers.updateStatus(packet.getFrom(), type);
-	}
+    }
 }

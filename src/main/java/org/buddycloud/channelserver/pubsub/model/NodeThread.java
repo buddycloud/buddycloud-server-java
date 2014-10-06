@@ -7,10 +7,10 @@ import org.xmpp.resultsetmanagement.ResultSet;
 
 public interface NodeThread extends Result {
 
-	String getId();
-	
-	Date getUpdated();
-	
-	ResultSet<NodeItem> getItems();
-	
+    String getId();
+
+    Date getUpdated();
+
+    ResultSet<NodeItem> getItems();
+
 }

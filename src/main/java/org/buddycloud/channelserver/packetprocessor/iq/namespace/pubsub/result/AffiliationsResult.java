@@ -14,65 +14,60 @@ import org.xmpp.packet.JID;
 
 public class AffiliationsResult extends PubSubElementProcessorAbstract {
 
-	private IQ request;
-	private boolean ownerRequest;
-	private String lastNode = "";
+    private IQ request;
+    private boolean ownerRequest;
+    private String lastNode = "";
 
-	private static final Logger logger = Logger
-			.getLogger(AffiliationsResult.class);
+    private static final Logger logger = Logger.getLogger(AffiliationsResult.class);
 
-	public AffiliationsResult(ChannelManager channelManager) {
-		this.channelManager = channelManager;
-	}
+    public AffiliationsResult(ChannelManager channelManager) {
+        this.channelManager = channelManager;
+    }
 
-	@Override
-	public void process(Element elm, JID actorJID, IQ reqIQ, Element rsm)
-			throws Exception {
-		this.request = reqIQ;
+    @Override
+    public void process(Element elm, JID actorJID, IQ reqIQ, Element rsm) throws Exception {
+        this.request = reqIQ;
 
-		if (-1 != request.getFrom().toString().indexOf("@")) {
-			logger.debug("Ignoring result packet, only interested in stanzas "
-					+ "from other buddycloud servers");
-			return;
-		}
+        if (-1 != request.getFrom().toString().indexOf("@")) {
+            logger.debug("Ignoring result packet, only interested in stanzas " + "from other buddycloud servers");
+            return;
+        }
 
-		ownerRequest = ((null == node) || (true == node.equals("")));
+        ownerRequest = ((null == node) || (true == node.equals("")));
 
-		@SuppressWarnings("unchecked")
-		List<Element> affiliations = reverseList(request.getElement().element("pubsub")
-				.element("affiliations").elements("affiliation"));
+        @SuppressWarnings("unchecked")
+        List<Element> affiliations = reverseList(request.getElement().element("pubsub").element("affiliations").elements("affiliation"));
 
-		for (Element affiliation : affiliations) {
-			addAffiliation(affiliation);
-		}
-	}
+        for (Element affiliation : affiliations) {
+            addAffiliation(affiliation);
+        }
+    }
 
-	private List<Element> reverseList(List<Element> originalList) {
-	    List<Element> invertedList = new ArrayList<Element>();
-	    for (int i = originalList.size() - 1; i >= 0; i--) {
-	        invertedList.add(originalList.get(i));
-	    }
-	    return invertedList;
-	}
-	
-	private void addAffiliation(Element affiliation) throws NodeStoreException {
+    private List<Element> reverseList(List<Element> originalList) {
+        List<Element> invertedList = new ArrayList<Element>();
+        for (int i = originalList.size() - 1; i >= 0; i--) {
+            invertedList.add(originalList.get(i));
+        }
+        return invertedList;
+    }
 
-		if (true == ownerRequest) {
-			node = affiliation.attributeValue("node");
-		}
+    private void addAffiliation(Element affiliation) throws NodeStoreException {
 
-		if ((false == lastNode.equals(node))
-				&& (false == channelManager.nodeExists(node)))
-			channelManager.addRemoteNode(node);
+        if (true == ownerRequest) {
+            node = affiliation.attributeValue("node");
+        }
 
-		JID jid = new JID(affiliation.attributeValue("jid"));
-		channelManager.setUserAffiliation(node, jid, Affiliations
-				.createFromString(affiliation.attributeValue("affiliation")));
-		lastNode = node;
-	}
+        if ((false == lastNode.equals(node)) && (false == channelManager.nodeExists(node))) {
+            channelManager.addRemoteNode(node);
+        }
 
-	@Override
-	public boolean accept(Element elm) {
-		return elm.getName().equals("affiliations");
-	}
+        JID jid = new JID(affiliation.attributeValue("jid"));
+        channelManager.setUserAffiliation(node, jid, Affiliations.createFromString(affiliation.attributeValue("affiliation")));
+        lastNode = node;
+    }
+
+    @Override
+    public boolean accept(Element elm) {
+        return elm.getName().equals("affiliations");
+    }
 }

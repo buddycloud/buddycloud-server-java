@@ -16,75 +16,71 @@ import org.xmpp.packet.Packet;
 
 public class SubscriptionProcessor extends AbstractMessageProcessor {
 
-	private JID jid;
-	private JID invitedBy = null;
-	private Subscriptions subscription;
+    private JID jid;
+    private JID invitedBy = null;
+    private Subscriptions subscription;
 
-	private static final Logger logger = Logger
-			.getLogger(SubscriptionProcessor.class);
+    private static final Logger logger = Logger.getLogger(SubscriptionProcessor.class);
 
-	public SubscriptionProcessor(BlockingQueue<Packet> outQueue,
-			Properties configuration, ChannelManager channelManager) {
-		super(channelManager, configuration, outQueue);
-	}
+    public SubscriptionProcessor(BlockingQueue<Packet> outQueue, Properties configuration, ChannelManager channelManager) {
+        super(channelManager, configuration, outQueue);
+    }
 
-	@Override
-	public void process(Message packet) throws Exception {
-		message = packet;
+    @Override
+    public void process(Message packet) throws Exception {
+        message = packet;
 
-		handleSubscriptionElement();
+        handleSubscriptionElement();
 
-		if (true == channelManager.isLocalNode(node)) {
-			return;
-		}
-		
-		if (null == subscription) {
-			return;
-		} else if (subscription.equals(Subscriptions.pending)) {
-			sendLocalNotifications(NotificationScheme.ownerOrModerator, jid);
-		} else if (subscription.equals(Subscriptions.invited)) {
-			sendLocalNotifications(NotificationScheme.ownerOrModerator, jid);
-		} else if (subscription.equals(Subscriptions.subscribed)) {
-			sendLocalNotifications(NotificationScheme.validSubscribers, null);
-		} else if (subscription.equals(Subscriptions.none)) {
-			sendLocalNotifications(NotificationScheme.validSubscribers, jid);
-		}
-	}
-
-	private void handleSubscriptionElement() throws NodeStoreException {
-		Element subscriptionElement = message.getElement().element("event")
-				.element("subscription");
-		if (null == subscriptionElement) {
-			return;
-		}
-
-		jid = new JID(subscriptionElement.attributeValue("jid"));
-		node = subscriptionElement.attributeValue("node");
-		subscription = Subscriptions.valueOf(subscriptionElement
-				.attributeValue("subscription"));
-		if (null != subscriptionElement.attributeValue("invited-by")) {
-		    invitedBy = new JID(subscriptionElement.attributeValue("invited-by"));
-		}
-
-		if (true == channelManager.isLocalNode(node)) {
-			return;
-		}
-		storeNewSubscription();
-	}
-
-	private void storeNewSubscription() throws NodeStoreException {
-		NodeSubscriptionImpl newSubscription = new NodeSubscriptionImpl(node,
-				jid, subscription, invitedBy);
-		addRemoteNode();
-		channelManager.addUserSubscription(newSubscription);
-	}
-
-	private void addRemoteNode() {
-        try { 
-            if (false == channelManager.nodeExists(node))
-                channelManager.addRemoteNode(node); 
-        } catch (NodeStoreException e) { 
-        	logger.error(e);
+        if (true == channelManager.isLocalNode(node)) {
+            return;
         }
-	}
+
+        if (null == subscription) {
+            return;
+        } else if (subscription.equals(Subscriptions.pending)) {
+            sendLocalNotifications(NotificationScheme.ownerOrModerator, jid);
+        } else if (subscription.equals(Subscriptions.invited)) {
+            sendLocalNotifications(NotificationScheme.ownerOrModerator, jid);
+        } else if (subscription.equals(Subscriptions.subscribed)) {
+            sendLocalNotifications(NotificationScheme.validSubscribers, null);
+        } else if (subscription.equals(Subscriptions.none)) {
+            sendLocalNotifications(NotificationScheme.validSubscribers, jid);
+        }
+    }
+
+    private void handleSubscriptionElement() throws NodeStoreException {
+        Element subscriptionElement = message.getElement().element("event").element("subscription");
+        if (null == subscriptionElement) {
+            return;
+        }
+
+        jid = new JID(subscriptionElement.attributeValue("jid"));
+        node = subscriptionElement.attributeValue("node");
+        subscription = Subscriptions.valueOf(subscriptionElement.attributeValue("subscription"));
+        if (null != subscriptionElement.attributeValue("invited-by")) {
+            invitedBy = new JID(subscriptionElement.attributeValue("invited-by"));
+        }
+
+        if (true == channelManager.isLocalNode(node)) {
+            return;
+        }
+        storeNewSubscription();
+    }
+
+    private void storeNewSubscription() throws NodeStoreException {
+        NodeSubscriptionImpl newSubscription = new NodeSubscriptionImpl(node, jid, subscription, invitedBy);
+        addRemoteNode();
+        channelManager.addUserSubscription(newSubscription);
+    }
+
+    private void addRemoteNode() {
+        try {
+            if (false == channelManager.nodeExists(node)) {
+                channelManager.addRemoteNode(node);
+            }
+        } catch (NodeStoreException e) {
+            logger.error(e);
+        }
+    }
 }

@@ -32,316 +32,283 @@ import org.xmpp.packet.PacketError.Condition;
 import org.xmpp.packet.PacketError.Type;
 
 public class NodeItemsGet implements PubSubElementProcessor {
-	private static final Logger logger = Logger.getLogger(NodeItemsGet.class);
+    private static final Logger logger = Logger.getLogger(NodeItemsGet.class);
 
-	private final BlockingQueue<Packet> outQueue;
+    private final BlockingQueue<Packet> outQueue;
 
-	private ChannelManager channelManager;
-	private String node;
-	private String firstItem;
-	private String lastItem;
-	private SAXReader xmlReader;
-	private Element entry;
-	private IQ requestIq;
-	private IQ reply;
-	private Element resultSetManagement;
-	private Element element;
+    private ChannelManager channelManager;
+    private String node;
+    private String firstItem;
+    private String lastItem;
+    private SAXReader xmlReader;
+    private Element entry;
+    private IQ requestIq;
+    private IQ reply;
+    private Element resultSetManagement;
+    private Element element;
 
-	private NodeViewAcl nodeViewAcl;
-	private Map<String, String> nodeDetails;
+    private NodeViewAcl nodeViewAcl;
+    private Map<String, String> nodeDetails;
 
-	private int rsmEntriesCount;
+    private int rsmEntriesCount;
 
-	private JID actor;
-	private Boolean isOwnerModerator;
+    private JID actor;
 
-	public NodeItemsGet(BlockingQueue<Packet> outQueue,
-			ChannelManager channelManager) {
-		this.outQueue = outQueue;
-		setChannelManager(channelManager);
-	}
+    public NodeItemsGet(BlockingQueue<Packet> outQueue, ChannelManager channelManager) {
+        this.outQueue = outQueue;
+        setChannelManager(channelManager);
+    }
 
-	public void setChannelManager(ChannelManager ds) {
-		channelManager = ds;
-	}
+    public void setChannelManager(ChannelManager ds) {
+        channelManager = ds;
+    }
 
-	public void setNodeViewAcl(NodeViewAcl acl) {
-		nodeViewAcl = acl;
-	}
+    public void setNodeViewAcl(NodeViewAcl acl) {
+        nodeViewAcl = acl;
+    }
 
-	private NodeViewAcl getNodeViewAcl() {
-		if (null == nodeViewAcl) {
-			nodeViewAcl = new NodeViewAcl();
-		}
-		return nodeViewAcl;
-	}
+    private NodeViewAcl getNodeViewAcl() {
+        if (null == nodeViewAcl) {
+            nodeViewAcl = new NodeViewAcl();
+        }
+        return nodeViewAcl;
+    }
 
-	@Override
-	public void process(Element elm, JID actorJID, IQ reqIQ, Element rsm)
-			throws Exception {
-		node = elm.attributeValue("node");
-		requestIq = reqIQ;
-		reply = IQ.createResultIQ(reqIQ);
-		element = elm;
-		resultSetManagement = rsm;
+    @Override
+    public void process(Element elm, JID actorJID, IQ reqIQ, Element rsm) throws Exception {
+        node = elm.attributeValue("node");
+        requestIq = reqIQ;
+        reply = IQ.createResultIQ(reqIQ);
+        element = elm;
+        resultSetManagement = rsm;
 
-		if (!channelManager.isLocalJID(requestIq.getFrom())) {
-			reply.getElement().addAttribute("remote-server-discover", "false");
-		}
+        if (!channelManager.isLocalJID(requestIq.getFrom())) {
+            reply.getElement().addAttribute("remote-server-discover", "false");
+        }
 
-		boolean isCached = channelManager.isCachedNode(node);
+        boolean isCached = channelManager.isCachedNode(node);
 
-		this.actor = actorJID;
-		if (null == this.actor) {
-			this.actor = requestIq.getFrom();
-		}
+        this.actor = actorJID;
+        if (null == this.actor) {
+            this.actor = requestIq.getFrom();
+        }
 
-		if (!channelManager.isLocalNode(node) && !isCached) {
-			logger.debug("Node " + node
-					+ " is remote and not cached, off to get some data");
-			makeRemoteRequest();
-			return;
-		}
+        if (!channelManager.isLocalNode(node) && !isCached) {
+            logger.debug("Node " + node + " is remote and not cached, off to get some data");
+            makeRemoteRequest();
+            return;
+        }
 
-		try {
-			if (!nodeExists()) {
-				setErrorCondition(PacketError.Type.cancel,
-						PacketError.Condition.item_not_found);
-				outQueue.put(reply);
-				return;
-			}
+        try {
+            if (!nodeExists()) {
+                setErrorCondition(PacketError.Type.cancel, PacketError.Condition.item_not_found);
+                outQueue.put(reply);
+                return;
+            }
 
-			if (!userCanViewNode()) {
-				outQueue.put(reply);
-				return;
-			}
-			xmlReader = new SAXReader();
-			if (element.element("item") == null) {
-				getItems();
-			} else {
-				if (!getItem()) {
-					return;
-				}
-			}
-		} catch (NodeStoreException e) {
-			logger.error(e);
-			setErrorCondition(PacketError.Type.wait,
-					PacketError.Condition.internal_server_error);
-		}
-		outQueue.put(reply);
-	}
+            if (!userCanViewNode()) {
+                outQueue.put(reply);
+                return;
+            }
+            xmlReader = new SAXReader();
+            if (element.element("item") == null) {
+                getItems();
+            } else {
+                if (!getItem()) {
+                    return;
+                }
+            }
+        } catch (NodeStoreException e) {
+            logger.error(e);
+            setErrorCondition(PacketError.Type.wait, PacketError.Condition.internal_server_error);
+        }
+        outQueue.put(reply);
+    }
 
-	private boolean getItem() throws Exception {
-		NodeItem nodeItem = channelManager.getNodeItem(node,
-				element.element("item").attributeValue("id"));
-		if (nodeItem == null) {
-			if (!channelManager.isLocalNode(node)) {
-				makeRemoteRequest();
-				return false;
-			}
-			setErrorCondition(PacketError.Type.cancel,
-					PacketError.Condition.item_not_found);
-			return true;
-		}
-		Element pubsub = reply.getElement().addElement("pubsub",
-				JabberPubsub.NAMESPACE_URI);
-		Element items = pubsub.addElement("items").addAttribute("node", node);
-		addItemToResponse(nodeItem, items);
-		return true;
-	}
+    private boolean getItem() throws Exception {
+        NodeItem nodeItem = channelManager.getNodeItem(node, element.element("item").attributeValue("id"));
+        if (nodeItem == null) {
+            if (!channelManager.isLocalNode(node)) {
+                makeRemoteRequest();
+                return false;
+            }
+            setErrorCondition(PacketError.Type.cancel, PacketError.Condition.item_not_found);
+            return true;
+        }
+        Element pubsub = reply.getElement().addElement("pubsub", JabberPubsub.NAMESPACE_URI);
+        Element items = pubsub.addElement("items").addAttribute("node", node);
+        addItemToResponse(nodeItem, items);
+        return true;
+    }
 
-	private void makeRemoteRequest() throws InterruptedException {
-		requestIq.setTo(new JID(node.split("/")[2]).getDomain());
-		if (null == requestIq.getElement().element("pubsub").element("actor")) {
-			Element actor = requestIq.getElement().element("pubsub")
-					.addElement("actor", Buddycloud.NS);
-			actor.addText(requestIq.getFrom().toBareJID());
-		}
-		outQueue.put(requestIq);
-	}
+    private void makeRemoteRequest() throws InterruptedException {
+        requestIq.setTo(new JID(node.split("/")[2]).getDomain());
+        if (null == requestIq.getElement().element("pubsub").element("actor")) {
+            Element actor = requestIq.getElement().element("pubsub").addElement("actor", Buddycloud.NS);
+            actor.addText(requestIq.getFrom().toBareJID());
+        }
+        outQueue.put(requestIq);
+    }
 
-	private boolean nodeExists() throws NodeStoreException {
+    private boolean nodeExists() throws NodeStoreException {
 
-		if (channelManager.nodeExists(node)) {
-			nodeDetails = channelManager.getNodeConf(node);
-			return true;
-		}
-		setErrorCondition(PacketError.Type.cancel,
-				PacketError.Condition.item_not_found);
-		return false;
-	}
+        if (channelManager.nodeExists(node)) {
+            nodeDetails = channelManager.getNodeConf(node);
+            return true;
+        }
+        setErrorCondition(PacketError.Type.cancel, PacketError.Condition.item_not_found);
+        return false;
+    }
 
-	private void setErrorCondition(Type type, Condition condition) {
-		reply.setType(IQ.Type.error);
-		PacketError error = new PacketError(condition, type);
-		reply.setError(error);
-	}
+    private void setErrorCondition(Type type, Condition condition) {
+        reply.setType(IQ.Type.error);
+        PacketError error = new PacketError(condition, type);
+        reply.setError(error);
+    }
 
-	private void getItems() throws Exception {
-		Element pubsub = new DOMElement(PubSubGet.ELEMENT_NAME,
-				new org.dom4j.Namespace("", JabberPubsub.NAMESPACE_URI));
+    private void getItems() throws Exception {
+        Element pubsub = new DOMElement(PubSubGet.ELEMENT_NAME, new org.dom4j.Namespace("", JabberPubsub.NAMESPACE_URI));
 
-		int maxItemsToReturn = MAX_ITEMS_TO_RETURN;
-		String afterItemId = null;
+        int maxItemsToReturn = MAX_ITEMS_TO_RETURN;
+        String afterItemId = null;
 
-		String max_items = element.attributeValue("max_items");
-		if (max_items != null) {
-			maxItemsToReturn = Integer.parseInt(max_items);
-		}
+        String max_items = element.attributeValue("max_items");
+        if (max_items != null) {
+            maxItemsToReturn = Integer.parseInt(max_items);
+        }
 
-		if (resultSetManagement != null) {
-			Element max = resultSetManagement.element("max");
-			if (max != null) {
-				maxItemsToReturn = Integer.parseInt(max.getTextTrim());
-			}
-			Element after = resultSetManagement.element("after");
-			if (after != null) {
-				try {
-					// Try and parse it as a global item id
-					GlobalItemID afterGlobalItemID = GlobalItemIDImpl
-							.fromString(after.getTextTrim());
-					afterItemId = afterGlobalItemID.getItemID();
+        if (resultSetManagement != null) {
+            Element max = resultSetManagement.element("max");
+            if (max != null) {
+                maxItemsToReturn = Integer.parseInt(max.getTextTrim());
+            }
+            Element after = resultSetManagement.element("after");
+            if (after != null) {
+                try {
+                    // Try and parse it as a global item id
+                    GlobalItemID afterGlobalItemID = GlobalItemIDImpl.fromString(after.getTextTrim());
+                    afterItemId = afterGlobalItemID.getItemID();
 
-					// Check it's for the correct node
-					if (!afterGlobalItemID.getNodeID().equals(node)) {
-						createExtendedErrorReply(Type.modify,
-								Condition.item_not_found,
-								"RSM 'after' specifies an unexpected NodeID: "
-										+ afterGlobalItemID.getNodeID());
-					}
-				} catch (IllegalArgumentException e) {
-					// If the after isn't a valid 'tag:...' then it might just
-					// be a straight ItemID
-					afterItemId = after.getTextTrim();
-					logger.error(e);
-				}
-			}
-		}
+                    // Check it's for the correct node
+                    if (!afterGlobalItemID.getNodeID().equals(node)) {
+                        createExtendedErrorReply(Type.modify, Condition.item_not_found,
+                                "RSM 'after' specifies an unexpected NodeID: " + afterGlobalItemID.getNodeID());
+                    }
+                } catch (IllegalArgumentException e) {
+                    // If the after isn't a valid 'tag:...' then it might just
+                    // be a straight ItemID
+                    afterItemId = after.getTextTrim();
+                    logger.error(e);
+                }
+            }
+        }
 
-		Element items = pubsub.addElement("items");
-		items.addAttribute("node", node);
+        Element items = pubsub.addElement("items");
+        items.addAttribute("node", node);
 
-		entry = null;
-		int totalEntriesCount = getNodeItems(items, maxItemsToReturn,
-					afterItemId);
+        entry = null;
+        int totalEntriesCount = getNodeItems(items, maxItemsToReturn, afterItemId);
 
-		if ((false == channelManager.isLocalNode(node))
-				&& (0 == rsmEntriesCount)) {
-			logger.debug("No results in cache for remote node, so "
-					+ "we're going federated to get more");
-			makeRemoteRequest();
-			return;
-		}
+        if ((false == channelManager.isLocalNode(node)) && (0 == rsmEntriesCount)) {
+            logger.debug("No results in cache for remote node, so " + "we're going federated to get more");
+            makeRemoteRequest();
+            return;
+        }
 
-		if ((resultSetManagement != null)
-				|| (totalEntriesCount > maxItemsToReturn)) {
-			/*
-			 * TODO, add result set here as defined in 6.5.4 Returning Some
-			 * Items <set xmlns='http://jabber.org/protocol/rsm'> <first
-			 * index='0'>368866411b877c30064a5f62b917cffe</first>
-			 * <last>4e30f35051b7b8b42abe083742187228</last> <count>19</count>
-			 * </set>
-			 */
-			Element rsm = pubsub.addElement("set",
-					"http://jabber.org/protocol/rsm");
+        if ((resultSetManagement != null) || (totalEntriesCount > maxItemsToReturn)) {
+            /*
+             * TODO(lloydwatkin), add result set here as defined in 6.5.4 Returning Some Items <set
+             * xmlns='http://jabber.org/protocol/rsm'> <first
+             * index='0'>368866411b877c30064a5f62b917cffe</first>
+             * <last>4e30f35051b7b8b42abe083742187228</last> <count>19</count> </set>
+             */
+            Element rsm = pubsub.addElement("set", "http://jabber.org/protocol/rsm");
 
-			if (firstItem != null) {
-				rsm.addElement("first").setText(firstItem);
-				rsm.addElement("last").setText(lastItem);
-			}
-			rsm.addElement("count")
-					.setText(Integer.toString(totalEntriesCount));
-		}
+            if (firstItem != null) {
+                rsm.addElement("first").setText(firstItem);
+                rsm.addElement("last").setText(lastItem);
+            }
+            rsm.addElement("count").setText(Integer.toString(totalEntriesCount));
+        }
 
-		reply.setChildElement(pubsub);
-	}
+        reply.setChildElement(pubsub);
+    }
 
-	private boolean userCanViewNode() throws NodeStoreException {
-		NodeMembership nodeMembership = channelManager.getNodeMembership(node,
-				actor);
+    private boolean userCanViewNode() throws NodeStoreException {
+        NodeMembership nodeMembership = channelManager.getNodeMembership(node, actor);
 
-		if (getNodeViewAcl().canViewNode(node, nodeMembership,
-				getNodeAccessModel(), channelManager.isLocalJID(actor))) {
-			return true;
-		}
-		NodeAclRefuseReason reason = getNodeViewAcl().getReason();
-		createExtendedErrorReply(reason.getType(), reason.getCondition(),
-				reason.getAdditionalErrorElement());
-		return false;
-	}
+        if (getNodeViewAcl().canViewNode(node, nodeMembership, getNodeAccessModel(), channelManager.isLocalJID(actor))) {
+            return true;
+        }
+        NodeAclRefuseReason reason = getNodeViewAcl().getReason();
+        createExtendedErrorReply(reason.getType(), reason.getCondition(), reason.getAdditionalErrorElement());
+        return false;
+    }
 
-	private AccessModels getNodeAccessModel() {
-		if (!nodeDetails.containsKey(AccessModel.FIELD_NAME)) {
-			return AccessModels.authorize;
-		}
-		return AccessModels.createFromString(nodeDetails
-				.get(AccessModel.FIELD_NAME));
-	}
+    private AccessModels getNodeAccessModel() {
+        if (!nodeDetails.containsKey(AccessModel.FIELD_NAME)) {
+            return AccessModels.authorize;
+        }
+        return AccessModels.createFromString(nodeDetails.get(AccessModel.FIELD_NAME));
+    }
 
-	/**
-	 * Get items nodes
-	 */
-	private int getNodeItems(Element items, int maxItemsToReturn,
-			String afterItemId) throws NodeStoreException {
+    /**
+     * Get items nodes
+     */
+    private int getNodeItems(Element items, int maxItemsToReturn, String afterItemId) throws NodeStoreException {
 
-		CloseableIterator<NodeItem> itemIt = channelManager.getNodeItems(node,
-				afterItemId, maxItemsToReturn);
-		rsmEntriesCount = 0;
-		if (itemIt == null) {
-			return 0;
-		}
-		try {
-			while (itemIt.hasNext()) {
-				++rsmEntriesCount;
-				NodeItem nodeItem = itemIt.next();
+        CloseableIterator<NodeItem> itemIt = channelManager.getNodeItems(node, afterItemId, maxItemsToReturn);
+        rsmEntriesCount = 0;
+        if (itemIt == null) {
+            return 0;
+        }
+        try {
+            while (itemIt.hasNext()) {
+                ++rsmEntriesCount;
+                NodeItem nodeItem = itemIt.next();
 
-				if (firstItem == null) {
-					firstItem = nodeItem.getId();
-				}
-				addItemToResponse(nodeItem, items);
-				lastItem = nodeItem.getId();
-			}
-			logger.debug("Including RSM there are " + rsmEntriesCount
-					+ " items for node " + node);
-			return channelManager.countNodeItems(node);
-		} finally {
-			if (itemIt != null)
-				itemIt.close();
-		}
-	}
+                if (firstItem == null) {
+                    firstItem = nodeItem.getId();
+                }
+                addItemToResponse(nodeItem, items);
+                lastItem = nodeItem.getId();
+            }
+            logger.debug("Including RSM there are " + rsmEntriesCount + " items for node " + node);
+            return channelManager.countNodeItems(node);
+        } finally {
+            if (itemIt != null) {
+                itemIt.close();
+            }
+        }
+    }
 
-	private void addItemToResponse(NodeItem nodeItem, Element parent) {
-		try {
-			entry = xmlReader.read(new StringReader(nodeItem.getPayload()))
-					.getRootElement();
-			Element item = parent.addElement("item");
-			item.addAttribute("id", nodeItem.getId());
-			item.add(entry);
-		} catch (DocumentException e) {
-			logger.error("Error parsing a node entry, ignoring. " + nodeItem);
-		}
-	}
+    private void addItemToResponse(NodeItem nodeItem, Element parent) {
+        try {
+            entry = xmlReader.read(new StringReader(nodeItem.getPayload())).getRootElement();
+            Element item = parent.addElement("item");
+            item.addAttribute("id", nodeItem.getId());
+            item.add(entry);
+        } catch (DocumentException e) {
+            logger.error("Error parsing a node entry, ignoring. " + nodeItem);
+        }
+    }
 
-	private boolean isOwnerModerator() throws NodeStoreException {
-		return channelManager.getNodeMembership(node, actor).getAffiliation()
-				.canAuthorize();
-	}
+    private boolean isOwnerModerator() throws NodeStoreException {
+        return channelManager.getNodeMembership(node, actor).getAffiliation().canAuthorize();
+    }
 
-	private void createExtendedErrorReply(Type type, Condition condition,
-			String additionalElement) {
-		reply.setType(IQ.Type.error);
-		Element standardError = new DOMElement(condition.toString(),
-				new org.dom4j.Namespace("", JabberPubsub.NS_XMPP_STANZAS));
-		Element extraError = new DOMElement(additionalElement,
-				new org.dom4j.Namespace("", JabberPubsub.NS_PUBSUB_ERROR));
-		Element error = new DOMElement("error");
-		error.addAttribute("type", type.toString());
-		error.add(standardError);
-		error.add(extraError);
-		reply.setChildElement(error);
-	}
+    private void createExtendedErrorReply(Type type, Condition condition, String additionalElement) {
+        reply.setType(IQ.Type.error);
+        Element standardError = new DOMElement(condition.toString(), new org.dom4j.Namespace("", JabberPubsub.NS_XMPP_STANZAS));
+        Element extraError = new DOMElement(additionalElement, new org.dom4j.Namespace("", JabberPubsub.NS_PUBSUB_ERROR));
+        Element error = new DOMElement("error");
+        error.addAttribute("type", type.toString());
+        error.add(standardError);
+        error.add(extraError);
+        reply.setChildElement(error);
+    }
 
-	public boolean accept(Element elm) {
-		return elm.getName().equals("items");
-	}
+    public boolean accept(Element elm) {
+        return elm.getName().equals("items");
+    }
 }

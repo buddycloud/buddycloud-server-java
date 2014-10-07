@@ -10,39 +10,34 @@ import org.buddycloud.channelserver.db.jdbc.dialect.Sql92NodeStoreDialect;
 
 public class DefaultNodeStoreFactoryImpl implements NodeStoreFactory {
 
-	private static final String CONFIGURATION_JDBC_DIALECT = "jdbc.dialect";
-	private static final Logger LOGGER = Logger.getLogger(DefaultNodeStoreFactoryImpl.class);
-	
-	private final Properties configuration;
+    private static final String CONFIGURATION_JDBC_DIALECT = "jdbc.dialect";
+    private static final Logger LOGGER = Logger.getLogger(DefaultNodeStoreFactoryImpl.class);
 
-	public DefaultNodeStoreFactoryImpl(final Properties configuration)
-			throws NodeStoreException {
-		this.configuration = configuration;
+    private final Properties configuration;
 
-		String dialectClass = configuration.getProperty(CONFIGURATION_JDBC_DIALECT,
-				Sql92NodeStoreDialect.class.getName());
+    public DefaultNodeStoreFactoryImpl(final Properties configuration) throws NodeStoreException {
+        this.configuration = configuration;
 
-		try {
-			Class.forName(dialectClass).newInstance();
-		} catch (Exception e) {
-			throw new NodeStoreException("Could not instantiate dialect class "
-					+ dialectClass, e);
-		}
-	}
+        String dialectClass = configuration.getProperty(CONFIGURATION_JDBC_DIALECT, Sql92NodeStoreDialect.class.getName());
 
-	@Override
-	public NodeStore create() {
+        try {
+            Class.forName(dialectClass).newInstance();
+        } catch (Exception e) {
+            throw new NodeStoreException("Could not instantiate dialect class " + dialectClass, e);
+        }
+    }
 
-		Connection connection = null;
-		try {
-			connection = new JDBCConnectionFactory(configuration).getConnection();
-			return new JDBCNodeStore(
-					connection,
-					new Sql92NodeStoreDialect());
-		} catch (Exception e) {
-			LOGGER.error("JDBCNodeStore failed to initialize.", e);
-		}
-		return null;
-	}
+    @Override
+    public NodeStore create() {
+
+        Connection connection = null;
+        try {
+            connection = new JDBCConnectionFactory(configuration).getConnection();
+            return new JDBCNodeStore(connection, new Sql92NodeStoreDialect());
+        } catch (Exception e) {
+            LOGGER.error("JDBCNodeStore failed to initialize.", e);
+        }
+        return null;
+    }
 
 }

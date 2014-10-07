@@ -18,63 +18,54 @@ import org.xmpp.packet.Presence;
 
 public class InQueueConsumer extends QueueConsumer {
 
-	private static final Logger logger = Logger
-			.getLogger(InQueueConsumer.class);
+    private static final Logger logger = Logger.getLogger(InQueueConsumer.class);
 
-	private final BlockingQueue<Packet> outQueue;
-	private final Configuration conf;
-	private final ChannelManagerFactory channelManagerFactory;
-	private final FederatedQueueManager federatedQueueManager;
+    private final BlockingQueue<Packet> outQueue;
+    private final Configuration conf;
+    private final ChannelManagerFactory channelManagerFactory;
+    private final FederatedQueueManager federatedQueueManager;
 
-	private OnlineResourceManager onlineUsers;
+    private OnlineResourceManager onlineUsers;
 
-	public InQueueConsumer(BlockingQueue<Packet> outQueue, Configuration conf,
-			BlockingQueue<Packet> inQueue,
-			ChannelManagerFactory channelManagerFactory,
-			FederatedQueueManager federatedQueueManager, OnlineResourceManager onlineUsers) {
-		super(inQueue);
-		this.outQueue = outQueue;
-		this.conf = conf;
-		this.channelManagerFactory = channelManagerFactory;
-		this.federatedQueueManager = federatedQueueManager;
-		this.onlineUsers = onlineUsers;
-	}
+    public InQueueConsumer(BlockingQueue<Packet> outQueue, Configuration conf, BlockingQueue<Packet> inQueue, ChannelManagerFactory channelManagerFactory,
+            FederatedQueueManager federatedQueueManager, OnlineResourceManager onlineUsers) {
+        super(inQueue);
+        this.outQueue = outQueue;
+        this.conf = conf;
+        this.channelManagerFactory = channelManagerFactory;
+        this.federatedQueueManager = federatedQueueManager;
+        this.onlineUsers = onlineUsers;
+    }
 
-	@Override
-	protected void consume(Packet p) {
-		ChannelManager channelManager = null;
-		try {
-			Long start = System.currentTimeMillis();
+    @Override
+    protected void consume(Packet p) {
+        ChannelManager channelManager = null;
+        try {
+            Long start = System.currentTimeMillis();
 
-			String xml = p.toXML();
-			logger.debug("Received payload: '" + xml + "'.");
-			channelManager = channelManagerFactory.create();
-			if (p instanceof IQ) {
-				new IQProcessor(outQueue, conf, channelManager,
-						federatedQueueManager).process((IQ) p);
-			} else if (p instanceof Message) {
-				new MessageProcessor(outQueue, conf, channelManager)
-						.process((Message) p);
-			} else if (p instanceof Presence) {
-				new PresenceProcessor(conf, onlineUsers).process((Presence) p);
-			} else {
-				logger.info("Not handling following stanzas yet: '" + xml
-						+ "'.");
-			}
+            String xml = p.toXML();
+            logger.debug("Received payload: '" + xml + "'.");
+            channelManager = channelManagerFactory.create();
+            if (p instanceof IQ) {
+                new IQProcessor(outQueue, conf, channelManager, federatedQueueManager).process((IQ) p);
+            } else if (p instanceof Message) {
+                new MessageProcessor(outQueue, conf, channelManager).process((Message) p);
+            } else if (p instanceof Presence) {
+                new PresenceProcessor(conf, onlineUsers).process((Presence) p);
+            } else {
+                logger.info("Not handling following stanzas yet: '" + xml + "'.");
+            }
 
-			logger.debug("Payload handled in '"
-					+ Long.toString((System.currentTimeMillis() - start))
-					+ "' milliseconds.");
+            logger.debug("Payload handled in '" + Long.toString((System.currentTimeMillis() - start)) + "' milliseconds.");
 
-		} catch (Exception e) {
-			logger.error("Exception: " + e.getMessage(), e);
-		} finally {
-			try {
-				channelManager.close();
-			} catch (NodeStoreException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-		}
-	}
+        } catch (Exception e) {
+            logger.error("Exception: " + e.getMessage(), e);
+        } finally {
+            try {
+                channelManager.close();
+            } catch (NodeStoreException e) {
+                logger.error(e);
+            }
+        }
+    }
 }

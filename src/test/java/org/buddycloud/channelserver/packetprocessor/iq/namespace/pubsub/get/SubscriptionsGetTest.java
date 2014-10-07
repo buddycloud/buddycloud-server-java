@@ -15,7 +15,6 @@ import org.buddycloud.channelserver.pubsub.subscription.Subscriptions;
 import org.dom4j.Element;
 import org.dom4j.tree.BaseElement;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.xmpp.packet.IQ;
@@ -25,199 +24,183 @@ import org.xmpp.resultsetmanagement.ResultSetImpl;
 
 public class SubscriptionsGetTest extends IQTestHandler {
 
-	private IQ userRequest;
-	private IQ nodeRequest;
-	private SubscriptionsGet subscriptionsGet;
-	private Element element;
-	private BlockingQueue<Packet> queue = new LinkedBlockingQueue<Packet>();
+    private IQ userRequest;
+    private IQ nodeRequest;
+    private SubscriptionsGet subscriptionsGet;
+    private Element element;
+    private BlockingQueue<Packet> queue = new LinkedBlockingQueue<Packet>();
 
-	private String node = "/user/pamela@denmark.lit/posts";
-	private JID jid = new JID("juliet@shakespeare.lit");
-	private JID invitedBy = new JID("romeo@shakespeare.lit");
-	
-	private ChannelManager channelManager;
+    private String node = "/user/pamela@denmark.lit/posts";
+    private JID jid = new JID("juliet@shakespeare.lit");
+    private JID invitedBy = new JID("romeo@shakespeare.lit");
 
-	@Before
-	public void setUp() throws Exception {
+    private ChannelManager channelManager;
 
-		queue = new LinkedBlockingQueue<Packet>();
-		subscriptionsGet = new SubscriptionsGet(queue, channelManager);
-		element = new BaseElement("subscriptions");
+    @Before
+    public void setUp() throws Exception {
 
-		channelManager = Mockito.mock(ChannelManager.class);
-		Mockito.when(channelManager.isLocalNode(Mockito.anyString()))
-				.thenReturn(true);
-		Mockito.when(channelManager.isLocalJID(Mockito.any(JID.class)))
-				.thenReturn(true);
+        queue = new LinkedBlockingQueue<Packet>();
+        subscriptionsGet = new SubscriptionsGet(queue, channelManager);
+        element = new BaseElement("subscriptions");
 
-		NodeMembership nodeMembership = new NodeMembershipImpl(node, jid,
-				Subscriptions.subscribed, Affiliations.member, null);
-		Mockito.when(
-				channelManager.getNodeMembership(Mockito.anyString(),
-						Mockito.any(JID.class))).thenReturn(nodeMembership);
-		subscriptionsGet.setChannelManager(channelManager);
-		
-		userRequest = readStanzaAsIq("/iq/pubsub/subscriptions/request.stanza");
-		nodeRequest = readStanzaAsIq("/iq/pubsub/subscriptions/requestExistingNode.stanza");
+        channelManager = Mockito.mock(ChannelManager.class);
+        Mockito.when(channelManager.isLocalNode(Mockito.anyString())).thenReturn(true);
+        Mockito.when(channelManager.isLocalJID(Mockito.any(JID.class))).thenReturn(true);
 
-	}
+        NodeMembership nodeMembership = new NodeMembershipImpl(node, jid, Subscriptions.subscribed, Affiliations.member, null);
+        Mockito.when(channelManager.getNodeMembership(Mockito.anyString(), Mockito.any(JID.class))).thenReturn(nodeMembership);
+        subscriptionsGet.setChannelManager(channelManager);
 
-	@Test
-	public void testPassingSubscriptionsAsElementNameReturnsTrue() {
-		Assert.assertTrue(subscriptionsGet.accept(element));
-	}
+        userRequest = readStanzaAsIq("/iq/pubsub/subscriptions/request.stanza");
+        nodeRequest = readStanzaAsIq("/iq/pubsub/subscriptions/requestExistingNode.stanza");
 
-	@Test
-	public void testPassingNotSubscriptionsAsElementNameReturnsFalse() {
-		Element element = new BaseElement("not-subscriptions");
-		Assert.assertFalse(subscriptionsGet.accept(element));
-	}
-	
-	@Test
-	public void addsInvitedByToUserSubscriptionsList() throws Exception {
+    }
 
-		
-		ArrayList<NodeMembership> members = new ArrayList<NodeMembership>();
-		members.add(new NodeMembershipImpl(node, jid, Subscriptions.invited, Affiliations.publisher, invitedBy));
-		
-		Mockito.when(channelManager.getUserMemberships(Mockito.any(JID.class))).thenReturn(new ResultSetImpl<NodeMembership>(members));
-		
-		subscriptionsGet.process(element, jid, userRequest, null);
+    @Test
+    public void testPassingSubscriptionsAsElementNameReturnsTrue() {
+        Assert.assertTrue(subscriptionsGet.accept(element));
+    }
 
-		Assert.assertEquals(1, queue.size());
+    @Test
+    public void testPassingNotSubscriptionsAsElementNameReturnsFalse() {
+        Element element = new BaseElement("not-subscriptions");
+        Assert.assertFalse(subscriptionsGet.accept(element));
+    }
 
-		IQ response = (IQ) queue.poll();
-		Assert.assertEquals(IQ.Type.result, response.getType());
-		Assert.assertEquals(userRequest.getTo(), response.getFrom());
-		Assert.assertEquals(userRequest.getFrom(), response.getTo());
-		Assert.assertEquals(userRequest.getID(), response.getID());
-		Assert.assertEquals(1, response.getChildElement().element("subscriptions").elements("subscription").size());
+    @Test
+    public void addsInvitedByToUserSubscriptionsList() throws Exception {
 
-	}
-	
-	// ------------- node subscripton tests
-	
-	@Test
-	public void remoteNodeForwardsStanza() throws Exception {
 
-		Mockito.when(channelManager.isLocalNode(Mockito.anyString()))
-				.thenReturn(false);
-		Mockito.when(channelManager.isCachedNode(Mockito.anyString()))
-		.thenReturn(false);
+        ArrayList<NodeMembership> members = new ArrayList<NodeMembership>();
+        members.add(new NodeMembershipImpl(node, jid, Subscriptions.invited, Affiliations.publisher, invitedBy));
 
-		subscriptionsGet.process(element, jid, nodeRequest, null);
+        Mockito.when(channelManager.getUserMemberships(Mockito.any(JID.class))).thenReturn(new ResultSetImpl<NodeMembership>(members));
 
-		IQ response = (IQ) queue.poll();
+        subscriptionsGet.process(element, jid, userRequest, null);
 
-		Assert.assertEquals(IQ.Type.get, response.getType());
-		Assert.assertEquals(new JID("denmark.lit"), response.getTo());
-		Assert.assertEquals(userRequest.getID(), response.getID());
-	}
-	
+        Assert.assertEquals(1, queue.size());
 
-	@Test
-	public void doesntAddInvitedByToNodeSubscriptionsListIfNotUserOrOwnerOrModerator() throws Exception {
+        IQ response = (IQ) queue.poll();
+        Assert.assertEquals(IQ.Type.result, response.getType());
+        Assert.assertEquals(userRequest.getTo(), response.getFrom());
+        Assert.assertEquals(userRequest.getFrom(), response.getTo());
+        Assert.assertEquals(userRequest.getID(), response.getID());
+        Assert.assertEquals(1, response.getChildElement().element("subscriptions").elements("subscription").size());
 
-		ArrayList<NodeMembership> members = new ArrayList<NodeMembership>();
-		members.add(new NodeMembershipImpl(node, jid, Subscriptions.invited, Affiliations.publisher, invitedBy));
-		
-		Mockito.when(channelManager.getNodeMemberships(Mockito.anyString())).thenReturn(new ResultSetImpl<NodeMembership>(members));
-		
-		subscriptionsGet.process(element, jid, nodeRequest, null);
+    }
 
-		Assert.assertEquals(1, queue.size());
+    // ------------- node subscripton tests
 
-		IQ response = (IQ) queue.poll();
-		Assert.assertEquals(IQ.Type.result, response.getType());
-		Assert.assertEquals(userRequest.getTo(), response.getFrom());
-		Assert.assertEquals(userRequest.getFrom(), response.getTo());
-		Assert.assertEquals(userRequest.getID(), response.getID());
-		Assert.assertEquals(0, response.getChildElement().element("subscriptions").elements("subscription").size());
-	}
-	
-	@Test
-	public void addsInvitedByToNodeSubscriptionsList() throws Exception {
+    @Test
+    public void remoteNodeForwardsStanza() throws Exception {
 
-		NodeMembership nodeMembership = new NodeMembershipImpl(node, jid,
-				Subscriptions.subscribed, Affiliations.owner, null);
-		Mockito.when(
-				channelManager.getNodeMembership(Mockito.anyString(),
-						Mockito.any(JID.class))).thenReturn(nodeMembership);
-		
-		ArrayList<NodeMembership> members = new ArrayList<NodeMembership>();
-		members.add(new NodeMembershipImpl(node, jid, Subscriptions.invited, Affiliations.publisher, invitedBy));
-		
-		Mockito.when(channelManager.getNodeMemberships(Mockito.anyString())).thenReturn(new ResultSetImpl<NodeMembership>(members));
-		
-		subscriptionsGet.process(element, jid, nodeRequest, null);
+        Mockito.when(channelManager.isLocalNode(Mockito.anyString())).thenReturn(false);
+        Mockito.when(channelManager.isCachedNode(Mockito.anyString())).thenReturn(false);
 
-		Assert.assertEquals(1, queue.size());
+        subscriptionsGet.process(element, jid, nodeRequest, null);
 
-		IQ response = (IQ) queue.poll();
+        IQ response = (IQ) queue.poll();
 
-		Assert.assertEquals(IQ.Type.result, response.getType());
-		Assert.assertEquals(userRequest.getTo(), response.getFrom());
-		Assert.assertEquals(userRequest.getFrom(), response.getTo());
-		Assert.assertEquals(userRequest.getID(), response.getID());
-		Assert.assertEquals(1, response.getChildElement().element("subscriptions").elements("subscription").size());
+        Assert.assertEquals(IQ.Type.get, response.getType());
+        Assert.assertEquals(new JID("denmark.lit"), response.getTo());
+        Assert.assertEquals(userRequest.getID(), response.getID());
+    }
+
+
+    @Test
+    public void doesntAddInvitedByToNodeSubscriptionsListIfNotUserOrOwnerOrModerator() throws Exception {
+
+        ArrayList<NodeMembership> members = new ArrayList<NodeMembership>();
+        members.add(new NodeMembershipImpl(node, jid, Subscriptions.invited, Affiliations.publisher, invitedBy));
+
+        Mockito.when(channelManager.getNodeMemberships(Mockito.anyString())).thenReturn(new ResultSetImpl<NodeMembership>(members));
+
+        subscriptionsGet.process(element, jid, nodeRequest, null);
+
+        Assert.assertEquals(1, queue.size());
+
+        IQ response = (IQ) queue.poll();
+        Assert.assertEquals(IQ.Type.result, response.getType());
+        Assert.assertEquals(userRequest.getTo(), response.getFrom());
+        Assert.assertEquals(userRequest.getFrom(), response.getTo());
+        Assert.assertEquals(userRequest.getID(), response.getID());
+        Assert.assertEquals(0, response.getChildElement().element("subscriptions").elements("subscription").size());
+    }
+
+    @Test
+    public void addsInvitedByToNodeSubscriptionsList() throws Exception {
+
+        NodeMembership nodeMembership = new NodeMembershipImpl(node, jid, Subscriptions.subscribed, Affiliations.owner, null);
+        Mockito.when(channelManager.getNodeMembership(Mockito.anyString(), Mockito.any(JID.class))).thenReturn(nodeMembership);
+
+        ArrayList<NodeMembership> members = new ArrayList<NodeMembership>();
+        members.add(new NodeMembershipImpl(node, jid, Subscriptions.invited, Affiliations.publisher, invitedBy));
+
+        Mockito.when(channelManager.getNodeMemberships(Mockito.anyString())).thenReturn(new ResultSetImpl<NodeMembership>(members));
+
+        subscriptionsGet.process(element, jid, nodeRequest, null);
+
+        Assert.assertEquals(1, queue.size());
+
+        IQ response = (IQ) queue.poll();
+
+        Assert.assertEquals(IQ.Type.result, response.getType());
+        Assert.assertEquals(userRequest.getTo(), response.getFrom());
+        Assert.assertEquals(userRequest.getFrom(), response.getTo());
+        Assert.assertEquals(userRequest.getID(), response.getID());
+        Assert.assertEquals(1, response.getChildElement().element("subscriptions").elements("subscription").size());
         Element subscription = (Element) response.getChildElement().element("subscriptions").elements("subscription").get(0);
         Assert.assertEquals(node, subscription.attributeValue("node"));
         Assert.assertEquals(invitedBy.toBareJID(), subscription.attributeValue("invited-by"));
         Assert.assertEquals(jid.toBareJID(), subscription.attributeValue("jid"));
         Assert.assertEquals(Subscriptions.invited.toString(), subscription.attributeValue("subscription"));
-	}	
-	
-	@Test
-	public void addsInvitedByToNodeSubscriptionsListIfModerator() throws Exception {
+    }
 
-		NodeMembership nodeMembership = new NodeMembershipImpl(node, jid,
-				Subscriptions.subscribed, Affiliations.moderator, null);
-		Mockito.when(
-				channelManager.getNodeMembership(Mockito.anyString(),
-						Mockito.any(JID.class))).thenReturn(nodeMembership);
-		
-		ArrayList<NodeMembership> members = new ArrayList<NodeMembership>();
-		members.add(new NodeMembershipImpl(node, jid, Subscriptions.invited, Affiliations.publisher, invitedBy));
-		
-		Mockito.when(channelManager.getNodeMemberships(Mockito.anyString())).thenReturn(new ResultSetImpl<NodeMembership>(members));
-		
-		subscriptionsGet.process(element, jid, nodeRequest, null);
+    @Test
+    public void addsInvitedByToNodeSubscriptionsListIfModerator() throws Exception {
 
-		Assert.assertEquals(1, queue.size());
+        NodeMembership nodeMembership = new NodeMembershipImpl(node, jid, Subscriptions.subscribed, Affiliations.moderator, null);
+        Mockito.when(channelManager.getNodeMembership(Mockito.anyString(), Mockito.any(JID.class))).thenReturn(nodeMembership);
 
-		IQ response = (IQ) queue.poll();
-		Assert.assertEquals(IQ.Type.result, response.getType());
-		Assert.assertEquals(userRequest.getTo(), response.getFrom());
-		Assert.assertEquals(userRequest.getFrom(), response.getTo());
-		Assert.assertEquals(userRequest.getID(), response.getID());
-		Assert.assertEquals(1, response.getChildElement().element("subscriptions").elements("subscription").size());
+        ArrayList<NodeMembership> members = new ArrayList<NodeMembership>();
+        members.add(new NodeMembershipImpl(node, jid, Subscriptions.invited, Affiliations.publisher, invitedBy));
 
-	}
-	
-	@Test
-	public void addsInvitedByToUserSubscriptionsListIfUser() throws Exception {
+        Mockito.when(channelManager.getNodeMemberships(Mockito.anyString())).thenReturn(new ResultSetImpl<NodeMembership>(members));
 
-		NodeMembership nodeMembership = new NodeMembershipImpl(node, nodeRequest.getFrom(),
-				Subscriptions.subscribed, Affiliations.moderator, null);
-		Mockito.when(
-				channelManager.getNodeMembership(Mockito.anyString(),
-						Mockito.any(JID.class))).thenReturn(nodeMembership);
-		
-		ArrayList<NodeMembership> members = new ArrayList<NodeMembership>();
-		members.add(new NodeMembershipImpl(node, jid, Subscriptions.invited, Affiliations.publisher, invitedBy));
-		
-		Mockito.when(channelManager.getNodeMemberships(Mockito.anyString())).thenReturn(new ResultSetImpl<NodeMembership>(members));
-		
-		subscriptionsGet.process(element, jid, nodeRequest, null);
+        subscriptionsGet.process(element, jid, nodeRequest, null);
 
-		Assert.assertEquals(1, queue.size());
+        Assert.assertEquals(1, queue.size());
 
-		IQ response = (IQ) queue.poll();
-		Assert.assertEquals(IQ.Type.result, response.getType());
-		Assert.assertEquals(userRequest.getTo(), response.getFrom());
-		Assert.assertEquals(userRequest.getFrom(), response.getTo());
-		Assert.assertEquals(userRequest.getID(), response.getID());
-		Assert.assertEquals(1, response.getChildElement().element("subscriptions").elements("subscription").size());
+        IQ response = (IQ) queue.poll();
+        Assert.assertEquals(IQ.Type.result, response.getType());
+        Assert.assertEquals(userRequest.getTo(), response.getFrom());
+        Assert.assertEquals(userRequest.getFrom(), response.getTo());
+        Assert.assertEquals(userRequest.getID(), response.getID());
+        Assert.assertEquals(1, response.getChildElement().element("subscriptions").elements("subscription").size());
 
-	}
+    }
+
+    @Test
+    public void addsInvitedByToUserSubscriptionsListIfUser() throws Exception {
+
+        NodeMembership nodeMembership = new NodeMembershipImpl(node, nodeRequest.getFrom(), Subscriptions.subscribed, Affiliations.moderator, null);
+        Mockito.when(channelManager.getNodeMembership(Mockito.anyString(), Mockito.any(JID.class))).thenReturn(nodeMembership);
+
+        ArrayList<NodeMembership> members = new ArrayList<NodeMembership>();
+        members.add(new NodeMembershipImpl(node, jid, Subscriptions.invited, Affiliations.publisher, invitedBy));
+
+        Mockito.when(channelManager.getNodeMemberships(Mockito.anyString())).thenReturn(new ResultSetImpl<NodeMembership>(members));
+
+        subscriptionsGet.process(element, jid, nodeRequest, null);
+
+        Assert.assertEquals(1, queue.size());
+
+        IQ response = (IQ) queue.poll();
+        Assert.assertEquals(IQ.Type.result, response.getType());
+        Assert.assertEquals(userRequest.getTo(), response.getFrom());
+        Assert.assertEquals(userRequest.getFrom(), response.getTo());
+        Assert.assertEquals(userRequest.getID(), response.getID());
+        Assert.assertEquals(1, response.getChildElement().element("subscriptions").elements("subscription").size());
+
+    }
 }

@@ -11,36 +11,29 @@ import org.junit.Test;
 
 public class JDBCNodeStoreNodeExistsTest extends JDBCNodeStoreAbstract {
 
-	public JDBCNodeStoreNodeExistsTest() throws SQLException, IOException,
-			ClassNotFoundException {
-		dbTester = new DatabaseTester();
-		IQTestHandler.readConf();
-	}
+    public JDBCNodeStoreNodeExistsTest() throws SQLException, IOException, ClassNotFoundException {
+        dbTester = new DatabaseTester();
+        IQTestHandler.readConf();
+    }
 
-	@Test
-	public void testNodeExistsSuccess() throws Exception {
-		dbTester.loadData("node_1");
+    @Test
+    public void testNodeExistsSuccess() throws Exception {
+        dbTester.loadData("node_1");
 
-		assertTrue(
-				"nodeExists returned false when there blatantly is a node there",
-				store.nodeExists(TEST_SERVER1_NODE1_ID));
-	}
+        assertTrue("nodeExists returned false when there blatantly is a node there", store.nodeExists(TEST_SERVER1_NODE1_ID));
+    }
 
-	@Test
-	public void testNodeExistsFailure() throws Exception {
-		dbTester.loadData("node_1");
+    @Test
+    public void testNodeExistsFailure() throws Exception {
+        dbTester.loadData("node_1");
 
-		assertFalse(
-				"nodeExists returned true when there blatantly is not a node there",
-				store.nodeExists("node2"));
-	}
+        assertFalse("nodeExists returned true when there blatantly is not a node there", store.nodeExists("node2"));
+    }
 
-	@Test
-	public void testNodeExistsIsCaseSensitive() throws Exception {
-		dbTester.loadData("node_1");
+    @Test
+    public void testNodeExistsIsCaseSensitive() throws Exception {
+        dbTester.loadData("node_1");
 
-		assertFalse(
-				"nodeExists returned true for Node1 when the only node is node1 (note case)",
-				store.nodeExists("Node1"));
-	}
+        assertFalse("nodeExists returned true for Node1 when the only node is node1 (note case)", store.nodeExists("Node1"));
+    }
 }

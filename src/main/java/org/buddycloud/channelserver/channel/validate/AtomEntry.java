@@ -18,7 +18,6 @@ import org.buddycloud.channelserver.utils.node.item.payload.ActivityStreams;
 import org.buddycloud.channelserver.utils.node.item.payload.Atom;
 import org.buddycloud.channelserver.utils.node.item.payload.Buddycloud;
 import org.dom4j.Element;
-import org.dom4j.Namespace;
 import org.dom4j.dom.DOMElement;
 import org.xmpp.packet.JID;
 
@@ -51,7 +50,7 @@ public class AtomEntry implements PayloadValidator {
     public static final String ACTIVITY_VERB_POST = "post";
     public static final String ACTIVITY_VERB_RATED = "rated";
 
-    private static Logger LOGGER = Logger.getLogger(Atom.class);
+    private static final Logger LOGGER = Logger.getLogger(Atom.class);
 
     private Element entry;
 
@@ -74,8 +73,7 @@ public class AtomEntry implements PayloadValidator {
     private Element geoloc;
     private String globalItemID;
 
-    public AtomEntry() {
-    }
+    public AtomEntry() {}
 
     public AtomEntry(Element item) {
         setPayload(item);
@@ -131,8 +129,7 @@ public class AtomEntry implements PayloadValidator {
         if (null == contentType) {
             contentType = CONTENT_TEXT;
         }
-        if ((false == contentType.equals(CONTENT_TEXT))
-                && (false == contentType.equals(CONTENT_XHTML))) {
+        if ((false == contentType.equals(CONTENT_TEXT)) && (false == contentType.equals(CONTENT_XHTML))) {
             this.errorMessage = UNSUPPORTED_CONTENT_TYPE;
             return false;
         }
@@ -143,8 +140,7 @@ public class AtomEntry implements PayloadValidator {
         if (null == updated) {
 
             String updateTime = Conf.formatDate(new Date());
-            LOGGER.debug("Update of the entry was missing. We add a default one to it: '"
-                    + updateTime + "'.");
+            LOGGER.debug("Update of the entry was missing. We add a default one to it: '" + updateTime + "'.");
             this.entry.addElement("updated").setText(updateTime);
         }
 
@@ -178,8 +174,7 @@ public class AtomEntry implements PayloadValidator {
     @Override
     public Element getPayload() {
 
-        Element entry = new DOMElement("entry", new org.dom4j.Namespace("",
-                Atom.NS));
+        Element entry = new DOMElement("entry", new org.dom4j.Namespace("", Atom.NS));
         entry.add(new org.dom4j.Namespace("activity", ActivityStreams.NS));
 
         String postType = POST_TYPE_NOTE;
@@ -220,20 +215,19 @@ public class AtomEntry implements PayloadValidator {
             entry.add(meta.createCopy());
         }
 
-		if (null != media) {
-			entry.addNamespace(Buddycloud.NS_MEDIA_PREFIX, Buddycloud.NS_MEDIA);
-			Element mediaElement = media.createCopy();
-			for (Iterator<Element> iter = mediaElement.elements().iterator(); iter.hasNext();) {
-				Element item = iter.next();
-				item.setName(Buddycloud.NS_MEDIA_PREFIX + ":item");
-			}
-			mediaElement.setName(Buddycloud.NS_MEDIA_PREFIX + ":media");
-			entry.add(mediaElement);
-		}
+        if (null != media) {
+            entry.addNamespace(Buddycloud.NS_MEDIA_PREFIX, Buddycloud.NS_MEDIA);
+            Element mediaElement = media.createCopy();
+            for (Iterator<Element> iter = mediaElement.elements().iterator(); iter.hasNext();) {
+                Element item = iter.next();
+                item.setName(Buddycloud.NS_MEDIA_PREFIX + ":item");
+            }
+            mediaElement.setName(Buddycloud.NS_MEDIA_PREFIX + ":media");
+            entry.add(mediaElement);
+        }
 
         if (null != targetId) {
-            GlobalItemIDImpl globalTargetId = new GlobalItemIDImpl(new JID(
-                    channelServerDomain), node, targetId);
+            GlobalItemIDImpl globalTargetId = new GlobalItemIDImpl(new JID(channelServerDomain), node, targetId);
             Element target = entry.addElement("activity:target");
             target.addElement("id").setText(globalTargetId.toString());
             target.addElement("activity:object-type").setText("post");
@@ -276,8 +270,7 @@ public class AtomEntry implements PayloadValidator {
         this.channelServerDomain = channelServerDomain;
     }
 
-    private boolean validateInReplyToElement(Element reply)
-            throws NodeStoreException {
+    private boolean validateInReplyToElement(Element reply) throws NodeStoreException {
         if (null == reply) {
             return true;
         }
@@ -300,8 +293,7 @@ public class AtomEntry implements PayloadValidator {
         return true;
     }
 
-    private boolean validateTargetElement(Element target)
-            throws NodeStoreException {
+    private boolean validateTargetElement(Element target) throws NodeStoreException {
         if (null == target) {
             return true;
         }
@@ -329,16 +321,14 @@ public class AtomEntry implements PayloadValidator {
         if (true == targetItem.getId().equals(targetId)) {
             return true;
         }
-        if ((null == targetItem.getInReplyTo())
-                || (false == targetItem.getInReplyTo().equals(targetId))) {
+        if ((null == targetItem.getInReplyTo()) || (false == targetItem.getInReplyTo().equals(targetId))) {
             this.errorMessage = TARGET_MUST_BE_IN_SAME_THREAD;
             return false;
         }
         return true;
     }
 
-    private boolean validateRatingElement(Element rating)
-            throws NodeStoreException {
+    private boolean validateRatingElement(Element rating) throws NodeStoreException {
         if (null == rating) {
             return true;
         }
@@ -369,8 +359,7 @@ public class AtomEntry implements PayloadValidator {
             return false;
         }
 
-        GlobalItemID globalTargetId = new GlobalItemIDImpl(new JID(
-                channelServerDomain), node, targetId);
+        GlobalItemID globalTargetId = new GlobalItemIDImpl(new JID(channelServerDomain), node, targetId);
         if (true == channelManager.userHasRatedPost(node, jid, globalTargetId)) {
             this.errorMessage = ITEM_ALREADY_RATED;
             return false;
@@ -388,8 +377,7 @@ public class AtomEntry implements PayloadValidator {
     public String getGlobalItemId() {
         if (null == globalItemID) {
             String id = UUID.randomUUID().toString();
-            globalItemID = new GlobalItemIDImpl(
-                        new JID(channelServerDomain), node, id).toString();
+            globalItemID = new GlobalItemIDImpl(new JID(channelServerDomain), node, id).toString();
         }
         return globalItemID;
     }
@@ -399,8 +387,7 @@ public class AtomEntry implements PayloadValidator {
         String inReplyTo = null;
         Element inReplyToElement = this.entry.element("in-reply-to");
         if (null != inReplyToElement) {
-            inReplyTo = GlobalItemIDImpl.toLocalId(inReplyToElement
-                    .attributeValue("ref"));
+            inReplyTo = GlobalItemIDImpl.toLocalId(inReplyToElement.attributeValue("ref"));
         }
         return inReplyTo;
     }

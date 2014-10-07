@@ -43,384 +43,340 @@ import org.xmpp.packet.PacketError;
 
 public class RecentItemsGetTest extends IQTestHandler {
 
-	private IQ request;
-	private RecentItemsGet recentItemsGet;
-	private Element element;
-	private BlockingQueue<Packet> queue = new LinkedBlockingQueue<Packet>();
+    private IQ request;
+    private RecentItemsGet recentItemsGet;
+    private Element element;
+    private BlockingQueue<Packet> queue = new LinkedBlockingQueue<Packet>();
 
-	private String node = "/user/pamela@denmark.lit/posts";
-	private JID jid = new JID("juliet@shakespeare.lit");
-	private ChannelManager channelManager;
+    private String node = "/user/pamela@denmark.lit/posts";
+    private JID jid = new JID("juliet@shakespeare.lit");
+    private ChannelManager channelManager;
 
-	private String TEST_NODE_1 = "node1";
-	private String TEST_NODE_2 = "node2";
+    private String TEST_NODE_1 = "node1";
+    private String TEST_NODE_2 = "node2";
 
-	@Before
-	public void setUp() throws Exception {
+    @Before
+    public void setUp() throws Exception {
 
-		queue = new LinkedBlockingQueue<Packet>();
-		channelManager = Mockito.mock(ChannelManager.class);
+        queue = new LinkedBlockingQueue<Packet>();
+        channelManager = Mockito.mock(ChannelManager.class);
 
-		recentItemsGet = new RecentItemsGet(queue, channelManager);
+        recentItemsGet = new RecentItemsGet(queue, channelManager);
 
-		request = readStanzaAsIq("/iq/pubsub/recent-items/request.stanza");
-		element = new BaseElement("recent-items");
-	}
+        request = readStanzaAsIq("/iq/pubsub/recent-items/request.stanza");
+        element = new BaseElement("recent-items");
+    }
 
-	@Test
-	public void testPassingRecentItemsAsElementNameReturnsTrue() {
-		Assert.assertTrue(recentItemsGet.accept(element));
-	}
+    @Test
+    public void testPassingRecentItemsAsElementNameReturnsTrue() {
+        Assert.assertTrue(recentItemsGet.accept(element));
+    }
 
-	@Test
-	public void testPassingNotRecentItemsAsElementNameReturnsFalse() {
-		Element element = new BaseElement("not-items");
-		Assert.assertFalse(recentItemsGet.accept(element));
-	}
+    @Test
+    public void testPassingNotRecentItemsAsElementNameReturnsFalse() {
+        Element element = new BaseElement("not-items");
+        Assert.assertFalse(recentItemsGet.accept(element));
+    }
 
-	@Test
-	public void testMissingMaxAttributeReturnsErrorStanza() throws Exception {
+    @Test
+    public void testMissingMaxAttributeReturnsErrorStanza() throws Exception {
 
-		request.getChildElement().element("recent-items")
-				.addAttribute("max", null);
+        request.getChildElement().element("recent-items").addAttribute("max", null);
 
-		recentItemsGet.process(element, jid, request, null);
-		Packet response = queue.poll();
+        recentItemsGet.process(element, jid, request, null);
+        Packet response = queue.poll();
 
-		PacketError error = response.getError();
-		Assert.assertNotNull(error);
-		Assert.assertEquals(PacketError.Type.modify, error.getType());
-		Assert.assertEquals("max-required", error.getApplicationConditionName());
-	}
+        PacketError error = response.getError();
+        Assert.assertNotNull(error);
+        Assert.assertEquals(PacketError.Type.modify, error.getType());
+        Assert.assertEquals("max-required", error.getApplicationConditionName());
+    }
 
-	@Test
-	public void testInvalidMaxAttributesReturnsErrorStanza() throws Exception {
+    @Test
+    public void testInvalidMaxAttributesReturnsErrorStanza() throws Exception {
 
-		request.getChildElement().element("recent-items")
-				.addAttribute("max", "three");
+        request.getChildElement().element("recent-items").addAttribute("max", "three");
 
-		recentItemsGet.process(element, jid, request, null);
-		Packet response = queue.poll();
+        recentItemsGet.process(element, jid, request, null);
+        Packet response = queue.poll();
 
-		PacketError error = response.getError();
-		Assert.assertNotNull(error);
-		Assert.assertEquals(PacketError.Type.modify, error.getType());
-		Assert.assertEquals("invalid-max-value-provided",
-				error.getApplicationConditionName());
-	}
+        PacketError error = response.getError();
+        Assert.assertNotNull(error);
+        Assert.assertEquals(PacketError.Type.modify, error.getType());
+        Assert.assertEquals("invalid-max-value-provided", error.getApplicationConditionName());
+    }
 
-	@Test
-	public void testMissingSinceAttributeReturnsErrorStanza() throws Exception {
+    @Test
+    public void testMissingSinceAttributeReturnsErrorStanza() throws Exception {
 
-		request.getChildElement().element("recent-items")
-				.addAttribute("since", null);
+        request.getChildElement().element("recent-items").addAttribute("since", null);
 
-		recentItemsGet.process(element, jid, request, null);
-		Packet response = queue.poll();
+        recentItemsGet.process(element, jid, request, null);
+        Packet response = queue.poll();
 
-		PacketError error = response.getError();
-		Assert.assertNotNull(error);
-		Assert.assertEquals(PacketError.Type.modify, error.getType());
-		Assert.assertEquals("since-required",
-				error.getApplicationConditionName());
-	}
+        PacketError error = response.getError();
+        Assert.assertNotNull(error);
+        Assert.assertEquals(PacketError.Type.modify, error.getType());
+        Assert.assertEquals("since-required", error.getApplicationConditionName());
+    }
 
-	@Test
-	public void testInvalidSinceAttributesReturnsErrorStanza() throws Exception {
+    @Test
+    public void testInvalidSinceAttributesReturnsErrorStanza() throws Exception {
 
-		request.getChildElement().element("recent-items")
-				.addAttribute("since", "a week ago");
+        request.getChildElement().element("recent-items").addAttribute("since", "a week ago");
 
-		recentItemsGet.process(element, jid, request, null);
-		Packet response = queue.poll();
+        recentItemsGet.process(element, jid, request, null);
+        Packet response = queue.poll();
 
-		PacketError error = response.getError();
-		Assert.assertNotNull(error);
-		Assert.assertEquals(PacketError.Type.modify, error.getType());
-		Assert.assertEquals("invalid-since-value-provided",
-				error.getApplicationConditionName());
-	}
+        PacketError error = response.getError();
+        Assert.assertNotNull(error);
+        Assert.assertEquals(PacketError.Type.modify, error.getType());
+        Assert.assertEquals("invalid-since-value-provided", error.getApplicationConditionName());
+    }
 
-	@Test
-	public void testNodeStoreExceptionGeneratesAnErrorStanza() throws Exception {
+    @Test
+    public void testNodeStoreExceptionGeneratesAnErrorStanza() throws Exception {
 
-		Mockito.when(
-				channelManager.getRecentItems(Mockito.any(JID.class),
-						Mockito.any(Date.class), Mockito.anyInt(),
-						Mockito.anyInt(), Mockito.any(GlobalItemID.class),
-						Mockito.anyString(), Mockito.anyBoolean())).thenThrow(
-				new NodeStoreException());
+        Mockito.when(
+                channelManager.getRecentItems(Mockito.any(JID.class), Mockito.any(Date.class), Mockito.anyInt(), Mockito.anyInt(),
+                        Mockito.any(GlobalItemID.class), Mockito.anyString(), Mockito.anyBoolean())).thenThrow(new NodeStoreException());
 
-		recentItemsGet.process(element, jid, request, null);
-		Packet response = queue.poll();
+        recentItemsGet.process(element, jid, request, null);
+        Packet response = queue.poll();
 
-		PacketError error = response.getError();
-		Assert.assertNotNull(error);
-		Assert.assertEquals(PacketError.Type.wait, error.getType());
-		Assert.assertEquals(PacketError.Condition.internal_server_error,
-				error.getCondition());
-	}
+        PacketError error = response.getError();
+        Assert.assertNotNull(error);
+        Assert.assertEquals(PacketError.Type.wait, error.getType());
+        Assert.assertEquals(PacketError.Condition.internal_server_error, error.getCondition());
+    }
 
-	@Test
-	public void testNoRecentItemsReturnsEmptyStanza() throws Exception {
+    @Test
+    public void testNoRecentItemsReturnsEmptyStanza() throws Exception {
 
-		Mockito.when(
-				channelManager.getRecentItems(Mockito.any(JID.class),
-						Mockito.any(Date.class), Mockito.anyInt(),
-						Mockito.anyInt(), Mockito.any(GlobalItemID.class),
-						Mockito.anyString(), Mockito.anyBoolean())).thenReturn(
-				new ClosableIteratorImpl<NodeItem>(new ArrayList<NodeItem>()
-						.iterator()));
+        Mockito.when(
+                channelManager.getRecentItems(Mockito.any(JID.class), Mockito.any(Date.class), Mockito.anyInt(), Mockito.anyInt(),
+                        Mockito.any(GlobalItemID.class), Mockito.anyString(), Mockito.anyBoolean())).thenReturn(
+                new ClosableIteratorImpl<NodeItem>(new ArrayList<NodeItem>().iterator()));
 
-		recentItemsGet.process(element, jid, request, null);
-		IQ response = (IQ) queue.poll();
+        recentItemsGet.process(element, jid, request, null);
+        IQ response = (IQ) queue.poll();
 
-		Assert.assertEquals(IQ.Type.result, response.getType());
-		Element pubsub = response.getChildElement();
-		Assert.assertEquals("pubsub", pubsub.getName());
-		Assert.assertEquals(JabberPubsub.NAMESPACE_URI,
-				pubsub.getNamespaceURI());
-	}
+        Assert.assertEquals(IQ.Type.result, response.getType());
+        Element pubsub = response.getChildElement();
+        Assert.assertEquals("pubsub", pubsub.getName());
+        Assert.assertEquals(JabberPubsub.NAMESPACE_URI, pubsub.getNamespaceURI());
+    }
 
-	@SuppressWarnings("unchecked")
-	@Test
-	public void testOutgoingStanzaFormattedAsExpected() throws Exception {
+    @SuppressWarnings("unchecked")
+    @Test
+    public void testOutgoingStanzaFormattedAsExpected() throws Exception {
 
-		NodeItem item1 = new NodeItemImpl(TEST_NODE_1, "1", new Date(),
-				"<entry>item1</entry>");
-		NodeItem item2 = new NodeItemImpl(TEST_NODE_2, "1", new Date(),
-				"<entry>item2</entry>");
-		NodeItem item3 = new NodeItemImpl(TEST_NODE_1, "2", new Date(),
-				"<entry>item3</entry>");
-		NodeItem item4 = new NodeItemImpl(TEST_NODE_1, "3", new Date(),
-				"<entry>item4</entry>");
+        NodeItem item1 = new NodeItemImpl(TEST_NODE_1, "1", new Date(), "<entry>item1</entry>");
+        NodeItem item2 = new NodeItemImpl(TEST_NODE_2, "1", new Date(), "<entry>item2</entry>");
+        NodeItem item3 = new NodeItemImpl(TEST_NODE_1, "2", new Date(), "<entry>item3</entry>");
+        NodeItem item4 = new NodeItemImpl(TEST_NODE_1, "3", new Date(), "<entry>item4</entry>");
 
-		ArrayList<NodeItem> results = new ArrayList<NodeItem>();
-		results.add(item1);
-		results.add(item2);
-		results.add(item3);
-		results.add(item4);
+        ArrayList<NodeItem> results = new ArrayList<NodeItem>();
+        results.add(item1);
+        results.add(item2);
+        results.add(item3);
+        results.add(item4);
 
-		Mockito.when(
-				channelManager.getRecentItems(Mockito.any(JID.class),
-						Mockito.any(Date.class), Mockito.anyInt(),
-						Mockito.anyInt(), Mockito.any(GlobalItemID.class),
-						Mockito.anyString(), Mockito.anyBoolean())).thenReturn(
-				new ClosableIteratorImpl<NodeItem>(results.iterator()));
+        Mockito.when(
+                channelManager.getRecentItems(Mockito.any(JID.class), Mockito.any(Date.class), Mockito.anyInt(), Mockito.anyInt(),
+                        Mockito.any(GlobalItemID.class), Mockito.anyString(), Mockito.anyBoolean())).thenReturn(
+                new ClosableIteratorImpl<NodeItem>(results.iterator()));
 
-		recentItemsGet.process(element, jid, request, null);
-		IQ response = (IQ) queue.poll();
+        recentItemsGet.process(element, jid, request, null);
+        IQ response = (IQ) queue.poll();
 
-		Assert.assertEquals(IQ.Type.result, response.getType());
-		Element pubsub = response.getChildElement();
-		Assert.assertEquals("pubsub", pubsub.getName());
-		Assert.assertEquals(JabberPubsub.NAMESPACE_URI,
-				pubsub.getNamespaceURI());
+        Assert.assertEquals(IQ.Type.result, response.getType());
+        Element pubsub = response.getChildElement();
+        Assert.assertEquals("pubsub", pubsub.getName());
+        Assert.assertEquals(JabberPubsub.NAMESPACE_URI, pubsub.getNamespaceURI());
 
-		List<Element> items = pubsub.elements("items");
-		Assert.assertEquals(3, items.size());
+        List<Element> items = pubsub.elements("items");
+        Assert.assertEquals(3, items.size());
 
-		Assert.assertEquals(TEST_NODE_1, items.get(0).attributeValue("node"));
-		Assert.assertEquals(TEST_NODE_2, items.get(1).attributeValue("node"));
-		Assert.assertEquals(TEST_NODE_1, items.get(2).attributeValue("node"));
+        Assert.assertEquals(TEST_NODE_1, items.get(0).attributeValue("node"));
+        Assert.assertEquals(TEST_NODE_2, items.get(1).attributeValue("node"));
+        Assert.assertEquals(TEST_NODE_1, items.get(2).attributeValue("node"));
 
-		Assert.assertEquals(1, items.get(0).elements("item").size());
-		Assert.assertEquals(2, items.get(2).elements("item").size());
-	}
+        Assert.assertEquals(1, items.get(0).elements("item").size());
+        Assert.assertEquals(2, items.get(2).elements("item").size());
+    }
 
-	@Test
-	public void testUnparsableItemEntriesAreSimplyIgnored() throws Exception {
+    @Test
+    public void testUnparsableItemEntriesAreSimplyIgnored() throws Exception {
 
-		NodeItem item1 = new NodeItemImpl(TEST_NODE_1, "1", new Date(),
-				"<entry>item1</entry>");
-		NodeItem item2 = new NodeItemImpl(TEST_NODE_1, "2", new Date(),
-				"<entry>item2");
+        NodeItem item1 = new NodeItemImpl(TEST_NODE_1, "1", new Date(), "<entry>item1</entry>");
+        NodeItem item2 = new NodeItemImpl(TEST_NODE_1, "2", new Date(), "<entry>item2");
 
-		ArrayList<NodeItem> results = new ArrayList<NodeItem>();
-		results.add(item1);
-		results.add(item2);
+        ArrayList<NodeItem> results = new ArrayList<NodeItem>();
+        results.add(item1);
+        results.add(item2);
 
-		Mockito.when(
-				channelManager.getRecentItems(Mockito.any(JID.class),
-						Mockito.any(Date.class), Mockito.anyInt(),
-						Mockito.anyInt(), Mockito.any(GlobalItemID.class),
-						Mockito.anyString(), Mockito.anyBoolean())).thenReturn(
-				new ClosableIteratorImpl<NodeItem>(results.iterator()));
+        Mockito.when(
+                channelManager.getRecentItems(Mockito.any(JID.class), Mockito.any(Date.class), Mockito.anyInt(), Mockito.anyInt(),
+                        Mockito.any(GlobalItemID.class), Mockito.anyString(), Mockito.anyBoolean())).thenReturn(
+                new ClosableIteratorImpl<NodeItem>(results.iterator()));
 
-		recentItemsGet.process(element, jid, request, null);
-		IQ response = (IQ) queue.poll();
-		Assert.assertEquals(1, response.getChildElement().element("items")
-				.elements("item").size());
-	}
+        recentItemsGet.process(element, jid, request, null);
+        IQ response = (IQ) queue.poll();
+        Assert.assertEquals(1, response.getChildElement().element("items").elements("item").size());
+    }
 
-	@SuppressWarnings("unchecked")
-	@Test
-	@Ignore
-	public void testCanControlGatheredEntriesUsingRsm() throws Exception {
+    @SuppressWarnings("unchecked")
+    @Test
+    @Ignore
+    public void testCanControlGatheredEntriesUsingRsm() throws Exception {
 
-		NodeItem item1 = new NodeItemImpl(TEST_NODE_1, "node1:1", new Date(0),
-				"<entry>item1</entry>");
-		NodeItem item2 = new NodeItemImpl(TEST_NODE_2, "node2:1", new Date(10),
-				"<entry>item2</entry>");
-		NodeItem item3 = new NodeItemImpl(TEST_NODE_1, "node1:2", new Date(20),
-				"<entry>item3</entry>");
-		NodeItem item4 = new NodeItemImpl(TEST_NODE_1, "node1:3", new Date(30),
-				"<entry>item4</entry>");
+        NodeItem item1 = new NodeItemImpl(TEST_NODE_1, "node1:1", new Date(0), "<entry>item1</entry>");
+        NodeItem item2 = new NodeItemImpl(TEST_NODE_2, "node2:1", new Date(10), "<entry>item2</entry>");
+        NodeItem item3 = new NodeItemImpl(TEST_NODE_1, "node1:2", new Date(20), "<entry>item3</entry>");
+        NodeItem item4 = new NodeItemImpl(TEST_NODE_1, "node1:3", new Date(30), "<entry>item4</entry>");
 
-		ArrayList<NodeItem> results = new ArrayList<NodeItem>();
-		results.add(item1);
-		results.add(item2);
-		results.add(item3);
-		results.add(item4);
+        ArrayList<NodeItem> results = new ArrayList<NodeItem>();
+        results.add(item1);
+        results.add(item2);
+        results.add(item3);
+        results.add(item4);
 
-		Mockito.when(
-				channelManager.getRecentItems(Mockito.any(JID.class),
-						Mockito.any(Date.class), Mockito.anyInt(),
-						Mockito.anyInt(), Mockito.any(GlobalItemID.class),
-						Mockito.anyString(), Mockito.anyBoolean())).thenReturn(
-				new ClosableIteratorImpl<NodeItem>(results.iterator()));
-		Mockito.when(
-				channelManager.getCountRecentItems(Mockito.any(JID.class),
-						Mockito.any(Date.class), Mockito.anyInt(),
-						Mockito.anyString(), Mockito.anyBoolean())).thenReturn(results.size());
+        Mockito.when(
+                channelManager.getRecentItems(Mockito.any(JID.class), Mockito.any(Date.class), Mockito.anyInt(), Mockito.anyInt(),
+                        Mockito.any(GlobalItemID.class), Mockito.anyString(), Mockito.anyBoolean())).thenReturn(
+                new ClosableIteratorImpl<NodeItem>(results.iterator()));
+        Mockito.when(
+                channelManager.getCountRecentItems(Mockito.any(JID.class), Mockito.any(Date.class), Mockito.anyInt(), Mockito.anyString(),
+                        Mockito.anyBoolean())).thenReturn(results.size());
 
-		Element rsm = request.getElement().addElement("rsm");
-		rsm.addNamespace("", RecentItemsGet.NS_RSM);
-		rsm.addElement("max").addText("2");
-		rsm.addElement("after").addText("node1:1");
+        Element rsm = request.getElement().addElement("rsm");
+        rsm.addNamespace("", RecentItemsGet.NS_RSM);
+        rsm.addElement("max").addText("2");
+        rsm.addElement("after").addText("node1:1");
 
-		recentItemsGet.process(element, jid, request, null);
-		IQ response = (IQ) queue.poll();
+        recentItemsGet.process(element, jid, request, null);
+        IQ response = (IQ) queue.poll();
 
-		Assert.assertEquals(IQ.Type.result, response.getType());
-		Element pubsub = response.getChildElement();
-		Assert.assertEquals("pubsub", pubsub.getName());
-		Assert.assertEquals(JabberPubsub.NAMESPACE_URI,
-				pubsub.getNamespaceURI());
+        Assert.assertEquals(IQ.Type.result, response.getType());
+        Element pubsub = response.getChildElement();
+        Assert.assertEquals("pubsub", pubsub.getName());
+        Assert.assertEquals(JabberPubsub.NAMESPACE_URI, pubsub.getNamespaceURI());
 
-		List<Element> items = pubsub.elements("items");
-		Assert.assertEquals(2, items.size());
+        List<Element> items = pubsub.elements("items");
+        Assert.assertEquals(2, items.size());
 
-		Assert.assertEquals(TEST_NODE_2, items.get(0).attributeValue("node"));
-		Assert.assertEquals(TEST_NODE_1, items.get(1).attributeValue("node"));
-		Assert.assertEquals(1, items.get(0).elements("item").size());
-		Assert.assertEquals(1, items.get(1).elements("item").size());
+        Assert.assertEquals(TEST_NODE_2, items.get(0).attributeValue("node"));
+        Assert.assertEquals(TEST_NODE_1, items.get(1).attributeValue("node"));
+        Assert.assertEquals(1, items.get(0).elements("item").size());
+        Assert.assertEquals(1, items.get(1).elements("item").size());
 
-		Element rsmResult = pubsub.element("set");
-		Assert.assertEquals("2", rsmResult.element("count").getText());
-		Assert.assertEquals("node2:1", rsmResult.element("first").getText());
-		Assert.assertEquals("node1:2", rsmResult.element("last").getText());
-	}
-	
-	@SuppressWarnings("serial")
-	@Test
-	public void testPagingAfterItem() throws Exception {
-		Element rsm = new BaseElement(new QName("set", new Namespace("", "http://jabber.org/protocol/rsm")));
-		
-		GlobalItemID itemID = new GlobalItemIDImpl(new JID("capulet.lit"), "/user/juliet@capulet.lit/posts", "item1");
-			
-		rsm.addElement("after").setText(itemID.toString());
-		rsm.addElement("max").setText("5");
-		
-		element.addAttribute("node", node);
-		
-		Mockito.when(channelManager.nodeExists(anyString())).thenReturn(true);
-		
-		Mockito.when(channelManager.getNodeMembership(node, jid)).thenReturn(
-				new NodeMembershipImpl(node, jid, Subscriptions.subscribed, Affiliations.member, null));
-		
-		ArrayList<NodeItem> results = new ArrayList<NodeItem>() {{
-			add(new NodeItemImpl(TEST_NODE_1, "entry1", new Date(System.currentTimeMillis()), "<entry><id>entry1</id></entry>"));
-			add(new NodeItemImpl(TEST_NODE_2, "entry2", new Date(System.currentTimeMillis() - 100), "<entry><id>entry2</id></entry>"));
-		}};
-		
-		Mockito.when(
-				channelManager.getRecentItems(Mockito.any(JID.class),
-						Mockito.any(Date.class), Mockito.anyInt(),
-						Mockito.anyInt(), Mockito.any(GlobalItemID.class),
-						Mockito.anyString(), Mockito.anyBoolean())).thenReturn(
-				new ClosableIteratorImpl<NodeItem>(results.iterator()));
-		Mockito.when(
-				channelManager.getCountRecentItems(Mockito.any(JID.class),
-						Mockito.any(Date.class), Mockito.anyInt(),
-						Mockito.anyString(), Mockito.anyBoolean())).thenReturn(100);
-		
-		recentItemsGet.process(element, jid, request, rsm);
-		
-		verify(channelManager).getRecentItems(eq(jid), any(Date.class), anyInt(), eq(5), eq(itemID), eq("/posts"), Mockito.anyBoolean());
+        Element rsmResult = pubsub.element("set");
+        Assert.assertEquals("2", rsmResult.element("count").getText());
+        Assert.assertEquals("node2:1", rsmResult.element("first").getText());
+        Assert.assertEquals("node1:2", rsmResult.element("last").getText());
+    }
 
-		Packet p = queue.poll(100, TimeUnit.MILLISECONDS);
-		
-		// Check the response has a valid rsm element
-		Element rsmOut = p.getElement().element("pubsub").element("set");
-		
-		assertEquals("Unexpected count returned", "100", rsmOut.element("count").getText());
-		assertEquals("Unexpected first returned", TEST_NODE_1 + ",entry1", rsmOut.element("first").getText());
-		assertEquals("Unexpected last returned", TEST_NODE_2 + ",entry2", rsmOut.element("last").getText());
-	}
-	
-	@Test
-	public void testPagingAfterItemWithInvalidAfterId() throws Exception {
-		Element rsm = new BaseElement(new QName("set", new Namespace("", "http://jabber.org/protocol/rsm")));
-		
-		rsm.addElement("after").setText("this is invalid");
-		
-		element.addAttribute("node", "/user/francisco@denmark.lit/posts");
-		
-		Mockito.when(channelManager.nodeExists(anyString())).thenReturn(true);
-		
-		Mockito.when(channelManager.getNodeMembership(node, jid)).thenReturn(
-				new NodeMembershipImpl(node, jid, Subscriptions.subscribed, Affiliations.member, null));
-		
-		Mockito.when(
-				channelManager.getRecentItems(Mockito.any(JID.class),
-						Mockito.any(Date.class), Mockito.anyInt(),
-						Mockito.anyInt(), Mockito.any(GlobalItemID.class),
-						Mockito.anyString(), Mockito.eq(false))).thenReturn(
-				new ClosableIteratorImpl<NodeItem>(new ArrayList<NodeItem>().iterator()));
-		Mockito.when(
-				channelManager.getCountRecentItems(Mockito.any(JID.class),
-						Mockito.any(Date.class), Mockito.anyInt(),
-						Mockito.anyString(), Mockito.eq(false))).thenReturn(0);
-		
-		recentItemsGet.process(element, jid, request, rsm);
-		
-		Packet p = queue.poll(100, TimeUnit.MILLISECONDS);
-		
-		assertEquals("Error expected", "error", p.getElement().attributeValue("type"));
-	}
-	
-	@Test
-	public void whenRequestingParentOnlyCorrectFlagIsSetOnDatabaseRequest() throws Exception {
-		Element rsm = new BaseElement(new QName("set", new Namespace("", "http://jabber.org/protocol/rsm")));
-		
-				
-		element.addAttribute("node", "/user/francisco@denmark.lit/posts");
-		
-		IQ request = this.request.createCopy();
-		request.getChildElement().element("recent-items").addAttribute("parent-only", "true");
-		
+    @SuppressWarnings("serial")
+    @Test
+    public void testPagingAfterItem() throws Exception {
+        Element rsm = new BaseElement(new QName("set", new Namespace("", "http://jabber.org/protocol/rsm")));
+
+        GlobalItemID itemID = new GlobalItemIDImpl(new JID("capulet.lit"), "/user/juliet@capulet.lit/posts", "item1");
+
+        rsm.addElement("after").setText(itemID.toString());
+        rsm.addElement("max").setText("5");
+
+        element.addAttribute("node", node);
+
         Mockito.when(channelManager.nodeExists(anyString())).thenReturn(true);
-		
-		Mockito.when(channelManager.getNodeMembership(node, jid)).thenReturn(
-				new NodeMembershipImpl(node, jid, Subscriptions.subscribed, Affiliations.member, null));
-		
-		Mockito.when(
-				channelManager.getRecentItems(Mockito.any(JID.class),
-						Mockito.any(Date.class), Mockito.anyInt(),
-						Mockito.anyInt(), Mockito.any(GlobalItemID.class),
-						Mockito.anyString(), Mockito.anyBoolean())).thenReturn(
-				new ClosableIteratorImpl<NodeItem>(new ArrayList<NodeItem>().iterator()));
-		Mockito.when(
-				channelManager.getCountRecentItems(Mockito.any(JID.class),
-						Mockito.any(Date.class), Mockito.anyInt(),
-						Mockito.anyString(), Mockito.anyBoolean())).thenReturn(0);
 
-		recentItemsGet.process(element, jid, request, rsm);
-		
-		Mockito.verify(channelManager, Mockito.times(1)).getRecentItems(Mockito.any(JID.class),
-				Mockito.any(Date.class), Mockito.anyInt(),
-				Mockito.anyInt(), Mockito.any(GlobalItemID.class),
-				Mockito.anyString(), Mockito.eq(true));
-	}
+        Mockito.when(channelManager.getNodeMembership(node, jid)).thenReturn(
+                new NodeMembershipImpl(node, jid, Subscriptions.subscribed, Affiliations.member, null));
+
+        ArrayList<NodeItem> results = new ArrayList<NodeItem>() {
+            {
+                add(new NodeItemImpl(TEST_NODE_1, "entry1", new Date(System.currentTimeMillis()), "<entry><id>entry1</id></entry>"));
+                add(new NodeItemImpl(TEST_NODE_2, "entry2", new Date(System.currentTimeMillis() - 100), "<entry><id>entry2</id></entry>"));
+            }
+        };
+
+        Mockito.when(
+                channelManager.getRecentItems(Mockito.any(JID.class), Mockito.any(Date.class), Mockito.anyInt(), Mockito.anyInt(),
+                        Mockito.any(GlobalItemID.class), Mockito.anyString(), Mockito.anyBoolean())).thenReturn(
+                new ClosableIteratorImpl<NodeItem>(results.iterator()));
+        Mockito.when(
+                channelManager.getCountRecentItems(Mockito.any(JID.class), Mockito.any(Date.class), Mockito.anyInt(), Mockito.anyString(),
+                        Mockito.anyBoolean())).thenReturn(100);
+
+        recentItemsGet.process(element, jid, request, rsm);
+
+        verify(channelManager).getRecentItems(eq(jid), any(Date.class), anyInt(), eq(5), eq(itemID), eq("/posts"), Mockito.anyBoolean());
+
+        Packet p = queue.poll(100, TimeUnit.MILLISECONDS);
+
+        // Check the response has a valid rsm element
+        Element rsmOut = p.getElement().element("pubsub").element("set");
+
+        assertEquals("Unexpected count returned", "100", rsmOut.element("count").getText());
+        assertEquals("Unexpected first returned", TEST_NODE_1 + ",entry1", rsmOut.element("first").getText());
+        assertEquals("Unexpected last returned", TEST_NODE_2 + ",entry2", rsmOut.element("last").getText());
+    }
+
+    @Test
+    public void testPagingAfterItemWithInvalidAfterId() throws Exception {
+        Element rsm = new BaseElement(new QName("set", new Namespace("", "http://jabber.org/protocol/rsm")));
+
+        rsm.addElement("after").setText("this is invalid");
+
+        element.addAttribute("node", "/user/francisco@denmark.lit/posts");
+
+        Mockito.when(channelManager.nodeExists(anyString())).thenReturn(true);
+
+        Mockito.when(channelManager.getNodeMembership(node, jid)).thenReturn(
+                new NodeMembershipImpl(node, jid, Subscriptions.subscribed, Affiliations.member, null));
+
+        Mockito.when(
+                channelManager.getRecentItems(Mockito.any(JID.class), Mockito.any(Date.class), Mockito.anyInt(), Mockito.anyInt(),
+                        Mockito.any(GlobalItemID.class), Mockito.anyString(), Mockito.eq(false))).thenReturn(
+                new ClosableIteratorImpl<NodeItem>(new ArrayList<NodeItem>().iterator()));
+        Mockito.when(
+                channelManager.getCountRecentItems(Mockito.any(JID.class), Mockito.any(Date.class), Mockito.anyInt(), Mockito.anyString(),
+                        Mockito.eq(false))).thenReturn(0);
+
+        recentItemsGet.process(element, jid, request, rsm);
+
+        Packet p = queue.poll(100, TimeUnit.MILLISECONDS);
+
+        assertEquals("Error expected", "error", p.getElement().attributeValue("type"));
+    }
+
+    @Test
+    public void whenRequestingParentOnlyCorrectFlagIsSetOnDatabaseRequest() throws Exception {
+        Element rsm = new BaseElement(new QName("set", new Namespace("", "http://jabber.org/protocol/rsm")));
+
+
+        element.addAttribute("node", "/user/francisco@denmark.lit/posts");
+
+        IQ request = this.request.createCopy();
+        request.getChildElement().element("recent-items").addAttribute("parent-only", "true");
+
+        Mockito.when(channelManager.nodeExists(anyString())).thenReturn(true);
+
+        Mockito.when(channelManager.getNodeMembership(node, jid)).thenReturn(
+                new NodeMembershipImpl(node, jid, Subscriptions.subscribed, Affiliations.member, null));
+
+        Mockito.when(
+                channelManager.getRecentItems(Mockito.any(JID.class), Mockito.any(Date.class), Mockito.anyInt(), Mockito.anyInt(),
+                        Mockito.any(GlobalItemID.class), Mockito.anyString(), Mockito.anyBoolean())).thenReturn(
+                new ClosableIteratorImpl<NodeItem>(new ArrayList<NodeItem>().iterator()));
+        Mockito.when(
+                channelManager.getCountRecentItems(Mockito.any(JID.class), Mockito.any(Date.class), Mockito.anyInt(), Mockito.anyString(),
+                        Mockito.anyBoolean())).thenReturn(0);
+
+        recentItemsGet.process(element, jid, request, rsm);
+
+        Mockito.verify(channelManager, Mockito.times(1)).getRecentItems(Mockito.any(JID.class), Mockito.any(Date.class), Mockito.anyInt(),
+                Mockito.anyInt(), Mockito.any(GlobalItemID.class), Mockito.anyString(), Mockito.eq(true));
+    }
 }

@@ -12,65 +12,63 @@ import org.dom4j.Element;
 import org.xmpp.packet.Message;
 import org.xmpp.packet.Packet;
 
-public class ConfigurationProcessor extends AbstractMessageProcessor  {
- 
-	private Helper helper;
+public class ConfigurationProcessor extends AbstractMessageProcessor {
 
-	private static final Logger logger = Logger
-			.getLogger(ConfigurationProcessor.class);
+    private Helper helper;
 
-	public ConfigurationProcessor(BlockingQueue<Packet> outQueue,
-			Properties configuration, ChannelManager channelManager) {
-		super(channelManager, configuration, outQueue);
-		this.helper = new Helper(channelManager);
-	}
-	
-	public void setConfigurationHelper(Helper helper) {
-		this.helper = helper;
-	}
+    private static final Logger logger = Logger.getLogger(ConfigurationProcessor.class);
 
-	@Override
-	public void process(Message packet) throws Exception {
-		message = packet;
-		getPacketDetails();
+    public ConfigurationProcessor(BlockingQueue<Packet> outQueue, Properties configuration, ChannelManager channelManager) {
+        super(channelManager, configuration, outQueue);
+        this.helper = new Helper(channelManager);
+    }
 
-		if ((null == node) || (true == channelManager.isLocalNode(node))) {
-			return;
-		}
-		sendLocalNotifications(NotificationScheme.validSubscribers);
-		handleDataForm();
-	}
+    public void setConfigurationHelper(Helper helper) {
+        this.helper = helper;
+    }
 
-	private void getPacketDetails() {
-		Element configurationElement = message.getElement().element("event")
-				.element("configuration");
-		if (null == configurationElement) {
-			return;
-		}
-		
-		node = configurationElement.attributeValue("node");
-	}
+    @Override
+    public void process(Message packet) throws Exception {
+        message = packet;
+        getPacketDetails();
 
-	private void handleDataForm() throws NodeStoreException {
-
-		if (true == channelManager.isLocalNode(node)) {
-			return;
-		}
-        setNodeConfiguration();
-	}
-
-	private void setNodeConfiguration() throws NodeStoreException {
-		addRemoteNode();
-		helper.parseEventUpdate(message);
-		channelManager.setNodeConf(node, helper.getValues());	
-	}
-
-	private void addRemoteNode() {
-        try { 
-        	if (false == channelManager.nodeExists(node))
-                channelManager.addRemoteNode(node); 
-        } catch (NodeStoreException e) { 
-        	logger.error(e);
+        if ((null == node) || (true == channelManager.isLocalNode(node))) {
+            return;
         }
-	}
+        sendLocalNotifications(NotificationScheme.validSubscribers);
+        handleDataForm();
+    }
+
+    private void getPacketDetails() {
+        Element configurationElement = message.getElement().element("event").element("configuration");
+        if (null == configurationElement) {
+            return;
+        }
+
+        node = configurationElement.attributeValue("node");
+    }
+
+    private void handleDataForm() throws NodeStoreException {
+
+        if (true == channelManager.isLocalNode(node)) {
+            return;
+        }
+        setNodeConfiguration();
+    }
+
+    private void setNodeConfiguration() throws NodeStoreException {
+        addRemoteNode();
+        helper.parseEventUpdate(message);
+        channelManager.setNodeConf(node, helper.getValues());
+    }
+
+    private void addRemoteNode() {
+        try {
+            if (false == channelManager.nodeExists(node)) {
+                channelManager.addRemoteNode(node);
+            }
+        } catch (NodeStoreException e) {
+            logger.error(e);
+        }
+    }
 }

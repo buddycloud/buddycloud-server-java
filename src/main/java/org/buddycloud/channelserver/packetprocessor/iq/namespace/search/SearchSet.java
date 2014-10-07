@@ -2,7 +2,6 @@ package org.buddycloud.channelserver.packetprocessor.iq.namespace.search;
 
 import java.io.StringReader;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
 
@@ -17,7 +16,6 @@ import org.dom4j.Element;
 import org.dom4j.io.SAXReader;
 import org.dom4j.tree.DefaultElement;
 import org.xmpp.forms.DataForm;
-import org.xmpp.forms.FormField;
 import org.xmpp.packet.IQ;
 import org.xmpp.packet.JID;
 import org.xmpp.packet.Packet;
@@ -25,272 +23,248 @@ import org.xmpp.packet.PacketError;
 
 public class SearchSet implements PacketProcessor<IQ> {
 
-	private ChannelManager channelManager;
-	private BlockingQueue<Packet> outQueue;
-	private IQ responseIq;
-	private Element x;
-	private Element query;
-	private IQ requestIq;
-	private ArrayList<String> content = new ArrayList<String>();
-	private int page = 1;
-	private int rpp = 25;
-	private JID author;
-	private JID searcher;
-	
-	public static Logger logger = Logger.getLogger(SearchSet.class);
+    private ChannelManager channelManager;
+    private BlockingQueue<Packet> outQueue;
+    private IQ responseIq;
+    private Element x;
+    private IQ requestIq;
+    private ArrayList<String> content = new ArrayList<String>();
+    private int page = 1;
+    private int rpp = 25;
+    private JID author;
+    private JID searcher;
 
-	public SearchSet(BlockingQueue<Packet> outQueue,
-			ChannelManager channelManager) {
-		this.channelManager = channelManager;
-		this.outQueue = outQueue;
-	}
+    public static Logger logger = Logger.getLogger(SearchSet.class);
 
-	@Override
-	public void process(IQ request) throws Exception {
-		searcher = request.getFrom();
-		responseIq = IQ.createResultIQ(request);
-		this.requestIq = request;
+    public SearchSet(BlockingQueue<Packet> outQueue, ChannelManager channelManager) {
+        this.channelManager = channelManager;
+        this.outQueue = outQueue;
+    }
 
-		if (false == isValidRequest()) {
-			return;
-		}
+    @Override
+    public void process(IQ request) throws Exception {
+        searcher = request.getFrom();
+        responseIq = IQ.createResultIQ(request);
+        this.requestIq = request;
 
-		if (false == processForm()) {
-			return;
-		}
+        if (false == isValidRequest()) {
+            return;
+        }
 
-		try {
-			runSearch();
-		} catch (NodeStoreException e) {
-			sendErrorResponse(PacketError.Type.wait,
-					PacketError.Condition.internal_server_error);
-			return;
-		}
+        if (false == processForm()) {
+            return;
+        }
 
-		outQueue.put(responseIq);
-	}
+        try {
+            runSearch();
+        } catch (NodeStoreException e) {
+            sendErrorResponse(PacketError.Type.wait, PacketError.Condition.internal_server_error);
+            return;
+        }
 
-	private boolean isValidRequest() throws Exception {
+        outQueue.put(responseIq);
+    }
 
-		if (false == channelManager.isLocalJID(searcher)) {
-			sendErrorResponse(PacketError.Type.cancel,
-					PacketError.Condition.not_allowed);
-			return false;
-		}
+    private boolean isValidRequest() throws Exception {
 
-		if (false == hasDataForm() || false == dataFormCorrect()) {
-			return false;
-		}
+        if (false == channelManager.isLocalJID(searcher)) {
+            sendErrorResponse(PacketError.Type.cancel, PacketError.Condition.not_allowed);
+            return false;
+        }
 
-		return true;
-	}
+        if (false == hasDataForm() || false == dataFormCorrect()) {
+            return false;
+        }
 
-	private boolean hasDataForm() throws Exception {
-		x = requestIq.getElement().element("query").element("x");
+        return true;
+    }
 
-		if (null == x || !DataForm.NAMESPACE.equals(x.getNamespaceURI())
-				|| !"submit".equals(x.attributeValue("type"))) {
-			sendErrorResponse(PacketError.Type.modify,
-					PacketError.Condition.bad_request);
-			return false;
-		}
+    private boolean hasDataForm() throws Exception {
+        x = requestIq.getElement().element("query").element("x");
 
-		return true;
-	}
+        if (null == x || !DataForm.NAMESPACE.equals(x.getNamespaceURI()) || !"submit".equals(x.attributeValue("type"))) {
+            sendErrorResponse(PacketError.Type.modify, PacketError.Condition.bad_request);
+            return false;
+        }
 
-	private boolean dataFormCorrect() throws Exception {
-		if (!hasCorrectFormElement() || !hasEnoughFormFields()) {
-			sendErrorResponse(PacketError.Type.modify,
-					PacketError.Condition.bad_request);
-			return false;
-		}
+        return true;
+    }
 
-		return true;
-	}
+    private boolean dataFormCorrect() throws Exception {
+        if (!hasCorrectFormElement() || !hasEnoughFormFields()) {
+            sendErrorResponse(PacketError.Type.modify, PacketError.Condition.bad_request);
+            return false;
+        }
 
-	private boolean hasCorrectFormElement() throws Exception {
+        return true;
+    }
 
-		List<Element> elements = x.elements("field");
+    private boolean hasCorrectFormElement() throws Exception {
 
-		if (elements.size() > 0) {
-			for (Element field : elements) {
-				if (!"FORM_TYPE".equals(field.attributeValue("var"))) {
-					continue;
-				}
+        List<Element> elements = x.elements("field");
 
-				String value = field.elementText("value");
+        if (elements.size() > 0) {
+            for (Element field : elements) {
+                if (!"FORM_TYPE".equals(field.attributeValue("var"))) {
+                    continue;
+                }
 
-				if (null == value || !Search.NAMESPACE_URI.equals(value)) {
-					return false;
-				}
+                String value = field.elementText("value");
 
-				return true;
-			}
-		}
+                if (null == value || !Search.NAMESPACE_URI.equals(value)) {
+                    return false;
+                }
 
-		return false;
-	}
+                return true;
+            }
+        }
 
-	private boolean hasEnoughFormFields() throws Exception {
-		List<Element> elements = x.elements("field");
-		if (elements.size() < 2) {
-			return false;
-		}
+        return false;
+    }
 
-		boolean hasContentOrAuthor = false;
+    private boolean hasEnoughFormFields() throws Exception {
+        List<Element> elements = x.elements("field");
+        if (elements.size() < 2) {
+            return false;
+        }
 
-		String var;
-		for (Element field : elements) {
-			var = field.attributeValue("var");
-			if ("content".equals(var) || "author".equals(var)) {
-				hasContentOrAuthor = true;
-			}
-		}
+        boolean hasContentOrAuthor = false;
 
-		return hasContentOrAuthor;
-	}
+        String var;
+        for (Element field : elements) {
+            var = field.attributeValue("var");
+            if ("content".equals(var) || "author".equals(var)) {
+                hasContentOrAuthor = true;
+            }
+        }
 
-	private boolean processForm() throws Exception {
-		try {
-			extractFieldValues();
-		} catch (NumberFormatException e) {
-			return false;
-		}
+        return hasContentOrAuthor;
+    }
 
-		if (false == checkFieldValues()) {
-			return false;
-		}
+    private boolean processForm() throws Exception {
+        try {
+            extractFieldValues();
+        } catch (NumberFormatException e) {
+            return false;
+        }
 
-		return true;
-	}
+        if (false == checkFieldValues()) {
+            return false;
+        }
 
-	private void runSearch() throws NodeStoreException {
-		CloseableIterator<NodeItem> results = channelManager.performSearch(
-				searcher, content, author, page, rpp);
+        return true;
+    }
 
-		Element query = responseIq.getElement().addElement("query");
-		query.addAttribute("xmlns", Search.NAMESPACE_URI);
+    private void runSearch() throws NodeStoreException {
+        CloseableIterator<NodeItem> results = channelManager.performSearch(searcher, content, author, page, rpp);
 
-		Element x = new DefaultElement("x");
-		int resultCounter = 0;
-		NodeItem nodeItem;
-		Element entry;
+        Element query = responseIq.getElement().addElement("query");
+        query.addAttribute("xmlns", Search.NAMESPACE_URI);
 
-		SAXReader xmlReader = new SAXReader();
-		while (results.hasNext()) {
-			if (0 == resultCounter) {
-				addFormField(x);
-				addReportedFields(x);
-			}
+        Element x = new DefaultElement("x");
+        int resultCounter = 0;
+        NodeItem nodeItem;
+        Element entry;
 
-			nodeItem = results.next();
+        SAXReader xmlReader = new SAXReader();
+        while (results.hasNext()) {
+            if (0 == resultCounter) {
+                addFormField(x);
+                addReportedFields(x);
+            }
 
-			try {
-				entry = xmlReader.read(new StringReader(nodeItem.getPayload()))
-						.getRootElement();
+            nodeItem = results.next();
 
-				Element item = x.addElement("item");
+            try {
+                entry = xmlReader.read(new StringReader(nodeItem.getPayload())).getRootElement();
 
-				item.addElement("field").addAttribute("var", "node")
-						.addElement("value").setText(nodeItem.getNodeId());
+                Element item = x.addElement("item");
 
-				item.addElement("field").addAttribute("var", "id")
-						.addElement("value").setText(nodeItem.getId());
+                item.addElement("field").addAttribute("var", "node").addElement("value").setText(nodeItem.getNodeId());
 
-				item.addElement("field").addAttribute("var", "entry")
-						.addElement("value").add(entry);
-			} catch (DocumentException e) {
-				logger.error("Error parsing a node entry, ignoring. "
-				 + nodeItem);
-			}
+                item.addElement("field").addAttribute("var", "id").addElement("value").setText(nodeItem.getId());
 
-			resultCounter++;
-		}
+                item.addElement("field").addAttribute("var", "entry").addElement("value").add(entry);
+            } catch (DocumentException e) {
+                logger.error("Error parsing a node entry, ignoring. " + nodeItem);
+            }
 
-		if (resultCounter > 0) {
-			query.add(x);
-		}
+            resultCounter++;
+        }
 
-	}
+        if (resultCounter > 0) {
+            query.add(x);
+        }
 
-	private void addFormField(Element x) {
-		x.addElement("field").addAttribute("type", "hidden")
-				.addAttribute("var", "FORM_TYPE").addElement("value")
-				.setText(Search.NAMESPACE_URI);
-	}
+    }
 
-	private void addReportedFields(Element x) {
-		Element reported = x.addElement("reported");
+    private void addFormField(Element x) {
+        x.addElement("field").addAttribute("type", "hidden").addAttribute("var", "FORM_TYPE").addElement("value").setText(Search.NAMESPACE_URI);
+    }
 
-		reported.addElement("field").addAttribute("var", "node")
-				.addAttribute("label", "Node")
-				.addAttribute("type", "text-single");
+    private void addReportedFields(Element x) {
+        Element reported = x.addElement("reported");
 
-		reported.addElement("field").addAttribute("var", "id")
-				.addAttribute("label", "Item ID")
-				.addAttribute("type", "text-single");
+        reported.addElement("field").addAttribute("var", "node").addAttribute("label", "Node").addAttribute("type", "text-single");
 
-		reported.addElement("field").addAttribute("var", "entry")
-				.addAttribute("label", "Item").addAttribute("type", "xml");
-	}
+        reported.addElement("field").addAttribute("var", "id").addAttribute("label", "Item ID").addAttribute("type", "text-single");
 
-	private void extractFieldValues() {
-		List<Element> elements = x.elements("field");
-		String var;
-		for (Element field : elements) {
-			var = field.attributeValue("var");
-			if ("content".equals(var)) {
-				content = getValuesAsList(field);
-			} else if ("author".equals(var)) {
-				String authorStr = field.elementText("value");
-				if (authorStr.length() > 0) {
-					author = new JID(authorStr);
-				}
-			} else if ("page".equals(var)) {
-				page = getValueAsNumber(field);
-			} else if ("rpp".equals(var)) {
-				rpp = getValueAsNumber(field);
-			}
-		}
-	}
+        reported.addElement("field").addAttribute("var", "entry").addAttribute("label", "Item").addAttribute("type", "xml");
+    }
 
-	private boolean checkFieldValues() throws Exception {
-		if (((null != content && content.size() > 0) || (null != author && author
-				.toBareJID().length() > 0)) && (page > 0 && rpp > 0)) {
-			return true;
-		}
+    private void extractFieldValues() {
+        List<Element> elements = x.elements("field");
+        String var;
+        for (Element field : elements) {
+            var = field.attributeValue("var");
+            if ("content".equals(var)) {
+                content = getValuesAsList(field);
+            } else if ("author".equals(var)) {
+                String authorStr = field.elementText("value");
+                if (authorStr.length() > 0) {
+                    author = new JID(authorStr);
+                }
+            } else if ("page".equals(var)) {
+                page = getValueAsNumber(field);
+            } else if ("rpp".equals(var)) {
+                rpp = getValueAsNumber(field);
+            }
+        }
+    }
 
-		sendErrorResponse(PacketError.Type.modify,
-				PacketError.Condition.bad_request);
-		return false;
+    private boolean checkFieldValues() throws Exception {
+        if (((null != content && content.size() > 0) || (null != author && author.toBareJID().length() > 0)) && (page > 0 && rpp > 0)) {
+            return true;
+        }
 
-	}
+        sendErrorResponse(PacketError.Type.modify, PacketError.Condition.bad_request);
+        return false;
 
-	private ArrayList<String> getValuesAsList(Element field) {
-		ArrayList<String> rtn = new ArrayList<String>();
-		String valueText;
-		for (Element value : (List<Element>) field.elements("value")) {
-			valueText = value.getText();
-			if (valueText.length() == 0) {
-				continue;
-			}
-			rtn.add(valueText);
-		}
-		return rtn;
-	}
+    }
 
-	private Integer getValueAsNumber(Element field)
-			throws NumberFormatException {
-		String valueStr = field.elementText("value");
-		return Integer.parseInt(valueStr);
-	}
+    private ArrayList<String> getValuesAsList(Element field) {
+        ArrayList<String> rtn = new ArrayList<String>();
+        String valueText;
+        for (Element value : (List<Element>) field.elements("value")) {
+            valueText = value.getText();
+            if (valueText.length() == 0) {
+                continue;
+            }
+            rtn.add(valueText);
+        }
+        return rtn;
+    }
 
-	private void sendErrorResponse(PacketError.Type type,
-			PacketError.Condition condition) throws InterruptedException {
-		responseIq.setType(IQ.Type.error);
-		PacketError error = new PacketError(condition, type);
-		responseIq.setError(error);
+    private Integer getValueAsNumber(Element field) throws NumberFormatException {
+        String valueStr = field.elementText("value");
+        return Integer.parseInt(valueStr);
+    }
 
-		outQueue.put(responseIq);
-	}
+    private void sendErrorResponse(PacketError.Type type, PacketError.Condition condition) throws InterruptedException {
+        responseIq.setType(IQ.Type.error);
+        PacketError error = new PacketError(condition, type);
+        responseIq.setError(error);
+
+        outQueue.put(responseIq);
+    }
 }

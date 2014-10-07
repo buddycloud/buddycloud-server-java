@@ -6,9 +6,9 @@ import org.junit.Test;
 
 public class NodeAffiliationImplTest {
 
-	@Test
-	public void testEquals() {
-		EqualsVerifier.forClass(NodeAffiliationImpl.class).verify();
-	}
+    @Test
+    public void testEquals() {
+        EqualsVerifier.forClass(NodeAffiliationImpl.class).verify();
+    }
 
 }

@@ -2,6 +2,7 @@ package org.buddycloud.channelserver.packetprocessor.iq.namespace;
 
 import java.util.Properties;
 import java.util.concurrent.BlockingQueue;
+
 import org.apache.log4j.Logger;
 import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.packetprocessor.PacketProcessor;
@@ -12,101 +13,92 @@ import org.xmpp.packet.PacketError;
 
 public abstract class AbstractNamespace implements PacketProcessor<IQ> {
 
-	private static final Logger logger = Logger
-			.getLogger(AbstractNamespace.class);
+    private static final Logger logger = Logger.getLogger(AbstractNamespace.class);
 
-	private BlockingQueue<Packet> outQueue;
-	private Properties conf;
-	private ChannelManager channelManager;
+    private BlockingQueue<Packet> outQueue;
+    private Properties conf;
+    private ChannelManager channelManager;
 
-	public AbstractNamespace(BlockingQueue<Packet> outQueue, Properties conf,
-			ChannelManager channelManager) {
-		logger.trace("In " + this.getClass().getName());
-		this.outQueue = outQueue;
-		this.conf = conf;
-		this.channelManager = channelManager;
-	}
+    public AbstractNamespace(BlockingQueue<Packet> outQueue, Properties conf, ChannelManager channelManager) {
+        logger.trace("In " + this.getClass().getName());
+        this.outQueue = outQueue;
+        this.conf = conf;
+        this.channelManager = channelManager;
+    }
 
-	protected abstract PacketProcessor<IQ> get();
+    protected abstract PacketProcessor<IQ> get();
 
-	protected abstract PacketProcessor<IQ> set();
+    protected abstract PacketProcessor<IQ> set();
 
-	protected abstract PacketProcessor<IQ> result();
+    protected abstract PacketProcessor<IQ> result();
 
-	protected abstract PacketProcessor<IQ> error();
+    protected abstract PacketProcessor<IQ> error();
 
-	@Override
-	public void process(IQ reqIQ) throws Exception {
+    @Override
+    public void process(IQ reqIQ) throws Exception {
 
-		PacketProcessor<IQ> processor = null;
+        PacketProcessor<IQ> processor = null;
 
-		logger.info("Using processor for packet type: " + reqIQ.getType().toString());
-		switch (reqIQ.getType()) {
-			case get:
-				processor = get();
-				break;
-			case set:
-				processor = set();
-				break;
-			case result:
-				processor = result();
-				break;
-			case error:
-				processor = error();
-				break;
-			default:
-				break;
-		}
+        logger.info("Using processor for packet type: " + reqIQ.getType().toString());
+        switch (reqIQ.getType()) {
+            case get:
+                processor = get();
+                break;
+            case set:
+                processor = set();
+                break;
+            case result:
+                processor = result();
+                break;
+            case error:
+                processor = error();
+                break;
+            default:
+                break;
+        }
 
-		if (processor != null) {
-			processor.process(reqIQ);
-			return;
-		}
+        if (processor != null) {
+            processor.process(reqIQ);
+            return;
+        }
 
-		if (reqIQ.getType().equals(IQ.Type.error)
-				|| reqIQ.getType().equals(IQ.Type.result)) {
-//			handleStateReply(reqIQ);
-		} else {
-			handleUnexpectedRequest(reqIQ);
-		}
-	}
+        if (reqIQ.getType().equals(IQ.Type.error) || reqIQ.getType().equals(IQ.Type.result)) {
+            // handleStateReply(reqIQ);
+        } else {
+            handleUnexpectedRequest(reqIQ);
+        }
+    }
 
-	private void handleUnexpectedRequest(IQ reqIQ) throws InterruptedException {
-		IQ reply = IQ.createResultIQ(reqIQ);
-		reply.setChildElement(reqIQ.getChildElement().createCopy());
-		reply.setType(Type.error);
-		PacketError pe = new PacketError(
-				PacketError.Condition.unexpected_request, PacketError.Type.wait);
-		reply.setError(pe);
+    private void handleUnexpectedRequest(IQ reqIQ) throws InterruptedException {
+        IQ reply = IQ.createResultIQ(reqIQ);
+        reply.setChildElement(reqIQ.getChildElement().createCopy());
+        reply.setType(Type.error);
+        PacketError pe = new PacketError(PacketError.Condition.unexpected_request, PacketError.Type.wait);
+        reply.setError(pe);
 
-		outQueue.put(reply);
-	}
+        outQueue.put(reply);
+    }
 
-	private void handleStateReply(IQ reqIQ) throws InterruptedException {
-		// TODO
-/*
-		// This might be a reply to a state we are on.
-		Map<String, String> state = channelManager.getState(reqIQ.getID());
-		if (state != null && !state.isEmpty()) {
-			IStatemachine sm = StateMachineBuilder.buildFromState(reqIQ, state,
-					channelManager);
-			outQueue.put(sm.nextStep());
-		} else {
-			logger.error("This result was not handled in any way: '"
-					+ reqIQ.toXML() + "'.");
-		}
-*/
-	}
+    private void handleStateReply(IQ reqIQ) throws InterruptedException {
+        // TODO
+        /*
+         * // This might be a reply to a state we are on. Map<String, String> state =
+         * channelManager.getState(reqIQ.getID()); if (state != null && !state.isEmpty()) {
+         * IStatemachine sm = StateMachineBuilder.buildFromState(reqIQ, state, channelManager);
+         * outQueue.put(sm.nextStep()); } else {
+         * logger.error("This result was not handled in any way: '" + reqIQ.toXML() + "'."); }
+         */
+    }
 
-	protected ChannelManager getChannelManager() {
-		return channelManager;
-	}
+    protected ChannelManager getChannelManager() {
+        return channelManager;
+    }
 
-	protected BlockingQueue<Packet> getOutQueue() {
-		return outQueue;
-	}
+    protected BlockingQueue<Packet> getOutQueue() {
+        return outQueue;
+    }
 
-	public Properties getConf() {
-		return conf;
-	}
+    public Properties getConf() {
+        return conf;
+    }
 }

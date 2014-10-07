@@ -29,117 +29,106 @@ import org.xmpp.packet.PacketError;
 
 public class UserSingleItemGetTest extends IQTestHandler {
 
-	private IQ request;
-	private NodeItemsGet itemsGet;
-	private Element element;
-	private BlockingQueue<Packet> queue = new LinkedBlockingQueue<Packet>();
+    private IQ request;
+    private NodeItemsGet itemsGet;
+    private Element element;
+    private BlockingQueue<Packet> queue = new LinkedBlockingQueue<Packet>();
 
-	private String node = "/user/francisco@denmark.lit/posts";
-	private JID jid = new JID("francisco@denmark.lit");
-	private ChannelManager channelManager;
-	private NodeViewAcl nodeViewAcl;
+    private String node = "/user/francisco@denmark.lit/posts";
+    private JID jid = new JID("francisco@denmark.lit");
+    private ChannelManager channelManager;
+    private NodeViewAcl nodeViewAcl;
 
-	@Before
-	public void setUp() throws Exception {
+    @Before
+    public void setUp() throws Exception {
 
-		queue = new LinkedBlockingQueue<Packet>();
-		itemsGet = new NodeItemsGet(queue, channelManager);
-		request = readStanzaAsIq("/iq/pubsub/items/requestSingleItem.stanza");
-		element = request.getElement().element("pubsub").element("items");
+        queue = new LinkedBlockingQueue<Packet>();
+        itemsGet = new NodeItemsGet(queue, channelManager);
+        request = readStanzaAsIq("/iq/pubsub/items/requestSingleItem.stanza");
+        element = request.getElement().element("pubsub").element("items");
 
-		channelManager = Mockito.mock(ChannelManager.class);
-		
-		Mockito.when(channelManager.nodeExists(node)).thenReturn(true);
-		Mockito.when(channelManager.isLocalNode(Mockito.anyString()))
-				.thenReturn(true);
-		Mockito.when(channelManager.isLocalJID(Mockito.any(JID.class)))
-				.thenReturn(true);
-		
-		Mockito.when(channelManager.getNodeMembership(node, jid)).thenReturn(
-				new NodeMembershipImpl(node, jid, Subscriptions.subscribed, Affiliations.member, null));
-		nodeViewAcl = Mockito.mock(NodeViewAcl.class);
-		Mockito.doReturn(true)
-				.when(nodeViewAcl)
-				.canViewNode(Mockito.anyString(),
-						Mockito.any(NodeMembership.class),
-						Mockito.any(AccessModels.class), Mockito.anyBoolean());
-		itemsGet.setNodeViewAcl(nodeViewAcl);
-		
-		itemsGet.setChannelManager(channelManager);
-	}
+        channelManager = Mockito.mock(ChannelManager.class);
 
-	@Test
-	public void testPassingItemsAsElementNameReturnsTrue() {
-		Assert.assertTrue(itemsGet.accept(element));
-	}
-	
-	@Test
-	public void testInexistentNode() throws Exception {
-		Assert.assertTrue(itemsGet.accept(element));
-		itemsGet.process(element, jid, request, null);
-		Packet response = queue.poll();
-		
-		PacketError error = response.getError();
-		Assert.assertNotNull(error);
-		Assert.assertEquals(PacketError.Type.cancel, error.getType());
-		Assert.assertEquals(PacketError.Condition.item_not_found,
-				error.getCondition());
-	}
+        Mockito.when(channelManager.nodeExists(node)).thenReturn(true);
+        Mockito.when(channelManager.isLocalNode(Mockito.anyString())).thenReturn(true);
+        Mockito.when(channelManager.isLocalJID(Mockito.any(JID.class))).thenReturn(true);
 
-	@Test
-	public void unableToReadNode() throws Exception {
-		
-		NodeAclRefuseReason reason = Mockito.mock(NodeAclRefuseReason.class);
-		Mockito.when(reason.getType()).thenReturn(PacketError.Type.auth);
-		Mockito.when(reason.getCondition()).thenReturn(PacketError.Condition.forbidden);
-		
-		Mockito.doReturn(false)
-		.when(nodeViewAcl)
-		.canViewNode(Mockito.anyString(),
-				Mockito.any(NodeMembership.class),
-				Mockito.any(AccessModels.class), Mockito.anyBoolean());
-		Mockito.when(nodeViewAcl.getReason()).thenReturn(reason);
+        Mockito.when(channelManager.getNodeMembership(node, jid)).thenReturn(
+                new NodeMembershipImpl(node, jid, Subscriptions.subscribed, Affiliations.member, null));
+        nodeViewAcl = Mockito.mock(NodeViewAcl.class);
+        Mockito.doReturn(true).when(nodeViewAcl)
+                .canViewNode(Mockito.anyString(), Mockito.any(NodeMembership.class), Mockito.any(AccessModels.class), Mockito.anyBoolean());
+        itemsGet.setNodeViewAcl(nodeViewAcl);
 
-		itemsGet.process(element, jid, request, null);
-		Packet response = queue.poll();
+        itemsGet.setChannelManager(channelManager);
+    }
 
-		PacketError error = response.getError();
-		Assert.assertNotNull(error);
-		Assert.assertEquals(PacketError.Type.auth, error.getType());
-		Assert.assertEquals(PacketError.Condition.forbidden,
-				error.getCondition());
-	}
-	
-	@Test
-	public void inexistentItem() throws Exception {
+    @Test
+    public void testPassingItemsAsElementNameReturnsTrue() {
+        Assert.assertTrue(itemsGet.accept(element));
+    }
 
-		itemsGet.process(element, jid, request, null);
-		Packet response = queue.poll();
-		
-		PacketError error = response.getError();
-		Assert.assertNotNull(error);
-		Assert.assertEquals(PacketError.Type.cancel, error.getType());
-		Assert.assertEquals(PacketError.Condition.item_not_found,
-				error.getCondition());
-	}
-	
-	@Test
-	public void existentItemCheckNamespace() throws Exception {
+    @Test
+    public void testInexistentNode() throws Exception {
+        Assert.assertTrue(itemsGet.accept(element));
+        itemsGet.process(element, jid, request, null);
+        Packet response = queue.poll();
 
-		
-		final String itemId = "item1Id";
-		NodeItem nodeItem = new NodeItemImpl(node, itemId, new Date(), "<payload/>");
-		Mockito.when(channelManager.getNodeItem(node, itemId)).thenReturn(nodeItem);
-		
-		itemsGet.process(element, jid, request, null);
-		Packet response = queue.poll();
-		
-		Assert.assertNull(response.getError());
-		Element pubsubEl = response.getElement().element("pubsub");
-		Assert.assertEquals(JabberPubsub.NAMESPACE_URI, pubsubEl.getNamespaceURI());
-		Element itemsEl = pubsubEl.element("items");
-		Assert.assertEquals(JabberPubsub.NAMESPACE_URI, itemsEl.getNamespaceURI());
-		Element itemEl = itemsEl.element("item");
-		Assert.assertEquals(JabberPubsub.NAMESPACE_URI, itemEl.getNamespaceURI());
-	}
+        PacketError error = response.getError();
+        Assert.assertNotNull(error);
+        Assert.assertEquals(PacketError.Type.cancel, error.getType());
+        Assert.assertEquals(PacketError.Condition.item_not_found, error.getCondition());
+    }
+
+    @Test
+    public void unableToReadNode() throws Exception {
+
+        NodeAclRefuseReason reason = Mockito.mock(NodeAclRefuseReason.class);
+        Mockito.when(reason.getType()).thenReturn(PacketError.Type.auth);
+        Mockito.when(reason.getCondition()).thenReturn(PacketError.Condition.forbidden);
+
+        Mockito.doReturn(false).when(nodeViewAcl)
+                .canViewNode(Mockito.anyString(), Mockito.any(NodeMembership.class), Mockito.any(AccessModels.class), Mockito.anyBoolean());
+        Mockito.when(nodeViewAcl.getReason()).thenReturn(reason);
+
+        itemsGet.process(element, jid, request, null);
+        Packet response = queue.poll();
+
+        PacketError error = response.getError();
+        Assert.assertNotNull(error);
+        Assert.assertEquals(PacketError.Type.auth, error.getType());
+        Assert.assertEquals(PacketError.Condition.forbidden, error.getCondition());
+    }
+
+    @Test
+    public void inexistentItem() throws Exception {
+
+        itemsGet.process(element, jid, request, null);
+        Packet response = queue.poll();
+
+        PacketError error = response.getError();
+        Assert.assertNotNull(error);
+        Assert.assertEquals(PacketError.Type.cancel, error.getType());
+        Assert.assertEquals(PacketError.Condition.item_not_found, error.getCondition());
+    }
+
+    @Test
+    public void existentItemCheckNamespace() throws Exception {
+
+
+        final String itemId = "item1Id";
+        NodeItem nodeItem = new NodeItemImpl(node, itemId, new Date(), "<payload/>");
+        Mockito.when(channelManager.getNodeItem(node, itemId)).thenReturn(nodeItem);
+
+        itemsGet.process(element, jid, request, null);
+        Packet response = queue.poll();
+
+        Assert.assertNull(response.getError());
+        Element pubsubEl = response.getElement().element("pubsub");
+        Assert.assertEquals(JabberPubsub.NAMESPACE_URI, pubsubEl.getNamespaceURI());
+        Element itemsEl = pubsubEl.element("items");
+        Assert.assertEquals(JabberPubsub.NAMESPACE_URI, itemsEl.getNamespaceURI());
+        Element itemEl = itemsEl.element("item");
+        Assert.assertEquals(JabberPubsub.NAMESPACE_URI, itemEl.getNamespaceURI());
+    }
 }

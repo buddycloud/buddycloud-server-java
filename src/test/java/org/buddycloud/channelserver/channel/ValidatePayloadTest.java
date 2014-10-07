@@ -17,67 +17,55 @@ import org.mockito.Mockito;
 
 public class ValidatePayloadTest extends TestHandler {
 
-	private ValidatePayload validator;
-	private ChannelManager channelManager;
-	private String node = "/user/doc@outati.me/posts";
-	
-	@Before
-	public void setUp() throws Exception {
+    private ValidatePayload validator;
+    private ChannelManager channelManager;
+    private String node = "/user/doc@outati.me/posts";
 
-		channelManager = Mockito.mock(ChannelManager.class);
-		
-		Mockito.when(
-				channelManager.getNodeConfValue(node, ContentType.FIELD_NAME))
-				  .thenReturn(Atom.NS);
-		
-		validator = new ValidatePayload(channelManager, node);
-	}
-	
-	@Test
-	public void whenContentTypeIsAtomNsThenAtomValidatorReturned() throws Exception {
-		Assert.assertTrue(validator.getValidator() instanceof AtomEntry);
-	}
-	
-	@Test
-	public void nullContentTypeFieldRetunsAtomValidator() throws Exception {
-		Mockito.when(
-				channelManager.getNodeConfValue(node, ContentType.FIELD_NAME))
-				  .thenReturn(null);
-		Assert.assertTrue(validator.getValidator() instanceof AtomEntry);
-	}
-	
-	@Test(expected=UnknownContentTypeException.class)
-	public void unknownContentTypeThrowsException() throws Exception {
-		Mockito.when(
-				channelManager.getNodeConfValue(node, ContentType.FIELD_NAME))
-				  .thenReturn(Atom.NS_THREAD);
-		validator.getValidator();
-	}
-	
-	@Test(expected=NodeStoreException.class)
-	public void throwsNodeStoreException() throws Exception {
-		Mockito.when(
-				channelManager.getNodeConfValue(node, ContentType.FIELD_NAME))
-				  .thenThrow(new NodeStoreException());
-		validator.getValidator();
-	}
+    @Before
+    public void setUp() throws Exception {
 
-	@Test(expected=UnknownContentTypeException.class)
-	public void looksForForAppropriateValidatorInPlugins() throws Exception {
-	    Mockito.when(
-	            channelManager.getNodeConfValue(node, ContentType.FIELD_NAME))
-	            .thenReturn("any-strange-content-type");
+        channelManager = Mockito.mock(ChannelManager.class);
 
-	    PluginManager pm = Mockito.mock(PluginManager.class);
-	    OptionCapabilities capabilities = Mockito.mock(OptionCapabilities.class);
+        Mockito.when(channelManager.getNodeConfValue(node, ContentType.FIELD_NAME)).thenReturn(Atom.NS);
 
-	       Mockito.when(
-	               capabilities.getCapabilities())
-	                .thenReturn( new String[] {"any-strange-content-type"});
+        validator = new ValidatePayload(channelManager, node);
+    }
 
-	    validator.setPluginManager(pm);
-	    validator.getValidator();
+    @Test
+    public void whenContentTypeIsAtomNsThenAtomValidatorReturned() throws Exception {
+        Assert.assertTrue(validator.getValidator() instanceof AtomEntry);
+    }
 
-	    Mockito.verify(pm, Mockito.times(1)).getPlugin(PayloadValidator.class, capabilities);
-	}
+    @Test
+    public void nullContentTypeFieldRetunsAtomValidator() throws Exception {
+        Mockito.when(channelManager.getNodeConfValue(node, ContentType.FIELD_NAME)).thenReturn(null);
+        Assert.assertTrue(validator.getValidator() instanceof AtomEntry);
+    }
+
+    @Test(expected = UnknownContentTypeException.class)
+    public void unknownContentTypeThrowsException() throws Exception {
+        Mockito.when(channelManager.getNodeConfValue(node, ContentType.FIELD_NAME)).thenReturn(Atom.NS_THREAD);
+        validator.getValidator();
+    }
+
+    @Test(expected = NodeStoreException.class)
+    public void throwsNodeStoreException() throws Exception {
+        Mockito.when(channelManager.getNodeConfValue(node, ContentType.FIELD_NAME)).thenThrow(new NodeStoreException());
+        validator.getValidator();
+    }
+
+    @Test(expected = UnknownContentTypeException.class)
+    public void looksForForAppropriateValidatorInPlugins() throws Exception {
+        Mockito.when(channelManager.getNodeConfValue(node, ContentType.FIELD_NAME)).thenReturn("any-strange-content-type");
+
+        PluginManager pm = Mockito.mock(PluginManager.class);
+        OptionCapabilities capabilities = Mockito.mock(OptionCapabilities.class);
+
+        Mockito.when(capabilities.getCapabilities()).thenReturn(new String[] {"any-strange-content-type"});
+
+        validator.setPluginManager(pm);
+        validator.getValidator();
+
+        Mockito.verify(pm, Mockito.times(1)).getPlugin(PayloadValidator.class, capabilities);
+    }
 }

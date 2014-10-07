@@ -12,38 +12,44 @@ import org.xmpp.resultsetmanagement.Result;
  */
 public interface NodeMembership extends Result {
 
-	/**
-	 * Gets the subscription type
-	 * @return
-	 */
+    /**
+     * Gets the subscription type
+     * 
+     * @return
+     */
     Subscriptions getSubscription();
-    
+
     /**
      * Gets the affiliation type
+     * 
      * @return
      */
     Affiliations getAffiliation();
-    
+
     /**
      * Gets the user
+     * 
      * @return
      */
     JID getUser();
-    
+
     /**
      * Gets the listener for notifications (for the inbox protocol)
+     * 
      * @return the listener's JID, or <code>null</code> if not a remote subscription.
      */
     JID getListener();
-    
+
     /**
      * Gets the node id
+     * 
      * @return
      */
     String getNodeId();
-    
+
     /**
      * Get last updated
+     * 
      * @return
      */
     Date getLastUpdated();
@@ -53,5 +59,5 @@ public interface NodeMembership extends Result {
      * 
      * @return
      */
-	JID getInvitedBy();
+    JID getInvitedBy();
 }

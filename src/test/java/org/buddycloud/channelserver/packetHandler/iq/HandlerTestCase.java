@@ -11,28 +11,28 @@ import org.mockito.MockitoAnnotations;
 import org.xmpp.packet.Packet;
 
 public class HandlerTestCase {
-	protected TestHelper helper;
-	
-	@Mock
-	protected Configuration config;
-	
-	protected LinkedBlockingQueue<Packet> outQueue;
-	protected LinkedBlockingQueue<Packet> inQueue;
-    
+    protected TestHelper helper;
+
+    @Mock
+    protected Configuration config;
+
+    protected LinkedBlockingQueue<Packet> outQueue;
+    protected LinkedBlockingQueue<Packet> inQueue;
+
     /**
-     *  A channel manager which can be used to initialise nodes, etc. for tests.
+     * A channel manager which can be used to initialise nodes, etc. for tests.
      */
-	protected ChannelManager channelManager;
+    protected ChannelManager channelManager;
 
     @Before
-	public void setUp() throws Exception {
-    	MockitoAnnotations.initMocks(this);
+    public void setUp() throws Exception {
+        MockitoAnnotations.initMocks(this);
 
-    	helper = new TestHelper();
-    	
+        helper = new TestHelper();
+
         this.outQueue = helper.getOutQueue();
         this.inQueue = helper.getInQueue();
-        
+
         channelManager = helper.getChannelManagerFactory().create();
-	}
+    }
 }

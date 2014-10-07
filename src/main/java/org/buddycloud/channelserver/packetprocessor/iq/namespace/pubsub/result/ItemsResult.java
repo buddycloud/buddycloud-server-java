@@ -20,128 +20,120 @@ import org.xmpp.packet.JID;
 
 public class ItemsResult extends PubSubElementProcessorAbstract {
 
-	private static final String MISSING_NODE = "Missing node";
-	private static final Logger logger = Logger.getLogger(ItemsResult.class);
-	private boolean subscriptionNode = false;
+    private static final String MISSING_NODE = "Missing node";
+    private static final Logger logger = Logger.getLogger(ItemsResult.class);
+    private boolean subscriptionNode = false;
 
-	public ItemsResult(ChannelManager channelManager) {
-		this.channelManager = channelManager;
-	}
+    public ItemsResult(ChannelManager channelManager) {
+        this.channelManager = channelManager;
+    }
 
-	public void process(Element elm, JID actorJID, IQ reqIQ, Element rsm)
-			throws Exception {
+    public void process(Element elm, JID actorJID, IQ reqIQ, Element rsm) throws Exception {
 
-		this.request = reqIQ;
-		
-		if (-1 != request.getFrom().toString().indexOf("@")) {
-			logger.debug("Ignoring result packet, only interested in stanzas "
-					+ "from other buddycloud servers");
-			return;
-		}
+        this.request = reqIQ;
 
-		if (null != elm.attributeValue("node")) 
-			this.setNode(elm.attributeValue("node"));
+        if (-1 != request.getFrom().toString().indexOf("@")) {
+            logger.debug("Ignoring result packet, only interested in stanzas " + "from other buddycloud servers");
+            return;
+        }
 
-		if ((null == node) || (true == node.equals(""))) {
-			throw new NullPointerException(MISSING_NODE);
-		}
+        if (null != elm.attributeValue("node")) {
+            this.setNode(elm.attributeValue("node"));
+        }
 
-		subscriptionNode = (true == node.substring(node.length() - 13,
-				node.length()).equals("subscriptions"));
+        if ((null == node) || (true == node.equals(""))) {
+            throw new NullPointerException(MISSING_NODE);
+        }
 
-		if ((false == subscriptionNode)
-				&& (false == channelManager.nodeExists(node)))
-			channelManager.addRemoteNode(node);
+        subscriptionNode = (true == node.substring(node.length() - 13, node.length()).equals("subscriptions"));
 
-		@SuppressWarnings("unchecked")
-		List<Element> items = request.getElement().element("pubsub")
-				.element("items").elements("item");
+        if ((false == subscriptionNode) && (false == channelManager.nodeExists(node))) {
+            channelManager.addRemoteNode(node);
+        }
 
-		for (Element item : items) {
-			if (true == subscriptionNode) {
-				processSubscriptionItem(item);
-			} else {
-				processPublishedItem(item);
-			}
-		}
-	}
+        @SuppressWarnings("unchecked")
+        List<Element> items = request.getElement().element("pubsub").element("items").elements("item");
 
-	@SuppressWarnings("unchecked")
-	private void processSubscriptionItem(Element item)
-			throws NodeStoreException {
-		JID user = new JID(item.attributeValue("id"));
-		List<Element> items = item.element("query").elements("item");
-		for (Element subscription : items) {
-			try {
-			    addSubscription(subscription, user);
-			} catch (IllegalArgumentException e) {
-				logger.error(e);
-			}
-		}
-	}
+        for (Element item : items) {
+            if (true == subscriptionNode) {
+                processSubscriptionItem(item);
+            } else {
+                processPublishedItem(item);
+            }
+        }
+    }
 
-	private void addSubscription(Element item, JID user)
-			throws NodeStoreException {
+    @SuppressWarnings("unchecked")
+    private void processSubscriptionItem(Element item) throws NodeStoreException {
+        JID user = new JID(item.attributeValue("id"));
+        List<Element> items = item.element("query").elements("item");
+        for (Element subscription : items) {
+            try {
+                addSubscription(subscription, user);
+            } catch (IllegalArgumentException e) {
+                logger.error(e);
+            }
+        }
+    }
 
-		String node = item.attributeValue("node");
-		
-		// If its a local JID and/or a local node, that's our turf!
-		if ((true == channelManager.isLocalNode(node))
-				&& (true == channelManager.isLocalJID(user)))
-			return;
-        if (true == channelManager.isLocalNode(node)) return; 
-        
-		JID listener = request.getFrom();
-		Subscriptions sub = Subscriptions.createFromString(item
-				.attributeValue("subscription"));
-		Affiliations aff = Affiliations.createFromString(item
-				.attributeValue("affiliation"));
-		NodeSubscription subscription = new NodeSubscriptionImpl(node, user,
-				listener, sub, null);
+    private void addSubscription(Element item, JID user) throws NodeStoreException {
 
-		if (false == channelManager.nodeExists(node))
-			channelManager.addRemoteNode(node);
+        String node = item.attributeValue("node");
 
-		channelManager.addUserSubscription(subscription);
-		channelManager.setUserAffiliation(node, user, aff);
-	}
+        // If its a local JID and/or a local node, that's our turf!
+        if ((true == channelManager.isLocalNode(node)) && (true == channelManager.isLocalJID(user))) {
+            return;
+        }
+        if (true == channelManager.isLocalNode(node)) {
+            return;
+        }
 
-	private void processPublishedItem(Element item) throws NodeStoreException {
+        JID listener = request.getFrom();
+        Subscriptions sub = Subscriptions.createFromString(item.attributeValue("subscription"));
+        Affiliations aff = Affiliations.createFromString(item.attributeValue("affiliation"));
+        NodeSubscription subscription = new NodeSubscriptionImpl(node, user, listener, sub, null);
 
-		Element entry = item.element("entry");
+        if (false == channelManager.nodeExists(node)) {
+            channelManager.addRemoteNode(node);
+        }
 
-		try {
-			// Probably a tombstone'd item
-			if (null == entry.elementText("updated")) {
-				logger.debug("Entry has no 'updated' element, won't process");
-				return;
-			}
-			String inReplyTo = null;
-			Element reply;
-			
-			if (null != (reply = entry.element("in-reply-to"))) {
-				String[] inReplyToParts = reply.attributeValue("ref").split(",");
-				inReplyTo = inReplyToParts[inReplyToParts.length - 1];
-			}
-			Date updatedDate = Conf.parseDate(entry.elementText("updated"));
-			NodeItemImpl nodeItem = new NodeItemImpl(node,
-					GlobalItemIDImpl.toLocalId(entry.elementText("id")), 
-					updatedDate, entry.asXML(), inReplyTo);
-			try {
-				channelManager
-						.deleteNodeItemById(node, entry.elementText("id"));
-			} catch (NodeStoreException e) {
-				logger.error("Attempt to delete an item which didn't exist... its ok");
-			}
-			channelManager.addNodeItem(nodeItem);
-		} catch (IllegalArgumentException e) {
-			logger.error(e);
-			e.printStackTrace();
-			return;
-		}
-	}
+        channelManager.addUserSubscription(subscription);
+        channelManager.setUserAffiliation(node, user, aff);
+    }
 
-	public boolean accept(Element elm) {
-		return elm.getName().equals("items");
-	}
+    private void processPublishedItem(Element item) throws NodeStoreException {
+
+        Element entry = item.element("entry");
+
+        try {
+            // Probably a tombstone'd item
+            if (null == entry.elementText("updated")) {
+                logger.debug("Entry has no 'updated' element, won't process");
+                return;
+            }
+            String inReplyTo = null;
+            Element reply;
+
+            if (null != (reply = entry.element("in-reply-to"))) {
+                String[] inReplyToParts = reply.attributeValue("ref").split(",");
+                inReplyTo = inReplyToParts[inReplyToParts.length - 1];
+            }
+            Date updatedDate = Conf.parseDate(entry.elementText("updated"));
+            NodeItemImpl nodeItem = new NodeItemImpl(node, GlobalItemIDImpl.toLocalId(entry.elementText("id")), updatedDate, entry.asXML(), inReplyTo);
+            try {
+                channelManager.deleteNodeItemById(node, entry.elementText("id"));
+            } catch (NodeStoreException e) {
+                logger.error("Attempt to delete an item which didn't exist... its ok");
+            }
+            channelManager.addNodeItem(nodeItem);
+        } catch (IllegalArgumentException e) {
+            logger.error(e);
+            e.printStackTrace();
+            return;
+        }
+    }
+
+    public boolean accept(Element elm) {
+        return elm.getName().equals("items");
+    }
 }

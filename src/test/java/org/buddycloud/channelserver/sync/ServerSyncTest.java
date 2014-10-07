@@ -14,63 +14,50 @@ import org.xmpp.packet.Packet;
 
 public class ServerSyncTest extends IQTestHandler {
 
-	private BlockingQueue<Packet> outQueue = new LinkedBlockingQueue<Packet>();
-	private BlockingQueue<Packet> inQueue = new LinkedBlockingQueue<Packet>();
-	private ChannelManagerFactory channelManagerFactory;
-	private ChannelManager channelManager;
-	private ServerSync serverSync;
-	private Configuration configuration;
+    private BlockingQueue<Packet> outQueue = new LinkedBlockingQueue<Packet>();
+    private BlockingQueue<Packet> inQueue = new LinkedBlockingQueue<Packet>();
+    private ChannelManagerFactory channelManagerFactory;
+    private ChannelManager channelManager;
+    private ServerSync serverSync;
+    private Configuration configuration;
 
-	@Before
-	public void setUp() throws Exception {
+    @Before
+    public void setUp() throws Exception {
 
-		configuration = Mockito.mock(Configuration.class);
+        configuration = Mockito.mock(Configuration.class);
 
-		channelManager = Mockito.mock(ChannelManager.class);
-		channelManagerFactory = Mockito.mock(ChannelManagerFactory.class);
-		Mockito.when(channelManagerFactory.create()).thenReturn(channelManager);
-		serverSync = new ServerSync(channelManagerFactory, outQueue, inQueue,
-				configuration);
-	}
+        channelManager = Mockito.mock(ChannelManager.class);
+        channelManagerFactory = Mockito.mock(ChannelManagerFactory.class);
+        Mockito.when(channelManagerFactory.create()).thenReturn(channelManager);
+        serverSync = new ServerSync(channelManagerFactory, outQueue, inQueue, configuration);
+    }
 
-	@Test
-	public void testChannelManagerIsCreated() {
+    @Test
+    public void testChannelManagerIsCreated() {
 
-		Mockito.verify(channelManagerFactory, Mockito.times(1)).create();
-	}
+        Mockito.verify(channelManagerFactory, Mockito.times(1)).create();
+    }
 
-	@Test
-	public void ifUserChoosesToPurgeRemoteDataThenMethodIsCalled()
-			throws Exception {
+    @Test
+    public void ifUserChoosesToPurgeRemoteDataThenMethodIsCalled() throws Exception {
 
-		Mockito.when(
-				configuration.getProperty(
-						Mockito.eq(Configuration.PURGE_REMOTE_ON_START),
-						Mockito.eq("false"))).thenReturn("true");
-		serverSync.start();
-		Mockito.verify(channelManager, Mockito.times(1)).deleteRemoteData();
-	}
+        Mockito.when(configuration.getProperty(Mockito.eq(Configuration.PURGE_REMOTE_ON_START), Mockito.eq("false"))).thenReturn("true");
+        serverSync.start();
+        Mockito.verify(channelManager, Mockito.times(1)).deleteRemoteData();
+    }
 
-	@Test
-	public void ifUserChoosesNotToPurgeRemoteDataThenMethodIsNotCalled()
-			throws Exception {
-		Mockito.when(
-				configuration.getProperty(
-						Mockito.eq(Configuration.PURGE_REMOTE_ON_START),
-						Mockito.eq("false"))).thenReturn("false");
-		serverSync.start();
-		Mockito.verify(channelManager, Mockito.times(0)).deleteRemoteData();
-	}
+    @Test
+    public void ifUserChoosesNotToPurgeRemoteDataThenMethodIsNotCalled() throws Exception {
+        Mockito.when(configuration.getProperty(Mockito.eq(Configuration.PURGE_REMOTE_ON_START), Mockito.eq("false"))).thenReturn("false");
+        serverSync.start();
+        Mockito.verify(channelManager, Mockito.times(0)).deleteRemoteData();
+    }
 
-	@Test
-	public void ifNoChoiceIsMadeAboutPurgingRemoteDataThenMethodIsNotCalled()
-			throws Exception {
-		Mockito.when(
-				configuration.getProperty(
-						Mockito.eq(Configuration.PURGE_REMOTE_ON_START),
-						Mockito.eq("false"))).thenReturn(null);
-		serverSync.start();
-		Mockito.verify(channelManager, Mockito.times(0)).deleteRemoteData();
-	}
+    @Test
+    public void ifNoChoiceIsMadeAboutPurgingRemoteDataThenMethodIsNotCalled() throws Exception {
+        Mockito.when(configuration.getProperty(Mockito.eq(Configuration.PURGE_REMOTE_ON_START), Mockito.eq("false"))).thenReturn(null);
+        serverSync.start();
+        Mockito.verify(channelManager, Mockito.times(0)).deleteRemoteData();
+    }
 
 }

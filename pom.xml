@@ -6,9 +6,22 @@
     <packaging>jar</packaging>
     <version>0.18.0-SNAPSHOT</version>
     <name>Buddycloud Java Server</name>
+
     <scm>
+        <connection>scm:git:git@github.buddycloud/buddycloud-server-java.git</connection>
+        <developerConnection>scm:git:git@github.com:buddycloud/buddycloud-server-java.git</developerConnection>
         <url>https://github.com/buddycloud/buddycloud-server-java</url>
     </scm>
+
+    <issueManagement>
+        <system>GitHub Issues</system>
+        <url>https://github.com/buddycloud/buddycloud-server-java/issues</url>
+    </issueManagement>
+    <ciManagement>
+        <system>travis</system>
+        <url>https://travis-ci.org/buddycloud/buddycloud-server-java</url>
+    </ciManagement>
+
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>

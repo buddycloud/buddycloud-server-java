@@ -8,6 +8,19 @@ Note this points to the main buddycloud repository for the java server.
 
 [![Build Status](https://travis-ci.org/buddycloud/buddycloud-server-java.png?branch=master)](https://travis-ci.org/buddycloud/buddycloud-server-java)
 
+## Coding Standards
+
+Checkstyle is used to confirm the preferred coding standards are used, these are based loosely on Google's OS Java guidelines.  There is support in maven, the build should fail on the introduction of errors and there is also support for automated formatting in Eclipse.  To setup do the following -
+
+* Navigate to Eclipse->Preferences->Java ->Code Style->Formatter
+* Select 'import' and there is a file named 'eclipse_formatter.xml' in src/main/resources.
+* Import and set it as the active profile
+
+N.B. Its also worth setting up the hooks that allow for formatting and organising of imports on save, to do this 
+
+* Navigate to Eclipse->Preferences->Java->Code Style->Save Actions
+* Select 'Format All Lines' and 'Organize Imports'
+
 ## Database install
 
 The java server purposefully uses the same database schema as the buddycloud node.js server. See here for database installation instructions https://github.com/buddycloud/buddycloud-server/tree/develop/postgres.

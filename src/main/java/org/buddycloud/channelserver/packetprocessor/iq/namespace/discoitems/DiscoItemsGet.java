@@ -59,8 +59,9 @@ public class DiscoItemsGet implements PacketProcessor<IQ> {
         Element query = response.getElement().addElement("query");
         query.addNamespace("", JabberDiscoItems.NAMESPACE_URI);
         for (String node : nodes) {
-            if (false == isLocalNode(node))
+            if (false == isLocalNode(node)) {
                 continue;
+            }
             Element item = query.addElement("item");
             item.addAttribute("node", node);
             item.addAttribute("jid", jid);

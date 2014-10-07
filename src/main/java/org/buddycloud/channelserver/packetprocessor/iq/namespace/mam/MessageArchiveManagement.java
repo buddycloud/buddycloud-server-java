@@ -127,8 +127,9 @@ public class MessageArchiveManagement implements PacketProcessor<IQ> {
                 itemsElement.addAttribute("node", item.getNodeId());
                 i.addAttribute("id", item.getId());
 
-                if (null != i.element("entry"))
+                if (null != i.element("entry")) {
                     i.remove(i.element("entry"));
+                }
                 i.add(xmlReader.read(new StringReader(item.getPayload())).getRootElement());
 
                 forwarded.element("delay").addAttribute("stamp", Conf.formatDate(item.getUpdated()));
@@ -146,8 +147,9 @@ public class MessageArchiveManagement implements PacketProcessor<IQ> {
     private void sendAffiliationUpdated() {
         try {
             ResultSet<NodeAffiliation> changes = channelManager.getAffiliationChanges(requestIq.getFrom(), startTimestamp, endTimestamp);
-            if (0 == changes.size())
+            if (0 == changes.size()) {
                 return;
+            }
             Message notification = wrapper.createCopy();
             Element forwarded = notification.getElement().element("forwarded");
 
@@ -177,8 +179,9 @@ public class MessageArchiveManagement implements PacketProcessor<IQ> {
     private void sendSubscriptionUpdates() {
         try {
             ResultSet<NodeSubscription> changes = channelManager.getSubscriptionChanges(requestIq.getFrom(), endTimestamp, endTimestamp);
-            if (0 == changes.size())
+            if (0 == changes.size()) {
                 return;
+            }
             Message notification = wrapper.createCopy();
             Element forwarded = notification.getElement().element("forwarded");
 

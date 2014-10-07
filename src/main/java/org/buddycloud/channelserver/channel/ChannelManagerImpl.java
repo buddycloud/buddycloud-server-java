@@ -269,10 +269,12 @@ public class ChannelManagerImpl implements ChannelManager {
         ArrayList<String> nodes = this.getNodeList();
         for (String node : nodes) {
             try {
-                if (true == node.equals(("/firehose")))
+                if (true == node.equals(("/firehose"))) {
                     return;
-                if (false == this.isLocalNode(node))
+                }
+                if (false == this.isLocalNode(node)) {
                     nodeStore.purgeNodeItems(node);
+                }
             } catch (IllegalArgumentException e) {
                 logger.error("Invalid remote node in datastore " + node, e);
             }

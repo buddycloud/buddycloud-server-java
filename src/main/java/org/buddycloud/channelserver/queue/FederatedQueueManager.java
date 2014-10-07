@@ -232,8 +232,9 @@ public class FederatedQueueManager {
     }
 
     private boolean attemptDnsDiscovery(String originatingServer) throws ComponentException {
-        if (false == performDnsDiscovery)
+        if (false == performDnsDiscovery) {
             return false;
+        }
         try {
             String query = TXT_PREFIX + originatingServer;
             Record[] records = new Lookup(query, Type.TXT).run();
@@ -247,13 +248,15 @@ public class FederatedQueueManager {
             Pattern p = Pattern.compile("server=([^ ]*)");
             for (String txtString : txtStrings) {
                 Matcher m = p.matcher(txtString);
-                if (!m.find())
+                if (!m.find()) {
                     continue;
+                }
                 targetServer = m.group(1);
             }
 
-            if (null == targetServer)
+            if (null == targetServer) {
                 return false;
+            }
             setDiscoveredServer(originatingServer, targetServer);
             logger.info("DNS discovery complete for buddycloud server @ " + originatingServer + " (" + targetServer + ")");
             remoteChannelDiscoveryStatus.put(originatingServer, DISCOVERED);

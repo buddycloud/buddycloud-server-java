@@ -71,11 +71,13 @@ public class MessageProcessor extends AbstractMessageProcessor {
 
     private AbstractMessageProcessor processItems() {
         Element item = event.element("items").element("item");
-        if (null != item)
+        if (null != item) {
             return new ItemsProcessor(outQueue, configuration, channelManager);
+        }
         Element retract = event.element("items").element("retract");
-        if (null != retract)
+        if (null != retract) {
             return new RetractItemProcessor(outQueue, configuration, channelManager);
+        }
         return null;
     }
 

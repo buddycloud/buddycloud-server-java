@@ -160,7 +160,7 @@
 
         <!-- Checks for braces around if and else blocks -->
         <module name="NeedBraces">
-            <property name="severity" value="warning" />
+            <property name="severity" value="error" />
             <property name="tokens"
                 value="LITERAL_IF, LITERAL_ELSE, LITERAL_FOR, LITERAL_WHILE, LITERAL_DO" />
         </module>
@@ -236,6 +236,10 @@
             <!-- Checks that there is no whitespace before close parens or 
                 after open parens. -->
             <property name="severity" value="warning" />
+        </module>
+        
+        <module name="SuppressionFilter">
+            <property name="file" value="suppressions.xml"/>
         </module>
 
     </module>

@@ -87,8 +87,9 @@ class ResultSetIterator<T> implements CloseableIterator<T> {
 
     public void close() {
         try {
-            if (false == resultSet.isClosed())
+            if (false == resultSet.isClosed()) {
                 resultSet.getStatement().close();
+            }
         } catch (SQLException e) {
             logger.error("SQLException thrown while closing statement", e);
         }

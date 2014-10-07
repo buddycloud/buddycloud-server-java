@@ -130,8 +130,9 @@ public class SubscriptionEvent extends PubSubElementProcessorAbstract {
             outQueue.put(notification);
         }
 
-        if (hasNotifiedInviteesServer)
+        if (hasNotifiedInviteesServer) {
             return;
+        }
 
         if (newSubscription.equals(Subscriptions.invited)) {
             Message alertInvitedUser = rootElement.createCopy();

@@ -58,21 +58,24 @@ public class PubSubResult implements PacketProcessor<IQ> {
             for (Element x : elements) {
                 for (PubSubElementProcessorAbstract elementProcessor : elementProcessors) {
                     if (elementProcessor.accept(x)) {
-                        if (null != node)
+                        if (null != node) {
                             elementProcessor.setNode(node);
+                        }
                         elementProcessor.process(x, null, reqIQ, x);
                         handled = true;
                     }
                 }
             }
-            if (true == handled)
+            if (true == handled) {
                 return;
+            }
         } catch (UnknownFederatedPacketException e) {
             logger.error(e);
             e.printStackTrace();
         }
-        if (false == reqIQ.getType().toString().equals("result"))
+        if (false == reqIQ.getType().toString().equals("result")) {
             sendUnexpectedRequestResponse(reqIQ);
+        }
     }
 
     private void sendUnexpectedRequestResponse(IQ reqIQ) throws InterruptedException {

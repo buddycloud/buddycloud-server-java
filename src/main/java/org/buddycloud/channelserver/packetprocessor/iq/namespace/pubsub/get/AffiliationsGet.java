@@ -134,8 +134,9 @@ public class AffiliationsGet implements PubSubElementProcessor {
             }
             logger.trace("Adding affiliation for " + membership.getUser() + " affiliation " + membership.getAffiliation() + " (no node provided)");
 
-            if (null == firstItem)
+            if (null == firstItem) {
                 firstItem = membership.getNodeId();
+            }
             membership.getNodeId();
 
             affiliations.addElement("affiliation").addAttribute("node", membership.getNodeId())

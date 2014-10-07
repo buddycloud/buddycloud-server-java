@@ -1,6 +1,7 @@
 .settings
 .DS_Store
 .project
+.checkstyle
 target
 .classpath
 target

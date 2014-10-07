@@ -141,8 +141,9 @@ public class Conf {
 
     private static void getConfigurationOverrides(JID channelJID, String node) {
 
-        if (null == node)
+        if (null == node) {
             return;
+        }
 
         String accessModelKey = Configuration.CONFIGURATION_CHANNELS_DEFAULT_ACCESSMODEL.replace("default", node.replace("/", "."));
         if (null != projectConf.getProperty(accessModelKey)) {

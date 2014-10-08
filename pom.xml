@@ -26,8 +26,10 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.build.withDependencies>jar-with-dependencies</project.build.withDependencies>
-        <maven.checkstyle.plugin.version>2.13</maven.checkstyle.plugin.version>
+        <findbugs.version>2.5.5</findbugs.version>
+        <checkstyle.version>2.13</checkstyle.version>
         <checkstyle.config.location>src/main/resources/checkstyle.xml</checkstyle.config.location>
+        <cobertura.version>2.6</cobertura.version>
     </properties>
 
     <dependencies>
@@ -255,6 +257,7 @@
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-checkstyle-plugin</artifactId>
+                    <version>${checkstyle.version}</version>
                     <configuration>
                         <failOnViolation>true</failOnViolation>
                         <failsOnError>true</failsOnError>
@@ -264,7 +267,6 @@
                         <includes>**\/*.java</includes>
                         <includeResources>false</includeResources>
                     </configuration>
-                    <version>${maven.checkstyle.plugin.version}</version>
                     <executions>
                         <execution>
                             <id>validate</id>
@@ -292,6 +294,24 @@
                         <serviceName>travis-ci</serviceName>
                     </configuration>
                 </plugin>
+                <plugin>
+                    <groupId>org.codehaus.mojo</groupId>
+                    <artifactId>findbugs-maven-plugin</artifactId>
+                    <version>2.5.5</version>
+                    <configuration>
+                        <effort>Max</effort>
+                        <threshold>Low</threshold>
+                        <xmlOutput>true</xmlOutput>
+                    </configuration>
+                    <executions>
+                        <execution>
+                            <phase>verify</phase>
+                            <goals>
+                                <goal>check</goal>
+                            </goals>
+                        </execution>
+                    </executions>
+                </plugin>
             </plugins>
         </pluginManagement>
     </build>
@@ -300,12 +320,27 @@
         <plugins>
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
+                <artifactId>findbugs-maven-plugin</artifactId>
+                <version>${findbugs.version}</version>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-checkstyle-plugin</artifactId>
+                <version>${checkstyle.version}</version>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-report-plugin</artifactId>
+                <version>${surefire.reportplugin.version}</version>
+            </plugin>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
                 <artifactId>cobertura-maven-plugin</artifactId>
-                <version>2.6</version>
+                <version>${cobertura.version}</version>
                 <configuration>
                     <formats>
-                        <format>html</format>
                         <format>xml</format>
+                        <format>html</format>
                     </formats>
                 </configuration>
             </plugin>

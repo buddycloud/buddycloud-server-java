@@ -289,6 +289,7 @@
                         <maxmem>256m</maxmem>
                         <aggregate>true</aggregate>
                         <sourceEncoding>UTF-8</sourceEncoding>
+                        <serviceName>travis-ci</serviceName>
                     </configuration>
                 </plugin>
             </plugins>

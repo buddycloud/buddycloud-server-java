@@ -6,7 +6,7 @@ import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.db.exception.NodeStoreException;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.JabberPubsub;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.PubSubElementProcessor;
-import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.PubSubGet;
+import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.set.XMLConstants;
 import org.buddycloud.channelserver.pubsub.model.NodeMembership;
 import org.buddycloud.channelserver.utils.node.item.payload.Buddycloud;
 import org.dom4j.Element;
@@ -16,10 +16,6 @@ import org.xmpp.packet.Packet;
 import org.xmpp.resultsetmanagement.ResultSet;
 
 public class SubscriptionsGet implements PubSubElementProcessor {
-
-    public static final String ELEMENT_NAME = "subscription";
-
-    public static final String CONTAINER_ELEMENT_NAME = "subscriptions";
 
     private final BlockingQueue<Packet> outQueue;
     private ChannelManager channelManager;
@@ -45,10 +41,10 @@ public class SubscriptionsGet implements PubSubElementProcessor {
         result = IQ.createResultIQ(reqIQ);
         actorJid = actorJID;
         requestIq = reqIQ;
-        Element pubsub = result.setChildElement(PubSubGet.ELEMENT_NAME, JabberPubsub.NAMESPACE_URI);
-        Element subscriptions = pubsub.addElement(CONTAINER_ELEMENT_NAME);
+        Element pubsub = result.setChildElement(XMLConstants.PUBSUB_ELEM, JabberPubsub.NAMESPACE_URI);
+        Element subscriptions = pubsub.addElement(XMLConstants.SUBSCRIPTIONS_ELEM);
 
-        node = reqIQ.getChildElement().element(CONTAINER_ELEMENT_NAME).attributeValue("node");
+        node = reqIQ.getChildElement().element(XMLConstants.SUBSCRIPTIONS_ELEM).attributeValue(XMLConstants.NODE_ATTR);
 
         if (null == actorJid) {
             actorJid = reqIQ.getFrom();
@@ -77,22 +73,24 @@ public class SubscriptionsGet implements PubSubElementProcessor {
 
         if (channelManager.isLocalNode(node)) {
 
-            subscriptions.addAttribute("node", node);
+            subscriptions.addAttribute(XMLConstants.NODE_ATTR, node);
 
             for (NodeMembership ns : cur) {
                 if (actorJid.toBareJID().equals(ns.getUser().toBareJID())) {
-                    Element subscription = subscriptions.addElement(ELEMENT_NAME);
-                    subscription.addAttribute("node", ns.getNodeId()).addAttribute(ELEMENT_NAME, ns.getSubscription().toString())
-                            .addAttribute("jid", ns.getUser().toBareJID());
+                    Element subscription = subscriptions.addElement(XMLConstants.SUBSCRIPTION_ELEM);
+                    subscription.addAttribute(XMLConstants.NODE_ATTR, ns.getNodeId())
+                            .addAttribute(XMLConstants.SUBSCRIPTION_ELEM, ns.getSubscription().toString())
+                            .addAttribute(XMLConstants.JID_ATTR, ns.getUser().toBareJID());
                     if (null != ns.getInvitedBy()) {
-                        subscription.addAttribute("invited-by", ns.getInvitedBy().toBareJID());
+                        subscription.addAttribute(XMLConstants.INVITED_BY_ELEM, ns.getInvitedBy().toBareJID());
                     }
                 }
 
             }
         } else {
 
-            if (!channelManager.isCachedNode(node) || (null != requestIq.getElement().element(PubSubGet.ELEMENT_NAME).element("set")) && !cur.isEmpty()) {
+            if (!channelManager.isCachedNode(node) || (null != requestIq.getElement().element(XMLConstants.PUBSUB_ELEM).element(XMLConstants.SET_ELEM))
+                    && !cur.isEmpty()) {
                 makeRemoteRequest(new JID(node.split("/")[2]).getDomain());
             }
             return false;
@@ -106,16 +104,18 @@ public class SubscriptionsGet implements PubSubElementProcessor {
         ResultSet<NodeMembership> cur;
         cur = channelManager.getUserMemberships(actorJid);
 
-        if ((null != requestIq.getElement().element(PubSubGet.ELEMENT_NAME).element("set")) && (!cur.isEmpty()) && (!channelManager.isLocalJID(actorJid))) {
+        if ((null != requestIq.getElement().element(XMLConstants.PUBSUB_ELEM).element("set")) && (!cur.isEmpty())
+                && (!channelManager.isLocalJID(actorJid))) {
             makeRemoteRequest(actorJid.getDomain());
             return false;
         }
         for (NodeMembership ns : cur) {
-            Element subscription = subscriptions.addElement(ELEMENT_NAME);
-            subscription.addAttribute("node", ns.getNodeId()).addAttribute(ELEMENT_NAME, ns.getSubscription().toString())
-                    .addAttribute("jid", ns.getUser().toBareJID());
+            Element subscription = subscriptions.addElement(XMLConstants.SUBSCRIPTION_ELEM);
+            subscription.addAttribute(XMLConstants.NODE_ATTR, ns.getNodeId())
+                    .addAttribute(XMLConstants.SUBSCRIPTION_ELEM, ns.getSubscription().toString())
+                    .addAttribute(XMLConstants.JID_ATTR, ns.getUser().toBareJID());
             if (null != ns.getInvitedBy()) {
-                subscription.addAttribute("invited-by", ns.getInvitedBy().toBareJID());
+                subscription.addAttribute(XMLConstants.INVITED_BY_ELEM, ns.getInvitedBy().toBareJID());
             }
         }
         return true;
@@ -124,8 +124,8 @@ public class SubscriptionsGet implements PubSubElementProcessor {
     private void makeRemoteRequest(String to) throws InterruptedException {
         IQ forwarder = requestIq.createCopy();
         forwarder.setTo(to);
-        if (null == forwarder.getElement().element(PubSubGet.ELEMENT_NAME).element("actor")) {
-            Element actor = forwarder.getElement().element(PubSubGet.ELEMENT_NAME).addElement("actor", Buddycloud.NS);
+        if (null == forwarder.getElement().element(XMLConstants.PUBSUB_ELEM).element("actor")) {
+            Element actor = forwarder.getElement().element(XMLConstants.PUBSUB_ELEM).addElement("actor", Buddycloud.NS);
             actor.addText(requestIq.getFrom().toBareJID());
         }
         outQueue.put(forwarder);
@@ -133,6 +133,6 @@ public class SubscriptionsGet implements PubSubElementProcessor {
 
     @Override
     public boolean accept(Element elm) {
-        return CONTAINER_ELEMENT_NAME.equals(elm.getName());
+        return XMLConstants.SUBSCRIPTIONS_ELEM.equals(elm.getName());
     }
 }

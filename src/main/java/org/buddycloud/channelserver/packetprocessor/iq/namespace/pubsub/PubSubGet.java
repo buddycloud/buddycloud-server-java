@@ -25,8 +25,6 @@ import org.xmpp.packet.PacketError;
 
 public class PubSubGet implements PacketProcessor<IQ> {
 
-    public static final String ELEMENT_NAME = "pubsub";
-
     private final BlockingQueue<Packet> outQueue;
     private final ChannelManager channelManager;
     private final List<PubSubElementProcessor> elementProcessors = new LinkedList<PubSubElementProcessor>();

@@ -7,7 +7,7 @@ import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.db.exception.NodeStoreException;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.JabberPubsub;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.PubSubElementProcessor;
-import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.PubSubGet;
+import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.set.XMLConstants;
 import org.buddycloud.channelserver.pubsub.affiliation.Affiliations;
 import org.buddycloud.channelserver.pubsub.model.NodeMembership;
 import org.buddycloud.channelserver.pubsub.subscription.Subscriptions;
@@ -41,15 +41,15 @@ public class AffiliationsGet implements PubSubElementProcessor {
         requestIq = reqIQ;
         actorJid = actorJID;
         node = elm.attributeValue("node");
-        if (false == channelManager.isLocalJID(requestIq.getFrom())) {
-            result.getElement().addAttribute("remote-server-discover", "false");
+        if (!channelManager.isLocalJID(requestIq.getFrom())) {
+            result.getElement().addAttribute(XMLConstants.REMOTE_SERVER_DISCOVER_ATTR, Boolean.FALSE.toString());
         }
         String namespace = JabberPubsub.NS_PUBSUB_OWNER;
         if (node == null) {
             namespace = JabberPubsub.NAMESPACE_URI;
         }
 
-        Element pubsub = result.setChildElement(PubSubGet.ELEMENT_NAME, namespace);
+        Element pubsub = result.setChildElement(XMLConstants.PUBSUB_ELEM, namespace);
         Element affiliations = pubsub.addElement("affiliations");
 
         if (actorJid == null) {
@@ -62,7 +62,7 @@ public class AffiliationsGet implements PubSubElementProcessor {
         } else {
             isProcessedLocally = getNodeAffiliations(affiliations);
         }
-        if (false == isProcessedLocally) {
+        if (!isProcessedLocally) {
             return;
         }
 
@@ -70,14 +70,14 @@ public class AffiliationsGet implements PubSubElementProcessor {
     }
 
     private boolean getNodeAffiliations(Element affiliations) throws NodeStoreException, InterruptedException {
-        if (false == channelManager.isLocalNode(node) && (false == channelManager.isCachedNode(node))) {
+        if (!channelManager.isLocalNode(node) && (!channelManager.isCachedNode(node))) {
             makeRemoteRequest(node.split("/")[2]);
             return false;
         }
         ResultSet<NodeMembership> nodeMemberships;
         nodeMemberships = channelManager.getNodeMemberships(node);
 
-        if ((0 == nodeMemberships.size()) && (false == channelManager.isLocalNode(node))) {
+        if ((!nodeMemberships.isEmpty()) && (!channelManager.isLocalNode(node))) {
             makeRemoteRequest(node.split("/")[2]);
             return false;
         }
@@ -86,11 +86,11 @@ public class AffiliationsGet implements PubSubElementProcessor {
 
         for (NodeMembership nodeMembership : nodeMemberships) {
 
-            if (false == actorJid.toBareJID().equals(nodeMembership.getUser().toBareJID())) {
-                if ((false == isOwnerModerator) && nodeMembership.getAffiliation().in(Affiliations.outcast, Affiliations.none)) {
+            if (!actorJid.toBareJID().equals(nodeMembership.getUser().toBareJID())) {
+                if ((!isOwnerModerator) && nodeMembership.getAffiliation().in(Affiliations.outcast, Affiliations.none)) {
                     continue;
                 }
-                if ((false == isOwnerModerator) && !nodeMembership.getSubscription().equals(Subscriptions.subscribed)) {
+                if ((!isOwnerModerator) && !nodeMembership.getSubscription().equals(Subscriptions.subscribed)) {
                     continue;
                 }
             }
@@ -101,8 +101,9 @@ public class AffiliationsGet implements PubSubElementProcessor {
             }
             nodeMembership.getUser().toString();
 
-            affiliations.addElement("affiliation").addAttribute("node", nodeMembership.getNodeId())
-                    .addAttribute("affiliation", nodeMembership.getAffiliation().toString()).addAttribute("jid", nodeMembership.getUser().toString());
+            affiliations.addElement(XMLConstants.AFFILIATION_ELEM).addAttribute(XMLConstants.NODE_ATTR, nodeMembership.getNodeId())
+                    .addAttribute(XMLConstants.AFFILIATION_ELEM, nodeMembership.getAffiliation().toString())
+                    .addAttribute(XMLConstants.JID_ATTR, nodeMembership.getUser().toString());
         }
         return true;
     }
@@ -113,7 +114,7 @@ public class AffiliationsGet implements PubSubElementProcessor {
 
     private boolean getUserMemberships(Element affiliations) throws NodeStoreException, InterruptedException {
 
-        if (false == channelManager.isLocalJID(actorJid) && (false == channelManager.isCachedJID(requestIq.getFrom()))) {
+        if (!channelManager.isLocalJID(actorJid) && (!channelManager.isCachedJID(requestIq.getFrom()))) {
             makeRemoteRequest(actorJid.getDomain());
             return false;
         }
@@ -124,11 +125,11 @@ public class AffiliationsGet implements PubSubElementProcessor {
 
         for (NodeMembership membership : memberships) {
 
-            if (false == actorJid.toBareJID().equals(membership.getUser().toBareJID())) {
-                if ((false == isOwnerModerator) && membership.getAffiliation().in(Affiliations.outcast, Affiliations.none)) {
+            if (!actorJid.toBareJID().equals(membership.getUser().toBareJID())) {
+                if ((!isOwnerModerator) && membership.getAffiliation().in(Affiliations.outcast, Affiliations.none)) {
                     continue;
                 }
-                if ((false == isOwnerModerator) && !membership.getSubscription().equals(Subscriptions.subscribed)) {
+                if ((!isOwnerModerator) && !membership.getSubscription().equals(Subscriptions.subscribed)) {
                     continue;
                 }
             }
@@ -139,8 +140,9 @@ public class AffiliationsGet implements PubSubElementProcessor {
             }
             membership.getNodeId();
 
-            affiliations.addElement("affiliation").addAttribute("node", membership.getNodeId())
-                    .addAttribute("affiliation", membership.getAffiliation().toString()).addAttribute("jid", membership.getUser().toBareJID());
+            affiliations.addElement(XMLConstants.AFFILIATION_ELEM).addAttribute(XMLConstants.NODE_ATTR, membership.getNodeId())
+                    .addAttribute(XMLConstants.AFFILIATION_ELEM, membership.getAffiliation().toString())
+                    .addAttribute(XMLConstants.JID_ATTR, membership.getUser().toBareJID());
         }
         return true;
     }
@@ -157,6 +159,6 @@ public class AffiliationsGet implements PubSubElementProcessor {
 
     @Override
     public boolean accept(Element elm) {
-        return elm.getName().equals("affiliations");
+        return XMLConstants.AFFILIATION_ELEM.equals(elm.getName());
     }
 }

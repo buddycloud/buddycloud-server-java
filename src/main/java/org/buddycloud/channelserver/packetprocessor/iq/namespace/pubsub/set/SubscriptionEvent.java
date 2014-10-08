@@ -8,6 +8,7 @@ import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.db.exception.NodeStoreException;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.JabberPubsub;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.PubSubElementProcessorAbstract;
+import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.PubSubSet;
 import org.buddycloud.channelserver.pubsub.model.NodeMembership;
 import org.buddycloud.channelserver.pubsub.model.NodeSubscription;
 import org.buddycloud.channelserver.pubsub.model.impl.NodeSubscriptionImpl;
@@ -60,13 +61,13 @@ public class SubscriptionEvent extends PubSubElementProcessorAbstract {
         if (actor == null) {
             actor = request.getFrom();
         }
-        if (false == channelManager.isLocalNode(node)) {
+        if (!channelManager.isLocalNode(node)) {
             makeRemoteRequest();
             return;
         }
         try {
-            if ((false == nodeProvided()) || (false == validRequestStanza()) || (false == checkNodeExists()) || (false == actorHasPermissionToAuthorize())
-                    || (true == actorIsModifyingTheirSubscription()) || (false == userIsSubscribable())) {
+            if ((!nodeProvided()) || (!validRequestStanza()) || (!checkNodeExists()) || (!actorHasPermissionToAuthorize())
+                    || (actorIsModifyingTheirSubscription()) || (!userIsSubscribable())) {
                 outQueue.put(response);
                 return;
             }
@@ -76,8 +77,9 @@ public class SubscriptionEvent extends PubSubElementProcessorAbstract {
             LOGGER.error(e);
             setErrorCondition(PacketError.Type.wait, PacketError.Condition.internal_server_error);
             outQueue.put(response);
-            return;
         }
+
+        return;
     }
 
     private boolean actorIsModifyingTheirSubscription() {
@@ -98,18 +100,18 @@ public class SubscriptionEvent extends PubSubElementProcessorAbstract {
         ResultSet<NodeSubscription> subscribers = channelManager.getNodeSubscriptionListeners(node);
 
         Document document = getDocumentHelper();
-        Element message = document.addElement("message");
-        message.addAttribute("type", "headline");
-        message.addAttribute("remote-server-discover", "false");
-        Element event = message.addElement("event", JabberPubsub.NS_PUBSUB_EVENT);
-        Element subscription = event.addElement("subscription");
-        message.addAttribute("from", request.getTo().toString());
-        subscription.addAttribute("node", node);
-        subscription.addAttribute("jid", subscriptionElement.attributeValue("jid"));
-        subscription.addAttribute("subscription", subscriptionElement.attributeValue("subscription"));
+        Element message = document.addElement(XMLConstants.MESSAGE_ELEM);
+        message.addAttribute(XMLConstants.TYPE_ATTR, "headline");
+        message.addAttribute(XMLConstants.REMOTE_SERVER_DISCOVER_ATTR, Boolean.FALSE.toString());
+        Element event = message.addElement(XMLConstants.EVENT_ELEM, JabberPubsub.NS_PUBSUB_EVENT);
+        Element subscription = event.addElement(XMLConstants.SUBSCRIPTION_ELEM);
+        message.addAttribute(XMLConstants.FROM_ATTR, request.getTo().toString());
+        subscription.addAttribute(XMLConstants.NODE_ATTR, node);
+        subscription.addAttribute(XMLConstants.JID_ATTR, subscriptionElement.attributeValue(XMLConstants.JID_ATTR));
+        subscription.addAttribute(XMLConstants.SUBSCRIPTION_ELEM, subscriptionElement.attributeValue(XMLConstants.SUBSCRIPTION_ELEM));
         Message rootElement = new Message(message);
 
-        Subscriptions newSubscription = Subscriptions.valueOf(subscriptionElement.attributeValue("subscription"));
+        Subscriptions newSubscription = Subscriptions.valueOf(subscriptionElement.attributeValue(XMLConstants.SUBSCRIPTION_ELEM));
 
         if (newSubscription.equals(Subscriptions.invited)) {
             subscription.addAttribute("invited-by", actor.toBareJID());
@@ -174,19 +176,17 @@ public class SubscriptionEvent extends PubSubElementProcessorAbstract {
     }
 
     private boolean validRequestStanza() {
-        try {
-            subscriptionElement = request.getElement().element("pubsub").element("subscriptions").element("subscription");
-            requestedSubscription = Subscriptions.createFromString(subscriptionElement.attributeValue("subscription"));
+        subscriptionElement =
+                request.getElement().element(PubSubSet.ELEMENT_NAME).element(XMLConstants.SUBSCRIPTIONS_ELEM)
+                        .element(XMLConstants.SUBSCRIPTION_ELEM);
 
-            if ((null == subscriptionElement) || (null == subscriptionElement.attribute("jid")) || (null == subscriptionElement.attribute("subscription"))) {
-                setErrorCondition(PacketError.Type.modify, PacketError.Condition.bad_request);
-                return false;
-            }
-        } catch (NullPointerException e) {
-            LOGGER.error(e);
+
+        if ((null == subscriptionElement) || (null == subscriptionElement.attribute("jid")) || (null == subscriptionElement.attribute("subscription"))) {
             setErrorCondition(PacketError.Type.modify, PacketError.Condition.bad_request);
             return false;
         }
+
+        requestedSubscription = Subscriptions.createFromString(subscriptionElement.attributeValue(XMLConstants.SUBSCRIPTION_ELEM));
         subscriptionElement.addAttribute("subscription", requestedSubscription.toString());
         return true;
     }
@@ -218,7 +218,7 @@ public class SubscriptionEvent extends PubSubElementProcessorAbstract {
     }
 
     private boolean checkNodeExists() throws NodeStoreException {
-        if (false == channelManager.nodeExists(node)) {
+        if (!channelManager.nodeExists(node)) {
             setErrorCondition(PacketError.Type.cancel, PacketError.Condition.item_not_found);
             return false;
         }
@@ -236,6 +236,6 @@ public class SubscriptionEvent extends PubSubElementProcessorAbstract {
      * Determine if this class is capable of processing incoming stanza
      */
     public boolean accept(Element elm) {
-        return elm.getName().equals("subscriptions");
+        return XMLConstants.SUBSCRIPTIONS_ELEM.equals(elm.getName());
     }
 }

@@ -11,7 +11,7 @@ import org.buddycloud.channelserver.db.CloseableIterator;
 import org.buddycloud.channelserver.db.exception.NodeStoreException;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.JabberPubsub;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.PubSubElementProcessor;
-import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.PubSubGet;
+import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.set.XMLConstants;
 import org.buddycloud.channelserver.pubsub.accessmodel.AccessModels;
 import org.buddycloud.channelserver.pubsub.model.GlobalItemID;
 import org.buddycloud.channelserver.pubsub.model.NodeItem;
@@ -167,7 +167,7 @@ public class NodeItemsGet implements PubSubElementProcessor {
     }
 
     private void getItems() throws Exception {
-        Element pubsub = new DOMElement(PubSubGet.ELEMENT_NAME, new org.dom4j.Namespace("", JabberPubsub.NAMESPACE_URI));
+        Element pubsub = new DOMElement(XMLConstants.PUBSUB_ELEM, new org.dom4j.Namespace("", JabberPubsub.NAMESPACE_URI));
 
         int maxItemsToReturn = MAX_ITEMS_TO_RETURN;
         String afterItemId = null;

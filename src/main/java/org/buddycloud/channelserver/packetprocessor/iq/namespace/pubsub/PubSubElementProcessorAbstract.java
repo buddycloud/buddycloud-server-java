@@ -3,7 +3,6 @@ package org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub;
 import java.util.Collection;
 import java.util.concurrent.BlockingQueue;
 
-import org.apache.log4j.Logger;
 import org.buddycloud.channelserver.Configuration;
 import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.channel.node.configuration.Helper;
@@ -20,8 +19,6 @@ import org.xmpp.packet.PacketError.Type;
 
 public abstract class PubSubElementProcessorAbstract implements PubSubElementProcessor {
     public static final String NS_RSM = "http://jabber.org/protocol/rsm";
-
-    public static final Logger LOGGER = Logger.getLogger(PubSubElementProcessorAbstract.class);
 
     protected BlockingQueue<Packet> outQueue;
     protected ChannelManager channelManager;

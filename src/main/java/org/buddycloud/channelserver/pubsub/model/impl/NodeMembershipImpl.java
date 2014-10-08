@@ -40,7 +40,7 @@ public class NodeMembershipImpl implements NodeMembership {
         } else {
             this.user = new JID(user.toBareJID());
         }
-        this.lastUpdated = lastUpdated;
+        this.lastUpdated = new Date(lastUpdated.getTime());
         setListener(listener);
         this.subscription = subscription;
         this.affiliation = affiliation;
@@ -49,7 +49,7 @@ public class NodeMembershipImpl implements NodeMembership {
 
     private void setListener(JID listener) {
         if (null == listener) {
-            listener = this.user;
+            this.listener = this.user;
             return;
         }
         if (null == listener.getNode()) {

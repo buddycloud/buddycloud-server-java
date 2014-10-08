@@ -34,7 +34,7 @@ public class SearchSet implements PacketProcessor<IQ> {
     private JID author;
     private JID searcher;
 
-    public static Logger logger = Logger.getLogger(SearchSet.class);
+    public static final Logger LOGGER = Logger.getLogger(SearchSet.class);
 
     public SearchSet(BlockingQueue<Packet> outQueue, ChannelManager channelManager) {
         this.channelManager = channelManager;
@@ -186,7 +186,7 @@ public class SearchSet implements PacketProcessor<IQ> {
 
                 item.addElement("field").addAttribute("var", "entry").addElement("value").add(entry);
             } catch (DocumentException e) {
-                logger.error("Error parsing a node entry, ignoring. " + nodeItem);
+                LOGGER.error("Error parsing a node entry, ignoring. " + nodeItem);
             }
 
             resultCounter++;

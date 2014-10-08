@@ -173,8 +173,7 @@ public class RegisterSetTest extends IQTestHandler {
 
         registerSet.process(request);
 
-        // Check that a subscription has been added, but only for
-        // localPrivateChannel.
+        // Check that a subscription has been added, but only for localPrivateChannel.
         verify(channelManagerMock).addUserSubscription(
                 new NodeSubscriptionImpl(localPrivateChannelNode, REGISTER_REQUEST_FROM, Subscriptions.subscribed, null));
         verify(channelManagerMock).setUserAffiliation(localPrivateChannelNode, REGISTER_REQUEST_FROM, Affiliations.moderator);

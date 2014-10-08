@@ -3,10 +3,12 @@ package org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.set;
 import java.util.Collection;
 import java.util.concurrent.BlockingQueue;
 
+import org.apache.log4j.Logger;
 import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.db.exception.NodeStoreException;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.JabberPubsub;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.PubSubElementProcessorAbstract;
+import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.get.NodeThreadsGet;
 import org.buddycloud.channelserver.pubsub.affiliation.Affiliations;
 import org.buddycloud.channelserver.pubsub.model.NodeSubscription;
 import org.buddycloud.channelserver.utils.node.item.payload.Buddycloud;
@@ -23,6 +25,8 @@ import org.xmpp.resultsetmanagement.ResultSet;
 public class NodeDelete extends PubSubElementProcessorAbstract {
 
     private static final String NODE_REG_EX = "^/user/[^@]+@[^/]+/[^/]+$";
+
+    private static final Logger LOGGER = Logger.getLogger(NodeThreadsGet.class);
 
     public NodeDelete(BlockingQueue<Packet> outQueue, ChannelManager channelManager) {
         setChannelManager(channelManager);
@@ -72,7 +76,7 @@ public class NodeDelete extends PubSubElementProcessorAbstract {
                 outQueue.put(notification.createCopy());
             }
         } catch (Exception e) {
-            logger.error(e);
+            LOGGER.error(e);
         }
     }
 
@@ -90,7 +94,7 @@ public class NodeDelete extends PubSubElementProcessorAbstract {
         try {
             channelManager.deleteNode(node);
         } catch (NodeStoreException e) {
-            logger.error(e);
+            LOGGER.error(e);
             setErrorCondition(PacketError.Type.wait, PacketError.Condition.internal_server_error);
             outQueue.put(response);
             return;

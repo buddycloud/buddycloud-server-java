@@ -28,7 +28,7 @@ public class AffiliationsGet implements PubSubElementProcessor {
     private JID actorJid;
     private IQ result;
     private String firstItem;
-    private static final Logger logger = Logger.getLogger(AffiliationsGet.class);
+    private static final Logger LOGGER = Logger.getLogger(AffiliationsGet.class);
 
     public AffiliationsGet(BlockingQueue<Packet> outQueue, ChannelManager channelManager) {
         this.outQueue = outQueue;
@@ -86,7 +86,7 @@ public class AffiliationsGet implements PubSubElementProcessor {
 
         for (NodeMembership nodeMembership : nodeMemberships) {
 
-            if (false == actorJid.toBareJID().equals(nodeMembership.getUser())) {
+            if (false == actorJid.toBareJID().equals(nodeMembership.getUser().toBareJID())) {
                 if ((false == isOwnerModerator) && nodeMembership.getAffiliation().in(Affiliations.outcast, Affiliations.none)) {
                     continue;
                 }
@@ -94,7 +94,7 @@ public class AffiliationsGet implements PubSubElementProcessor {
                     continue;
                 }
             }
-            logger.trace("Adding affiliation for " + nodeMembership.getUser() + " affiliation " + nodeMembership.getAffiliation());
+            LOGGER.trace("Adding affiliation for " + nodeMembership.getUser() + " affiliation " + nodeMembership.getAffiliation());
 
             if (null == firstItem) {
                 firstItem = nodeMembership.getUser().toString();
@@ -124,7 +124,7 @@ public class AffiliationsGet implements PubSubElementProcessor {
 
         for (NodeMembership membership : memberships) {
 
-            if (false == actorJid.toBareJID().equals(membership.getUser())) {
+            if (false == actorJid.toBareJID().equals(membership.getUser().toBareJID())) {
                 if ((false == isOwnerModerator) && membership.getAffiliation().in(Affiliations.outcast, Affiliations.none)) {
                     continue;
                 }
@@ -132,7 +132,7 @@ public class AffiliationsGet implements PubSubElementProcessor {
                     continue;
                 }
             }
-            logger.trace("Adding affiliation for " + membership.getUser() + " affiliation " + membership.getAffiliation() + " (no node provided)");
+            LOGGER.trace("Adding affiliation for " + membership.getUser() + " affiliation " + membership.getAffiliation() + " (no node provided)");
 
             if (null == firstItem) {
                 firstItem = membership.getNodeId();
@@ -146,7 +146,7 @@ public class AffiliationsGet implements PubSubElementProcessor {
     }
 
     private void makeRemoteRequest(String node) throws InterruptedException {
-        logger.info("Going federated for <affiliations />");
+        LOGGER.info("Going federated for <affiliations />");
         requestIq.setTo(new JID(node).getDomain());
         if (null == requestIq.getElement().element("pubsub").element("actor")) {
             Element actor = requestIq.getElement().element("pubsub").addElement("actor", Buddycloud.NS);

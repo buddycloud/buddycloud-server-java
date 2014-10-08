@@ -4,6 +4,7 @@ import java.io.StringReader;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 
+import org.apache.log4j.Logger;
 import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.channel.Conf;
 import org.buddycloud.channelserver.channel.node.configuration.field.AccessModel;
@@ -26,6 +27,8 @@ import org.xmpp.packet.PacketError;
 import org.xmpp.resultsetmanagement.ResultSet;
 
 public class NodeThreadsGet extends PubSubElementProcessorAbstract {
+
+    private static final Logger LOGGER = Logger.getLogger(NodeThreadsGet.class);
 
     private static final int MAX_THREADS_TO_RETURN = 15;
     private int max;
@@ -58,7 +61,7 @@ public class NodeThreadsGet extends PubSubElementProcessorAbstract {
         }
 
         if (!channelManager.isLocalNode(node) && !channelManager.isCachedNode(node)) {
-            logger.debug("Node " + node + " is remote and not cached, off to get some data");
+            LOGGER.debug("Node " + node + " is remote and not cached, off to get some data");
             makeRemoteRequest();
             return;
         }
@@ -125,7 +128,7 @@ public class NodeThreadsGet extends PubSubElementProcessorAbstract {
                 return true;
             }
         } catch (NullPointerException e) {
-            logger.error(e);
+            LOGGER.error(e);
         }
         createExtendedErrorReply(PacketError.Type.modify, PacketError.Condition.bad_request, "nodeid-required");
         return false;

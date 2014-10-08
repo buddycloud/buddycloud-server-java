@@ -22,7 +22,6 @@ import org.xmpp.packet.Packet;
 import org.xmpp.packet.PacketError;
 
 public class NodeConfigureGet extends PubSubElementProcessorAbstract {
-    protected String node;
 
     public static final String NS_CONFIGURE = "http://jabber.org/protocol/pubsub#node_config";
 

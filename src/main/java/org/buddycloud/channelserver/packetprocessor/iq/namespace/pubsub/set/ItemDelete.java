@@ -67,13 +67,13 @@ public class ItemDelete extends PubSubElementProcessorAbstract {
             sendNotifications(node, itemId);
             return;
         } catch (NodeStoreException e) {
-            logger.error(e);
+            LOGGER.error(e);
             setErrorCondition(PacketError.Type.wait, PacketError.Condition.internal_server_error);
         } catch (NullPointerException e) {
-            logger.error(e);
+            LOGGER.error(e);
             setErrorCondition(PacketError.Type.modify, PacketError.Condition.bad_request);
         } catch (IllegalArgumentException e) {
-            logger.error(e);
+            LOGGER.error(e);
             setErrorCondition(PacketError.Type.modify, PacketError.Condition.bad_request);
         }
         outQueue.put(response);
@@ -104,7 +104,7 @@ public class ItemDelete extends PubSubElementProcessorAbstract {
             Message notification = getNotificationMessage(node, itemId);
 
             for (NodeSubscription subscription : subscriptions) {
-                logger.debug("Subscription [node: " + subscription.getNodeId() + ", listener: " + subscription.getListener() + ", subscription: "
+                LOGGER.debug("Subscription [node: " + subscription.getNodeId() + ", listener: " + subscription.getListener() + ", subscription: "
                         + subscription.getSubscription() + "]");
                 if (subscription.getSubscription().equals(Subscriptions.subscribed)) {
                     notification.setTo(subscription.getListener());
@@ -118,10 +118,10 @@ public class ItemDelete extends PubSubElementProcessorAbstract {
                 outQueue.put(notification.createCopy());
             }
         } catch (NullPointerException e) {
-            logger.error(e);
+            LOGGER.error(e);
             return;
         } catch (InterruptedException e) {
-            logger.error(e);
+            LOGGER.error(e);
             return;
         }
     }

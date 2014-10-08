@@ -3,6 +3,8 @@ package org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.set;
 import java.util.HashMap;
 import java.util.concurrent.BlockingQueue;
 
+import org.apache.log4j.LogManager;
+import org.apache.log4j.Logger;
 import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.channel.Conf;
 import org.buddycloud.channelserver.channel.node.configuration.NodeConfigurationException;
@@ -22,6 +24,8 @@ import org.xmpp.packet.PacketError;
 public class NodeCreate extends PubSubElementProcessorAbstract {
     private static final String NODE_REG_EX = "^/user/[^@]+@[^/]+/[^/]+$";
     private static final String INVALID_NODE_CONFIGURATION = "Invalid node configuration";
+
+    private static final Logger LOGGER = LogManager.getLogger(NodeCreate.class);
 
     public NodeCreate(BlockingQueue<Packet> outQueue, ChannelManager channelManager) {
         setChannelManager(channelManager);
@@ -53,12 +57,12 @@ public class NodeCreate extends PubSubElementProcessorAbstract {
         try {
             channelManager.createNode(actor, node, getNodeConfiguration());
         } catch (NodeStoreException e) {
-            logger.error(e);
+            LOGGER.error(e);
             setErrorCondition(PacketError.Type.wait, PacketError.Condition.internal_server_error);
             outQueue.put(response);
             return;
         } catch (NodeConfigurationException e) {
-            logger.error(e);
+            LOGGER.error(e);
             setErrorCondition(PacketError.Type.modify, PacketError.Condition.bad_request);
             outQueue.put(response);
             return;

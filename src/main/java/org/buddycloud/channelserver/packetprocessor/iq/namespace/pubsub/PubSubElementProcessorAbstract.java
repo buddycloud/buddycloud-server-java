@@ -21,7 +21,7 @@ import org.xmpp.packet.PacketError.Type;
 public abstract class PubSubElementProcessorAbstract implements PubSubElementProcessor {
     public static final String NS_RSM = "http://jabber.org/protocol/rsm";
 
-    public static Logger logger = Logger.getLogger(PubSubElementProcessorAbstract.class);
+    public static final Logger LOGGER = Logger.getLogger(PubSubElementProcessorAbstract.class);
 
     protected BlockingQueue<Packet> outQueue;
     protected ChannelManager channelManager;

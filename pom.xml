@@ -259,6 +259,8 @@
                     <artifactId>maven-checkstyle-plugin</artifactId>
                     <version>${checkstyle.version}</version>
                     <configuration>
+                        <!-- Set the property samedir so that the suppression file can be resolved by both maven and eclipse-cs -->
+                        <propertyExpansion>samedir=${basedir}/src/main/resources</propertyExpansion>
                         <failOnViolation>true</failOnViolation>
                         <failsOnError>true</failsOnError>
                         <encoding>UTF-8</encoding>
@@ -300,7 +302,7 @@
                     <version>2.5.5</version>
                     <configuration>
                         <effort>Max</effort>
-                        <threshold>Low</threshold>
+                        <threshold>High</threshold>
                         <xmlOutput>true</xmlOutput>
                     </configuration>
                     <executions>

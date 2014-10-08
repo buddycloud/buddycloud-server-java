@@ -1,6 +1,7 @@
 package org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.get;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
@@ -110,7 +111,7 @@ public class SubscriptionsGetTest extends IQTestHandler {
     @Test
     public void doesntAddInvitedByToNodeSubscriptionsListIfNotUserOrOwnerOrModerator() throws Exception {
 
-        ArrayList<NodeMembership> members = new ArrayList<NodeMembership>();
+        List<NodeMembership> members = new ArrayList<NodeMembership>();
         members.add(new NodeMembershipImpl(node, jid, Subscriptions.invited, Affiliations.publisher, invitedBy));
 
         Mockito.when(channelManager.getNodeMemberships(Mockito.anyString())).thenReturn(new ResultSetImpl<NodeMembership>(members));
@@ -124,7 +125,7 @@ public class SubscriptionsGetTest extends IQTestHandler {
         Assert.assertEquals(userRequest.getTo(), response.getFrom());
         Assert.assertEquals(userRequest.getFrom(), response.getTo());
         Assert.assertEquals(userRequest.getID(), response.getID());
-        Assert.assertEquals(0, response.getChildElement().element("subscriptions").elements("subscription").size());
+        Assert.assertEquals(0, response.getChildElement().element("subscriptions").elements("invited-by").size());
     }
 
     @Test

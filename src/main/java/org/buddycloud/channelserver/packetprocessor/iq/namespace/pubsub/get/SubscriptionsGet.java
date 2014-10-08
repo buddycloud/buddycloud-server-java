@@ -7,9 +7,7 @@ import org.buddycloud.channelserver.db.exception.NodeStoreException;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.JabberPubsub;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.PubSubElementProcessor;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.PubSubGet;
-import org.buddycloud.channelserver.pubsub.affiliation.Affiliations;
 import org.buddycloud.channelserver.pubsub.model.NodeMembership;
-import org.buddycloud.channelserver.pubsub.subscription.Subscriptions;
 import org.buddycloud.channelserver.utils.node.item.payload.Buddycloud;
 import org.dom4j.Element;
 import org.xmpp.packet.IQ;
@@ -74,41 +72,33 @@ public class SubscriptionsGet implements PubSubElementProcessor {
     }
 
     private boolean getNodeMemberships(Element subscriptions) throws NodeStoreException, InterruptedException {
-        if (!channelManager.isLocalNode(node) && (!channelManager.isCachedNode(node))) {
-            makeRemoteRequest(new JID(node.split("/")[2]).getDomain());
-            return false;
-        }
+
         ResultSet<NodeMembership> cur = channelManager.getNodeMemberships(node);
 
-        if ((null != requestIq.getElement().element(PubSubGet.ELEMENT_NAME).element("set")) && (!cur.isEmpty()) && (!channelManager.isLocalNode(node))) {
-            makeRemoteRequest(new JID(node.split("/")[2]).getDomain());
+        if (channelManager.isLocalNode(node)) {
+
+            subscriptions.addAttribute("node", node);
+
+            for (NodeMembership ns : cur) {
+                if (actorJid.toBareJID().equals(ns.getUser().toBareJID())) {
+                    Element subscription = subscriptions.addElement(ELEMENT_NAME);
+                    subscription.addAttribute("node", ns.getNodeId()).addAttribute(ELEMENT_NAME, ns.getSubscription().toString())
+                            .addAttribute("jid", ns.getUser().toBareJID());
+                    if (null != ns.getInvitedBy()) {
+                        subscription.addAttribute("invited-by", ns.getInvitedBy().toBareJID());
+                    }
+                }
+
+            }
+        } else {
+
+            if (!channelManager.isCachedNode(node) || (null != requestIq.getElement().element(PubSubGet.ELEMENT_NAME).element("set")) && !cur.isEmpty()) {
+                makeRemoteRequest(new JID(node.split("/")[2]).getDomain());
+            }
             return false;
         }
 
-        subscriptions.addAttribute("node", node);
-
-        boolean isOwnerModerator = isOwnerModerator();
-        for (NodeMembership ns : cur) {
-            if (!actorJid.toBareJID().equals(ns.getUser().toBareJID())) {
-                if ((!isOwnerModerator) && ns.getAffiliation().in(Affiliations.outcast, Affiliations.none)) {
-                    continue;
-                }
-                if ((!isOwnerModerator) && !ns.getSubscription().equals(Subscriptions.subscribed)) {
-                    continue;
-                }
-            }
-            Element subscription = subscriptions.addElement(ELEMENT_NAME);
-            subscription.addAttribute("node", ns.getNodeId()).addAttribute(ELEMENT_NAME, ns.getSubscription().toString())
-                    .addAttribute("jid", ns.getUser().toBareJID());
-            if (null != ns.getInvitedBy()) {
-                subscription.addAttribute("invited-by", ns.getInvitedBy().toBareJID());
-            }
-        }
         return true;
-    }
-
-    private boolean isOwnerModerator() throws NodeStoreException {
-        return channelManager.getNodeMembership(node, actorJid).getAffiliation().canAuthorize();
     }
 
     private boolean getUserMemberships(Element subscriptions) throws NodeStoreException, InterruptedException {

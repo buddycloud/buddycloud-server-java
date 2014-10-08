@@ -8,7 +8,6 @@ import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.db.exception.NodeStoreException;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.JabberPubsub;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.PubSubElementProcessorAbstract;
-import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.PubSubSet;
 import org.buddycloud.channelserver.pubsub.model.NodeMembership;
 import org.buddycloud.channelserver.pubsub.model.NodeSubscription;
 import org.buddycloud.channelserver.pubsub.model.impl.NodeSubscriptionImpl;
@@ -177,8 +176,7 @@ public class SubscriptionEvent extends PubSubElementProcessorAbstract {
 
     private boolean validRequestStanza() {
         subscriptionElement =
-                request.getElement().element(PubSubSet.ELEMENT_NAME).element(XMLConstants.SUBSCRIPTIONS_ELEM)
-                        .element(XMLConstants.SUBSCRIPTION_ELEM);
+                request.getElement().element(XMLConstants.PUBSUB_ELEM).element(XMLConstants.SUBSCRIPTIONS_ELEM).element(XMLConstants.SUBSCRIPTION_ELEM);
 
 
         if ((null == subscriptionElement) || (null == subscriptionElement.attribute("jid")) || (null == subscriptionElement.attribute("subscription"))) {

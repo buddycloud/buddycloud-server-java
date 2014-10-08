@@ -78,7 +78,7 @@ public class PubSubGet implements PacketProcessor<IQ> {
             }
         }
 
-        if (handled == false) {
+        if (!handled) {
 
             // <iq type='error'
             // from='pubsub.shakespeare.lit'

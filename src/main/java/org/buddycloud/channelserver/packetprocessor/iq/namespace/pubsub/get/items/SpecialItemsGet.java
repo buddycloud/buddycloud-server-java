@@ -6,6 +6,7 @@ import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.PubSubElementProcessor;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.PubSubElementProcessorAbstract;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.get.items.special.FirehoseGet;
+import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.set.XMLConstants;
 import org.dom4j.Element;
 import org.xmpp.packet.IQ;
 import org.xmpp.packet.JID;
@@ -25,8 +26,8 @@ public class SpecialItemsGet extends PubSubElementProcessorAbstract {
     public void process(Element elm, JID actorJID, IQ reqIQ, Element rsm) throws Exception {
         request = reqIQ;
         PubSubElementProcessor processor = null;
-        node = elm.attributeValue("node");
-        if (true == FIREHOSE.equals(node)) {
+        node = elm.attributeValue(XMLConstants.NODE_ATTR);
+        if (FIREHOSE.equals(node)) {
             processor = new FirehoseGet(outQueue, channelManager);
         } else {
             featureNotImplementedError();
@@ -42,6 +43,6 @@ public class SpecialItemsGet extends PubSubElementProcessorAbstract {
 
     @Override
     public boolean accept(Element elm) {
-        return elm.getName().equals("items");
+        return XMLConstants.ITEMS_ELEM.equals(elm.getName());
     }
 }

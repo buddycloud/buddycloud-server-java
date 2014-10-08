@@ -11,6 +11,7 @@ import org.buddycloud.channelserver.db.CloseableIterator;
 import org.buddycloud.channelserver.db.exception.NodeStoreException;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.JabberPubsub;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.PubSubElementProcessorAbstract;
+import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.set.XMLConstants;
 import org.buddycloud.channelserver.pubsub.model.GlobalItemID;
 import org.buddycloud.channelserver.pubsub.model.NodeItem;
 import org.buddycloud.channelserver.pubsub.model.impl.GlobalItemIDImpl;
@@ -46,6 +47,8 @@ public class RecentItemsGet extends PubSubElementProcessorAbstract {
         setChannelManager(channelManager);
         setOutQueue(outQueue);
         xmlReader = new SAXReader();
+
+        acceptedElementName = XMLConstants.RECENT_ITEMS_ELEM;
     }
 
     @Override
@@ -144,40 +147,44 @@ public class RecentItemsGet extends PubSubElementProcessorAbstract {
     }
 
     private boolean isValidStanza() {
-        Element recentItems = request.getChildElement().element("recent-items");
+        boolean valid = false;
+        String failureReason = null;
+
+        Element recentItems = request.getChildElement().element(XMLConstants.RECENT_ITEMS_ELEM);
         try {
-            String max = recentItems.attributeValue("max");
-            if (null == max) {
-                createExtendedErrorReply(PacketError.Type.modify, PacketError.Condition.bad_request, "max-required");
-                return false;
+            String max = recentItems.attributeValue(XMLConstants.MAX_ATTR);
+            if (null != max) {
+                maxItems = Integer.parseInt(max);
+
+                String since = recentItems.attributeValue(XMLConstants.SINCE_ATTR);
+                if (null != since) {
+                    maxAge = Conf.parseDate(since);
+                    valid = true;
+                } else {
+                    failureReason = XMLConstants.SINCE_REQUIRED_ELEM;
+                }
+            } else {
+                failureReason = XMLConstants.MAX_REQUIRED_ELEM;
             }
-            maxItems = Integer.parseInt(max);
-            String since = recentItems.attributeValue("since");
-            String parentOnlyAttribute = recentItems.attributeValue("parent-only");
-            if ((null != parentOnlyAttribute) && ((true == parentOnlyAttribute.equals("true")) || (true == parentOnlyAttribute.equals("1")))) {
+
+            String parentOnlyAttribute = recentItems.attributeValue(XMLConstants.PARENT_ONLY_ATTR);
+            if ((null != parentOnlyAttribute) && ((Boolean.TRUE.toString().equals(parentOnlyAttribute)) || ("1".equals(parentOnlyAttribute)))) {
                 parentOnly = true;
             }
 
-            if (null == since) {
-                createExtendedErrorReply(PacketError.Type.modify, PacketError.Condition.bad_request, "since-required");
-                return false;
-            }
-            maxAge = Conf.parseDate(since);
 
         } catch (NumberFormatException e) {
+            failureReason = XMLConstants.INVALID_MAX_VALUE_PROVIDED_ELEM;
             LOGGER.error(e);
-            createExtendedErrorReply(PacketError.Type.modify, PacketError.Condition.bad_request, "invalid-max-value-provided");
-            return false;
         } catch (IllegalArgumentException e) {
-            createExtendedErrorReply(PacketError.Type.modify, PacketError.Condition.bad_request, "invalid-since-value-provided");
+            failureReason = XMLConstants.INVALID_SINCE_VALUE_PROVIDED_ELEM;
             LOGGER.error(e);
-            return false;
         }
-        return true;
-    }
 
-    @Override
-    public boolean accept(Element elm) {
-        return elm.getName().equals("recent-items");
+        if (!valid) {
+            createExtendedErrorReply(PacketError.Type.modify, PacketError.Condition.bad_request, failureReason);
+        }
+
+        return valid;
     }
 }

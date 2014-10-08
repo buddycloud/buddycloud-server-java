@@ -5,6 +5,7 @@ import java.util.concurrent.BlockingQueue;
 import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.get.items.NodeItemsGet;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.get.items.SpecialItemsGet;
+import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.set.XMLConstants;
 import org.dom4j.Element;
 import org.xmpp.packet.IQ;
 import org.xmpp.packet.JID;
@@ -21,6 +22,8 @@ public class ItemsGet extends PubSubElementProcessorAbstract {
         setChannelManager(channelManager);
         userItems = new NodeItemsGet(outQueue, channelManager);
         specialItems = new SpecialItemsGet(outQueue, channelManager);
+
+        acceptedElementName = XMLConstants.ITEMS_ELEM;
     }
 
     @Override
@@ -39,10 +42,5 @@ public class ItemsGet extends PubSubElementProcessorAbstract {
             return;
         }
         userItems.process(elm, actorJID, reqIQ, rsm);
-    }
-
-    @Override
-    public boolean accept(Element elm) {
-        return elm.getName().equals("items");
     }
 }

@@ -30,6 +30,8 @@ public class NodeConfigureGet extends PubSubElementProcessorAbstract {
     public NodeConfigureGet(BlockingQueue<Packet> outQueue, ChannelManager channelManager) {
         setChannelManager(channelManager);
         setOutQueue(outQueue);
+
+        acceptedElementName = XMLConstants.CONFIGURE_ELEM;
     }
 
     public void process(Element elm, JID actorJID, IQ reqIQ, Element rsm) throws Exception {
@@ -122,9 +124,5 @@ public class NodeConfigureGet extends PubSubElementProcessorAbstract {
         Element actor = request.getElement().element(XMLConstants.PUBSUB_ELEM).addElement(XMLConstants.ACTOR_ELEM, Buddycloud.NS);
         actor.addText(request.getFrom().toBareJID());
         outQueue.put(request);
-    }
-
-    public boolean accept(Element elm) {
-        return XMLConstants.CONFIGURE_ELEM.equals(elm.getName());
     }
 }

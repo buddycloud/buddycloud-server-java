@@ -6,6 +6,7 @@ import java.util.concurrent.BlockingQueue;
 import org.buddycloud.channelserver.Configuration;
 import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.channel.node.configuration.Helper;
+import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.set.XMLConstants;
 import org.dom4j.Document;
 import org.dom4j.DocumentHelper;
 import org.dom4j.Element;
@@ -37,6 +38,8 @@ public abstract class PubSubElementProcessorAbstract implements PubSubElementPro
     protected int totalEntriesCount;
 
     private Collection<JID> adminUsers;
+
+    protected String acceptedElementName;
 
     public void setOutQueue(BlockingQueue<Packet> outQueue) {
         this.outQueue = outQueue;
@@ -121,12 +124,12 @@ public abstract class PubSubElementProcessorAbstract implements PubSubElementPro
         response.setType(IQ.Type.error);
         Element standardError = new DOMElement(condition.toXMPP(), new org.dom4j.Namespace("", JabberPubsub.NS_XMPP_STANZAS));
         Element extraError = new DOMElement(additionalElement, new org.dom4j.Namespace("", additionalNamespace));
-        Element error = new DOMElement("error");
-        error.addAttribute("type", type.toXMPP());
+        Element error = new DOMElement(XMLConstants.ERROR_ELEM);
+        error.addAttribute(XMLConstants.TYPE_ATTR, type.toXMPP());
         error.add(standardError);
         error.add(extraError);
         if (null != text) {
-            Element description = new DOMElement("text", new org.dom4j.Namespace("", "urn:ietf:params:xml:ns:xmpp-stanzas"));
+            Element description = new DOMElement(XMLConstants.TEXT_ELEM, new org.dom4j.Namespace("", "urn:ietf:params:xml:ns:xmpp-stanzas"));
             description.setText(text);
             error.add(description);
         }
@@ -135,5 +138,9 @@ public abstract class PubSubElementProcessorAbstract implements PubSubElementPro
 
     protected Document getDocumentHelper() {
         return DocumentHelper.createDocument();
+    }
+
+    public boolean accept(Element elm) {
+        return acceptedElementName.equals(elm.getName());
     }
 }

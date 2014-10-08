@@ -6,11 +6,9 @@ import org.apache.log4j.Logger;
 import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.db.exception.NodeStoreException;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.JabberPubsub;
-import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.PubSubElementProcessor;
+import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.PubSubElementProcessorAbstract;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.set.XMLConstants;
-import org.buddycloud.channelserver.pubsub.affiliation.Affiliations;
 import org.buddycloud.channelserver.pubsub.model.NodeMembership;
-import org.buddycloud.channelserver.pubsub.subscription.Subscriptions;
 import org.buddycloud.channelserver.utils.node.item.payload.Buddycloud;
 import org.dom4j.Element;
 import org.xmpp.packet.IQ;
@@ -18,7 +16,7 @@ import org.xmpp.packet.JID;
 import org.xmpp.packet.Packet;
 import org.xmpp.resultsetmanagement.ResultSet;
 
-public class AffiliationsGet implements PubSubElementProcessor {
+public class AffiliationsGet extends PubSubElementProcessorAbstract {
 
     private final BlockingQueue<Packet> outQueue;
     private final ChannelManager channelManager;
@@ -40,7 +38,7 @@ public class AffiliationsGet implements PubSubElementProcessor {
         result = IQ.createResultIQ(reqIQ);
         requestIq = reqIQ;
         actorJid = actorJID;
-        node = elm.attributeValue("node");
+        node = elm.attributeValue(XMLConstants.NODE_ATTR);
         if (!channelManager.isLocalJID(requestIq.getFrom())) {
             result.getElement().addAttribute(XMLConstants.REMOTE_SERVER_DISCOVER_ATTR, Boolean.FALSE.toString());
         }
@@ -50,7 +48,7 @@ public class AffiliationsGet implements PubSubElementProcessor {
         }
 
         Element pubsub = result.setChildElement(XMLConstants.PUBSUB_ELEM, namespace);
-        Element affiliations = pubsub.addElement("affiliations");
+        Element affiliations = pubsub.addElement(XMLConstants.AFFILIATION_ELEM);
 
         if (actorJid == null) {
             actorJid = requestIq.getFrom();
@@ -82,29 +80,19 @@ public class AffiliationsGet implements PubSubElementProcessor {
             return false;
         }
 
-        boolean isOwnerModerator = isOwnerModerator();
-
         for (NodeMembership nodeMembership : nodeMemberships) {
 
-            if (!actorJid.toBareJID().equals(nodeMembership.getUser().toBareJID())) {
-                if ((!isOwnerModerator) && nodeMembership.getAffiliation().in(Affiliations.outcast, Affiliations.none)) {
-                    continue;
+            if (actorJid.toBareJID().equals(nodeMembership.getUser().toBareJID())) {
+                if (null == firstItem) {
+                    firstItem = nodeMembership.getUser().toString();
                 }
-                if ((!isOwnerModerator) && !nodeMembership.getSubscription().equals(Subscriptions.subscribed)) {
-                    continue;
-                }
-            }
-            LOGGER.trace("Adding affiliation for " + nodeMembership.getUser() + " affiliation " + nodeMembership.getAffiliation());
 
-            if (null == firstItem) {
-                firstItem = nodeMembership.getUser().toString();
+                affiliations.addElement(XMLConstants.AFFILIATION_ELEM).addAttribute(XMLConstants.NODE_ATTR, nodeMembership.getNodeId())
+                        .addAttribute(XMLConstants.AFFILIATION_ELEM, nodeMembership.getAffiliation().toString())
+                        .addAttribute(XMLConstants.JID_ATTR, nodeMembership.getUser().toString());
             }
-            nodeMembership.getUser().toString();
-
-            affiliations.addElement(XMLConstants.AFFILIATION_ELEM).addAttribute(XMLConstants.NODE_ATTR, nodeMembership.getNodeId())
-                    .addAttribute(XMLConstants.AFFILIATION_ELEM, nodeMembership.getAffiliation().toString())
-                    .addAttribute(XMLConstants.JID_ATTR, nodeMembership.getUser().toString());
         }
+
         return true;
     }
 
@@ -119,30 +107,21 @@ public class AffiliationsGet implements PubSubElementProcessor {
             return false;
         }
 
-        ResultSet<NodeMembership> memberships;
-        memberships = channelManager.getUserMemberships(actorJid);
-        boolean isOwnerModerator = isOwnerModerator();
-
+        ResultSet<NodeMembership> memberships = channelManager.getUserMemberships(actorJid);
         for (NodeMembership membership : memberships) {
 
-            if (!actorJid.toBareJID().equals(membership.getUser().toBareJID())) {
-                if ((!isOwnerModerator) && membership.getAffiliation().in(Affiliations.outcast, Affiliations.none)) {
-                    continue;
-                }
-                if ((!isOwnerModerator) && !membership.getSubscription().equals(Subscriptions.subscribed)) {
-                    continue;
-                }
-            }
-            LOGGER.trace("Adding affiliation for " + membership.getUser() + " affiliation " + membership.getAffiliation() + " (no node provided)");
+            if (actorJid.toBareJID().equals(membership.getUser().toBareJID())) {
+                LOGGER.trace("Adding affiliation for " + membership.getUser() + " affiliation " + membership.getAffiliation() + " (no node provided)");
 
-            if (null == firstItem) {
-                firstItem = membership.getNodeId();
-            }
-            membership.getNodeId();
+                if (null == firstItem) {
+                    firstItem = membership.getNodeId();
+                }
 
-            affiliations.addElement(XMLConstants.AFFILIATION_ELEM).addAttribute(XMLConstants.NODE_ATTR, membership.getNodeId())
-                    .addAttribute(XMLConstants.AFFILIATION_ELEM, membership.getAffiliation().toString())
-                    .addAttribute(XMLConstants.JID_ATTR, membership.getUser().toBareJID());
+                affiliations.addElement(XMLConstants.AFFILIATION_ELEM).addAttribute(XMLConstants.NODE_ATTR, membership.getNodeId())
+                        .addAttribute(XMLConstants.AFFILIATION_ELEM, membership.getAffiliation().toString())
+                        .addAttribute(XMLConstants.JID_ATTR, membership.getUser().toBareJID());
+            }
+
         }
         return true;
     }

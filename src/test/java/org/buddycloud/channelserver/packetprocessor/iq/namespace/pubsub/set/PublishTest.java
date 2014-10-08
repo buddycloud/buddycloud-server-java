@@ -111,7 +111,7 @@ public class PublishTest extends IQTestHandler {
         PacketError error = response.getError();
         Assert.assertNotNull(error);
         Assert.assertEquals(PacketError.Type.modify, error.getType());
-        Assert.assertEquals(Publish.NODE_ID_REQUIRED, error.getApplicationConditionName());
+        Assert.assertEquals(XMLConstants.NODE_ID_REQUIRED, error.getApplicationConditionName());
     }
 
     @Test
@@ -246,7 +246,7 @@ public class PublishTest extends IQTestHandler {
         Assert.assertNotNull(error);
         Assert.assertEquals(PacketError.Type.modify, error.getType());
         Assert.assertEquals(PacketError.Condition.bad_request, error.getCondition());
-        Assert.assertEquals(Publish.MISSING_ITEM_ELEMENT, error.getApplicationConditionName());
+        Assert.assertEquals(XMLConstants.ITEM_REQUIRED_ELEM, error.getApplicationConditionName());
     }
 
     @Test

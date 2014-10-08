@@ -5,7 +5,7 @@ import java.util.concurrent.BlockingQueue;
 import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.db.exception.NodeStoreException;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.JabberPubsub;
-import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.PubSubElementProcessor;
+import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.PubSubElementProcessorAbstract;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.set.XMLConstants;
 import org.buddycloud.channelserver.pubsub.model.NodeMembership;
 import org.buddycloud.channelserver.utils.node.item.payload.Buddycloud;
@@ -15,7 +15,7 @@ import org.xmpp.packet.JID;
 import org.xmpp.packet.Packet;
 import org.xmpp.resultsetmanagement.ResultSet;
 
-public class SubscriptionsGet implements PubSubElementProcessor {
+public class SubscriptionsGet extends PubSubElementProcessorAbstract {
 
     private final BlockingQueue<Packet> outQueue;
     private ChannelManager channelManager;
@@ -56,7 +56,7 @@ public class SubscriptionsGet implements PubSubElementProcessor {
             isProcessedLocally = getUserMemberships(subscriptions);
         } else {
             if (!channelManager.isLocalNode(node)) {
-                result.getElement().addAttribute("remote-server-discover", "false");
+                result.getElement().addAttribute(XMLConstants.REMOTE_SERVER_DISCOVER_ATTR, Boolean.FALSE.toString());
             }
             isProcessedLocally = getNodeMemberships(subscriptions);
         }
@@ -124,8 +124,8 @@ public class SubscriptionsGet implements PubSubElementProcessor {
     private void makeRemoteRequest(String to) throws InterruptedException {
         IQ forwarder = requestIq.createCopy();
         forwarder.setTo(to);
-        if (null == forwarder.getElement().element(XMLConstants.PUBSUB_ELEM).element("actor")) {
-            Element actor = forwarder.getElement().element(XMLConstants.PUBSUB_ELEM).addElement("actor", Buddycloud.NS);
+        if (null == forwarder.getElement().element(XMLConstants.PUBSUB_ELEM).element(XMLConstants.ACTOR_ELEM)) {
+            Element actor = forwarder.getElement().element(XMLConstants.PUBSUB_ELEM).addElement(XMLConstants.ACTOR_ELEM, Buddycloud.NS);
             actor.addText(requestIq.getFrom().toBareJID());
         }
         outQueue.put(forwarder);

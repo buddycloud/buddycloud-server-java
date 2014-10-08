@@ -11,6 +11,7 @@ import org.buddycloud.channelserver.db.CloseableIterator;
 import org.buddycloud.channelserver.db.exception.NodeStoreException;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.JabberPubsub;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.PubSubElementProcessorAbstract;
+import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.set.XMLConstants;
 import org.buddycloud.channelserver.pubsub.model.GlobalItemID;
 import org.buddycloud.channelserver.pubsub.model.NodeItem;
 import org.buddycloud.channelserver.pubsub.model.impl.GlobalItemIDImpl;
@@ -43,6 +44,8 @@ public class UserItemsGet extends PubSubElementProcessorAbstract {
         setChannelManager(channelManager);
         setOutQueue(outQueue);
         xmlReader = new SAXReader();
+
+        acceptedElementName = XMLConstants.USER_ITEMS;
     }
 
     @Override
@@ -50,7 +53,7 @@ public class UserItemsGet extends PubSubElementProcessorAbstract {
         response = IQ.createResultIQ(reqIQ);
         request = reqIQ;
         actor = actorJID;
-        node = elm.attributeValue("node");
+        node = elm.attributeValue(XMLConstants.NODE_ATTR);
         resultSetManagement = rsm;
 
         if (null == actor) {
@@ -67,7 +70,7 @@ public class UserItemsGet extends PubSubElementProcessorAbstract {
         }
         pubsub = response.getElement().addElement("pubsub", JabberPubsub.NAMESPACE_URI);
         try {
-            if (true == parseRsmElement()) {
+            if (parseRsmElement()) {
                 addRecentItems();
                 addRsmElement();
             }
@@ -142,34 +145,29 @@ public class UserItemsGet extends PubSubElementProcessorAbstract {
     }
 
     private boolean isValidStanza() {
-        Element userFeedItems = request.getChildElement().element("user-items");
+        Element userFeedItems = request.getChildElement().element(XMLConstants.USER_ITEMS);
         try {
-            String since = userFeedItems.attributeValue("since");
-            String parentOnlyAttribute = userFeedItems.attributeValue("parent-only");
-            if ((null != parentOnlyAttribute) && ((true == parentOnlyAttribute.equals("true")) || (true == parentOnlyAttribute.equals("1")))) {
+            String since = userFeedItems.attributeValue(XMLConstants.SINCE_ATTR);
+            String parentOnlyAttribute = userFeedItems.attributeValue(XMLConstants.PARENT_ONLY_ATTR);
+            if ((null != parentOnlyAttribute) && (("true".equals(parentOnlyAttribute)) || ("1".equals(parentOnlyAttribute)))) {
                 parentOnly = true;
             }
 
             if (null == since) {
-                createExtendedErrorReply(PacketError.Type.modify, PacketError.Condition.bad_request, "since-required");
+                createExtendedErrorReply(PacketError.Type.modify, PacketError.Condition.bad_request, XMLConstants.SINCE_REQUIRED_ELEM);
                 return false;
             }
             maxAge = Conf.parseDate(since);
 
         } catch (NumberFormatException e) {
             LOGGER.error(e);
-            createExtendedErrorReply(PacketError.Type.modify, PacketError.Condition.bad_request, "invalid-max-value-provided");
+            createExtendedErrorReply(PacketError.Type.modify, PacketError.Condition.bad_request, XMLConstants.INVALID_MAX_VALUE_PROVIDED_ELEM);
             return false;
         } catch (IllegalArgumentException e) {
-            createExtendedErrorReply(PacketError.Type.modify, PacketError.Condition.bad_request, "invalid-since-value-provided");
+            createExtendedErrorReply(PacketError.Type.modify, PacketError.Condition.bad_request, XMLConstants.INVALID_SINCE_VALUE_PROVIDED_ELEM);
             LOGGER.error(e);
             return false;
         }
         return true;
-    }
-
-    @Override
-    public boolean accept(Element elm) {
-        return elm.getName().equals("user-items");
     }
 }

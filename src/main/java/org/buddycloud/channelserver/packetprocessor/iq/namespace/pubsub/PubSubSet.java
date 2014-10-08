@@ -15,6 +15,7 @@ import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.set.Publ
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.set.SubscribeSet;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.set.SubscriptionEvent;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.set.UnsubscribeSet;
+import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.set.XMLConstants;
 import org.dom4j.Element;
 import org.xmpp.packet.IQ;
 import org.xmpp.packet.IQ.Type;
@@ -23,8 +24,6 @@ import org.xmpp.packet.Packet;
 import org.xmpp.packet.PacketError;
 
 public class PubSubSet implements PacketProcessor<IQ> {
-
-    public static final String ELEMENT_NAME = "pubsub";
 
     private final BlockingQueue<Packet> outQueue;
     private final ChannelManager channelManager;
@@ -55,8 +54,8 @@ public class PubSubSet implements PacketProcessor<IQ> {
 
         // Let's get the possible actor
         JID actorJID = null;
-        if (pubsub.elementText("actor") != null) {
-            actorJID = new JID(pubsub.elementText("actor").trim());
+        if (pubsub.elementText(XMLConstants.ACTOR_ELEM) != null) {
+            actorJID = new JID(pubsub.elementText(XMLConstants.ACTOR_ELEM).trim());
             /**
              * TODO(lloydwatkin) validate here that the JID is somehow sane. We could check that the
              * domains are the same etc.
@@ -90,7 +89,6 @@ public class PubSubSet implements PacketProcessor<IQ> {
         @SuppressWarnings("unchecked")
         List<Element> elements = pubsub.elements();
 
-        boolean handled = false;
         for (Element x : elements) {
             for (PubSubElementProcessor elementProcessor : elementProcessors) {
                 if (elementProcessor.accept(x)) {

@@ -32,7 +32,9 @@ import org.xmpp.packet.PacketError.Condition;
 import org.xmpp.packet.PacketError.Type;
 
 public class NodeItemsGet implements PubSubElementProcessor {
-    private static final Logger logger = Logger.getLogger(NodeItemsGet.class);
+    private static final Logger LOGGER = Logger.getLogger(NodeItemsGet.class);
+
+    public static final int MAX_ITEMS_TO_RETURN = 50;
 
     private final BlockingQueue<Packet> outQueue;
 
@@ -94,7 +96,7 @@ public class NodeItemsGet implements PubSubElementProcessor {
         }
 
         if (!channelManager.isLocalNode(node) && !isCached) {
-            logger.debug("Node " + node + " is remote and not cached, off to get some data");
+            LOGGER.debug("Node " + node + " is remote and not cached, off to get some data");
             makeRemoteRequest();
             return;
         }
@@ -119,14 +121,14 @@ public class NodeItemsGet implements PubSubElementProcessor {
                 }
             }
         } catch (NodeStoreException e) {
-            logger.error(e);
+            LOGGER.error(e);
             setErrorCondition(PacketError.Type.wait, PacketError.Condition.internal_server_error);
         }
         outQueue.put(reply);
     }
 
     private boolean getItem() throws Exception {
-        NodeItem nodeItem = channelManager.getNodeItem(node, element.element("item").attributeValue("id"));
+        NodeItem nodeItem = channelManager.getNodeItem(node, element.element(XMLConstants.ITEM_ELEM).attributeValue(XMLConstants.ID_ATTR));
         if (nodeItem == null) {
             if (!channelManager.isLocalNode(node)) {
                 makeRemoteRequest();
@@ -135,16 +137,16 @@ public class NodeItemsGet implements PubSubElementProcessor {
             setErrorCondition(PacketError.Type.cancel, PacketError.Condition.item_not_found);
             return true;
         }
-        Element pubsub = reply.getElement().addElement("pubsub", JabberPubsub.NAMESPACE_URI);
-        Element items = pubsub.addElement("items").addAttribute("node", node);
+        Element pubsub = reply.getElement().addElement(XMLConstants.PUBSUB_ELEM, JabberPubsub.NAMESPACE_URI);
+        Element items = pubsub.addElement(XMLConstants.ITEMS_ELEM).addAttribute(XMLConstants.NODE_ATTR, node);
         addItemToResponse(nodeItem, items);
         return true;
     }
 
     private void makeRemoteRequest() throws InterruptedException {
         requestIq.setTo(new JID(node.split("/")[2]).getDomain());
-        if (null == requestIq.getElement().element("pubsub").element("actor")) {
-            Element actor = requestIq.getElement().element("pubsub").addElement("actor", Buddycloud.NS);
+        if (null == requestIq.getElement().element(XMLConstants.PUBSUB_ELEM).element(XMLConstants.ACTOR_ELEM)) {
+            Element actor = requestIq.getElement().element(XMLConstants.PUBSUB_ELEM).addElement(XMLConstants.ACTOR_ELEM, Buddycloud.NS);
             actor.addText(requestIq.getFrom().toBareJID());
         }
         outQueue.put(requestIq);
@@ -172,17 +174,17 @@ public class NodeItemsGet implements PubSubElementProcessor {
         int maxItemsToReturn = MAX_ITEMS_TO_RETURN;
         String afterItemId = null;
 
-        String max_items = element.attributeValue("max_items");
-        if (max_items != null) {
-            maxItemsToReturn = Integer.parseInt(max_items);
+        String maxItems = element.attributeValue(XMLConstants.MAX_ITEMS_ATTR);
+        if (maxItems != null) {
+            maxItemsToReturn = Integer.parseInt(maxItems);
         }
 
         if (resultSetManagement != null) {
-            Element max = resultSetManagement.element("max");
+            Element max = resultSetManagement.element(XMLConstants.MAX_ELEM);
             if (max != null) {
                 maxItemsToReturn = Integer.parseInt(max.getTextTrim());
             }
-            Element after = resultSetManagement.element("after");
+            Element after = resultSetManagement.element(XMLConstants.AFTER_ELEM);
             if (after != null) {
                 try {
                     // Try and parse it as a global item id
@@ -198,19 +200,19 @@ public class NodeItemsGet implements PubSubElementProcessor {
                     // If the after isn't a valid 'tag:...' then it might just
                     // be a straight ItemID
                     afterItemId = after.getTextTrim();
-                    logger.error(e);
+                    LOGGER.error(e);
                 }
             }
         }
 
-        Element items = pubsub.addElement("items");
-        items.addAttribute("node", node);
+        Element items = pubsub.addElement(XMLConstants.ITEMS_ELEM);
+        items.addAttribute(XMLConstants.NODE_ATTR, node);
 
         entry = null;
         int totalEntriesCount = getNodeItems(items, maxItemsToReturn, afterItemId);
 
-        if ((false == channelManager.isLocalNode(node)) && (0 == rsmEntriesCount)) {
-            logger.debug("No results in cache for remote node, so " + "we're going federated to get more");
+        if ((!channelManager.isLocalNode(node)) && (0 == rsmEntriesCount)) {
+            LOGGER.debug("No results in cache for remote node, so " + "we're going federated to get more");
             makeRemoteRequest();
             return;
         }
@@ -222,13 +224,13 @@ public class NodeItemsGet implements PubSubElementProcessor {
              * index='0'>368866411b877c30064a5f62b917cffe</first>
              * <last>4e30f35051b7b8b42abe083742187228</last> <count>19</count> </set>
              */
-            Element rsm = pubsub.addElement("set", "http://jabber.org/protocol/rsm");
+            Element rsm = pubsub.addElement(XMLConstants.SET_ELEM, "http://jabber.org/protocol/rsm");
 
             if (firstItem != null) {
-                rsm.addElement("first").setText(firstItem);
-                rsm.addElement("last").setText(lastItem);
+                rsm.addElement(XMLConstants.FIRST_ELEM).setText(firstItem);
+                rsm.addElement(XMLConstants.LAST_ELEM).setText(lastItem);
             }
-            rsm.addElement("count").setText(Integer.toString(totalEntriesCount));
+            rsm.addElement(XMLConstants.COUNT_ELEM).setText(Integer.toString(totalEntriesCount));
         }
 
         reply.setChildElement(pubsub);
@@ -273,12 +275,10 @@ public class NodeItemsGet implements PubSubElementProcessor {
                 addItemToResponse(nodeItem, items);
                 lastItem = nodeItem.getId();
             }
-            logger.debug("Including RSM there are " + rsmEntriesCount + " items for node " + node);
+            LOGGER.debug("Including RSM there are " + rsmEntriesCount + " items for node " + node);
             return channelManager.countNodeItems(node);
         } finally {
-            if (itemIt != null) {
-                itemIt.close();
-            }
+            itemIt.close();
         }
     }
 
@@ -289,20 +289,16 @@ public class NodeItemsGet implements PubSubElementProcessor {
             item.addAttribute("id", nodeItem.getId());
             item.add(entry);
         } catch (DocumentException e) {
-            logger.error("Error parsing a node entry, ignoring. " + nodeItem);
+            LOGGER.error("Error parsing a node entry, ignoring. " + nodeItem);
         }
-    }
-
-    private boolean isOwnerModerator() throws NodeStoreException {
-        return channelManager.getNodeMembership(node, actor).getAffiliation().canAuthorize();
     }
 
     private void createExtendedErrorReply(Type type, Condition condition, String additionalElement) {
         reply.setType(IQ.Type.error);
         Element standardError = new DOMElement(condition.toString(), new org.dom4j.Namespace("", JabberPubsub.NS_XMPP_STANZAS));
         Element extraError = new DOMElement(additionalElement, new org.dom4j.Namespace("", JabberPubsub.NS_PUBSUB_ERROR));
-        Element error = new DOMElement("error");
-        error.addAttribute("type", type.toString());
+        Element error = new DOMElement(XMLConstants.ERROR_ELEM);
+        error.addAttribute(XMLConstants.TYPE_ATTR, type.toString());
         error.add(standardError);
         error.add(extraError);
         reply.setChildElement(error);

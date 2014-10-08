@@ -11,6 +11,7 @@ import org.buddycloud.channelserver.db.CloseableIterator;
 import org.buddycloud.channelserver.db.exception.NodeStoreException;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.JabberPubsub;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.PubSubElementProcessorAbstract;
+import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.set.XMLConstants;
 import org.buddycloud.channelserver.pubsub.accessmodel.AccessModels;
 import org.buddycloud.channelserver.pubsub.model.NodeItem;
 import org.buddycloud.channelserver.utils.node.NodeAclRefuseReason;
@@ -36,7 +37,7 @@ public class RepliesGet extends PubSubElementProcessorAbstract {
     private NodeViewAcl nodeViewAcl;
     private Map<String, String> nodeConfiguration;
 
-    private static final Logger logger = Logger.getLogger(RecentItemsGet.class);
+    private static final Logger LOGGER = Logger.getLogger(RecentItemsGet.class);
 
     public static final String NS_RSM = "http://jabber.org/protocol/rsm";
 
@@ -45,6 +46,8 @@ public class RepliesGet extends PubSubElementProcessorAbstract {
         setOutQueue(outQueue);
 
         xmlReader = new SAXReader();
+
+        acceptedElementName = XMLConstants.REPLIES;
     }
 
     @Override
@@ -56,17 +59,17 @@ public class RepliesGet extends PubSubElementProcessorAbstract {
             actor = request.getFrom();
         }
 
-        if (false == isValidStanza()) {
+        if (!isValidStanza()) {
             outQueue.put(response);
             return;
         }
 
         try {
-            if (false == channelManager.isLocalJID(request.getFrom())) {
-                response.getElement().addAttribute("remote-server-discover", "false");
+            if (!channelManager.isLocalJID(request.getFrom())) {
+                response.getElement().addAttribute(XMLConstants.REMOTE_SERVER_DISCOVER_ATTR, Boolean.FALSE.toString());
             }
             pubsub = response.getElement().addElement("pubsub", JabberPubsub.NAMESPACE_URI);
-            if ((false == userCanViewNode()) || (false == itemExists())) {
+            if ((!userCanViewNode()) || (!itemExists())) {
                 outQueue.put(response);
                 return;
             }
@@ -75,7 +78,7 @@ public class RepliesGet extends PubSubElementProcessorAbstract {
             addRsmElement();
             outQueue.put(response);
         } catch (NodeStoreException e) {
-            logger.error(e);
+            LOGGER.error(e);
             response.getElement().remove(pubsub);
             setErrorCondition(PacketError.Type.wait, PacketError.Condition.internal_server_error);
         }
@@ -139,35 +142,35 @@ public class RepliesGet extends PubSubElementProcessorAbstract {
                 lastItemId = item.getId();
                 itemElement.add(entry);
             } catch (DocumentException e) {
-                logger.error("Error parsing a node entry, ignoring. " + item.getId());
+                LOGGER.error("Error parsing a node entry, ignoring. " + item.getId());
             }
         }
     }
 
     private boolean isValidStanza() {
-        Element replies = request.getChildElement().element("replies");
+        Element replies = request.getChildElement().element(XMLConstants.REPLIES);
         try {
-            node = replies.attributeValue("node");
+            node = replies.attributeValue(XMLConstants.NODE_ATTR);
             if (null == node) {
-                createExtendedErrorReply(PacketError.Type.modify, PacketError.Condition.bad_request, "nodeid-required");
+                createExtendedErrorReply(PacketError.Type.modify, PacketError.Condition.bad_request, XMLConstants.NODE_ID_REQUIRED);
                 return false;
             }
-            parentId = replies.attributeValue("item_id");
+            parentId = replies.attributeValue(XMLConstants.ITEM_ID);
             if (null == parentId) {
-                createExtendedErrorReply(PacketError.Type.modify, PacketError.Condition.bad_request, "itemid-required");
+                createExtendedErrorReply(PacketError.Type.modify, PacketError.Condition.bad_request, XMLConstants.ITEM_ID_REQUIRED);
                 return false;
             }
-            if (false == channelManager.nodeExists(node)) {
+            if (!channelManager.nodeExists(node)) {
                 setErrorCondition(PacketError.Type.cancel, PacketError.Condition.item_not_found);
                 return false;
             }
             nodeConfiguration = channelManager.getNodeConf(node);
         } catch (NullPointerException e) {
-            logger.error(e);
+            LOGGER.error(e);
             setErrorCondition(PacketError.Type.modify, PacketError.Condition.bad_request);
             return false;
         } catch (NodeStoreException e) {
-            logger.error(e);
+            LOGGER.error(e);
             setErrorCondition(PacketError.Type.wait, PacketError.Condition.internal_server_error);
             return false;
         }
@@ -184,7 +187,7 @@ public class RepliesGet extends PubSubElementProcessorAbstract {
     }
 
     private AccessModels getNodeAccessModel() {
-        if (false == nodeConfiguration.containsKey(AccessModel.FIELD_NAME)) {
+        if (!nodeConfiguration.containsKey(AccessModel.FIELD_NAME)) {
             return AccessModels.authorize;
         }
         return AccessModels.createFromString(nodeConfiguration.get(AccessModel.FIELD_NAME));
@@ -199,10 +202,5 @@ public class RepliesGet extends PubSubElementProcessorAbstract {
             nodeViewAcl = new NodeViewAcl();
         }
         return nodeViewAcl;
-    }
-
-    @Override
-    public boolean accept(Element elm) {
-        return elm.getName().equals("replies");
     }
 }

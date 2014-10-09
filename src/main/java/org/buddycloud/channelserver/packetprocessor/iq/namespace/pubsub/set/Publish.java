@@ -49,18 +49,17 @@ public class Publish extends PubSubElementProcessorAbstract {
     }
 
     @Override
-    public void process(Element elm, JID actorJID, IQ reqIQ, Element rsm)
-            throws Exception {
+    public void process(Element elm, JID actorJID, IQ reqIQ, Element rsm) throws Exception {
 
         request = reqIQ;
         response = IQ.createResultIQ(reqIQ);
         publishersJID = request.getFrom();
 
-        node = request.getChildElement().element("publish")
-                .attributeValue("node");
+        node = request.getChildElement().element("publish").attributeValue("node");
 
-        if (false == checkNode())
+        if (false == checkNode()) {
             return;
+        }
 
         boolean isLocalSubscriber = false;
 
@@ -78,15 +77,12 @@ public class Publish extends PubSubElementProcessorAbstract {
                 // publishing is not allowed.
 
                 /*
-                 * <iq type='error' from='pubsub.shakespeare.lit'
-                 * to='hamlet@denmark.lit/elsinore' id='create1'> <error
-                 * type='auth'> <registration-required
+                 * <iq type='error' from='pubsub.shakespeare.lit' to='hamlet@denmark.lit/elsinore'
+                 * id='create1'> <error type='auth'> <registration-required
                  * xmlns='urn:ietf:params:xml:ns:xmpp-stanzas'/> </error> </iq>
                  */
                 response.setType(Type.error);
-                PacketError pe = new PacketError(
-                        org.xmpp.packet.PacketError.Condition.registration_required,
-                        org.xmpp.packet.PacketError.Type.auth);
+                PacketError pe = new PacketError(org.xmpp.packet.PacketError.Condition.registration_required, org.xmpp.packet.PacketError.Type.auth);
                 response.setError(pe);
                 outQueue.put(response);
                 return;
@@ -94,43 +90,41 @@ public class Publish extends PubSubElementProcessorAbstract {
         }
 
         try {
-            if (false == nodeExists())
+            if (false == nodeExists()) {
                 return;
-            if (false == userCanPost())
+            }
+            if (false == userCanPost()) {
                 return;
-            if (false == isRequestValid())
+            }
+            if (false == isRequestValid()) {
                 return;
+            }
             saveNodeItem();
-			updateThreadParent();
+            updateThreadParent();
             sendResponseStanza();
             sendNotifications();
 
         } catch (NodeStoreException e) {
             LOGGER.error("Problem with node store", e);
-            setErrorCondition(PacketError.Type.wait,
-                    PacketError.Condition.internal_server_error);
+            setErrorCondition(PacketError.Type.wait, PacketError.Condition.internal_server_error);
             outQueue.put(response);
         } catch (UnknownContentTypeException e) {
-            createExtendedErrorReply(PacketError.Type.modify,
-                    PacketError.Condition.not_acceptable,
-                    ValidatePayload.UNSUPPORTED_CONTENT_TYPE);
+            createExtendedErrorReply(PacketError.Type.modify, PacketError.Condition.not_acceptable, ValidatePayload.UNSUPPORTED_CONTENT_TYPE);
         }
 
     }
 
-	private void updateThreadParent() throws NodeStoreException {
-		if (null == this.validator.getInReplyTo()) {
-			return;
-		}
-		channelManager.updateThreadParent(node, this.validator.getInReplyTo());
-	}
+    private void updateThreadParent() throws NodeStoreException {
+        if (null == this.validator.getInReplyTo()) {
+            return;
+        }
+        channelManager.updateThreadParent(node, this.validator.getInReplyTo());
+    }
 
     private void saveNodeItem() throws NodeStoreException {
         // Let's store the new item.
         entry = validator.getPayload();
-        channelManager.addNodeItem(new NodeItemImpl(
-                node, this.validator.getLocalItemId(), new Date(), entry.asXML(),
-                this.validator.getInReplyTo()));
+        channelManager.addNodeItem(new NodeItemImpl(node, this.validator.getLocalItemId(), new Date(), entry.asXML(), this.validator.getInReplyTo()));
     }
 
     public void setEntryValidator(PayloadValidator validator) {
@@ -139,25 +133,21 @@ public class Publish extends PubSubElementProcessorAbstract {
 
     private PayloadValidator getPayloadValidator() throws Exception {
         if (null == this.validator) {
-            this.validator = new ValidatePayload(channelManager, node)
-                    .getValidator();
+            this.validator = new ValidatePayload(channelManager, node).getValidator();
         }
         return this.validator;
     }
 
     private void sendInvalidPayloadResponse() throws InterruptedException {
-        LOGGER.info("Payload is not valid: '" + validator.getErrorMessage()
-                + "'.");
-        createExtendedErrorReply(PacketError.Type.modify,
-                PacketError.Condition.bad_request, validator.getErrorMessage());
+        LOGGER.info("Payload is not valid: '" + validator.getErrorMessage() + "'.");
+        createExtendedErrorReply(PacketError.Type.modify, PacketError.Condition.bad_request, validator.getErrorMessage());
         outQueue.put(response);
     }
 
     private boolean isRequestValid() throws Exception {
         item = request.getChildElement().element("publish").element("item");
         if (null == item) {
-            createExtendedErrorReply(PacketError.Type.modify,
-                    PacketError.Condition.bad_request, MISSING_ITEM_ELEMENT);
+            createExtendedErrorReply(PacketError.Type.modify, PacketError.Condition.bad_request, MISSING_ITEM_ELEMENT);
             outQueue.put(response);
             return false;
         }
@@ -176,19 +166,14 @@ public class Publish extends PubSubElementProcessorAbstract {
         return true;
     }
 
-    private boolean userCanPost() throws NodeStoreException,
-            InterruptedException {
+    private boolean userCanPost() throws NodeStoreException, InterruptedException {
 
-		NodeMembership membership = channelManager.getNodeMembership(node, publishersJID);
+        NodeMembership membership = channelManager.getNodeMembership(node, publishersJID);
 
-		if ((false == membership.getSubscription()
-                .equals(Subscriptions.subscribed))
-				|| (false == membership.getAffiliation().in(
-                        Affiliations.moderator, Affiliations.owner,
-                        Affiliations.publisher))) {
+        if ((false == membership.getSubscription().equals(Subscriptions.subscribed))
+                || (false == membership.getAffiliation().in(Affiliations.moderator, Affiliations.owner, Affiliations.publisher))) {
             response.setType(Type.error);
-            PacketError error = new PacketError(
-                    PacketError.Condition.forbidden, PacketError.Type.auth);
+            PacketError error = new PacketError(PacketError.Condition.forbidden, PacketError.Type.auth);
             response.setError(error);
             outQueue.put(response);
             return false;
@@ -199,11 +184,9 @@ public class Publish extends PubSubElementProcessorAbstract {
     private void sendResponseStanza() throws InterruptedException {
         /*
          * Success, let's response as defined in
-         * http://xmpp.org/extensions/xep-0060.html#publisher-publish - 7.1.2
-         * Success Case
+         * http://xmpp.org/extensions/xep-0060.html#publisher-publish - 7.1.2 Success Case
          */
-        Element pubsub = new DOMElement(PubSubSet.ELEMENT_NAME,
-                new org.dom4j.Namespace("", JabberPubsub.NAMESPACE_URI));
+        Element pubsub = new DOMElement(PubSubSet.ELEMENT_NAME, new org.dom4j.Namespace("", JabberPubsub.NAMESPACE_URI));
 
         Element publish = pubsub.addElement("publish");
         publish.addAttribute("node", node);
@@ -216,11 +199,11 @@ public class Publish extends PubSubElementProcessorAbstract {
     }
 
     private boolean nodeExists() throws Exception {
-        if (true == channelManager.nodeExists(node))
+        if (true == channelManager.nodeExists(node)) {
             return true;
+        }
         response.setType(Type.error);
-        PacketError error = new PacketError(
-                PacketError.Condition.item_not_found, PacketError.Type.cancel);
+        PacketError error = new PacketError(PacketError.Condition.item_not_found, PacketError.Type.cancel);
         response.setError(error);
         outQueue.put(response);
         return false;
@@ -230,12 +213,9 @@ public class Publish extends PubSubElementProcessorAbstract {
         if ((node == null) || (true == node.equals(""))) {
             response.setType(Type.error);
 
-            Element badRequest = new DOMElement(
-                    PacketError.Condition.bad_request.toXMPP(),
-                    new org.dom4j.Namespace("", JabberPubsub.NS_XMPP_STANZAS));
+            Element badRequest = new DOMElement(PacketError.Condition.bad_request.toXMPP(), new org.dom4j.Namespace("", JabberPubsub.NS_XMPP_STANZAS));
 
-            Element nodeIdRequired = new DOMElement(NODE_ID_REQUIRED,
-                    new org.dom4j.Namespace("", JabberPubsub.NS_PUBSUB_ERROR));
+            Element nodeIdRequired = new DOMElement(NODE_ID_REQUIRED, new org.dom4j.Namespace("", JabberPubsub.NS_PUBSUB_ERROR));
 
             Element error = new DOMElement("error");
             error.addAttribute("type", PacketError.Type.modify.toXMPP());
@@ -252,8 +232,7 @@ public class Publish extends PubSubElementProcessorAbstract {
             isLocalNode = channelManager.isLocalNode(node);
         } catch (IllegalArgumentException e) {
             response.setType(Type.error);
-            PacketError pe = new PacketError(PacketError.Condition.bad_request,
-                    PacketError.Type.modify);
+            PacketError pe = new PacketError(PacketError.Condition.bad_request, PacketError.Type.modify);
             response.setError(pe);
             LOGGER.error(e);
             outQueue.put(response);
@@ -267,24 +246,21 @@ public class Publish extends PubSubElementProcessorAbstract {
         return true;
     }
 
-    private void sendNotifications() throws NodeStoreException,
-            InterruptedException {
+    private void sendNotifications() throws NodeStoreException, InterruptedException {
         // Let's send notifications as defined in 7.1.2.1 Notification With
         // Payload
         Message msg = new Message();
         msg.getElement().addAttribute("remote-server-discover", "false");
         msg.setType(Message.Type.headline);
         msg.setFrom(request.getTo());
-        Element event = msg.addChildElement("event",
-                JabberPubsub.NS_PUBSUB_EVENT);
+        Element event = msg.addChildElement("event", JabberPubsub.NS_PUBSUB_EVENT);
         Element items = event.addElement("items");
         items.addAttribute("node", node);
         Element i = items.addElement("item");
         i.addAttribute("id", validator.getGlobalItemId());
         i.add(entry.createCopy());
 
-        ResultSet<NodeSubscription> cur = channelManager
-                .getNodeSubscriptionListeners(node);
+        ResultSet<NodeSubscription> cur = channelManager.getNodeSubscriptionListeners(node);
 
         for (NodeSubscription ns : cur) {
             JID to = ns.getUser();
@@ -304,8 +280,7 @@ public class Publish extends PubSubElementProcessorAbstract {
 
     private void makeRemoteRequest() throws InterruptedException {
         request.setTo(new JID(node.split("/")[2]).getDomain());
-        Element actor = request.getElement().element("pubsub")
-				.addElement("actor", Buddycloud.NS);
+        Element actor = request.getElement().element("pubsub").addElement("actor", Buddycloud.NS);
         actor.addText(request.getFrom().toBareJID());
         outQueue.put(request);
     }

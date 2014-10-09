@@ -1,7 +1,7 @@
 package org.buddycloud.channelserver.node;
 
 public interface NodeRef {
-	String getNodeId();
-	
-	String getRemoteServer();
+    String getNodeId();
+
+    String getRemoteServer();
 }

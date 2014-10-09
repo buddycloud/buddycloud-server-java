@@ -27,203 +27,176 @@ import org.xmpp.packet.PacketError;
 
 public class FirehoseGetTest extends IQTestHandler {
 
-	private IQ request;
-	private FirehoseGet recentItemsGet;
-	private Element element;
-	private BlockingQueue<Packet> queue = new LinkedBlockingQueue<Packet>();
+    private IQ request;
+    private FirehoseGet recentItemsGet;
+    private Element element;
+    private BlockingQueue<Packet> queue = new LinkedBlockingQueue<Packet>();
 
-	private String node = "/user/pamela@denmark.lit/posts";
-	private JID jid = new JID("user1@server1");
-	private ChannelManager channelManager;
+    private String node = "/user/pamela@denmark.lit/posts";
+    private JID jid = new JID("user1@server1");
+    private ChannelManager channelManager;
 
-	private String TEST_NODE_1 = "node1";
-	private String TEST_NODE_2 = "node2";
+    private String TEST_NODE_1 = "node1";
+    private String TEST_NODE_2 = "node2";
 
-	private JID TEST_JID_1 = new JID("user1@server1");
-	private JID TEST_JID_2 = new JID("user2@server1");
+    @Before
+    public void setUp() throws Exception {
 
-	@Before
-	public void setUp() throws Exception {
+        queue = new LinkedBlockingQueue<Packet>();
+        channelManager = Mockito.mock(ChannelManager.class);
 
-		queue = new LinkedBlockingQueue<Packet>();
-		channelManager = Mockito.mock(ChannelManager.class);
+        recentItemsGet = new FirehoseGet(queue, channelManager);
+        new IQTestHandler();
+        request = readStanzaAsIq("/iq/pubsub/items/request.stanza");
+        element = new BaseElement("items");
 
-		recentItemsGet = new FirehoseGet(queue, channelManager);
-		new IQTestHandler();
-		request = readStanzaAsIq("/iq/pubsub/items/request.stanza");
-		element = new BaseElement("items");
-		
-		readConf();
-	}
+        readConf();
+    }
 
-	@Test
-	public void testPassingItemsAsElementNameReturnsTrue() {
-		Assert.assertTrue(recentItemsGet.accept(element));
-	}
+    @Test
+    public void testPassingItemsAsElementNameReturnsTrue() {
+        Assert.assertTrue(recentItemsGet.accept(element));
+    }
 
-	@Test
-	public void testPassingNotItemsAsElementNameReturnsFalse() {
-		Element element = new BaseElement("not-items");
-		Assert.assertFalse(recentItemsGet.accept(element));
-	}
+    @Test
+    public void testPassingNotItemsAsElementNameReturnsFalse() {
+        Element element = new BaseElement("not-items");
+        Assert.assertFalse(recentItemsGet.accept(element));
+    }
 
-	@Test
-	public void testNodeStoreExceptionGeneratesAnErrorStanza() throws Exception {
+    @Test
+    public void testNodeStoreExceptionGeneratesAnErrorStanza() throws Exception {
 
-		Mockito.when(
-				channelManager.getFirehose(Mockito.anyInt(),
-						Mockito.anyString(), Mockito.anyBoolean())).thenThrow(
-				new NodeStoreException());
+        Mockito.when(channelManager.getFirehose(Mockito.anyInt(), Mockito.anyString(), Mockito.anyBoolean())).thenThrow(new NodeStoreException());
 
-		recentItemsGet.process(element, jid, request, null);
-		Packet response = queue.poll();
-		
-		PacketError error = response.getError();
-		Assert.assertNotNull(error);
-		Assert.assertEquals(PacketError.Type.wait, error.getType());
-		Assert.assertEquals(PacketError.Condition.internal_server_error,
-				error.getCondition());
-	}
+        recentItemsGet.process(element, jid, request, null);
+        Packet response = queue.poll();
 
-	@Test
-	public void testItemsReturnsEmptyStanza() throws Exception {
+        PacketError error = response.getError();
+        Assert.assertNotNull(error);
+        Assert.assertEquals(PacketError.Type.wait, error.getType());
+        Assert.assertEquals(PacketError.Condition.internal_server_error, error.getCondition());
+    }
 
-		Mockito.when(
-				channelManager.getFirehose(Mockito.anyInt(), Mockito.anyString(), Mockito.anyBoolean())).thenReturn(
-				new ClosableIteratorImpl<NodeItem>(new ArrayList<NodeItem>()
-						.iterator()));
+    @Test
+    public void testItemsReturnsEmptyStanza() throws Exception {
 
-		recentItemsGet.process(element, jid, request, null);
-		IQ response = (IQ) queue.poll();
+        Mockito.when(channelManager.getFirehose(Mockito.anyInt(), Mockito.anyString(), Mockito.anyBoolean())).thenReturn(
+                new ClosableIteratorImpl<NodeItem>(new ArrayList<NodeItem>().iterator()));
 
-		Assert.assertEquals(IQ.Type.result, response.getType());
-		Element pubsub = response.getChildElement();
-		Assert.assertEquals("pubsub", pubsub.getName());
-		Assert.assertEquals(JabberPubsub.NAMESPACE_URI,
-				pubsub.getNamespaceURI());
-	}
+        recentItemsGet.process(element, jid, request, null);
+        IQ response = (IQ) queue.poll();
 
-	@Test
-	public void testOutgoingStanzaFormattedAsExpected() throws Exception {
+        Assert.assertEquals(IQ.Type.result, response.getType());
+        Element pubsub = response.getChildElement();
+        Assert.assertEquals("pubsub", pubsub.getName());
+        Assert.assertEquals(JabberPubsub.NAMESPACE_URI, pubsub.getNamespaceURI());
+    }
 
-		NodeItem item1 = new NodeItemImpl(TEST_NODE_1, "1", new Date(),
-				"<entry>item1</entry>");
-		NodeItem item2 = new NodeItemImpl(TEST_NODE_2, "1", new Date(),
-				"<entry>item2</entry>");
-		NodeItem item3 = new NodeItemImpl(TEST_NODE_1, "2", new Date(),
-				"<entry>item3</entry>");
-		NodeItem item4 = new NodeItemImpl(TEST_NODE_1, "3", new Date(),
-				"<entry>item4</entry>");
+    @Test
+    public void testOutgoingStanzaFormattedAsExpected() throws Exception {
 
-		ArrayList<NodeItem> results = new ArrayList<NodeItem>();
-		results.add(item1);
-		results.add(item2);
-		results.add(item3);
-		results.add(item4);
+        NodeItem item1 = new NodeItemImpl(TEST_NODE_1, "1", new Date(), "<entry>item1</entry>");
+        NodeItem item2 = new NodeItemImpl(TEST_NODE_2, "1", new Date(), "<entry>item2</entry>");
+        NodeItem item3 = new NodeItemImpl(TEST_NODE_1, "2", new Date(), "<entry>item3</entry>");
+        NodeItem item4 = new NodeItemImpl(TEST_NODE_1, "3", new Date(), "<entry>item4</entry>");
 
-		Mockito.when(
-				channelManager.getFirehose(Mockito.anyInt(), Mockito.anyString(), Mockito.anyBoolean())).thenReturn(
-				new ClosableIteratorImpl<NodeItem>(results.iterator()));
-		Mockito.when(
-				channelManager.getFirehoseItemCount(Mockito.anyBoolean())).thenReturn(4);
+        ArrayList<NodeItem> results = new ArrayList<NodeItem>();
+        results.add(item1);
+        results.add(item2);
+        results.add(item3);
+        results.add(item4);
 
-		recentItemsGet.process(element, jid, request, null);
-		IQ response = (IQ) queue.poll();
+        Mockito.when(channelManager.getFirehose(Mockito.anyInt(), Mockito.anyString(), Mockito.anyBoolean())).thenReturn(
+                new ClosableIteratorImpl<NodeItem>(results.iterator()));
+        Mockito.when(channelManager.getFirehoseItemCount(Mockito.anyBoolean())).thenReturn(4);
 
-		Assert.assertEquals(IQ.Type.result, response.getType());
-		Element pubsub = response.getChildElement();
-		Assert.assertEquals("pubsub", pubsub.getName());
-		Assert.assertEquals(JabberPubsub.NAMESPACE_URI,
-				pubsub.getNamespaceURI());
+        recentItemsGet.process(element, jid, request, null);
+        IQ response = (IQ) queue.poll();
 
-		List<Element> items = pubsub.elements("items");
-		Assert.assertEquals(3, items.size());
+        Assert.assertEquals(IQ.Type.result, response.getType());
+        Element pubsub = response.getChildElement();
+        Assert.assertEquals("pubsub", pubsub.getName());
+        Assert.assertEquals(JabberPubsub.NAMESPACE_URI, pubsub.getNamespaceURI());
 
-		Assert.assertEquals(TEST_NODE_1, items.get(0).attributeValue("node"));
-		Assert.assertEquals(TEST_NODE_2, items.get(1).attributeValue("node"));
-		Assert.assertEquals(TEST_NODE_1, items.get(2).attributeValue("node"));
+        List<Element> items = pubsub.elements("items");
+        Assert.assertEquals(3, items.size());
 
-		Assert.assertEquals(1, items.get(0).elements("item").size());
-		Assert.assertEquals(2, items.get(2).elements("item").size());
-	}
+        Assert.assertEquals(TEST_NODE_1, items.get(0).attributeValue("node"));
+        Assert.assertEquals(TEST_NODE_2, items.get(1).attributeValue("node"));
+        Assert.assertEquals(TEST_NODE_1, items.get(2).attributeValue("node"));
 
-	@Test
-	public void testUnparsableItemEntriesAreSimplyIgnored() throws Exception {
+        Assert.assertEquals(1, items.get(0).elements("item").size());
+        Assert.assertEquals(2, items.get(2).elements("item").size());
+    }
 
-		NodeItem item1 = new NodeItemImpl(TEST_NODE_1, "1", new Date(),
-				"<entry>item1</entry>");
-		NodeItem item2 = new NodeItemImpl(TEST_NODE_1, "2", new Date(),
-				"<entry>item2");
+    @Test
+    public void testUnparsableItemEntriesAreSimplyIgnored() throws Exception {
 
-		ArrayList<NodeItem> results = new ArrayList<NodeItem>();
-		results.add(item1);
-		results.add(item2);
+        NodeItem item1 = new NodeItemImpl(TEST_NODE_1, "1", new Date(), "<entry>item1</entry>");
+        NodeItem item2 = new NodeItemImpl(TEST_NODE_1, "2", new Date(), "<entry>item2");
 
-		Mockito.when(
-				channelManager.getFirehose(Mockito.anyInt(), Mockito.anyString(), Mockito.anyBoolean())).thenReturn(
-				new ClosableIteratorImpl<NodeItem>(results.iterator()));
+        ArrayList<NodeItem> results = new ArrayList<NodeItem>();
+        results.add(item1);
+        results.add(item2);
 
-		recentItemsGet.process(element, jid, request, null);
-		IQ response = (IQ) queue.poll();
-		Assert.assertEquals(1, response.getChildElement().element("items")
-				.elements("item").size());
-	}
+        Mockito.when(channelManager.getFirehose(Mockito.anyInt(), Mockito.anyString(), Mockito.anyBoolean())).thenReturn(
+                new ClosableIteratorImpl<NodeItem>(results.iterator()));
 
-	@Test
-	public void testCanControlGatheredEntriesUsingRsm() throws Exception {
+        recentItemsGet.process(element, jid, request, null);
+        IQ response = (IQ) queue.poll();
+        Assert.assertEquals(1, response.getChildElement().element("items").elements("item").size());
+    }
 
-		NodeItem item2 = new NodeItemImpl(TEST_NODE_2, "node2:1", new Date(),
-				"<entry>item2</entry>");
-		NodeItem item3 = new NodeItemImpl(TEST_NODE_1, "node1:2", new Date(),
-				"<entry>item3</entry>");
+    @Test
+    public void testCanControlGatheredEntriesUsingRsm() throws Exception {
 
-		ArrayList<NodeItem> results = new ArrayList<NodeItem>();
-		results.add(item2);
-		results.add(item3);
+        NodeItem item2 = new NodeItemImpl(TEST_NODE_2, "node2:1", new Date(), "<entry>item2</entry>");
+        NodeItem item3 = new NodeItemImpl(TEST_NODE_1, "node1:2", new Date(), "<entry>item3</entry>");
 
-		Mockito.when(
-				channelManager.getFirehose(Mockito.anyInt(), Mockito.anyString(), Mockito.anyBoolean())).thenReturn(
-				new ClosableIteratorImpl<NodeItem>(results.iterator()));
-		Mockito.when(
-				channelManager.getFirehoseItemCount(Mockito.anyBoolean())).thenReturn(2);
+        ArrayList<NodeItem> results = new ArrayList<NodeItem>();
+        results.add(item2);
+        results.add(item3);
 
-		Element rsm = request.getElement().addElement("rsm");
-		rsm.addNamespace("", recentItemsGet.NS_RSM);
-		rsm.addElement("max").addText("2");
-		rsm.addElement("after").addText("node1:1");
+        Mockito.when(channelManager.getFirehose(Mockito.anyInt(), Mockito.anyString(), Mockito.anyBoolean())).thenReturn(
+                new ClosableIteratorImpl<NodeItem>(results.iterator()));
+        Mockito.when(channelManager.getFirehoseItemCount(Mockito.anyBoolean())).thenReturn(2);
 
-		recentItemsGet.process(element, jid, request, null);
-		IQ response = (IQ) queue.poll();
+        Element rsm = request.getElement().addElement("rsm");
+        rsm.addNamespace("", recentItemsGet.NS_RSM);
+        rsm.addElement("max").addText("2");
+        rsm.addElement("after").addText("node1:1");
 
-		Assert.assertEquals(IQ.Type.result, response.getType());
-		Element pubsub = response.getChildElement();
-		Assert.assertEquals("pubsub", pubsub.getName());
-		Assert.assertEquals(JabberPubsub.NAMESPACE_URI,
-				pubsub.getNamespaceURI());
+        recentItemsGet.process(element, jid, request, null);
+        IQ response = (IQ) queue.poll();
 
-		List<Element> items = pubsub.elements("items");
-		Assert.assertEquals(2, items.size());
+        Assert.assertEquals(IQ.Type.result, response.getType());
+        Element pubsub = response.getChildElement();
+        Assert.assertEquals("pubsub", pubsub.getName());
+        Assert.assertEquals(JabberPubsub.NAMESPACE_URI, pubsub.getNamespaceURI());
 
-		Assert.assertEquals(TEST_NODE_2, items.get(0).attributeValue("node"));
-		Assert.assertEquals(TEST_NODE_1, items.get(1).attributeValue("node"));
-		Assert.assertEquals(1, items.get(0).elements("item").size());
-		Assert.assertEquals(1, items.get(1).elements("item").size());
+        List<Element> items = pubsub.elements("items");
+        Assert.assertEquals(2, items.size());
 
-		Element rsmResult = pubsub.element("set");
-		Assert.assertEquals("2", rsmResult.element("count").getText());
-		Assert.assertEquals("node2:1", rsmResult.element("first").getText());
-		Assert.assertEquals("node1:2", rsmResult.element("last").getText());
-	}
-	
-	@Test 
-	public void testAdminUsersHaveRequestsMadeAsExpected() throws Exception {
+        Assert.assertEquals(TEST_NODE_2, items.get(0).attributeValue("node"));
+        Assert.assertEquals(TEST_NODE_1, items.get(1).attributeValue("node"));
+        Assert.assertEquals(1, items.get(0).elements("item").size());
+        Assert.assertEquals(1, items.get(1).elements("item").size());
 
-		ArrayList<NodeItem> results = new ArrayList<NodeItem>();
+        Element rsmResult = pubsub.element("set");
+        Assert.assertEquals("2", rsmResult.element("count").getText());
+        Assert.assertEquals("node2:1", rsmResult.element("first").getText());
+        Assert.assertEquals("node1:2", rsmResult.element("last").getText());
+    }
 
-		Mockito.when(
-				channelManager.getFirehose(Mockito.anyInt(), Mockito.anyString(), Mockito.eq(true))).thenReturn(
-				new ClosableIteratorImpl<NodeItem>(results.iterator()));
+    @Test
+    public void testAdminUsersHaveRequestsMadeAsExpected() throws Exception {
 
-		recentItemsGet.process(element, jid, request, null);
-	}
+        ArrayList<NodeItem> results = new ArrayList<NodeItem>();
+
+        Mockito.when(channelManager.getFirehose(Mockito.anyInt(), Mockito.anyString(), Mockito.eq(true))).thenReturn(
+                new ClosableIteratorImpl<NodeItem>(results.iterator()));
+
+        recentItemsGet.process(element, jid, request, null);
+    }
 }

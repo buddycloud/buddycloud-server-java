@@ -23,98 +23,81 @@ import org.xmpp.packet.PacketError;
 
 public class IQProcessor implements PacketProcessor<IQ> {
 
-	private static final Logger logger = Logger.getLogger(IQProcessor.class);
+    private static final Logger logger = Logger.getLogger(IQProcessor.class);
 
-	private Map<String, PacketProcessor<IQ>> processorsPerNamespace = new HashMap<String, PacketProcessor<IQ>>();
-	private BlockingQueue<Packet> outQueue;
-	private FederatedQueueManager federatedQueueManager;
+    private Map<String, PacketProcessor<IQ>> processorsPerNamespace = new HashMap<String, PacketProcessor<IQ>>();
+    private BlockingQueue<Packet> outQueue;
+    private FederatedQueueManager federatedQueueManager;
 
-	public IQProcessor(BlockingQueue<Packet> outQueue, Configuration conf,
-			ChannelManager channelManager,
-			FederatedQueueManager federatedQueueManager) {
-		this.outQueue = outQueue;
-		this.federatedQueueManager = federatedQueueManager;
+    public IQProcessor(BlockingQueue<Packet> outQueue, Configuration conf, ChannelManager channelManager, FederatedQueueManager federatedQueueManager) {
+        this.outQueue = outQueue;
+        this.federatedQueueManager = federatedQueueManager;
 
-		JabberPubsub ps = new JabberPubsub(outQueue, conf, channelManager,
-				federatedQueueManager);
+        JabberPubsub ps = new JabberPubsub(outQueue, conf, channelManager, federatedQueueManager);
 
-		processorsPerNamespace.put(JabberDiscoItems.NAMESPACE_URI,
-				new JabberDiscoItems(outQueue, conf, channelManager,
-						federatedQueueManager));
-		processorsPerNamespace.put(JabberDiscoInfo.NAMESPACE_URI,
-				new JabberDiscoInfo(outQueue, conf, channelManager,
-						federatedQueueManager));
-		processorsPerNamespace.put(JabberRegister.NAMESPACE_URI,
-				new JabberRegister(outQueue, conf, channelManager));
-		processorsPerNamespace.put(JabberPubsub.NAMESPACE_URI, ps);
-		processorsPerNamespace.put(JabberPubsub.NS_PUBSUB_OWNER, ps);
-		processorsPerNamespace.put(MessageArchiveManagement.NAMESPACE_MAM,
-				new MessageArchiveManagement(outQueue, channelManager));
-		processorsPerNamespace.put(Search.NAMESPACE_URI,
-		        new Search(outQueue, channelManager));
-	}
+        processorsPerNamespace.put(JabberDiscoItems.NAMESPACE_URI, new JabberDiscoItems(outQueue, conf, channelManager, federatedQueueManager));
+        processorsPerNamespace.put(JabberDiscoInfo.NAMESPACE_URI, new JabberDiscoInfo(outQueue, conf, channelManager, federatedQueueManager));
+        processorsPerNamespace.put(JabberRegister.NAMESPACE_URI, new JabberRegister(outQueue, conf, channelManager));
+        processorsPerNamespace.put(JabberPubsub.NAMESPACE_URI, ps);
+        processorsPerNamespace.put(JabberPubsub.NS_PUBSUB_OWNER, ps);
+        processorsPerNamespace.put(MessageArchiveManagement.NAMESPACE_MAM, new MessageArchiveManagement(outQueue, channelManager));
+        processorsPerNamespace.put(Search.NAMESPACE_URI, new Search(outQueue, channelManager));
+    }
 
-	@Override
-	public void process(IQ packet) throws Exception {
+    @Override
+    public void process(IQ packet) throws Exception {
 
-		try {
-			processPacket(packet);
-		} catch (Exception e) {
-			if (packet.getType().equals(IQ.Type.result) || packet.getType().equals(IQ.Type.error)) return;
-			IQ reply = IQ.createResultIQ(packet);
-			reply.setChildElement(packet.getChildElement().createCopy());
-			reply.setType(Type.error);
-			PacketError pe = new PacketError(
-					org.xmpp.packet.PacketError.Condition.internal_server_error,
-					org.xmpp.packet.PacketError.Type.wait);
-			reply.setError(pe);
-			logger.error("Error while processing packet.", e);
+        try {
+            processPacket(packet);
+        } catch (Exception e) {
+            if (packet.getType().equals(IQ.Type.result) || packet.getType().equals(IQ.Type.error)) {
+                return;
+            }
+            IQ reply = IQ.createResultIQ(packet);
+            reply.setChildElement(packet.getChildElement().createCopy());
+            reply.setType(Type.error);
+            PacketError pe = new PacketError(org.xmpp.packet.PacketError.Condition.internal_server_error, org.xmpp.packet.PacketError.Type.wait);
+            reply.setError(pe);
+            logger.error("Error while processing packet.", e);
             e.printStackTrace();
-			this.outQueue.put(reply);
-		}
-	}
+            this.outQueue.put(reply);
+        }
+    }
 
-	private void processPacket(IQ packet) throws Exception,
-			InterruptedException {
-		if (null != packet.getChildElement()) {
-			logger.debug("Finding IQ processor for namespace "
-					+ packet.getChildElement().getNamespaceURI());
+    private void processPacket(IQ packet) throws Exception, InterruptedException {
+        if (null != packet.getChildElement()) {
+            logger.debug("Finding IQ processor for namespace " + packet.getChildElement().getNamespaceURI());
 
-			PacketProcessor<IQ> namespaceProcessor = processorsPerNamespace
-					.get(packet.getChildElement().getNamespaceURI());
+            PacketProcessor<IQ> namespaceProcessor = processorsPerNamespace.get(packet.getChildElement().getNamespaceURI());
 
-			if (packet.getChildElement().getNamespaceURI() != null
-					&& namespaceProcessor != null) {
-				logger.trace("Using namespace processor: "
-						+ namespaceProcessor.getClass().getName());
-				namespaceProcessor.process(packet);
-				return;
+            if (packet.getChildElement().getNamespaceURI() != null && namespaceProcessor != null) {
+                logger.trace("Using namespace processor: " + namespaceProcessor.getClass().getName());
+                namespaceProcessor.process(packet);
+                return;
 
-			}
-		}
-		// See if this was an externally sent packet
-		try {
-			federatedQueueManager.passResponseToRequester(packet);
-			return;
-		} catch (UnknownFederatedPacketException e) {
-			logger.error(e);
-		}
-		logger.debug("Couldn't find processor for packet");
+            }
+        }
+        // See if this was an externally sent packet
+        try {
+            federatedQueueManager.passResponseToRequester(packet);
+            return;
+        } catch (UnknownFederatedPacketException e) {
+            logger.error(e);
+        }
+        logger.debug("Couldn't find processor for packet");
 
-		if (packet.getType().equals(IQ.Type.set) || packet.getType().equals(IQ.Type.get)) {
+        if (packet.getType().equals(IQ.Type.set) || packet.getType().equals(IQ.Type.get)) {
 
-			IQ reply = IQ.createResultIQ(packet);
-			reply.setChildElement(packet.getChildElement().createCopy());
-			reply.setType(Type.error);
-			PacketError pe = new PacketError(
-					org.xmpp.packet.PacketError.Condition.service_unavailable,
-					org.xmpp.packet.PacketError.Type.cancel);
-			reply.setError(pe);
+            IQ reply = IQ.createResultIQ(packet);
+            reply.setChildElement(packet.getChildElement().createCopy());
+            reply.setType(Type.error);
+            PacketError pe = new PacketError(org.xmpp.packet.PacketError.Condition.service_unavailable, org.xmpp.packet.PacketError.Type.cancel);
+            reply.setError(pe);
 
-			this.outQueue.put(reply);
-			return;
+            this.outQueue.put(reply);
+            return;
 
-		}
-		logger.error("Could not handle packet " + packet.toXML());
-	}
+        }
+        logger.error("Could not handle packet " + packet.toXML());
+    }
 }

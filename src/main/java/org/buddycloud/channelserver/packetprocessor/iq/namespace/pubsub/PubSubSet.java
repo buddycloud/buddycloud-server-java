@@ -4,7 +4,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
 
-import org.apache.log4j.Logger;
 import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.packetprocessor.PacketProcessor;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.set.AffiliationEvent;
@@ -24,21 +23,19 @@ import org.xmpp.packet.Packet;
 import org.xmpp.packet.PacketError;
 
 public class PubSubSet implements PacketProcessor<IQ> {
-    
+
     public static final String ELEMENT_NAME = "pubsub";
 
-    private static final Logger LOGGER = Logger.getLogger(PubSubSet.class);
-    
     private final BlockingQueue<Packet> outQueue;
     private final ChannelManager channelManager;
     private final List<PubSubElementProcessor> elementProcessors = new LinkedList<PubSubElementProcessor>();
-    
+
     public PubSubSet(BlockingQueue<Packet> outQueue, ChannelManager channelManager) {
         this.outQueue = outQueue;
         this.channelManager = channelManager;
         initElementProcessors();
     }
-    
+
     private void initElementProcessors() {
         elementProcessors.add(new Publish(outQueue, channelManager));
         elementProcessors.add(new SubscribeSet(outQueue, channelManager));
@@ -50,47 +47,46 @@ public class PubSubSet implements PacketProcessor<IQ> {
         elementProcessors.add(new ItemDelete(outQueue, channelManager));
         elementProcessors.add(new NodeDelete(outQueue, channelManager));
     }
-    
+
     @Override
     public void process(IQ reqIQ) throws Exception {
-        
+
         Element pubsub = reqIQ.getChildElement();
-        
-        //Let's get the possible actor
+
+        // Let's get the possible actor
         JID actorJID = null;
         if (pubsub.elementText("actor") != null) {
             actorJID = new JID(pubsub.elementText("actor").trim());
-             /**
-             * TODO validate here that the JID is somehow sane.
-             *      We could check that the domains are the same etc.
-             *      
+            /**
+             * TODO(lloydwatkin) validate here that the JID is somehow sane. We could check that the
+             * domains are the same etc.
+             * 
              */
             // something like this:
             // reqIQ.getFrom().getDomain().contains(actorJID.getDomain());
             //
             // If not, return not-allowed or bad request?
             // <error type='cancel'>
-            //    <not-allowed xmlns='urn:ietf:params:xml:ns:xmpp-stanzas'/>
+            // <not-allowed xmlns='urn:ietf:params:xml:ns:xmpp-stanzas'/>
             //
-            //    or ?
+            // or ?
             //
-            //    <bad-request xmlns='urn:ietf:params:xml:ns:xmpp-stanzas'/>
+            // <bad-request xmlns='urn:ietf:params:xml:ns:xmpp-stanzas'/>
             // </error>
             //
-            //actor = actorJID.toBareJID();
-            
-            if(!reqIQ.getFrom().getDomain().contains(actorJID.getDomain())) {
+            // actor = actorJID.toBareJID();
+
+            if (!reqIQ.getFrom().getDomain().contains(actorJID.getDomain())) {
                 IQ reply = IQ.createResultIQ(reqIQ);
                 reply.setChildElement(reqIQ.getChildElement().createCopy());
                 reply.setType(Type.error);
-                PacketError pe = new PacketError(org.xmpp.packet.PacketError.Condition.bad_request, 
-                                                 org.xmpp.packet.PacketError.Type.cancel);
+                PacketError pe = new PacketError(org.xmpp.packet.PacketError.Condition.bad_request, org.xmpp.packet.PacketError.Type.cancel);
                 reply.setError(pe);
                 outQueue.put(reply);
                 return;
             }
         }
-        
+
         @SuppressWarnings("unchecked")
         List<Element> elements = pubsub.elements();
 
@@ -103,14 +99,13 @@ public class PubSubSet implements PacketProcessor<IQ> {
                 }
             }
         }
-        
+
         IQ reply = IQ.createResultIQ(reqIQ);
         reply.setChildElement(reqIQ.getChildElement().createCopy());
         reply.setType(Type.error);
-        PacketError pe = new PacketError(org.xmpp.packet.PacketError.Condition.unexpected_request, 
-                                         org.xmpp.packet.PacketError.Type.wait);
+        PacketError pe = new PacketError(org.xmpp.packet.PacketError.Condition.unexpected_request, org.xmpp.packet.PacketError.Type.wait);
         reply.setError(pe);
         outQueue.put(reply);
     }
-    
+
 }

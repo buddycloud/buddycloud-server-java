@@ -24,152 +24,134 @@ import org.xmpp.packet.Packet;
 import org.xmpp.packet.PacketError;
 
 public class RegisterSet implements PacketProcessor<IQ> {
-	public static final String ELEMENT_NAME = "query";
-	private static final Logger LOGGER = Logger.getLogger(RegisterSet.class);
+    public static final String ELEMENT_NAME = "query";
+    private static final Logger LOGGER = Logger.getLogger(RegisterSet.class);
 
-	private final BlockingQueue<Packet> outQueue;
-	private final ChannelManager channelManager;
-	private IQ request;
-	private IQ response;
-	private final Configuration configuration;
+    private final BlockingQueue<Packet> outQueue;
+    private final ChannelManager channelManager;
+    private IQ request;
+    private IQ response;
+    private final Configuration configuration;
 
-	public RegisterSet(BlockingQueue<Packet> outQueue, ChannelManager channelManager) {
-		this(Configuration.getInstance(), outQueue, channelManager);
-	}
-	
-	public RegisterSet(Configuration configuration, BlockingQueue<Packet> outQueue, ChannelManager channelManager) {
-		this.configuration = configuration;
-		this.outQueue = outQueue;
-		this.channelManager = channelManager;
-	}
+    public RegisterSet(BlockingQueue<Packet> outQueue, ChannelManager channelManager) {
+        this(Configuration.getInstance(), outQueue, channelManager);
+    }
 
-	@Override
-	public void process(IQ reqIQ) throws Exception {
-		this.request = reqIQ;
-		this.response = IQ.createResultIQ(reqIQ);
-		
-		LOGGER.debug("Processing register request from " + request.getFrom());
+    public RegisterSet(Configuration configuration, BlockingQueue<Packet> outQueue, ChannelManager channelManager) {
+        this.configuration = configuration;
+        this.outQueue = outQueue;
+        this.channelManager = channelManager;
+    }
 
-		String domain = reqIQ.getFrom().getDomain();
-		if (!LocalDomainChecker.isLocal(domain, configuration)) {
-			notThisDomain(reqIQ);
-			return;
-		}
-		
-		if (userRegistered()) {
-			LOGGER.debug("User " + request.getFrom().toBareJID() + " is already registered");
-			outQueue.put(response);
-			return;
-		}
+    @Override
+    public void process(IQ reqIQ) throws Exception {
+        this.request = reqIQ;
+        this.response = IQ.createResultIQ(reqIQ);
 
-		LOGGER.debug("Registering new user " + request.getFrom());
-		
-		channelManager.createPersonalChannel(request.getFrom());
-		outQueue.put(response);
-		autosubscribeToChannels(request.getFrom());
-	}
+        LOGGER.debug("Processing register request from " + request.getFrom());
 
-	private void notThisDomain(IQ reqIQ) throws InterruptedException {
-		// Request is coming from different domain than the
-		// component is using. We will not allow this because
-		// "buddycloud federation" cannot work for that.
-		IQ reply = IQ.createResultIQ(reqIQ);
-		reply.setType(Type.error);
-		reply.setChildElement(reqIQ.getChildElement().createCopy());
-		PacketError pe = new PacketError(
-				org.xmpp.packet.PacketError.Condition.not_allowed,
-				org.xmpp.packet.PacketError.Type.cancel);
-		reply.setError(pe);
-		outQueue.put(reply);
-	}
-	
-	private boolean userRegistered() throws Exception {
-		return channelManager.nodeExists("/user/" + request.getFrom().toBareJID() + "/posts");
-	}
+        String domain = reqIQ.getFrom().getDomain();
+        if (!LocalDomainChecker.isLocal(domain, configuration)) {
+            notThisDomain(reqIQ);
+            return;
+        }
 
-	// TODO: We should really be returning an error as per spec shouldn't we?
-	// It should be up to the client to ignore the error, not the server.
-	@SuppressWarnings("unused")
-	private void userAlreadyRegistered() throws InterruptedException {
-		// User is already registered.
-		IQ reply = IQ.createResultIQ(request);
-		reply.setType(Type.error);
-		reply.setChildElement(request.getChildElement().createCopy());
-		PacketError pe = new PacketError(
-				org.xmpp.packet.PacketError.Condition.conflict,
-				org.xmpp.packet.PacketError.Type.cancel);
-		reply.setError(pe);
-		outQueue.put(reply);
-	}
+        if (userRegistered()) {
+            LOGGER.debug("User " + request.getFrom().toBareJID() + " is already registered");
+            outQueue.put(response);
+            return;
+        }
 
-	private void autosubscribeToChannels(final JID from) {
-		Collection<JID> channels = configuration.getAutosubscribeChannels();
+        LOGGER.debug("Registering new user " + request.getFrom());
 
-		if (LOGGER.isDebugEnabled()) {
-			LOGGER.debug("Auto-subscribing " + from + " to " + channels.size()
-					+ " channel(s)");
-		}
+        channelManager.createPersonalChannel(request.getFrom());
+        outQueue.put(response);
+        autosubscribeToChannels(request.getFrom());
+    }
 
-		for (JID channel : channels) {
-			if (LOGGER.isDebugEnabled()) {
-				LOGGER.debug("Auto-subscribing " + from + " to " + channel);
-			}
+    private void notThisDomain(IQ reqIQ) throws InterruptedException {
+        // Request is coming from different domain than the
+        // component is using. We will not allow this because
+        // "buddycloud federation" cannot work for that.
+        IQ reply = IQ.createResultIQ(reqIQ);
+        reply.setType(Type.error);
+        reply.setChildElement(reqIQ.getChildElement().createCopy());
+        PacketError pe = new PacketError(org.xmpp.packet.PacketError.Condition.not_allowed, org.xmpp.packet.PacketError.Type.cancel);
+        reply.setError(pe);
+        outQueue.put(reply);
+    }
 
-			IQ subscribe = new IQ();
+    private boolean userRegistered() throws Exception {
+        return channelManager.nodeExists("/user/" + request.getFrom().toBareJID() + "/posts");
+    }
 
-			subscribe.setType(Type.set);
+    // TODO(lloydwatkin): We should really be returning an error as per spec shouldn't we?
+    // It should be up to the client to ignore the error, not the server.
+    @SuppressWarnings("unused")
+    private void userAlreadyRegistered() throws InterruptedException {
+        // User is already registered.
+        IQ reply = IQ.createResultIQ(request);
+        reply.setType(Type.error);
+        reply.setChildElement(request.getChildElement().createCopy());
+        PacketError pe = new PacketError(org.xmpp.packet.PacketError.Condition.conflict, org.xmpp.packet.PacketError.Type.cancel);
+        reply.setError(pe);
+        outQueue.put(reply);
+    }
 
-			Element el = subscribe.getElement();
-			Element pubsubEl = el.addElement("pubsub",
-					JabberPubsub.NAMESPACE_URI);
-			Element subscribeEl = pubsubEl.addElement("subscribe");
+    private void autosubscribeToChannels(final JID from) {
+        Collection<JID> channels = configuration.getAutosubscribeChannels();
 
-			String channelNodeId = Conf.getPostChannelNodename(channel);
+        if (LOGGER.isDebugEnabled()) {
+            LOGGER.debug("Auto-subscribing " + from + " to " + channels.size() + " channel(s)");
+        }
 
-			subscribeEl.addAttribute("node", channelNodeId);
-			subscribeEl.addAttribute("jid", from.toBareJID().toString());
+        for (JID channel : channels) {
+            if (LOGGER.isDebugEnabled()) {
+                LOGGER.debug("Auto-subscribing " + from + " to " + channel);
+            }
 
-			try {
-				if (channelManager.isLocalJID(channel)) {
-					subscribe.setFrom(from);
-					subscribe.setTo(configuration.getServerChannelsDomain());
-				} else {
-					subscribe.setFrom(configuration.getServerChannelsDomain());
-					subscribe.setTo(channel.getDomain());
+            IQ subscribe = new IQ();
 
-					Element actorEl = pubsubEl.addElement(QName.get("actor",
-							Buddycloud.NS));
+            subscribe.setType(Type.set);
 
-					actorEl.setText(from.toBareJID());
-				}
+            Element el = subscribe.getElement();
+            Element pubsubEl = el.addElement("pubsub", JabberPubsub.NAMESPACE_URI);
+            Element subscribeEl = pubsubEl.addElement("subscribe");
 
-				outQueue.put(subscribe);
+            String channelNodeId = Conf.getPostChannelNodename(channel);
 
-				// If auto-approve is set, and this is a local private channel
-				// then set the user to subscribed
-				if (configuration.getBooleanProperty(
-						Configuration.CONFIGURATION_CHANNELS_AUTOSUBSCRIBE_AUTOAPPROVE,
-						false)
-						&& channelManager.isLocalJID(channel)
-						&& AccessModels.authorize.toString().equals(
-								channelManager.getNodeConfValue(channelNodeId,
-										Conf.ACCESS_MODEL))) {
-					channelManager
-							.addUserSubscription(new NodeSubscriptionImpl(
-									channelNodeId, from,
-									Subscriptions.subscribed, null));
+            subscribeEl.addAttribute("node", channelNodeId);
+            subscribeEl.addAttribute("jid", from.toBareJID().toString());
 
-					channelManager.setUserAffiliation(channelNodeId, from,
-							channelManager
-									.getDefaultNodeAffiliation(channelNodeId));
-				}
-			} catch (InterruptedException e) {
-				LOGGER.error("Could not auto-subscribe " + from + " to "
-						+ channel, e);
-			} catch (NodeStoreException e) {
-				LOGGER.error("Could not auto-subscribe " + from + " to "
-						+ channel, e);
-			}
-		}
-	}
+            try {
+                if (channelManager.isLocalJID(channel)) {
+                    subscribe.setFrom(from);
+                    subscribe.setTo(configuration.getServerChannelsDomain());
+                } else {
+                    subscribe.setFrom(configuration.getServerChannelsDomain());
+                    subscribe.setTo(channel.getDomain());
+
+                    Element actorEl = pubsubEl.addElement(QName.get("actor", Buddycloud.NS));
+
+                    actorEl.setText(from.toBareJID());
+                }
+
+                outQueue.put(subscribe);
+
+                // If auto-approve is set, and this is a local private channel
+                // then set the user to subscribed
+                if (configuration.getBooleanProperty(Configuration.CONFIGURATION_CHANNELS_AUTOSUBSCRIBE_AUTOAPPROVE, false)
+                        && channelManager.isLocalJID(channel)
+                        && AccessModels.authorize.toString().equals(channelManager.getNodeConfValue(channelNodeId, Conf.ACCESS_MODEL))) {
+                    channelManager.addUserSubscription(new NodeSubscriptionImpl(channelNodeId, from, Subscriptions.subscribed, null));
+
+                    channelManager.setUserAffiliation(channelNodeId, from, channelManager.getDefaultNodeAffiliation(channelNodeId));
+                }
+            } catch (InterruptedException e) {
+                LOGGER.error("Could not auto-subscribe " + from + " to " + channel, e);
+            } catch (NodeStoreException e) {
+                LOGGER.error("Could not auto-subscribe " + from + " to " + channel, e);
+            }
+        }
+    }
 }

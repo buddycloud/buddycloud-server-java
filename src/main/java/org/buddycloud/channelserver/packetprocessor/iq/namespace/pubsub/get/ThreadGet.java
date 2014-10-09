@@ -76,14 +76,13 @@ public class ThreadGet extends PubSubElementProcessorAbstract {
             parseRsmElement();
             addItems();
             addRsmElement();
-            // TODO(lloydwatkin) two responses on the out queue?
+
             outQueue.put(response);
         } catch (NodeStoreException e) {
             LOGGER.error(e);
             response.getElement().remove(pubsub);
             setErrorCondition(PacketError.Type.wait, PacketError.Condition.internal_server_error);
         }
-        outQueue.put(response);
     }
 
     private boolean itemExists() throws NodeStoreException {

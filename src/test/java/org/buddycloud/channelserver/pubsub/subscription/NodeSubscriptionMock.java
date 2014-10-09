@@ -7,68 +7,58 @@ import org.buddycloud.channelserver.pubsub.model.NodeSubscription;
 import org.xmpp.packet.JID;
 
 public class NodeSubscriptionMock implements NodeSubscription {
-	private JID subscriber;
-	private Affiliations affiliation;
-	private Subscriptions subscription;
-	private String foreignChannelServer;
-	private JID invitedBy;
+    private JID subscriber;
+    private Subscriptions subscription;
+    private JID invitedBy;
 
-	public void setBareJID(JID jid) {
-		this.subscriber = jid;
-	}
+    public void setBareJID(JID jid) {
+        this.subscriber = jid;
+    }
 
-	public void setAffiliation(Affiliations affiliation) {
-		this.affiliation = affiliation;
-	}
+    public void setAffiliation(Affiliations affiliation) {}
 
-	public void setSubscription(Subscriptions subscription) {
-		this.subscription = subscription;
-	}
+    public void setSubscription(Subscriptions subscription) {
+        this.subscription = subscription;
+    }
 
-	public void setForeignChannelServer(String foreignChannelServer) {
-		this.foreignChannelServer = foreignChannelServer;
-	}
+    public void setForeignChannelServer(String foreignChannelServer) {}
 
-	public NodeSubscriptionMock(JID jid) {
-		subscriber = jid;
-	}
+    public NodeSubscriptionMock(JID jid) {
+        subscriber = jid;
+    }
 
-	@Override
-	public Subscriptions getSubscription() {
-		// TODO Auto-generated method stub
-		return subscription;
-	}
+    @Override
+    public Subscriptions getSubscription() {
+        return subscription;
+    }
 
-	@Override
-	public JID getUser() {
-		// TODO Auto-generated method stub
-		return subscriber;
-	}
+    @Override
+    public JID getUser() {
+        return subscriber;
+    }
 
-	@Override
-	public JID getListener() {
-		// TODO Auto-generated method stub
-		return subscriber;
-	}
+    @Override
+    public JID getListener() {
+        return subscriber;
+    }
 
-	@Override
-	public String getNodeId() {
-		// TODO Auto-generated method stub
-		return null;
-	}
+    @Override
+    public String getNodeId() {
+        return null;
+    }
 
-	@Override
-	public String getUID() {
-		return subscriber.toString();
-	}
+    @Override
+    public String getUID() {
+        return subscriber.toString();
+    }
 
-	@Override
-	public Date getLastUpdated() {
-		return new Date();
-	}
+    @Override
+    public Date getLastUpdated() {
+        return new Date();
+    }
 
-	@Override
-	public JID getInvitedBy() {
-		return invitedBy;
-	}
+    @Override
+    public JID getInvitedBy() {
+        return invitedBy;
+    }
 }

@@ -11,22 +11,21 @@ import org.xmpp.packet.Packet;
 
 public class NotificationSendingMock extends AbstractMessageProcessor {
 
-	public NotificationSendingMock(ChannelManager channelManager,
-			Properties configuration, BlockingQueue<Packet> outQueue) {
-		super(channelManager, configuration, outQueue);
-	}
+    public NotificationSendingMock(ChannelManager channelManager, Properties configuration, BlockingQueue<Packet> outQueue) {
+        super(channelManager, configuration, outQueue);
+    }
 
-	@Override
-	public void process(Message packet) throws Exception {
-		message = packet;
-		
-		JID jid = null;
-		if (null == message.getElement().attributeValue("jid")) {
-			sendLocalNotifications(NotificationScheme.createFromString(message.getElement().attributeValue("scheme")));
-			return;
-		}
-		jid = new JID(message.getElement().attributeValue("jid"));
-		sendLocalNotifications(NotificationScheme.createFromString(message.getElement().attributeValue("scheme")), jid);
-	}
+    @Override
+    public void process(Message packet) throws Exception {
+        message = packet;
+
+        JID jid = null;
+        if (null == message.getElement().attributeValue("jid")) {
+            sendLocalNotifications(NotificationScheme.createFromString(message.getElement().attributeValue("scheme")));
+            return;
+        }
+        jid = new JID(message.getElement().attributeValue("jid"));
+        sendLocalNotifications(NotificationScheme.createFromString(message.getElement().attributeValue("scheme")), jid);
+    }
 
 }

@@ -19,87 +19,70 @@ import org.xmpp.resultsetmanagement.ResultSet;
 
 public class JDBCNodeStoreUserMembershipsTest extends JDBCNodeStoreAbstract {
 
-	public JDBCNodeStoreUserMembershipsTest() throws SQLException, IOException,
-			ClassNotFoundException {
-		dbTester = new DatabaseTester();
-		IQTestHandler.readConf();
-	}
+    public JDBCNodeStoreUserMembershipsTest() throws SQLException, IOException, ClassNotFoundException {
+        dbTester = new DatabaseTester();
+        IQTestHandler.readConf();
+    }
 
-	@Test
-	public void getUserMemberships() throws Exception {
-		dbTester.loadData("node_1");
-		dbTester.loadData("node_2");
+    @Test
+    public void getUserMemberships() throws Exception {
+        dbTester.loadData("node_1");
+        dbTester.loadData("node_2");
 
-		ResultSet<NodeMembership> result = store
-				.getUserMemberships(TEST_SERVER1_USER1_JID);
+        ResultSet<NodeMembership> result = store.getUserMemberships(TEST_SERVER1_USER1_JID);
 
-		HashSet<NodeMembership> expected = new HashSet<NodeMembership>() {
-			{
-				add(new NodeMembershipImpl(TEST_SERVER1_NODE1_ID,
-						TEST_SERVER1_USER1_JID, Subscriptions.subscribed, Affiliations.owner, null, new Date()));
-				add(new NodeMembershipImpl(TEST_SERVER1_NODE2_ID,
-						TEST_SERVER1_USER1_JID, Subscriptions.subscribed, Affiliations.publisher, null,
-						new Date()));
-			}
-		};
+        HashSet<NodeMembership> expected = new HashSet<NodeMembership>() {
+            {
+                add(new NodeMembershipImpl(TEST_SERVER1_NODE1_ID, TEST_SERVER1_USER1_JID, Subscriptions.subscribed, Affiliations.owner, null, new Date()));
+                add(new NodeMembershipImpl(TEST_SERVER1_NODE2_ID, TEST_SERVER1_USER1_JID, Subscriptions.subscribed, Affiliations.publisher, null,
+                        new Date()));
+            }
+        };
 
-		assertEquals("Incorrect number of user memberships returned",
-				expected.size(), result.size());
-		assertTrue("Incorrect user memberships returned",
-				CollectionUtils.isEqualCollection(expected, result));
-	}
+        assertEquals("Incorrect number of user memberships returned", expected.size(), result.size());
+        assertTrue("Incorrect user memberships returned", CollectionUtils.isEqualCollection(expected, result));
+    }
 
-	@Test
-	public void getUserMembershipsUsesBareJID() throws Exception {
-		dbTester.loadData("node_1");
-		dbTester.loadData("node_2");
+    @Test
+    public void getUserMembershipsUsesBareJID() throws Exception {
+        dbTester.loadData("node_1");
+        dbTester.loadData("node_2");
 
-		ResultSet<NodeMembership> result = store
-				.getUserMemberships(TEST_SERVER1_USER1_JID_WITH_RESOURCE);
+        ResultSet<NodeMembership> result = store.getUserMemberships(TEST_SERVER1_USER1_JID_WITH_RESOURCE);
 
-		HashSet<NodeMembership> expected = new HashSet<NodeMembership>() {
-			{
-				add(new NodeMembershipImpl(TEST_SERVER1_NODE1_ID,
-						TEST_SERVER1_USER1_JID, Subscriptions.subscribed, Affiliations.owner, null, new Date()));
-				add(new NodeMembershipImpl(TEST_SERVER1_NODE2_ID,
-						TEST_SERVER1_USER1_JID, Subscriptions.subscribed, Affiliations.publisher, null,
-						new Date()));
-			}
-		};
+        HashSet<NodeMembership> expected = new HashSet<NodeMembership>() {
+            {
+                add(new NodeMembershipImpl(TEST_SERVER1_NODE1_ID, TEST_SERVER1_USER1_JID, Subscriptions.subscribed, Affiliations.owner, null, new Date()));
+                add(new NodeMembershipImpl(TEST_SERVER1_NODE2_ID, TEST_SERVER1_USER1_JID, Subscriptions.subscribed, Affiliations.publisher, null,
+                        new Date()));
+            }
+        };
 
-		assertEquals("Incorrect number of user memberships returned",
-				expected.size(), result.size());
-		assertTrue("Incorrect user memberships returned",
-				CollectionUtils.isEqualCollection(expected, result));
-	}
-	@Test
-	public void canGetUserMembershipWhereTheresOnlySubscription() throws Exception {
-		dbTester.loadData("node_1");
+        assertEquals("Incorrect number of user memberships returned", expected.size(), result.size());
+        assertTrue("Incorrect user memberships returned", CollectionUtils.isEqualCollection(expected, result));
+    }
 
-		store.deleteUserAffiliations(TEST_SERVER1_USER1_JID);
-		
-		ResultSet<NodeMembership> result = store.getUserMemberships(TEST_SERVER1_USER1_JID);
+    @Test
+    public void canGetUserMembershipWhereTheresOnlySubscription() throws Exception {
+        dbTester.loadData("node_1");
 
-		NodeMembership expected = new NodeMembershipImpl(TEST_SERVER1_NODE1_ID, TEST_SERVER1_USER1_JID,
-				Subscriptions.subscribed, Affiliations.none, null);
+        store.deleteUserAffiliations(TEST_SERVER1_USER1_JID);
 
-		assertEquals("An unexpected user membership was returned", expected,
-				result.get(0));
-	}
-	
-	@Test
-	public void querySelectsTheMostRecentUpdatedDate() throws Exception {
-		dbTester.loadData("node_1");
-		Date originalDate = store.getUserMemberships(TEST_SERVER1_USER1_JID).get(0).getLastUpdated();
-        
-        store.setUserAffiliation(
-    		TEST_SERVER1_NODE1_ID,
-    		TEST_SERVER1_USER1_JID,
-    		Affiliations.owner
-        );
-		Date newDate = store.getNodeMembership(
-				TEST_SERVER1_NODE1_ID, TEST_SERVER1_USER1_JID).getLastUpdated();
+        ResultSet<NodeMembership> result = store.getUserMemberships(TEST_SERVER1_USER1_JID);
 
-		assertTrue(newDate.after(originalDate));
-	}
+        NodeMembership expected = new NodeMembershipImpl(TEST_SERVER1_NODE1_ID, TEST_SERVER1_USER1_JID, Subscriptions.subscribed, Affiliations.none, null);
+
+        assertEquals("An unexpected user membership was returned", expected, result.get(0));
+    }
+
+    @Test
+    public void querySelectsTheMostRecentUpdatedDate() throws Exception {
+        dbTester.loadData("node_1");
+        Date originalDate = store.getUserMemberships(TEST_SERVER1_USER1_JID).get(0).getLastUpdated();
+
+        store.setUserAffiliation(TEST_SERVER1_NODE1_ID, TEST_SERVER1_USER1_JID, Affiliations.owner);
+        Date newDate = store.getNodeMembership(TEST_SERVER1_NODE1_ID, TEST_SERVER1_USER1_JID).getLastUpdated();
+
+        assertTrue(newDate.after(originalDate));
+    }
 }

@@ -20,46 +20,45 @@ import org.xmpp.packet.PacketError;
 
 public class ItemsGetTest extends IQTestHandler {
 
-	private IQ request;
-	private ItemsGet itemsGet;
-	private Element element;
-	private BlockingQueue<Packet> queue = new LinkedBlockingQueue<Packet>();
+    private IQ request;
+    private ItemsGet itemsGet;
+    private Element element;
+    private BlockingQueue<Packet> queue = new LinkedBlockingQueue<Packet>();
 
-	private JID jid = new JID("juliet@shakespeare.lit");
-	private ChannelManager channelManager;
+    private JID jid = new JID("juliet@shakespeare.lit");
+    private ChannelManager channelManager;
 
-	@Before
-	public void setUp() throws Exception {
+    @Before
+    public void setUp() throws Exception {
 
-		queue = new LinkedBlockingQueue<Packet>();
-		itemsGet = new ItemsGet(queue, channelManager);
-		request = readStanzaAsIq("/iq/pubsub/items/request.stanza");
-		element = new BaseElement("items");
+        queue = new LinkedBlockingQueue<Packet>();
+        itemsGet = new ItemsGet(queue, channelManager);
+        request = readStanzaAsIq("/iq/pubsub/items/request.stanza");
+        element = new BaseElement("items");
 
-		channelManager = Mockito.mock(ChannelManager.class);
-		itemsGet.setChannelManager(channelManager);
-	}
+        channelManager = Mockito.mock(ChannelManager.class);
+        itemsGet.setChannelManager(channelManager);
+    }
 
-	@Test
-	public void testPassingItemsAsElementNameReturnsTrue() {
-		Assert.assertTrue(itemsGet.accept(element));
-	}
+    @Test
+    public void testPassingItemsAsElementNameReturnsTrue() {
+        Assert.assertTrue(itemsGet.accept(element));
+    }
 
-	@Test
-	public void testPassingNotItemsAsElementNameReturnsFalse() {
-		Element element = new BaseElement("not-items");
-		Assert.assertFalse(itemsGet.accept(element));
-	}
+    @Test
+    public void testPassingNotItemsAsElementNameReturnsFalse() {
+        Element element = new BaseElement("not-items");
+        Assert.assertFalse(itemsGet.accept(element));
+    }
 
-	@Test
-	public void testMissingNodeAttributeReturnsErrorStanza() throws Exception {
-		itemsGet.process(element, jid, request, null);
-		Packet response = queue.poll();
+    @Test
+    public void testMissingNodeAttributeReturnsErrorStanza() throws Exception {
+        itemsGet.process(element, jid, request, null);
+        Packet response = queue.poll();
 
-		PacketError error = response.getError();
-		Assert.assertNotNull(error);
-		Assert.assertEquals(PacketError.Type.modify, error.getType());
-		Assert.assertEquals("nodeid-required",
-				error.getApplicationConditionName());
-	}
+        PacketError error = response.getError();
+        Assert.assertNotNull(error);
+        Assert.assertEquals(PacketError.Type.modify, error.getType());
+        Assert.assertEquals("nodeid-required", error.getApplicationConditionName());
+    }
 }

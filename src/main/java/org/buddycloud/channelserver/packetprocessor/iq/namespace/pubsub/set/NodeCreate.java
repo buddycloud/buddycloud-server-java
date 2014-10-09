@@ -21,8 +21,8 @@ import org.xmpp.packet.Packet;
 import org.xmpp.packet.PacketError;
 
 public class NodeCreate extends PubSubElementProcessorAbstract {
-	private static final String NODE_REG_EX = "^/user/[^@]+@[^/]+/[^/]+$";
-	private static final String INVALID_NODE_CONFIGURATION = "Invalid node configuration";
+    private static final String NODE_REG_EX = "^/user/[^@]+@[^/]+/[^/]+$";
+    private static final String INVALID_NODE_CONFIGURATION = "Invalid node configuration";
 
 	public NodeCreate(BlockingQueue<Packet> outQueue,
 			ChannelManager channelManager) {
@@ -57,105 +57,91 @@ public class NodeCreate extends PubSubElementProcessorAbstract {
 		createNode();
 	}
 
-	private void createNode() throws InterruptedException {
-		try {
-			channelManager.createNode(actor, node, getNodeConfiguration());
-		} catch (NodeStoreException e) {
-			logger.error(e);
-			setErrorCondition(PacketError.Type.wait,
-					PacketError.Condition.internal_server_error);
-			outQueue.put(response);
-			return;
-		} catch (NodeConfigurationException e) {
-			logger.error(e);
-			setErrorCondition(PacketError.Type.modify,
-					PacketError.Condition.bad_request);
-			outQueue.put(response);
-			return;
-		}
-		response.setType(IQ.Type.result);
-		outQueue.put(response);
-	}
+    private void createNode() throws InterruptedException {
+        try {
+            channelManager.createNode(actor, node, getNodeConfiguration());
+        } catch (NodeStoreException e) {
+            logger.error(e);
+            setErrorCondition(PacketError.Type.wait, PacketError.Condition.internal_server_error);
+            outQueue.put(response);
+            return;
+        } catch (NodeConfigurationException e) {
+            logger.error(e);
+            setErrorCondition(PacketError.Type.modify, PacketError.Condition.bad_request);
+            outQueue.put(response);
+            return;
+        }
+        response.setType(IQ.Type.result);
+        outQueue.put(response);
+    }
 
-	public boolean accept(Element elm) {
-		return elm.getName().equals("create");
-	}
+    public boolean accept(Element elm) {
+        return elm.getName().equals("create");
+    }
 
-	private HashMap<String, String> getNodeConfiguration() throws NodeStoreException {
-		getNodeConfigurationHelper().parse(request);
-		getNodeConfigurationHelper().setNode(node);
-		if (false == getNodeConfigurationHelper().isValid()) {
-			throw new NodeConfigurationException(INVALID_NODE_CONFIGURATION);
-		}
-		HashMap<String, String> defaultConfiguration = Conf.getDefaultChannelConf(
-				new JID(node.split("/")[2]), actor);
-		HashMap<String, String> configuration = getNodeConfigurationHelper()
-				.getValues();
-		configuration.put(Creator.FIELD_NAME, actor.toBareJID());
-		
-		defaultConfiguration.putAll(configuration);
-		
-		return defaultConfiguration;
-	}
+    private HashMap<String, String> getNodeConfiguration() throws NodeStoreException {
+        getNodeConfigurationHelper().parse(request);
+        getNodeConfigurationHelper().setNode(node);
+        if (false == getNodeConfigurationHelper().isValid()) {
+            throw new NodeConfigurationException(INVALID_NODE_CONFIGURATION);
+        }
+        HashMap<String, String> defaultConfiguration = Conf.getDefaultChannelConf(new JID(node.split("/")[2]), actor);
+        HashMap<String, String> configuration = getNodeConfigurationHelper().getValues();
+        configuration.put(Creator.FIELD_NAME, actor.toBareJID());
 
-	private boolean validateNode() {
-		if ((node != null) && !node.trim().equals("")) {
-			return true;
-		}
-		response.setType(IQ.Type.error);
-		Element nodeIdRequired = new DOMElement("nodeid-required",
-				new Namespace("", JabberPubsub.NS_PUBSUB_ERROR));
-		Element badRequest = new DOMElement(
-				PacketError.Condition.bad_request.toXMPP(), new Namespace("",
-						JabberPubsub.NS_XMPP_STANZAS));
-		Element error = new DOMElement("error");
-		error.addAttribute("type", "modify");
-		error.add(badRequest);
-		error.add(nodeIdRequired);
-		response.setChildElement(error);
-		return false;
-	}
+        defaultConfiguration.putAll(configuration);
 
-	private boolean doesNodeExist() throws NodeStoreException {
-		if (false == channelManager.nodeExists(node)) {
-			return false;
-		}
-		setErrorCondition(PacketError.Type.cancel,
-				PacketError.Condition.conflict);
-		return true;
-	}
+        return defaultConfiguration;
+    }
 
-	private boolean actorIsRegistered() {
-		if (true == actor.getDomain().equals(getServerDomain())) {
-			return true;
-		}
-		setErrorCondition(PacketError.Type.auth,
-				PacketError.Condition.forbidden);
-		return false;
-	}
+    private boolean validateNode() {
+        if ((node != null) && !node.trim().equals("")) {
+            return true;
+        }
+        response.setType(IQ.Type.error);
+        Element nodeIdRequired = new DOMElement("nodeid-required", new Namespace("", JabberPubsub.NS_PUBSUB_ERROR));
+        Element badRequest = new DOMElement(PacketError.Condition.bad_request.toXMPP(), new Namespace("", JabberPubsub.NS_XMPP_STANZAS));
+        Element error = new DOMElement("error");
+        error.addAttribute("type", "modify");
+        error.add(badRequest);
+        error.add(nodeIdRequired);
+        response.setChildElement(error);
+        return false;
+    }
 
-	private boolean nodeHandledByThisServer() {
-		if (false == node.matches(NODE_REG_EX)) {
-			setErrorCondition(PacketError.Type.modify,
-					PacketError.Condition.bad_request);
-			return false;
-		}
+    private boolean doesNodeExist() throws NodeStoreException {
+        if (false == channelManager.nodeExists(node)) {
+            return false;
+        }
+        setErrorCondition(PacketError.Type.cancel, PacketError.Condition.conflict);
+        return true;
+    }
 
-		if ((false == node.contains("@" + getServerDomain()))
-				&& (false == node.contains("@" + getTopicsDomain()))) {
-			setErrorCondition(PacketError.Type.modify,
-					PacketError.Condition.not_acceptable);
-			return false;
-		}
-		return true;
-	}
-	
-	private void makeRemoteRequest() throws InterruptedException {
-		request.setTo(new JID(node.split("/")[2]).getDomain());
-		Element actor = request.getElement()
-		    .element("pubsub")
-		    .addElement("actor", Buddycloud.NS);
-		actor.addText(request.getFrom().toBareJID());
-	    outQueue.put(request);
-	}
+    private boolean actorIsRegistered() {
+        if (true == actor.getDomain().equals(getServerDomain())) {
+            return true;
+        }
+        setErrorCondition(PacketError.Type.auth, PacketError.Condition.forbidden);
+        return false;
+    }
+
+    private boolean nodeHandledByThisServer() {
+        if (false == node.matches(NODE_REG_EX)) {
+            setErrorCondition(PacketError.Type.modify, PacketError.Condition.bad_request);
+            return false;
+        }
+
+        if ((false == node.contains("@" + getServerDomain())) && (false == node.contains("@" + getTopicsDomain()))) {
+            setErrorCondition(PacketError.Type.modify, PacketError.Condition.not_acceptable);
+            return false;
+        }
+        return true;
+    }
+
+    private void makeRemoteRequest() throws InterruptedException {
+        request.setTo(new JID(node.split("/")[2]).getDomain());
+        Element actor = request.getElement().element("pubsub").addElement("actor", Buddycloud.NS);
+        actor.addText(request.getFrom().toBareJID());
+        outQueue.put(request);
+    }
 }

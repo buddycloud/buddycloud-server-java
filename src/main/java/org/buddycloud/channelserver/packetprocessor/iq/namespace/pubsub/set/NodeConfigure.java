@@ -31,21 +31,19 @@ import org.xmpp.resultsetmanagement.ResultSet;
 
 public class NodeConfigure extends PubSubElementProcessorAbstract {
 
-	private static final Logger LOGGER = Logger.getLogger(NodeConfigure.class);
+    private static final Logger LOGGER = Logger.getLogger(NodeConfigure.class);
 
-	public NodeConfigure(BlockingQueue<Packet> outQueue,
-			ChannelManager channelManager) {
-		setChannelManager(channelManager);
-		setOutQueue(outQueue);
-	}
+    public NodeConfigure(BlockingQueue<Packet> outQueue, ChannelManager channelManager) {
+        setChannelManager(channelManager);
+        setOutQueue(outQueue);
+    }
 
-	public void process(Element elm, JID actorJID, IQ reqIQ, Element rsm)
-			throws Exception {
-		element = elm;
-		response = IQ.createResultIQ(reqIQ);
-		request = reqIQ;
-		actor = actorJID;
-		node = element.attributeValue("node");
+    public void process(Element elm, JID actorJID, IQ reqIQ, Element rsm) throws Exception {
+        element = elm;
+        response = IQ.createResultIQ(reqIQ);
+        request = reqIQ;
+        actor = actorJID;
+        node = element.attributeValue("node");
 
 		if (null == actor) {
 			actor = request.getFrom();
@@ -73,135 +71,120 @@ public class NodeConfigure extends PubSubElementProcessorAbstract {
 		setNodeConfiguration();
 	}
 
-	private void setNodeConfiguration() throws Exception {
-		try {
-			getNodeConfigurationHelper().parse(request);
-			getNodeConfigurationHelper().setNode(node);
-			if (getNodeConfigurationHelper().isValid()) {
-				HashMap<String, String> configuration = getNodeConfigurationHelper()
-						.getValues();
-				updateNodeConfiguration(configuration);
-				notifySubscribers(configuration);
-				return;
-			}
-		} catch (NodeConfigurationException e) {
-			LOGGER.error("Node configuration exception", e);
-			setErrorCondition(PacketError.Type.modify,
-					PacketError.Condition.bad_request);
-			outQueue.put(response);
-			return;
-		} catch (NodeStoreException e) {
-			LOGGER.error("Data Store Exception", e);
-			setErrorCondition(PacketError.Type.cancel,
-					PacketError.Condition.internal_server_error);
-			outQueue.put(response);
-			return;
-		}
-		setErrorCondition(PacketError.Type.modify,
-				PacketError.Condition.bad_request);
-		outQueue.put(response);
-	}
+    private void setNodeConfiguration() throws Exception {
+        try {
+            getNodeConfigurationHelper().parse(request);
+            getNodeConfigurationHelper().setNode(node);
+            if (getNodeConfigurationHelper().isValid()) {
+                HashMap<String, String> configuration = getNodeConfigurationHelper().getValues();
+                updateNodeConfiguration(configuration);
+                notifySubscribers(configuration);
+                return;
+            }
+        } catch (NodeConfigurationException e) {
+            LOGGER.error("Node configuration exception", e);
+            setErrorCondition(PacketError.Type.modify, PacketError.Condition.bad_request);
+            outQueue.put(response);
+            return;
+        } catch (NodeStoreException e) {
+            LOGGER.error("Data Store Exception", e);
+            setErrorCondition(PacketError.Type.cancel, PacketError.Condition.internal_server_error);
+            outQueue.put(response);
+            return;
+        }
+        setErrorCondition(PacketError.Type.modify, PacketError.Condition.bad_request);
+        outQueue.put(response);
+    }
 
-	private void updateNodeConfiguration(HashMap<String, String> configuration)
-			throws Exception {
-		channelManager.setNodeConf(node, configuration);
-		outQueue.put(response);
-	}
+    private void updateNodeConfiguration(HashMap<String, String> configuration) throws Exception {
+        channelManager.setNodeConf(node, configuration);
+        outQueue.put(response);
+    }
 
-	private void notifySubscribers(HashMap<String, String> configuration) throws NodeStoreException,
-			InterruptedException {
-		ResultSet<NodeSubscription> subscribers = channelManager
-				.getNodeSubscriptionListeners(node);
-		Document document = getDocumentHelper();
-		Element message = document.addElement("message");
-		message.addAttribute("remote-server-discover", "false");
-		Element event = message.addElement("event");
-		Element configurationElement = event.addElement("configuration");
-		configurationElement.addAttribute("node", node);
-		event.addNamespace("", Event.NAMESPACE);
-		message.addAttribute("from", request.getTo().toString());
-		message.addAttribute("type", "headline");
-		Message rootElement = new Message(message);
-		
-		Element dataForm = configurationElement.addElement("x");
-		dataForm.addAttribute("type", "result");
-		dataForm.addNamespace("", DataForm.NAMESPACE);
-		DataForm df = new DataForm(dataForm);
+    private void notifySubscribers(HashMap<String, String> configuration) throws NodeStoreException, InterruptedException {
+        ResultSet<NodeSubscription> subscribers = channelManager.getNodeSubscriptionListeners(node);
+        Document document = getDocumentHelper();
+        Element message = document.addElement("message");
+        message.addAttribute("remote-server-discover", "false");
+        Element event = message.addElement("event");
+        Element configurationElement = event.addElement("configuration");
+        configurationElement.addAttribute("node", node);
+        event.addNamespace("", Event.NAMESPACE);
+        message.addAttribute("from", request.getTo().toString());
+        message.addAttribute("type", "headline");
+        Message rootElement = new Message(message);
 
-		FormField field;
-		for (Map.Entry<String, String> entry : configuration.entrySet()) {
-		    String key = entry.getKey();
-		    Object value = entry.getValue();
-		    field = df.addField(key, null, null);
-		    field.addValue(value);
-		    // ...
-		}	
+        Element dataForm = configurationElement.addElement("x");
+        dataForm.addAttribute("type", "result");
+        dataForm.addNamespace("", DataForm.NAMESPACE);
+        DataForm df = new DataForm(dataForm);
 
-		for (NodeSubscription subscriber : subscribers) {
-			Message notification = rootElement.createCopy();
-			notification.setTo(subscriber.getListener());
-			outQueue.put(notification);
-		}
-		
-		Collection<JID> admins = getAdminUsers();
-		for (JID admin : admins) {
-			Message notification = rootElement.createCopy();
-			notification.setTo(admin);
-			outQueue.put(notification);
-		}
-	}
+        FormField field;
+        for (Map.Entry<String, String> entry : configuration.entrySet()) {
+            String key = entry.getKey();
+            Object value = entry.getValue();
+            field = df.addField(key, null, null);
+            field.addValue(value);
+            // ...
+        }
 
-	private boolean isActorOwner() throws NodeStoreException {
-		return channelManager.getNodeMembership(node,
-				new JID(actor.toBareJID())).getAffiliation().equals(Affiliations.owner);
-	}
-	
-	private boolean actorCanModify() throws NodeStoreException {
-		if (isActorOwner()) {
-			return true;
-		}
-		setErrorCondition(PacketError.Type.auth,
-				PacketError.Condition.forbidden);
-		return false;
-	}
+        for (NodeSubscription subscriber : subscribers) {
+            Message notification = rootElement.createCopy();
+            notification.setTo(subscriber.getListener());
+            outQueue.put(notification);
+        }
 
-	private boolean nodeExists() throws NodeStoreException {
-		if (channelManager.nodeExists(node)) {
-			return true;
-		}
-		setErrorCondition(PacketError.Type.cancel,
-				PacketError.Condition.item_not_found);
-		return false;
-	}
+        Collection<JID> admins = getAdminUsers();
+        for (JID admin : admins) {
+            Message notification = rootElement.createCopy();
+            notification.setTo(admin);
+            outQueue.put(notification);
+        }
+    }
 
-	private boolean nodeProvided() {
-		if ((null != node) && !node.equals("")) {
-			return true;
-		}
-		response.setType(IQ.Type.error);
-		Element nodeIdRequired = new DOMElement("nodeid-required",
-				new Namespace("", JabberPubsub.NS_PUBSUB_ERROR));
-		Element badRequest = new DOMElement(
-				PacketError.Condition.bad_request.toXMPP(), new Namespace("",
-						JabberPubsub.NS_XMPP_STANZAS));
-		Element error = new DOMElement("error");
-		error.addAttribute("type", "modify");
-		error.add(badRequest);
-		error.add(nodeIdRequired);
-		response.setChildElement(error);
-		return false;
-	}
-	
-	private void makeRemoteRequest() throws InterruptedException {
-		request.setTo(new JID(node.split("/")[2]).getDomain());
-		Element actor = request.getElement()
-		    .element("pubsub")
-		    .addElement("actor", Buddycloud.NS);
-		actor.addText(request.getFrom().toBareJID());
-	    outQueue.put(request);
-	}
+    private boolean isActorOwner() throws NodeStoreException {
+        return channelManager.getNodeMembership(node, new JID(actor.toBareJID())).getAffiliation().equals(Affiliations.owner);
+    }
 
-	public boolean accept(Element elm) {
-		return elm.getName().equals("configure");
-	}
+    private boolean actorCanModify() throws NodeStoreException {
+        if (isActorOwner()) {
+            return true;
+        }
+        setErrorCondition(PacketError.Type.auth, PacketError.Condition.forbidden);
+        return false;
+    }
+
+    private boolean nodeExists() throws NodeStoreException {
+        if (channelManager.nodeExists(node)) {
+            return true;
+        }
+        setErrorCondition(PacketError.Type.cancel, PacketError.Condition.item_not_found);
+        return false;
+    }
+
+    private boolean nodeProvided() {
+        if ((null != node) && !node.equals("")) {
+            return true;
+        }
+        response.setType(IQ.Type.error);
+        Element nodeIdRequired = new DOMElement("nodeid-required", new Namespace("", JabberPubsub.NS_PUBSUB_ERROR));
+        Element badRequest = new DOMElement(PacketError.Condition.bad_request.toXMPP(), new Namespace("", JabberPubsub.NS_XMPP_STANZAS));
+        Element error = new DOMElement("error");
+        error.addAttribute("type", "modify");
+        error.add(badRequest);
+        error.add(nodeIdRequired);
+        response.setChildElement(error);
+        return false;
+    }
+
+    private void makeRemoteRequest() throws InterruptedException {
+        request.setTo(new JID(node.split("/")[2]).getDomain());
+        Element actor = request.getElement().element("pubsub").addElement("actor", Buddycloud.NS);
+        actor.addText(request.getFrom().toBareJID());
+        outQueue.put(request);
+    }
+
+    public boolean accept(Element elm) {
+        return elm.getName().equals("configure");
+    }
 }

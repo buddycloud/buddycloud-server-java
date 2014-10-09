@@ -11,14 +11,14 @@ import org.xmpp.packet.Packet;
 
 public final class JabberRegister extends AbstractNamespace {
 
-	public static final String NAMESPACE_URI = "jabber:iq:register";
-	
-	private final PacketProcessor<IQ> setProcessor;
-	
-	public JabberRegister(BlockingQueue<Packet> outQueue, Configuration conf, ChannelManager channelManager) {
-		super(outQueue, conf, channelManager);
-		this.setProcessor = new JabberRegisterSet(outQueue, channelManager);
-	}
+    public static final String NAMESPACE_URI = "jabber:iq:register";
+
+    private final PacketProcessor<IQ> setProcessor;
+
+    public JabberRegister(BlockingQueue<Packet> outQueue, Configuration conf, ChannelManager channelManager) {
+        super(outQueue, conf, channelManager);
+        this.setProcessor = new JabberRegisterSet(outQueue, channelManager);
+    }
 
     @Override
     protected PacketProcessor<IQ> get() {

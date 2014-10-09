@@ -10,34 +10,33 @@ import org.xmpp.packet.Packet;
 
 public abstract class QueueConsumer {
 
-	private static final Logger LOGGER = Logger.getLogger(QueueConsumer.class);
+    private static final Logger LOGGER = Logger.getLogger(QueueConsumer.class);
 
-	private ExecutorService executorService = Executors.newFixedThreadPool(5);
-	private final BlockingQueue<Packet> queue;
+    private ExecutorService executorService = Executors.newFixedThreadPool(5);
+    private final BlockingQueue<Packet> queue;
 
-	public QueueConsumer(BlockingQueue<Packet> queue) {
-		this.queue = queue;
-	}
+    public QueueConsumer(BlockingQueue<Packet> queue) {
+        this.queue = queue;
+    }
 
-	public void start() {
-		executorService.submit(new Runnable() {
-			@Override
-			public void run() {
-				while (true) {
-					try {
-						Packet packet = queue.take();
-						consume(packet);
-					} catch (InterruptedException e) {
-						LOGGER.error(e);
-					} catch (NodeStoreException e) {
-						// TODO Auto-generated catch block
-						LOGGER.error(e);
-					}
-				}
-			}
-		});
-	}
+    public void start() {
+        executorService.submit(new Runnable() {
+            @Override
+            public void run() {
+                while (true) {
+                    try {
+                        Packet packet = queue.take();
+                        consume(packet);
+                    } catch (InterruptedException e) {
+                        LOGGER.error(e);
+                    } catch (NodeStoreException e) {
+                        LOGGER.error(e);
+                    }
+                }
+            }
+        });
+    }
 
-	protected abstract void consume(Packet p) throws NodeStoreException;
+    protected abstract void consume(Packet p) throws NodeStoreException;
 
 }

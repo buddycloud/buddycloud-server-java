@@ -7,6 +7,7 @@ import org.buddycloud.channelserver.db.exception.NodeStoreException;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.JabberPubsub;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.PubSubElementProcessorAbstract;
 import org.buddycloud.channelserver.pubsub.model.NodeMembership;
+import org.buddycloud.channelserver.pubsub.subscription.Subscriptions;
 import org.buddycloud.channelserver.utils.XMLConstants;
 import org.buddycloud.channelserver.utils.node.item.payload.Buddycloud;
 import org.dom4j.Element;
@@ -67,6 +68,15 @@ public class SubscriptionsGet extends PubSubElementProcessorAbstract {
         outQueue.put(result);
     }
 
+    /**
+     * Don't include any subscriptions other than Subscriptions.subscriptions, unless the user is
+     * one of owner, moderator or the user.
+     * 
+     * @param subscriptions
+     * @return
+     * @throws NodeStoreException
+     * @throws InterruptedException
+     */
     private boolean getNodeMemberships(Element subscriptions) throws NodeStoreException, InterruptedException {
 
         ResultSet<NodeMembership> cur = channelManager.getNodeMemberships(node);
@@ -76,19 +86,23 @@ public class SubscriptionsGet extends PubSubElementProcessorAbstract {
             subscriptions.addAttribute(XMLConstants.NODE_ATTR, node);
 
             for (NodeMembership ns : cur) {
-                if (actorJid.toBareJID().equals(ns.getUser().toBareJID())) {
-                    Element subscription = subscriptions.addElement(XMLConstants.SUBSCRIPTION_ELEM);
-                    subscription.addAttribute(XMLConstants.NODE_ATTR, ns.getNodeId())
-                            .addAttribute(XMLConstants.SUBSCRIPTION_ELEM, ns.getSubscription().toString())
-                            .addAttribute(XMLConstants.JID_ATTR, ns.getUser().toBareJID());
-                    if (null != ns.getInvitedBy() && isOwnerModerator()) {
-                        subscription.addAttribute(XMLConstants.INVITED_BY_ELEM, ns.getInvitedBy().toBareJID());
-                    }
+                if (!isUserPriviledged(ns.getUser()) && !ns.getSubscription().equals(Subscriptions.subscribed)) {
+                    continue;
+                }
+
+                Element subscription = subscriptions.addElement(XMLConstants.SUBSCRIPTION_ELEM);
+                subscription.addAttribute(XMLConstants.NODE_ATTR, ns.getNodeId())
+                        .addAttribute(XMLConstants.SUBSCRIPTION_ELEM, ns.getSubscription().toString())
+                        .addAttribute(XMLConstants.JID_ATTR, ns.getUser().toBareJID());
+
+                // Only add the invited by attribute if the user has the necessary priviledges
+                if (null != ns.getInvitedBy() && isUserPriviledged(ns.getUser())) {
+                    subscription.addAttribute(XMLConstants.INVITED_BY_ELEM, ns.getInvitedBy().toBareJID());
                 }
 
             }
         } else {
-
+            // TODO(garethf) this looks like makeRemoteRequest
             if (!channelManager.isCachedNode(node) || (null != requestIq.getElement().element(XMLConstants.PUBSUB_ELEM).element(XMLConstants.SET_ELEM))
                     && !cur.isEmpty()) {
                 makeRemoteRequest(new JID(node.split("/")[2]).getDomain());
@@ -97,6 +111,21 @@ public class SubscriptionsGet extends PubSubElementProcessorAbstract {
         }
 
         return true;
+    }
+
+    /**
+     * Don't include any subscriptions other than Subscriptions.subscriptions, unless the user is
+     * one of owner, moderator or the user.
+     * 
+     * @param ns
+     * 
+     * @return
+     * @throws NodeStoreException
+     */
+    private boolean isUserPriviledged(JID jid) throws NodeStoreException {
+        boolean isUser = actorJid.toBareJID().equals(jid.toBareJID());
+
+        return (isUser || isOwnerModerator()) ? true : false;
     }
 
     private boolean getUserMemberships(Element subscriptions) throws NodeStoreException, InterruptedException {

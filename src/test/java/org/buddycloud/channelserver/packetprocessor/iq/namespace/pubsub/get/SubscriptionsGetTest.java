@@ -71,7 +71,6 @@ public class SubscriptionsGetTest extends IQTestHandler {
     @Test
     public void addsInvitedByToUserSubscriptionsList() throws Exception {
 
-
         ArrayList<NodeMembership> members = new ArrayList<NodeMembership>();
         members.add(new NodeMembershipImpl(node, jid, Subscriptions.invited, Affiliations.publisher, invitedBy));
 
@@ -112,11 +111,12 @@ public class SubscriptionsGetTest extends IQTestHandler {
     public void doesntAddInvitedByToNodeSubscriptionsListIfNotUserOrOwnerOrModerator() throws Exception {
 
         List<NodeMembership> members = new ArrayList<NodeMembership>();
-        members.add(new NodeMembershipImpl(node, jid, Subscriptions.invited, Affiliations.publisher, invitedBy));
+        members.add(new NodeMembershipImpl(node, jid, Subscriptions.subscribed, Affiliations.publisher, invitedBy));
 
         Mockito.when(channelManager.getNodeMemberships(Mockito.anyString())).thenReturn(new ResultSetImpl<NodeMembership>(members));
 
-        subscriptionsGet.process(element, jid, nodeRequest, null);
+        // Run the processing as a JID other than the one used in the above 'add'
+        subscriptionsGet.process(element, new JID("shylock@shakespeare.lit"), nodeRequest, null);
 
         Assert.assertEquals(1, queue.size());
 
@@ -131,7 +131,7 @@ public class SubscriptionsGetTest extends IQTestHandler {
     }
 
     @Test
-    public void addsInvitedByToNodeSubscriptionsList() throws Exception {
+    public void addsInvitedByToNodeSubscriptionsListIfOwner() throws Exception {
 
         NodeMembership nodeMembership = new NodeMembershipImpl(node, jid, Subscriptions.subscribed, Affiliations.owner, null);
         Mockito.when(channelManager.getNodeMembership(Mockito.anyString(), Mockito.any(JID.class))).thenReturn(nodeMembership);

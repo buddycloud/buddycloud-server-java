@@ -11,6 +11,7 @@ import org.apache.log4j.Logger;
 import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.channel.Conf;
 import org.buddycloud.channelserver.db.exception.NodeStoreException;
+import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.set.XMLConstants;
 import org.buddycloud.channelserver.pubsub.model.GlobalItemID;
 import org.buddycloud.channelserver.pubsub.model.NodeItem;
 import org.buddycloud.channelserver.pubsub.model.impl.GlobalItemIDImpl;
@@ -73,7 +74,9 @@ public class AtomEntry implements PayloadValidator {
     private Element geoloc;
     private String globalItemID;
 
-    public AtomEntry() {}
+    public AtomEntry() {
+
+    }
 
     public AtomEntry(Element item) {
         setPayload(item);
@@ -103,8 +106,8 @@ public class AtomEntry implements PayloadValidator {
             return false;
         }
 
-        Element id = this.entry.element("id");
-        if ((id == null) || (true == id.getText().isEmpty())) {
+        Element id = this.entry.element(XMLConstants.ID_ELEM);
+        if ((id == null) || (id.getText().isEmpty())) {
             if (null != id) {
                 id.detach();
             }
@@ -112,58 +115,58 @@ public class AtomEntry implements PayloadValidator {
             this.entry.addElement("id").setText("1");
         }
 
-        Element title = this.entry.element("title");
+        Element title = this.entry.element(XMLConstants.TITLE_ELEM);
         if (null == title) {
             LOGGER.debug("Title of the entry was missing. We add a default one to it: 'Post'.");
-            title = this.entry.addElement("title");
+            title = this.entry.addElement(XMLConstants.TITLE_ELEM);
             title.setText("Post");
         }
-        this.params.put("title", title.getText());
+        this.params.put(XMLConstants.TITLE_ELEM, title.getText());
 
         Element content = this.entry.element("content");
         if (null == content) {
             this.errorMessage = MISSING_CONTENT_ELEMENT;
             return false;
         }
-        String contentType = content.attributeValue("type");
+        String contentType = content.attributeValue(XMLConstants.TYPE_ATTR);
         if (null == contentType) {
             contentType = CONTENT_TEXT;
         }
-        if ((false == contentType.equals(CONTENT_TEXT)) && (false == contentType.equals(CONTENT_XHTML))) {
+        if ((!contentType.equals(CONTENT_TEXT)) && (!contentType.equals(CONTENT_XHTML))) {
             this.errorMessage = UNSUPPORTED_CONTENT_TYPE;
             return false;
         }
         this.params.put("content", content.getText());
         this.params.put("content-type", contentType);
 
-        Element updated = this.entry.element("updated");
+        Element updated = this.entry.element(XMLConstants.UPDATED_ELEM);
         if (null == updated) {
 
             String updateTime = Conf.formatDate(new Date());
             LOGGER.debug("Update of the entry was missing. We add a default one to it: '" + updateTime + "'.");
-            this.entry.addElement("updated").setText(updateTime);
+            this.entry.addElement(XMLConstants.UPDATED_ELEM).setText(updateTime);
         }
 
-        this.geoloc = this.entry.element("geoloc");
+        this.geoloc = this.entry.element(XMLConstants.GEOLOC_ELEM);
 
-        if (false == validateInReplyToElement(this.entry.element("in-reply-to"))) {
+        if (!validateInReplyToElement(this.entry.element(XMLConstants.IN_REPLY_TO_ELEM))) {
             return false;
         }
 
-        if (false == validateTargetElement(this.entry.element("target"))) {
+        if (!validateTargetElement(this.entry.element(XMLConstants.TARGET_ELEM))) {
             return false;
         }
 
-        if (false == validateRatingElement(this.entry.element("rating"))) {
+        if (!validateRatingElement(this.entry.element(XMLConstants.RATING_ELEM))) {
             return false;
         }
 
-        Element meta = this.entry.element("meta");
+        Element meta = this.entry.element(XMLConstants.META_ELEM);
         if (null != meta) {
             this.meta = meta;
         }
 
-        Element media = this.entry.element("media");
+        Element media = this.entry.element(XMLConstants.MEDIA_ELEM);
         if (null != media) {
             this.media = media;
         }
@@ -174,36 +177,36 @@ public class AtomEntry implements PayloadValidator {
     @Override
     public Element getPayload() {
 
-        Element entry = new DOMElement("entry", new org.dom4j.Namespace("", Atom.NS));
+        Element entry = new DOMElement(XMLConstants.ENTRY_ELEM, new org.dom4j.Namespace("", Atom.NS));
         entry.add(new org.dom4j.Namespace("activity", ActivityStreams.NS));
 
         String postType = POST_TYPE_NOTE;
         String activityVerb = ACTIVITY_VERB_POST;
 
-        entry.addElement("id").setText(getGlobalItemId());
+        entry.addElement(XMLConstants.ID_ELEM).setText(getGlobalItemId());
 
         String title = this.params.get("title");
         String itemContent = this.params.get("content");
         String publishedDate = Conf.formatDate(new Date());
 
-        entry.addElement("published").setText(publishedDate);
+        entry.addElement(XMLConstants.PUBLISHED_ELEM).setText(publishedDate);
 
-        entry.addElement("updated").setText(publishedDate);
+        entry.addElement(XMLConstants.UPDATED_ELEM).setText(publishedDate);
 
-        Element author = entry.addElement("author");
+        Element author = entry.addElement(XMLConstants.AUTHOR_ELEM);
 
-        author.addElement("name").setText(jid.toBareJID());
+        author.addElement(XMLConstants.NAME_ELEM).setText(jid.toBareJID());
 
-        author.addElement("uri").setText(AUTHOR_URI_PREFIX + jid.toBareJID());
+        author.addElement(XMLConstants.URI_ELEM).setText(AUTHOR_URI_PREFIX + jid.toBareJID());
 
-        author.addElement("activity:object-type").setText(AUTHOR_TYPE);
+        author.addElement(XMLConstants.ACTIVITY_OBJECT_TYPE_ELEM).setText(AUTHOR_TYPE);
 
         if (this.geoloc != null) {
             entry.add(this.geoloc.createCopy());
         }
 
         if (this.inReplyTo != null) {
-            Element reply = entry.addElement("in-reply-to");
+            Element reply = entry.addElement(XMLConstants.IN_REPLY_TO_ELEM);
             reply.addNamespace("", Atom.NS_THREAD);
             reply.addAttribute("ref", inReplyTo);
             postType = POST_TYPE_COMMENT;
@@ -276,7 +279,7 @@ public class AtomEntry implements PayloadValidator {
         }
 
         inReplyTo = reply.attributeValue("ref");
-        if (true == GlobalItemIDImpl.isGlobalId(inReplyTo)) {
+        if (GlobalItemIDImpl.isGlobalId(inReplyTo)) {
             inReplyTo = GlobalItemIDImpl.toLocalId(inReplyTo);
         }
 
@@ -297,7 +300,7 @@ public class AtomEntry implements PayloadValidator {
         if (null == target) {
             return true;
         }
-        targetId = target.elementText("id");
+        targetId = target.elementText(XMLConstants.ID_ELEM);
         if ((null == targetId) || (0 == targetId.length())) {
             this.errorMessage = MISSING_TARGET_ID;
             return false;
@@ -306,10 +309,10 @@ public class AtomEntry implements PayloadValidator {
             this.errorMessage = IN_REPLY_TO_MISSING;
             return false;
         }
-        if (true == GlobalItemIDImpl.isGlobalId(targetId)) {
+        if (GlobalItemIDImpl.isGlobalId(targetId)) {
             targetId = GlobalItemIDImpl.toLocalId(targetId);
         }
-        if (true == targetId.equals(replyingToItem.getId())) {
+        if (targetId.equals(replyingToItem.getId())) {
             targetItem = replyingToItem;
         } else {
             targetItem = channelManager.getNodeItem(node, targetId);
@@ -318,10 +321,10 @@ public class AtomEntry implements PayloadValidator {
             this.errorMessage = TARGETED_ITEM_NOT_FOUND;
             return false;
         }
-        if (true == targetItem.getId().equals(targetId)) {
+        if (targetItem.getId().equals(targetId)) {
             return true;
         }
-        if ((null == targetItem.getInReplyTo()) || (false == targetItem.getInReplyTo().equals(targetId))) {
+        if ((null == targetItem.getInReplyTo()) || (!targetItem.getInReplyTo().equals(targetId))) {
             this.errorMessage = TARGET_MUST_BE_IN_SAME_THREAD;
             return false;
         }
@@ -360,7 +363,7 @@ public class AtomEntry implements PayloadValidator {
         }
 
         GlobalItemID globalTargetId = new GlobalItemIDImpl(new JID(channelServerDomain), node, targetId);
-        if (true == channelManager.userHasRatedPost(node, jid, globalTargetId)) {
+        if (channelManager.userHasRatedPost(node, jid, globalTargetId)) {
             this.errorMessage = ITEM_ALREADY_RATED;
             return false;
         }
@@ -384,12 +387,12 @@ public class AtomEntry implements PayloadValidator {
 
     @Override
     public String getInReplyTo() {
-        String inReplyTo = null;
-        Element inReplyToElement = this.entry.element("in-reply-to");
+        String localReply = null;
+        Element inReplyToElement = this.entry.element(XMLConstants.IN_REPLY_TO_ELEM);
         if (null != inReplyToElement) {
-            inReplyTo = GlobalItemIDImpl.toLocalId(inReplyToElement.attributeValue("ref"));
+            localReply = GlobalItemIDImpl.toLocalId(inReplyToElement.attributeValue("ref"));
         }
-        return inReplyTo;
+        return localReply;
     }
 
     @Override

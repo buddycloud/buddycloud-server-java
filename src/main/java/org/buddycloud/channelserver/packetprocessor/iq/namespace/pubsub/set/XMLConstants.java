@@ -96,6 +96,36 @@ public class XMLConstants {
 
     public static final String ITEM_REQUIRED_ELEM = "item-required";
 
+    public static final String ID_ELEM = "id";
+
+    public static final String TITLE_ELEM = "title";
+
+    public static final String UPDATED_ELEM = "updated";
+
+    public static final String GEOLOC_ELEM = "geoloc";
+
+    public static final String IN_REPLY_TO_ELEM = "in-reply-to";
+
+    public static final String TARGET_ELEM = "target";
+
+    public static final String RATING_ELEM = "rating";
+
+    public static final String META_ELEM = "meta";
+
+    public static final String MEDIA_ELEM = "media";
+
+    public static final String ENTRY_ELEM = "entry";
+
+    public static final String PUBLISHED_ELEM = "published";
+
+    public static final String NAME_ELEM = "name";
+
+    public static final String URI_ELEM = "uri";
+
+    public static final String ACTIVITY_OBJECT_TYPE_ELEM = "activity:object-type";
+
+    public static final String AUTHOR_ELEM = "author";
+
     // Private (hidden) constructor
     private XMLConstants() {
 

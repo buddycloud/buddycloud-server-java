@@ -12,6 +12,7 @@ import org.buddycloud.channelserver.channel.node.configuration.field.Creator;
 import org.buddycloud.channelserver.db.exception.NodeStoreException;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.JabberPubsub;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.PubSubElementProcessorAbstract;
+import org.buddycloud.channelserver.utils.XMLConstants;
 import org.buddycloud.channelserver.utils.node.item.payload.Buddycloud;
 import org.dom4j.Element;
 import org.dom4j.Namespace;

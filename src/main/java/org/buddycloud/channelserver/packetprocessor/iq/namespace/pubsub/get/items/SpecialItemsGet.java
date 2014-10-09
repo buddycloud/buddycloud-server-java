@@ -6,7 +6,7 @@ import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.PubSubElementProcessor;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.PubSubElementProcessorAbstract;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.get.items.special.FirehoseGet;
-import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.set.XMLConstants;
+import org.buddycloud.channelserver.utils.XMLConstants;
 import org.dom4j.Element;
 import org.xmpp.packet.IQ;
 import org.xmpp.packet.JID;

@@ -15,7 +15,7 @@ import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.set.Publ
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.set.SubscribeSet;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.set.SubscriptionEvent;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.set.UnsubscribeSet;
-import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.set.XMLConstants;
+import org.buddycloud.channelserver.utils.XMLConstants;
 import org.dom4j.Element;
 import org.xmpp.packet.IQ;
 import org.xmpp.packet.IQ.Type;

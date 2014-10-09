@@ -6,7 +6,7 @@ import java.util.concurrent.BlockingQueue;
 import org.buddycloud.channelserver.Configuration;
 import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.channel.node.configuration.Helper;
-import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.set.XMLConstants;
+import org.buddycloud.channelserver.utils.XMLConstants;
 import org.dom4j.Document;
 import org.dom4j.DocumentHelper;
 import org.dom4j.Element;

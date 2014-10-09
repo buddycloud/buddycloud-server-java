@@ -11,6 +11,7 @@ import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.PubSubEl
 import org.buddycloud.channelserver.pubsub.affiliation.Affiliations;
 import org.buddycloud.channelserver.pubsub.model.NodeMembership;
 import org.buddycloud.channelserver.pubsub.model.NodeSubscription;
+import org.buddycloud.channelserver.utils.XMLConstants;
 import org.buddycloud.channelserver.utils.node.item.payload.Buddycloud;
 import org.dom4j.Document;
 import org.dom4j.Element;

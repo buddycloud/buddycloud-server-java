@@ -71,7 +71,7 @@ public class PubSubResult implements PacketProcessor<IQ> {
         } catch (UnknownFederatedPacketException e) {
             LOGGER.error(e);
         }
-        if (!"result".equals(reqIQ.getType().toString())) {
+        if (IQ.Type.result != reqIQ.getType()) {
             sendUnexpectedRequestResponse(reqIQ);
         }
     }

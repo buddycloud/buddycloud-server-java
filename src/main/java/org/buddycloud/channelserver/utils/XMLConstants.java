@@ -1,4 +1,4 @@
-package org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.set;
+package org.buddycloud.channelserver.utils;
 
 public class XMLConstants {
 

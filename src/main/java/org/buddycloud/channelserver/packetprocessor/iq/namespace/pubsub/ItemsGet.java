@@ -5,7 +5,7 @@ import java.util.concurrent.BlockingQueue;
 import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.get.items.NodeItemsGet;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.get.items.SpecialItemsGet;
-import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.set.XMLConstants;
+import org.buddycloud.channelserver.utils.XMLConstants;
 import org.dom4j.Element;
 import org.xmpp.packet.IQ;
 import org.xmpp.packet.JID;

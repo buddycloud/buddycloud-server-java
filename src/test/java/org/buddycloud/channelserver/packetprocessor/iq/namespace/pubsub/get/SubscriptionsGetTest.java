@@ -125,7 +125,9 @@ public class SubscriptionsGetTest extends IQTestHandler {
         Assert.assertEquals(userRequest.getTo(), response.getFrom());
         Assert.assertEquals(userRequest.getFrom(), response.getTo());
         Assert.assertEquals(userRequest.getID(), response.getID());
-        Assert.assertEquals(0, response.getChildElement().element("subscriptions").elements("invited-by").size());
+        Element subscription = (Element) response.getChildElement().element("subscriptions").elements("subscription").get(0);
+        Assert.assertNull(subscription.attributeValue("invited-by"));
+
     }
 
     @Test

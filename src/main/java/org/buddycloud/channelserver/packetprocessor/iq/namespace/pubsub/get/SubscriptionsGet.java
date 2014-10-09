@@ -6,8 +6,8 @@ import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.db.exception.NodeStoreException;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.JabberPubsub;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.PubSubElementProcessorAbstract;
-import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.set.XMLConstants;
 import org.buddycloud.channelserver.pubsub.model.NodeMembership;
+import org.buddycloud.channelserver.utils.XMLConstants;
 import org.buddycloud.channelserver.utils.node.item.payload.Buddycloud;
 import org.dom4j.Element;
 import org.xmpp.packet.IQ;
@@ -81,7 +81,7 @@ public class SubscriptionsGet extends PubSubElementProcessorAbstract {
                     subscription.addAttribute(XMLConstants.NODE_ATTR, ns.getNodeId())
                             .addAttribute(XMLConstants.SUBSCRIPTION_ELEM, ns.getSubscription().toString())
                             .addAttribute(XMLConstants.JID_ATTR, ns.getUser().toBareJID());
-                    if (null != ns.getInvitedBy()) {
+                    if (null != ns.getInvitedBy() && isOwnerModerator()) {
                         subscription.addAttribute(XMLConstants.INVITED_BY_ELEM, ns.getInvitedBy().toBareJID());
                     }
                 }
@@ -114,11 +114,15 @@ public class SubscriptionsGet extends PubSubElementProcessorAbstract {
             subscription.addAttribute(XMLConstants.NODE_ATTR, ns.getNodeId())
                     .addAttribute(XMLConstants.SUBSCRIPTION_ELEM, ns.getSubscription().toString())
                     .addAttribute(XMLConstants.JID_ATTR, ns.getUser().toBareJID());
-            if (null != ns.getInvitedBy()) {
+            if (null != ns.getInvitedBy() && isOwnerModerator()) {
                 subscription.addAttribute(XMLConstants.INVITED_BY_ELEM, ns.getInvitedBy().toBareJID());
             }
         }
         return true;
+    }
+
+    private boolean isOwnerModerator() throws NodeStoreException {
+        return channelManager.getNodeMembership(node, actorJid).getAffiliation().canAuthorize();
     }
 
     private void makeRemoteRequest(String to) throws InterruptedException {

@@ -54,7 +54,7 @@ public class AffiliationsGet extends PubSubElementProcessorAbstract {
 
 
         Element pubsub = result.setChildElement(XMLConstants.PUBSUB_ELEM, namespace);
-        Element affiliations = pubsub.addElement(XMLConstants.AFFILIATION_ELEM);
+        Element affiliations = pubsub.addElement(XMLConstants.AFFILIATIONS_ELEM);
 
         if (actorJid == null) {
             actorJid = requestIq.getFrom();
@@ -147,6 +147,6 @@ public class AffiliationsGet extends PubSubElementProcessorAbstract {
 
     @Override
     public boolean accept(Element elm) {
-        return XMLConstants.AFFILIATION_ELEM.equals(elm.getName());
+        return XMLConstants.AFFILIATIONS_ELEM.equals(elm.getName());
     }
 }

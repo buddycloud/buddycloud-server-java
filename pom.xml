@@ -303,6 +303,7 @@
                 <configuration>
                     <effort>Max</effort>
                     <xmlOutput>true</xmlOutput>
+                    <failOnError>false</failOnError>
                 </configuration>
                 <executions>
                     <execution>

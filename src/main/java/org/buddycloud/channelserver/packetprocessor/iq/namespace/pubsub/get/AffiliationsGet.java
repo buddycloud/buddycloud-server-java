@@ -3,6 +3,7 @@ package org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.get;
 import java.util.concurrent.BlockingQueue;
 
 import org.apache.log4j.Logger;
+import org.buddycloud.channelserver.Configuration;
 import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.db.exception.NodeStoreException;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.JabberPubsub;
@@ -28,20 +29,25 @@ public class AffiliationsGet implements PubSubElementProcessor {
     private JID actorJid;
     private IQ result;
     private String firstItem;
-    private static final Logger logger = Logger.getLogger(AffiliationsGet.class);
 
-    public AffiliationsGet(BlockingQueue<Packet> outQueue, ChannelManager channelManager) {
+    private static final Logger logger = Logger
+            .getLogger(AffiliationsGet.class);
+
+    public AffiliationsGet(BlockingQueue<Packet> outQueue,
+            ChannelManager channelManager) {
         this.outQueue = outQueue;
         this.channelManager = channelManager;
     }
 
     @Override
-    public void process(Element elm, JID actorJID, IQ reqIQ, Element rsm) throws Exception {
+    public void process(Element elm, JID actorJID, IQ reqIQ, Element rsm)
+            throws Exception {
         result = IQ.createResultIQ(reqIQ);
         requestIq = reqIQ;
         actorJid = actorJID;
         node = elm.attributeValue("node");
-        if (false == channelManager.isLocalJID(requestIq.getFrom())) {
+
+        if (false == Configuration.getInstance().isLocalJID(requestIq.getFrom())) {
             result.getElement().addAttribute("remote-server-discover", "false");
         }
         String namespace = JabberPubsub.NS_PUBSUB_OWNER;
@@ -49,7 +55,8 @@ public class AffiliationsGet implements PubSubElementProcessor {
             namespace = JabberPubsub.NAMESPACE_URI;
         }
 
-        Element pubsub = result.setChildElement(PubSubGet.ELEMENT_NAME, namespace);
+        Element pubsub = result.setChildElement(PubSubGet.ELEMENT_NAME,
+                namespace);
         Element affiliations = pubsub.addElement("affiliations");
 
         if (actorJid == null) {
@@ -65,25 +72,28 @@ public class AffiliationsGet implements PubSubElementProcessor {
         if (false == isProcessedLocally) {
             return;
         }
-
+            
         outQueue.put(result);
     }
 
-    private boolean getNodeAffiliations(Element affiliations) throws NodeStoreException, InterruptedException {
-        if (false == channelManager.isLocalNode(node) && (false == channelManager.isCachedNode(node))) {
+    private boolean getNodeAffiliations(Element affiliations)
+            throws NodeStoreException, InterruptedException {
+        if (false == Configuration.getInstance().isLocalNode(node)
+                && (false == channelManager.isCachedNode(node))) {
             makeRemoteRequest(node.split("/")[2]);
             return false;
         }
         ResultSet<NodeMembership> nodeMemberships;
         nodeMemberships = channelManager.getNodeMemberships(node);
-
-        if ((0 == nodeMemberships.size()) && (false == channelManager.isLocalNode(node))) {
+        
+        if ((0 == nodeMemberships.size())
+            && (false == Configuration.getInstance().isLocalNode(node))) {
             makeRemoteRequest(node.split("/")[2]);
             return false;
         }
-
+        
         boolean isOwnerModerator = isOwnerModerator();
-
+        
         for (NodeMembership nodeMembership : nodeMemberships) {
 
             if (false == actorJid.toBareJID().equals(nodeMembership.getUser())) {
@@ -94,34 +104,41 @@ public class AffiliationsGet implements PubSubElementProcessor {
                     continue;
                 }
             }
-            logger.trace("Adding affiliation for " + nodeMembership.getUser() + " affiliation " + nodeMembership.getAffiliation());
-
+            logger.trace("Adding affiliation for " + nodeMembership.getUser()
+                    + " affiliation " + nodeMembership.getAffiliation());
+            
             if (null == firstItem) {
                 firstItem = nodeMembership.getUser().toString();
             }
-            nodeMembership.getUser().toString();
-
-            affiliations.addElement("affiliation").addAttribute("node", nodeMembership.getNodeId())
-                    .addAttribute("affiliation", nodeMembership.getAffiliation().toString()).addAttribute("jid", nodeMembership.getUser().toString());
+            
+            affiliations
+                    .addElement("affiliation")
+                    .addAttribute("node", nodeMembership.getNodeId())
+                    .addAttribute("affiliation",
+                            nodeMembership.getAffiliation().toString())
+                    .addAttribute("jid", nodeMembership.getUser().toString());
         }
         return true;
     }
-
+    
     private boolean isOwnerModerator() throws NodeStoreException {
-        return channelManager.getNodeMembership(node, actorJid).getAffiliation().canAuthorize();
+        return channelManager.getNodeMembership(node,
+                actorJid).getAffiliation().canAuthorize();
     }
 
-    private boolean getUserMemberships(Element affiliations) throws NodeStoreException, InterruptedException {
-
-        if (false == channelManager.isLocalJID(actorJid) && (false == channelManager.isCachedJID(requestIq.getFrom()))) {
+    private boolean getUserMemberships(Element affiliations)
+            throws NodeStoreException, InterruptedException {
+        
+        if (false == Configuration.getInstance().isLocalJID(actorJid)
+                && (false == channelManager.isCachedJID(requestIq.getFrom()))) {
             makeRemoteRequest(actorJid.getDomain());
             return false;
         }
-
+        
         ResultSet<NodeMembership> memberships;
         memberships = channelManager.getUserMemberships(actorJid);
         boolean isOwnerModerator = isOwnerModerator();
-
+        
         for (NodeMembership membership : memberships) {
 
             if (false == actorJid.toBareJID().equals(membership.getUser())) {
@@ -132,15 +149,20 @@ public class AffiliationsGet implements PubSubElementProcessor {
                     continue;
                 }
             }
-            logger.trace("Adding affiliation for " + membership.getUser() + " affiliation " + membership.getAffiliation() + " (no node provided)");
-
+            logger.trace("Adding affiliation for " + membership.getUser()
+                    + " affiliation " + membership.getAffiliation()
+                    + " (no node provided)");
+            
             if (null == firstItem) {
                 firstItem = membership.getNodeId();
             }
-            membership.getNodeId();
-
-            affiliations.addElement("affiliation").addAttribute("node", membership.getNodeId())
-                    .addAttribute("affiliation", membership.getAffiliation().toString()).addAttribute("jid", membership.getUser().toBareJID());
+            
+            affiliations
+                    .addElement("affiliation")
+                    .addAttribute("node", membership.getNodeId())
+                    .addAttribute("affiliation",
+                            membership.getAffiliation().toString())
+                    .addAttribute("jid", membership.getUser().toBareJID());
         }
         return true;
     }
@@ -149,7 +171,8 @@ public class AffiliationsGet implements PubSubElementProcessor {
         logger.info("Going federated for <affiliations />");
         requestIq.setTo(new JID(node).getDomain());
         if (null == requestIq.getElement().element("pubsub").element("actor")) {
-            Element actor = requestIq.getElement().element("pubsub").addElement("actor", Buddycloud.NS);
+            Element actor = requestIq.getElement().element("pubsub")
+                .addElement("actor", Buddycloud.NS);
             actor.addText(requestIq.getFrom().toBareJID());
         }
         outQueue.put(requestIq);

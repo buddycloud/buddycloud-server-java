@@ -8,6 +8,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import org.buddycloud.channelserver.Configuration;
 import org.buddycloud.channelserver.db.NodeStore;
@@ -25,32 +26,34 @@ public class ChannelManagerImplTest {
 
     private static final String TEST_DOMAIN = "domain.com";
     private static final String TEST_TOPICS_DOMAIN = "topics.domain.com";
-
+    
     @Mock
     NodeStore nodeStore;
-
-    @Mock
-    Configuration configuration;
-
+    
     String user1 = "/user/user@" + TEST_DOMAIN + "/posts";
     String user2 = "/user/user@server2.com/posts";
     String user3 = "/user/user@topics.server3.com/posts";
     String user4 = "/user/user@" + TEST_TOPICS_DOMAIN + "/status";
     String user5 = "/user/user@server1.com/meta";
-
+    
     /**
      * Class under test
      */
     ChannelManagerImpl channelManager;
-
+    
     @Before
     public void setUp() throws Exception {
         MockitoAnnotations.initMocks(this);
-        channelManager = new ChannelManagerImpl(nodeStore, configuration);
-
+        channelManager = new ChannelManagerImpl(nodeStore);
+        
         // This is used loads
-        when(configuration.getProperty(Configuration.CONFIGURATION_SERVER_DOMAIN)).thenReturn(TEST_DOMAIN);
-        when(configuration.getProperty(Configuration.CONFIGURATION_SERVER_TOPICS_DOMAIN)).thenReturn(TEST_TOPICS_DOMAIN);
+        Configuration.getInstance().putProperty(
+                Configuration.CONFIGURATION_SERVER_DOMAIN, TEST_DOMAIN);
+        Configuration.getInstance().putProperty(
+                Configuration.CONFIGURATION_SERVER_TOPICS_DOMAIN,
+                TEST_TOPICS_DOMAIN);
+        Configuration.getInstance().remove(
+                Configuration.CONFIGURATION_LOCAL_DOMAIN_CHECKER);
     }
 
     @After
@@ -62,7 +65,7 @@ public class ChannelManagerImplTest {
     @Ignore("Until we can so something about the millisecond matching")
     public void testCreatePersonalChannel() throws Exception {
         JID channelJID = new JID("testchannel@domain.com");
-
+        
         channelManager.createPersonalChannel(channelJID);
 
         verify(nodeStore).createNode(channelJID, Conf.getPostChannelNodename(channelJID), Conf.getDefaultPostChannelConf(channelJID));
@@ -75,24 +78,26 @@ public class ChannelManagerImplTest {
     @Test(expected = IllegalArgumentException.class)
     public void testCreatePersonalChannelFailsForRemoteUser() throws Exception {
         JID channelJID = new JID("testchannel@otherdomain.com");
-
+        
         channelManager.createPersonalChannel(channelJID);
     }
 
     @Test
     public void testCreatePersonalWorksForExternallyValidatedDomain() throws Exception {
-        when(configuration.getProperty(Configuration.CONFIGURATION_LOCAL_DOMAIN_CHECKER)).thenReturn(Boolean.TRUE.toString());
+        Configuration.getInstance().putProperty(
+                Configuration.CONFIGURATION_LOCAL_DOMAIN_CHECKER,
+                Boolean.TRUE.toString());
         JID channelJID = new JID("testchannel@otherdomain.com");
         channelManager.createPersonalChannel(channelJID);
     }
-
+    
     @Test
     @Ignore("Until we can so something about the millisecond matching")
     public void testCreatePersonalChannelSomeNodesExist() throws Exception {
         JID channelJID = new JID("testchannel@domain.com");
-
+        
         when(nodeStore.nodeExists(Conf.getPostChannelNodename(channelJID))).thenReturn(true);
-
+        
         channelManager.createPersonalChannel(new JID("testchannel@domain.com"));
 
         verify(nodeStore, never()).createNode(channelJID, Conf.getPostChannelNodename(channelJID), Conf.getDefaultPostChannelConf(channelJID));
@@ -101,79 +106,62 @@ public class ChannelManagerImplTest {
         verify(nodeStore).createNode(channelJID, Conf.getGeoCurrentChannelNodename(channelJID), Conf.getDefaultGeoCurrentChannelConf(channelJID));
         verify(nodeStore).createNode(channelJID, Conf.getGeoNextChannelNodename(channelJID), Conf.getDefaultGeoNextChannelConf(channelJID));
     }
-
+    
     @Test
     public void testIsLocalNodeSuccess() throws Exception {
-        assertTrue(channelManager.isLocalNode("/user/test@domain.com/posts"));
+        assertTrue(Configuration.getInstance().isLocalNode("/user/test@domain.com/posts"));
     }
-
+    
     @Test
     public void testIsLocalNodeFailure() throws Exception {
-        assertFalse(channelManager.isLocalNode("/user/test@otherdomain.com/posts"));
+        assertFalse(Configuration.getInstance().isLocalNode("/user/test@otherdomain.com/posts"));        
     }
-
+    
     @Test(expected = IllegalArgumentException.class)
     public void testIsLocalNodeWithInvalidNodeThrowsException() throws Exception {
-        channelManager.isLocalNode("somerandomnodeid");
+        Configuration.getInstance().isLocalNode("somerandomnodeid");        
     }
 
     @Test
     public void testIsLocalJidForLocaJid() throws Exception {
-        assertTrue(channelManager.isLocalJID(new JID("user@" + TEST_DOMAIN)));
+        assertTrue(Configuration.getInstance().isLocalJID(new JID("user@" + TEST_DOMAIN)));
     }
-
+    
     @Test
     public void testIsLocalJidForNonLocaJid() throws Exception {
-        assertFalse(channelManager.isLocalJID(new JID("user@server1.com")));
+        assertFalse(Configuration.getInstance().isLocalJID(new JID("user@server1.com")));
     }
-
+    
     @Test
     public void testDeleteRemoteDataDeletesRemoteData() throws Exception {
-
-        ArrayList<String> nodes = new ArrayList<String>();
-        nodes.add(user2);
-        nodes.add(user3);
-        nodes.add(user5);
-
-        when(nodeStore.getNodeList()).thenReturn(nodes);
-
+        
+        List<String> remoteNodes = new ArrayList<String>();
+        remoteNodes.add(user2);
+        remoteNodes.add(user3);
+        remoteNodes.add(user5);
+        
+        when(nodeStore.getRemoteNodesList()).thenReturn(remoteNodes);
+        
         channelManager.deleteRemoteData();
-
-        verify(nodeStore).getNodeList();
+        
+        verify(nodeStore).getRemoteNodesList();
         verify(nodeStore, Mockito.times(3)).purgeNodeItems(Mockito.anyString());
     }
-
-    @Test
-    public void testDeleteRemoteDoesNotPurgeLocalNodes() throws Exception {
-
-        ArrayList<String> nodes = new ArrayList<String>();
-        nodes.add(user1);
-        nodes.add(user2);
-        nodes.add(user3);
-        nodes.add(user4);
-
-        when(nodeStore.getNodeList()).thenReturn(nodes);
-
-        channelManager.deleteRemoteData();
-
-        verify(nodeStore).getNodeList();
-        verify(nodeStore, Mockito.times(2)).purgeNodeItems(Mockito.anyString());
-    }
-
+    
     @Test
     public void testGetNodeDefaultAffiliationForNodeWithConf() throws Exception {
         when(nodeStore.getNodeConfValue(user1, Conf.DEFAULT_AFFILIATION)).thenReturn("moderator");
-
+        
         Affiliations affiliation = channelManager.getDefaultNodeAffiliation(user1);
-
+        
         assertEquals("Incorrect default affiliation", Affiliations.moderator, affiliation);
     }
-
-
+    
+    
     @Test
     public void testGetNodeDefaultAffiliationForNodeWithoutConf() throws Exception {
         Affiliations affiliation = channelManager.getDefaultNodeAffiliation(user1);
-
+        
         // If nothing is specified, the default affiliation is "member"
         assertEquals("Incorrect default affiliation", Affiliations.member, affiliation);
     }

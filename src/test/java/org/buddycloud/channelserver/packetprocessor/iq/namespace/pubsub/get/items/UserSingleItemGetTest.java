@@ -6,6 +6,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 import junit.framework.Assert;
 
+import org.buddycloud.channelserver.Configuration;
 import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.packetHandler.iq.IQTestHandler;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.JabberPubsub;
@@ -48,18 +49,21 @@ public class UserSingleItemGetTest extends IQTestHandler {
         element = request.getElement().element("pubsub").element("items");
 
         channelManager = Mockito.mock(ChannelManager.class);
-
+        
         Mockito.when(channelManager.nodeExists(node)).thenReturn(true);
-        Mockito.when(channelManager.isLocalNode(Mockito.anyString())).thenReturn(true);
-        Mockito.when(channelManager.isLocalJID(Mockito.any(JID.class))).thenReturn(true);
-
+        Configuration.getInstance().putProperty(
+                Configuration.CONFIGURATION_LOCAL_DOMAIN_CHECKER, Boolean.TRUE.toString());
+        
         Mockito.when(channelManager.getNodeMembership(node, jid)).thenReturn(
                 new NodeMembershipImpl(node, jid, Subscriptions.subscribed, Affiliations.member, null));
         nodeViewAcl = Mockito.mock(NodeViewAcl.class);
-        Mockito.doReturn(true).when(nodeViewAcl)
-                .canViewNode(Mockito.anyString(), Mockito.any(NodeMembership.class), Mockito.any(AccessModels.class), Mockito.anyBoolean());
+        Mockito.doReturn(true)
+                .when(nodeViewAcl)
+                .canViewNode(Mockito.anyString(),
+                        Mockito.any(NodeMembership.class),
+                        Mockito.any(AccessModels.class), Mockito.anyBoolean());
         itemsGet.setNodeViewAcl(nodeViewAcl);
-
+        
         itemsGet.setChannelManager(channelManager);
     }
 
@@ -67,28 +71,32 @@ public class UserSingleItemGetTest extends IQTestHandler {
     public void testPassingItemsAsElementNameReturnsTrue() {
         Assert.assertTrue(itemsGet.accept(element));
     }
-
+    
     @Test
     public void testInexistentNode() throws Exception {
         Assert.assertTrue(itemsGet.accept(element));
         itemsGet.process(element, jid, request, null);
         Packet response = queue.poll();
-
+        
         PacketError error = response.getError();
         Assert.assertNotNull(error);
         Assert.assertEquals(PacketError.Type.cancel, error.getType());
-        Assert.assertEquals(PacketError.Condition.item_not_found, error.getCondition());
+        Assert.assertEquals(PacketError.Condition.item_not_found,
+                error.getCondition());
     }
 
     @Test
     public void unableToReadNode() throws Exception {
-
+        
         NodeAclRefuseReason reason = Mockito.mock(NodeAclRefuseReason.class);
         Mockito.when(reason.getType()).thenReturn(PacketError.Type.auth);
         Mockito.when(reason.getCondition()).thenReturn(PacketError.Condition.forbidden);
-
-        Mockito.doReturn(false).when(nodeViewAcl)
-                .canViewNode(Mockito.anyString(), Mockito.any(NodeMembership.class), Mockito.any(AccessModels.class), Mockito.anyBoolean());
+        
+        Mockito.doReturn(false)
+        .when(nodeViewAcl)
+        .canViewNode(Mockito.anyString(),
+                Mockito.any(NodeMembership.class),
+                Mockito.any(AccessModels.class), Mockito.anyBoolean());
         Mockito.when(nodeViewAcl.getReason()).thenReturn(reason);
 
         itemsGet.process(element, jid, request, null);
@@ -97,32 +105,34 @@ public class UserSingleItemGetTest extends IQTestHandler {
         PacketError error = response.getError();
         Assert.assertNotNull(error);
         Assert.assertEquals(PacketError.Type.auth, error.getType());
-        Assert.assertEquals(PacketError.Condition.forbidden, error.getCondition());
+        Assert.assertEquals(PacketError.Condition.forbidden,
+                error.getCondition());
     }
-
+    
     @Test
     public void inexistentItem() throws Exception {
 
         itemsGet.process(element, jid, request, null);
         Packet response = queue.poll();
-
+        
         PacketError error = response.getError();
         Assert.assertNotNull(error);
         Assert.assertEquals(PacketError.Type.cancel, error.getType());
-        Assert.assertEquals(PacketError.Condition.item_not_found, error.getCondition());
+        Assert.assertEquals(PacketError.Condition.item_not_found,
+                error.getCondition());
     }
-
+    
     @Test
     public void existentItemCheckNamespace() throws Exception {
 
-
+        
         final String itemId = "item1Id";
         NodeItem nodeItem = new NodeItemImpl(node, itemId, new Date(), "<payload/>");
         Mockito.when(channelManager.getNodeItem(node, itemId)).thenReturn(nodeItem);
-
+        
         itemsGet.process(element, jid, request, null);
         Packet response = queue.poll();
-
+        
         Assert.assertNull(response.getError());
         Element pubsubEl = response.getElement().element("pubsub");
         Assert.assertEquals(JabberPubsub.NAMESPACE_URI, pubsubEl.getNamespaceURI());

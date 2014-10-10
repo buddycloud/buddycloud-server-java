@@ -6,6 +6,7 @@ import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 
 import org.apache.log4j.Logger;
+import org.buddycloud.channelserver.Configuration;
 import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.channel.node.configuration.NodeConfigurationException;
 import org.buddycloud.channelserver.db.exception.NodeStoreException;
@@ -47,18 +48,23 @@ public class NodeConfigure extends PubSubElementProcessorAbstract {
         if (null == actor) {
             actor = request.getFrom();
         }
-        if (!channelManager.isLocalNode(node)) {
+        if (!nodeProvided()) {
+            outQueue.put(response);
+            return;
+        }
+        if (!Configuration.getInstance().isLocalNode(node)) {
             makeRemoteRequest();
             return;
         }
         try {
-            if (!nodeProvided() || !nodeExists() || !actorCanModify()) {
+            if (!nodeExists() || !actorCanModify()) {
                 outQueue.put(response);
                 return;
             }
         } catch (NodeStoreException e) {
             LOGGER.error(e);
-            setErrorCondition(PacketError.Type.cancel, PacketError.Condition.internal_server_error);
+            setErrorCondition(PacketError.Type.cancel,
+                    PacketError.Condition.internal_server_error);
             outQueue.put(response);
             return;
         }

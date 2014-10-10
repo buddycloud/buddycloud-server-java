@@ -7,6 +7,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 import junit.framework.Assert;
 
+import org.buddycloud.channelserver.Configuration;
 import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.db.exception.NodeStoreException;
 import org.buddycloud.channelserver.packetHandler.iq.IQTestHandler;
@@ -29,7 +30,7 @@ public class AffiliationProcessorTest extends IQTestHandler {
     private AffiliationProcessor affiliationProcessor;
     private Element affiliation;
     private Element affiliations;
-
+    
     private BlockingQueue<Packet> queue = new LinkedBlockingQueue<Packet>();
     private ChannelManager channelManager;
 
@@ -39,48 +40,58 @@ public class AffiliationProcessorTest extends IQTestHandler {
     public void setUp() throws Exception {
 
         Properties configuration = new Properties();
-        configuration.setProperty("server.domain.channels", "channels.shakespeare.lit");
+        configuration.setProperty("server.domain.channels",
+                "channels.shakespeare.lit");
 
         channelManager = Mockito.mock(ChannelManager.class);
-        Mockito.when(channelManager.isLocalNode(Mockito.anyString())).thenReturn(false);
-        Mockito.when(channelManager.isLocalJID(Mockito.any(JID.class))).thenReturn(true);
-
+        Configuration.getInstance().remove(
+                Configuration.CONFIGURATION_LOCAL_DOMAIN_CHECKER);
+        
         ArrayList<NodeMembership> subscribers = new ArrayList<NodeMembership>();
-        subscribers.add(new NodeMembershipImpl("/users/romeo@shakespeare.lit/posts", jid, Subscriptions.subscribed, Affiliations.member, null));
-        Mockito.doReturn(new ResultSetImpl<NodeMembership>(subscribers)).when(channelManager).getNodeMemberships(Mockito.anyString());
+        subscribers.add(new NodeMembershipImpl(
+                "/user/romeo@shakespeare.lit/posts", jid,
+                Subscriptions.subscribed, Affiliations.member, null));
+        Mockito.doReturn(new ResultSetImpl<NodeMembership>(subscribers))
+                .when(channelManager).getNodeMemberships(Mockito.anyString());
 
-        affiliationProcessor = new AffiliationProcessor(queue, configuration, channelManager);
+        affiliationProcessor = new AffiliationProcessor(queue, configuration,
+                channelManager);
 
         message = new Message();
         message.setType(Message.Type.headline);
-        Element event = message.addChildElement("event", JabberPubsub.NS_PUBSUB_EVENT);
+        Element event = message.addChildElement("event",
+                JabberPubsub.NS_PUBSUB_EVENT);
 
         affiliations = event.addElement("affiliations");
-        affiliations.addAttribute("node", "/users/juliet@shakespeare.lit/posts");
-
+        affiliations.addAttribute("node", "/user/juliet@denmark.lit/posts");
+        
         affiliation = affiliations.addElement("affiliation");
         affiliation.addAttribute("jid", "romeo@shakespeare.lit");
-        affiliation.addAttribute("affiliation", Affiliations.publisher.toString());
+        affiliation.addAttribute("affiliation",
+                Affiliations.publisher.toString());
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void testInvalidAffiliationValueThrowsException() throws Exception {
         Message badAffiliationValue = message.createCopy();
-        badAffiliationValue.getElement().element("event").element("affiliations").element("affiliation").addAttribute("affiliation", "invalid");
+        badAffiliationValue.getElement().element("event").element("affiliations")
+                .element("affiliation").addAttribute("affiliation", "invalid");
         affiliationProcessor.process(badAffiliationValue);
     }
 
     @Test
-    public void testMissingAffiliationElementDoesNotCauseError() throws Exception {
+    public void testMissingAffiliationElementDoesNotCauseError()
+            throws Exception {
         Message noAffiliationElement = message.createCopy();
-        noAffiliationElement.getElement().element("event").element("affiliations").element("affiliation").detach();
+        noAffiliationElement.getElement().element("event").element("affiliations")
+                .element("affiliation").detach();
         affiliationProcessor.process(noAffiliationElement);
     }
 
     @Test
     public void testEventForLocalNodeIsIgnored() throws Exception {
-
-        Mockito.when(channelManager.isLocalNode(Mockito.anyString())).thenReturn(true);
+        Configuration.getInstance().putProperty(
+                Configuration.CONFIGURATION_LOCAL_DOMAIN_CHECKER, Boolean.TRUE.toString());
         affiliationProcessor.process(message);
         Assert.assertEquals(0, queue.size());
     }
@@ -88,14 +99,17 @@ public class AffiliationProcessorTest extends IQTestHandler {
     @Test(expected = NodeStoreException.class)
     public void testNodeStoreExceptionIsThrownWhenExpected() throws Exception {
 
-        Mockito.doThrow(new NodeStoreException()).when(channelManager)
-                .setUserAffiliation(Mockito.anyString(), Mockito.any(JID.class), Mockito.any(Affiliations.class));
+        Mockito.doThrow(new NodeStoreException())
+                .when(channelManager)
+                .setUserAffiliation(Mockito.anyString(),
+                        Mockito.any(JID.class), Mockito.any(Affiliations.class));
         affiliationProcessor.process(message);
     }
 
     @Test
     public void testNotificationsAreSentOutAsExpected() throws Exception {
-
+        Configuration.getInstance().putProperty(
+                Configuration.CONFIGURATION_SERVER_DOMAIN, "shakespeare.lit");
         affiliationProcessor.process(message);
 
         Assert.assertEquals(1, queue.size());

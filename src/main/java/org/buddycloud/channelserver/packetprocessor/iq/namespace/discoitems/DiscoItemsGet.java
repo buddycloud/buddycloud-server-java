@@ -1,6 +1,6 @@
 package org.buddycloud.channelserver.packetprocessor.iq.namespace.discoitems;
 
-import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.BlockingQueue;
 
 import org.apache.log4j.Logger;
@@ -52,28 +52,17 @@ public class DiscoItemsGet implements PacketProcessor<IQ> {
     }
 
     private void addItems() throws NodeStoreException {
-        ArrayList<String> nodes = channelManager.getNodeList();
+        List<String> nodes = channelManager.getLocalNodesList();
 
-        String jid = Configuration.getInstance().getProperty(Configuration.CONFIGURATION_SERVER_CHANNELS_DOMAIN);
-
+        String jid = Configuration.getInstance()
+            .getProperty(Configuration.CONFIGURATION_SERVER_CHANNELS_DOMAIN);
+        
         Element query = response.getElement().addElement("query");
         query.addNamespace("", JabberDiscoItems.NAMESPACE_URI);
         for (String node : nodes) {
-            if (false == isLocalNode(node)) {
-                continue;
-            }
             Element item = query.addElement("item");
             item.addAttribute("node", node);
             item.addAttribute("jid", jid);
-        }
-    }
-
-    private boolean isLocalNode(String node) throws NodeStoreException {
-        try {
-            return channelManager.isLocalNode(node);
-        } catch (IllegalArgumentException e) {
-            logger.error(e);
-            return false;
         }
     }
 

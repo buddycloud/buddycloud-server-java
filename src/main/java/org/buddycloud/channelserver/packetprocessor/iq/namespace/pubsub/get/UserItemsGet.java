@@ -5,6 +5,7 @@ import java.util.Date;
 import java.util.concurrent.BlockingQueue;
 
 import org.apache.log4j.Logger;
+import org.buddycloud.channelserver.Configuration;
 import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.channel.Conf;
 import org.buddycloud.channelserver.db.CloseableIterator;
@@ -27,6 +28,7 @@ import org.xmpp.packet.PacketError.Type;
 public class UserItemsGet extends PubSubElementProcessorAbstract {
 
     private static final Logger LOGGER = Logger.getLogger(UserItemsGet.class);
+
     private Date maxAge;
 
     private Element pubsub;
@@ -39,14 +41,16 @@ public class UserItemsGet extends PubSubElementProcessorAbstract {
     private int maxResults = -1;
     private boolean parentOnly = false;
 
-    public UserItemsGet(BlockingQueue<Packet> outQueue, ChannelManager channelManager) {
+    public UserItemsGet(BlockingQueue<Packet> outQueue,
+            ChannelManager channelManager) {
         setChannelManager(channelManager);
         setOutQueue(outQueue);
         xmlReader = new SAXReader();
     }
 
     @Override
-    public void process(Element elm, JID actorJID, IQ reqIQ, Element rsm) throws Exception {
+    public void process(Element elm, JID actorJID, IQ reqIQ, Element rsm)
+            throws Exception {
         response = IQ.createResultIQ(reqIQ);
         request = reqIQ;
         actor = actorJID;
@@ -62,10 +66,12 @@ public class UserItemsGet extends PubSubElementProcessorAbstract {
             return;
         }
 
-        if (!channelManager.isLocalJID(request.getFrom())) {
-            response.getElement().addAttribute("remote-server-discover", "false");
+        if (!Configuration.getInstance().isLocalJID(request.getFrom())) {
+            response.getElement().addAttribute("remote-server-discover",
+                    "false");
         }
-        pubsub = response.getElement().addElement("pubsub", JabberPubsub.NAMESPACE_URI);
+        pubsub = response.getElement().addElement("pubsub",
+                JabberPubsub.NAMESPACE_URI);
         try {
             if (true == parseRsmElement()) {
                 addRecentItems();
@@ -74,7 +80,8 @@ public class UserItemsGet extends PubSubElementProcessorAbstract {
         } catch (NodeStoreException e) {
             LOGGER.error(e);
             response.getElement().remove(pubsub);
-            setErrorCondition(PacketError.Type.wait, PacketError.Condition.internal_server_error);
+            setErrorCondition(PacketError.Type.wait,
+                    PacketError.Condition.internal_server_error);
         }
         outQueue.put(response);
 
@@ -93,10 +100,15 @@ public class UserItemsGet extends PubSubElementProcessorAbstract {
 
         if (null != (after = resultSetManagement.element("after"))) {
             try {
-                afterItemId = GlobalItemIDImpl.fromBuddycloudString(after.getTextTrim());
+                afterItemId = GlobalItemIDImpl.fromBuddycloudString(after
+                        .getTextTrim());
             } catch (IllegalArgumentException e) {
                 LOGGER.error(e);
-                createExtendedErrorReply(Type.modify, Condition.bad_request, "Could not parse the 'after' id: " + after.getTextTrim());
+                createExtendedErrorReply(
+                        Type.modify,
+                        Condition.bad_request,
+                        "Could not parse the 'after' id: "
+                                + after.getTextTrim());
                 return false;
             }
         }
@@ -111,11 +123,14 @@ public class UserItemsGet extends PubSubElementProcessorAbstract {
         rsm.addElement("first", NS_RSM).setText(firstItemId.toString());
         rsm.addElement("last", NS_RSM).setText(lastItemId.toString());
 
-        rsm.addElement("count", NS_RSM).setText(String.valueOf(channelManager.getCountUserFeedItems(actor, maxAge, parentOnly)));
+        rsm.addElement("count", NS_RSM).setText(
+                String.valueOf(channelManager.getCountUserFeedItems(actor,
+                        maxAge, parentOnly)));
     }
 
     private void addRecentItems() throws NodeStoreException {
-        CloseableIterator<NodeItem> items = channelManager.getUserFeedItems(actor, maxAge, maxResults, afterItemId, parentOnly);
+        CloseableIterator<NodeItem> items = channelManager.getUserFeedItems(
+                actor, maxAge, maxResults, afterItemId, parentOnly);
         String lastNodeId = "";
         Element itemsElement = null;
         while (items.hasNext()) {
@@ -126,17 +141,21 @@ public class UserItemsGet extends PubSubElementProcessorAbstract {
                 lastNodeId = item.getNodeId();
             }
             try {
-                Element entry = xmlReader.read(new StringReader(item.getPayload())).getRootElement();
+                Element entry = xmlReader.read(
+                        new StringReader(item.getPayload())).getRootElement();
                 Element itemElement = itemsElement.addElement("item");
                 itemElement.addAttribute("id", item.getId());
 
                 if (null == firstItemId) {
-                    firstItemId = new GlobalItemIDImpl(null, item.getNodeId(), item.getId());
+                    firstItemId = new GlobalItemIDImpl(null, item.getNodeId(),
+                            item.getId());
                 }
-                lastItemId = new GlobalItemIDImpl(null, item.getNodeId(), item.getId());
+                lastItemId = new GlobalItemIDImpl(null, item.getNodeId(),
+                        item.getId());
                 itemElement.add(entry);
             } catch (DocumentException e) {
-                LOGGER.error("Error parsing a node entry, ignoring. " + item.getId());
+                LOGGER.error("Error parsing a node entry, ignoring. "
+                        + item.getId());
             }
         }
     }
@@ -145,23 +164,31 @@ public class UserItemsGet extends PubSubElementProcessorAbstract {
         Element userFeedItems = request.getChildElement().element("user-items");
         try {
             String since = userFeedItems.attributeValue("since");
-            String parentOnlyAttribute = userFeedItems.attributeValue("parent-only");
-            if ((null != parentOnlyAttribute) && ((true == parentOnlyAttribute.equals("true")) || (true == parentOnlyAttribute.equals("1")))) {
+            String parentOnlyAttribute = userFeedItems
+                    .attributeValue("parent-only");
+            if ((null != parentOnlyAttribute)
+                    && ((true == parentOnlyAttribute.equals("true")) || (true == parentOnlyAttribute
+                            .equals("1")))) {
                 parentOnly = true;
             }
 
             if (null == since) {
-                createExtendedErrorReply(PacketError.Type.modify, PacketError.Condition.bad_request, "since-required");
+                createExtendedErrorReply(PacketError.Type.modify,
+                        PacketError.Condition.bad_request, "since-required");
                 return false;
             }
             maxAge = Conf.parseDate(since);
 
         } catch (NumberFormatException e) {
             LOGGER.error(e);
-            createExtendedErrorReply(PacketError.Type.modify, PacketError.Condition.bad_request, "invalid-max-value-provided");
+            createExtendedErrorReply(PacketError.Type.modify,
+                    PacketError.Condition.bad_request,
+                    "invalid-max-value-provided");
             return false;
         } catch (IllegalArgumentException e) {
-            createExtendedErrorReply(PacketError.Type.modify, PacketError.Condition.bad_request, "invalid-since-value-provided");
+            createExtendedErrorReply(PacketError.Type.modify,
+                    PacketError.Condition.bad_request,
+                    "invalid-since-value-provided");
             LOGGER.error(e);
             return false;
         }

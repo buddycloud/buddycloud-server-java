@@ -5,6 +5,7 @@ import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 
 import org.apache.log4j.Logger;
+import org.buddycloud.channelserver.Configuration;
 import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.channel.node.configuration.field.AccessModel;
 import org.buddycloud.channelserver.db.CloseableIterator;
@@ -82,7 +83,7 @@ public class NodeItemsGet implements PubSubElementProcessor {
         element = elm;
         resultSetManagement = rsm;
 
-        if (!channelManager.isLocalJID(requestIq.getFrom())) {
+        if (!Configuration.getInstance().isLocalJID(requestIq.getFrom())) {
             reply.getElement().addAttribute("remote-server-discover", "false");
         }
 
@@ -93,8 +94,9 @@ public class NodeItemsGet implements PubSubElementProcessor {
             this.actor = requestIq.getFrom();
         }
 
-        if (!channelManager.isLocalNode(node) && !isCached) {
-            logger.debug("Node " + node + " is remote and not cached, off to get some data");
+        if (!Configuration.getInstance().isLocalNode(node) && !isCached) {
+            logger.debug("Node " + node
+                    + " is remote and not cached, off to get some data");
             makeRemoteRequest();
             return;
         }
@@ -126,16 +128,19 @@ public class NodeItemsGet implements PubSubElementProcessor {
     }
 
     private boolean getItem() throws Exception {
-        NodeItem nodeItem = channelManager.getNodeItem(node, element.element("item").attributeValue("id"));
+        NodeItem nodeItem = channelManager.getNodeItem(node,
+                element.element("item").attributeValue("id"));
         if (nodeItem == null) {
-            if (!channelManager.isLocalNode(node)) {
+            if (!Configuration.getInstance().isLocalNode(node)) {
                 makeRemoteRequest();
                 return false;
             }
-            setErrorCondition(PacketError.Type.cancel, PacketError.Condition.item_not_found);
+            setErrorCondition(PacketError.Type.cancel,
+                    PacketError.Condition.item_not_found);
             return true;
         }
-        Element pubsub = reply.getElement().addElement("pubsub", JabberPubsub.NAMESPACE_URI);
+        Element pubsub = reply.getElement().addElement("pubsub",
+                JabberPubsub.NAMESPACE_URI);
         Element items = pubsub.addElement("items").addAttribute("node", node);
         addItemToResponse(nodeItem, items);
         return true;
@@ -172,9 +177,9 @@ public class NodeItemsGet implements PubSubElementProcessor {
         int maxItemsToReturn = MAX_ITEMS_TO_RETURN;
         String afterItemId = null;
 
-        String max_items = element.attributeValue("max_items");
-        if (max_items != null) {
-            maxItemsToReturn = Integer.parseInt(max_items);
+        String maxItems = element.attributeValue("max_items");
+        if (maxItems != null) {
+            maxItemsToReturn = Integer.parseInt(maxItems);
         }
 
         if (resultSetManagement != null) {
@@ -209,8 +214,10 @@ public class NodeItemsGet implements PubSubElementProcessor {
         entry = null;
         int totalEntriesCount = getNodeItems(items, maxItemsToReturn, afterItemId);
 
-        if ((false == channelManager.isLocalNode(node)) && (0 == rsmEntriesCount)) {
-            logger.debug("No results in cache for remote node, so " + "we're going federated to get more");
+        if ((false == Configuration.getInstance().isLocalNode(node))
+                && (0 == rsmEntriesCount)) {
+            logger.debug("No results in cache for remote node, so "
+                    + "we're going federated to get more");
             makeRemoteRequest();
             return;
         }
@@ -237,11 +244,13 @@ public class NodeItemsGet implements PubSubElementProcessor {
     private boolean userCanViewNode() throws NodeStoreException {
         NodeMembership nodeMembership = channelManager.getNodeMembership(node, actor);
 
-        if (getNodeViewAcl().canViewNode(node, nodeMembership, getNodeAccessModel(), channelManager.isLocalJID(actor))) {
+        if (getNodeViewAcl().canViewNode(node, nodeMembership,
+                getNodeAccessModel(), Configuration.getInstance().isLocalJID(actor))) {
             return true;
         }
         NodeAclRefuseReason reason = getNodeViewAcl().getReason();
-        createExtendedErrorReply(reason.getType(), reason.getCondition(), reason.getAdditionalErrorElement());
+        createExtendedErrorReply(reason.getType(), reason.getCondition(),
+                reason.getAdditionalErrorElement());
         return false;
     }
 
@@ -284,17 +293,14 @@ public class NodeItemsGet implements PubSubElementProcessor {
 
     private void addItemToResponse(NodeItem nodeItem, Element parent) {
         try {
-            entry = xmlReader.read(new StringReader(nodeItem.getPayload())).getRootElement();
+            entry = xmlReader.read(new StringReader(nodeItem.getPayload()))
+                    .getRootElement();
             Element item = parent.addElement("item");
             item.addAttribute("id", nodeItem.getId());
             item.add(entry);
         } catch (DocumentException e) {
             logger.error("Error parsing a node entry, ignoring. " + nodeItem);
         }
-    }
-
-    private boolean isOwnerModerator() throws NodeStoreException {
-        return channelManager.getNodeMembership(node, actor).getAffiliation().canAuthorize();
     }
 
     private void createExtendedErrorReply(Type type, Condition condition, String additionalElement) {

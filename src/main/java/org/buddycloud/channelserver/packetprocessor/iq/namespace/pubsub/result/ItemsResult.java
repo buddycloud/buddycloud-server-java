@@ -4,6 +4,7 @@ import java.util.Date;
 import java.util.List;
 
 import org.apache.log4j.Logger;
+import org.buddycloud.channelserver.Configuration;
 import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.channel.Conf;
 import org.buddycloud.channelserver.db.exception.NodeStoreException;
@@ -81,10 +82,11 @@ public class ItemsResult extends PubSubElementProcessorAbstract {
         String node = item.attributeValue("node");
 
         // If its a local JID and/or a local node, that's our turf!
-        if ((true == channelManager.isLocalNode(node)) && (true == channelManager.isLocalJID(user))) {
+        if ((true == Configuration.getInstance().isLocalNode(node))
+                && (true == Configuration.getInstance().isLocalJID(user))) {
             return;
         }
-        if (true == channelManager.isLocalNode(node)) {
+        if (true == Configuration.getInstance().isLocalNode(node)) {
             return;
         }
 

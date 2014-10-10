@@ -4,6 +4,7 @@ import java.util.Properties;
 import java.util.concurrent.BlockingQueue;
 
 import org.apache.log4j.Logger;
+import org.buddycloud.channelserver.Configuration;
 import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.db.exception.NodeStoreException;
 import org.buddycloud.channelserver.pubsub.model.impl.NodeSubscriptionImpl;
@@ -20,9 +21,11 @@ public class SubscriptionProcessor extends AbstractMessageProcessor {
     private JID invitedBy = null;
     private Subscriptions subscription;
 
-    private static final Logger logger = Logger.getLogger(SubscriptionProcessor.class);
+    private static final Logger logger = Logger
+            .getLogger(SubscriptionProcessor.class);
 
-    public SubscriptionProcessor(BlockingQueue<Packet> outQueue, Properties configuration, ChannelManager channelManager) {
+    public SubscriptionProcessor(BlockingQueue<Packet> outQueue,
+            Properties configuration, ChannelManager channelManager) {
         super(channelManager, configuration, outQueue);
     }
 
@@ -32,13 +35,13 @@ public class SubscriptionProcessor extends AbstractMessageProcessor {
 
         handleSubscriptionElement();
 
-        if (true == channelManager.isLocalNode(node)) {
-            return;
-        }
-
         if (null == subscription) {
             return;
-        } else if (subscription.equals(Subscriptions.pending)) {
+        }
+        if (true == Configuration.getInstance().isLocalNode(node)) {
+            return;
+        }
+        if (subscription.equals(Subscriptions.pending)) {
             sendLocalNotifications(NotificationScheme.ownerOrModerator, jid);
         } else if (subscription.equals(Subscriptions.invited)) {
             sendLocalNotifications(NotificationScheme.ownerOrModerator, jid);
@@ -50,36 +53,39 @@ public class SubscriptionProcessor extends AbstractMessageProcessor {
     }
 
     private void handleSubscriptionElement() throws NodeStoreException {
-        Element subscriptionElement = message.getElement().element("event").element("subscription");
+        Element subscriptionElement = message.getElement().element("event")
+                .element("subscription");
         if (null == subscriptionElement) {
             return;
         }
 
         jid = new JID(subscriptionElement.attributeValue("jid"));
         node = subscriptionElement.attributeValue("node");
-        subscription = Subscriptions.valueOf(subscriptionElement.attributeValue("subscription"));
+        subscription = Subscriptions.valueOf(subscriptionElement
+                .attributeValue("subscription"));
         if (null != subscriptionElement.attributeValue("invited-by")) {
             invitedBy = new JID(subscriptionElement.attributeValue("invited-by"));
         }
 
-        if (true == channelManager.isLocalNode(node)) {
+        if (true == Configuration.getInstance().isLocalNode(node)) {
             return;
         }
         storeNewSubscription();
     }
 
     private void storeNewSubscription() throws NodeStoreException {
-        NodeSubscriptionImpl newSubscription = new NodeSubscriptionImpl(node, jid, subscription, invitedBy);
+        NodeSubscriptionImpl newSubscription = new NodeSubscriptionImpl(node,
+                jid, subscription, invitedBy);
         addRemoteNode();
         channelManager.addUserSubscription(newSubscription);
     }
 
     private void addRemoteNode() {
-        try {
+        try { 
             if (false == channelManager.nodeExists(node)) {
-                channelManager.addRemoteNode(node);
+                channelManager.addRemoteNode(node); 
             }
-        } catch (NodeStoreException e) {
+        } catch (NodeStoreException e) { 
             logger.error(e);
         }
     }

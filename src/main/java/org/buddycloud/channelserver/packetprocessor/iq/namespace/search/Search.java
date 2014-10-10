@@ -11,10 +11,10 @@ import org.xmpp.packet.Packet;
 import org.xmpp.packet.PacketError;
 
 public class Search implements PacketProcessor<IQ> {
-
+    
     public static final String ELEMENT_NAME = "query";
     private static final Logger logger = Logger.getLogger(Search.class);
-
+    
     public static final String NAMESPACE_URI = "jabber:iq:search";
 
     private final BlockingQueue<Packet> outQueue;
@@ -23,9 +23,10 @@ public class Search implements PacketProcessor<IQ> {
     private SearchGet searchGet;
     private SearchSet searchSet;
 
-    public Search(BlockingQueue<Packet> outQueue, ChannelManager channelManager) {
+    public Search(BlockingQueue<Packet> outQueue,
+            ChannelManager channelManager) {
         this.outQueue = outQueue;
-        this.searchGet = new SearchGet(outQueue, channelManager);
+        this.searchGet = new SearchGet(outQueue);
         this.searchSet = new SearchSet(outQueue, channelManager);
     }
 
@@ -43,7 +44,10 @@ public class Search implements PacketProcessor<IQ> {
         }
         IQ response = IQ.createResultIQ(request);
         response.setType(IQ.Type.error);
-        PacketError error = new PacketError(PacketError.Condition.bad_request, PacketError.Type.modify);
+        PacketError error = new PacketError(
+                PacketError.Condition.bad_request,
+                PacketError.Type.modify
+        );
         response.setError(error);
         outQueue.put(response);
     }

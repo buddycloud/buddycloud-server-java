@@ -6,6 +6,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 import junit.framework.Assert;
 
+import org.buddycloud.channelserver.Configuration;
 import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.channel.validate.AtomEntry;
 import org.buddycloud.channelserver.db.exception.NodeStoreException;
@@ -50,7 +51,8 @@ public class PublishTest extends IQTestHandler {
         channelManager = Mockito.mock(ChannelManager.class);
         validateEntry = Mockito.mock(AtomEntry.class);
 
-        Mockito.when(channelManager.isLocalNode(Mockito.anyString())).thenReturn(true);
+        Configuration.getInstance().putProperty(
+                Configuration.CONFIGURATION_LOCAL_DOMAIN_CHECKER, Boolean.TRUE.toString());
 
         queue = new LinkedBlockingQueue<Packet>();
         publish = new Publish(queue, channelManager);
@@ -61,23 +63,30 @@ public class PublishTest extends IQTestHandler {
         publish.setChannelManager(channelManager);
         publish.setEntryValidator(validateEntry);
 
-        entry = request.getChildElement().element("publish").element("item").element("entry").createCopy();
+        entry = request.getChildElement().element("publish").element("item")
+                .element("entry").createCopy();
 
         element = new BaseElement("publish");
 
-        Mockito.when(channelManager.isLocalNode(node)).thenReturn(true);
-
         Mockito.when(channelManager.nodeExists(node)).thenReturn(true);
 
-        NodeMembership membership = new NodeMembershipImpl(node, jid, Subscriptions.subscribed, Affiliations.publisher, null);
-        Mockito.when(channelManager.getNodeMembership(Mockito.eq(node), Mockito.eq(jid))).thenReturn(membership);
+        NodeMembership membership = new NodeMembershipImpl(node, jid,
+                Subscriptions.subscribed, Affiliations.publisher, null);
+        Mockito.when(
+                channelManager.getNodeMembership(Mockito.eq(node),
+                        Mockito.eq(jid))).thenReturn(membership);
 
-        Mockito.when(channelManager.getNodeSubscriptionListeners(Mockito.eq(node))).thenReturn(
-                new ResultSetImpl<NodeSubscription>(new ArrayList<NodeSubscription>()));
+        Mockito.when(
+                channelManager.getNodeSubscriptionListeners(Mockito.eq(node)))
+                .thenReturn(
+                        new ResultSetImpl<NodeSubscription>(
+                                new ArrayList<NodeSubscription>()));
 
-        validateEntry.setPayload(request.getChildElement().element("publish").element("item").createCopy());
+        validateEntry.setPayload(request.getChildElement().element("publish")
+                .element("item").createCopy());
         Mockito.when(validateEntry.getGlobalItemId()).thenReturn(
-                new GlobalItemIDImpl(new JID(request.getTo().toBareJID()), node, entry.elementText("id")).toString());
+                new GlobalItemIDImpl(new JID(request.getTo().toBareJID()),
+                        node, entry.elementText("id")).toString());
 
         Mockito.when(validateEntry.getLocalItemId()).thenCallRealMethod();
         Mockito.when(validateEntry.isValid()).thenReturn(true);
@@ -111,12 +120,14 @@ public class PublishTest extends IQTestHandler {
         PacketError error = response.getError();
         Assert.assertNotNull(error);
         Assert.assertEquals(PacketError.Type.modify, error.getType());
-        Assert.assertEquals(Publish.NODE_ID_REQUIRED, error.getApplicationConditionName());
+        Assert.assertEquals(Publish.NODE_ID_REQUIRED,
+                error.getApplicationConditionName());
     }
 
     @Test
     public void nodeStoreExceptionReturnsErrorStanza() throws Exception {
-        Mockito.doThrow(new NodeStoreException()).when(channelManager).nodeExists(Mockito.eq(node));
+        Mockito.doThrow(new NodeStoreException()).when(channelManager)
+                .nodeExists(Mockito.eq(node));
 
         publish.process(element, jid, request, null);
 
@@ -124,7 +135,8 @@ public class PublishTest extends IQTestHandler {
 
         PacketError error = response.getError();
         Assert.assertNotNull(error);
-        Assert.assertEquals(PacketError.Condition.internal_server_error, error.getCondition());
+        Assert.assertEquals(PacketError.Condition.internal_server_error,
+                error.getCondition());
         Assert.assertEquals(PacketError.Type.wait, error.getType());
 
     }
@@ -140,28 +152,38 @@ public class PublishTest extends IQTestHandler {
         PacketError error = response.getError();
         Assert.assertNotNull(error);
         Assert.assertEquals(PacketError.Type.cancel, error.getType());
-        Assert.assertEquals(PacketError.Condition.item_not_found, error.getCondition());
+        Assert.assertEquals(PacketError.Condition.item_not_found,
+                error.getCondition());
     }
 
     @Test
     public void requestToRemoteNodeResultsInForwardedPacket() throws Exception {
-        Mockito.when(channelManager.isLocalNode(node)).thenReturn(false);
+        Configuration.getInstance().remove(
+                Configuration.CONFIGURATION_LOCAL_DOMAIN_CHECKER);
+        Configuration.getInstance().putProperty(
+                Configuration.CONFIGURATION_SERVER_DOMAIN, "shakespeare.lit");
 
-        Assert.assertEquals(new JID("channels.shakespeare.lit"), request.getTo());
+        Assert.assertEquals(new JID("channels.shakespeare.lit"),
+                request.getTo());
 
+        request.getElement().element("pubsub").element(
+                "publish").addAttribute("node", "/user/romeo@barracks.lit/posts");
         publish.process(element, jid, request, null);
 
         Assert.assertEquals(1, queue.size());
 
         Packet response = queue.poll();
 
-        Assert.assertEquals(new JID("shakespeare.lit"), response.getTo());
+        Assert.assertEquals(new JID("barracks.lit"), response.getTo());
     }
 
     @Test
     public void unsubscribedUserCanNotPublish() throws Exception {
-        NodeMembership membership = new NodeMembershipImpl(node, jid, Subscriptions.none, Affiliations.publisher, null);
-        Mockito.when(channelManager.getNodeMembership(Mockito.eq(node), Mockito.eq(jid))).thenReturn(membership);
+        NodeMembership membership = new NodeMembershipImpl(node, jid,
+                Subscriptions.none, Affiliations.publisher, null);
+        Mockito.when(
+                channelManager.getNodeMembership(Mockito.eq(node),
+                        Mockito.eq(jid))).thenReturn(membership);
 
         publish.process(element, jid, request, null);
 
@@ -170,13 +192,17 @@ public class PublishTest extends IQTestHandler {
         PacketError error = response.getError();
         Assert.assertNotNull(error);
         Assert.assertEquals(PacketError.Type.auth, error.getType());
-        Assert.assertEquals(PacketError.Condition.forbidden, error.getCondition());
+        Assert.assertEquals(PacketError.Condition.forbidden,
+                error.getCondition());
     }
 
     @Test
     public void pendingSubscriptionCanNotPublish() throws Exception {
-        NodeMembership membership = new NodeMembershipImpl(node, jid, Subscriptions.pending, Affiliations.publisher, null);
-        Mockito.when(channelManager.getNodeMembership(Mockito.eq(node), Mockito.eq(jid))).thenReturn(membership);
+        NodeMembership membership = new NodeMembershipImpl(node, jid,
+                Subscriptions.pending, Affiliations.publisher, null);
+        Mockito.when(
+                channelManager.getNodeMembership(Mockito.eq(node),
+                        Mockito.eq(jid))).thenReturn(membership);
 
         publish.process(element, jid, request, null);
 
@@ -185,13 +211,17 @@ public class PublishTest extends IQTestHandler {
         PacketError error = response.getError();
         Assert.assertNotNull(error);
         Assert.assertEquals(PacketError.Type.auth, error.getType());
-        Assert.assertEquals(PacketError.Condition.forbidden, error.getCondition());
+        Assert.assertEquals(PacketError.Condition.forbidden,
+                error.getCondition());
     }
 
     @Test
     public void noAffiliationCanNotPublish() throws Exception {
-        NodeMembership membership = new NodeMembershipImpl(node, jid, Subscriptions.subscribed, Affiliations.none, null);
-        Mockito.when(channelManager.getNodeMembership(Mockito.eq(node), Mockito.eq(jid))).thenReturn(membership);
+        NodeMembership membership = new NodeMembershipImpl(node, jid,
+                Subscriptions.subscribed, Affiliations.none, null);
+        Mockito.when(
+                channelManager.getNodeMembership(Mockito.eq(node),
+                        Mockito.eq(jid))).thenReturn(membership);
 
         publish.process(element, jid, request, null);
 
@@ -200,13 +230,17 @@ public class PublishTest extends IQTestHandler {
         PacketError error = response.getError();
         Assert.assertNotNull(error);
         Assert.assertEquals(PacketError.Type.auth, error.getType());
-        Assert.assertEquals(PacketError.Condition.forbidden, error.getCondition());
+        Assert.assertEquals(PacketError.Condition.forbidden,
+                error.getCondition());
     }
 
     @Test
     public void memberAffiliationCanNotPublish() throws Exception {
-        NodeMembership membership = new NodeMembershipImpl(node, jid, Subscriptions.subscribed, Affiliations.member, null);
-        Mockito.when(channelManager.getNodeMembership(Mockito.eq(node), Mockito.eq(jid))).thenReturn(membership);
+        NodeMembership membership = new NodeMembershipImpl(node, jid,
+                Subscriptions.subscribed, Affiliations.member, null);
+        Mockito.when(
+                channelManager.getNodeMembership(Mockito.eq(node),
+                        Mockito.eq(jid))).thenReturn(membership);
 
         publish.process(element, jid, request, null);
 
@@ -215,13 +249,17 @@ public class PublishTest extends IQTestHandler {
         PacketError error = response.getError();
         Assert.assertNotNull(error);
         Assert.assertEquals(PacketError.Type.auth, error.getType());
-        Assert.assertEquals(PacketError.Condition.forbidden, error.getCondition());
+        Assert.assertEquals(PacketError.Condition.forbidden,
+                error.getCondition());
     }
 
     @Test
     public void outcastAffiliationCanNotPublish() throws Exception {
-        NodeMembership membership = new NodeMembershipImpl(node, jid, Subscriptions.subscribed, Affiliations.outcast, null);
-        Mockito.when(channelManager.getNodeMembership(Mockito.eq(node), Mockito.eq(jid))).thenReturn(membership);
+        NodeMembership membership = new NodeMembershipImpl(node, jid,
+                Subscriptions.subscribed, Affiliations.outcast, null);
+        Mockito.when(
+                channelManager.getNodeMembership(Mockito.eq(node),
+                        Mockito.eq(jid))).thenReturn(membership);
 
         publish.process(element, jid, request, null);
 
@@ -230,7 +268,8 @@ public class PublishTest extends IQTestHandler {
         PacketError error = response.getError();
         Assert.assertNotNull(error);
         Assert.assertEquals(PacketError.Type.auth, error.getType());
-        Assert.assertEquals(PacketError.Condition.forbidden, error.getCondition());
+        Assert.assertEquals(PacketError.Condition.forbidden,
+                error.getCondition());
     }
 
     @Test
@@ -245,8 +284,10 @@ public class PublishTest extends IQTestHandler {
         PacketError error = response.getError();
         Assert.assertNotNull(error);
         Assert.assertEquals(PacketError.Type.modify, error.getType());
-        Assert.assertEquals(PacketError.Condition.bad_request, error.getCondition());
-        Assert.assertEquals(Publish.MISSING_ITEM_ELEMENT, error.getApplicationConditionName());
+        Assert.assertEquals(PacketError.Condition.bad_request,
+                error.getCondition());
+        Assert.assertEquals(Publish.MISSING_ITEM_ELEMENT,
+                error.getApplicationConditionName());
     }
 
     @Test
@@ -262,7 +303,8 @@ public class PublishTest extends IQTestHandler {
         PacketError error = response.getError();
         Assert.assertNotNull(error);
         Assert.assertEquals(PacketError.Type.modify, error.getType());
-        Assert.assertEquals(PacketError.Condition.bad_request, error.getCondition());
+        Assert.assertEquals(PacketError.Condition.bad_request,
+                error.getCondition());
         Assert.assertEquals(errorMessage, error.getApplicationConditionName());
     }
 
@@ -271,7 +313,8 @@ public class PublishTest extends IQTestHandler {
         IQ request = this.request.createCopy();
         publish.process(element, jid, request, null);
 
-        Mockito.verify(channelManager, Mockito.times(1)).addNodeItem(Mockito.any(NodeItemImpl.class));
+        Mockito.verify(channelManager, Mockito.times(1)).addNodeItem(
+                Mockito.any(NodeItemImpl.class));
     }
 
     @Test
@@ -286,7 +329,8 @@ public class PublishTest extends IQTestHandler {
         Assert.assertEquals(request.getTo(), response.getFrom());
 
         Element pubsub = response.getElement().element("pubsub");
-        Assert.assertEquals(JabberPubsub.NAMESPACE_URI, pubsub.getNamespaceURI());
+        Assert.assertEquals(JabberPubsub.NAMESPACE_URI,
+                pubsub.getNamespaceURI());
         Element publish = pubsub.element("publish");
         Assert.assertEquals(node, publish.attributeValue("node"));
 
@@ -300,18 +344,23 @@ public class PublishTest extends IQTestHandler {
     @Test
     public void sendsOutExpectedNotifications() throws Exception {
 
-        NodeSubscription subscriber1 = new NodeSubscriptionImpl(node, new JID("romeo@shakespeare.lit"), Subscriptions.subscribed, null);
+        NodeSubscription subscriber1 = new NodeSubscriptionImpl(node, new JID(
+                "romeo@shakespeare.lit"), Subscriptions.subscribed, null);
         // Expect not to see this user (subscription: 'pending')
-        NodeSubscription subscriber2 = new NodeSubscriptionImpl(node, new JID("titania@shakespeare.lit"), Subscriptions.pending, null);
-        NodeSubscription subscriber3 =
-                new NodeSubscriptionImpl(node, new JID("faustus@marlowe.lit"), new JID("channels.marlowe.lit"), Subscriptions.subscribed, null);
+        NodeSubscription subscriber2 = new NodeSubscriptionImpl(node, new JID(
+                "titania@shakespeare.lit"), Subscriptions.pending, null);
+        NodeSubscription subscriber3 = new NodeSubscriptionImpl(node, new JID(
+                "faustus@marlowe.lit"), new JID("channels.marlowe.lit"),
+                Subscriptions.subscribed, null);
 
         ArrayList<NodeSubscription> subscribers = new ArrayList<NodeSubscription>();
         subscribers.add(subscriber1);
         subscribers.add(subscriber2);
         subscribers.add(subscriber3);
 
-        Mockito.when(channelManager.getNodeSubscriptionListeners(Mockito.eq(node))).thenReturn(new ResultSetImpl<NodeSubscription>(subscribers));
+        Mockito.when(
+                channelManager.getNodeSubscriptionListeners(Mockito.eq(node)))
+                .thenReturn(new ResultSetImpl<NodeSubscription>(subscribers));
 
         IQ request = this.request.createCopy();
         publish.process(element, jid, request, null);
@@ -326,7 +375,8 @@ public class PublishTest extends IQTestHandler {
         Assert.assertEquals(server, notification.getFrom().toString());
 
         Element event = notification.getElement().element("event");
-        Assert.assertEquals(JabberPubsub.NS_PUBSUB_EVENT, event.getNamespaceURI());
+        Assert.assertEquals(JabberPubsub.NS_PUBSUB_EVENT,
+                event.getNamespaceURI());
 
         Element items = event.element("items");
         Assert.assertEquals(node, items.attributeValue("node"));
@@ -352,41 +402,54 @@ public class PublishTest extends IQTestHandler {
     @Test
     public void inReplyToIdIsSavedToDatabase() throws Exception {
         IQ request = readStanzaAsIq("/iq/pubsub/publish/reply.stanza");
-        Mockito.when(validateEntry.getPayload()).thenReturn(request.getChildElement().element("publish").element("item").element("entry"));
+        Mockito.when(validateEntry.getPayload()).thenReturn(
+                request.getChildElement().element("publish").element("item")
+                        .element("entry"));
 
         Mockito.when(validateEntry.getInReplyTo()).thenReturn(
-                GlobalItemIDImpl.toLocalId(request.getChildElement().element("publish").element("item").element("entry").element("in-reply-to")
-                        .attributeValue("ref")));
+                GlobalItemIDImpl.toLocalId(request.getChildElement()
+                        .element("publish").element("item").element("entry")
+                        .element("in-reply-to").attributeValue("ref")));
 
         publish.process(element, jid, request, null);
 
         Assert.assertEquals(IQ.Type.result, ((IQ) queue.poll()).getType());
 
-        ArgumentCaptor<NodeItemImpl> argument = ArgumentCaptor.forClass(NodeItemImpl.class);
+        ArgumentCaptor<NodeItemImpl> argument = ArgumentCaptor
+                .forClass(NodeItemImpl.class);
 
-        Mockito.verify(channelManager, Mockito.times(1)).addNodeItem(argument.capture());
+        Mockito.verify(channelManager, Mockito.times(1)).addNodeItem(
+                argument.capture());
 
-        Assert.assertEquals("fc362eb42085f017ed9ccd9c4004b095", argument.getValue().getInReplyTo());
+        Assert.assertEquals("fc362eb42085f017ed9ccd9c4004b095", argument
+                .getValue().getInReplyTo());
         Assert.assertEquals(node, argument.getValue().getNodeId());
     }
 
     @Test
     public void replyUpdatesThreadParentDate() throws Exception {
         IQ request = readStanzaAsIq("/iq/pubsub/publish/reply.stanza");
-        Mockito.when(validateEntry.getPayload()).thenReturn(request.getChildElement().element("publish").element("item").element("entry"));
+        Mockito.when(validateEntry.getPayload()).thenReturn(
+                request.getChildElement().element("publish").element("item")
+                        .element("entry"));
 
-        Mockito.when(validateEntry.getInReplyTo()).thenReturn("fc362eb42085f017ed9ccd9c4004b095");
+        Mockito.when(validateEntry.getInReplyTo())
+            .thenReturn("fc362eb42085f017ed9ccd9c4004b095");
 
         publish.process(element, jid, request, null);
 
         Assert.assertEquals(IQ.Type.result, ((IQ) queue.poll()).getType());
 
-        ArgumentCaptor<String> inReplyTo = ArgumentCaptor.forClass(String.class);
-        ArgumentCaptor<String> passedNode = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<String> inReplyTo = ArgumentCaptor
+                .forClass(String.class);
+        ArgumentCaptor<String> passedNode = ArgumentCaptor
+                .forClass(String.class);
 
-        Mockito.verify(channelManager, Mockito.times(1)).updateThreadParent(passedNode.capture(), inReplyTo.capture());
+        Mockito.verify(channelManager, Mockito.times(1)).updateThreadParent(
+                passedNode.capture(), inReplyTo.capture());
 
-        Assert.assertEquals("fc362eb42085f017ed9ccd9c4004b095", inReplyTo.getValue());
+        Assert.assertEquals("fc362eb42085f017ed9ccd9c4004b095",
+                inReplyTo.getValue());
         Assert.assertEquals(node, passedNode.getValue());
     }
 
@@ -395,6 +458,7 @@ public class PublishTest extends IQTestHandler {
         IQ request = this.request.createCopy();
         publish.process(element, jid, request, null);
 
-        Mockito.verify(channelManager, Mockito.times(0)).updateThreadParent(Mockito.anyString(), Mockito.anyString());
+        Mockito.verify(channelManager, Mockito.times(0)).updateThreadParent(
+                Mockito.anyString(), Mockito.anyString());
     }
 }

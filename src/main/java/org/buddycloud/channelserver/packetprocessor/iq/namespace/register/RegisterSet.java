@@ -7,7 +7,6 @@ import org.apache.log4j.Logger;
 import org.buddycloud.channelserver.Configuration;
 import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.channel.Conf;
-import org.buddycloud.channelserver.channel.LocalDomainChecker;
 import org.buddycloud.channelserver.db.exception.NodeStoreException;
 import org.buddycloud.channelserver.packetprocessor.PacketProcessor;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.JabberPubsub;
@@ -36,7 +35,7 @@ public class RegisterSet implements PacketProcessor<IQ> {
     public RegisterSet(BlockingQueue<Packet> outQueue, ChannelManager channelManager) {
         this(Configuration.getInstance(), outQueue, channelManager);
     }
-
+    
     public RegisterSet(Configuration configuration, BlockingQueue<Packet> outQueue, ChannelManager channelManager) {
         this.configuration = configuration;
         this.outQueue = outQueue;
@@ -47,15 +46,15 @@ public class RegisterSet implements PacketProcessor<IQ> {
     public void process(IQ reqIQ) throws Exception {
         this.request = reqIQ;
         this.response = IQ.createResultIQ(reqIQ);
-
+        
         LOGGER.debug("Processing register request from " + request.getFrom());
 
         String domain = reqIQ.getFrom().getDomain();
-        if (!LocalDomainChecker.isLocal(domain, configuration)) {
+        if (!Configuration.getInstance().isLocalDomain(domain)) {
             notThisDomain(reqIQ);
             return;
         }
-
+        
         if (userRegistered()) {
             LOGGER.debug("User " + request.getFrom().toBareJID() + " is already registered");
             outQueue.put(response);
@@ -63,7 +62,7 @@ public class RegisterSet implements PacketProcessor<IQ> {
         }
 
         LOGGER.debug("Registering new user " + request.getFrom());
-
+        
         channelManager.createPersonalChannel(request.getFrom());
         outQueue.put(response);
         autosubscribeToChannels(request.getFrom());
@@ -76,11 +75,13 @@ public class RegisterSet implements PacketProcessor<IQ> {
         IQ reply = IQ.createResultIQ(reqIQ);
         reply.setType(Type.error);
         reply.setChildElement(reqIQ.getChildElement().createCopy());
-        PacketError pe = new PacketError(org.xmpp.packet.PacketError.Condition.not_allowed, org.xmpp.packet.PacketError.Type.cancel);
+        PacketError pe = new PacketError(
+                org.xmpp.packet.PacketError.Condition.not_allowed,
+                org.xmpp.packet.PacketError.Type.cancel);
         reply.setError(pe);
         outQueue.put(reply);
     }
-
+    
     private boolean userRegistered() throws Exception {
         return channelManager.nodeExists("/user/" + request.getFrom().toBareJID() + "/posts");
     }
@@ -93,7 +94,9 @@ public class RegisterSet implements PacketProcessor<IQ> {
         IQ reply = IQ.createResultIQ(request);
         reply.setType(Type.error);
         reply.setChildElement(request.getChildElement().createCopy());
-        PacketError pe = new PacketError(org.xmpp.packet.PacketError.Condition.conflict, org.xmpp.packet.PacketError.Type.cancel);
+        PacketError pe = new PacketError(
+                org.xmpp.packet.PacketError.Condition.conflict,
+                org.xmpp.packet.PacketError.Type.cancel);
         reply.setError(pe);
         outQueue.put(reply);
     }
@@ -102,7 +105,8 @@ public class RegisterSet implements PacketProcessor<IQ> {
         Collection<JID> channels = configuration.getAutosubscribeChannels();
 
         if (LOGGER.isDebugEnabled()) {
-            LOGGER.debug("Auto-subscribing " + from + " to " + channels.size() + " channel(s)");
+            LOGGER.debug("Auto-subscribing " + from + " to " + channels.size()
+                    + " channel(s)");
         }
 
         for (JID channel : channels) {
@@ -115,7 +119,8 @@ public class RegisterSet implements PacketProcessor<IQ> {
             subscribe.setType(Type.set);
 
             Element el = subscribe.getElement();
-            Element pubsubEl = el.addElement("pubsub", JabberPubsub.NAMESPACE_URI);
+            Element pubsubEl = el.addElement("pubsub",
+                    JabberPubsub.NAMESPACE_URI);
             Element subscribeEl = pubsubEl.addElement("subscribe");
 
             String channelNodeId = Conf.getPostChannelNodename(channel);
@@ -124,14 +129,15 @@ public class RegisterSet implements PacketProcessor<IQ> {
             subscribeEl.addAttribute("jid", from.toBareJID().toString());
 
             try {
-                if (channelManager.isLocalJID(channel)) {
+                if (Configuration.getInstance().isLocalJID(channel)) {
                     subscribe.setFrom(from);
                     subscribe.setTo(configuration.getServerChannelsDomain());
                 } else {
                     subscribe.setFrom(configuration.getServerChannelsDomain());
                     subscribe.setTo(channel.getDomain());
 
-                    Element actorEl = pubsubEl.addElement(QName.get("actor", Buddycloud.NS));
+                    Element actorEl = pubsubEl.addElement(QName.get("actor",
+                            Buddycloud.NS));
 
                     actorEl.setText(from.toBareJID());
                 }
@@ -140,17 +146,28 @@ public class RegisterSet implements PacketProcessor<IQ> {
 
                 // If auto-approve is set, and this is a local private channel
                 // then set the user to subscribed
-                if (configuration.getBooleanProperty(Configuration.CONFIGURATION_CHANNELS_AUTOSUBSCRIBE_AUTOAPPROVE, false)
-                        && channelManager.isLocalJID(channel)
-                        && AccessModels.authorize.toString().equals(channelManager.getNodeConfValue(channelNodeId, Conf.ACCESS_MODEL))) {
-                    channelManager.addUserSubscription(new NodeSubscriptionImpl(channelNodeId, from, Subscriptions.subscribed, null));
+                if (configuration.getBooleanProperty(
+                        Configuration.CONFIGURATION_CHANNELS_AUTOSUBSCRIBE_AUTOAPPROVE,
+                        false)
+                        && Configuration.getInstance().isLocalJID(channel)
+                        && AccessModels.authorize.toString().equals(
+                                channelManager.getNodeConfValue(channelNodeId,
+                                        Conf.ACCESS_MODEL))) {
+                    channelManager
+                            .addUserSubscription(new NodeSubscriptionImpl(
+                                    channelNodeId, from,
+                                    Subscriptions.subscribed, null));
 
-                    channelManager.setUserAffiliation(channelNodeId, from, channelManager.getDefaultNodeAffiliation(channelNodeId));
+                    channelManager.setUserAffiliation(channelNodeId, from,
+                            channelManager
+                                    .getDefaultNodeAffiliation(channelNodeId));
                 }
             } catch (InterruptedException e) {
-                LOGGER.error("Could not auto-subscribe " + from + " to " + channel, e);
+                LOGGER.error("Could not auto-subscribe " + from + " to "
+                        + channel, e);
             } catch (NodeStoreException e) {
-                LOGGER.error("Could not auto-subscribe " + from + " to " + channel, e);
+                LOGGER.error("Could not auto-subscribe " + from + " to "
+                        + channel, e);
             }
         }
     }

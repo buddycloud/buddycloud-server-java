@@ -5,6 +5,7 @@ import java.util.Date;
 import java.util.concurrent.BlockingQueue;
 
 import org.apache.log4j.Logger;
+import org.buddycloud.channelserver.Configuration;
 import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.channel.Conf;
 import org.buddycloud.channelserver.db.CloseableIterator;
@@ -65,10 +66,12 @@ public class RecentItemsGet extends PubSubElementProcessorAbstract {
             return;
         }
 
-        if (!channelManager.isLocalJID(request.getFrom())) {
-            response.getElement().addAttribute("remote-server-discover", "false");
+        if (!Configuration.getInstance().isLocalJID(request.getFrom())) {
+            response.getElement().addAttribute("remote-server-discover",
+                    "false");
         }
-        pubsub = response.getElement().addElement("pubsub", JabberPubsub.NAMESPACE_URI);
+        pubsub = response.getElement().addElement("pubsub",
+                JabberPubsub.NAMESPACE_URI);
         try {
             parseRsmElement();
             addRecentItems();
@@ -77,10 +80,10 @@ public class RecentItemsGet extends PubSubElementProcessorAbstract {
         } catch (NodeStoreException e) {
             LOGGER.error(e);
             response.getElement().remove(pubsub);
-            setErrorCondition(PacketError.Type.wait, PacketError.Condition.internal_server_error);
+            setErrorCondition(PacketError.Type.wait,
+                    PacketError.Condition.internal_server_error);
         }
         outQueue.put(response);
-
     }
 
     private void parseRsmElement() {

@@ -51,8 +51,8 @@ public class UserItemsGetTest extends IQTestHandler {
     private JID jid = new JID("juliet@shakespeare.lit");
     private ChannelManager channelManager;
 
-    private String TEST_NODE_1 = "node1";
-    private String TEST_NODE_2 = "node2";
+    private static final String TEST_NODE_1 = "node1";
+    private static final String TEST_NODE_2 = "node2";
 
     @Before
     public void setUp() throws Exception {

@@ -23,7 +23,7 @@ import org.xmpp.packet.Packet;
 import org.xmpp.resultsetmanagement.ResultSetImpl;
 
 public class NotificationSendingMockTest extends IQTestHandler {
-
+    
     private static final String CHANNEL_SERVER = "channels.server.com";
 
     private Message message;
@@ -39,11 +39,15 @@ public class NotificationSendingMockTest extends IQTestHandler {
 
         channelManager = Mockito.mock(ChannelManager.class);
 
-        Mockito.when(channelManager.isLocalJID(Mockito.any(JID.class))).thenReturn(true);
+        Configuration.getInstance().remove(
+                Configuration.CONFIGURATION_LOCAL_DOMAIN_CHECKER);
+        Configuration.getInstance().putProperty(
+                Configuration.CONFIGURATION_SERVER_DOMAIN, "shakespeare.lit");
 
         Properties configuration = new Properties();
         configuration.setProperty(Configuration.CONFIGURATION_SERVER_CHANNELS_DOMAIN, CHANNEL_SERVER);
-        notificationSending = new NotificationSendingMock(channelManager, configuration, queue);
+        notificationSending = new NotificationSendingMock(channelManager, configuration,
+                queue);
 
         message = new Message();
         message.setType(Message.Type.headline);
@@ -54,27 +58,29 @@ public class NotificationSendingMockTest extends IQTestHandler {
     public void noNotificationSentForRemoteUser() throws Exception {
 
         registerUserResponse(Subscriptions.none, Affiliations.none);
-
-        Mockito.when(channelManager.isLocalJID(Mockito.any(JID.class))).thenReturn(false);
-
+        
+        Configuration.getInstance().putProperty(
+                Configuration.CONFIGURATION_SERVER_DOMAIN, "denmark.lit");
+        
         notificationSending.process(message);
         Assert.assertEquals(0, queue.size());
     }
-
+    
     @Test
     public void sendsNotificationToSpecifiedUser() throws Exception {
         ArrayList<NodeMembership> members = new ArrayList<NodeMembership>();
-        Mockito.doReturn(new ResultSetImpl<NodeMembership>(members)).when(channelManager).getNodeMemberships(Mockito.anyString());
-
+        Mockito.doReturn(new ResultSetImpl<NodeMembership>(members))
+        .when(channelManager).getNodeMemberships(Mockito.anyString());
+        
         String user = "user@example.com";
         Message message = this.message.createCopy();
         message.getElement().addAttribute("jid", user);
-
+        
         notificationSending.process(message);
         Assert.assertEquals(1, queue.size());
         Assert.assertEquals(user, queue.poll().getElement().attributeValue("to"));
     }
-
+    
     @Test
     public void onlySendsToValidSubscribers() throws Exception {
         registerUserResponse(Subscriptions.none, Affiliations.none);
@@ -106,13 +112,13 @@ public class NotificationSendingMockTest extends IQTestHandler {
         notificationSending.process(message);
         Assert.assertEquals(1, queue.size());
     }
-
+    
     @Test
     public void onlySendsToOwnersAndModerators() throws Exception {
         Message message = this.message.createCopy();
         message.getElement().attribute("scheme").detach();
         message.getElement().addAttribute("scheme", Integer.toString(2));
-
+        
         registerUserResponse(Subscriptions.none, Affiliations.none);
         notificationSending.process(message);
         Assert.assertEquals(0, queue.size());
@@ -151,12 +157,15 @@ public class NotificationSendingMockTest extends IQTestHandler {
         notificationSending.process(message);
         Assert.assertEquals(1, queue.size());
     }
-
-
+    
+    
     private void registerUserResponse(Subscriptions subscription, Affiliations affiliation) throws Exception {
         ArrayList<NodeMembership> members = new ArrayList<NodeMembership>();
-        members.add(new NodeMembershipImpl("/users/romeo@shakespeare.lit/posts", jid, subscription, affiliation, null));
-        Mockito.doReturn(new ResultSetImpl<NodeMembership>(members)).when(channelManager).getNodeMemberships(Mockito.anyString());
+        members.add(new NodeMembershipImpl(
+                "/users/romeo@shakespeare.lit/posts", jid,
+                subscription, affiliation, null));
+        Mockito.doReturn(new ResultSetImpl<NodeMembership>(members))
+                .when(channelManager).getNodeMemberships(Mockito.anyString());
     }
 
 }

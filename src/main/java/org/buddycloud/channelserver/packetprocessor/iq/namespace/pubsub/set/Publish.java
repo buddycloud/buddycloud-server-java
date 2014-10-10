@@ -5,6 +5,7 @@ import java.util.Date;
 import java.util.concurrent.BlockingQueue;
 
 import org.apache.log4j.Logger;
+import org.buddycloud.channelserver.Configuration;
 import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.channel.ValidatePayload;
 import org.buddycloud.channelserver.channel.validate.PayloadValidator;
@@ -67,7 +68,7 @@ public class Publish extends PubSubElementProcessorAbstract {
             publishersJID = actorJID;
         } else {
 
-            isLocalSubscriber = channelManager.isLocalJID(publishersJID);
+            isLocalSubscriber = Configuration.getInstance().isLocalJID(publishersJID);
 
             // Check that user is registered.
             if (!isLocalSubscriber) {
@@ -229,7 +230,7 @@ public class Publish extends PubSubElementProcessorAbstract {
         }
         boolean isLocalNode = false;
         try {
-            isLocalNode = channelManager.isLocalNode(node);
+            isLocalNode = Configuration.getInstance().isLocalNode(node);
         } catch (IllegalArgumentException e) {
             response.setType(Type.error);
             PacketError pe = new PacketError(PacketError.Condition.bad_request, PacketError.Type.modify);

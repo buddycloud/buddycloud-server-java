@@ -41,7 +41,7 @@ public class ThreadGetTest extends IQTestHandler {
     private JID jid = new JID("juliet@shakespeare.lit");
     private ChannelManager channelManager;
 
-    private String TEST_NODE = "node1";
+    private static final String TEST_NODE = "node1";
     private NodeViewAcl nodeViewAclMock;
 
     @Before

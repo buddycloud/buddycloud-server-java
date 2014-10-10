@@ -5,6 +5,7 @@ import java.util.Collection;
 import java.util.concurrent.BlockingQueue;
 
 import org.apache.log4j.Logger;
+import org.buddycloud.channelserver.Configuration;
 import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.db.ClosableIteratorImpl;
 import org.buddycloud.channelserver.db.exception.NodeStoreException;
@@ -35,13 +36,15 @@ public class ItemDelete extends PubSubElementProcessorAbstract {
     private NodeItem nodeItem;
     private Element parsedPayload;
 
-    public ItemDelete(BlockingQueue<Packet> outQueue, ChannelManager channelManager) {
+    public ItemDelete(BlockingQueue<Packet> outQueue,
+            ChannelManager channelManager) {
         this.setOutQueue(outQueue);
         this.setChannelManager(channelManager);
     }
 
     @Override
-    public void process(Element elm, JID actor, IQ reqIQ, Element rsm) throws InterruptedException, NodeStoreException {
+    public void process(Element elm, JID actor, IQ reqIQ, Element rsm)
+            throws InterruptedException, NodeStoreException {
 
         element = elm;
         request = reqIQ;
@@ -51,13 +54,19 @@ public class ItemDelete extends PubSubElementProcessorAbstract {
         if (null == this.actor) {
             this.actor = request.getFrom();
         }
-        if (!channelManager.isLocalNode(node)) {
+        if (!validNodeProvided()) {
+            outQueue.put(response);
+            return;
+        }
+        
+        if (!Configuration.getInstance().isLocalNode(node)) {
             makeRemoteRequest();
             return;
         }
 
         try {
-            if (!validNodeProvided() || !nodeExists() || !itemIdProvided() || !itemExists() || !validPayload() || !canDelete()) {
+            if (!nodeExists() || !itemIdProvided()
+                    || !itemExists() || !validPayload() || !canDelete()) {
                 outQueue.put(response);
                 return;
             }
@@ -68,13 +77,16 @@ public class ItemDelete extends PubSubElementProcessorAbstract {
             return;
         } catch (NodeStoreException e) {
             logger.error(e);
-            setErrorCondition(PacketError.Type.wait, PacketError.Condition.internal_server_error);
+            setErrorCondition(PacketError.Type.wait,
+                    PacketError.Condition.internal_server_error);
         } catch (NullPointerException e) {
             logger.error(e);
-            setErrorCondition(PacketError.Type.modify, PacketError.Condition.bad_request);
+            setErrorCondition(PacketError.Type.modify,
+                    PacketError.Condition.bad_request);
         } catch (IllegalArgumentException e) {
             logger.error(e);
-            setErrorCondition(PacketError.Type.modify, PacketError.Condition.bad_request);
+            setErrorCondition(PacketError.Type.modify,
+                    PacketError.Condition.bad_request);
         }
         outQueue.put(response);
     }
@@ -83,30 +95,41 @@ public class ItemDelete extends PubSubElementProcessorAbstract {
         if (null != nodeItem.getInReplyTo()) {
             return;
         }
-        ClosableIteratorImpl<NodeItem> replies = channelManager.getNodeItemReplies(node, itemId.getItemID(), null, -1);
+        ClosableIteratorImpl<NodeItem> replies = channelManager
+                .getNodeItemReplies(node, itemId.getItemID(), null, -1);
         NodeItem reply = null;
         while (replies.hasNext()) {
             reply = replies.next();
             channelManager.deleteNodeItemById(reply.getNodeId(), reply.getId());
 
-            sendNotifications(node, new GlobalItemIDImpl(new JID(this.getServerDomain()), reply.getNodeId(), reply.getId()));
+            sendNotifications(
+                    node,
+                    new GlobalItemIDImpl(new JID(this.getServerDomain()), reply
+                            .getNodeId(), reply.getId()));
         }
     }
 
-    private void sendNotifications(String node, GlobalItemID itemId) throws NodeStoreException {
+    private void sendNotifications(String node, GlobalItemID itemId)
+            throws NodeStoreException {
         try {
-            String notify = request.getElement().element("pubsub").element("retract").attributeValue("notify");
+            String notify = request.getElement().element("pubsub")
+                    .element("retract").attributeValue("notify");
 
-            if ((notify != null) && (notify.equals("false") || notify.equals("0"))) {
+            if ((notify != null)
+                    && (notify.equals("false") || notify.equals("0"))) {
                 return;
             }
-            ResultSet<NodeSubscription> subscriptions = channelManager.getNodeSubscriptionListeners(node);
+            ResultSet<NodeSubscription> subscriptions = channelManager
+                    .getNodeSubscriptionListeners(node);
             Message notification = getNotificationMessage(node, itemId);
 
             for (NodeSubscription subscription : subscriptions) {
-                logger.debug("Subscription [node: " + subscription.getNodeId() + ", listener: " + subscription.getListener() + ", subscription: "
-                        + subscription.getSubscription() + "]");
-                if (subscription.getSubscription().equals(Subscriptions.subscribed)) {
+                logger.debug("Subscription [node: " + subscription.getNodeId()
+                        + ", listener: " + subscription.getListener()
+                        + ", subscription: " + subscription.getSubscription()
+                        + "]");
+                if (subscription.getSubscription().equals(
+                        Subscriptions.subscribed)) {
                     notification.setTo(subscription.getListener());
                     outQueue.put(notification.createCopy());
                 }
@@ -129,8 +152,10 @@ public class ItemDelete extends PubSubElementProcessorAbstract {
     private Message getNotificationMessage(String node, GlobalItemID itemId) {
         Message notification = new Message();
         notification.setType(Message.Type.headline);
-        notification.getElement().addAttribute("remote-server-discover", "false");
-        Element event = notification.addChildElement("event", JabberPubsub.NS_PUBSUB_EVENT);
+        notification.getElement().addAttribute("remote-server-discover",
+                "false");
+        Element event = notification.addChildElement("event",
+                JabberPubsub.NS_PUBSUB_EVENT);
         Element items = event.addElement("items");
         items.addAttribute("node", node);
         Element retract = items.addElement("retract");
@@ -144,7 +169,8 @@ public class ItemDelete extends PubSubElementProcessorAbstract {
 
     private boolean canDelete() throws NodeStoreException {
         if (!userOwnsItem() && !userManagesNode()) {
-            setErrorCondition(PacketError.Type.auth, PacketError.Condition.forbidden);
+            setErrorCondition(PacketError.Type.auth,
+                    PacketError.Condition.forbidden);
             return false;
         }
         return true;
@@ -152,14 +178,16 @@ public class ItemDelete extends PubSubElementProcessorAbstract {
 
     private boolean userOwnsItem() {
         try {
-            return parsedPayload.element("author").elementText("name").equals(actor.toBareJID());
+            return parsedPayload.element("author").elementText("name")
+                    .equals(actor.toBareJID());
         } catch (NullPointerException e) {
             return false;
         }
     }
 
     private boolean userManagesNode() throws NodeStoreException {
-        return channelManager.getNodeMembership(node, actor).getAffiliation().canAuthorize();
+        return channelManager.getNodeMembership(node, actor).getAffiliation()
+                .canAuthorize();
     }
 
     private boolean validPayload() {
@@ -169,11 +197,13 @@ public class ItemDelete extends PubSubElementProcessorAbstract {
             xmlReader.setMergeAdjacentText(true);
             xmlReader.setStringInternEnabled(true);
             xmlReader.setStripWhitespaceText(true);
-            parsedPayload = xmlReader.read(new StringReader(nodeItem.getPayload())).getRootElement();
+            parsedPayload = xmlReader.read(
+                    new StringReader(nodeItem.getPayload())).getRootElement();
             return true;
         } catch (Exception e) {
             LOGGER.error(e);
-            setErrorCondition(PacketError.Type.wait, PacketError.Condition.internal_server_error);
+            setErrorCondition(PacketError.Type.wait,
+                    PacketError.Condition.internal_server_error);
             return false;
         }
     }
@@ -183,24 +213,30 @@ public class ItemDelete extends PubSubElementProcessorAbstract {
         if (nodeItem != null) {
             return true;
         }
-        setErrorCondition(PacketError.Type.cancel, PacketError.Condition.item_not_found);
+        setErrorCondition(PacketError.Type.cancel,
+                PacketError.Condition.item_not_found);
         return false;
     }
 
     private boolean itemIdProvided() {
-        String id = request.getElement().element("pubsub").element("retract").element("item").attributeValue("id");
+        String id = request.getElement().element("pubsub").element("retract")
+                .element("item").attributeValue("id");
 
         if ((id != null) && !id.isEmpty()) {
             if (true == GlobalItemIDImpl.isGlobalId(id)) {
                 itemId = GlobalItemIDImpl.fromBuddycloudString(id);
             } else {
-                itemId = new GlobalItemIDImpl(new JID(this.getServerDomain()), node, id);
+                itemId = new GlobalItemIDImpl(new JID(this.getServerDomain()),
+                        node, id);
             }
             return true;
         }
         response.setType(IQ.Type.error);
-        Element nodeIdRequired = new DOMElement("item-required", new Namespace("", JabberPubsub.NS_PUBSUB_ERROR));
-        Element badRequest = new DOMElement(PacketError.Condition.bad_request.toXMPP(), new Namespace("", JabberPubsub.NS_XMPP_STANZAS));
+        Element nodeIdRequired = new DOMElement("item-required", new Namespace(
+                "", JabberPubsub.NS_PUBSUB_ERROR));
+        Element badRequest = new DOMElement(
+                PacketError.Condition.bad_request.toXMPP(), new Namespace("",
+                        JabberPubsub.NS_XMPP_STANZAS));
         Element error = new DOMElement("error");
         error.addAttribute("type", PacketError.Type.modify.toXMPP());
         error.add(badRequest);
@@ -210,8 +246,10 @@ public class ItemDelete extends PubSubElementProcessorAbstract {
     }
 
     private boolean nodeExists() throws NodeStoreException {
-        if ((false == channelManager.isLocalNode(node)) || (false == channelManager.nodeExists(node))) {
-            setErrorCondition(PacketError.Type.cancel, PacketError.Condition.item_not_found);
+        if ((false == Configuration.getInstance().isLocalNode(node))
+                || (false == channelManager.nodeExists(node))) {
+            setErrorCondition(PacketError.Type.cancel,
+                    PacketError.Condition.item_not_found);
             return false;
         }
         return true;
@@ -222,8 +260,11 @@ public class ItemDelete extends PubSubElementProcessorAbstract {
             return true;
         }
         response.setType(IQ.Type.error);
-        Element nodeIdRequired = new DOMElement("nodeid-required", new Namespace("", JabberPubsub.NS_PUBSUB_ERROR));
-        Element badRequest = new DOMElement(PacketError.Condition.bad_request.toXMPP(), new Namespace("", JabberPubsub.NS_XMPP_STANZAS));
+        Element nodeIdRequired = new DOMElement("nodeid-required",
+                new Namespace("", JabberPubsub.NS_PUBSUB_ERROR));
+        Element badRequest = new DOMElement(
+                PacketError.Condition.bad_request.toXMPP(), new Namespace("",
+                        JabberPubsub.NS_XMPP_STANZAS));
         Element error = new DOMElement("error");
         error.addAttribute("type", "modify");
         error.add(badRequest);
@@ -234,7 +275,8 @@ public class ItemDelete extends PubSubElementProcessorAbstract {
 
     private void makeRemoteRequest() throws InterruptedException {
         request.setTo(new JID(node.split("/")[2]).getDomain());
-        request.getElement().element("pubsub").addElement("actor", Buddycloud.NS).addText(actor.toBareJID());
+        request.getElement().element("pubsub")
+                .addElement("actor", Buddycloud.NS).addText(actor.toBareJID());
         outQueue.put(request);
     }
 

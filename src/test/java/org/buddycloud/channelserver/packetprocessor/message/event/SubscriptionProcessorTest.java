@@ -10,6 +10,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 import junit.framework.Assert;
 
+import org.buddycloud.channelserver.Configuration;
 import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.db.exception.NodeStoreException;
 import org.buddycloud.channelserver.packetHandler.iq.IQTestHandler;
@@ -36,53 +37,67 @@ public class SubscriptionProcessorTest extends IQTestHandler {
     private BlockingQueue<Packet> queue = new LinkedBlockingQueue<Packet>();
     private ChannelManager channelManager;
 
-    private JID jid = new JID("juliet@shakespeare.lit");
-    private String node = "/users/juliet@shakespeare.lit/posts";
+    private JID jid = new JID("juliet@denmark.lit");
+    private String node = "/user/juliet@shakespeare.lit/posts";
 
     @Before
     public void setUp() throws Exception {
 
         Properties configuration = new Properties();
-        configuration.setProperty("server.domain.channels", "channels.shakespeare.lit");
+        configuration.setProperty("server.domain.channels",
+                "channels.shakespeare.lit");
 
         channelManager = Mockito.mock(ChannelManager.class);
-        Mockito.when(channelManager.isLocalNode(Mockito.anyString())).thenReturn(false);
-        Mockito.when(channelManager.isLocalJID(Mockito.any(JID.class))).thenReturn(true);
+        Configuration.getInstance().remove(
+                Configuration.CONFIGURATION_LOCAL_DOMAIN_CHECKER);
+        Configuration.getInstance().putProperty(
+                Configuration.CONFIGURATION_SERVER_DOMAIN, "denmark.lit");
 
         ArrayList<NodeMembership> members = new ArrayList<NodeMembership>();
-        members.add(new NodeMembershipImpl("/users/romeo@shakespeare.lit/posts", jid, Subscriptions.subscribed, Affiliations.member, null));
-        Mockito.doReturn(new ResultSetImpl<NodeMembership>(members)).when(channelManager).getNodeMemberships(Mockito.anyString());
+        members.add(new NodeMembershipImpl(
+                "/user/romeo@shakespeare.lit/posts", jid,
+                Subscriptions.subscribed, Affiliations.member, null));
+        Mockito.doReturn(new ResultSetImpl<NodeMembership>(members)).when(channelManager)
+                .getNodeMemberships(Mockito.anyString());
 
-        subscriptionProcessor = new SubscriptionProcessor(queue, configuration, channelManager);
+        subscriptionProcessor = new SubscriptionProcessor(queue, configuration,
+                channelManager);
 
         message = new Message();
         message.setType(Message.Type.headline);
-        Element event = message.addChildElement("event", JabberPubsub.NS_PUBSUB_EVENT);
-
+        Element event = message.addChildElement("event",
+                JabberPubsub.NS_PUBSUB_EVENT);
+        
         subscription = event.addElement("subscription");
         subscription.addAttribute("jid", "romeo@shakespeare.lit");
-        subscription.addAttribute("node", node);
-        subscription.addAttribute("subscription", Subscriptions.subscribed.toString());
+        subscription
+                .addAttribute("node", node);
+        subscription.addAttribute("subscription",
+                Subscriptions.subscribed.toString());
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void testInvalidSubscriptionValueThrowsException() throws Exception {
         Message badSubscriptionValue = message.createCopy();
-        badSubscriptionValue.getElement().element("event").element("subscription").addAttribute("subscription", "invalid");
+        badSubscriptionValue.getElement().element("event")
+                .element("subscription")
+                .addAttribute("subscription", "invalid");
         subscriptionProcessor.process(badSubscriptionValue);
     }
 
     @Test
-    public void testMissingSubscriptionElementDoesNotCauseError() throws Exception {
+    public void testMissingSubscriptionElementDoesNotCauseError()
+            throws Exception {
         Message noSubscriptionElement = message.createCopy();
-        noSubscriptionElement.getElement().element("event").element("subscription").detach();
+        noSubscriptionElement.getElement().element("event")
+                .element("subscription").detach();
         subscriptionProcessor.process(noSubscriptionElement);
     }
 
     @Test
     public void testEventForLocalNodeIsIgnored() throws Exception {
-
-        Mockito.when(channelManager.isLocalNode(Mockito.anyString())).thenReturn(true);
+        Configuration.getInstance().putProperty(
+                Configuration.CONFIGURATION_SERVER_DOMAIN, "shakespeare.lit");
         subscriptionProcessor.process(message);
         Assert.assertEquals(0, queue.size());
     }
@@ -90,7 +105,8 @@ public class SubscriptionProcessorTest extends IQTestHandler {
     @Test(expected = NodeStoreException.class)
     public void testNodeStoreExceptionIsThrownWhenExpected() throws Exception {
 
-        Mockito.doThrow(new NodeStoreException()).when(channelManager).addUserSubscription(Mockito.any(NodeSubscription.class));
+        Mockito.doThrow(new NodeStoreException()).when(channelManager)
+                .addUserSubscription(Mockito.any(NodeSubscription.class));
         subscriptionProcessor.process(message);
     }
 
@@ -103,22 +119,22 @@ public class SubscriptionProcessorTest extends IQTestHandler {
         message.setTo(jid.toString());
         Assert.assertEquals(message.toString(), queue.poll().toString());
     }
-
+    
     @Test
     public void setsInvitedByIfProvided() throws Exception {
-
+        
         Message invite = message.createCopy();
         Element subscription = invite.getElement().element("event").element("subscription");
         subscription.attribute("subscription").detach();
         subscription.addAttribute("subscription", "invited");
         subscription.addAttribute("invited-by", "juliet@shakespeare.lit");
-
+        
         subscriptionProcessor.process(invite);
-
+        
         ArgumentCaptor<NodeSubscription> newSubscription = ArgumentCaptor.forClass(NodeSubscription.class);
-
+        
         verify(channelManager, times(1)).addUserSubscription(newSubscription.capture());
-
+        
         Assert.assertEquals(new JID("juliet@shakespeare.lit"), newSubscription.getValue().getInvitedBy());
         Assert.assertEquals(Subscriptions.invited, newSubscription.getValue().getSubscription());
         Assert.assertEquals(node, newSubscription.getValue().getNodeId());

@@ -4,6 +4,7 @@ import java.io.StringReader;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 
+import org.buddycloud.channelserver.Configuration;
 import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.channel.Conf;
 import org.buddycloud.channelserver.channel.node.configuration.field.AccessModel;
@@ -48,8 +49,9 @@ public class NodeThreadsGet extends PubSubElementProcessorAbstract {
             actor = request.getFrom();
         }
 
-        if (!channelManager.isLocalJID(request.getFrom())) {
-            response.getElement().addAttribute("remote-server-discover", "false");
+        if (!Configuration.getInstance().isLocalJID(request.getFrom())) {
+            response.getElement().addAttribute("remote-server-discover",
+                    "false");
         }
 
         if (!isValidStanza()) {
@@ -57,8 +59,10 @@ public class NodeThreadsGet extends PubSubElementProcessorAbstract {
             return;
         }
 
-        if (!channelManager.isLocalNode(node) && !channelManager.isCachedNode(node)) {
-            logger.debug("Node " + node + " is remote and not cached, off to get some data");
+        if (!Configuration.getInstance().isLocalNode(node)
+                && !channelManager.isCachedNode(node)) {
+            logger.debug("Node " + node
+                    + " is remote and not cached, off to get some data");
             makeRemoteRequest();
             return;
         }
@@ -150,8 +154,10 @@ public class NodeThreadsGet extends PubSubElementProcessorAbstract {
         NodeViewAcl nodeViewAcl = new NodeViewAcl();
         Map<String, String> nodeConfiguration = channelManager.getNodeConf(node);
 
-        if (nodeViewAcl.canViewNode(node, channelManager.getNodeMembership(node, actor), getNodeAccessModel(nodeConfiguration),
-                channelManager.isLocalJID(actor))) {
+        if (nodeViewAcl.canViewNode(node,
+                channelManager.getNodeMembership(node, actor),
+                getNodeAccessModel(nodeConfiguration),
+                Configuration.getInstance().isLocalJID(actor))) {
             return true;
         }
 

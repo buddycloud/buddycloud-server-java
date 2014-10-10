@@ -5,6 +5,7 @@ import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 
 import org.apache.log4j.Logger;
+import org.buddycloud.channelserver.Configuration;
 import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.channel.node.configuration.field.AccessModel;
 import org.buddycloud.channelserver.db.CloseableIterator;
@@ -27,6 +28,7 @@ public class RepliesGet extends PubSubElementProcessorAbstract {
 
     private Element pubsub;
     private SAXReader xmlReader;
+
     // RSM details
     private String firstItemId = null;
     private String lastItemId = null;
@@ -40,7 +42,8 @@ public class RepliesGet extends PubSubElementProcessorAbstract {
 
     public static final String NS_RSM = "http://jabber.org/protocol/rsm";
 
-    public RepliesGet(BlockingQueue<Packet> outQueue, ChannelManager channelManager) {
+    public RepliesGet(BlockingQueue<Packet> outQueue,
+            ChannelManager channelManager) {
         setChannelManager(channelManager);
         setOutQueue(outQueue);
 
@@ -48,10 +51,13 @@ public class RepliesGet extends PubSubElementProcessorAbstract {
     }
 
     @Override
-    public void process(Element elm, JID actorJID, IQ reqIQ, Element rsm) throws Exception {
+    public void process(Element elm, JID actorJID, IQ reqIQ, Element rsm)
+            throws Exception {
         response = IQ.createResultIQ(reqIQ);
         request = reqIQ;
         actor = actorJID;
+        resultSetManagement = rsm;
+
         if (null == actor) {
             actor = request.getFrom();
         }
@@ -62,10 +68,12 @@ public class RepliesGet extends PubSubElementProcessorAbstract {
         }
 
         try {
-            if (false == channelManager.isLocalJID(request.getFrom())) {
-                response.getElement().addAttribute("remote-server-discover", "false");
+            if (false == Configuration.getInstance().isLocalJID(request.getFrom())) {
+                response.getElement().addAttribute("remote-server-discover",
+                        "false");
             }
-            pubsub = response.getElement().addElement("pubsub", JabberPubsub.NAMESPACE_URI);
+            pubsub = response.getElement().addElement("pubsub",
+                    JabberPubsub.NAMESPACE_URI);
             if ((false == userCanViewNode()) || (false == itemExists())) {
                 outQueue.put(response);
                 return;
@@ -77,7 +85,8 @@ public class RepliesGet extends PubSubElementProcessorAbstract {
         } catch (NodeStoreException e) {
             logger.error(e);
             response.getElement().remove(pubsub);
-            setErrorCondition(PacketError.Type.wait, PacketError.Condition.internal_server_error);
+            setErrorCondition(PacketError.Type.wait,
+                    PacketError.Condition.internal_server_error);
         }
         outQueue.put(response);
 
@@ -87,7 +96,8 @@ public class RepliesGet extends PubSubElementProcessorAbstract {
         if (null != channelManager.getNodeItem(node, parentId)) {
             return true;
         }
-        setErrorCondition(PacketError.Type.modify, PacketError.Condition.bad_request);
+        setErrorCondition(PacketError.Type.modify,
+                PacketError.Condition.bad_request);
         return false;
     }
 
@@ -114,7 +124,8 @@ public class RepliesGet extends PubSubElementProcessorAbstract {
         rsm.addNamespace("", NS_RSM);
         rsm.addElement("first").setText(firstItemId);
         rsm.addElement("last").setText(lastItemId);
-        rsm.addElement("count").setText(String.valueOf(channelManager.getCountNodeItemReplies(node, parentId)));
+        rsm.addElement("count").setText(
+                String.valueOf(channelManager.getCountNodeItemReplies(node, parentId)));
     }
 
     private void addReplies() throws NodeStoreException {
@@ -125,12 +136,13 @@ public class RepliesGet extends PubSubElementProcessorAbstract {
         Element itemElement;
         Element itemsElement = pubsub.addElement("items");
         itemsElement.addAttribute("node", node);
-
+        
         while (items.hasNext()) {
             item = items.next();
 
             try {
-                entry = xmlReader.read(new StringReader(item.getPayload())).getRootElement();
+                entry = xmlReader.read(new StringReader(item.getPayload()))
+                        .getRootElement();
                 itemElement = itemsElement.addElement("item");
                 itemElement.addAttribute("id", item.getId());
                 if (null == firstItemId) {
@@ -139,7 +151,8 @@ public class RepliesGet extends PubSubElementProcessorAbstract {
                 lastItemId = item.getId();
                 itemElement.add(entry);
             } catch (DocumentException e) {
-                logger.error("Error parsing a node entry, ignoring. " + item.getId());
+                logger.error("Error parsing a node entry, ignoring. "
+                        + item.getId());
             }
         }
     }
@@ -149,16 +162,19 @@ public class RepliesGet extends PubSubElementProcessorAbstract {
         try {
             node = replies.attributeValue("node");
             if (null == node) {
-                createExtendedErrorReply(PacketError.Type.modify, PacketError.Condition.bad_request, "nodeid-required");
+                createExtendedErrorReply(PacketError.Type.modify,
+                        PacketError.Condition.bad_request, "nodeid-required");
                 return false;
             }
             parentId = replies.attributeValue("item_id");
             if (null == parentId) {
-                createExtendedErrorReply(PacketError.Type.modify, PacketError.Condition.bad_request, "itemid-required");
+                createExtendedErrorReply(PacketError.Type.modify,
+                        PacketError.Condition.bad_request, "itemid-required");
                 return false;
             }
             if (false == channelManager.nodeExists(node)) {
-                setErrorCondition(PacketError.Type.cancel, PacketError.Condition.item_not_found);
+                setErrorCondition(PacketError.Type.cancel,
+                        PacketError.Condition.item_not_found);
                 return false;
             }
             nodeConfiguration = channelManager.getNodeConf(node);
@@ -173,23 +189,28 @@ public class RepliesGet extends PubSubElementProcessorAbstract {
         }
         return true;
     }
-
+    
     private boolean userCanViewNode() throws NodeStoreException {
-        if (nodeViewAcl.canViewNode(node, channelManager.getNodeMembership(node, actor), getNodeAccessModel(), channelManager.isLocalJID(actor))) {
+        if (nodeViewAcl.canViewNode(node,
+                channelManager.getNodeMembership(node, actor),
+                getNodeAccessModel(),
+                Configuration.getInstance().isLocalJID(actor))) {
             return true;
         }
         NodeAclRefuseReason reason = getNodeViewAcl().getReason();
-        createExtendedErrorReply(reason.getType(), reason.getCondition(), reason.getAdditionalErrorElement());
+        createExtendedErrorReply(reason.getType(), reason.getCondition(),
+                reason.getAdditionalErrorElement());
         return false;
     }
-
+    
     private AccessModels getNodeAccessModel() {
         if (false == nodeConfiguration.containsKey(AccessModel.FIELD_NAME)) {
             return AccessModels.authorize;
         }
-        return AccessModels.createFromString(nodeConfiguration.get(AccessModel.FIELD_NAME));
+        return AccessModels.createFromString(nodeConfiguration
+                .get(AccessModel.FIELD_NAME));
     }
-
+    
     public void setNodeViewAcl(NodeViewAcl acl) {
         nodeViewAcl = acl;
     }

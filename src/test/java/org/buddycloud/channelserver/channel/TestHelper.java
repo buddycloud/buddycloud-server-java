@@ -19,9 +19,9 @@ public class TestHelper {
     LinkedBlockingQueue<Packet> outQueue;
     LinkedBlockingQueue<Packet> inQueue;
     InQueueConsumer consumer;
-
+    
     ChannelManagerFactory channelManagerFactory;
-
+    
     public TestHelper() throws FileNotFoundException, IOException {
         initialiseChannelManagerFactory();
 
@@ -30,43 +30,44 @@ public class TestHelper {
         consumer = new InQueueConsumer(outQueue, Configuration.getInstance(), inQueue, channelManagerFactory, null, null);
         consumer.start();
     }
-
+    
     public LinkedBlockingQueue<Packet> getOutQueue() {
         return outQueue;
     }
-
+    
     public LinkedBlockingQueue<Packet> getInQueue() {
         return inQueue;
     }
-
+    
     public InQueueConsumer getConsumer() {
         return consumer;
     }
-
+      
     public ChannelManagerFactory getChannelManagerFactory() {
         return channelManagerFactory;
     }
-
+    
     private ChannelManagerFactory initialiseChannelManagerFactory() {
         NodeStoreFactory nsFactory = new NodeStoreFactory() {
-
+            
             @Override
             public NodeStore create() {
-                try {
-                    return new JDBCNodeStore(new DatabaseTester().getConnection(), new Sql92NodeStoreDialect());
-                } catch (SQLException e) {
-                    e.printStackTrace();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                } catch (ClassNotFoundException e) {
-                    e.printStackTrace();
-                }
-                return null;
+                    try {
+                        return new JDBCNodeStore(new DatabaseTester().getConnection(), new Sql92NodeStoreDialect());
+                    } catch (SQLException e) {
+                        e.printStackTrace();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    } catch (ClassNotFoundException e) {
+                        e.printStackTrace();
+                    }
+                    return null;
             }
         };
-
+        
         try {
-            channelManagerFactory = new ChannelManagerFactoryImpl(IQTestHandler.readConf(), nsFactory);
+            IQTestHandler.readConf();
+            channelManagerFactory = new ChannelManagerFactoryImpl(nsFactory);
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         } catch (IOException e) {
@@ -74,5 +75,5 @@ public class TestHelper {
         }
         return null;
     }
-
+    
 }

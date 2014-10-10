@@ -4,6 +4,7 @@ import java.util.Collection;
 import java.util.concurrent.BlockingQueue;
 
 import org.apache.log4j.Logger;
+import org.buddycloud.channelserver.Configuration;
 import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.db.exception.NodeStoreException;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.JabberPubsub;
@@ -60,13 +61,21 @@ public class SubscriptionEvent extends PubSubElementProcessorAbstract {
         if (actor == null) {
             actor = request.getFrom();
         }
-        if (false == channelManager.isLocalNode(node)) {
+        if (false == nodeProvided()) {
+            outQueue.put(response);
+            return;
+        }
+        
+        if (false == Configuration.getInstance().isLocalNode(node)) {
             makeRemoteRequest();
             return;
         }
         try {
-            if ((false == nodeProvided()) || (false == validRequestStanza()) || (false == checkNodeExists()) || (false == actorHasPermissionToAuthorize())
-                    || (true == actorIsModifyingTheirSubscription()) || (false == userIsSubscribable())) {
+            if ((false == validRequestStanza())
+                    || (false == checkNodeExists())
+                    || (false == actorHasPermissionToAuthorize())
+                    || (true == actorIsModifyingTheirSubscription())
+                    || (false == userIsSubscribable())) {
                 outQueue.put(response);
                 return;
             }
@@ -74,7 +83,8 @@ public class SubscriptionEvent extends PubSubElementProcessorAbstract {
             sendNotifications();
         } catch (NodeStoreException e) {
             LOGGER.error(e);
-            setErrorCondition(PacketError.Type.wait, PacketError.Condition.internal_server_error);
+            setErrorCondition(PacketError.Type.wait,
+                    PacketError.Condition.internal_server_error);
             outQueue.put(response);
             return;
         }
@@ -137,8 +147,9 @@ public class SubscriptionEvent extends PubSubElementProcessorAbstract {
         if (newSubscription.equals(Subscriptions.invited)) {
             Message alertInvitedUser = rootElement.createCopy();
             JID to = jid;
-            alertInvitedUser.getElement().attribute("remote-server-discover").detach();
-            if (!channelManager.isLocalJID(jid)) {
+            alertInvitedUser.getElement().attribute("remote-server-discover")
+                    .detach();
+            if (!Configuration.getInstance().isLocalJID(jid)) {
                 to = invitedUsersDomain;
             }
             alertInvitedUser.setTo(to);

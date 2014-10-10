@@ -8,6 +8,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 import junit.framework.Assert;
 
+import org.buddycloud.channelserver.Configuration;
 import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.db.ClosableIteratorImpl;
 import org.buddycloud.channelserver.db.CloseableIterator;
@@ -60,7 +61,8 @@ public class SearchSetTest extends IQTestHandler {
         Element query = request.getElement().addElement("query");
         query.addNamespace("", Search.NAMESPACE_URI);
 
-        Mockito.when(channelManager.isLocalJID(Mockito.any(JID.class))).thenReturn(true);
+        Configuration.getInstance().putProperty(
+                Configuration.CONFIGURATION_LOCAL_DOMAIN_CHECKER, Boolean.TRUE.toString());
 
         setStanza = readStanzaAsIq("/iq/search/set.stanza");
     }
@@ -68,14 +70,16 @@ public class SearchSetTest extends IQTestHandler {
     @Test
     public void testOnlyAcceptsPacketsFromLocalUsers() throws Exception {
 
-        Mockito.when(channelManager.isLocalJID(Mockito.any(JID.class))).thenReturn(false);
+        Configuration.getInstance().putProperty(
+                Configuration.CONFIGURATION_LOCAL_DOMAIN_CHECKER, Boolean.FALSE.toString());
 
         search.process(request);
         Packet response = queue.poll();
         PacketError error = response.getError();
         Assert.assertNotNull(error);
         Assert.assertEquals(PacketError.Type.cancel, error.getType());
-        Assert.assertEquals(PacketError.Condition.not_allowed, error.getCondition());
+        Assert.assertEquals(PacketError.Condition.not_allowed,
+                error.getCondition());
     }
 
     @Test
@@ -86,7 +90,8 @@ public class SearchSetTest extends IQTestHandler {
         PacketError error = response.getError();
         Assert.assertNotNull(error);
         Assert.assertEquals(PacketError.Type.modify, error.getType());
-        Assert.assertEquals(PacketError.Condition.bad_request, error.getCondition());
+        Assert.assertEquals(PacketError.Condition.bad_request,
+                error.getCondition());
     }
 
     @Test
@@ -100,7 +105,8 @@ public class SearchSetTest extends IQTestHandler {
         PacketError error = response.getError();
         Assert.assertNotNull(error);
         Assert.assertEquals(PacketError.Type.modify, error.getType());
-        Assert.assertEquals(PacketError.Condition.bad_request, error.getCondition());
+        Assert.assertEquals(PacketError.Condition.bad_request,
+                error.getCondition());
     }
 
     @Test
@@ -115,7 +121,8 @@ public class SearchSetTest extends IQTestHandler {
         PacketError error = response.getError();
         Assert.assertNotNull(error);
         Assert.assertEquals(PacketError.Type.modify, error.getType());
-        Assert.assertEquals(PacketError.Condition.bad_request, error.getCondition());
+        Assert.assertEquals(PacketError.Condition.bad_request,
+                error.getCondition());
     }
 
     @Test
@@ -133,11 +140,13 @@ public class SearchSetTest extends IQTestHandler {
         PacketError error = response.getError();
         Assert.assertNotNull(error);
         Assert.assertEquals(PacketError.Type.modify, error.getType());
-        Assert.assertEquals(PacketError.Condition.bad_request, error.getCondition());
+        Assert.assertEquals(PacketError.Condition.bad_request,
+                error.getCondition());
     }
 
     @Test
-    public void testReturnsErrorIfFieldFormTypeValueIsIncorrect() throws Exception {
+    public void testReturnsErrorIfFieldFormTypeValueIsIncorrect()
+            throws Exception {
         Element query = request.getElement().element("query");
         Element x = query.addElement("x");
         x.addAttribute("xmlns", DataForm.NAMESPACE);
@@ -152,7 +161,8 @@ public class SearchSetTest extends IQTestHandler {
         PacketError error = response.getError();
         Assert.assertNotNull(error);
         Assert.assertEquals(PacketError.Type.modify, error.getType());
-        Assert.assertEquals(PacketError.Condition.bad_request, error.getCondition());
+        Assert.assertEquals(PacketError.Condition.bad_request,
+                error.getCondition());
     }
 
     @Test
@@ -174,7 +184,8 @@ public class SearchSetTest extends IQTestHandler {
         PacketError error = response.getError();
         Assert.assertNotNull(error);
         Assert.assertEquals(PacketError.Type.modify, error.getType());
-        Assert.assertEquals(PacketError.Condition.bad_request, error.getCondition());
+        Assert.assertEquals(PacketError.Condition.bad_request,
+                error.getCondition());
     }
 
     @Test
@@ -197,7 +208,8 @@ public class SearchSetTest extends IQTestHandler {
         PacketError error = response.getError();
         Assert.assertNotNull(error);
         Assert.assertEquals(PacketError.Type.modify, error.getType());
-        Assert.assertEquals(PacketError.Condition.bad_request, error.getCondition());
+        Assert.assertEquals(PacketError.Condition.bad_request,
+                error.getCondition());
     }
 
     @Test
@@ -220,7 +232,8 @@ public class SearchSetTest extends IQTestHandler {
         PacketError error = response.getError();
         Assert.assertNotNull(error);
         Assert.assertEquals(PacketError.Type.modify, error.getType());
-        Assert.assertEquals(PacketError.Condition.bad_request, error.getCondition());
+        Assert.assertEquals(PacketError.Condition.bad_request,
+                error.getCondition());
     }
 
     @Test
@@ -243,7 +256,8 @@ public class SearchSetTest extends IQTestHandler {
         PacketError error = response.getError();
         Assert.assertNotNull(error);
         Assert.assertEquals(PacketError.Type.modify, error.getType());
-        Assert.assertEquals(PacketError.Condition.bad_request, error.getCondition());
+        Assert.assertEquals(PacketError.Condition.bad_request,
+                error.getCondition());
     }
 
     @Test
@@ -266,7 +280,8 @@ public class SearchSetTest extends IQTestHandler {
         PacketError error = response.getError();
         Assert.assertNotNull(error);
         Assert.assertEquals(PacketError.Type.modify, error.getType());
-        Assert.assertEquals(PacketError.Condition.bad_request, error.getCondition());
+        Assert.assertEquals(PacketError.Condition.bad_request,
+                error.getCondition());
     }
 
     @Test
@@ -289,14 +304,17 @@ public class SearchSetTest extends IQTestHandler {
         PacketError error = response.getError();
         Assert.assertNotNull(error);
         Assert.assertEquals(PacketError.Type.modify, error.getType());
-        Assert.assertEquals(PacketError.Condition.bad_request, error.getCondition());
+        Assert.assertEquals(PacketError.Condition.bad_request,
+                error.getCondition());
     }
 
     @Test
     public void testReturnsErrorOnChannelManagerException() throws Exception {
         Mockito.when(
-                channelManager.performSearch(Mockito.any(JID.class), Mockito.any(List.class), Mockito.any(JID.class), Mockito.anyInt(), Mockito.anyInt()))
-                .thenThrow(new NodeStoreException());
+                channelManager.performSearch(Mockito.any(JID.class),
+                        Mockito.any(List.class), Mockito.any(JID.class),
+                        Mockito.anyInt(), Mockito.anyInt())).thenThrow(
+                new NodeStoreException());
 
         search.process(setStanza);
 
@@ -304,16 +322,20 @@ public class SearchSetTest extends IQTestHandler {
         PacketError error = response.getError();
         Assert.assertNotNull(error);
         Assert.assertEquals(PacketError.Type.wait, error.getType());
-        Assert.assertEquals(PacketError.Condition.internal_server_error, error.getCondition());
+        Assert.assertEquals(PacketError.Condition.internal_server_error,
+                error.getCondition());
     }
 
     @Test
     public void testNoResultsReturnsExpectedStanza() throws Exception {
         NodeItem[] items = new NodeItem[0];
-        CloseableIterator<NodeItem> itemList = new ClosableIteratorImpl<NodeItem>(Arrays.asList(items).iterator());
+        CloseableIterator<NodeItem> itemList = new ClosableIteratorImpl<NodeItem>(
+                Arrays.asList(items).iterator());
 
-        Mockito.doReturn(itemList).when(channelManager)
-                .performSearch(Mockito.any(JID.class), Mockito.any(List.class), Mockito.any(JID.class), Mockito.anyInt(), Mockito.anyInt());
+        Mockito.doReturn(itemList)
+                .when(channelManager)
+                .performSearch(Mockito.any(JID.class), Mockito.any(List.class),
+                        Mockito.any(JID.class), Mockito.anyInt(), Mockito.anyInt());
 
         search.process(setStanza);
 
@@ -326,17 +348,22 @@ public class SearchSetTest extends IQTestHandler {
 
     @Test
     public void testReturnsDataInExpectedFormat() throws Exception {
-        NodeItemImpl item1 = new NodeItemImpl(nodeItemNodeId1, nodeItemId1, new Date(), "<entry/>");
-        NodeItemImpl item2 = new NodeItemImpl(nodeItemNodeId2, nodeItemId2, new Date(), "<entry2/>");
+        NodeItemImpl item1 = new NodeItemImpl(nodeItemNodeId1, nodeItemId1,
+                new Date(), "<entry/>");
+        NodeItemImpl item2 = new NodeItemImpl(nodeItemNodeId2, nodeItemId2,
+                new Date(), "<entry2/>");
 
         NodeItem[] itemArray = new NodeItem[2];
         itemArray[0] = item1;
         itemArray[1] = item2;
 
-        CloseableIterator<NodeItem> itemList = new ClosableIteratorImpl<NodeItem>(Arrays.asList(itemArray).iterator());
+        CloseableIterator<NodeItem> itemList = new ClosableIteratorImpl<NodeItem>(
+                Arrays.asList(itemArray).iterator());
 
-        Mockito.doReturn(itemList).when(channelManager)
-                .performSearch(Mockito.any(JID.class), Mockito.any(List.class), Mockito.any(JID.class), Mockito.anyInt(), Mockito.anyInt());
+        Mockito.doReturn(itemList)
+                .when(channelManager)
+                .performSearch(Mockito.any(JID.class), Mockito.any(List.class),
+                        Mockito.any(JID.class), Mockito.anyInt(), Mockito.anyInt());
 
         search.process(setStanza);
 
@@ -350,7 +377,8 @@ public class SearchSetTest extends IQTestHandler {
         Element field = x.element("field");
         Assert.assertNotNull(field);
         Assert.assertEquals("FORM_TYPE", field.attributeValue("var"));
-        Assert.assertEquals(Search.NAMESPACE_URI, field.element("value").getText());
+        Assert.assertEquals(Search.NAMESPACE_URI, field.element("value")
+                .getText());
 
         Element reported = x.element("reported");
         Assert.assertNotNull(reported);
@@ -368,7 +396,8 @@ public class SearchSetTest extends IQTestHandler {
 
         Assert.assertEquals("entry", fields.get(2).attributeValue("var"));
         Assert.assertEquals("Item", fields.get(2).attributeValue("label"));
-        Assert.assertEquals("xml", fields.get(2).attributeValue("type"));
+        Assert.assertEquals("xml", fields.get(2)
+                .attributeValue("type"));
 
         List<Element> items = x.elements("item");
         Assert.assertEquals(2, items.size());
@@ -376,39 +405,50 @@ public class SearchSetTest extends IQTestHandler {
         List<Element> itemFields = items.get(0).elements("field");
         Assert.assertEquals(3, itemFields.size());
         Assert.assertEquals("node", itemFields.get(0).attributeValue("var"));
-        Assert.assertEquals(nodeItemNodeId1, itemFields.get(0).element("value").getText());
+        Assert.assertEquals(nodeItemNodeId1, itemFields.get(0).element("value")
+                .getText());
 
         Assert.assertEquals("id", itemFields.get(1).attributeValue("var"));
-        Assert.assertEquals(nodeItemId1, itemFields.get(1).element("value").getText());
+        Assert.assertEquals(nodeItemId1, itemFields.get(1).element("value")
+                .getText());
 
         Assert.assertEquals("entry", itemFields.get(2).attributeValue("var"));
-        Assert.assertEquals(1, itemFields.get(2).element("value").elements("entry").size());
+        Assert.assertEquals(1,
+                itemFields.get(2).element("value").elements("entry").size());
 
         itemFields = items.get(1).elements("field");
         Assert.assertEquals(3, itemFields.size());
         Assert.assertEquals("node", itemFields.get(0).attributeValue("var"));
-        Assert.assertEquals(nodeItemNodeId2, itemFields.get(0).element("value").getText());
+        Assert.assertEquals(nodeItemNodeId2, itemFields.get(0).element("value")
+                .getText());
 
         Assert.assertEquals("id", itemFields.get(1).attributeValue("var"));
-        Assert.assertEquals(nodeItemId2, itemFields.get(1).element("value").getText());
+        Assert.assertEquals(nodeItemId2, itemFields.get(1).element("value")
+                .getText());
 
         Assert.assertEquals("entry", itemFields.get(2).attributeValue("var"));
-        Assert.assertEquals(1, itemFields.get(2).element("value").elements("entry2").size());
+        Assert.assertEquals(1,
+                itemFields.get(2).element("value").elements("entry2").size());
     }
 
     @Test
     public void testBadlyFormedSourceDataIsIgnored() throws Exception {
-        NodeItemImpl item1 = new NodeItemImpl(nodeItemNodeId1, nodeItemId1, new Date(), "<entry><open>");
-        NodeItemImpl item2 = new NodeItemImpl(nodeItemNodeId2, nodeItemId2, new Date(), "<entry2/>");
+        NodeItemImpl item1 = new NodeItemImpl(nodeItemNodeId1, nodeItemId1,
+                new Date(), "<entry><open>");
+        NodeItemImpl item2 = new NodeItemImpl(nodeItemNodeId2, nodeItemId2,
+                new Date(), "<entry2/>");
 
         NodeItem[] itemArray = new NodeItem[2];
         itemArray[0] = item1;
         itemArray[1] = item2;
 
-        CloseableIterator<NodeItem> itemList = new ClosableIteratorImpl<NodeItem>(Arrays.asList(itemArray).iterator());
+        CloseableIterator<NodeItem> itemList = new ClosableIteratorImpl<NodeItem>(
+                Arrays.asList(itemArray).iterator());
 
-        Mockito.doReturn(itemList).when(channelManager)
-                .performSearch(Mockito.any(JID.class), Mockito.any(List.class), Mockito.any(JID.class), Mockito.anyInt(), Mockito.anyInt());
+        Mockito.doReturn(itemList)
+                .when(channelManager)
+                .performSearch(Mockito.any(JID.class), Mockito.any(List.class),
+                        Mockito.any(JID.class), Mockito.anyInt(), Mockito.anyInt());
 
         search.process(setStanza);
 
@@ -426,12 +466,15 @@ public class SearchSetTest extends IQTestHandler {
         List<Element> itemFields = items.get(0).elements("field");
         Assert.assertEquals(3, itemFields.size());
         Assert.assertEquals("node", itemFields.get(0).attributeValue("var"));
-        Assert.assertEquals(nodeItemNodeId2, itemFields.get(0).element("value").getText());
+        Assert.assertEquals(nodeItemNodeId2, itemFields.get(0).element("value")
+                .getText());
 
         Assert.assertEquals("id", itemFields.get(1).attributeValue("var"));
-        Assert.assertEquals(nodeItemId2, itemFields.get(1).element("value").getText());
+        Assert.assertEquals(nodeItemId2, itemFields.get(1).element("value")
+                .getText());
 
         Assert.assertEquals("entry", itemFields.get(2).attributeValue("var"));
-        Assert.assertEquals(1, itemFields.get(2).element("value").elements("entry2").size());
+        Assert.assertEquals(1,
+                itemFields.get(2).element("value").elements("entry2").size());
     }
 }

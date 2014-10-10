@@ -41,39 +41,39 @@ public class DiscoInfoGet implements PacketProcessor<IQ> {
     @Override
     public void process(IQ reqIQ) throws Exception {
 
-		requestIq = reqIQ;
-		result = IQ.createResultIQ(reqIQ);
-		Element elm = reqIQ.getChildElement();
-		node = elm.attributeValue("node");
-		query = result.setChildElement(ELEMENT_NAME,
-				JabberDiscoInfo.NAMESPACE_URI);
-		if (false == Configuration.getInstance().isLocalJID(requestIq.getFrom())) {
-			result.getElement().addAttribute("remote-server-discover", "false");
-		}
-		if ((node == null) || (true == node.equals(""))) {
-			sendServerDiscoInfo();
-			return;
-		}
-		if (false == Configuration.getInstance().isLocalNode(node)
-				&& (false == channelManager.isCachedNode(node))) {
-			logger.info("Node " + node + " is remote and not cached so "
-					+ "we're going off to get disco#info");
-			makeRemoteRequest();
-			return;
-		}
-		conf = channelManager.getNodeConf(node);
-		if (conf.isEmpty()) {
-			nodeDoesntExistResponse();
-			return;
-		}
-		try {
-			sendNodeConfigurationInformation();
-		} catch (NodeStoreException e) {
-			logger.error(e);
-			setErrorResponse(PacketError.Type.wait,
-					PacketError.Condition.internal_server_error);
-		}
-	}
+        requestIq = reqIQ;
+        result = IQ.createResultIQ(reqIQ);
+        Element elm = reqIQ.getChildElement();
+        node = elm.attributeValue("node");
+        query = result.setChildElement(ELEMENT_NAME,
+                JabberDiscoInfo.NAMESPACE_URI);
+        if (false == Configuration.getInstance().isLocalJID(requestIq.getFrom())) {
+            result.getElement().addAttribute("remote-server-discover", "false");
+        }
+        if ((node == null) || (true == node.equals(""))) {
+            sendServerDiscoInfo();
+            return;
+        }
+        if (false == Configuration.getInstance().isLocalNode(node)
+                && (false == channelManager.isCachedNode(node))) {
+            logger.info("Node " + node + " is remote and not cached so "
+                    + "we're going off to get disco#info");
+            makeRemoteRequest();
+            return;
+        }
+        conf = channelManager.getNodeConf(node);
+        if (conf.isEmpty()) {
+            nodeDoesntExistResponse();
+            return;
+        }
+        try {
+            sendNodeConfigurationInformation();
+        } catch (NodeStoreException e) {
+            logger.error(e);
+            setErrorResponse(PacketError.Type.wait,
+                    PacketError.Condition.internal_server_error);
+        }
+    }
 
     private void sendNodeConfigurationInformation() throws Exception {
 
@@ -88,16 +88,16 @@ public class DiscoInfoGet implements PacketProcessor<IQ> {
 
         String value;
 
-		configuration.putAll(conf);
-		for (String key : configuration.keySet()) {
-			value = configuration.get(key);
-			if ((true == key.equals(AccessModel.FIELD_NAME))
-					&& (value.equals(AccessModel.local.toString()))
-					&& (false == Configuration.getInstance().isLocalJID(requestIq.getFrom()))) {
-				value = AccessModel.authorize.toString();
-			}
-			x.addField(key, null, null).addValue(value);
-		}
+        configuration.putAll(conf);
+        for (String key : configuration.keySet()) {
+            value = configuration.get(key);
+            if ((true == key.equals(AccessModel.FIELD_NAME))
+                    && (value.equals(AccessModel.local.toString()))
+                    && (false == Configuration.getInstance().isLocalJID(requestIq.getFrom()))) {
+                value = AccessModel.authorize.toString();
+            }
+            x.addField(key, null, null).addValue(value);
+        }
 
         query.addAttribute("node", node);
         query.addElement("identity").addAttribute("category", "pubsub").addAttribute("type", "leaf");

@@ -58,10 +58,10 @@ public class MessageArchiveManagement implements PacketProcessor<IQ> {
         requestIq = reqIQ;
         reply = IQ.createResultIQ(requestIq);
 
-		if (false == Configuration.getInstance().isLocalJID(requestIq.getFrom())) {
-			this._sendNotHandledStanza();
-			return;
-		}
+        if (false == Configuration.getInstance().isLocalJID(requestIq.getFrom())) {
+            this.sendNotHandledStanza();
+            return;
+        }
 
         if (false == isValidRequest()) {
             return;
@@ -210,7 +210,7 @@ public class MessageArchiveManagement implements PacketProcessor<IQ> {
         }
     }
 
-    private void _sendNotHandledStanza() throws InterruptedException {
+    private void sendNotHandledStanza() throws InterruptedException {
         sendErrorPacket(PacketError.Type.cancel, PacketError.Condition.service_unavailable);
     }
 

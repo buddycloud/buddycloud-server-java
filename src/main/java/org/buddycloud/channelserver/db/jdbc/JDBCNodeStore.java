@@ -506,151 +506,151 @@ public class JDBCNodeStore implements NodeStore {
         }
     }
     
-	@Override
-	public CloseableIterator<NodeItem> getFirehose(int limit,
-			String afterItemId, boolean isAdmin, String actorDomain) throws NodeStoreException {
-	
-		PreparedStatement stmt = null;
-		Date beforeDate = null;
-	
-		if (afterItemId != null) {
-			beforeDate = getNodeItem(GlobalItemIDImpl.fromBuddycloudString(
-					afterItemId)).getUpdated();
-		} else {
-			beforeDate = new Date();
-		}
-	
-		if (limit < 0) {
-			throw new IllegalArgumentException(
-					"Invalid value for parameter count: " + limit);
-		}
-	
-		try {
-			stmt = conn.prepareStatement(dialect.selectItemsForLocalNodesBeforeDate());
-			stmt.setTimestamp(1, new java.sql.Timestamp(beforeDate.getTime()));
-			stmt.setString(2, Conf.ACCESS_MODEL);
-			stmt.setBoolean(3, isAdmin);
-			stmt.setString(4, AccessModels.open.toString());
-			stmt.setString(5, AccessModels.local.toString());
-			stmt.setString(6, getDomainRegex(actorDomain));
-			stmt.setBoolean(7, isAdmin);
-			stmt.setString(8, getLocalDomainRegex());
-			stmt.setInt(9, limit);
-	
-			java.sql.ResultSet rs = stmt.executeQuery();
-	
-			LinkedList<NodeItem> results = new LinkedList<NodeItem>();
-	
-			while (rs.next()) {
-				results.push(new NodeItemImpl(rs.getString(1), rs.getString(2),
-						rs.getTimestamp(3), rs.getString(4), rs.getString(5), rs.getTimestamp(6)));
-			}
-	
-			return new ClosableIteratorImpl<NodeItem>(results.iterator());
-		} catch (SQLException e) {
-			throw new NodeStoreException(e);
-		} finally {
-			close(stmt); // Will implicitly close the resultset if required
-		}
-	}
-	
-	@Override
-	public int getFirehoseItemCount(boolean isAdmin, String actorDomain)
-			throws NodeStoreException {
-		PreparedStatement stmt = null;
-	
-		try {
-			stmt = conn.prepareStatement(dialect.countItemsForLocalNodes());
-			stmt.setString(1, Conf.ACCESS_MODEL);
-			stmt.setBoolean(2, isAdmin);
-			stmt.setString(3, AccessModels.open.toString());
-			stmt.setString(4, AccessModels.local.toString());
-			stmt.setString(5, getDomainRegex(actorDomain));
-			stmt.setBoolean(6, isAdmin);
-			stmt.setString(7, getLocalDomainRegex());
-			
-			java.sql.ResultSet rs = stmt.executeQuery();
-			if (!rs.next()) {
-				return 0; // This really shouldn't happen!
-			}
-			return rs.getInt(1);
-		} catch (SQLException e) {
-			throw new NodeStoreException(e);
-		} finally {
-			close(stmt); // Will implicitly close the resultset if
-							// required
-		}
-	}
-	
-	private static final String POSIX_SPECIAL_CHARS = "\\.^$*+?()[{|"; 
-	
-	private static String posixRegexQuote(String str) {
-		for (Character p : POSIX_SPECIAL_CHARS.toCharArray()) {
-			str = str.replace(p.toString(), "\\" + p.toString());
-		}
-		return str;
-	}
-	
-	private static String getLocalDomainRegex() {
-		String serverDomain = Configuration.getInstance().getServerDomain();
-		String serverTopicsDomain = Configuration.getInstance().getServerTopicsDomain();
-		List<String> localDomains = new LinkedList<String>();
-		if (serverDomain != null) {
-			localDomains.add(posixRegexQuote(serverDomain));
-		}
-		if (serverTopicsDomain != null) {
-			localDomains.add(posixRegexQuote(serverTopicsDomain));
-		}
-		for (String localDomain : LocalDomainChecker.getLocalDomains(Configuration.getInstance())) {
-			localDomains.add(posixRegexQuote(localDomain));
-		}
-		
-		String domainRegex = localDomains.isEmpty() ? ".*" : 
-			getDomainRegex(StringUtils.join(localDomains, "|"));
-		return domainRegex;
-	}
-	
-	private static String getDomainRegex(String localDomains) {
-		return ".*@(" + localDomains  + ")\\/.*";
-	}
-	
-	@Override
-	public List<String> getLocalNodesList() throws NodeStoreException {
-		PreparedStatement stmt = null;
-		try {
-			stmt = conn.prepareStatement(dialect.selectLocalNodes());
-			stmt.setString(1, getLocalDomainRegex());
-			java.sql.ResultSet rs = stmt.executeQuery();
-			List<String> result = new ArrayList<String>();
-			while (rs.next()) {
-				result.add(rs.getString(1));
-			}
-			return result;
-		} catch (SQLException e) {
-			throw new NodeStoreException(e);
-		} finally {
-			close(stmt); // Will implicitly close the resultset if required
-		}
-	}
+    @Override
+    public CloseableIterator<NodeItem> getFirehose(int limit,
+            String afterItemId, boolean isAdmin, String actorDomain) throws NodeStoreException {
+    
+        PreparedStatement stmt = null;
+        Date beforeDate = null;
+    
+        if (afterItemId != null) {
+            beforeDate = getNodeItem(GlobalItemIDImpl.fromBuddycloudString(
+                    afterItemId)).getUpdated();
+        } else {
+            beforeDate = new Date();
+        }
+    
+        if (limit < 0) {
+            throw new IllegalArgumentException(
+                    "Invalid value for parameter count: " + limit);
+        }
+    
+        try {
+            stmt = conn.prepareStatement(dialect.selectItemsForLocalNodesBeforeDate());
+            stmt.setTimestamp(1, new java.sql.Timestamp(beforeDate.getTime()));
+            stmt.setString(2, Conf.ACCESS_MODEL);
+            stmt.setBoolean(3, isAdmin);
+            stmt.setString(4, AccessModels.open.toString());
+            stmt.setString(5, AccessModels.local.toString());
+            stmt.setString(6, getDomainRegex(actorDomain));
+            stmt.setBoolean(7, isAdmin);
+            stmt.setString(8, getLocalDomainRegex());
+            stmt.setInt(9, limit);
+    
+            java.sql.ResultSet rs = stmt.executeQuery();
+    
+            LinkedList<NodeItem> results = new LinkedList<NodeItem>();
+    
+            while (rs.next()) {
+                results.push(new NodeItemImpl(rs.getString(1), rs.getString(2),
+                        rs.getTimestamp(3), rs.getString(4), rs.getString(5), rs.getTimestamp(6)));
+            }
+    
+            return new ClosableIteratorImpl<NodeItem>(results.iterator());
+        } catch (SQLException e) {
+            throw new NodeStoreException(e);
+        } finally {
+            close(stmt); // Will implicitly close the resultset if required
+        }
+    }
+    
+    @Override
+    public int getFirehoseItemCount(boolean isAdmin, String actorDomain)
+            throws NodeStoreException {
+        PreparedStatement stmt = null;
+    
+        try {
+            stmt = conn.prepareStatement(dialect.countItemsForLocalNodes());
+            stmt.setString(1, Conf.ACCESS_MODEL);
+            stmt.setBoolean(2, isAdmin);
+            stmt.setString(3, AccessModels.open.toString());
+            stmt.setString(4, AccessModels.local.toString());
+            stmt.setString(5, getDomainRegex(actorDomain));
+            stmt.setBoolean(6, isAdmin);
+            stmt.setString(7, getLocalDomainRegex());
+            
+            java.sql.ResultSet rs = stmt.executeQuery();
+            if (!rs.next()) {
+                return 0; // This really shouldn't happen!
+            }
+            return rs.getInt(1);
+        } catch (SQLException e) {
+            throw new NodeStoreException(e);
+        } finally {
+            close(stmt); // Will implicitly close the resultset if
+                            // required
+        }
+    }
+    
+    private static final String POSIX_SPECIAL_CHARS = "\\.^$*+?()[{|"; 
+    
+    private static String posixRegexQuote(String str) {
+        for (Character p : POSIX_SPECIAL_CHARS.toCharArray()) {
+            str = str.replace(p.toString(), "\\" + p.toString());
+        }
+        return str;
+    }
+    
+    private static String getLocalDomainRegex() {
+        String serverDomain = Configuration.getInstance().getServerDomain();
+        String serverTopicsDomain = Configuration.getInstance().getServerTopicsDomain();
+        List<String> localDomains = new LinkedList<String>();
+        if (serverDomain != null) {
+            localDomains.add(posixRegexQuote(serverDomain));
+        }
+        if (serverTopicsDomain != null) {
+            localDomains.add(posixRegexQuote(serverTopicsDomain));
+        }
+        for (String localDomain : LocalDomainChecker.getLocalDomains(Configuration.getInstance())) {
+            localDomains.add(posixRegexQuote(localDomain));
+        }
+        
+        String domainRegex = localDomains.isEmpty() ? ".*" : 
+            getDomainRegex(StringUtils.join(localDomains, "|"));
+        return domainRegex;
+    }
+    
+    private static String getDomainRegex(String localDomains) {
+        return ".*@(" + localDomains  + ")\\/.*";
+    }
+    
+    @Override
+    public List<String> getLocalNodesList() throws NodeStoreException {
+        PreparedStatement stmt = null;
+        try {
+            stmt = conn.prepareStatement(dialect.selectLocalNodes());
+            stmt.setString(1, getLocalDomainRegex());
+            java.sql.ResultSet rs = stmt.executeQuery();
+            List<String> result = new ArrayList<String>();
+            while (rs.next()) {
+                result.add(rs.getString(1));
+            }
+            return result;
+        } catch (SQLException e) {
+            throw new NodeStoreException(e);
+        } finally {
+            close(stmt); // Will implicitly close the resultset if required
+        }
+    }
 
-	@Override
-	public List<String> getRemoteNodesList() throws NodeStoreException {
-		PreparedStatement stmt = null;
-		try {
-			stmt = conn.prepareStatement(dialect.selectRemoteNodes());
-			stmt.setString(1, getLocalDomainRegex());
-			java.sql.ResultSet rs = stmt.executeQuery();
-			List<String> result = new ArrayList<String>();
-			while (rs.next()) {
-				result.add(rs.getString(1));
-			}
-			return result;
-		} catch (SQLException e) {
-			throw new NodeStoreException(e);
-		} finally {
-			close(stmt); // Will implicitly close the resultset if required
-		}
-	}
+    @Override
+    public List<String> getRemoteNodesList() throws NodeStoreException {
+        PreparedStatement stmt = null;
+        try {
+            stmt = conn.prepareStatement(dialect.selectRemoteNodes());
+            stmt.setString(1, getLocalDomainRegex());
+            java.sql.ResultSet rs = stmt.executeQuery();
+            List<String> result = new ArrayList<String>();
+            while (rs.next()) {
+                result.add(rs.getString(1));
+            }
+            return result;
+        } catch (SQLException e) {
+            throw new NodeStoreException(e);
+        } finally {
+            close(stmt); // Will implicitly close the resultset if required
+        }
+    }
 
     @Override
     public ResultSet<NodeSubscription> getSubscriptionChanges(JID user, Date startDate, Date endDate) throws NodeStoreException {
@@ -1797,9 +1797,9 @@ public class JDBCNodeStore implements NodeStore {
 
         String countNodeAffiliations();
 
-		String selectRemoteNodes();
+        String selectRemoteNodes();
 
-		String selectLocalNodes();
+        String selectLocalNodes();
 
         String countNodeAffiliationsForOwner();
 

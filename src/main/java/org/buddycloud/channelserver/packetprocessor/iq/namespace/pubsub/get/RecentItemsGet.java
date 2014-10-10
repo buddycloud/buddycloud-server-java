@@ -66,24 +66,24 @@ public class RecentItemsGet extends PubSubElementProcessorAbstract {
             return;
         }
 
-		if (!Configuration.getInstance().isLocalJID(request.getFrom())) {
-			response.getElement().addAttribute("remote-server-discover",
-					"false");
-		}
-		pubsub = response.getElement().addElement("pubsub",
-				JabberPubsub.NAMESPACE_URI);
-		try {
-			parseRsmElement();
-			addRecentItems();
-			addRsmElement();
-			outQueue.put(response);
-		} catch (NodeStoreException e) {
-			LOGGER.error(e);
-			response.getElement().remove(pubsub);
-			setErrorCondition(PacketError.Type.wait,
-					PacketError.Condition.internal_server_error);
-		}
-		outQueue.put(response);
+        if (!Configuration.getInstance().isLocalJID(request.getFrom())) {
+            response.getElement().addAttribute("remote-server-discover",
+                    "false");
+        }
+        pubsub = response.getElement().addElement("pubsub",
+                JabberPubsub.NAMESPACE_URI);
+        try {
+            parseRsmElement();
+            addRecentItems();
+            addRsmElement();
+            outQueue.put(response);
+        } catch (NodeStoreException e) {
+            LOGGER.error(e);
+            response.getElement().remove(pubsub);
+            setErrorCondition(PacketError.Type.wait,
+                    PacketError.Condition.internal_server_error);
+        }
+        outQueue.put(response);
     }
 
     private void parseRsmElement() {

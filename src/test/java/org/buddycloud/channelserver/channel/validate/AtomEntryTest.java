@@ -31,9 +31,9 @@ import org.xmpp.packet.JID;
  */
 public class AtomEntryTest extends TestHandler {
 
-	private static final String ISO_8601_REGEX = "[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}.[0-9]{3}(Z|[+-][0-9]{2}:[0-9]{2})";
+    private static final String ISO_8601_REGEX = "[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}.[0-9]{3}(Z|[+-][0-9]{2}:[0-9]{2})";
 
-	private AtomEntry validator;
+    private AtomEntry validator;
 
     private IQ publishRequest;
     private Element publishEntry;
@@ -44,9 +44,9 @@ public class AtomEntryTest extends TestHandler {
 
     private ChannelManager channelManager;
 
-	JID jid = new JID("juliet@shakespeare.lit/balcony");
-	String node = "/users/romeo@shakespeare.lit/posts";
-	String server = "channels.shakespeare.lit";
+    JID jid = new JID("juliet@shakespeare.lit/balcony");
+    String node = "/users/romeo@shakespeare.lit/posts";
+    String server = "channels.shakespeare.lit";
 
     @Before
     public void setUp() throws Exception {
@@ -157,8 +157,8 @@ public class AtomEntryTest extends TestHandler {
         validator = getEntryObject(item);
         Assert.assertTrue(validator.isValid());
         Element entry = validator.getPayload();
-		Assert.assertTrue(entry.elementText("updated").matches(ISO_8601_REGEX));
-	}
+        Assert.assertTrue(entry.elementText("updated").matches(ISO_8601_REGEX));
+    }
 
     @Test
     public void updateDateIsIgnored() throws Exception {

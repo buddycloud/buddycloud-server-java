@@ -45,31 +45,31 @@ public class NodeConfigure extends PubSubElementProcessorAbstract {
         actor = actorJID;
         node = element.attributeValue("node");
 
-		if (null == actor) {
-			actor = request.getFrom();
-		}
-		if (!nodeProvided()) {
-			outQueue.put(response);
-			return;
-		}
-		if (!Configuration.getInstance().isLocalNode(node)) {
-			makeRemoteRequest();
-			return;
-		}
-		try {
-			if (!nodeExists() || !actorCanModify()) {
-				outQueue.put(response);
-				return;
-			}
-		} catch (NodeStoreException e) {
-			LOGGER.error(e);
-			setErrorCondition(PacketError.Type.cancel,
-					PacketError.Condition.internal_server_error);
-			outQueue.put(response);
-			return;
-		}
-		setNodeConfiguration();
-	}
+        if (null == actor) {
+            actor = request.getFrom();
+        }
+        if (!nodeProvided()) {
+            outQueue.put(response);
+            return;
+        }
+        if (!Configuration.getInstance().isLocalNode(node)) {
+            makeRemoteRequest();
+            return;
+        }
+        try {
+            if (!nodeExists() || !actorCanModify()) {
+                outQueue.put(response);
+                return;
+            }
+        } catch (NodeStoreException e) {
+            LOGGER.error(e);
+            setErrorCondition(PacketError.Type.cancel,
+                    PacketError.Condition.internal_server_error);
+            outQueue.put(response);
+            return;
+        }
+        setNodeConfiguration();
+    }
 
     private void setNodeConfiguration() throws Exception {
         try {

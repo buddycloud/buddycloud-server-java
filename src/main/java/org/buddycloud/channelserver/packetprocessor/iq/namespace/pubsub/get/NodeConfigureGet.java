@@ -50,10 +50,10 @@ public class NodeConfigureGet extends PubSubElementProcessorAbstract {
             return;
         }
 
-		if (!Configuration.getInstance().isLocalNode(node) && !channelManager.isCachedNodeConfig(node)) {
-			makeRemoteRequest();
-			return;
-		}
+        if (!Configuration.getInstance().isLocalNode(node) && !channelManager.isCachedNodeConfig(node)) {
+            makeRemoteRequest();
+            return;
+        }
 
         try {
             if (!nodeExists()) {
@@ -81,24 +81,24 @@ public class NodeConfigureGet extends PubSubElementProcessorAbstract {
 
         String value;
 
-		for (String key : nodeConf.keySet()) {
-			// If access model is 'local' and its not a local user return
-			// 'authorize'
-			value = nodeConf.get(key);
-			if ((true == key.equals(AccessModel.FIELD_NAME))
-					&& (value.equals(AccessModel.local.toString()))
-					&& (false == Configuration.getInstance().isLocalJID(actor))) {
-				value = AccessModel.authorize.toString();
-			}
-			x.addField(key, null, null).addValue(value);
-		}
-		Element pubsub = response.setChildElement(PubSubGet.ELEMENT_NAME,
-				JabberPubsub.NS_PUBSUB_OWNER);
-		Element configure = pubsub.addElement("configure");
-		configure.addAttribute("node", node);
-		configure.add(x.getElement());
-		outQueue.put(response);
-	}
+        for (String key : nodeConf.keySet()) {
+            // If access model is 'local' and its not a local user return
+            // 'authorize'
+            value = nodeConf.get(key);
+            if ((true == key.equals(AccessModel.FIELD_NAME))
+                    && (value.equals(AccessModel.local.toString()))
+                    && (false == Configuration.getInstance().isLocalJID(actor))) {
+                value = AccessModel.authorize.toString();
+            }
+            x.addField(key, null, null).addValue(value);
+        }
+        Element pubsub = response.setChildElement(PubSubGet.ELEMENT_NAME,
+                JabberPubsub.NS_PUBSUB_OWNER);
+        Element configure = pubsub.addElement("configure");
+        configure.addAttribute("node", node);
+        configure.add(x.getElement());
+        outQueue.put(response);
+    }
 
     private boolean nodeExists() throws NodeStoreException {
         if (channelManager.nodeExists(node)) {

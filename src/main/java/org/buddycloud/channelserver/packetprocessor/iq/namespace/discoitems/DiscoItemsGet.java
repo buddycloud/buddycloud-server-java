@@ -51,20 +51,20 @@ public class DiscoItemsGet implements PacketProcessor<IQ> {
         outQueue.add(response);
     }
 
-	private void addItems() throws NodeStoreException {
-		List<String> nodes = channelManager.getLocalNodesList();
+    private void addItems() throws NodeStoreException {
+        List<String> nodes = channelManager.getLocalNodesList();
 
-		String jid = Configuration.getInstance()
-		    .getProperty(Configuration.CONFIGURATION_SERVER_CHANNELS_DOMAIN);
-		
-		Element query = response.getElement().addElement("query");
-		query.addNamespace("", JabberDiscoItems.NAMESPACE_URI);
-		for (String node : nodes) {
-			Element item = query.addElement("item");
-			item.addAttribute("node", node);
-			item.addAttribute("jid", jid);
-		}
-	}
+        String jid = Configuration.getInstance()
+            .getProperty(Configuration.CONFIGURATION_SERVER_CHANNELS_DOMAIN);
+        
+        Element query = response.getElement().addElement("query");
+        query.addNamespace("", JabberDiscoItems.NAMESPACE_URI);
+        for (String node : nodes) {
+            Element item = query.addElement("item");
+            item.addAttribute("node", node);
+            item.addAttribute("jid", jid);
+        }
+    }
 
     private void setErrorCondition(Type type, Condition condition) {
         response.setType(IQ.Type.error);

@@ -38,25 +38,25 @@ public class NodeDelete extends PubSubElementProcessorAbstract {
         this.actor = actorJID;
         this.node = element.attributeValue("node");
 
-		if (actorJID == null) {
-			actor = request.getFrom();
-		}
-		if (!nodePresent() || !nodeValid()) {
-			outQueue.put(response);
-			return;
-		}
-		if (!Configuration.getInstance().isLocalNode(node)) {
-			makeRemoteRequest();
-			return;
-		}
-		if (!nodeExists() || !actorIsRegistered() || !nodeHandledByThisServer()
-				|| !actorAllowedToDelete()) {
-			outQueue.put(response);
-			return;
-		}
-		deleteNode();
-		sendNotifications();
-	}
+        if (actorJID == null) {
+            actor = request.getFrom();
+        }
+        if (!nodePresent() || !nodeValid()) {
+            outQueue.put(response);
+            return;
+        }
+        if (!Configuration.getInstance().isLocalNode(node)) {
+            makeRemoteRequest();
+            return;
+        }
+        if (!nodeExists() || !actorIsRegistered() || !nodeHandledByThisServer()
+                || !actorAllowedToDelete()) {
+            outQueue.put(response);
+            return;
+        }
+        deleteNode();
+        sendNotifications();
+    }
 
     private void sendNotifications() throws NodeStoreException {
         try {
@@ -105,23 +105,23 @@ public class NodeDelete extends PubSubElementProcessorAbstract {
         return elm.getName().equals("delete");
     }
 
-	private boolean nodePresent() {
-		if (node != null && !node.trim().equals("")) {
-			return true;
-		}
-		response.setType(IQ.Type.error);
-		Element nodeIdRequired = new DOMElement("nodeid-required",
-				new Namespace("", JabberPubsub.NS_PUBSUB_ERROR));
-		Element badRequest = new DOMElement(
-				PacketError.Condition.bad_request.toXMPP(), new Namespace("",
-						JabberPubsub.NS_XMPP_STANZAS));
-		Element error = new DOMElement("error");
-		error.addAttribute("type", "modify");
-		error.add(badRequest);
-		error.add(nodeIdRequired);
-		response.setChildElement(error);
-		return false;
-	}
+    private boolean nodePresent() {
+        if (node != null && !node.trim().equals("")) {
+            return true;
+        }
+        response.setType(IQ.Type.error);
+        Element nodeIdRequired = new DOMElement("nodeid-required",
+                new Namespace("", JabberPubsub.NS_PUBSUB_ERROR));
+        Element badRequest = new DOMElement(
+                PacketError.Condition.bad_request.toXMPP(), new Namespace("",
+                        JabberPubsub.NS_XMPP_STANZAS));
+        Element error = new DOMElement("error");
+        error.addAttribute("type", "modify");
+        error.add(badRequest);
+        error.add(nodeIdRequired);
+        response.setChildElement(error);
+        return false;
+    }
 
     private boolean nodeExists() throws NodeStoreException {
         if (channelManager.nodeExists(node)) {
@@ -149,30 +149,30 @@ public class NodeDelete extends PubSubElementProcessorAbstract {
         return false;
     }
 
-	private boolean nodeHandledByThisServer() {
-		if (!node.contains("@" + getServerDomain())
-				&& !node.contains("@" + getTopicsDomain())) {
-			setErrorCondition(PacketError.Type.modify,
-					PacketError.Condition.not_acceptable);
-			return false;
-		}
-		return true;
-	}
+    private boolean nodeHandledByThisServer() {
+        if (!node.contains("@" + getServerDomain())
+                && !node.contains("@" + getTopicsDomain())) {
+            setErrorCondition(PacketError.Type.modify,
+                    PacketError.Condition.not_acceptable);
+            return false;
+        }
+        return true;
+    }
 
-	private boolean nodeValid() {
-		if (!node.matches(NODE_REG_EX)) {
-			setErrorCondition(PacketError.Type.modify,
-					PacketError.Condition.bad_request);
-			return false;
-		}
-		return true;
-	}
+    private boolean nodeValid() {
+        if (!node.matches(NODE_REG_EX)) {
+            setErrorCondition(PacketError.Type.modify,
+                    PacketError.Condition.bad_request);
+            return false;
+        }
+        return true;
+    }
 
-	private void makeRemoteRequest() throws InterruptedException {
-		request.setTo(new JID(node.split("/")[2]).getDomain());
-		Element actor = request.getElement().element("pubsub")
-				.addElement("actor", Buddycloud.NS);
-		actor.addText(request.getFrom().toBareJID());
-		outQueue.put(request);
-	}
+    private void makeRemoteRequest() throws InterruptedException {
+        request.setTo(new JID(node.split("/")[2]).getDomain());
+        Element actor = request.getElement().element("pubsub")
+                .addElement("actor", Buddycloud.NS);
+        actor.addText(request.getFrom().toBareJID());
+        outQueue.put(request);
+    }
 }

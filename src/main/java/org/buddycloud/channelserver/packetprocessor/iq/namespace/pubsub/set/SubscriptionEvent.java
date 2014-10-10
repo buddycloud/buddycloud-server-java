@@ -58,37 +58,37 @@ public class SubscriptionEvent extends PubSubElementProcessorAbstract {
         actor = actorJID;
         node = element.attributeValue("node");
 
-		if (actor == null) {
-			actor = request.getFrom();
-		}
-		if (false == nodeProvided()) {
-			outQueue.put(response);
-			return;
-		}
-		
-		if (false == Configuration.getInstance().isLocalNode(node)) {
-			makeRemoteRequest();
-			return;
-		}
-		try {
-			if ((false == validRequestStanza())
-					|| (false == checkNodeExists())
-					|| (false == actorHasPermissionToAuthorize())
-					|| (true == actorIsModifyingTheirSubscription())
-					|| (false == userIsSubscribable())) {
-				outQueue.put(response);
-				return;
-			}
-			saveUpdatedSubscription();
-			sendNotifications();
-		} catch (NodeStoreException e) {
-			LOGGER.error(e);
-			setErrorCondition(PacketError.Type.wait,
-					PacketError.Condition.internal_server_error);
-			outQueue.put(response);
-			return;
-		}
-	}
+        if (actor == null) {
+            actor = request.getFrom();
+        }
+        if (false == nodeProvided()) {
+            outQueue.put(response);
+            return;
+        }
+        
+        if (false == Configuration.getInstance().isLocalNode(node)) {
+            makeRemoteRequest();
+            return;
+        }
+        try {
+            if ((false == validRequestStanza())
+                    || (false == checkNodeExists())
+                    || (false == actorHasPermissionToAuthorize())
+                    || (true == actorIsModifyingTheirSubscription())
+                    || (false == userIsSubscribable())) {
+                outQueue.put(response);
+                return;
+            }
+            saveUpdatedSubscription();
+            sendNotifications();
+        } catch (NodeStoreException e) {
+            LOGGER.error(e);
+            setErrorCondition(PacketError.Type.wait,
+                    PacketError.Condition.internal_server_error);
+            outQueue.put(response);
+            return;
+        }
+    }
 
     private boolean actorIsModifyingTheirSubscription() {
         if (actor.toBareJID().equals(subscriptionElement.attributeValue("jid"))) {
@@ -144,18 +144,18 @@ public class SubscriptionEvent extends PubSubElementProcessorAbstract {
             return;
         }
 
-		if (newSubscription.equals(Subscriptions.invited)) {
-			Message alertInvitedUser = rootElement.createCopy();
-			JID to = jid;
-			alertInvitedUser.getElement().attribute("remote-server-discover")
-					.detach();
-			if (!Configuration.getInstance().isLocalJID(jid)) {
-				to = invitedUsersDomain;
-			}
-			alertInvitedUser.setTo(to);
-			outQueue.put(alertInvitedUser);
-		}
-	}
+        if (newSubscription.equals(Subscriptions.invited)) {
+            Message alertInvitedUser = rootElement.createCopy();
+            JID to = jid;
+            alertInvitedUser.getElement().attribute("remote-server-discover")
+                    .detach();
+            if (!Configuration.getInstance().isLocalJID(jid)) {
+                to = invitedUsersDomain;
+            }
+            alertInvitedUser.setTo(to);
+            outQueue.put(alertInvitedUser);
+        }
+    }
 
     private void saveUpdatedSubscription() throws NodeStoreException {
         if (requestedSubscription.equals(Subscriptions.invited)) {

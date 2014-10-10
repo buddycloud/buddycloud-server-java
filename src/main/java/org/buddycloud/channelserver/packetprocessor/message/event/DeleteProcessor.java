@@ -13,30 +13,30 @@ import org.xmpp.packet.Packet;
  
 public class DeleteProcessor extends AbstractMessageProcessor  {
  
-	public DeleteProcessor(BlockingQueue<Packet> outQueue,
-			Properties configuration, ChannelManager channelManager) {
-		super(channelManager, configuration, outQueue);
-	}
+    public DeleteProcessor(BlockingQueue<Packet> outQueue,
+            Properties configuration, ChannelManager channelManager) {
+        super(channelManager, configuration, outQueue);
+    }
 
-	@Override
-	public void process(Message packet) throws Exception {
-		message = packet;
-		deleteNode();
-		if (!Configuration.getInstance().isLocalNode(node)) {
-			sendLocalNotifications(NotificationScheme.validSubscribers);
-		}
-	}
+    @Override
+    public void process(Message packet) throws Exception {
+        message = packet;
+        deleteNode();
+        if (!Configuration.getInstance().isLocalNode(node)) {
+            sendLocalNotifications(NotificationScheme.validSubscribers);
+        }
+    }
 
-	private void deleteNode() throws NodeStoreException {
-		Element deleteElement = message.getElement().element("event")
-				.element("delete");
-		if (deleteElement == null) {
-			return;
-		}
-		node = deleteElement.attributeValue("node");
-		if (Configuration.getInstance().isLocalNode(node)) {
-			return;
-		}
+    private void deleteNode() throws NodeStoreException {
+        Element deleteElement = message.getElement().element("event")
+                .element("delete");
+        if (deleteElement == null) {
+            return;
+        }
+        node = deleteElement.attributeValue("node");
+        if (Configuration.getInstance().isLocalNode(node)) {
+            return;
+        }
         channelManager.deleteNode(node);
-	}
+    }
 }

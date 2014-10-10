@@ -110,11 +110,11 @@ public class ChannelsEngine implements Component {
             throw new ComponentException(e);
         }
 
-		channelManagerFactory = new ChannelManagerFactoryImpl(nodeStoreFactory);
-		federatedQueueManager = new FederatedQueueManager(this,
-				configuration);
-		onlineUsers = new OnlineResourceManager(configuration, channelManagerFactory.create());
-	}
+        channelManagerFactory = new ChannelManagerFactoryImpl(nodeStoreFactory);
+        federatedQueueManager = new FederatedQueueManager(this,
+                configuration);
+        onlineUsers = new OnlineResourceManager(configuration, channelManagerFactory.create());
+    }
 
     @Override
     public void processPacket(Packet p) {

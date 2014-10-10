@@ -25,176 +25,176 @@ import org.xmpp.packet.PacketError;
 
 public class NodeConfigureGetTest extends IQTestHandler {
 
-	private NodeConfigureGet configureGet;
-	private BlockingQueue<Packet> queue = new LinkedBlockingQueue<Packet>();
-	private JID jid = new JID("juliet@shakespeare.lit");
-	private ChannelManager channelManager;
-	private BaseElement element;
+    private NodeConfigureGet configureGet;
+    private BlockingQueue<Packet> queue = new LinkedBlockingQueue<Packet>();
+    private JID jid = new JID("juliet@shakespeare.lit");
+    private ChannelManager channelManager;
+    private BaseElement element;
 
-	@Before
-	public void setUp() throws Exception {
-		queue = new LinkedBlockingQueue<Packet>();
-		configureGet = new NodeConfigureGet(queue, channelManager);
-		element = new BaseElement("configure");
-		channelManager = Mockito.mock(ChannelManager.class);
-		configureGet.setChannelManager(channelManager);
-		Configuration.getInstance().putProperty(
-				Configuration.CONFIGURATION_LOCAL_DOMAIN_CHECKER, Boolean.TRUE.toString());
-	}
+    @Before
+    public void setUp() throws Exception {
+        queue = new LinkedBlockingQueue<Packet>();
+        configureGet = new NodeConfigureGet(queue, channelManager);
+        element = new BaseElement("configure");
+        channelManager = Mockito.mock(ChannelManager.class);
+        configureGet.setChannelManager(channelManager);
+        Configuration.getInstance().putProperty(
+                Configuration.CONFIGURATION_LOCAL_DOMAIN_CHECKER, Boolean.TRUE.toString());
+    }
 
-	@After
-	public void tearDown() {
-		Mockito.reset(channelManager);
-	}
+    @After
+    public void tearDown() {
+        Mockito.reset(channelManager);
+    }
 
-	@Test
-	public void testPassingConfigureAsElementNameReturnsTrue() {
-		Assert.assertTrue(configureGet.accept(element));
-	}
+    @Test
+    public void testPassingConfigureAsElementNameReturnsTrue() {
+        Assert.assertTrue(configureGet.accept(element));
+    }
 
-	@Test
-	public void testPassingNotConfigureAsElementNameReturnsFalse() {
-		Element element = new BaseElement("not-configure");
-		Assert.assertFalse(configureGet.accept(element));
-	}
+    @Test
+    public void testPassingNotConfigureAsElementNameReturnsFalse() {
+        Element element = new BaseElement("not-configure");
+        Assert.assertFalse(configureGet.accept(element));
+    }
 
-	@Test
-	public void testMissingNodeAttributeReturnsErrorStanza() throws Exception {
-		IQ request = readStanzaAsIq("/iq/pubsub/configure/request-no-node.stanza");
-		Element configure = request.getChildElement().element("configure");
-		configureGet.process(configure, jid, request, null);
-		Packet response = queue.poll();
+    @Test
+    public void testMissingNodeAttributeReturnsErrorStanza() throws Exception {
+        IQ request = readStanzaAsIq("/iq/pubsub/configure/request-no-node.stanza");
+        Element configure = request.getChildElement().element("configure");
+        configureGet.process(configure, jid, request, null);
+        Packet response = queue.poll();
 
-		PacketError error = response.getError();
-		Assert.assertNotNull(error);
-		Assert.assertEquals(PacketError.Type.modify, error.getType());
-		Assert.assertEquals("nodeid-required",
-				error.getApplicationConditionName());
-	}
+        PacketError error = response.getError();
+        Assert.assertNotNull(error);
+        Assert.assertEquals(PacketError.Type.modify, error.getType());
+        Assert.assertEquals("nodeid-required",
+                error.getApplicationConditionName());
+    }
 
-	@Test
-	public void testInexistentNodeAttributeReturnsErrorStanza()
-			throws Exception {
-		IQ request = readStanzaAsIq("/iq/pubsub/configure/request-with-node.stanza");
-		Element configure = request.getChildElement().element("configure");
+    @Test
+    public void testInexistentNodeAttributeReturnsErrorStanza()
+            throws Exception {
+        IQ request = readStanzaAsIq("/iq/pubsub/configure/request-with-node.stanza");
+        Element configure = request.getChildElement().element("configure");
 
-		configureGet.process(configure, jid, request, null);
+        configureGet.process(configure, jid, request, null);
 
-		Packet response = queue.poll();
+        Packet response = queue.poll();
 
-		PacketError error = response.getError();
-		Assert.assertNotNull(error);
-		Assert.assertEquals(PacketError.Type.cancel, error.getType());
-		Assert.assertEquals(PacketError.Condition.item_not_found,
-				error.getCondition());
-	}
+        PacketError error = response.getError();
+        Assert.assertNotNull(error);
+        Assert.assertEquals(PacketError.Type.cancel, error.getType());
+        Assert.assertEquals(PacketError.Condition.item_not_found,
+                error.getCondition());
+    }
 
-	@Test
-	public void testRemoteNodeNoError() throws Exception {
-		IQ request = readStanzaAsIq("/iq/pubsub/configure/request-with-node.stanza");
-		Element configure = request.getChildElement().element("configure");
+    @Test
+    public void testRemoteNodeNoError() throws Exception {
+        IQ request = readStanzaAsIq("/iq/pubsub/configure/request-with-node.stanza");
+        Element configure = request.getChildElement().element("configure");
 
-		Configuration.getInstance().putProperty(
-				Configuration.CONFIGURATION_LOCAL_DOMAIN_CHECKER, Boolean.FALSE.toString());
-		configureGet.process(configure, jid, request, null);
+        Configuration.getInstance().putProperty(
+                Configuration.CONFIGURATION_LOCAL_DOMAIN_CHECKER, Boolean.FALSE.toString());
+        configureGet.process(configure, jid, request, null);
 
-		Packet response = queue.poll();
+        Packet response = queue.poll();
 
-		Assert.assertNull(response.getError());
+        Assert.assertNull(response.getError());
 
-		Element pubsubResponse = response.getElement().element("pubsub");
-		Assert.assertNotNull(pubsubResponse);
+        Element pubsubResponse = response.getElement().element("pubsub");
+        Assert.assertNotNull(pubsubResponse);
 
-		Element configureResponse = pubsubResponse.element("configure");
-		Assert.assertNotNull(configureResponse);
-		Assert.assertEquals(configure.attributeValue("node"),
-				configureResponse.attributeValue("node"));
+        Element configureResponse = pubsubResponse.element("configure");
+        Assert.assertNotNull(configureResponse);
+        Assert.assertEquals(configure.attributeValue("node"),
+                configureResponse.attributeValue("node"));
 
-		Element actor = pubsubResponse.element("actor");
-		Assert.assertNotNull(actor);
-		Assert.assertEquals(actor.getText(), jid.toBareJID());
-	}
+        Element actor = pubsubResponse.element("actor");
+        Assert.assertNotNull(actor);
+        Assert.assertEquals(actor.getText(), jid.toBareJID());
+    }
 
-	@Test
-	public void testLocalNodeNoError() throws Exception {
-		IQ request = readStanzaAsIq("/iq/pubsub/configure/request-with-node.stanza");
-		Element configure = request.getChildElement().element("configure");
+    @Test
+    public void testLocalNodeNoError() throws Exception {
+        IQ request = readStanzaAsIq("/iq/pubsub/configure/request-with-node.stanza");
+        Element configure = request.getChildElement().element("configure");
 
-		Map<String, String> conf = new HashMap<String, String>();
-		conf.put("pubsub#att1", "value1");
-		conf.put("pubsub#att2", "value2");
+        Map<String, String> conf = new HashMap<String, String>();
+        conf.put("pubsub#att1", "value1");
+        conf.put("pubsub#att2", "value2");
 
-		String node = configure.attributeValue("node");
-		Mockito.when(channelManager.nodeExists(node)).thenReturn(true);
-		Mockito.when(channelManager.getNodeConf(node)).thenReturn(conf);
+        String node = configure.attributeValue("node");
+        Mockito.when(channelManager.nodeExists(node)).thenReturn(true);
+        Mockito.when(channelManager.getNodeConf(node)).thenReturn(conf);
 
-		configureGet.process(configure, jid, request, null);
-		Packet response = queue.poll();
+        configureGet.process(configure, jid, request, null);
+        Packet response = queue.poll();
 
-		PacketError error = response.getError();
-		Assert.assertNull(error);
+        PacketError error = response.getError();
+        Assert.assertNull(error);
 
-		Element pubsubResponse = response.getElement().element("pubsub");
-		Assert.assertNotNull(pubsubResponse);
+        Element pubsubResponse = response.getElement().element("pubsub");
+        Assert.assertNotNull(pubsubResponse);
 
-		Element configureResponse = pubsubResponse.element("configure");
-		Assert.assertNotNull(configureResponse);
-		Assert.assertEquals(node, configureResponse.attributeValue("node"));
+        Element configureResponse = pubsubResponse.element("configure");
+        Assert.assertNotNull(configureResponse);
+        Assert.assertEquals(node, configureResponse.attributeValue("node"));
 
-		Element x = configureResponse.element("x");
-		Assert.assertEquals("http://jabber.org/protocol/pubsub#node_config",
-				fieldValue(x, "FORM_TYPE"));
-		Assert.assertEquals("value1", fieldValue(x, "pubsub#att1"));
-		Assert.assertEquals("value2", fieldValue(x, "pubsub#att2"));
-	}
+        Element x = configureResponse.element("x");
+        Assert.assertEquals("http://jabber.org/protocol/pubsub#node_config",
+                fieldValue(x, "FORM_TYPE"));
+        Assert.assertEquals("value1", fieldValue(x, "pubsub#att1"));
+        Assert.assertEquals("value2", fieldValue(x, "pubsub#att2"));
+    }
 
-	@Test
-	public void testLocalAccessModelGetsReportedAsAuthorizeToRemoveUsers()
-			throws Exception {
+    @Test
+    public void testLocalAccessModelGetsReportedAsAuthorizeToRemoveUsers()
+            throws Exception {
 
-		Configuration.getInstance().putProperty(
-				Configuration.CONFIGURATION_SERVER_DOMAIN, "denmark.lit");
-		Configuration.getInstance().remove(
-				Configuration.CONFIGURATION_LOCAL_DOMAIN_CHECKER);
+        Configuration.getInstance().putProperty(
+                Configuration.CONFIGURATION_SERVER_DOMAIN, "denmark.lit");
+        Configuration.getInstance().remove(
+                Configuration.CONFIGURATION_LOCAL_DOMAIN_CHECKER);
 
-		IQ request = readStanzaAsIq("/iq/pubsub/configure/request-with-node.stanza");
-		Element configure = request.getChildElement().element("configure");
+        IQ request = readStanzaAsIq("/iq/pubsub/configure/request-with-node.stanza");
+        Element configure = request.getChildElement().element("configure");
 
-		Map<String, String> conf = new HashMap<String, String>();
-		conf.put("pubsub#access_model", AccessModels.local.toString());
+        Map<String, String> conf = new HashMap<String, String>();
+        conf.put("pubsub#access_model", AccessModels.local.toString());
 
-		String node = configure.attributeValue("node");
-		Mockito.when(channelManager.nodeExists(node)).thenReturn(true);
-		Mockito.when(channelManager.getNodeConf(node)).thenReturn(conf);
+        String node = configure.attributeValue("node");
+        Mockito.when(channelManager.nodeExists(node)).thenReturn(true);
+        Mockito.when(channelManager.getNodeConf(node)).thenReturn(conf);
 
-		configureGet.process(configure, jid, request, null);
-		Packet response = queue.poll();
+        configureGet.process(configure, jid, request, null);
+        Packet response = queue.poll();
 
-		PacketError error = response.getError();
-		Assert.assertNull(error);
+        PacketError error = response.getError();
+        Assert.assertNull(error);
 
-		Element pubsubResponse = response.getElement().element("pubsub");
-		Assert.assertNotNull(pubsubResponse);
+        Element pubsubResponse = response.getElement().element("pubsub");
+        Assert.assertNotNull(pubsubResponse);
 
-		Element configureResponse = pubsubResponse.element("configure");
-		Assert.assertNotNull(configureResponse);
-		Assert.assertEquals(node, configureResponse.attributeValue("node"));
+        Element configureResponse = pubsubResponse.element("configure");
+        Assert.assertNotNull(configureResponse);
+        Assert.assertEquals(node, configureResponse.attributeValue("node"));
 
-		Element x = configureResponse.element("x");
-		Assert.assertEquals("http://jabber.org/protocol/pubsub#node_config",
-				fieldValue(x, "FORM_TYPE"));
-		Assert.assertEquals(AccessModels.authorize.toString(),
-				fieldValue(x, "pubsub#access_model"));
-	}
+        Element x = configureResponse.element("x");
+        Assert.assertEquals("http://jabber.org/protocol/pubsub#node_config",
+                fieldValue(x, "FORM_TYPE"));
+        Assert.assertEquals(AccessModels.authorize.toString(),
+                fieldValue(x, "pubsub#access_model"));
+    }
 
-	@SuppressWarnings("unchecked")
-	private static String fieldValue(Element x, String var) {
-		List<Element> elements = x.elements();
-		for (Element field : elements) {
-			if (field.attributeValue("var").equals(var)) {
-				return field.element("value").getText();
-			}
-		}
-		return null;
-	}
+    @SuppressWarnings("unchecked")
+    private static String fieldValue(Element x, String var) {
+        List<Element> elements = x.elements();
+        for (Element field : elements) {
+            if (field.attributeValue("var").equals(var)) {
+                return field.element("value").getText();
+            }
+        }
+        return null;
+    }
 }

@@ -143,46 +143,46 @@ public class Sql92NodeStoreDialect implements NodeStoreSQLDialect {
     private static final String SELECT_COUNT_ITEM_THREAD = "" + "SELECT COUNT(\"id\") " + "FROM \"items\" WHERE \"node\" = ? "
             + "AND (\"in_reply_to\" LIKE ? OR \"id\" = ?) ";
 
-	private static final String SELECT_LOCAL_NODES = 	
-			"SELECT \"node\" " +
-			"FROM \"nodes\" " +
-			"WHERE \"node\" ~ ? ";
-	
-	private static final String SELECT_REMOTE_NODES = 	
-			"SELECT \"node\" " +
-			"FROM \"nodes\" " +
-			"WHERE \"node\" !~ ?";
-	
-	private static final String SELECT_ITEMS_FROM_LOCAL_NODES_BEFORE_DATE = 
-			"SELECT \"items\".\"node\", \"id\", \"items\".\"updated\", \"xml\", \"in_reply_to\", \"created\" " +
-			"FROM \"items\", \"node_config\" " +
-			"WHERE \"items\".\"updated\" < ? " +
-			"AND \"items\".\"node\" = \"node_config\".\"node\" "+
-			"AND \"key\" = ? " +
-			"AND ((" +
-			  "NOT ? AND " +
-			    "(\"value\" LIKE ?) OR " +
-			    "(\"value\" LIKE ? AND \"items\".\"node\" ~ ?)) " +
-			"OR ?) " +
-			"AND \"items\".\"node\" ~ ? " +
-			"ORDER BY \"updated\" DESC, \"id\" ASC LIMIT ?";
+    private static final String SELECT_LOCAL_NODES = 
+            "SELECT \"node\" " +
+            "FROM \"nodes\" " +
+            "WHERE \"node\" ~ ? ";
+    
+    private static final String SELECT_REMOTE_NODES =     
+            "SELECT \"node\" " +
+            "FROM \"nodes\" " +
+            "WHERE \"node\" !~ ?";
+    
+    private static final String SELECT_ITEMS_FROM_LOCAL_NODES_BEFORE_DATE = 
+            "SELECT \"items\".\"node\", \"id\", \"items\".\"updated\", \"xml\", \"in_reply_to\", \"created\" " +
+            "FROM \"items\", \"node_config\" " +
+            "WHERE \"items\".\"updated\" < ? " +
+            "AND \"items\".\"node\" = \"node_config\".\"node\" " +
+            "AND \"key\" = ? " +
+            "AND ((" +
+              "NOT ? AND " +
+                "(\"value\" LIKE ?) OR " +
+                "(\"value\" LIKE ? AND \"items\".\"node\" ~ ?)) " +
+            "OR ?) " +
+            "AND \"items\".\"node\" ~ ? " +
+            "ORDER BY \"updated\" DESC, \"id\" ASC LIMIT ?";
 
-	private static final String COUNT_SUBSCRIPTIONS_FOR_NODE = "SELECT COUNT(*) " + "FROM \"subscriptions\", \"affiliations\" WHERE "
+    private static final String COUNT_SUBSCRIPTIONS_FOR_NODE = "SELECT COUNT(*) " + "FROM \"subscriptions\", \"affiliations\" WHERE "
             + "\"subscriptions\".\"node\" = ? AND \"affiliations\".\"node\" = \"subscriptions\".\"node\" "
             + "AND \"affiliations\".\"user\" = \"subscriptions\".\"user\" " + "AND \"affiliations\".\"affiliation\" != 'outcast';";
 
-	private static final String COUNT_ITEMS_FROM_LOCAL_NODES = 	
-			"SELECT COUNT(\"id\") " +
-			"FROM \"items\", \"node_config\" " +
-			"WHERE \"items\".\"node\" = \"node_config\".\"node\" "+
-			"AND \"key\" = ? " +
-			"AND ((" +
-			  "NOT ? AND " +
-			    "(\"value\" LIKE ?) OR " +
-			    "(\"value\" LIKE ? AND \"items\".\"node\" ~ ?)) " +
-			"OR ?) " +
-			"AND \"items\".\"node\" ~ ?";
-	
+    private static final String COUNT_ITEMS_FROM_LOCAL_NODES =     
+            "SELECT COUNT(\"id\") " +
+            "FROM \"items\", \"node_config\" " +
+            "WHERE \"items\".\"node\" = \"node_config\".\"node\" " +
+            "AND \"key\" = ? " +
+            "AND ((" +
+              "NOT ? AND " +
+                "(\"value\" LIKE ?) OR " +
+                "(\"value\" LIKE ? AND \"items\".\"node\" ~ ?)) " +
+            "OR ?) " +
+            "AND \"items\".\"node\" ~ ?";
+    
     private static final String COUNT_SUBSCRIPTIONS_TO_NODE_FOR_OWNER = "SELECT COUNT(*) " + "FROM \"subscriptions\" WHERE "
             + "\"subscriptions\".\"node\" = ?;";
 
@@ -648,14 +648,14 @@ public class Sql92NodeStoreDialect implements NodeStoreSQLDialect {
         return SELECT_COUNT_USER_FEED_ITEMS;
     }
 
-	@Override
-	public String selectRemoteNodes() {
-		return SELECT_REMOTE_NODES;
-	}
+    @Override
+    public String selectRemoteNodes() {
+        return SELECT_REMOTE_NODES;
+    }
 
-	@Override
-	public String selectLocalNodes() {
-		return SELECT_LOCAL_NODES;
-	}
+    @Override
+    public String selectLocalNodes() {
+        return SELECT_LOCAL_NODES;
+    }
 
 }

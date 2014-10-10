@@ -68,16 +68,16 @@ public class SubscribeSet extends PubSubElementProcessorAbstract {
 
         boolean isLocalSubscriber = false;
 
-		if (actorJID != null) {
-			subscribingJid = actorJID;
-		} else {
-			isLocalSubscriber = Configuration.getInstance().isLocalJID(subscribingJid);
-			// Check that user is registered.
-			if (!isLocalSubscriber) {
-				failAuthRequired();
-				return;
-			}
-		}
+        if (actorJID != null) {
+            subscribingJid = actorJID;
+        } else {
+            isLocalSubscriber = Configuration.getInstance().isLocalJID(subscribingJid);
+            // Check that user is registered.
+            if (!isLocalSubscriber) {
+                failAuthRequired();
+                return;
+            }
+        }
 
         Map<String, String> nodeConf = null;
 
@@ -117,42 +117,42 @@ public class SubscribeSet extends PubSubElementProcessorAbstract {
             Affiliations defaultAffiliation = Affiliations.member;
             Subscriptions defaultSubscription = Subscriptions.none;
 
-			if (!membership.getSubscription().equals(Subscriptions.invited)
-					&& !membership.getSubscription().in(Subscriptions.none)
-					&& !membership.getAffiliation().in(Affiliations.none)) {
-				LOGGER.debug("User already has a '"
-						+ membership.getSubscription().toString()
-						+ "' subscription");
-				defaultAffiliation = membership.getAffiliation();
-				defaultSubscription = membership.getSubscription();
-			} else {
-				try {
-					String nodeDefaultAffiliation = nodeConf
-							.get(Conf.DEFAULT_AFFILIATION);
-					LOGGER.debug("Node default affiliation: '"
-							+ nodeDefaultAffiliation + "'");
-					if (!Affiliations.none.equals(Affiliations
-							.createFromString(nodeDefaultAffiliation))) {
-						defaultAffiliation = Affiliations
-								.createFromString(nodeDefaultAffiliation);
-					}
-				} catch (NullPointerException e) {
-					LOGGER.error("Could not create affiliation.", e);
-					defaultAffiliation = Affiliations.member;
-				}
-				defaultSubscription = Subscriptions.subscribed;
-				String accessModel = nodeConf.get(Conf.ACCESS_MODEL);
-				if ((null == accessModel)
-						|| (true == accessModel.equals(AccessModels.authorize
-								.toString()))
-						|| (true == accessModel.equals(AccessModels.whitelist
-								.toString()))) {
-					defaultSubscription = Subscriptions.pending;
-				} else if ((true == accessModel.equals(AccessModels.local
-						.toString()) && (false == Configuration.getInstance()
-						.isLocalJID(subscribingJid)))) {
-					defaultSubscription = Subscriptions.pending;
-				}
+            if (!membership.getSubscription().equals(Subscriptions.invited)
+                    && !membership.getSubscription().in(Subscriptions.none)
+                    && !membership.getAffiliation().in(Affiliations.none)) {
+                LOGGER.debug("User already has a '"
+                        + membership.getSubscription().toString()
+                        + "' subscription");
+                defaultAffiliation = membership.getAffiliation();
+                defaultSubscription = membership.getSubscription();
+            } else {
+                try {
+                    String nodeDefaultAffiliation = nodeConf
+                            .get(Conf.DEFAULT_AFFILIATION);
+                    LOGGER.debug("Node default affiliation: '"
+                            + nodeDefaultAffiliation + "'");
+                    if (!Affiliations.none.equals(Affiliations
+                            .createFromString(nodeDefaultAffiliation))) {
+                        defaultAffiliation = Affiliations
+                                .createFromString(nodeDefaultAffiliation);
+                    }
+                } catch (NullPointerException e) {
+                    LOGGER.error("Could not create affiliation.", e);
+                    defaultAffiliation = Affiliations.member;
+                }
+                defaultSubscription = Subscriptions.subscribed;
+                String accessModel = nodeConf.get(Conf.ACCESS_MODEL);
+                if ((null == accessModel)
+                        || (true == accessModel.equals(AccessModels.authorize
+                                .toString()))
+                        || (true == accessModel.equals(AccessModels.whitelist
+                                .toString()))) {
+                    defaultSubscription = Subscriptions.pending;
+                } else if ((true == accessModel.equals(AccessModels.local
+                        .toString()) && (false == Configuration.getInstance()
+                        .isLocalJID(subscribingJid)))) {
+                    defaultSubscription = Subscriptions.pending;
+                }
 
                 NodeSubscription newSubscription = new NodeSubscriptionImpl(node, subscribingJid, request.getFrom(), defaultSubscription, null);
                 channelManager.addUserSubscription(newSubscription);
@@ -183,23 +183,23 @@ public class SubscribeSet extends PubSubElementProcessorAbstract {
         }
     }
 
-	private boolean handleNodeSubscription(Element elm, JID actorJID,
-			JID subscribingJid) throws NodeStoreException, InterruptedException {
-		boolean isLocalNode = false;
-		try {
-			isLocalNode = Configuration.getInstance().isLocalNode(node);
-		} catch (IllegalArgumentException e) {
-			LOGGER.debug(e);
-			createExtendedErrorReply(PacketError.Type.modify,
-					PacketError.Condition.bad_request, INVALID_NODE_FORMAT,
-					Buddycloud.NS_ERROR);
-			outQueue.put(response);
-			return false;
-		}
-		if (!isLocalNode && !node.equals("/firehose")) {
-			makeRemoteRequest();
-			return false;
-		}
+    private boolean handleNodeSubscription(Element elm, JID actorJID,
+            JID subscribingJid) throws NodeStoreException, InterruptedException {
+        boolean isLocalNode = false;
+        try {
+            isLocalNode = Configuration.getInstance().isLocalNode(node);
+        } catch (IllegalArgumentException e) {
+            LOGGER.debug(e);
+            createExtendedErrorReply(PacketError.Type.modify,
+                    PacketError.Condition.bad_request, INVALID_NODE_FORMAT,
+                    Buddycloud.NS_ERROR);
+            outQueue.put(response);
+            return false;
+        }
+        if (!isLocalNode && !node.equals("/firehose")) {
+            makeRemoteRequest();
+            return false;
+        }
 
         // 6.1.3.1 JIDs Do Not Match
 

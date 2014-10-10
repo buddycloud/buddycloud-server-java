@@ -408,74 +408,74 @@ public interface NodeStore {
      */
     void purgeNodeItems(String nodeId) throws NodeStoreException;
 
-	/**
-	 * Retrieves a list of nodes
-	 * 
-	 * @throws NodeStoreException
-	 */
-	ArrayList<String> getNodeList() throws NodeStoreException;
-	
-	/**
-	 * Retrieves a list of local nodes
-	 * 
-	 * @throws NodeStoreException
-	 */
-	List<String> getLocalNodesList() throws NodeStoreException;
+    /**
+     * Retrieves a list of nodes
+     * 
+     * @throws NodeStoreException
+     */
+    ArrayList<String> getNodeList() throws NodeStoreException;
+    
+    /**
+     * Retrieves a list of local nodes
+     * 
+     * @throws NodeStoreException
+     */
+    List<String> getLocalNodesList() throws NodeStoreException;
 
-	/**
-	 * Retrieves a list of remote nodes
-	 * 
-	 * @throws NodeStoreException
-	 */
-	List<String> getRemoteNodesList() throws NodeStoreException;
-	
-	/**
-	 * Search subscribed nodes for content
-	 * 
-	 * @param searcher
-	 *            JID of user performing the search
-	 * @param content
-	 *            Keywords upon which to search
-	 * @param author
-	 *            JID of the content author
-	 * @param page
-	 *            Page number of results (>= 1)
-	 * @param rpp
-	 *            Results per page (>= 1)
-	 * @return
-	 * @throws NodeStoreException
-	 */
-	@SuppressWarnings("rawtypes")
-	CloseableIterator<NodeItem> performSearch(JID searcher, List content,
-			JID author, int page, int rpp) throws NodeStoreException;
+    /**
+     * Retrieves a list of remote nodes
+     * 
+     * @throws NodeStoreException
+     */
+    List<String> getRemoteNodesList() throws NodeStoreException;
+    
+    /**
+     * Search subscribed nodes for content
+     * 
+     * @param searcher
+     *            JID of user performing the search
+     * @param content
+     *            Keywords upon which to search
+     * @param author
+     *            JID of the content author
+     * @param page
+     *            Page number of results (>= 1)
+     * @param rpp
+     *            Results per page (>= 1)
+     * @return
+     * @throws NodeStoreException
+     */
+    @SuppressWarnings("rawtypes")
+    CloseableIterator<NodeItem> performSearch(JID searcher, List content,
+            JID author, int page, int rpp) throws NodeStoreException;
 
-	/**
-	 * Retrieves a list of items from public channels "firehose"
-	 * 
-	 * @param limit
-	 *            limit the number of results
-	 * @param afterItemId
-	 *            after item ID#
-	 * @param isAdmin
-	 *            show items from non-open nodes
-	 * @param actorDomain
-	 * 			  the domain of the actor
-	 * @return
-	 * @throws NodeStoreException
-	 */
-	CloseableIterator<NodeItem> getFirehose(int limit, String afterItemId,
-			boolean isAdmin, String actorDomain) throws NodeStoreException;
+    /**
+     * Retrieves a list of items from public channels "firehose"
+     * 
+     * @param limit
+     *            limit the number of results
+     * @param afterItemId
+     *            after item ID#
+     * @param isAdmin
+     *            show items from non-open nodes
+     * @param actorDomain
+     *               the domain of the actor
+     * @return
+     * @throws NodeStoreException
+     */
+    CloseableIterator<NodeItem> getFirehose(int limit, String afterItemId,
+            boolean isAdmin, String actorDomain) throws NodeStoreException;
 
-	/**
-	 * Get count of items from public channels "firehose"
-	 * 
-	 * @param isAdmin
-	 *            counts items from non-open nodes
-	 * @param actorDomain
-	 * 			  the domain of the actor
-	 * @throws NodeStoreException
-	 */
-	int getFirehoseItemCount(boolean isAdmin, String actorDomain) throws NodeStoreException;
+    /**
+     * Get count of items from public channels "firehose"
+     * 
+     * @param isAdmin
+     *            counts items from non-open nodes
+     * @param actorDomain
+     *               the domain of the actor
+     * @throws NodeStoreException
+     */
+    int getFirehoseItemCount(boolean isAdmin, String actorDomain) throws NodeStoreException;
 
     /**
      * Get a list of posts for a user

@@ -27,20 +27,20 @@ import org.xmpp.resultsetmanagement.ResultSet;
  */
 public class ChannelManagerImpl implements ChannelManager {
 
-	private final NodeStore nodeStore;
+    private final NodeStore nodeStore;
 
-	private static final Logger logger = Logger.getLogger(ChannelManagerImpl.class);
-	private static final String REMOTE_NODE = "Illegal remote node";
+    private static final Logger logger = Logger.getLogger(ChannelManagerImpl.class);
+    private static final String REMOTE_NODE = "Illegal remote node";
 
-	/**
-	 * Create an instance backed by a {@link NodeStore}.
-	 * 
-	 * @param nodeStore
-	 *            the backing {@link NodeStore}.
-	 */
-	public ChannelManagerImpl(final NodeStore nodeStore) {
-		this.nodeStore = nodeStore;
-	}
+    /**
+     * Create an instance backed by a {@link NodeStore}.
+     * 
+     * @param nodeStore
+     *            the backing {@link NodeStore}.
+     */
+    public ChannelManagerImpl(final NodeStore nodeStore) {
+        this.nodeStore = nodeStore;
+    }
 
     @Override
     public void createNode(JID owner, String nodeId, Map<String, String> nodeConf) throws NodeStoreException {
@@ -185,84 +185,84 @@ public class ChannelManagerImpl implements ChannelManager {
         nodeStore.deleteNodeItemById(nodeId, nodeItemId);
     }
     
-	@Override
-	public Transaction beginTransaction() throws NodeStoreException {
-		return nodeStore.beginTransaction();
-	}
+    @Override
+    public Transaction beginTransaction() throws NodeStoreException {
+        return nodeStore.beginTransaction();
+    }
 
-	@Override
-	public void createPersonalChannel(JID owner) throws NodeStoreException {
-		if (false == Configuration.getInstance().isLocalJID(owner)) {
-			throw new IllegalArgumentException(REMOTE_NODE);
-		}
-		if (!nodeExists(Conf.getPostChannelNodename(owner))) {
-			this.createNode(owner, Conf.getPostChannelNodename(owner),
-					Conf.getDefaultPostChannelConf(owner));
-		}
-		if (!nodeExists(Conf.getStatusChannelNodename(owner))) {
-			this.createNode(owner, Conf.getStatusChannelNodename(owner),
-					Conf.getDefaultStatusChannelConf(owner));
-		}
-		if (!nodeExists(Conf.getSubscriptionsChannelNodename(owner))) {
-			this.createNode(owner, Conf.getSubscriptionsChannelNodename(owner),
-					Conf.getDefaultSubscriptionsChannelConf(owner));
-		}
-		if (!nodeExists(Conf.getGeoPreviousChannelNodename(owner))) {
-			this.createNode(owner, Conf.getGeoPreviousChannelNodename(owner),
-					Conf.getDefaultGeoPreviousChannelConf(owner));
-		}
-		if (!nodeExists(Conf.getGeoCurrentChannelNodename(owner))) {
-			this.createNode(owner, Conf.getGeoCurrentChannelNodename(owner),
-					Conf.getDefaultGeoCurrentChannelConf(owner));
-		}
-		if (!nodeExists(Conf.getGeoNextChannelNodename(owner))) {
-			this.createNode(owner, Conf.getGeoNextChannelNodename(owner),
-					Conf.getDefaultGeoNextChannelConf(owner));
-		}
-	}
+    @Override
+    public void createPersonalChannel(JID owner) throws NodeStoreException {
+        if (false == Configuration.getInstance().isLocalJID(owner)) {
+            throw new IllegalArgumentException(REMOTE_NODE);
+        }
+        if (!nodeExists(Conf.getPostChannelNodename(owner))) {
+            this.createNode(owner, Conf.getPostChannelNodename(owner),
+                    Conf.getDefaultPostChannelConf(owner));
+        }
+        if (!nodeExists(Conf.getStatusChannelNodename(owner))) {
+            this.createNode(owner, Conf.getStatusChannelNodename(owner),
+                    Conf.getDefaultStatusChannelConf(owner));
+        }
+        if (!nodeExists(Conf.getSubscriptionsChannelNodename(owner))) {
+            this.createNode(owner, Conf.getSubscriptionsChannelNodename(owner),
+                    Conf.getDefaultSubscriptionsChannelConf(owner));
+        }
+        if (!nodeExists(Conf.getGeoPreviousChannelNodename(owner))) {
+            this.createNode(owner, Conf.getGeoPreviousChannelNodename(owner),
+                    Conf.getDefaultGeoPreviousChannelConf(owner));
+        }
+        if (!nodeExists(Conf.getGeoCurrentChannelNodename(owner))) {
+            this.createNode(owner, Conf.getGeoCurrentChannelNodename(owner),
+                    Conf.getDefaultGeoCurrentChannelConf(owner));
+        }
+        if (!nodeExists(Conf.getGeoNextChannelNodename(owner))) {
+            this.createNode(owner, Conf.getGeoNextChannelNodename(owner),
+                    Conf.getDefaultGeoNextChannelConf(owner));
+        }
+    }
 
-	@Override
-	public void close() throws NodeStoreException {
-		nodeStore.close();
-	}
-	
-	@Override
-	public void addRemoteNode(String node) throws NodeStoreException {
-		nodeStore.addRemoteNode(node);
-	}
+    @Override
+    public void close() throws NodeStoreException {
+        nodeStore.close();
+    }
+    
+    @Override
+    public void addRemoteNode(String node) throws NodeStoreException {
+        nodeStore.addRemoteNode(node);
+    }
 
-	@Override
-	public ResultSet<NodeSubscription> getNodeSubscriptionListeners(
-			String nodeId) throws NodeStoreException {
-		return nodeStore.getNodeSubscriptionListeners(nodeId);
-	}
+    @Override
+    public ResultSet<NodeSubscription> getNodeSubscriptionListeners(
+            String nodeId) throws NodeStoreException {
+        return nodeStore.getNodeSubscriptionListeners(nodeId);
+    }
 
-	@Override
-	public ResultSet<NodeSubscription> getNodeSubscriptionListeners()
-			throws NodeStoreException {
-		return nodeStore.getNodeSubscriptionListeners();
-	}
+    @Override
+    public ResultSet<NodeSubscription> getNodeSubscriptionListeners()
+            throws NodeStoreException {
+        return nodeStore.getNodeSubscriptionListeners();
+    }
 
-	@Override
-	public void deleteNode(String nodeId) throws NodeStoreException {
-		nodeStore.deleteNode(nodeId);
-	}
-	
-	@Override
-	public void deleteRemoteData() throws NodeStoreException {
-		List<String> nodes = this.getRemoteNodesList();
-		for (String node : nodes) {
-			try {
-				if (true == node.equals(("/firehose"))) {
-					continue;
-				}
-				nodeStore.purgeNodeItems(node);
-			} catch (IllegalArgumentException e) {
-				logger.error("Invalid remote node in datastore " + node, e);
-			}
-		}
-	}
-	
+    @Override
+    public void deleteNode(String nodeId) throws NodeStoreException {
+        nodeStore.deleteNode(nodeId);
+    }
+    
+    @Override
+    public void deleteRemoteData() throws NodeStoreException {
+        List<String> nodes = this.getRemoteNodesList();
+        for (String node : nodes) {
+            try {
+                if (true == node.equals(("/firehose"))) {
+                    continue;
+                }
+                nodeStore.purgeNodeItems(node);
+            } catch (IllegalArgumentException e) {
+                logger.error("Invalid remote node in datastore " + node, e);
+            }
+        }
+    }
+    
     @Override
     public void purgeNodeItems(String nodeId) throws NodeStoreException {
         nodeStore.purgeNodeItems(nodeId);
@@ -284,17 +284,17 @@ public class ChannelManagerImpl implements ChannelManager {
         return nodeStore.getCountRecentItems(user, since, maxPerNode, node, parentOnly);
     }
 
-	@Override
-	public CloseableIterator<NodeItem> getFirehose(int limit,
-			String afterItemId, boolean isAdmin, String actorDomain) throws NodeStoreException {
-		return nodeStore.getFirehose(limit, afterItemId, isAdmin, actorDomain);
-	}
+    @Override
+    public CloseableIterator<NodeItem> getFirehose(int limit,
+            String afterItemId, boolean isAdmin, String actorDomain) throws NodeStoreException {
+        return nodeStore.getFirehose(limit, afterItemId, isAdmin, actorDomain);
+    }
     
-	@Override
-	public int getFirehoseItemCount(boolean isAdmin, String actorDomain) throws NodeStoreException {
-		return nodeStore.getFirehoseItemCount(isAdmin, actorDomain);
-	}
-	
+    @Override
+    public int getFirehoseItemCount(boolean isAdmin, String actorDomain) throws NodeStoreException {
+        return nodeStore.getFirehoseItemCount(isAdmin, actorDomain);
+    }
+    
     @Override
     public Affiliations getDefaultNodeAffiliation(String nodeId) throws NodeStoreException {
         String affiliationString = getNodeConfValue(nodeId, Conf.DEFAULT_AFFILIATION);
@@ -310,19 +310,19 @@ public class ChannelManagerImpl implements ChannelManager {
         return Affiliations.member;
     }
 
-	@SuppressWarnings("rawtypes")
-	@Override
-	public CloseableIterator<NodeItem> performSearch(JID searcher,
-			List content, JID author, int page, int rpp)
-			throws NodeStoreException {
-		return nodeStore.performSearch(searcher, content, author, page, rpp);
-	}
-	
-	@Override
-	public ResultSet<NodeItem> getUserPublishedItems(JID userJid)
-			throws NodeStoreException {
-		return nodeStore.getUserPublishedItems(userJid);
-	}
+    @SuppressWarnings("rawtypes")
+    @Override
+    public CloseableIterator<NodeItem> performSearch(JID searcher,
+            List content, JID author, int page, int rpp)
+            throws NodeStoreException {
+        return nodeStore.performSearch(searcher, content, author, page, rpp);
+    }
+    
+    @Override
+    public ResultSet<NodeItem> getUserPublishedItems(JID userJid)
+            throws NodeStoreException {
+        return nodeStore.getUserPublishedItems(userJid);
+    }
     
     @Override
     public void deleteUserItems(JID userJid) throws NodeStoreException {
@@ -339,11 +339,11 @@ public class ChannelManagerImpl implements ChannelManager {
         nodeStore.deleteUserSubscriptions(userJid);
     }
 
-	@Override
-	public ResultSet<NodeThread> getNodeThreads(String node, String afterId,
-			int limit) throws NodeStoreException {
-		return nodeStore.getNodeThreads(node, afterId, limit);
-	}
+    @Override
+    public ResultSet<NodeThread> getNodeThreads(String node, String afterId,
+            int limit) throws NodeStoreException {
+        return nodeStore.getNodeThreads(node, afterId, limit);
+    }
     
     @Override
     public int countNodeThreads(String node) throws NodeStoreException {
@@ -402,14 +402,14 @@ public class ChannelManagerImpl implements ChannelManager {
         return nodeStore.onlineJids(jid);
     }
 
-	@Override
-	public List<String> getLocalNodesList() throws NodeStoreException {
-		return nodeStore.getLocalNodesList();
-	}
+    @Override
+    public List<String> getLocalNodesList() throws NodeStoreException {
+        return nodeStore.getLocalNodesList();
+    }
 
-	@Override
-	public List<String> getRemoteNodesList() throws NodeStoreException {
-		return nodeStore.getRemoteNodesList();
-	}
+    @Override
+    public List<String> getRemoteNodesList() throws NodeStoreException {
+        return nodeStore.getRemoteNodesList();
+    }
 
 }

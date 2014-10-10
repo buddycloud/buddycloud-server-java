@@ -82,13 +82,13 @@ public class ItemsResult extends PubSubElementProcessorAbstract {
         String node = item.attributeValue("node");
 
         // If its a local JID and/or a local node, that's our turf!
-		if ((true == Configuration.getInstance().isLocalNode(node))
-				&& (true == Configuration.getInstance().isLocalJID(user))) {
-			return;
-		}
-		if (true == Configuration.getInstance().isLocalNode(node)) {
-			return;
-		}
+        if ((true == Configuration.getInstance().isLocalNode(node))
+                && (true == Configuration.getInstance().isLocalJID(user))) {
+            return;
+        }
+        if (true == Configuration.getInstance().isLocalNode(node)) {
+            return;
+        }
 
         JID listener = request.getFrom();
         Subscriptions sub = Subscriptions.createFromString(item.attributeValue("subscription"));

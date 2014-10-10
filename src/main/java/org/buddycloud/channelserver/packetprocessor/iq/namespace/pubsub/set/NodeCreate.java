@@ -24,38 +24,38 @@ public class NodeCreate extends PubSubElementProcessorAbstract {
     private static final String NODE_REG_EX = "^/user/[^@]+@[^/]+/[^/]+$";
     private static final String INVALID_NODE_CONFIGURATION = "Invalid node configuration";
 
-	public NodeCreate(BlockingQueue<Packet> outQueue,
-			ChannelManager channelManager) {
-		setChannelManager(channelManager);
-		setOutQueue(outQueue);
-	}
+    public NodeCreate(BlockingQueue<Packet> outQueue,
+            ChannelManager channelManager) {
+        setChannelManager(channelManager);
+        setOutQueue(outQueue);
+    }
 
-	public void process(Element elm, JID actorJID, IQ reqIQ, Element rsm)
-			throws Exception {
-		element = elm;
-		response = IQ.createResultIQ(reqIQ);
-		request = reqIQ;
-		actor = actorJID;
-		node = element.attributeValue("node");
-		if (null == actorJID) {
-			actor = request.getFrom();
-		}
-		if (false == validateNode()) {
-			outQueue.put(response);
-			return;
-		}
-		if (false == Configuration.getInstance().isLocalNode(node)) {
-			makeRemoteRequest();
-			return;
-		}
-		if ((true == doesNodeExist())
-				|| (false == actorIsRegistered())
-				|| (false == nodeHandledByThisServer())) {
-			outQueue.put(response);
-			return;
-		}
-		createNode();
-	}
+    public void process(Element elm, JID actorJID, IQ reqIQ, Element rsm)
+            throws Exception {
+        element = elm;
+        response = IQ.createResultIQ(reqIQ);
+        request = reqIQ;
+        actor = actorJID;
+        node = element.attributeValue("node");
+        if (null == actorJID) {
+            actor = request.getFrom();
+        }
+        if (false == validateNode()) {
+            outQueue.put(response);
+            return;
+        }
+        if (false == Configuration.getInstance().isLocalNode(node)) {
+            makeRemoteRequest();
+            return;
+        }
+        if ((true == doesNodeExist())
+                || (false == actorIsRegistered())
+                || (false == nodeHandledByThisServer())) {
+            outQueue.put(response);
+            return;
+        }
+        createNode();
+    }
 
     private void createNode() throws InterruptedException {
         try {

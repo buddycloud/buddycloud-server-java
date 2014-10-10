@@ -8,6 +8,7 @@ import junit.framework.Assert;
 
 import org.buddycloud.channelserver.Configuration;
 import org.buddycloud.channelserver.channel.ChannelManager;
+import org.buddycloud.channelserver.db.exception.NodeStoreException;
 import org.buddycloud.channelserver.packetHandler.iq.IQTestHandler;
 import org.buddycloud.channelserver.pubsub.affiliation.Affiliations;
 import org.buddycloud.channelserver.pubsub.model.NodeSubscription;
@@ -283,5 +284,31 @@ public class NodeDeleteTest extends IQTestHandler {
         Assert.assertNotNull(eventEl);
         Assert.assertEquals(node,
                 eventEl.element("delete").attributeValue("node"));
+    }
+    
+    @Test
+    public void databaseExceptionWhenGettingListenersSendsMinimalNotifications() throws Exception {
+        IQ request = readStanzaAsIq("/iq/pubsub/delete/request-with-node.stanza");
+        Element deleteEl = request.getChildElement().element("delete");
+
+        String node = deleteEl.attributeValue("node");
+        Mockito.when(channelManager.nodeExists(node)).thenReturn(true);
+
+        Mockito.doThrow(new NodeStoreException()).when(channelManager)
+            .getNodeSubscriptionListeners(Mockito.anyString());
+        
+        Mockito.when(channelManager.getNodeMembership(node, jid)).thenReturn(
+                new NodeMembershipImpl(node, jid, Subscriptions.subscribed,
+                        Affiliations.owner, null));
+
+        nodeDelete.process(deleteEl, jid, request, null);
+        IQ response = (IQ) queue.poll();
+
+        Assert.assertNull(response.getError());
+        Assert.assertEquals(request.getID(), response.getID());
+        Assert.assertEquals(Type.result, response.getType());
+
+        int adminCount = Configuration.getInstance().getAdminUsers().size();
+        Assert.assertEquals(adminCount, queue.size());
     }
 }

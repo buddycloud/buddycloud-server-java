@@ -4,6 +4,7 @@ import java.io.StringReader;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 
+import org.apache.log4j.Logger;
 import org.buddycloud.channelserver.Configuration;
 import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.channel.Conf;
@@ -14,6 +15,7 @@ import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.PubSubEl
 import org.buddycloud.channelserver.pubsub.accessmodel.AccessModels;
 import org.buddycloud.channelserver.pubsub.model.NodeItem;
 import org.buddycloud.channelserver.pubsub.model.NodeThread;
+import org.buddycloud.channelserver.utils.XMLConstants;
 import org.buddycloud.channelserver.utils.node.NodeAclRefuseReason;
 import org.buddycloud.channelserver.utils.node.NodeViewAcl;
 import org.buddycloud.channelserver.utils.node.item.payload.Buddycloud;
@@ -28,6 +30,8 @@ import org.xmpp.resultsetmanagement.ResultSet;
 
 public class NodeThreadsGet extends PubSubElementProcessorAbstract {
 
+    private static final Logger LOGGER = Logger.getLogger(NodeThreadsGet.class);
+
     private static final int MAX_THREADS_TO_RETURN = 15;
     private int max;
     private String afterId;
@@ -35,6 +39,8 @@ public class NodeThreadsGet extends PubSubElementProcessorAbstract {
     public NodeThreadsGet(BlockingQueue<Packet> outQueue, ChannelManager channelManager) {
         setChannelManager(channelManager);
         setOutQueue(outQueue);
+
+        acceptedElementName = XMLConstants.THREADS_ELEM;
     }
 
     @Override
@@ -50,8 +56,7 @@ public class NodeThreadsGet extends PubSubElementProcessorAbstract {
         }
 
         if (!Configuration.getInstance().isLocalJID(request.getFrom())) {
-            response.getElement().addAttribute("remote-server-discover",
-                    "false");
+            response.getElement().addAttribute(XMLConstants.REMOTE_SERVER_DISCOVER_ATTR, Boolean.FALSE.toString());
         }
 
         if (!isValidStanza()) {
@@ -59,10 +64,9 @@ public class NodeThreadsGet extends PubSubElementProcessorAbstract {
             return;
         }
 
-        if (!Configuration.getInstance().isLocalNode(node)
-                && !channelManager.isCachedNode(node)) {
-            logger.debug("Node " + node
-                    + " is remote and not cached, off to get some data");
+        if (!Configuration.getInstance().isLocalNode(node) && !channelManager.isCachedNode(node)) {
+            LOGGER.debug("Node " + node + " is remote and not cached, off to get some data");
+
             makeRemoteRequest();
             return;
         }
@@ -79,8 +83,8 @@ public class NodeThreadsGet extends PubSubElementProcessorAbstract {
     private void makeRemoteRequest() throws InterruptedException {
         String domain = new JID(node.split("/")[2]).getDomain();
         request.setTo(domain);
-        if (null == request.getElement().element("pubsub").element("actor")) {
-            Element actor = request.getElement().element("pubsub").addElement("actor", Buddycloud.NS);
+        if (null == request.getElement().element(XMLConstants.PUBSUB_ELEM).element(XMLConstants.ACTOR_ELEM)) {
+            Element actor = request.getElement().element(XMLConstants.PUBSUB_ELEM).addElement(XMLConstants.ACTOR_ELEM, Buddycloud.NS);
             actor.addText(request.getFrom().toBareJID());
         }
         outQueue.put(request);
@@ -90,8 +94,8 @@ public class NodeThreadsGet extends PubSubElementProcessorAbstract {
         if (firstItem == null) {
             return;
         }
-        Element pubsubEl = response.getElement().element("pubsub");
-        Element rsm = pubsubEl.addElement("set", NS_RSM);
+        Element pubsubEl = response.getElement().element(XMLConstants.PUBSUB_ELEM);
+        Element rsm = pubsubEl.addElement(XMLConstants.SET_ELEM, NS_RSM);
         rsm.addElement("first", NS_RSM).setText(firstItem);
         rsm.addElement("last", NS_RSM).setText(lastItem);
 
@@ -101,18 +105,18 @@ public class NodeThreadsGet extends PubSubElementProcessorAbstract {
 
     private void getNodeThreads() throws NodeStoreException, DocumentException {
         ResultSet<NodeThread> nodeThreads = channelManager.getNodeThreads(node, afterId, max);
-        Element pubsubEl = response.getElement().addElement("pubsub", JabberPubsub.NAMESPACE_URI);
+        Element pubsubEl = response.getElement().addElement(XMLConstants.PUBSUB_ELEM, JabberPubsub.NAMESPACE_URI);
         SAXReader xmlReader = new SAXReader();
         for (NodeThread nodeThread : nodeThreads) {
-            Element threadEl = pubsubEl.addElement("thread");
-            threadEl.addAttribute("node", node);
-            threadEl.addAttribute("id", nodeThread.getId());
-            threadEl.addAttribute("updated", Conf.formatDate(nodeThread.getUpdated()));
+            Element threadEl = pubsubEl.addElement(XMLConstants.THREAD_ELEM);
+            threadEl.addAttribute(XMLConstants.NODE_ATTR, node);
+            threadEl.addAttribute(XMLConstants.ID_ATTR, nodeThread.getId());
+            threadEl.addAttribute(XMLConstants.UPDATED_ATTR, Conf.formatDate(nodeThread.getUpdated()));
             ResultSet<NodeItem> items = nodeThread.getItems();
             for (NodeItem item : items) {
                 Element entry = xmlReader.read(new StringReader(item.getPayload())).getRootElement();
-                Element itemElement = threadEl.addElement("item");
-                itemElement.addAttribute("id", item.getId());
+                Element itemElement = threadEl.addElement(XMLConstants.ITEM_ELEM);
+                itemElement.addAttribute(XMLConstants.ID_ATTR, item.getId());
                 itemElement.add(entry);
             }
         }
@@ -124,14 +128,14 @@ public class NodeThreadsGet extends PubSubElementProcessorAbstract {
 
     private boolean isValidStanza() throws NodeStoreException {
         try {
-            this.node = request.getChildElement().element("threads").attributeValue("node");
+            this.node = request.getChildElement().element(XMLConstants.THREADS_ELEM).attributeValue(XMLConstants.NODE_ATTR);
             if (node != null) {
                 return true;
             }
         } catch (NullPointerException e) {
-            logger.error(e);
+            LOGGER.error(e);
         }
-        createExtendedErrorReply(PacketError.Type.modify, PacketError.Condition.bad_request, "nodeid-required");
+        createExtendedErrorReply(PacketError.Type.modify, PacketError.Condition.bad_request, XMLConstants.NODE_ID_REQUIRED);
         return false;
     }
 
@@ -154,10 +158,8 @@ public class NodeThreadsGet extends PubSubElementProcessorAbstract {
         NodeViewAcl nodeViewAcl = new NodeViewAcl();
         Map<String, String> nodeConfiguration = channelManager.getNodeConf(node);
 
-        if (nodeViewAcl.canViewNode(node,
-                channelManager.getNodeMembership(node, actor),
-                getNodeAccessModel(nodeConfiguration),
-                Configuration.getInstance().isLocalJID(actor))) {
+        if (nodeViewAcl.canViewNode(node, channelManager.getNodeMembership(node, actor), getNodeAccessModel(nodeConfiguration), Configuration
+                .getInstance().isLocalJID(actor))) {
             return true;
         }
 
@@ -185,8 +187,4 @@ public class NodeThreadsGet extends PubSubElementProcessorAbstract {
         return true;
     }
 
-    @Override
-    public boolean accept(Element elm) {
-        return elm.getName().equals("threads");
-    }
 }

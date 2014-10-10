@@ -26,8 +26,11 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.build.withDependencies>jar-with-dependencies</project.build.withDependencies>
-        <maven.checkstyle.plugin.version>2.13</maven.checkstyle.plugin.version>
+        <findbugs.version>2.5.5</findbugs.version>
+        <checkstyle.version>2.13</checkstyle.version>
         <checkstyle.config.location>src/main/resources/checkstyle.xml</checkstyle.config.location>
+        <cobertura.version>2.6</cobertura.version>
+        <surefire.reportplugin.version>2.5</surefire.reportplugin.version>
     </properties>
 
     <dependencies>
@@ -168,144 +171,184 @@
         </repository>
     </repositories>
     <build>
-        <pluginManagement>
-            <plugins>
-                <plugin>
-                    <!-- Extended Maven antrun plugin -->
-                    <!-- https://maven-antrun-extended-plugin.dev.java.net/ -->
-                    <groupId>org.jvnet.maven-antrun-extended-plugin</groupId>
-                    <artifactId>maven-antrun-extended-plugin</artifactId>
-                    <executions>
-                        <execution>
-                            <id>test-reports</id>
-                            <phase>test</phase>
-                            <configuration>
-                                <tasks unless="maven.test.skip">
-                                    <junitreport todir="target/surefire-reports">
-                                        <fileset dir="target/surefire-reports">
-                                            <include name="**/*.xml" />
-                                        </fileset>
-                                        <report format="noframes" todir="target/surefire-reports" />
-                                    </junitreport>
-                                </tasks>
-                            </configuration>
-                            <goals>
-                                <goal>run</goal>
-                            </goals>
-                        </execution>
-                    </executions>
-                    <dependencies>
-                        <dependency>
-                            <groupId>org.apache.ant</groupId>
-                            <artifactId>ant-junit</artifactId>
-                            <version>1.8.0</version>
-                        </dependency>
-                        <dependency>
-                            <groupId>org.apache.ant</groupId>
-                            <artifactId>ant-trax</artifactId>
-                            <version>1.8.0</version>
-                        </dependency>
-                    </dependencies>
-                </plugin>
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-surefire-plugin</artifactId>
-                    <version>2.5</version>
-                    <configuration>
-                        <argLine>-Duser.timezone=UTC -XX:MaxPermSize=1024m -Xmx1024m</argLine>
-                        <skipTests>false</skipTests>
-                        <testFailureIgnore>true</testFailureIgnore>
-                        <forkMode>once</forkMode>
-                        <includes>
-                            <include>**/*Test.java</include>
-                        </includes>
-                        <useFile>false</useFile>
-                    </configuration>
-                </plugin>
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-compiler-plugin</artifactId>
-                    <version>2.5.1</version>
-                    <configuration>
-                        <source>1.6</source>
-                        <target>1.6</target>
-                    </configuration>
-                </plugin>
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-shade-plugin</artifactId>
-                    <version>2.3</version>
-                    <configuration>
-                        <outputFile>${project.build.directory}/${project.build.finalName}-${project.build.withDependencies}.jar</outputFile>
-                        <transformers>
-                            <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-                                <mainClass>org.buddycloud.channelserver.Main</mainClass>
-                            </transformer>
-                        </transformers>
-                    </configuration>
-                    <executions>
-                        <execution>
-                            <phase>package</phase>
-                            <goals>
-                                <goal>shade</goal>
-                            </goals>
-                        </execution>
-                    </executions>
-                </plugin>
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-checkstyle-plugin</artifactId>
-                    <configuration>
-                        <failOnViolation>true</failOnViolation>
-                        <failsOnError>true</failsOnError>
-                        <encoding>UTF-8</encoding>
-                        <consoleOutput>false</consoleOutput>
-                        <linkXRef>false</linkXRef>
-                        <includes>**\/*.java</includes>
-                        <includeResources>false</includeResources>
-                    </configuration>
-                    <version>${maven.checkstyle.plugin.version}</version>
-                    <executions>
-                        <execution>
-                            <id>validate</id>
-                            <phase>validate</phase>
-                            <goals>
-                                <goal>check</goal>
-                            </goals>
-                        </execution>
-                    </executions>
-                </plugin>
-                <plugin>
-                    <groupId>org.codehaus.mojo</groupId>
-                    <artifactId>cobertura-maven-plugin</artifactId>
-                    <version>2.6</version>
-                </plugin>
-                <plugin>
-                    <groupId>org.eluder.coveralls</groupId>
-                    <artifactId>coveralls-maven-plugin</artifactId>
-                    <version>2.2.0</version>
-                    <configuration>
-                        <format>xml</format>
-                        <maxmem>256m</maxmem>
-                        <aggregate>true</aggregate>
-                        <sourceEncoding>UTF-8</sourceEncoding>
-                        <serviceName>travis-ci</serviceName>
-                    </configuration>
-                </plugin>
-            </plugins>
-        </pluginManagement>
+        <plugins>
+            <plugin>
+                <!-- Extended Maven antrun plugin -->
+                <!-- https://maven-antrun-extended-plugin.dev.java.net/ -->
+                <groupId>org.jvnet.maven-antrun-extended-plugin</groupId>
+                <artifactId>maven-antrun-extended-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>test-reports</id>
+                        <phase>test</phase>
+                        <configuration>
+                            <tasks unless="maven.test.skip">
+                                <junitreport todir="target/surefire-reports">
+                                    <fileset dir="target/surefire-reports">
+                                        <include name="**/*.xml" />
+                                    </fileset>
+                                    <report format="noframes" todir="target/surefire-reports" />
+                                </junitreport>
+                            </tasks>
+                        </configuration>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <dependencies>
+                    <dependency>
+                        <groupId>org.apache.ant</groupId>
+                        <artifactId>ant-junit</artifactId>
+                        <version>1.8.0</version>
+                    </dependency>
+                    <dependency>
+                        <groupId>org.apache.ant</groupId>
+                        <artifactId>ant-trax</artifactId>
+                        <version>1.8.0</version>
+                    </dependency>
+                </dependencies>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>${surefire.reportplugin.version}</version>
+                <configuration>
+                    <argLine>-Duser.timezone=UTC -XX:MaxPermSize=1024m -Xmx1024m</argLine>
+                    <skipTests>false</skipTests>
+                    <testFailureIgnore>true</testFailureIgnore>
+                    <forkMode>once</forkMode>
+                    <includes>
+                        <include>**/*Test.java</include>
+                    </includes>
+                    <useFile>false</useFile>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>2.5.1</version>
+                <configuration>
+                    <source>1.6</source>
+                    <target>1.6</target>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-shade-plugin</artifactId>
+                <version>2.3</version>
+                <configuration>
+                    <outputFile>${project.build.directory}/${project.build.finalName}-${project.build.withDependencies}.jar</outputFile>
+                    <transformers>
+                        <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                            <mainClass>org.buddycloud.channelserver.Main</mainClass>
+                        </transformer>
+                    </transformers>
+                </configuration>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>shade</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-checkstyle-plugin</artifactId>
+                <version>${checkstyle.version}</version>
+                <configuration>
+                    <!-- Set the property samedir so that the suppression file can be resolved by both maven and eclipse-cs -->
+                    <propertyExpansion>samedir=${basedir}/src/main/resources</propertyExpansion>
+                    <failOnViolation>true</failOnViolation>
+                    <failOnError>true</failOnError>
+                    <encoding>UTF-8</encoding>
+                    <consoleOutput>false</consoleOutput>
+                    <linkXRef>false</linkXRef>
+                    <includes>**\/*.java</includes>
+                    <includeResources>false</includeResources>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>validate</id>
+                        <phase>validate</phase>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>cobertura-maven-plugin</artifactId>
+                <version>2.6</version>
+            </plugin>
+            <plugin>
+                <groupId>org.eluder.coveralls</groupId>
+                <artifactId>coveralls-maven-plugin</artifactId>
+                <version>2.2.0</version>
+                <configuration>
+                    <format>xml</format>
+                    <maxmem>256m</maxmem>
+                    <aggregate>true</aggregate>
+                    <sourceEncoding>UTF-8</sourceEncoding>
+                    <serviceName>travis-ci</serviceName>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>findbugs-maven-plugin</artifactId>
+                <version>2.5.5</version>
+                <configuration>
+                    <effort>Max</effort>
+                    <xmlOutput>true</xmlOutput>
+                    <failOnError>false</failOnError>
+                </configuration>
+                <executions>
+                    <execution>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
     </build>
 
     <reporting>
         <plugins>
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
+                <artifactId>findbugs-maven-plugin</artifactId>
+                <version>${findbugs.version}</version>
+                <configuration>
+                    <effort>Max</effort>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-checkstyle-plugin</artifactId>
+                <version>${checkstyle.version}</version>
+                <configuration>
+                    <!-- Set the property samedir so that the suppression file can be resolved by both maven and eclipse-cs -->
+                    <propertyExpansion>samedir=${basedir}/src/main/resources</propertyExpansion>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-report-plugin</artifactId>
+                <version>${surefire.reportplugin.version}</version>
+            </plugin>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
                 <artifactId>cobertura-maven-plugin</artifactId>
-                <version>2.6</version>
+                <version>${cobertura.version}</version>
                 <configuration>
                     <formats>
-                        <format>html</format>
                         <format>xml</format>
+                        <format>html</format>
                     </formats>
                 </configuration>
             </plugin>

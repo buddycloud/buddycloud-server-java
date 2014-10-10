@@ -9,7 +9,6 @@ import org.xmpp.packet.JID;
 public class NodeSubscriptionMock implements NodeSubscription {
     private JID subscriber;
     private Subscriptions subscription;
-    private JID invitedBy;
 
     public void setBareJID(JID jid) {
         this.subscriber = jid;
@@ -59,6 +58,6 @@ public class NodeSubscriptionMock implements NodeSubscription {
 
     @Override
     public JID getInvitedBy() {
-        return invitedBy;
+        return null;
     }
 }

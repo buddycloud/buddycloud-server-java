@@ -21,8 +21,7 @@ import org.xmpp.packet.PacketError;
 
 public class PubSubResult implements PacketProcessor<IQ> {
 
-    public static final String ELEMENT_NAME = "pubsub";
-    private Logger logger = Logger.getLogger(PubSubResult.class);
+    private Logger LOGGER = Logger.getLogger(PubSubResult.class);
     private final BlockingQueue<Packet> outQueue;
 
     private FederatedQueueManager federatedQueueManager;
@@ -66,14 +65,13 @@ public class PubSubResult implements PacketProcessor<IQ> {
                     }
                 }
             }
-            if (true == handled) {
+            if (handled) {
                 return;
             }
         } catch (UnknownFederatedPacketException e) {
-            logger.error(e);
-            e.printStackTrace();
+            LOGGER.error(e);
         }
-        if (false == reqIQ.getType().toString().equals("result")) {
+        if (IQ.Type.result != reqIQ.getType()) {
             sendUnexpectedRequestResponse(reqIQ);
         }
     }

@@ -10,7 +10,7 @@ import org.buddycloud.channelserver.channel.node.configuration.field.AccessModel
 import org.buddycloud.channelserver.db.exception.NodeStoreException;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.JabberPubsub;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.PubSubElementProcessorAbstract;
-import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.PubSubGet;
+import org.buddycloud.channelserver.utils.XMLConstants;
 import org.buddycloud.channelserver.utils.node.item.payload.Buddycloud;
 import org.dom4j.Element;
 import org.dom4j.Namespace;
@@ -23,7 +23,6 @@ import org.xmpp.packet.Packet;
 import org.xmpp.packet.PacketError;
 
 public class NodeConfigureGet extends PubSubElementProcessorAbstract {
-    protected String node;
 
     public static final String NS_CONFIGURE = "http://jabber.org/protocol/pubsub#node_config";
 
@@ -32,14 +31,16 @@ public class NodeConfigureGet extends PubSubElementProcessorAbstract {
     public NodeConfigureGet(BlockingQueue<Packet> outQueue, ChannelManager channelManager) {
         setChannelManager(channelManager);
         setOutQueue(outQueue);
+
+        acceptedElementName = XMLConstants.CONFIGURE_ELEM;
     }
 
     public void process(Element elm, JID actorJID, IQ reqIQ, Element rsm) throws Exception {
-        element = elm;
+
         response = IQ.createResultIQ(reqIQ);
         request = reqIQ;
         actor = actorJID;
-        node = element.attributeValue("node");
+        node = elm.attributeValue(XMLConstants.NODE_ATTR);
 
         if (null == actor) {
             actor = request.getFrom();
@@ -82,18 +83,17 @@ public class NodeConfigureGet extends PubSubElementProcessorAbstract {
         String value;
 
         for (String key : nodeConf.keySet()) {
-            // If access model is 'local' and its not a local user return
-            // 'authorize'
+            // If access model is 'local' and its not a local user return 'authorize'
             value = nodeConf.get(key);
-            if ((true == key.equals(AccessModel.FIELD_NAME))
-                    && (value.equals(AccessModel.local.toString()))
-                    && (false == Configuration.getInstance().isLocalJID(actor))) {
+            if ((key.equals(AccessModel.FIELD_NAME)) && (value.equals(AccessModel.local.toString())) && (!Configuration.getInstance().isLocalJID(actor))) {
+
                 value = AccessModel.authorize.toString();
             }
             x.addField(key, null, null).addValue(value);
         }
-        Element pubsub = response.setChildElement(PubSubGet.ELEMENT_NAME,
-                JabberPubsub.NS_PUBSUB_OWNER);
+
+        Element pubsub = response.setChildElement(XMLConstants.PUBSUB_ELEM, JabberPubsub.NS_PUBSUB_OWNER);
+
         Element configure = pubsub.addElement("configure");
         configure.addAttribute("node", node);
         configure.add(x.getElement());
@@ -109,7 +109,7 @@ public class NodeConfigureGet extends PubSubElementProcessorAbstract {
     }
 
     private boolean nodeProvided() {
-        if ((null != node) && !node.equals("")) {
+        if ((null != node) && !"".equals(node)) {
             return true;
         }
         response.setType(IQ.Type.error);
@@ -125,12 +125,8 @@ public class NodeConfigureGet extends PubSubElementProcessorAbstract {
 
     private void makeRemoteRequest() throws InterruptedException {
         request.setTo(new JID(node.split("/")[2]).getDomain());
-        Element actor = request.getElement().element("pubsub").addElement("actor", Buddycloud.NS);
+        Element actor = request.getElement().element(XMLConstants.PUBSUB_ELEM).addElement(XMLConstants.ACTOR_ELEM, Buddycloud.NS);
         actor.addText(request.getFrom().toBareJID());
         outQueue.put(request);
-    }
-
-    public boolean accept(Element elm) {
-        return elm.getName().equals("configure");
     }
 }

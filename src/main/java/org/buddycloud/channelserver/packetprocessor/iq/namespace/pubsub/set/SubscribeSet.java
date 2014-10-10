@@ -13,7 +13,6 @@ import org.buddycloud.channelserver.channel.Conf;
 import org.buddycloud.channelserver.db.exception.NodeStoreException;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.JabberPubsub;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.PubSubElementProcessorAbstract;
-import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.PubSubSet;
 import org.buddycloud.channelserver.pubsub.accessmodel.AccessModels;
 import org.buddycloud.channelserver.pubsub.affiliation.Affiliations;
 import org.buddycloud.channelserver.pubsub.event.Event;
@@ -21,6 +20,7 @@ import org.buddycloud.channelserver.pubsub.model.NodeMembership;
 import org.buddycloud.channelserver.pubsub.model.NodeSubscription;
 import org.buddycloud.channelserver.pubsub.model.impl.NodeSubscriptionImpl;
 import org.buddycloud.channelserver.pubsub.subscription.Subscriptions;
+import org.buddycloud.channelserver.utils.XMLConstants;
 import org.buddycloud.channelserver.utils.node.item.payload.Buddycloud;
 import org.dom4j.Document;
 import org.dom4j.Element;
@@ -164,7 +164,7 @@ public class SubscribeSet extends PubSubElementProcessorAbstract {
             }
 
             IQ reply = IQ.createResultIQ(request);
-            Element pubsub = reply.setChildElement(PubSubSet.ELEMENT_NAME, JabberPubsub.NAMESPACE_URI);
+            Element pubsub = reply.setChildElement(XMLConstants.PUBSUB_ELEM, JabberPubsub.NAMESPACE_URI);
             pubsub.addElement("subscription").addAttribute("node", node).addAttribute("jid", subscribingJid.toBareJID())
                     .addAttribute("subscription", defaultSubscription.toString());
             pubsub.addElement("affiliation").addAttribute("node", node).addAttribute("jid", subscribingJid.toBareJID())

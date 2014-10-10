@@ -16,7 +16,7 @@ public class XmppComponent {
 
     public XmppComponent(Configuration configuration, String domain) throws ProxoolException {
         hostname = configuration.getXmppHost();
-        socket = Integer.valueOf(configuration.getComponentPort());
+        socket = Integer.parseInt(configuration.getComponentPort());
         this.domain = domain;
         password = configuration.getProperty("xmpp.secretkey");
         channelsEngine = new ChannelsEngine(configuration);

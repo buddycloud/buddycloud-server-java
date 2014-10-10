@@ -34,11 +34,11 @@ public class SearchSet implements PacketProcessor<IQ> {
     private int rpp = 25;
     private JID author;
     private JID searcher;
-    
-    public static Logger logger = Logger.getLogger(SearchSet.class);
 
-    public SearchSet(BlockingQueue<Packet> outQueue,
-            ChannelManager channelManager) {
+    public static final Logger LOGGER = Logger.getLogger(SearchSet.class);
+
+
+    public SearchSet(BlockingQueue<Packet> outQueue, ChannelManager channelManager) {
         this.channelManager = channelManager;
         this.outQueue = outQueue;
     }
@@ -60,8 +60,7 @@ public class SearchSet implements PacketProcessor<IQ> {
         try {
             runSearch();
         } catch (NodeStoreException e) {
-            sendErrorResponse(PacketError.Type.wait,
-                    PacketError.Condition.internal_server_error);
+            sendErrorResponse(PacketError.Type.wait, PacketError.Condition.internal_server_error);
             return;
         }
 
@@ -71,8 +70,7 @@ public class SearchSet implements PacketProcessor<IQ> {
     private boolean isValidRequest() throws Exception {
 
         if (false == Configuration.getInstance().isLocalJID(searcher)) {
-            sendErrorResponse(PacketError.Type.cancel,
-                    PacketError.Condition.not_allowed);
+            sendErrorResponse(PacketError.Type.cancel, PacketError.Condition.not_allowed);
             return false;
         }
 
@@ -86,10 +84,8 @@ public class SearchSet implements PacketProcessor<IQ> {
     private boolean hasDataForm() throws Exception {
         x = requestIq.getElement().element("query").element("x");
 
-        if (null == x || !DataForm.NAMESPACE.equals(x.getNamespaceURI())
-                || !"submit".equals(x.attributeValue("type"))) {
-            sendErrorResponse(PacketError.Type.modify,
-                    PacketError.Condition.bad_request);
+        if (null == x || !DataForm.NAMESPACE.equals(x.getNamespaceURI()) || !"submit".equals(x.attributeValue("type"))) {
+            sendErrorResponse(PacketError.Type.modify, PacketError.Condition.bad_request);
             return false;
         }
 
@@ -98,8 +94,7 @@ public class SearchSet implements PacketProcessor<IQ> {
 
     private boolean dataFormCorrect() throws Exception {
         if (!hasCorrectFormElement() || !hasEnoughFormFields()) {
-            sendErrorResponse(PacketError.Type.modify,
-                    PacketError.Condition.bad_request);
+            sendErrorResponse(PacketError.Type.modify, PacketError.Condition.bad_request);
             return false;
         }
 
@@ -163,8 +158,7 @@ public class SearchSet implements PacketProcessor<IQ> {
     }
 
     private void runSearch() throws NodeStoreException {
-        CloseableIterator<NodeItem> results = channelManager.performSearch(
-                searcher, content, author, page, rpp);
+        CloseableIterator<NodeItem> results = channelManager.performSearch(searcher, content, author, page, rpp);
 
         Element query = responseIq.getElement().addElement("query");
         query.addAttribute("xmlns", Search.NAMESPACE_URI);
@@ -184,22 +178,17 @@ public class SearchSet implements PacketProcessor<IQ> {
             nodeItem = results.next();
 
             try {
-                entry = xmlReader.read(new StringReader(nodeItem.getPayload()))
-                        .getRootElement();
+                entry = xmlReader.read(new StringReader(nodeItem.getPayload())).getRootElement();
 
                 Element item = x.addElement("item");
 
-                item.addElement("field").addAttribute("var", "node")
-                        .addElement("value").setText(nodeItem.getNodeId());
+                item.addElement("field").addAttribute("var", "node").addElement("value").setText(nodeItem.getNodeId());
 
-                item.addElement("field").addAttribute("var", "id")
-                        .addElement("value").setText(nodeItem.getId());
+                item.addElement("field").addAttribute("var", "id").addElement("value").setText(nodeItem.getId());
 
-                item.addElement("field").addAttribute("var", "entry")
-                        .addElement("value").add(entry);
+                item.addElement("field").addAttribute("var", "entry").addElement("value").add(entry);
             } catch (DocumentException e) {
-                logger.error("Error parsing a node entry, ignoring. "
-                 + nodeItem);
+                LOGGER.error("Error parsing a node entry, ignoring. " + nodeItem);
             }
 
             resultCounter++;
@@ -212,24 +201,17 @@ public class SearchSet implements PacketProcessor<IQ> {
     }
 
     private void addFormField(Element x) {
-        x.addElement("field").addAttribute("type", "hidden")
-                .addAttribute("var", "FORM_TYPE").addElement("value")
-                .setText(Search.NAMESPACE_URI);
+        x.addElement("field").addAttribute("type", "hidden").addAttribute("var", "FORM_TYPE").addElement("value").setText(Search.NAMESPACE_URI);
     }
 
     private void addReportedFields(Element x) {
         Element reported = x.addElement("reported");
 
-        reported.addElement("field").addAttribute("var", "node")
-                .addAttribute("label", "Node")
-                .addAttribute("type", "text-single");
+        reported.addElement("field").addAttribute("var", "node").addAttribute("label", "Node").addAttribute("type", "text-single");
 
-        reported.addElement("field").addAttribute("var", "id")
-                .addAttribute("label", "Item ID")
-                .addAttribute("type", "text-single");
+        reported.addElement("field").addAttribute("var", "id").addAttribute("label", "Item ID").addAttribute("type", "text-single");
 
-        reported.addElement("field").addAttribute("var", "entry")
-                .addAttribute("label", "Item").addAttribute("type", "xml");
+        reported.addElement("field").addAttribute("var", "entry").addAttribute("label", "Item").addAttribute("type", "xml");
     }
 
     private void extractFieldValues() {
@@ -253,13 +235,11 @@ public class SearchSet implements PacketProcessor<IQ> {
     }
 
     private boolean checkFieldValues() throws Exception {
-        if (((null != content && content.size() > 0) || (null != author && author
-                .toBareJID().length() > 0)) && (page > 0 && rpp > 0)) {
+        if (((null != content && content.size() > 0) || (null != author && author.toBareJID().length() > 0)) && (page > 0 && rpp > 0)) {
             return true;
         }
 
-        sendErrorResponse(PacketError.Type.modify,
-                PacketError.Condition.bad_request);
+        sendErrorResponse(PacketError.Type.modify, PacketError.Condition.bad_request);
         return false;
 
     }
@@ -277,14 +257,12 @@ public class SearchSet implements PacketProcessor<IQ> {
         return rtn;
     }
 
-    private Integer getValueAsNumber(Element field)
-            throws NumberFormatException {
+    private Integer getValueAsNumber(Element field) throws NumberFormatException {
         String valueStr = field.elementText("value");
         return Integer.parseInt(valueStr);
     }
 
-    private void sendErrorResponse(PacketError.Type type,
-            PacketError.Condition condition) throws InterruptedException {
+    private void sendErrorResponse(PacketError.Type type, PacketError.Condition condition) throws InterruptedException {
         responseIq.setType(IQ.Type.error);
         PacketError error = new PacketError(condition, type);
         responseIq.setError(error);

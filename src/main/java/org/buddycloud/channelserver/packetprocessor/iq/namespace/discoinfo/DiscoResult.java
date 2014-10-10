@@ -23,11 +23,12 @@ public class DiscoResult implements PacketProcessor<IQ> {
 
     private FederatedQueueManager federatedQueueManager;
     private ChannelManager channelManager;
-    private Helper helper = new Helper(channelManager);
+    private Helper helper;
 
     public DiscoResult(ChannelManager channelManager, FederatedQueueManager federatedQueueManager) {
         this.channelManager = channelManager;
         this.federatedQueueManager = federatedQueueManager;
+        this.helper = new Helper(channelManager);
     }
 
     public void process(IQ reqIQ) throws Exception {

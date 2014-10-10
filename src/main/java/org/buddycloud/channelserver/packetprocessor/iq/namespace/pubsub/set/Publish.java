@@ -13,12 +13,12 @@ import org.buddycloud.channelserver.channel.validate.UnknownContentTypeException
 import org.buddycloud.channelserver.db.exception.NodeStoreException;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.JabberPubsub;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.PubSubElementProcessorAbstract;
-import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.PubSubSet;
 import org.buddycloud.channelserver.pubsub.affiliation.Affiliations;
 import org.buddycloud.channelserver.pubsub.model.NodeMembership;
 import org.buddycloud.channelserver.pubsub.model.NodeSubscription;
 import org.buddycloud.channelserver.pubsub.model.impl.NodeItemImpl;
 import org.buddycloud.channelserver.pubsub.subscription.Subscriptions;
+import org.buddycloud.channelserver.utils.XMLConstants;
 import org.buddycloud.channelserver.utils.node.item.payload.Buddycloud;
 import org.dom4j.Element;
 import org.dom4j.dom.DOMElement;
@@ -34,9 +34,6 @@ public class Publish extends PubSubElementProcessorAbstract {
 
     private static final Logger LOGGER = Logger.getLogger(Publish.class);
 
-    public static final String MISSING_ITEM_ELEMENT = "item-required";
-    public static final String NODE_ID_REQUIRED = "nodeid-required";
-
     private Element entry;
     private JID publishersJID;
     private Element item;
@@ -47,6 +44,8 @@ public class Publish extends PubSubElementProcessorAbstract {
     public Publish(BlockingQueue<Packet> outQueue, ChannelManager channelManager) {
         this.outQueue = outQueue;
         this.channelManager = channelManager;
+
+        acceptedElementName = XMLConstants.PUBLISH_ELEM;
     }
 
     @Override
@@ -56,9 +55,9 @@ public class Publish extends PubSubElementProcessorAbstract {
         response = IQ.createResultIQ(reqIQ);
         publishersJID = request.getFrom();
 
-        node = request.getChildElement().element("publish").attributeValue("node");
+        node = request.getChildElement().element(XMLConstants.PUBLISH_ELEM).attributeValue(XMLConstants.NODE_ATTR);
 
-        if (false == checkNode()) {
+        if (!checkNode()) {
             return;
         }
 
@@ -91,13 +90,13 @@ public class Publish extends PubSubElementProcessorAbstract {
         }
 
         try {
-            if (false == nodeExists()) {
+            if (!nodeExists()) {
                 return;
             }
-            if (false == userCanPost()) {
+            if (!userCanPost()) {
                 return;
             }
-            if (false == isRequestValid()) {
+            if (!isRequestValid()) {
                 return;
             }
             saveNodeItem();
@@ -110,6 +109,7 @@ public class Publish extends PubSubElementProcessorAbstract {
             setErrorCondition(PacketError.Type.wait, PacketError.Condition.internal_server_error);
             outQueue.put(response);
         } catch (UnknownContentTypeException e) {
+            LOGGER.error(e);
             createExtendedErrorReply(PacketError.Type.modify, PacketError.Condition.not_acceptable, ValidatePayload.UNSUPPORTED_CONTENT_TYPE);
         }
 
@@ -148,7 +148,7 @@ public class Publish extends PubSubElementProcessorAbstract {
     private boolean isRequestValid() throws Exception {
         item = request.getChildElement().element("publish").element("item");
         if (null == item) {
-            createExtendedErrorReply(PacketError.Type.modify, PacketError.Condition.bad_request, MISSING_ITEM_ELEMENT);
+            createExtendedErrorReply(PacketError.Type.modify, PacketError.Condition.bad_request, XMLConstants.ITEM_REQUIRED_ELEM);
             outQueue.put(response);
             return false;
         }
@@ -171,8 +171,8 @@ public class Publish extends PubSubElementProcessorAbstract {
 
         NodeMembership membership = channelManager.getNodeMembership(node, publishersJID);
 
-        if ((false == membership.getSubscription().equals(Subscriptions.subscribed))
-                || (false == membership.getAffiliation().in(Affiliations.moderator, Affiliations.owner, Affiliations.publisher))) {
+        if ((!membership.getSubscription().equals(Subscriptions.subscribed))
+                || (!membership.getAffiliation().in(Affiliations.moderator, Affiliations.owner, Affiliations.publisher))) {
             response.setType(Type.error);
             PacketError error = new PacketError(PacketError.Condition.forbidden, PacketError.Type.auth);
             response.setError(error);
@@ -187,13 +187,13 @@ public class Publish extends PubSubElementProcessorAbstract {
          * Success, let's response as defined in
          * http://xmpp.org/extensions/xep-0060.html#publisher-publish - 7.1.2 Success Case
          */
-        Element pubsub = new DOMElement(PubSubSet.ELEMENT_NAME, new org.dom4j.Namespace("", JabberPubsub.NAMESPACE_URI));
+        Element pubsub = new DOMElement(XMLConstants.PUBSUB_ELEM, new org.dom4j.Namespace("", JabberPubsub.NAMESPACE_URI));
 
-        Element publish = pubsub.addElement("publish");
-        publish.addAttribute("node", node);
+        Element publish = pubsub.addElement(XMLConstants.PUBLISH_ELEM);
+        publish.addAttribute(XMLConstants.NODE_ATTR, node);
 
-        Element newItem = publish.addElement("item");
-        newItem.addAttribute("id", validator.getGlobalItemId());
+        Element newItem = publish.addElement(XMLConstants.ITEM_ELEM);
+        newItem.addAttribute(XMLConstants.ID_ATTR, validator.getGlobalItemId());
 
         response.setChildElement(pubsub);
         outQueue.put(response);
@@ -211,15 +211,15 @@ public class Publish extends PubSubElementProcessorAbstract {
     }
 
     private boolean checkNode() throws InterruptedException, NodeStoreException {
-        if ((node == null) || (true == node.equals(""))) {
+        if (node == null || "".equals(node)) {
             response.setType(Type.error);
 
             Element badRequest = new DOMElement(PacketError.Condition.bad_request.toXMPP(), new org.dom4j.Namespace("", JabberPubsub.NS_XMPP_STANZAS));
 
-            Element nodeIdRequired = new DOMElement(NODE_ID_REQUIRED, new org.dom4j.Namespace("", JabberPubsub.NS_PUBSUB_ERROR));
+            Element nodeIdRequired = new DOMElement(XMLConstants.NODE_ID_REQUIRED, new org.dom4j.Namespace("", JabberPubsub.NS_PUBSUB_ERROR));
 
-            Element error = new DOMElement("error");
-            error.addAttribute("type", PacketError.Type.modify.toXMPP());
+            Element error = new DOMElement(XMLConstants.ERROR_ELEM);
+            error.addAttribute(XMLConstants.TYPE_ATTR, PacketError.Type.modify.toXMPP());
             error.add(badRequest);
             error.add(nodeIdRequired);
 
@@ -240,7 +240,7 @@ public class Publish extends PubSubElementProcessorAbstract {
             return false;
         }
 
-        if (false == isLocalNode) {
+        if (!isLocalNode) {
             makeRemoteRequest();
             return false;
         }
@@ -286,8 +286,4 @@ public class Publish extends PubSubElementProcessorAbstract {
         outQueue.put(request);
     }
 
-    @Override
-    public boolean accept(Element elm) {
-        return elm.getName().equals("publish");
-    }
 }

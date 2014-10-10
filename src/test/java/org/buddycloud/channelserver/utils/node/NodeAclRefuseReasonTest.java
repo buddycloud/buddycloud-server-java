@@ -12,13 +12,12 @@ public class NodeAclRefuseReasonTest extends TestCase {
 
     Type type = PacketError.Type.cancel;
     Condition condition = PacketError.Condition.feature_not_implemented;
-    String additionalErrorElement;
 
     NodeAclRefuseReason reason;
 
     @Before
     public void setUp() {
-        reason = new NodeAclRefuseReason(type, condition, additionalErrorElement);
+        reason = new NodeAclRefuseReason(type, condition, null);
     }
 
     @Test

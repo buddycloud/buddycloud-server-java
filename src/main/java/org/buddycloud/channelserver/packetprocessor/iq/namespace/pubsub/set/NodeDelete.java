@@ -4,11 +4,13 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.concurrent.BlockingQueue;
 
+import org.apache.log4j.Logger;
 import org.buddycloud.channelserver.Configuration;
 import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.db.exception.NodeStoreException;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.JabberPubsub;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.PubSubElementProcessorAbstract;
+import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.get.NodeThreadsGet;
 import org.buddycloud.channelserver.pubsub.affiliation.Affiliations;
 import org.buddycloud.channelserver.pubsub.model.NodeSubscription;
 import org.buddycloud.channelserver.utils.node.item.payload.Buddycloud;
@@ -27,6 +29,8 @@ public class NodeDelete extends PubSubElementProcessorAbstract {
 
     private static final String NODE_REG_EX = "^/user/[^@]+@[^/]+/[^/]+$";
 	private ResultSet<NodeSubscription> subscriptions;
+
+    private static final Logger LOGGER = Logger.getLogger(NodeThreadsGet.class);
 
     public NodeDelete(BlockingQueue<Packet> outQueue, ChannelManager channelManager) {
         setChannelManager(channelManager);
@@ -52,8 +56,7 @@ public class NodeDelete extends PubSubElementProcessorAbstract {
             makeRemoteRequest();
             return;
         }
-        if (!nodeExists() || !actorIsRegistered() || !nodeHandledByThisServer()
-                || !actorAllowedToDelete()) {
+        if (!nodeExists() || !actorIsRegistered() || !nodeHandledByThisServer() || !actorAllowedToDelete()) {
             outQueue.put(response);
             return;
         }
@@ -85,7 +88,7 @@ public class NodeDelete extends PubSubElementProcessorAbstract {
                 outQueue.put(notification.createCopy());
             }
         } catch (Exception e) {
-            logger.error(e);
+            LOGGER.error(e);
         }
     }
 
@@ -103,7 +106,7 @@ public class NodeDelete extends PubSubElementProcessorAbstract {
         try {
             channelManager.deleteNode(node);
         } catch (NodeStoreException e) {
-            logger.error(e);
+            LOGGER.error(e);
             setErrorCondition(PacketError.Type.wait, PacketError.Condition.internal_server_error);
             outQueue.put(response);
             return;
@@ -121,11 +124,8 @@ public class NodeDelete extends PubSubElementProcessorAbstract {
             return true;
         }
         response.setType(IQ.Type.error);
-        Element nodeIdRequired = new DOMElement("nodeid-required",
-                new Namespace("", JabberPubsub.NS_PUBSUB_ERROR));
-        Element badRequest = new DOMElement(
-                PacketError.Condition.bad_request.toXMPP(), new Namespace("",
-                        JabberPubsub.NS_XMPP_STANZAS));
+        Element nodeIdRequired = new DOMElement("nodeid-required", new Namespace("", JabberPubsub.NS_PUBSUB_ERROR));
+        Element badRequest = new DOMElement(PacketError.Condition.bad_request.toXMPP(), new Namespace("", JabberPubsub.NS_XMPP_STANZAS));
         Element error = new DOMElement("error");
         error.addAttribute("type", "modify");
         error.add(badRequest);
@@ -161,10 +161,8 @@ public class NodeDelete extends PubSubElementProcessorAbstract {
     }
 
     private boolean nodeHandledByThisServer() {
-        if (!node.contains("@" + getServerDomain())
-                && !node.contains("@" + getTopicsDomain())) {
-            setErrorCondition(PacketError.Type.modify,
-                    PacketError.Condition.not_acceptable);
+        if (!node.contains("@" + getServerDomain()) && !node.contains("@" + getTopicsDomain())) {
+            setErrorCondition(PacketError.Type.modify, PacketError.Condition.not_acceptable);
             return false;
         }
         return true;
@@ -172,8 +170,7 @@ public class NodeDelete extends PubSubElementProcessorAbstract {
 
     private boolean nodeValid() {
         if (!node.matches(NODE_REG_EX)) {
-            setErrorCondition(PacketError.Type.modify,
-                    PacketError.Condition.bad_request);
+            setErrorCondition(PacketError.Type.modify, PacketError.Condition.bad_request);
             return false;
         }
         return true;
@@ -181,8 +178,7 @@ public class NodeDelete extends PubSubElementProcessorAbstract {
 
     private void makeRemoteRequest() throws InterruptedException {
         request.setTo(new JID(node.split("/")[2]).getDomain());
-        Element actor = request.getElement().element("pubsub")
-                .addElement("actor", Buddycloud.NS);
+        Element actor = request.getElement().element("pubsub").addElement("actor", Buddycloud.NS);
         actor.addText(request.getFrom().toBareJID());
         outQueue.put(request);
     }

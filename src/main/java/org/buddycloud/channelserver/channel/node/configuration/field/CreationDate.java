@@ -9,7 +9,7 @@ public class CreationDate extends DateField {
     public static final String FIELD_NAME = "pubsub#creation_date";
     public static final String DEFAULT_VALUE = "1955-11-05T01:21:00Z";
 
-    public static Logger logger = Logger.getLogger(CreationDate.class);
+    public static final Logger LOGGER = Logger.getLogger(CreationDate.class);
 
     public CreationDate() {
         setValue(Conf.formatDate(new Date()));
@@ -23,7 +23,7 @@ public class CreationDate extends DateField {
             setValue(Conf.formatDate(parsed));
             return true;
         } catch (IllegalArgumentException e) {
-            logger.error(e);
+            LOGGER.error(e);
             return false;
         }
     }

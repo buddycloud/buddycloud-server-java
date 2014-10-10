@@ -1,5 +1,6 @@
 package org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.set;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.concurrent.BlockingQueue;
 
@@ -22,10 +23,12 @@ import org.xmpp.packet.Message;
 import org.xmpp.packet.Packet;
 import org.xmpp.packet.PacketError;
 import org.xmpp.resultsetmanagement.ResultSet;
+import org.xmpp.resultsetmanagement.ResultSetImpl;
 
 public class NodeDelete extends PubSubElementProcessorAbstract {
 
     private static final String NODE_REG_EX = "^/user/[^@]+@[^/]+/[^/]+$";
+	private ResultSet<NodeSubscription> subscriptions;
 
     private static final Logger LOGGER = Logger.getLogger(NodeThreadsGet.class);
 
@@ -57,13 +60,21 @@ public class NodeDelete extends PubSubElementProcessorAbstract {
             outQueue.put(response);
             return;
         }
+        getNodeListeners();
         deleteNode();
         sendNotifications();
     }
 
-    private void sendNotifications() throws NodeStoreException {
+    private void getNodeListeners() {
+    	try {
+			subscriptions = channelManager.getNodeSubscriptionListeners(node);
+		} catch (NodeStoreException e) {
+			subscriptions = new ResultSetImpl<NodeSubscription>(new ArrayList<NodeSubscription>());
+		}
+	}
+
+	private void sendNotifications() throws NodeStoreException {
         try {
-            ResultSet<NodeSubscription> subscriptions = channelManager.getNodeSubscriptionListeners(node);
             Message notification = createNotificationMessage();
             if (subscriptions != null) {
                 for (NodeSubscription subscription : subscriptions) {

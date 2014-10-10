@@ -207,4 +207,5 @@ public class SubscriptionsGetTest extends IQTestHandler {
         Assert.assertEquals(1, response.getChildElement().element("subscriptions").elements("subscription").size());
 
     }
+
 }

@@ -7,6 +7,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 import junit.framework.Assert;
 
+import org.buddycloud.channelserver.Configuration;
 import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.db.exception.NodeStoreException;
 import org.buddycloud.channelserver.packetHandler.iq.IQTestHandler;
@@ -38,30 +39,38 @@ public class DeleteProcessorTest extends IQTestHandler {
     public void setUp() throws Exception {
 
         Properties configuration = new Properties();
-        configuration.setProperty("server.domain.channels", "chgnnels.shakespeare.lit");
+        configuration.setProperty("server.domain.channels",
+                "chgnnels.shakespeare.lit");
 
         channelManager = Mockito.mock(ChannelManager.class);
-        Mockito.when(channelManager.isLocalNode(Mockito.anyString())).thenReturn(false);
-        Mockito.when(channelManager.isLocalJID(Mockito.any(JID.class))).thenReturn(true);
+        Configuration.getInstance().remove(
+                Configuration.CONFIGURATION_LOCAL_DOMAIN_CHECKER);
+        Configuration.getInstance().putProperty(
+                Configuration.CONFIGURATION_SERVER_DOMAIN, "shakespeare.lit");
 
         ArrayList<NodeMembership> members = new ArrayList<NodeMembership>();
-        members.add(new NodeMembershipImpl("/users/romeo@shakespeare.lit/posts", jid, Subscriptions.subscribed, Affiliations.member, null));
-        Mockito.doReturn(new ResultSetImpl<NodeMembership>(members)).when(channelManager).getNodeMemberships(Mockito.anyString());
+        members.add(new NodeMembershipImpl(
+                "/user/romeo@denmark.lit/posts", jid,
+                Subscriptions.subscribed, Affiliations.member, null));
+        Mockito.doReturn(new ResultSetImpl<NodeMembership>(members))
+                .when(channelManager).getNodeMemberships(Mockito.anyString());
 
-        deleteProcessor = new DeleteProcessor(queue, configuration, channelManager);
+        deleteProcessor = new DeleteProcessor(queue, configuration,
+                channelManager);
 
         message = new Message();
         message.setType(Message.Type.headline);
-        Element event = message.addChildElement("event", JabberPubsub.NS_PUBSUB_EVENT);
+        Element event = message.addChildElement("event",
+                JabberPubsub.NS_PUBSUB_EVENT);
 
         delete = event.addElement("delete");
-        delete.addAttribute("node", "/users/juliet@shakespeare.lit/posts");
+        delete.addAttribute("node", "/user/juliet@denmark.lit/posts");
     }
 
     @Test
     public void testEventForLocalNodeIsIgnored() throws Exception {
-
-        Mockito.when(channelManager.isLocalNode(Mockito.anyString())).thenReturn(true);
+        Configuration.getInstance().putProperty(
+                Configuration.CONFIGURATION_SERVER_DOMAIN, "denmark.lit");
         deleteProcessor.process(message);
         Assert.assertEquals(0, queue.size());
     }
@@ -69,7 +78,8 @@ public class DeleteProcessorTest extends IQTestHandler {
     @Test(expected = NodeStoreException.class)
     public void testNodeStoreExceptionIsThrownWhenExpected() throws Exception {
 
-        Mockito.doThrow(new NodeStoreException()).when(channelManager).deleteNode(Mockito.anyString());
+        Mockito.doThrow(new NodeStoreException()).when(channelManager)
+                .deleteNode(Mockito.anyString());
         deleteProcessor.process(message);
     }
 

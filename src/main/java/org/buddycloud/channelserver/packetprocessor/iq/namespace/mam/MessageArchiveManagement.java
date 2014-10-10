@@ -5,6 +5,7 @@ import java.util.Date;
 import java.util.concurrent.BlockingQueue;
 
 import org.apache.log4j.Logger;
+import org.buddycloud.channelserver.Configuration;
 import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.channel.Conf;
 import org.buddycloud.channelserver.db.CloseableIterator;
@@ -57,8 +58,8 @@ public class MessageArchiveManagement implements PacketProcessor<IQ> {
         requestIq = reqIQ;
         reply = IQ.createResultIQ(requestIq);
 
-        if (false == channelManager.isLocalJID(requestIq.getFrom())) {
-            this._sendNotHandledStanza();
+        if (false == Configuration.getInstance().isLocalJID(requestIq.getFrom())) {
+            this.sendNotHandledStanza();
             return;
         }
 
@@ -209,7 +210,7 @@ public class MessageArchiveManagement implements PacketProcessor<IQ> {
         }
     }
 
-    private void _sendNotHandledStanza() throws InterruptedException {
+    private void sendNotHandledStanza() throws InterruptedException {
         sendErrorPacket(PacketError.Type.cancel, PacketError.Condition.service_unavailable);
     }
 

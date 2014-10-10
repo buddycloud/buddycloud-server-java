@@ -12,6 +12,7 @@ import java.util.Map.Entry;
 import org.buddycloud.channelserver.db.jdbc.dialect.Sql92NodeStoreDialect;
 import org.buddycloud.channelserver.packetHandler.iq.IQTestHandler;
 import org.buddycloud.channelserver.pubsub.model.NodeItem;
+import org.buddycloud.channelserver.pubsub.model.impl.GlobalItemIDImpl;
 import org.junit.After;
 import org.junit.Before;
 import org.xmpp.packet.JID;
@@ -35,6 +36,8 @@ public abstract class JDBCNodeStoreAbstract {
     protected static final String TEST_SERVER1_NODE1_ITEM3_CONTENT = "Test 3";
 
     protected static final String TEST_SERVER1_NODE1_ITEM4_ID = "a4";
+    protected static final String TEST_SERVER1_NODE1_ITEM4_GLOBAL_ID = new GlobalItemIDImpl(
+            new JID("server1"), TEST_SERVER1_NODE1_ID, TEST_SERVER1_NODE1_ITEM4_ID).toString();
     protected static final String TEST_SERVER1_NODE1_ITEM4_CONTENT = "Test 4";
 
     protected static final String TEST_SERVER1_NODE1_ITEM5_ID = "a5";

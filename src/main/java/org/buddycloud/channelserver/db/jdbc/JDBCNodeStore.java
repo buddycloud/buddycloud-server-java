@@ -20,11 +20,13 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.buddycloud.channelserver.Configuration;
 import org.buddycloud.channelserver.channel.Conf;
+import org.buddycloud.channelserver.channel.LocalDomainChecker;
 import org.buddycloud.channelserver.db.ClosableIteratorImpl;
 import org.buddycloud.channelserver.db.CloseableIterator;
 import org.buddycloud.channelserver.db.NodeStore;
 import org.buddycloud.channelserver.db.exception.ItemNotFoundException;
 import org.buddycloud.channelserver.db.exception.NodeStoreException;
+import org.buddycloud.channelserver.pubsub.accessmodel.AccessModels;
 import org.buddycloud.channelserver.pubsub.affiliation.Affiliations;
 import org.buddycloud.channelserver.pubsub.model.GlobalItemID;
 import org.buddycloud.channelserver.pubsub.model.NodeAffiliation;
@@ -394,13 +396,10 @@ public class JDBCNodeStore implements NodeStore {
 
     @Override
     public ResultSet<NodeMembership> getUserMemberships(JID jid) throws NodeStoreException {
-
         PreparedStatement stmt = null;
-
         try {
             stmt = conn.prepareStatement(dialect.selectUserMemberships());
             stmt.setString(1, jid.toBareJID());
-
             java.sql.ResultSet rs = stmt.executeQuery();
 
             ArrayList<NodeMembership> result = new ArrayList<NodeMembership>();
@@ -414,7 +413,6 @@ public class JDBCNodeStore implements NodeStore {
                                 Subscriptions.valueOf(rs.getString(4)), Affiliations.valueOf(rs.getString(5)), inviter, rs.getTimestamp(7));
                 result.add(membership);
             }
-
             return new ResultSetImpl<NodeMembership>(result);
         } catch (SQLException e) {
             throw new NodeStoreException(e);
@@ -437,7 +435,6 @@ public class JDBCNodeStore implements NodeStore {
             while (rs.next()) {
                 result.add(new JID(rs.getString(1)));
             }
-
             return result;
         } catch (SQLException e) {
             throw new NodeStoreException(e);
@@ -449,14 +446,12 @@ public class JDBCNodeStore implements NodeStore {
     @Override
     public NodeMembership getNodeMembership(String nodeId, JID user) throws NodeStoreException {
         PreparedStatement selectStatement = null;
-
         try {
             NodeMembershipImpl membership;
 
             selectStatement = conn.prepareStatement(dialect.selectMembership());
             selectStatement.setString(2, nodeId);
             selectStatement.setString(1, user.toBareJID());
-
             java.sql.ResultSet rs = selectStatement.executeQuery();
 
             if (rs.next()) {
@@ -504,6 +499,152 @@ public class JDBCNodeStore implements NodeStore {
             }
 
             return new ResultSetImpl<NodeMembership>(result);
+        } catch (SQLException e) {
+            throw new NodeStoreException(e);
+        } finally {
+            close(stmt); // Will implicitly close the resultset if required
+        }
+    }
+    
+    @Override
+    public CloseableIterator<NodeItem> getFirehose(int limit,
+            String afterItemId, boolean isAdmin, String actorDomain) throws NodeStoreException {
+    
+        PreparedStatement stmt = null;
+        Date beforeDate = null;
+    
+        if (afterItemId != null) {
+            beforeDate = getNodeItem(GlobalItemIDImpl.fromBuddycloudString(
+                    afterItemId)).getUpdated();
+        } else {
+            beforeDate = new Date();
+        }
+    
+        if (limit < 0) {
+            throw new IllegalArgumentException(
+                    "Invalid value for parameter count: " + limit);
+        }
+    
+        try {
+            stmt = conn.prepareStatement(dialect.selectItemsForLocalNodesBeforeDate());
+            stmt.setTimestamp(1, new java.sql.Timestamp(beforeDate.getTime()));
+            stmt.setString(2, Conf.ACCESS_MODEL);
+            stmt.setBoolean(3, isAdmin);
+            stmt.setString(4, AccessModels.open.toString());
+            stmt.setString(5, AccessModels.local.toString());
+            stmt.setString(6, getDomainRegex(actorDomain));
+            stmt.setBoolean(7, isAdmin);
+            stmt.setString(8, getLocalDomainRegex());
+            stmt.setInt(9, limit);
+    
+            java.sql.ResultSet rs = stmt.executeQuery();
+    
+            LinkedList<NodeItem> results = new LinkedList<NodeItem>();
+    
+            while (rs.next()) {
+                results.push(new NodeItemImpl(rs.getString(1), rs.getString(2),
+                        rs.getTimestamp(3), rs.getString(4), rs.getString(5), rs.getTimestamp(6)));
+            }
+    
+            return new ClosableIteratorImpl<NodeItem>(results.iterator());
+        } catch (SQLException e) {
+            throw new NodeStoreException(e);
+        } finally {
+            close(stmt); // Will implicitly close the resultset if required
+        }
+    }
+    
+    @Override
+    public int getFirehoseItemCount(boolean isAdmin, String actorDomain)
+            throws NodeStoreException {
+        PreparedStatement stmt = null;
+    
+        try {
+            stmt = conn.prepareStatement(dialect.countItemsForLocalNodes());
+            stmt.setString(1, Conf.ACCESS_MODEL);
+            stmt.setBoolean(2, isAdmin);
+            stmt.setString(3, AccessModels.open.toString());
+            stmt.setString(4, AccessModels.local.toString());
+            stmt.setString(5, getDomainRegex(actorDomain));
+            stmt.setBoolean(6, isAdmin);
+            stmt.setString(7, getLocalDomainRegex());
+            
+            java.sql.ResultSet rs = stmt.executeQuery();
+            if (!rs.next()) {
+                return 0; // This really shouldn't happen!
+            }
+            return rs.getInt(1);
+        } catch (SQLException e) {
+            throw new NodeStoreException(e);
+        } finally {
+            close(stmt); // Will implicitly close the resultset if
+                            // required
+        }
+    }
+    
+    private static final String POSIX_SPECIAL_CHARS = "\\.^$*+?()[{|"; 
+    
+    private static String posixRegexQuote(String str) {
+        for (Character p : POSIX_SPECIAL_CHARS.toCharArray()) {
+            str = str.replace(p.toString(), "\\" + p.toString());
+        }
+        return str;
+    }
+    
+    private static String getLocalDomainRegex() {
+        String serverDomain = Configuration.getInstance().getServerDomain();
+        String serverTopicsDomain = Configuration.getInstance().getServerTopicsDomain();
+        List<String> localDomains = new LinkedList<String>();
+        if (serverDomain != null) {
+            localDomains.add(posixRegexQuote(serverDomain));
+        }
+        if (serverTopicsDomain != null) {
+            localDomains.add(posixRegexQuote(serverTopicsDomain));
+        }
+        for (String localDomain : LocalDomainChecker.getLocalDomains(Configuration.getInstance())) {
+            localDomains.add(posixRegexQuote(localDomain));
+        }
+        
+        String domainRegex = localDomains.isEmpty() ? ".*" : 
+            getDomainRegex(StringUtils.join(localDomains, "|"));
+        return domainRegex;
+    }
+    
+    private static String getDomainRegex(String localDomains) {
+        return ".*@(" + localDomains  + ")\\/.*";
+    }
+    
+    @Override
+    public List<String> getLocalNodesList() throws NodeStoreException {
+        PreparedStatement stmt = null;
+        try {
+            stmt = conn.prepareStatement(dialect.selectLocalNodes());
+            stmt.setString(1, getLocalDomainRegex());
+            java.sql.ResultSet rs = stmt.executeQuery();
+            List<String> result = new ArrayList<String>();
+            while (rs.next()) {
+                result.add(rs.getString(1));
+            }
+            return result;
+        } catch (SQLException e) {
+            throw new NodeStoreException(e);
+        } finally {
+            close(stmt); // Will implicitly close the resultset if required
+        }
+    }
+
+    @Override
+    public List<String> getRemoteNodesList() throws NodeStoreException {
+        PreparedStatement stmt = null;
+        try {
+            stmt = conn.prepareStatement(dialect.selectRemoteNodes());
+            stmt.setString(1, getLocalDomainRegex());
+            java.sql.ResultSet rs = stmt.executeQuery();
+            List<String> result = new ArrayList<String>();
+            while (rs.next()) {
+                result.add(rs.getString(1));
+            }
+            return result;
         } catch (SQLException e) {
             throw new NodeStoreException(e);
         } finally {
@@ -651,83 +792,6 @@ public class JDBCNodeStore implements NodeStore {
             throw new NodeStoreException(e);
         }
     }
-
-    @Override
-    public CloseableIterator<NodeItem> getFirehose(int limit, String afterItemId, boolean isAdmin) throws NodeStoreException {
-
-        PreparedStatement stmt = null;
-        Date beforeDate = null;
-
-        // if (afterItemId != null) {
-        // beforeDate = getNodeItemById(afterItemId).getUpdated();
-        // } else {
-        beforeDate = new Date();
-        afterItemId = "";
-        // }
-
-        if (limit < 0) {
-            throw new IllegalArgumentException("Invalid value for parameter count: " + limit);
-        }
-
-        String accessModel = "open";
-        if (true == isAdmin) {
-            accessModel = "%";
-        }
-        try {
-            stmt = conn.prepareStatement(dialect.selectItemsForLocalNodesBeforeDate());
-            stmt.setTimestamp(1, new java.sql.Timestamp(beforeDate.getTime()));
-            stmt.setString(2, Conf.ACCESS_MODEL);
-            stmt.setString(3, accessModel);
-            stmt.setString(4, "%@" + Configuration.getInstance().getProperty(Configuration.CONFIGURATION_SERVER_DOMAIN) + "%");
-            stmt.setString(5, "%@" + Configuration.getInstance().getProperty(Configuration.CONFIGURATION_SERVER_TOPICS_DOMAIN) + "%");
-            stmt.setInt(6, limit);
-
-            java.sql.ResultSet rs = stmt.executeQuery();
-
-            LinkedList<NodeItem> results = new LinkedList<NodeItem>();
-
-            while (rs.next()) {
-                results.push(new NodeItemImpl(rs.getString(1), rs.getString(2), rs.getTimestamp(3), rs.getString(4), rs.getString(5), rs.getTimestamp(6)));
-            }
-
-            return new ClosableIteratorImpl<NodeItem>(results.iterator());
-        } catch (SQLException e) {
-            throw new NodeStoreException(e);
-        } finally {
-            close(stmt); // Will implicitly close the resultset if required
-        }
-    }
-
-    @Override
-    public int getFirehoseItemCount(boolean isAdmin) throws NodeStoreException {
-        PreparedStatement stmt = null;
-
-        String accessModel = "open";
-        if (true == isAdmin) {
-            accessModel = "%";
-        }
-
-        try {
-            stmt = conn.prepareStatement(dialect.countItemsForLocalNodes());
-            stmt.setString(1, Conf.ACCESS_MODEL);
-            stmt.setString(2, accessModel);
-            stmt.setString(3, "%@" + Configuration.getInstance().getProperty(Configuration.CONFIGURATION_SERVER_DOMAIN) + "%");
-            stmt.setString(4, "%@" + Configuration.getInstance().getProperty(Configuration.CONFIGURATION_SERVER_TOPICS_DOMAIN) + "%");
-            java.sql.ResultSet rs = stmt.executeQuery();
-
-            if (rs.next()) {
-                return rs.getInt(1);
-            } else {
-                return 0; // This really shouldn't happen!
-            }
-        } catch (SQLException e) {
-            throw new NodeStoreException(e);
-        } finally {
-            close(stmt); // Will implicitly close the resultset if
-                         // required
-        }
-    }
-
 
     @Override
     public CloseableIterator<NodeItem> getUserFeedItems(JID user, Date since, int limit, GlobalItemID afterItemId, boolean parentOnly)
@@ -1671,11 +1735,9 @@ public class JDBCNodeStore implements NodeStore {
             if (!isLatestTransaction()) {
                 throw new IllegalStateException("Close called on transaction other than the innermost transaction");
             }
-
             store.transactionStack.pop();
             closed = true;
             store.transactionHasBeenRolledBack = true;
-
             try {
                 if (store.transactionStack.isEmpty()) {
                     store.conn.rollback();
@@ -1734,6 +1796,10 @@ public class JDBCNodeStore implements NodeStore {
         String selectRecentItemParts();
 
         String countNodeAffiliations();
+
+        String selectRemoteNodes();
+
+        String selectLocalNodes();
 
         String countNodeAffiliationsForOwner();
 

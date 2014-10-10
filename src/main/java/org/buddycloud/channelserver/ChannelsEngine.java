@@ -110,8 +110,9 @@ public class ChannelsEngine implements Component {
             throw new ComponentException(e);
         }
 
-        channelManagerFactory = new ChannelManagerFactoryImpl(configuration, nodeStoreFactory);
-        federatedQueueManager = new FederatedQueueManager(this, configuration);
+        channelManagerFactory = new ChannelManagerFactoryImpl(nodeStoreFactory);
+        federatedQueueManager = new FederatedQueueManager(this,
+                configuration);
         onlineUsers = new OnlineResourceManager(configuration, channelManagerFactory.create());
     }
 

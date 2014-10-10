@@ -3,6 +3,7 @@ package org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.set;
 import java.util.HashMap;
 import java.util.concurrent.BlockingQueue;
 
+import org.buddycloud.channelserver.Configuration;
 import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.channel.Conf;
 import org.buddycloud.channelserver.channel.node.configuration.NodeConfigurationException;
@@ -23,26 +24,33 @@ public class NodeCreate extends PubSubElementProcessorAbstract {
     private static final String NODE_REG_EX = "^/user/[^@]+@[^/]+/[^/]+$";
     private static final String INVALID_NODE_CONFIGURATION = "Invalid node configuration";
 
-    public NodeCreate(BlockingQueue<Packet> outQueue, ChannelManager channelManager) {
+    public NodeCreate(BlockingQueue<Packet> outQueue,
+            ChannelManager channelManager) {
         setChannelManager(channelManager);
         setOutQueue(outQueue);
     }
 
-    public void process(Element elm, JID actorJID, IQ reqIQ, Element rsm) throws Exception {
+    public void process(Element elm, JID actorJID, IQ reqIQ, Element rsm)
+            throws Exception {
         element = elm;
         response = IQ.createResultIQ(reqIQ);
         request = reqIQ;
         actor = actorJID;
         node = element.attributeValue("node");
-
         if (null == actorJID) {
             actor = request.getFrom();
         }
-        if (false == channelManager.isLocalNode(node)) {
+        if (false == validateNode()) {
+            outQueue.put(response);
+            return;
+        }
+        if (false == Configuration.getInstance().isLocalNode(node)) {
             makeRemoteRequest();
             return;
         }
-        if ((false == validateNode()) || (true == doesNodeExist()) || (false == actorIsRegistered()) || (false == nodeHandledByThisServer())) {
+        if ((true == doesNodeExist())
+                || (false == actorIsRegistered())
+                || (false == nodeHandledByThisServer())) {
             outQueue.put(response);
             return;
         }

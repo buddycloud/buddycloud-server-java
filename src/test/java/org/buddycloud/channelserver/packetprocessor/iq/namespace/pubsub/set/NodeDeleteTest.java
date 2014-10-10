@@ -43,6 +43,8 @@ public class NodeDeleteTest extends IQTestHandler {
         this.nodeDelete = new NodeDelete(queue, channelManager);
         this.nodeDelete.setServerDomain("shakespeare.lit");
         this.element = new BaseElement("delete");
+        Configuration.getInstance().putProperty(
+                Configuration.CONFIGURATION_LOCAL_DOMAIN_CHECKER, Boolean.TRUE.toString());
     }
 
     @After
@@ -71,7 +73,8 @@ public class NodeDeleteTest extends IQTestHandler {
         PacketError error = response.getError();
         Assert.assertNotNull(error);
         Assert.assertEquals(PacketError.Type.modify, error.getType());
-        Assert.assertEquals("nodeid-required", error.getApplicationConditionName());
+        Assert.assertEquals("nodeid-required",
+                error.getApplicationConditionName());
     }
 
     @Test
@@ -84,7 +87,8 @@ public class NodeDeleteTest extends IQTestHandler {
         PacketError error = response.getError();
         Assert.assertNotNull(error);
         Assert.assertEquals(PacketError.Type.modify, error.getType());
-        Assert.assertEquals("nodeid-required", error.getApplicationConditionName());
+        Assert.assertEquals("nodeid-required",
+                error.getApplicationConditionName());
     }
 
     @Test
@@ -92,14 +96,15 @@ public class NodeDeleteTest extends IQTestHandler {
         IQ request = readStanzaAsIq("/iq/pubsub/delete/request-with-node.stanza");
         Element deleteEl = request.getChildElement().element("delete");
 
-        String node = deleteEl.attributeValue("node");
-        Mockito.when(channelManager.isLocalNode(node)).thenReturn(false);
+        Configuration.getInstance().putProperty(
+                Configuration.CONFIGURATION_LOCAL_DOMAIN_CHECKER, Boolean.FALSE.toString());
 
         nodeDelete.process(deleteEl, jid, request, null);
         Packet response = queue.poll();
 
         Assert.assertNull(response.getError());
-        Element actorEl = response.getElement().element("pubsub").element("actor");
+        Element actorEl = response.getElement().element("pubsub")
+                .element("actor");
         Assert.assertEquals(jid.toBareJID(), actorEl.getText());
     }
 
@@ -109,7 +114,6 @@ public class NodeDeleteTest extends IQTestHandler {
         Element deleteEl = request.getChildElement().element("delete");
 
         String node = deleteEl.attributeValue("node");
-        Mockito.when(channelManager.isLocalNode(node)).thenReturn(true);
         Mockito.when(channelManager.nodeExists(node)).thenReturn(false);
 
         nodeDelete.process(deleteEl, jid, request, null);
@@ -118,7 +122,8 @@ public class NodeDeleteTest extends IQTestHandler {
         PacketError error = response.getError();
         Assert.assertNotNull(error);
         Assert.assertEquals(PacketError.Type.cancel, error.getType());
-        Assert.assertEquals(PacketError.Condition.item_not_found, error.getCondition());
+        Assert.assertEquals(PacketError.Condition.item_not_found,
+                error.getCondition());
     }
 
     @Test
@@ -127,7 +132,6 @@ public class NodeDeleteTest extends IQTestHandler {
         Element deleteEl = request.getChildElement().element("delete");
 
         String node = deleteEl.attributeValue("node");
-        Mockito.when(channelManager.isLocalNode(node)).thenReturn(true);
         Mockito.when(channelManager.nodeExists(node)).thenReturn(true);
         nodeDelete.setServerDomain("fake.domain");
 
@@ -137,7 +141,8 @@ public class NodeDeleteTest extends IQTestHandler {
         PacketError error = response.getError();
         Assert.assertNotNull(error);
         Assert.assertEquals(PacketError.Type.auth, error.getType());
-        Assert.assertEquals(PacketError.Condition.forbidden, error.getCondition());
+        Assert.assertEquals(PacketError.Condition.forbidden,
+                error.getCondition());
     }
 
     @Test
@@ -146,10 +151,10 @@ public class NodeDeleteTest extends IQTestHandler {
         Element deleteEl = request.getChildElement().element("delete");
 
         String node = deleteEl.attributeValue("node");
-        Mockito.when(channelManager.isLocalNode(node)).thenReturn(true);
         Mockito.when(channelManager.nodeExists(node)).thenReturn(true);
         Mockito.when(channelManager.getNodeMembership(node, jid)).thenReturn(
-                new NodeMembershipImpl(node, jid, Subscriptions.subscribed, Affiliations.none, null));
+                new NodeMembershipImpl(node, jid, Subscriptions.subscribed,
+                        Affiliations.none, null));
 
         nodeDelete.process(deleteEl, jid, request, null);
         Packet response = queue.poll();
@@ -157,7 +162,8 @@ public class NodeDeleteTest extends IQTestHandler {
         PacketError error = response.getError();
         Assert.assertNotNull(error);
         Assert.assertEquals(PacketError.Type.auth, error.getType());
-        Assert.assertEquals(PacketError.Condition.not_authorized, error.getCondition());
+        Assert.assertEquals(PacketError.Condition.not_authorized,
+                error.getCondition());
     }
 
     @Test
@@ -166,11 +172,11 @@ public class NodeDeleteTest extends IQTestHandler {
         Element deleteEl = request.getChildElement().element("delete");
 
         String node = deleteEl.attributeValue("node");
-        Mockito.when(channelManager.isLocalNode(node)).thenReturn(true);
         Mockito.when(channelManager.nodeExists(node)).thenReturn(true);
 
         Mockito.when(channelManager.getNodeMembership(node, jid)).thenReturn(
-                new NodeMembershipImpl(node, jid, Subscriptions.subscribed, Affiliations.moderator, null));
+                new NodeMembershipImpl(node, jid, Subscriptions.subscribed,
+                        Affiliations.moderator, null));
 
         nodeDelete.process(deleteEl, jid, request, null);
         Packet response = queue.poll();
@@ -178,7 +184,8 @@ public class NodeDeleteTest extends IQTestHandler {
         PacketError error = response.getError();
         Assert.assertNotNull(error);
         Assert.assertEquals(PacketError.Type.auth, error.getType());
-        Assert.assertEquals(PacketError.Condition.not_authorized, error.getCondition());
+        Assert.assertEquals(PacketError.Condition.not_authorized,
+                error.getCondition());
     }
 
     @Test
@@ -187,7 +194,6 @@ public class NodeDeleteTest extends IQTestHandler {
         Element deleteEl = request.getChildElement().element("delete");
 
         String node = deleteEl.attributeValue("node");
-        Mockito.when(channelManager.isLocalNode(node)).thenReturn(true);
         Mockito.when(channelManager.nodeExists(node)).thenReturn(true);
 
         nodeDelete.process(deleteEl, jid, request, null);
@@ -196,7 +202,8 @@ public class NodeDeleteTest extends IQTestHandler {
         PacketError error = response.getError();
         Assert.assertNotNull(error);
         Assert.assertEquals(PacketError.Type.modify, error.getType());
-        Assert.assertEquals(PacketError.Condition.bad_request, error.getCondition());
+        Assert.assertEquals(PacketError.Condition.bad_request,
+                error.getCondition());
     }
 
     @Test
@@ -205,7 +212,6 @@ public class NodeDeleteTest extends IQTestHandler {
         Element deleteEl = request.getChildElement().element("delete");
 
         String node = deleteEl.attributeValue("node");
-        Mockito.when(channelManager.isLocalNode(node)).thenReturn(true);
         Mockito.when(channelManager.nodeExists(node)).thenReturn(true);
 
         nodeDelete.process(deleteEl, jid, request, null);
@@ -214,7 +220,8 @@ public class NodeDeleteTest extends IQTestHandler {
         PacketError error = response.getError();
         Assert.assertNotNull(error);
         Assert.assertEquals(PacketError.Type.modify, error.getType());
-        Assert.assertEquals(PacketError.Condition.not_acceptable, error.getCondition());
+        Assert.assertEquals(PacketError.Condition.not_acceptable,
+                error.getCondition());
     }
 
     @Test
@@ -223,11 +230,11 @@ public class NodeDeleteTest extends IQTestHandler {
         Element deleteEl = request.getChildElement().element("delete");
 
         String node = deleteEl.attributeValue("node");
-        Mockito.when(channelManager.isLocalNode(node)).thenReturn(true);
         Mockito.when(channelManager.nodeExists(node)).thenReturn(true);
 
         Mockito.when(channelManager.getNodeMembership(node, jid)).thenReturn(
-                new NodeMembershipImpl(node, jid, Subscriptions.subscribed, Affiliations.owner, null));
+                new NodeMembershipImpl(node, jid, Subscriptions.subscribed,
+                        Affiliations.owner, null));
 
         nodeDelete.process(deleteEl, jid, request, null);
         IQ response = (IQ) queue.poll();
@@ -246,18 +253,20 @@ public class NodeDeleteTest extends IQTestHandler {
         Element deleteEl = request.getChildElement().element("delete");
 
         String node = deleteEl.attributeValue("node");
-        Mockito.when(channelManager.isLocalNode(node)).thenReturn(true);
         Mockito.when(channelManager.nodeExists(node)).thenReturn(true);
 
         Mockito.when(channelManager.getNodeMembership(node, jid)).thenReturn(
-                new NodeMembershipImpl(node, jid, Subscriptions.subscribed, Affiliations.owner, null));
+                new NodeMembershipImpl(node, jid, Subscriptions.subscribed,
+                        Affiliations.owner, null));
 
         JID subscriberJid = new JID("subscriber@shakespeare.lit");
-        NodeSubscriptionImpl subscription = new NodeSubscriptionImpl(node, subscriberJid, subscriberJid, Subscriptions.subscribed, null);
+        NodeSubscriptionImpl subscription = new NodeSubscriptionImpl(node,
+                subscriberJid, subscriberJid, Subscriptions.subscribed, null);
         List<NodeSubscription> subscriptions = new LinkedList<NodeSubscription>();
         subscriptions.add(subscription);
 
-        Mockito.when(channelManager.getNodeSubscriptionListeners(node)).thenReturn(new ResultSetImpl<NodeSubscription>(subscriptions));
+        Mockito.when(channelManager.getNodeSubscriptionListeners(node))
+                .thenReturn(new ResultSetImpl<NodeSubscription>(subscriptions));
 
         nodeDelete.process(deleteEl, jid, request, null);
         IQ response = (IQ) queue.poll();
@@ -272,6 +281,7 @@ public class NodeDeleteTest extends IQTestHandler {
 
         Element eventEl = subscriberNotification.getElement().element("event");
         Assert.assertNotNull(eventEl);
-        Assert.assertEquals(node, eventEl.element("delete").attributeValue("node"));
+        Assert.assertEquals(node,
+                eventEl.element("delete").attributeValue("node"));
     }
 }

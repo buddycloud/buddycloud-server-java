@@ -2,6 +2,7 @@ package org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.get;
 
 import java.util.concurrent.BlockingQueue;
 
+import org.buddycloud.channelserver.Configuration;
 import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.db.exception.NodeStoreException;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.JabberPubsub;
@@ -21,27 +22,31 @@ public class SubscriptionsGet implements PubSubElementProcessor {
 
     private final BlockingQueue<Packet> outQueue;
     private ChannelManager channelManager;
-
+    
     private IQ result;
     private String node;
     private JID actorJid;
     private IQ requestIq;
-
+    
     public void setChannelManager(ChannelManager dataStore) {
         channelManager = dataStore;
     }
-
-    public SubscriptionsGet(BlockingQueue<Packet> outQueue, ChannelManager channelManager) {
+    
+    public SubscriptionsGet(BlockingQueue<Packet> outQueue,
+            ChannelManager channelManager) {
         this.outQueue = outQueue;
         this.channelManager = channelManager;
     }
 
     @Override
-    public void process(Element elm, JID actorJID, IQ reqIQ, Element rsm) throws Exception {
+    public void process(Element elm, JID actorJID, IQ reqIQ, Element rsm)
+            throws Exception {
         result = IQ.createResultIQ(reqIQ);
         actorJid = actorJID;
         requestIq = reqIQ;
-        Element pubsub = result.setChildElement(PubSubGet.ELEMENT_NAME, JabberPubsub.NAMESPACE_URI);
+        
+        Element pubsub = result.setChildElement(PubSubGet.ELEMENT_NAME,
+                JabberPubsub.NAMESPACE_URI);
         Element subscriptions = pubsub.addElement("subscriptions");
 
         node = reqIQ.getChildElement().element("subscriptions").attributeValue("node");
@@ -49,13 +54,13 @@ public class SubscriptionsGet implements PubSubElementProcessor {
         if (null == actorJid) {
             actorJid = reqIQ.getFrom();
         }
-
+        
         boolean isProcessedLocally = true;
 
         if (node == null) {
             isProcessedLocally = getUserMemberships(subscriptions);
         } else {
-            if (false == channelManager.isLocalNode(node)) {
+            if (false == Configuration.getInstance().isLocalNode(node)) {
                 result.getElement().addAttribute("remote-server-discover", "false");
             }
             isProcessedLocally = getNodeMemberships(subscriptions);
@@ -63,12 +68,15 @@ public class SubscriptionsGet implements PubSubElementProcessor {
         if (false == isProcessedLocally) {
             return;
         }
-
+        
         outQueue.put(result);
     }
 
-    private boolean getNodeMemberships(Element subscriptions) throws NodeStoreException, InterruptedException {
-        if (false == channelManager.isLocalNode(node) && (false == channelManager.isCachedNode(node))) {
+    private boolean getNodeMemberships(Element subscriptions)
+            throws NodeStoreException, InterruptedException {
+        if (false == Configuration.getInstance().isLocalNode(node) 
+            && (false == channelManager.isCachedNode(node))
+        ) {
             makeRemoteRequest(new JID(node.split("/")[2]).getDomain());
             return false;
         }
@@ -77,7 +85,9 @@ public class SubscriptionsGet implements PubSubElementProcessor {
 
         subscriptions.addAttribute("node", node);
 
-        if ((null != requestIq.getElement().element("pubsub").element("set")) && (0 == cur.size()) && (false == channelManager.isLocalNode(node))) {
+        if ((null != requestIq.getElement().element("pubsub").element("set"))
+                && (0 == cur.size())
+                && (false == Configuration.getInstance().isLocalNode(node))) {
             makeRemoteRequest(new JID(node.split("/")[2]).getDomain());
             return false;
         }
@@ -91,8 +101,12 @@ public class SubscriptionsGet implements PubSubElementProcessor {
                     continue;
                 }
             }
-            Element subscription = subscriptions.addElement("subscription");
-            subscription.addAttribute("node", ns.getNodeId()).addAttribute("subscription", ns.getSubscription().toString())
+            Element subscription = subscriptions
+                    .addElement("subscription");
+            subscription
+                    .addAttribute("node", ns.getNodeId())
+                    .addAttribute("subscription",
+                            ns.getSubscription().toString())
                     .addAttribute("jid", ns.getUser().toBareJID());
             if (null != ns.getInvitedBy()) {
                 subscription.addAttribute("invited-by", ns.getInvitedBy().toBareJID());
@@ -105,18 +119,25 @@ public class SubscriptionsGet implements PubSubElementProcessor {
         return channelManager.getNodeMembership(node, actorJid).getAffiliation().canAuthorize();
     }
 
-    private boolean getUserMemberships(Element subscriptions) throws NodeStoreException, InterruptedException {
+    private boolean getUserMemberships(Element subscriptions)
+            throws NodeStoreException, InterruptedException {
         // let's get all subscriptions.
         ResultSet<NodeMembership> cur;
         cur = channelManager.getUserMemberships(actorJid);
 
-        if ((null != requestIq.getElement().element("pubsub").element("set")) && (0 == cur.size()) && (false == channelManager.isLocalJID(actorJid))) {
+        if ((null != requestIq.getElement().element("pubsub").element("set"))
+                && (0 == cur.size())
+                && (false == Configuration.getInstance().isLocalJID(actorJid))) {
             makeRemoteRequest(actorJid.getDomain());
             return false;
         }
         for (NodeMembership ns : cur) {
-            Element subscription = subscriptions.addElement("subscription");
-            subscription.addAttribute("node", ns.getNodeId()).addAttribute("subscription", ns.getSubscription().toString())
+            Element subscription = subscriptions
+                    .addElement("subscription");
+            subscription
+                    .addAttribute("node", ns.getNodeId())
+                    .addAttribute("subscription",
+                            ns.getSubscription().toString())
                     .addAttribute("jid", ns.getUser().toBareJID());
             if (null != ns.getInvitedBy()) {
                 subscription.addAttribute("invited-by", ns.getInvitedBy().toBareJID());
@@ -124,17 +145,18 @@ public class SubscriptionsGet implements PubSubElementProcessor {
         }
         return true;
     }
-
+    
     private void makeRemoteRequest(String to) throws InterruptedException {
         IQ forwarder = requestIq.createCopy();
         forwarder.setTo(to);
         if (null == forwarder.getElement().element("pubsub").element("actor")) {
-            Element actor = forwarder.getElement().element("pubsub").addElement("actor", Buddycloud.NS);
+            Element actor = forwarder.getElement().element("pubsub")
+                .addElement("actor", Buddycloud.NS);
             actor.addText(requestIq.getFrom().toBareJID());
         }
         outQueue.put(forwarder);
     }
-
+    
     @Override
     public boolean accept(Element elm) {
         return elm.getName().equals("subscriptions");

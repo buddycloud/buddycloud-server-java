@@ -44,11 +44,12 @@ import org.xmpp.packet.JID;
 @SuppressWarnings("serial")
 public class JDBCNodeStoreTest extends JDBCNodeStoreAbstract {
 
-    public JDBCNodeStoreTest() throws SQLException, IOException, ClassNotFoundException {
+    public JDBCNodeStoreTest() throws SQLException, IOException,
+            ClassNotFoundException {
         dbTester = new DatabaseTester();
         IQTestHandler.readConf();
     }
-
+    
     @Test
     public void testIsCachedJidForCachedJid() throws Exception {
         dbTester.loadData("node_1");
@@ -71,20 +72,26 @@ public class JDBCNodeStoreTest extends JDBCNodeStoreAbstract {
 
         Iterator<NodeItem> result = store.getNodeItems(TEST_SERVER1_NODE1_ID);
 
-        String[] expectedNodeIds =
-                {TEST_SERVER1_NODE1_ITEM5_ID, TEST_SERVER1_NODE1_ITEM4_ID, TEST_SERVER1_NODE1_ITEM3_ID, TEST_SERVER1_NODE1_ITEM2_ID,
-                        TEST_SERVER1_NODE1_ITEM1_ID};
-        String[] expectedEntryContent =
-                {TEST_SERVER1_NODE1_ITEM5_CONTENT, TEST_SERVER1_NODE1_ITEM4_CONTENT, TEST_SERVER1_NODE1_ITEM3_CONTENT, TEST_SERVER1_NODE1_ITEM2_CONTENT,
-                        TEST_SERVER1_NODE1_ITEM1_CONTENT};
+        String[] expectedNodeIds = { TEST_SERVER1_NODE1_ITEM5_ID,
+                TEST_SERVER1_NODE1_ITEM4_ID, TEST_SERVER1_NODE1_ITEM3_ID,
+                TEST_SERVER1_NODE1_ITEM2_ID, TEST_SERVER1_NODE1_ITEM1_ID, };
+        String[] expectedEntryContent = { TEST_SERVER1_NODE1_ITEM5_CONTENT,
+                TEST_SERVER1_NODE1_ITEM4_CONTENT,
+                TEST_SERVER1_NODE1_ITEM3_CONTENT,
+                TEST_SERVER1_NODE1_ITEM2_CONTENT,
+                TEST_SERVER1_NODE1_ITEM1_CONTENT, };
 
         int i = 0;
 
         while (result.hasNext()) {
             NodeItem item = result.next();
 
-            assertEquals("The " + i + " node returned does not have the expected id", expectedNodeIds[i], item.getId());
-            assertTrue("The " + i + " node returned does not have the expected content", item.getPayload().contains(expectedEntryContent[i]));
+            assertEquals("The " + i
+                    + " node returned does not have the expected id",
+                    expectedNodeIds[i], item.getId());
+            assertTrue("The " + i
+                    + " node returned does not have the expected content", item
+                    .getPayload().contains(expectedEntryContent[i]));
 
             ++i;
         }
@@ -95,30 +102,40 @@ public class JDBCNodeStoreTest extends JDBCNodeStoreAbstract {
     }
 
     @Test
-    public void testGetNodeItemsForUnknownNodeReturnsEmptyIterator() throws Exception {
+    public void testGetNodeItemsForUnknownNodeReturnsEmptyIterator()
+            throws Exception {
         dbTester.loadData("node_1");
 
         Iterator<NodeItem> result = store.getNodeItems(TEST_SERVER1_NODE2_ID);
 
-        assertFalse("Items were returned but none were expected", result.hasNext());
+        assertFalse("Items were returned but none were expected",
+                result.hasNext());
     }
 
     @Test
     public void testGetNodeItemsWithLimits() throws Exception {
         dbTester.loadData("node_1");
 
-        Iterator<NodeItem> result = store.getNodeItems(TEST_SERVER1_NODE1_ID, TEST_SERVER1_NODE1_ITEM4_ID, 4);
+        Iterator<NodeItem> result = store.getNodeItems(TEST_SERVER1_NODE1_ID,
+                TEST_SERVER1_NODE1_ITEM4_ID, 4);
 
-        String[] expectedNodeIds = {TEST_SERVER1_NODE1_ITEM3_ID, TEST_SERVER1_NODE1_ITEM2_ID, TEST_SERVER1_NODE1_ITEM1_ID};
-        String[] expectedEntryContent = {TEST_SERVER1_NODE1_ITEM3_CONTENT, TEST_SERVER1_NODE1_ITEM2_CONTENT, TEST_SERVER1_NODE1_ITEM1_CONTENT};
+        String[] expectedNodeIds = { TEST_SERVER1_NODE1_ITEM3_ID,
+                TEST_SERVER1_NODE1_ITEM2_ID, TEST_SERVER1_NODE1_ITEM1_ID };
+        String[] expectedEntryContent = { TEST_SERVER1_NODE1_ITEM3_CONTENT,
+                TEST_SERVER1_NODE1_ITEM2_CONTENT,
+                TEST_SERVER1_NODE1_ITEM1_CONTENT };
 
         int i = 0;
 
         while (result.hasNext()) {
             NodeItem item = result.next();
 
-            assertEquals("The " + i + " node returned does not have the expected id", expectedNodeIds[i], item.getId());
-            assertTrue("The " + i + " node returned does not have the expected content", item.getPayload().contains(expectedEntryContent[i]));
+            assertEquals("The " + i
+                    + " node returned does not have the expected id",
+                    expectedNodeIds[i], item.getId());
+            assertTrue("The " + i
+                    + " node returned does not have the expected content", item
+                    .getPayload().contains(expectedEntryContent[i]));
 
             ++i;
         }
@@ -137,11 +154,14 @@ public class JDBCNodeStoreTest extends JDBCNodeStoreAbstract {
         NodeItem[] items = new NodeItem[20];
 
         for (int i = 0; i < 20; i++) {
-            items[i] = new NodeItemImpl(TEST_SERVER1_NODE1_ID, String.valueOf(i), new Date(start + i * 10), "payload" + String.valueOf(i));
+            items[i] = new NodeItemImpl(TEST_SERVER1_NODE1_ID,
+                    String.valueOf(i), new Date(start + i * 10), "payload"
+                            + String.valueOf(i));
             store.addNodeItem(items[i]);
         }
 
-        CloseableIterator<NodeItem> result = store.getNodeItems(TEST_SERVER1_NODE1_ID, "15", 3);
+        CloseableIterator<NodeItem> result = store.getNodeItems(
+                TEST_SERVER1_NODE1_ID, "15", 3);
 
         assertEquals("Incorrect node item returned", items[14], result.next());
         assertEquals("Incorrect node item returned", items[13], result.next());
@@ -149,25 +169,33 @@ public class JDBCNodeStoreTest extends JDBCNodeStoreAbstract {
     }
 
     @Test
-    public void testGetNodeItemsWithNegativeOneCountReturnsAllItems() throws Exception {
+    public void testGetNodeItemsWithNegativeOneCountReturnsAllItems()
+            throws Exception {
         dbTester.loadData("node_1");
 
-        Iterator<NodeItem> result = store.getNodeItems(TEST_SERVER1_NODE1_ID, null, -1);
+        Iterator<NodeItem> result = store.getNodeItems(TEST_SERVER1_NODE1_ID,
+                null, -1);
 
-        String[] expectedNodeIds =
-                {TEST_SERVER1_NODE1_ITEM5_ID, TEST_SERVER1_NODE1_ITEM4_ID, TEST_SERVER1_NODE1_ITEM3_ID, TEST_SERVER1_NODE1_ITEM2_ID,
-                        TEST_SERVER1_NODE1_ITEM1_ID};
-        String[] expectedEntryContent =
-                {TEST_SERVER1_NODE1_ITEM5_CONTENT, TEST_SERVER1_NODE1_ITEM4_CONTENT, TEST_SERVER1_NODE1_ITEM3_CONTENT, TEST_SERVER1_NODE1_ITEM2_CONTENT,
-                        TEST_SERVER1_NODE1_ITEM1_CONTENT};
+        String[] expectedNodeIds = { TEST_SERVER1_NODE1_ITEM5_ID,
+                TEST_SERVER1_NODE1_ITEM4_ID, TEST_SERVER1_NODE1_ITEM3_ID,
+                TEST_SERVER1_NODE1_ITEM2_ID, TEST_SERVER1_NODE1_ITEM1_ID, };
+        String[] expectedEntryContent = { TEST_SERVER1_NODE1_ITEM5_CONTENT,
+                TEST_SERVER1_NODE1_ITEM4_CONTENT,
+                TEST_SERVER1_NODE1_ITEM3_CONTENT,
+                TEST_SERVER1_NODE1_ITEM2_CONTENT,
+                TEST_SERVER1_NODE1_ITEM1_CONTENT, };
 
         int i = 0;
 
         while (result.hasNext()) {
             NodeItem item = result.next();
 
-            assertEquals("The " + i + " node returned does not have the expected id", expectedNodeIds[i], item.getId());
-            assertTrue("The " + i + " node returned does not have the expected content", item.getPayload().contains(expectedEntryContent[i]));
+            assertEquals("The " + i
+                    + " node returned does not have the expected id",
+                    expectedNodeIds[i], item.getId());
+            assertTrue("The " + i
+                    + " node returned does not have the expected content", item
+                    .getPayload().contains(expectedEntryContent[i]));
 
             ++i;
         }
@@ -178,30 +206,40 @@ public class JDBCNodeStoreTest extends JDBCNodeStoreAbstract {
     }
 
     @Test(expected = IllegalArgumentException.class)
-    public void testGetNodeItemsWithInvalidCountThrowsException() throws Exception {
-        store.getNodeItems(TEST_SERVER1_NODE1_ID, TEST_SERVER1_NODE1_ITEM1_ID, -2);
+    public void testGetNodeItemsWithInvalidCountThrowsException()
+            throws Exception {
+        store.getNodeItems(TEST_SERVER1_NODE1_ID, TEST_SERVER1_NODE1_ITEM1_ID,
+                -2);
     }
 
     @Test
-    public void testGetNodeItemsWithUnknownItemReturnsAllItems() throws Exception {
+    public void testGetNodeItemsWithUnknownItemReturnsAllItems()
+            throws Exception {
         dbTester.loadData("node_1");
 
-        Iterator<NodeItem> result = store.getNodeItems(TEST_SERVER1_NODE1_ID, "randomunknownitemid", 10);
+        Iterator<NodeItem> result = store.getNodeItems(TEST_SERVER1_NODE1_ID,
+                "randomunknownitemid", 10);
 
-        String[] expectedNodeIds =
-                {TEST_SERVER1_NODE1_ITEM5_ID, TEST_SERVER1_NODE1_ITEM4_ID, TEST_SERVER1_NODE1_ITEM3_ID, TEST_SERVER1_NODE1_ITEM2_ID,
-                        TEST_SERVER1_NODE1_ITEM1_ID};
-        String[] expectedEntryContent =
-                {TEST_SERVER1_NODE1_ITEM5_CONTENT, TEST_SERVER1_NODE1_ITEM4_CONTENT, TEST_SERVER1_NODE1_ITEM3_CONTENT, TEST_SERVER1_NODE1_ITEM2_CONTENT,
-                        TEST_SERVER1_NODE1_ITEM1_CONTENT};
+        String[] expectedNodeIds = { TEST_SERVER1_NODE1_ITEM5_ID,
+                TEST_SERVER1_NODE1_ITEM4_ID, TEST_SERVER1_NODE1_ITEM3_ID,
+                TEST_SERVER1_NODE1_ITEM2_ID, TEST_SERVER1_NODE1_ITEM1_ID, };
+        String[] expectedEntryContent = { TEST_SERVER1_NODE1_ITEM5_CONTENT,
+                TEST_SERVER1_NODE1_ITEM4_CONTENT,
+                TEST_SERVER1_NODE1_ITEM3_CONTENT,
+                TEST_SERVER1_NODE1_ITEM2_CONTENT,
+                TEST_SERVER1_NODE1_ITEM1_CONTENT, };
 
         int i = 0;
 
         while (result.hasNext()) {
             NodeItem item = result.next();
 
-            assertEquals("The " + i + " node returned does not have the expected id", expectedNodeIds[i], item.getId());
-            assertTrue("The " + i + " node returned does not have the expected content", item.getPayload().contains(expectedEntryContent[i]));
+            assertEquals("The " + i
+                    + " node returned does not have the expected id",
+                    expectedNodeIds[i], item.getId());
+            assertTrue("The " + i
+                    + " node returned does not have the expected content", item
+                    .getPayload().contains(expectedEntryContent[i]));
 
             ++i;
         }
@@ -227,24 +265,32 @@ public class JDBCNodeStoreTest extends JDBCNodeStoreAbstract {
 
         // We shouldn't see this item come out!
         store.addRemoteNode(TEST_SERVER2_NODE1_ID);
-        store.addNodeItem(new NodeItemImpl(TEST_SERVER2_NODE1_ID, "1", new Date(), "item-payload"));
+        store.addNodeItem(new NodeItemImpl(TEST_SERVER2_NODE1_ID, "1",
+                new Date(), "item-payload"));
 
-        Iterator<NodeItem> result = store.getNewNodeItemsForUser(TEST_SERVER1_USER1_JID, new Date(0), new Date());
+        Iterator<NodeItem> result = store.getNewNodeItemsForUser(
+                TEST_SERVER1_USER1_JID, new Date(0), new Date());
 
-        String[] expectedNodeIds =
-                {TEST_SERVER1_NODE1_ITEM5_ID, TEST_SERVER1_NODE1_ITEM4_ID, TEST_SERVER1_NODE1_ITEM3_ID, TEST_SERVER1_NODE1_ITEM2_ID,
-                        TEST_SERVER1_NODE1_ITEM1_ID};
-        String[] expectedEntryContent =
-                {TEST_SERVER1_NODE1_ITEM5_CONTENT, TEST_SERVER1_NODE1_ITEM4_CONTENT, TEST_SERVER1_NODE1_ITEM3_CONTENT, TEST_SERVER1_NODE1_ITEM2_CONTENT,
-                        TEST_SERVER1_NODE1_ITEM1_CONTENT};
+        String[] expectedNodeIds = { TEST_SERVER1_NODE1_ITEM5_ID,
+                TEST_SERVER1_NODE1_ITEM4_ID, TEST_SERVER1_NODE1_ITEM3_ID,
+                TEST_SERVER1_NODE1_ITEM2_ID, TEST_SERVER1_NODE1_ITEM1_ID, };
+        String[] expectedEntryContent = { TEST_SERVER1_NODE1_ITEM5_CONTENT,
+                TEST_SERVER1_NODE1_ITEM4_CONTENT,
+                TEST_SERVER1_NODE1_ITEM3_CONTENT,
+                TEST_SERVER1_NODE1_ITEM2_CONTENT,
+                TEST_SERVER1_NODE1_ITEM1_CONTENT, };
 
         int i = 0;
 
         while (result.hasNext()) {
             NodeItem item = result.next();
 
-            assertEquals("The " + i + " node returned does not have the expected id", expectedNodeIds[i], item.getId());
-            assertTrue("The " + i + " node returned does not have the expected content", item.getPayload().contains(expectedEntryContent[i]));
+            assertEquals("The " + i
+                    + " node returned does not have the expected id",
+                    expectedNodeIds[i], item.getId());
+            assertTrue("The " + i
+                    + " node returned does not have the expected content", item
+                    .getPayload().contains(expectedEntryContent[i]));
 
             ++i;
         }
@@ -254,13 +300,16 @@ public class JDBCNodeStoreTest extends JDBCNodeStoreAbstract {
     }
 
     @Test
-    public void testGetNewNodeItemsForUserBetweenDatesWhenOutcast() throws Exception {
+    public void testGetNewNodeItemsForUserBetweenDatesWhenOutcast()
+            throws Exception {
 
         dbTester.loadData("node_1");
 
-        store.setUserAffiliation(TEST_SERVER1_NODE1_ID, TEST_SERVER1_USER1_JID, Affiliations.outcast);
+        store.setUserAffiliation(TEST_SERVER1_NODE1_ID, TEST_SERVER1_USER1_JID,
+                Affiliations.outcast);
 
-        Iterator<NodeItem> result = store.getNewNodeItemsForUser(TEST_SERVER1_USER1_JID, new Date(0), new Date());
+        Iterator<NodeItem> result = store.getNewNodeItemsForUser(
+                TEST_SERVER1_USER1_JID, new Date(0), new Date());
 
         int i = 0;
         while (result.hasNext()) {
@@ -300,30 +349,37 @@ public class JDBCNodeStoreTest extends JDBCNodeStoreAbstract {
     public void testGetNodeItem() throws Exception {
         dbTester.loadData("node_1");
 
-        NodeItem result = store.getNodeItem(TEST_SERVER1_NODE1_ID, TEST_SERVER1_NODE1_ITEM1_ID);
+        NodeItem result = store.getNodeItem(TEST_SERVER1_NODE1_ID,
+                TEST_SERVER1_NODE1_ITEM1_ID);
 
-        assertEquals("Unexpected Node ID returned", TEST_SERVER1_NODE1_ITEM1_ID, result.getId());
-        assertTrue("Unexpected Node content returned", result.getPayload().contains(TEST_SERVER1_NODE1_ITEM1_CONTENT));
+        assertEquals("Unexpected Node ID returned",
+                TEST_SERVER1_NODE1_ITEM1_ID, result.getId());
+        assertTrue("Unexpected Node content returned", result.getPayload()
+                .contains(TEST_SERVER1_NODE1_ITEM1_CONTENT));
     }
-
+    
     @Test
     public void canUpdateUpdatedDateOfItem() throws Exception {
         dbTester.loadData("node_1");
 
-        NodeItem result = store.getNodeItem(TEST_SERVER1_NODE1_ID, TEST_SERVER1_NODE1_ITEM1_ID);
+        NodeItem result = store.getNodeItem(TEST_SERVER1_NODE1_ID,
+                TEST_SERVER1_NODE1_ITEM1_ID);
         Date originalDate = result.getUpdated();
         store.updateThreadParent(result.getNodeId(), result.getId());
-        result = store.getNodeItem(TEST_SERVER1_NODE1_ID, TEST_SERVER1_NODE1_ITEM1_ID);
+        result = store.getNodeItem(TEST_SERVER1_NODE1_ID,
+                TEST_SERVER1_NODE1_ITEM1_ID);
         assertTrue(result.getUpdated().after(originalDate));
     }
 
     @Test
     public void canGetItemReplies() throws Exception {
         dbTester.loadData("node_1");
-        NodeItem testItem = new NodeItemImpl(TEST_SERVER1_NODE1_ID, "a6", new Date(), "<entry>payload</entry>", "a5", new Date());
+        NodeItem testItem = new NodeItemImpl(TEST_SERVER1_NODE1_ID, "a6",
+                new Date(), "<entry>payload</entry>", "a5", new Date());
         store.addNodeItem(testItem);
 
-        ClosableIteratorImpl<NodeItem> items = store.getNodeItemReplies(TEST_SERVER1_NODE1_ID, "a5", null, -1);
+        ClosableIteratorImpl<NodeItem> items = store.getNodeItemReplies(
+                TEST_SERVER1_NODE1_ID, "a5", null, -1);
 
         int count = 0;
         NodeItem item = null;
@@ -339,17 +395,21 @@ public class JDBCNodeStoreTest extends JDBCNodeStoreAbstract {
     @Test
     public void canGetItemRepliesWithResultSetManagement() throws Exception {
         dbTester.loadData("node_1");
-        NodeItem testItem1 = new NodeItemImpl(TEST_SERVER1_NODE1_ID, "a6", new Date(), "<entry>payload</entry>", "a5", new Date());
-        NodeItem testItem2 = new NodeItemImpl(TEST_SERVER1_NODE1_ID, "a7", new Date(0), "<entry>payload</entry>", "a5", new Date());
-        NodeItem testItem3 = new NodeItemImpl(TEST_SERVER1_NODE1_ID, "a8", new Date(100), "<entry>payload</entry>", "a5", new Date());
-        NodeItem testItem4 =
-                new NodeItemImpl(TEST_SERVER1_NODE1_ID, "a9", new Date(200), "<entry>payload</entry>", "/full-node-item-id-ref/a5", new Date());
+        NodeItem testItem1 = new NodeItemImpl(TEST_SERVER1_NODE1_ID, "a6",
+                new Date(), "<entry>payload</entry>", "a5", new Date());
+        NodeItem testItem2 = new NodeItemImpl(TEST_SERVER1_NODE1_ID, "a7",
+                new Date(0), "<entry>payload</entry>", "a5", new Date());
+        NodeItem testItem3 = new NodeItemImpl(TEST_SERVER1_NODE1_ID, "a8",
+                new Date(100), "<entry>payload</entry>", "a5", new Date());
+        NodeItem testItem4 = new NodeItemImpl(TEST_SERVER1_NODE1_ID, "a9",
+                new Date(200), "<entry>payload</entry>", "/full-node-item-id-ref/a5", new Date());
         store.addNodeItem(testItem1);
         store.addNodeItem(testItem2);
         store.addNodeItem(testItem3);
         store.addNodeItem(testItem4);
 
-        ClosableIteratorImpl<NodeItem> items = store.getNodeItemReplies(TEST_SERVER1_NODE1_ID, "a5", "a7", 2);
+        ClosableIteratorImpl<NodeItem> items = store.getNodeItemReplies(
+                TEST_SERVER1_NODE1_ID, "a5", "a7", 2);
 
         int count = 0;
         ArrayList<NodeItem> itemsResult = new ArrayList<NodeItem>();
@@ -366,7 +426,8 @@ public class JDBCNodeStoreTest extends JDBCNodeStoreAbstract {
     @Test
     public void canGetCountOfItemReplies() throws Exception {
         dbTester.loadData("node_1");
-        NodeItem testItem = new NodeItemImpl(TEST_SERVER1_NODE1_ID, "a6", new Date(), "<entry>payload</entry>", "/full-node-item-id-ref/a5", new Date());
+        NodeItem testItem = new NodeItemImpl(TEST_SERVER1_NODE1_ID, "a6",
+                new Date(), "<entry>payload</entry>", "/full-node-item-id-ref/a5", new Date());
         store.addNodeItem(testItem);
 
         int items = store.getCountNodeItemReplies(TEST_SERVER1_NODE1_ID, "a5");
@@ -376,10 +437,12 @@ public class JDBCNodeStoreTest extends JDBCNodeStoreAbstract {
     @Test
     public void canGetItemThread() throws Exception {
         dbTester.loadData("node_1");
-        NodeItem testItem = new NodeItemImpl(TEST_SERVER1_NODE1_ID, "a6", new Date(), "<entry>payload</entry>", "/full-node-item-id-ref/a5", new Date());
+        NodeItem testItem = new NodeItemImpl(TEST_SERVER1_NODE1_ID, "a6",
+                new Date(), "<entry>payload</entry>", "/full-node-item-id-ref/a5", new Date());
         store.addNodeItem(testItem);
 
-        ClosableIteratorImpl<NodeItem> items = store.getNodeItemThread(TEST_SERVER1_NODE1_ID, "a5", null, -1);
+        ClosableIteratorImpl<NodeItem> items = store.getNodeItemThread(
+                TEST_SERVER1_NODE1_ID, "a5", null, -1);
 
         int count = 0;
         NodeItem item = null;
@@ -391,24 +454,29 @@ public class JDBCNodeStoreTest extends JDBCNodeStoreAbstract {
         assertEquals(2, count);
         assertSameNodeItem(item, testItem);
     }
-
+    
 
     @Test
     public void canGetItemThreadWithResultSetManagement() throws Exception {
         dbTester.loadData("node_1");
-        NodeItem testItemParent = new NodeItemImpl(TEST_SERVER1_NODE1_ID, "a100", new Date(100), "<entry>payload parent</entry>", null, new Date());
-        NodeItem testItem1 = new NodeItemImpl(TEST_SERVER1_NODE1_ID, "a6", new Date(20), "<entry>payload</entry>", "a100", new Date());
-        NodeItem testItem2 = new NodeItemImpl(TEST_SERVER1_NODE1_ID, "a7", new Date(40), "<entry>payload</entry>", "a100", new Date());
-        NodeItem testItem3 =
-                new NodeItemImpl(TEST_SERVER1_NODE1_ID, "/full-node-item-id-ref/a8", new Date(80), "<entry>payload</entry>", "a100", new Date());
-        NodeItem testItem4 = new NodeItemImpl(TEST_SERVER1_NODE1_ID, "a9", new Date(160), "<entry>payload</entry>", "a100", new Date());
+        NodeItem testItemParent = new NodeItemImpl(TEST_SERVER1_NODE1_ID,
+                "a100", new Date(100), "<entry>payload parent</entry>", null, new Date());
+        NodeItem testItem1 = new NodeItemImpl(TEST_SERVER1_NODE1_ID, "a6",
+                new Date(20), "<entry>payload</entry>", "a100", new Date());
+        NodeItem testItem2 = new NodeItemImpl(TEST_SERVER1_NODE1_ID, "a7",
+                new Date(40), "<entry>payload</entry>", "a100", new Date());
+        NodeItem testItem3 = new NodeItemImpl(TEST_SERVER1_NODE1_ID, "/full-node-item-id-ref/a8",
+                new Date(80), "<entry>payload</entry>", "a100", new Date());
+        NodeItem testItem4 = new NodeItemImpl(TEST_SERVER1_NODE1_ID, "a9",
+                new Date(160), "<entry>payload</entry>", "a100", new Date());
         store.addNodeItem(testItemParent);
         store.addNodeItem(testItem1);
         store.addNodeItem(testItem2);
         store.addNodeItem(testItem3);
         store.addNodeItem(testItem4);
 
-        ClosableIteratorImpl<NodeItem> items = store.getNodeItemThread(TEST_SERVER1_NODE1_ID, "a100", "a7", 2);
+        ClosableIteratorImpl<NodeItem> items = store.getNodeItemThread(
+                TEST_SERVER1_NODE1_ID, "a100", "a7", 2);
 
         int count = 0;
         ArrayList<NodeItem> itemsResult = new ArrayList<NodeItem>();
@@ -425,7 +493,8 @@ public class JDBCNodeStoreTest extends JDBCNodeStoreAbstract {
     @Test
     public void canGetCountOfItemThread() throws Exception {
         dbTester.loadData("node_1");
-        NodeItem testItem = new NodeItemImpl(TEST_SERVER1_NODE1_ID, "a6", new Date(), "<entry>payload</entry>", "/full-node-item-id-ref/a5", new Date());
+        NodeItem testItem = new NodeItemImpl(TEST_SERVER1_NODE1_ID, "a6",
+                new Date(), "<entry>payload</entry>", "/full-node-item-id-ref/a5", new Date());
         store.addNodeItem(testItem);
 
         int items = store.getCountNodeThread(TEST_SERVER1_NODE1_ID, "a5");
@@ -440,17 +509,19 @@ public class JDBCNodeStoreTest extends JDBCNodeStoreAbstract {
         final Timestamp updated = new Timestamp(System.currentTimeMillis());
         final String testContent = "<content>Hello World</content>";
 
-        NodeItem item = new NodeItemImpl(TEST_SERVER1_NODE1_ID, itemId, updated, testContent);
+        NodeItem item = new NodeItemImpl(TEST_SERVER1_NODE1_ID, itemId,
+                updated, testContent);
         store.addNodeItem(item);
 
-        dbTester.assertions().assertTableContains("items", new HashMap<String, Object>() {
-            {
-                put("node", TEST_SERVER1_NODE1_ID);
-                put("id", itemId);
-                put("updated", updated);
-                put("xml", testContent);
-            }
-        });
+        dbTester.assertions().assertTableContains("items",
+                new HashMap<String, Object>() {
+                    {
+                        put("node", TEST_SERVER1_NODE1_ID);
+                        put("id", itemId);
+                        put("updated", updated);
+                        put("xml", testContent);
+                    }
+                });
     }
 
     @Test
@@ -462,18 +533,20 @@ public class JDBCNodeStoreTest extends JDBCNodeStoreAbstract {
         final String testContent = "<content>Hello World</content>";
         final String inReplyTo = "a5";
 
-        NodeItem item = new NodeItemImpl(TEST_SERVER1_NODE1_ID, itemId, updated, testContent, "a5", new Date());
+        NodeItem item = new NodeItemImpl(TEST_SERVER1_NODE1_ID, itemId,
+                updated, testContent, "a5", new Date());
         store.addNodeItem(item);
 
-        dbTester.assertions().assertTableContains("items", new HashMap<String, Object>() {
-            {
-                put("node", TEST_SERVER1_NODE1_ID);
-                put("id", itemId);
-                put("updated", updated);
-                put("xml", testContent);
-                put("in_reply_to", inReplyTo);
-            }
-        });
+        dbTester.assertions().assertTableContains("items",
+                new HashMap<String, Object>() {
+                    {
+                        put("node", TEST_SERVER1_NODE1_ID);
+                        put("id", itemId);
+                        put("updated", updated);
+                        put("xml", testContent);
+                        put("in_reply_to", inReplyTo);
+                    }
+                });
     }
 
     @Test(expected = NodeStoreException.class)
@@ -483,7 +556,8 @@ public class JDBCNodeStoreTest extends JDBCNodeStoreAbstract {
         final Date updated = new Date(System.currentTimeMillis());
         final String testContent = "<content>Hello World</content>";
 
-        NodeItem item = new NodeItemImpl(TEST_SERVER1_NODE1_ID, TEST_SERVER1_NODE1_ITEM1_ID, updated, testContent);
+        NodeItem item = new NodeItemImpl(TEST_SERVER1_NODE1_ID,
+                TEST_SERVER1_NODE1_ITEM1_ID, updated, testContent);
         store.addNodeItem(item);
     }
 
@@ -494,28 +568,32 @@ public class JDBCNodeStoreTest extends JDBCNodeStoreAbstract {
         final Timestamp updated = new Timestamp(System.currentTimeMillis());
         final String testContent = "<content>Hello World</content>";
 
-        NodeItem item = new NodeItemImpl(TEST_SERVER1_NODE1_ID, TEST_SERVER1_NODE1_ITEM1_ID, updated, testContent);
+        NodeItem item = new NodeItemImpl(TEST_SERVER1_NODE1_ID,
+                TEST_SERVER1_NODE1_ITEM1_ID, updated, testContent);
         store.updateNodeItem(item);
 
-        dbTester.assertions().assertTableContains("items", new HashMap<String, Object>() {
-            {
-                put("node", TEST_SERVER1_NODE1_ID);
-                put("id", TEST_SERVER1_NODE1_ITEM1_ID);
-                put("updated", updated);
-                put("xml", testContent);
-            }
-        });
+        dbTester.assertions().assertTableContains("items",
+                new HashMap<String, Object>() {
+                    {
+                        put("node", TEST_SERVER1_NODE1_ID);
+                        put("id", TEST_SERVER1_NODE1_ITEM1_ID);
+                        put("updated", updated);
+                        put("xml", testContent);
+                    }
+                });
     }
 
     @Test(expected = ItemNotFoundException.class)
-    public void testUpdateNodeItemForNonExistantItemThrowsException() throws Exception {
+    public void testUpdateNodeItemForNonExistantItemThrowsException()
+            throws Exception {
         dbTester.loadData("node_1");
 
         final String itemId = "test-item-id";
         final Timestamp updated = new Timestamp(System.currentTimeMillis());
         final String testContent = "<content>Hello World</content>";
 
-        NodeItem item = new NodeItemImpl(TEST_SERVER1_NODE1_ID, itemId, updated, testContent);
+        NodeItem item = new NodeItemImpl(TEST_SERVER1_NODE1_ID, itemId,
+                updated, testContent);
         store.updateNodeItem(item);
     }
 
@@ -523,18 +601,21 @@ public class JDBCNodeStoreTest extends JDBCNodeStoreAbstract {
     public void testDeleteNodeItem() throws Exception {
         dbTester.loadData("node_1");
 
-        store.deleteNodeItemById(TEST_SERVER1_NODE1_ID, TEST_SERVER1_NODE1_ITEM1_ID);
+        store.deleteNodeItemById(TEST_SERVER1_NODE1_ID,
+                TEST_SERVER1_NODE1_ITEM1_ID);
 
-        dbTester.assertions().assertTableContains("items", new HashMap<String, Object>() {
-            {
-                put("node", TEST_SERVER1_NODE1_ID);
-                put("id", TEST_SERVER1_NODE1_ITEM1_ID);
-            }
-        }, 0);
+        dbTester.assertions().assertTableContains("items",
+                new HashMap<String, Object>() {
+                    {
+                        put("node", TEST_SERVER1_NODE1_ID);
+                        put("id", TEST_SERVER1_NODE1_ITEM1_ID);
+                    }
+                }, 0);
     }
 
     @Test(expected = ItemNotFoundException.class)
-    public void testDeleteNodeItemForNonExistantItemThrowsException() throws Exception {
+    public void testDeleteNodeItemForNonExistantItemThrowsException()
+            throws Exception {
 
         dbTester.loadData("node_1");
 
@@ -558,7 +639,8 @@ public class JDBCNodeStoreTest extends JDBCNodeStoreAbstract {
     }
 
     @Test
-    public void testPurgeNodeItemsDoesntDeleteItemsUnexpectedly() throws Exception {
+    public void testPurgeNodeItemsDoesntDeleteItemsUnexpectedly()
+            throws Exception {
 
         dbTester.loadData("node_1");
         int itemCount = store.countNodeItems(TEST_SERVER1_NODE1_ID);
@@ -566,24 +648,28 @@ public class JDBCNodeStoreTest extends JDBCNodeStoreAbstract {
         store.purgeNodeItems(TEST_SERVER1_NODE2_ID); // <--- NODE **2**
         assertEquals(itemCount, store.countNodeItems(TEST_SERVER1_NODE1_ID));
     }
-
+    
     @Test
-    public void testGetIsCachedSubscriptionNodeReturnsFalseWhereThereAreNoSubscriptions() throws Exception {
+    public void testGetIsCachedSubscriptionNodeReturnsFalseWhereThereAreNoSubscriptions()
+            throws Exception {
         boolean cached = store.nodeHasSubscriptions(TEST_SERVER1_NODE1_ID);
         assertEquals(false, cached);
     }
-
+    
     @Test(expected = IllegalArgumentException.class)
-    public void testFirehoseItemsThrowsExceptionIfNegativeLimitRequested() throws Exception {
-        store.getFirehose(-1, null, false);
+    public void testFirehoseItemsThrowsExceptionIfNegativeLimitRequested()
+            throws Exception {
+        store.getFirehose(-1, null, false, TEST_SERVER1_HOSTNAME);
     }
 
     @Test
     public void testCanGetFirehoseItems() throws Exception {
         dbTester.loadData("node_1");
         dbTester.loadData("node_2");
-        store.setNodeConfValue(TEST_SERVER1_NODE1_ID, "pubsub#access_model", "open");
-        store.setNodeConfValue(TEST_SERVER1_NODE2_ID, "pubsub#access_model", "open");
+        store.setNodeConfValue(TEST_SERVER1_NODE1_ID, "pubsub#access_model",
+                "open");
+        store.setNodeConfValue(TEST_SERVER1_NODE2_ID, "pubsub#access_model",
+                "open");
         // Add a remote node - don't expect to see
         HashMap<String, String> remoteNodeConf = new HashMap<String, String>();
         remoteNodeConf.put("pubsub#access_model", "open");
@@ -592,10 +678,13 @@ public class JDBCNodeStoreTest extends JDBCNodeStoreAbstract {
         // Add a private node - don't expect to see
         HashMap<String, String> privateNodeConf = new HashMap<String, String>();
         privateNodeConf.put("pubsub#access_model", "subscribe");
-        store.createNode(TEST_SERVER1_USER1_JID, TEST_SERVER1_NODE3_ID, privateNodeConf);
-        store.addNodeItem(new NodeItemImpl(TEST_SERVER1_NODE3_ID, "1111", new Date(), "<entry/>"));
+        store.createNode(TEST_SERVER1_USER1_JID, TEST_SERVER1_NODE3_ID,
+                privateNodeConf);
+        store.addNodeItem(new NodeItemImpl(TEST_SERVER1_NODE3_ID, "1111",
+                new Date(), "<entry/>"));
         Thread.sleep(4);
-        CloseableIterator<NodeItem> items = store.getFirehose(50, null, false);
+        CloseableIterator<NodeItem> items = store.getFirehose(50, null, 
+                false, TEST_SERVER1_HOSTNAME);
         NodeItem item = null;
         int count = 0;
         while (items.hasNext()) {
@@ -606,23 +695,29 @@ public class JDBCNodeStoreTest extends JDBCNodeStoreAbstract {
     }
 
     @Test
-    public void testCanGetFirehoseItemsIncludingPrivateAsAdminUser() throws Exception {
+    public void testCanGetFirehoseItemsIncludingPrivateAsAdminUser()
+            throws Exception {
         dbTester.loadData("node_1");
         dbTester.loadData("node_2");
-        store.setNodeConfValue(TEST_SERVER1_NODE1_ID, AccessModel.FIELD_NAME, AccessModels.open.toString());
-        store.setNodeConfValue(TEST_SERVER1_NODE2_ID, AccessModel.FIELD_NAME, AccessModels.open.toString());
+        store.setNodeConfValue(TEST_SERVER1_NODE1_ID, AccessModel.FIELD_NAME,
+                AccessModels.open.toString());
+        store.setNodeConfValue(TEST_SERVER1_NODE2_ID, AccessModel.FIELD_NAME,
+                AccessModels.open.toString());
         // Add a private node - *do* expect to see
         HashMap<String, String> privateNodeConf = new HashMap<String, String>();
         privateNodeConf.put(AccessModel.FIELD_NAME, AccessModels.authorize.toString());
-        store.createNode(TEST_SERVER1_USER1_JID, TEST_SERVER1_NODE3_ID, privateNodeConf);
-        store.addNodeItem(new NodeItemImpl(TEST_SERVER1_NODE3_ID, "1111", new Date(), "<entry/>"));
+        store.createNode(TEST_SERVER1_USER1_JID, TEST_SERVER1_NODE3_ID,
+                privateNodeConf);
+        store.addNodeItem(new NodeItemImpl(TEST_SERVER1_NODE3_ID, "1111",
+                new Date(), "<entry/>"));
         // Add a remote node - don't expect to see
         HashMap<String, String> remoteNodeConf = new HashMap<String, String>();
         remoteNodeConf.put(AccessModel.FIELD_NAME, AccessModels.open.toString());
         store.addRemoteNode(TEST_SERVER2_NODE1_ID);
         store.setNodeConf(TEST_SERVER2_NODE1_ID, remoteNodeConf);
 
-        CloseableIterator<NodeItem> items = store.getFirehose(50, null, true);
+        CloseableIterator<NodeItem> items = store.getFirehose(50, null, 
+                true, TEST_SERVER1_HOSTNAME);
         NodeItem item = null;
         int count = 0;
         while (items.hasNext()) {
@@ -637,13 +732,17 @@ public class JDBCNodeStoreTest extends JDBCNodeStoreAbstract {
     public void testCanGetFirehoseItemsWithRsm() throws Exception {
         dbTester.loadData("node_1");
         dbTester.loadData("node_2");
-        store.setNodeConfValue(TEST_SERVER1_NODE1_ID, "pubsub#access_model", "open");
-        store.setNodeConfValue(TEST_SERVER1_NODE2_ID, "pubsub#access_model", "open");
+        store.setNodeConfValue(TEST_SERVER1_NODE1_ID, "pubsub#access_model",
+                "open");
+        store.setNodeConfValue(TEST_SERVER1_NODE2_ID, "pubsub#access_model",
+                "open");
         // Add a private node - don't expect to see
         HashMap<String, String> privateNodeConf = new HashMap<String, String>();
         privateNodeConf.put("pubsub#access_model", "subscribe");
-        store.createNode(TEST_SERVER1_USER1_JID, TEST_SERVER1_NODE3_ID, privateNodeConf);
-        store.addNodeItem(new NodeItemImpl(TEST_SERVER1_NODE3_ID, "1111", new Date(), "<entry/>"));
+        store.createNode(TEST_SERVER1_USER1_JID, TEST_SERVER1_NODE3_ID,
+                privateNodeConf);
+        store.addNodeItem(new NodeItemImpl(TEST_SERVER1_NODE3_ID, "1111",
+                new Date(), "<entry/>"));
 
         // Add a remote node - don't expect to see
         HashMap<String, String> remoteNodeConf = new HashMap<String, String>();
@@ -651,7 +750,8 @@ public class JDBCNodeStoreTest extends JDBCNodeStoreAbstract {
         store.addRemoteNode(TEST_SERVER2_NODE1_ID);
         store.setNodeConf(TEST_SERVER2_NODE1_ID, remoteNodeConf);
 
-        CloseableIterator<NodeItem> items = store.getFirehose(2, "a3", false);
+        CloseableIterator<NodeItem> items = store.getFirehose(2, "a3", 
+                false, TEST_SERVER1_HOSTNAME);
         NodeItem item1 = items.next();
         NodeItem item2 = items.next();
         assertFalse(items.hasNext());
@@ -665,44 +765,55 @@ public class JDBCNodeStoreTest extends JDBCNodeStoreAbstract {
     public void testCanGetFirehoseItemCount() throws Exception {
         dbTester.loadData("node_1");
         dbTester.loadData("node_2");
-        store.setNodeConfValue(TEST_SERVER1_NODE1_ID, "pubsub#access_model", "open");
-        store.setNodeConfValue(TEST_SERVER1_NODE2_ID, "pubsub#access_model", "open");
+        store.setNodeConfValue(TEST_SERVER1_NODE1_ID, "pubsub#access_model",
+                "open");
+        store.setNodeConfValue(TEST_SERVER1_NODE2_ID, "pubsub#access_model",
+                "open");
         // Add a private node - *do* expect to see
         HashMap<String, String> privateNodeConf = new HashMap<String, String>();
         privateNodeConf.put("pubsub#access_model", "subscribe");
-        store.createNode(TEST_SERVER1_USER1_JID, TEST_SERVER1_NODE3_ID, privateNodeConf);
-        store.addNodeItem(new NodeItemImpl(TEST_SERVER1_NODE3_ID, "1111", new Date(), "<entry/>"));
+        store.createNode(TEST_SERVER1_USER1_JID, TEST_SERVER1_NODE3_ID,
+                privateNodeConf);
+        store.addNodeItem(new NodeItemImpl(TEST_SERVER1_NODE3_ID, "1111",
+                new Date(), "<entry/>"));
         // Add a remote node - don't expect to see
         HashMap<String, String> remoteNodeConf = new HashMap<String, String>();
         remoteNodeConf.put("pubsub#access_model", "open");
         store.addRemoteNode(TEST_SERVER2_NODE1_ID);
         store.setNodeConf(TEST_SERVER2_NODE1_ID, remoteNodeConf);
-        assertEquals(6, store.getFirehoseItemCount(false));
+        assertEquals(6, store.getFirehoseItemCount(false, TEST_SERVER1_HOSTNAME));
     }
 
     @Test
-    public void testCanGetFirehostItemCountWithPrivateItemsAsAdmin() throws Exception {
+    public void testCanGetFirehostItemCountWithPrivateItemsAsAdmin()
+            throws Exception {
         dbTester.loadData("node_1");
         dbTester.loadData("node_2");
-        store.setNodeConfValue(TEST_SERVER1_NODE1_ID, "pubsub#access_model", "open");
-        store.setNodeConfValue(TEST_SERVER1_NODE2_ID, "pubsub#access_model", "open");
+        store.setNodeConfValue(TEST_SERVER1_NODE1_ID, "pubsub#access_model",
+                "open");
+        store.setNodeConfValue(TEST_SERVER1_NODE2_ID, "pubsub#access_model",
+                "open");
         // Add a private node - *do* expect to see
         HashMap<String, String> privateNodeConf = new HashMap<String, String>();
         privateNodeConf.put("pubsub#access_model", "subscribe");
-        store.createNode(TEST_SERVER1_USER1_JID, TEST_SERVER1_NODE3_ID, privateNodeConf);
-        store.addNodeItem(new NodeItemImpl(TEST_SERVER1_NODE3_ID, "1111", new Date(), "<entry/>"));
+        store.createNode(TEST_SERVER1_USER1_JID, TEST_SERVER1_NODE3_ID,
+                privateNodeConf);
+        store.addNodeItem(new NodeItemImpl(TEST_SERVER1_NODE3_ID, "1111",
+                new Date(), "<entry/>"));
         // Add a remote node - don't expect to see
         HashMap<String, String> remoteNodeConf = new HashMap<String, String>();
         remoteNodeConf.put("pubsub#access_model", "open");
         store.addRemoteNode(TEST_SERVER2_NODE1_ID);
         store.setNodeConf(TEST_SERVER2_NODE1_ID, remoteNodeConf);
-        assertEquals(7, store.getFirehoseItemCount(true));
+        assertEquals(7, store.getFirehoseItemCount(true, TEST_SERVER1_HOSTNAME));
     }
-
+    
     @Test
     public void testOnlySeeSearchResultsFromSubscribedPostsNodes() throws Exception {
         dbTester.loadData("search-test-1");
-        CloseableIterator<NodeItem> items = store.performSearch(new JID("user1@server1"), new ArrayList<String>(), new JID("author@server1"), 1, 25);
+        CloseableIterator<NodeItem> items = store.performSearch(
+            new JID("user1@server1"), new ArrayList<String>(), new JID("author@server1"), 1, 25
+        );
         int counter = 0;
         while (items.hasNext()) {
             ++counter;
@@ -712,11 +823,13 @@ public class JDBCNodeStoreTest extends JDBCNodeStoreAbstract {
         }
         assertEquals(1, counter);
     }
-
+    
     @Test
     public void testOnlySeeSearchResultsFromRequestedAuthor() throws Exception {
         dbTester.loadData("search-test-2");
-        CloseableIterator<NodeItem> items = store.performSearch(new JID("user1@server1"), new ArrayList<String>(), new JID("author@server1"), 1, 25);
+        CloseableIterator<NodeItem> items = store.performSearch(
+            new JID("user1@server1"), new ArrayList<String>(), new JID("author@server1"), 1, 25
+        );
         int counter = 0;
         NodeItem item;
         while (items.hasNext()) {
@@ -732,16 +845,18 @@ public class JDBCNodeStoreTest extends JDBCNodeStoreAbstract {
         }
         assertEquals(2, counter);
     }
-
+    
     @Test
     public void testOnlySeeSearchResultsWithSpecificContent() throws Exception {
         dbTester.loadData("search-test-3");
-
+        
         ArrayList<String> searchTerms = new ArrayList<String>();
         searchTerms.add("keyword");
         searchTerms.add("post");
-
-        CloseableIterator<NodeItem> items = store.performSearch(new JID("user1@server1"), searchTerms, new JID("author@server1"), 1, 25);
+        
+        CloseableIterator<NodeItem> items = store.performSearch(
+            new JID("user1@server1"), searchTerms, new JID("author@server1"), 1, 25
+        );
         int counter = 0;
         NodeItem item;
         while (items.hasNext()) {
@@ -757,16 +872,18 @@ public class JDBCNodeStoreTest extends JDBCNodeStoreAbstract {
         }
         assertEquals(2, counter);
     }
-
+    
     @Test
     public void testOnlySeeSearchResultsWithSpecificContentAndAuthor() throws Exception {
         dbTester.loadData("search-test-4");
-
+        
         ArrayList<String> searchTerms = new ArrayList<String>();
         searchTerms.add("keyword");
         searchTerms.add("post");
-
-        CloseableIterator<NodeItem> items = store.performSearch(new JID("user1@server1"), searchTerms, new JID("author@server1"), 1, 25);
+        
+        CloseableIterator<NodeItem> items = store.performSearch(
+            new JID("user1@server1"), searchTerms, new JID("author@server1"), 1, 25
+        );
         int counter = 0;
         NodeItem item;
         while (items.hasNext()) {
@@ -786,7 +903,8 @@ public class JDBCNodeStoreTest extends JDBCNodeStoreAbstract {
     @Test
     public void testBeginTransaction() throws Exception {
         Connection conn = Mockito.mock(Connection.class);
-        JDBCNodeStore store = new JDBCNodeStore(conn, mock(NodeStoreSQLDialect.class));
+        JDBCNodeStore store = new JDBCNodeStore(conn,
+                mock(NodeStoreSQLDialect.class));
 
         NodeStore.Transaction t = store.beginTransaction();
 
@@ -798,7 +916,8 @@ public class JDBCNodeStoreTest extends JDBCNodeStoreAbstract {
     @Test
     public void testCommitTransaction() throws Exception {
         Connection conn = Mockito.mock(Connection.class);
-        JDBCNodeStore store = new JDBCNodeStore(conn, mock(NodeStoreSQLDialect.class));
+        JDBCNodeStore store = new JDBCNodeStore(conn,
+                mock(NodeStoreSQLDialect.class));
 
         NodeStore.Transaction t = store.beginTransaction();
         t.commit();
@@ -810,7 +929,8 @@ public class JDBCNodeStoreTest extends JDBCNodeStoreAbstract {
     @Test
     public void testCloseTransaction() throws Exception {
         Connection conn = Mockito.mock(Connection.class);
-        JDBCNodeStore store = new JDBCNodeStore(conn, mock(NodeStoreSQLDialect.class));
+        JDBCNodeStore store = new JDBCNodeStore(conn,
+                mock(NodeStoreSQLDialect.class));
 
         NodeStore.Transaction t = store.beginTransaction();
         t.close();
@@ -821,9 +941,11 @@ public class JDBCNodeStoreTest extends JDBCNodeStoreAbstract {
     }
 
     @Test
-    public void testCloseOnAlreadyCommittedTransactionDoesntRollback() throws Exception {
+    public void testCloseOnAlreadyCommittedTransactionDoesntRollback()
+            throws Exception {
         Connection conn = Mockito.mock(Connection.class);
-        JDBCNodeStore store = new JDBCNodeStore(conn, mock(NodeStoreSQLDialect.class));
+        JDBCNodeStore store = new JDBCNodeStore(conn,
+                mock(NodeStoreSQLDialect.class));
 
         NodeStore.Transaction t = store.beginTransaction();
         t.commit();
@@ -836,7 +958,8 @@ public class JDBCNodeStoreTest extends JDBCNodeStoreAbstract {
     @Test
     public void testNestedTransactionsOnlySetAutoCommitOnce() throws Exception {
         Connection conn = Mockito.mock(Connection.class);
-        JDBCNodeStore store = new JDBCNodeStore(conn, mock(NodeStoreSQLDialect.class));
+        JDBCNodeStore store = new JDBCNodeStore(conn,
+                mock(NodeStoreSQLDialect.class));
 
         store.beginTransaction();
 
@@ -851,9 +974,11 @@ public class JDBCNodeStoreTest extends JDBCNodeStoreAbstract {
     }
 
     @Test
-    public void testNestedTransactionsOnlyCallCommitOnOuterTransaction() throws Exception {
+    public void testNestedTransactionsOnlyCallCommitOnOuterTransaction()
+            throws Exception {
         Connection conn = Mockito.mock(Connection.class);
-        JDBCNodeStore store = new JDBCNodeStore(conn, mock(NodeStoreSQLDialect.class));
+        JDBCNodeStore store = new JDBCNodeStore(conn,
+                mock(NodeStoreSQLDialect.class));
 
         InOrder inOrder = inOrder(conn);
 
@@ -880,7 +1005,8 @@ public class JDBCNodeStoreTest extends JDBCNodeStoreAbstract {
     @Test(expected = IllegalStateException.class)
     public void testNestedTransactionsWithRollbackInMiddle() throws Exception {
         Connection conn = Mockito.mock(Connection.class);
-        JDBCNodeStore store = new JDBCNodeStore(conn, mock(NodeStoreSQLDialect.class));
+        JDBCNodeStore store = new JDBCNodeStore(conn,
+                mock(NodeStoreSQLDialect.class));
 
         NodeStore.Transaction t1 = store.beginTransaction();
         NodeStore.Transaction t2 = store.beginTransaction();
@@ -892,9 +1018,11 @@ public class JDBCNodeStoreTest extends JDBCNodeStoreAbstract {
     }
 
     @Test(expected = IllegalStateException.class)
-    public void testNestedTransactionsWithOutOfOrderCommitsThrowsException() throws Exception {
+    public void testNestedTransactionsWithOutOfOrderCommitsThrowsException()
+            throws Exception {
         Connection conn = Mockito.mock(Connection.class);
-        JDBCNodeStore store = new JDBCNodeStore(conn, mock(NodeStoreSQLDialect.class));
+        JDBCNodeStore store = new JDBCNodeStore(conn,
+                mock(NodeStoreSQLDialect.class));
 
         NodeStore.Transaction t1 = store.beginTransaction();
         NodeStore.Transaction t2 = store.beginTransaction();
@@ -908,7 +1036,8 @@ public class JDBCNodeStoreTest extends JDBCNodeStoreAbstract {
     @Test
     public void testSelectNodeThreads() throws Exception {
         dbTester.loadData("node_1");
-        assertEquals(5, store.getNodeThreads(TEST_SERVER1_NODE1_ID, null, 10).size());
+        assertEquals(5, store.getNodeThreads(TEST_SERVER1_NODE1_ID, null, 10)
+                .size());
     }
 
     @Test
@@ -926,81 +1055,126 @@ public class JDBCNodeStoreTest extends JDBCNodeStoreAbstract {
     @Test
     public void testNodeOwnersReturnsExpectedList() throws Exception {
         dbTester.loadData("node_1");
-
+        
         store.addUserSubscription(new NodeSubscriptionImpl(TEST_SERVER1_NODE1_ID, TEST_SERVER1_USER2_JID, Subscriptions.subscribed, null));
         store.setUserAffiliation(TEST_SERVER1_NODE1_ID, TEST_SERVER1_USER2_JID, Affiliations.owner);
-
+        
         assertEquals(2, store.getNodeOwners(TEST_SERVER1_NODE1_ID).size());
         assertEquals(TEST_SERVER1_USER1_JID, store.getNodeOwners(TEST_SERVER1_NODE1_ID).get(0));
         assertEquals(TEST_SERVER1_USER2_JID, store.getNodeOwners(TEST_SERVER1_NODE1_ID).get(1));
     }
-
+    
     @Test
     public void notPreviousRatingByUserReturnsFalse() throws Exception {
 
         String node = "/users/romeo@capulet.lit/posts";
         store.addRemoteNode(node);
-
-        String content =
-                "<entry xmlns='http://www.w3.org/2005/Atom' xmlns:thr='http://purl.org/syndication/thread/1.0'"
-                        + " xmlns:activity='http://activitystrea.ms/spec/1.0/'>" + "<id>tag:channels.capulet.lit,/users/romeo@capulet.lit/posts,6</id>"
-                        + "<title>Post title</title>" + "<published>2014-01-01T00:00:00.000Z</published>" + "<updated>2014-01-01T00:00:00.000Z</updated>"
-                        + "<author>" + "<name>romeo@capulet.lit</name>" + "<uri>acct:romeo@capulet.lit</uri>"
-                        + "<jid xmlns='http://buddycloud.com/atom-elements-0'>romeo@capulet.lit</jid>" + "</author>"
-                        + "<content type='text'>rating:5.0</content>" + "<activity:verb>rated</activity:verb>" + "<activity:object>"
-                        + "<activity:object-type>comment</activity:object-type>" + "</activity:object>"
-                        + "<thr:in-reply-to ref='tag:channels.capulet.lit,/users/romeo@capulet.lit/posts,5' />" + "<activity:target>"
-                        + "<id>tag:channels.capulet.lit,/users/romeo@capulet.lit/posts,5</id>" + "</activity:target>"
-                        + "<review:rating>5.0</review:rating>" + "</entry>";
-        String alternativeContent =
-                "<entry xmlns='http://www.w3.org/2005/Atom' xmlns:thr='http://purl.org/syndication/thread/1.0'"
-                        + " xmlns:activity='http://activitystrea.ms/spec/1.0/'>" + "<id>tag:channels.capulet.lit,/users/romeo@capulet.lit/posts,7</id>"
-                        + "<title>Post title</title>" + "<published>2014-01-01T00:00:00.000Z</published>" + "<content type='text'>rating:5.0</content>"
-                        + "<activity:verb>rated</activity:verb>" + "<activity:object>" + "<activity:object-type>comment</activity:object-type>"
-                        + "</activity:object>" + "<thr:in-reply-to ref='tag:channels.capulet.lit,/users/romeo@capulet.lit/posts,5' />"
-                        + "<activity:target>" + "<id>tag:channels.capulet.lit,/users/romeo@capulet.lit/posts,5</id>" + "</activity:target>"
-                        + "<review:rating>5.0</review:rating>" + "</entry>";
-
+        
+        String content = "" +
+                "<entry xmlns='http://www.w3.org/2005/Atom' xmlns:thr='http://purl.org/syndication/thread/1.0' " +
+                        "xmlns:activity='http://activitystrea.ms/spec/1.0/'>" +
+                    "<id>tag:channels.capulet.lit,/users/romeo@capulet.lit/posts,6</id>" +
+                    "<title>Post title</title>" +
+                    "<published>2014-01-01T00:00:00.000Z</published>" +
+                    "<updated>2014-01-01T00:00:00.000Z</updated>" +
+                    "<author>" +
+                          "<name>romeo@capulet.lit</name>" +
+                          "<uri>acct:romeo@capulet.lit</uri>" +
+                          "<jid xmlns='http://buddycloud.com/atom-elements-0'>romeo@capulet.lit</jid>" +
+                    "</author>" +
+                       "<content type='text'>rating:5.0</content>" +
+                       "<activity:verb>rated</activity:verb>" +
+                       "<activity:object>" +
+                          "<activity:object-type>comment</activity:object-type>" +
+                       "</activity:object>" +
+                       "<thr:in-reply-to ref='tag:channels.capulet.lit,/users/romeo@capulet.lit/posts,5' />" +
+                       "<activity:target>" +
+                           "<id>tag:channels.capulet.lit,/users/romeo@capulet.lit/posts,5</id>" +
+                       "</activity:target>" +
+                       "<review:rating>5.0</review:rating>" +
+                   "</entry>";
+                String alternativeContent = "" +
+                    "<entry xmlns='http://www.w3.org/2005/Atom' xmlns:thr='http://purl.org/syndication/thread/1.0' " +
+                            "xmlns:activity='http://activitystrea.ms/spec/1.0/'>" +
+                        "<id>tag:channels.capulet.lit,/users/romeo@capulet.lit/posts,7</id>" +
+                        "<title>Post title</title>" +
+                        "<published>2014-01-01T00:00:00.000Z</published>" +
+                           "<content type='text'>rating:5.0</content>" +
+                           "<activity:verb>rated</activity:verb>" +
+                           "<activity:object>" +
+                              "<activity:object-type>comment</activity:object-type>" +
+                           "</activity:object>" +
+                           "<thr:in-reply-to ref='tag:channels.capulet.lit,/users/romeo@capulet.lit/posts,5' />" +
+                           "<activity:target>" +
+                               "<id>tag:channels.capulet.lit,/users/romeo@capulet.lit/posts,5</id>" +
+                           "</activity:target>" +
+                           "<review:rating>5.0</review:rating>" +
+                       "</entry>";
+        
         NodeItem item1 = new NodeItemImpl(node, "6", new Date(), content);
         store.addNodeItem(item1);
         NodeItem item2 = new NodeItemImpl(node, "7", new Date(), alternativeContent);
         store.addNodeItem(item2);
-
-        Assert.assertFalse(store.userHasRatedPost(node, new JID("romeo@capulet.lit"), new GlobalItemIDImpl(new JID("channels.capulet.lit"), node, "6")));
+        
+        Assert.assertFalse(
+            store.userHasRatedPost(node, new JID("romeo@capulet.lit"), new GlobalItemIDImpl(new JID("channels.capulet.lit"), node, "6"))
+        );
     }
-
+    
     @Test
     public void previousRatingByUserReturnsTrue() throws Exception {
 
         String node = "/users/romeo@capulet.lit/posts";
         store.addRemoteNode(node);
-
-        String content =
-                "<entry xmlns='http://www.w3.org/2005/Atom' xmlns:thr='http://purl.org/syndication/thread/1.0'"
-                        + " xmlns:activity='http://activitystrea.ms/spec/1.0/'>" + "<id>tag:channels.capulet.lit,/users/romeo@capulet.lit/posts,6</id>"
-                        + "<title>Post title</title>" + "<published>2014-01-01T00:00:00.000Z</published>" + "<updated>2014-01-01T00:00:00.000Z</updated>"
-                        + "<author>" + "<name>romeo@capulet.lit</name>" + "<uri>acct:romeo@capulet.lit</uri>"
-                        + "<jid xmlns='http://buddycloud.com/atom-elements-0'>romeo@capulet.lit</jid>" + "</author>"
-                        + "<content type='text'>rating:5.0</content>" + "<activity:verb>rated</activity:verb>" + "<activity:object>"
-                        + "<activity:object-type>comment</activity:object-type>" + "</activity:object>"
-                        + "<thr:in-reply-to ref='tag:channels.capulet.lit,/users/romeo@capulet.lit/posts,5' />" + "<activity:target>"
-                        + "<id>tag:channels.capulet.lit,/users/romeo@capulet.lit/posts,5</id>" + "</activity:target>"
-                        + "<review:rating>5.0</review:rating>" + "</entry>";
-        String alternativeContent =
-                "<entry xmlns='http://www.w3.org/2005/Atom' xmlns:thr='http://purl.org/syndication/thread/1.0'"
-                        + " xmlns:activity='http://activitystrea.ms/spec/1.0/'>" + "<id>tag:channels.capulet.lit,/users/romeo@capulet.lit/posts,7</id>"
-                        + "<title>Post title</title>" + "<published>2014-01-01T00:00:00.000Z</published>" + "<content type='text'>rating:5.0</content>"
-                        + "<activity:verb>rated</activity:verb>" + "<activity:object>" + "<activity:object-type>comment</activity:object-type>"
-                        + "</activity:object>" + "<thr:in-reply-to ref='tag:channels.capulet.lit,/users/romeo@capulet.lit/posts,5' />"
-                        + "<activity:target>" + "<id>tag:channels.capulet.lit,/users/romeo@capulet.lit/posts,5</id>" + "</activity:target>"
-                        + "<review:rating>5.0</review:rating>" + "</entry>";
-
+        
+        String content = "" +
+                "<entry xmlns='http://www.w3.org/2005/Atom' xmlns:thr='http://purl.org/syndication/thread/1.0' " +
+                        "xmlns:activity='http://activitystrea.ms/spec/1.0/'>" +
+                    "<id>tag:channels.capulet.lit,/users/romeo@capulet.lit/posts,6</id>" +
+                    "<title>Post title</title>" +
+                    "<published>2014-01-01T00:00:00.000Z</published>" +
+                    "<updated>2014-01-01T00:00:00.000Z</updated>" +
+                    "<author>" +
+                          "<name>romeo@capulet.lit</name>" +
+                          "<uri>acct:romeo@capulet.lit</uri>" +
+                          "<jid xmlns='http://buddycloud.com/atom-elements-0'>romeo@capulet.lit</jid>" +
+                    "</author>" +
+                       "<content type='text'>rating:5.0</content>" +
+                       "<activity:verb>rated</activity:verb>" +
+                       "<activity:object>" +
+                          "<activity:object-type>comment</activity:object-type>" +
+                       "</activity:object>" +
+                       "<thr:in-reply-to ref='tag:channels.capulet.lit,/users/romeo@capulet.lit/posts,5' />" +
+                       "<activity:target>" +
+                           "<id>tag:channels.capulet.lit,/users/romeo@capulet.lit/posts,5</id>" +
+                       "</activity:target>" +
+                       "<review:rating>5.0</review:rating>" +
+                   "</entry>";
+                String alternativeContent = "" +
+                    "<entry xmlns='http://www.w3.org/2005/Atom' xmlns:thr='http://purl.org/syndication/thread/1.0' " +
+                            "xmlns:activity='http://activitystrea.ms/spec/1.0/'>" +
+                        "<id>tag:channels.capulet.lit,/users/romeo@capulet.lit/posts,7</id>" +
+                        "<title>Post title</title>" +
+                        "<published>2014-01-01T00:00:00.000Z</published>" +
+                           "<content type='text'>rating:5.0</content>" +
+                           "<activity:verb>rated</activity:verb>" +
+                           "<activity:object>" +
+                              "<activity:object-type>comment</activity:object-type>" +
+                           "</activity:object>" +
+                           "<thr:in-reply-to ref='tag:channels.capulet.lit,/users/romeo@capulet.lit/posts,5' />" +
+                           "<activity:target>" +
+                               "<id>tag:channels.capulet.lit,/users/romeo@capulet.lit/posts,5</id>" +
+                           "</activity:target>" +
+                           "<review:rating>5.0</review:rating>" +
+                       "</entry>";
+        
         NodeItem item1 = new NodeItemImpl(node, "6", new Date(), content);
         store.addNodeItem(item1);
         NodeItem item2 = new NodeItemImpl(node, "7", new Date(), alternativeContent);
         store.addNodeItem(item2);
-
-        Assert.assertTrue(store.userHasRatedPost(node, new JID("romeo@capulet.lit"), new GlobalItemIDImpl(new JID("channels.capulet.lit"), node, "5")));
+        
+        Assert.assertTrue(
+            store.userHasRatedPost(node, new JID("romeo@capulet.lit"), new GlobalItemIDImpl(new JID("channels.capulet.lit"), node, "5"))
+        );
     }
-
 }

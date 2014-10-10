@@ -31,6 +31,8 @@ import org.xmpp.packet.JID;
  */
 public class AtomEntryTest extends TestHandler {
 
+    private static final String ISO_8601_REGEX = "[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}.[0-9]{3}(Z|[+-][0-9]{2}:[0-9]{2})";
+
     private AtomEntry validator;
 
     private IQ publishRequest;
@@ -155,7 +157,7 @@ public class AtomEntryTest extends TestHandler {
         validator = getEntryObject(item);
         Assert.assertTrue(validator.isValid());
         Element entry = validator.getPayload();
-        Assert.assertTrue(entry.elementText("updated").matches("[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}.[0-9]{3}Z"));
+        Assert.assertTrue(entry.elementText("updated").matches(ISO_8601_REGEX));
     }
 
     @Test

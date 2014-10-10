@@ -14,13 +14,15 @@ import org.dom4j.io.SAXReader;
 import org.xmpp.packet.IQ;
 
 public class TestHandler {
-
-    public static final String STANZA_PATH = "src/test/resources/stanzas";
-
+    
+    public static final String  STANZA_PATH = "src/test/resources/stanzas";
+    
     private static final String CONFIGURATION_PROPERTIES = "src/test/resources/configuration.properties";
-    public static final String LOGGER_PROPERTIES = "src/test/resources/log4j.properties";
-
-    public static Properties readConf() throws FileNotFoundException, IOException {
+    public static final String  LOGGER_PROPERTIES        = "src/test/resources/log4j.properties";
+    
+    public static Properties readConf() 
+        throws FileNotFoundException, IOException {
+        Configuration.reset();
         Configuration conf = Configuration.getInstance();
         try {
             conf.load(new FileInputStream(CONFIGURATION_PROPERTIES));
@@ -30,21 +32,25 @@ public class TestHandler {
         }
         return conf;
     }
-
-    public static String readStanzaAsString(String stanzaPath) throws IOException, DocumentException {
-        String stanzaStr = IOUtils.toString(new FileInputStream(STANZA_PATH + stanzaPath));
+    
+    public static String readStanzaAsString(String stanzaPath) 
+        throws IOException, DocumentException {
+        String stanzaStr = IOUtils.toString(
+                new FileInputStream(STANZA_PATH + stanzaPath));
         return stanzaStr.replaceAll("   ", "").replaceAll("\n", "");
     }
-
-    public static IQ readStanzaAsIq(String stanzaPath) throws IOException, DocumentException {
-        String stanzaStr = IOUtils.toString(new FileInputStream(STANZA_PATH + stanzaPath));
+    
+    public static IQ readStanzaAsIq(String stanzaPath)
+        throws IOException, DocumentException {
+        String stanzaStr = IOUtils.toString(
+                new FileInputStream(STANZA_PATH + stanzaPath));
         return toIq(stanzaStr);
     }
 
     public static IQ toIq(String stanzaStr) throws DocumentException {
         return new IQ(parseXml(stanzaStr));
     }
-
+    
     public static Element parseXml(String stanzaStr) throws DocumentException {
         SAXReader xmlReader = new SAXReader();
         xmlReader.setMergeAdjacentText(true);

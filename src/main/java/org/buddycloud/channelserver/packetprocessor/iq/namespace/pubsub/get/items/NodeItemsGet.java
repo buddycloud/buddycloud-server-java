@@ -5,6 +5,7 @@ import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 
 import org.apache.log4j.Logger;
+import org.buddycloud.channelserver.Configuration;
 import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.channel.node.configuration.field.AccessModel;
 import org.buddycloud.channelserver.db.CloseableIterator;
@@ -84,7 +85,7 @@ public class NodeItemsGet implements PubSubElementProcessor {
         element = elm;
         resultSetManagement = rsm;
 
-        if (!channelManager.isLocalJID(requestIq.getFrom())) {
+        if (!Configuration.getInstance().isLocalJID(requestIq.getFrom())) {
             reply.getElement().addAttribute("remote-server-discover", "false");
         }
 
@@ -95,8 +96,9 @@ public class NodeItemsGet implements PubSubElementProcessor {
             this.actor = requestIq.getFrom();
         }
 
-        if (!channelManager.isLocalNode(node) && !isCached) {
+        if (!Configuration.getInstance().isLocalNode(node) && !isCached) {
             LOGGER.debug("Node " + node + " is remote and not cached, off to get some data");
+
             makeRemoteRequest();
             return;
         }
@@ -129,16 +131,19 @@ public class NodeItemsGet implements PubSubElementProcessor {
 
     private boolean getItem() throws Exception {
         NodeItem nodeItem = channelManager.getNodeItem(node, element.element(XMLConstants.ITEM_ELEM).attributeValue(XMLConstants.ID_ATTR));
+
         if (nodeItem == null) {
-            if (!channelManager.isLocalNode(node)) {
+            if (!Configuration.getInstance().isLocalNode(node)) {
                 makeRemoteRequest();
                 return false;
             }
             setErrorCondition(PacketError.Type.cancel, PacketError.Condition.item_not_found);
             return true;
         }
+
         Element pubsub = reply.getElement().addElement(XMLConstants.PUBSUB_ELEM, JabberPubsub.NAMESPACE_URI);
         Element items = pubsub.addElement(XMLConstants.ITEMS_ELEM).addAttribute(XMLConstants.NODE_ATTR, node);
+
         addItemToResponse(nodeItem, items);
         return true;
     }
@@ -175,6 +180,7 @@ public class NodeItemsGet implements PubSubElementProcessor {
         String afterItemId = null;
 
         String maxItems = element.attributeValue(XMLConstants.MAX_ITEMS_ATTR);
+
         if (maxItems != null) {
             maxItemsToReturn = Integer.parseInt(maxItems);
         }
@@ -211,7 +217,7 @@ public class NodeItemsGet implements PubSubElementProcessor {
         entry = null;
         int totalEntriesCount = getNodeItems(items, maxItemsToReturn, afterItemId);
 
-        if ((!channelManager.isLocalNode(node)) && (0 == rsmEntriesCount)) {
+        if ((false == Configuration.getInstance().isLocalNode(node)) && (0 == rsmEntriesCount)) {
             LOGGER.debug("No results in cache for remote node, so " + "we're going federated to get more");
             makeRemoteRequest();
             return;
@@ -239,7 +245,7 @@ public class NodeItemsGet implements PubSubElementProcessor {
     private boolean userCanViewNode() throws NodeStoreException {
         NodeMembership nodeMembership = channelManager.getNodeMembership(node, actor);
 
-        if (getNodeViewAcl().canViewNode(node, nodeMembership, getNodeAccessModel(), channelManager.isLocalJID(actor))) {
+        if (getNodeViewAcl().canViewNode(node, nodeMembership, getNodeAccessModel(), Configuration.getInstance().isLocalJID(actor))) {
             return true;
         }
         NodeAclRefuseReason reason = getNodeViewAcl().getReason();

@@ -3,6 +3,7 @@ package org.buddycloud.channelserver.packetprocessor.message.event;
 import java.util.Properties;
 import java.util.concurrent.BlockingQueue;
 
+import org.buddycloud.channelserver.Configuration;
 import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.db.exception.NodeStoreException;
 import org.buddycloud.channelserver.pubsub.affiliation.Affiliations;
@@ -17,7 +18,8 @@ public class AffiliationProcessor extends AbstractMessageProcessor {
     private JID jid;
     private Affiliations affiliation;
 
-    public AffiliationProcessor(BlockingQueue<Packet> outQueue, Properties configuration, ChannelManager channelManager) {
+    public AffiliationProcessor(BlockingQueue<Packet> outQueue,
+            Properties configuration, ChannelManager channelManager) {
         super(channelManager, configuration, outQueue);
     }
 
@@ -27,7 +29,7 @@ public class AffiliationProcessor extends AbstractMessageProcessor {
 
         handleAffiliationElement();
 
-        if (true == channelManager.isLocalNode(node)) {
+        if (true == Configuration.getInstance().isLocalNode(node)) {
             return;
         }
         if (null == affiliation) {
@@ -41,15 +43,17 @@ public class AffiliationProcessor extends AbstractMessageProcessor {
     }
 
     private void handleAffiliationElement() throws NodeStoreException {
-        Element affiliationsElement = message.getElement().element("event").element("affiliations");
+        Element affiliationsElement = message.getElement().element("event")
+                .element("affiliations");
         Element affiliationElement = affiliationsElement.element("affiliation");
+        node = affiliationsElement.attributeValue("node");
         if (null == affiliationElement) {
             return;
         }
         jid = new JID(affiliationElement.attributeValue("jid"));
-        node = affiliationsElement.attributeValue("node");
-        affiliation = Affiliations.valueOf(affiliationElement.attributeValue("affiliation"));
-        if (true == channelManager.isLocalNode(node)) {
+        affiliation = Affiliations.valueOf(affiliationElement
+                .attributeValue("affiliation"));
+        if (true == Configuration.getInstance().isLocalNode(node)) {
             return;
         }
         storeNewAffiliation();

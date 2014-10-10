@@ -11,6 +11,7 @@ import java.util.Collections;
 import java.util.Properties;
 
 import org.apache.log4j.Logger;
+import org.buddycloud.channelserver.channel.LocalDomainChecker;
 import org.xmpp.packet.JID;
 
 public class Configuration extends Properties {
@@ -19,12 +20,13 @@ public class Configuration extends Properties {
     private static final long serialVersionUID = 1L;
 
     private static final String ARRAY_PROPERTY_SEPARATOR = ";";
+    private static final String INVALID_NODE = "Illegal node format";
 
     public static final String CONFIGURATION_SERVER_DOMAIN = "server.domain";
     public static final String CONFIGURATION_SERVER_CHANNELS_DOMAIN = "server.domain.channels";
     public static final String CONFIGURATION_SERVER_TOPICS_DOMAIN = "server.domain.topics";
     public static final String CONFIGURATION_LOCAL_DOMAIN_CHECKER = "server.domain.checker";
-
+    
     public static final String CONFIGURATION_ADMIN_USERS = "users.admin";
 
     public static final String CONFIGURATION_CHANNELS_AUTOSUBSCRIBE = "channels.autosubscribe";
@@ -33,17 +35,17 @@ public class Configuration extends Properties {
     public static final String CONFIGURATION_CHANNELS_DEFAULT_ACCESSMODEL = "channel.configuration.default.accessmodel";
     public static final String CONFIGURATION_CHANNELS_DEFAULT_DESCRIPTION = "channel.configuration.default.description";
     public static final String CONFIGURATION_CHANNELS_DEFAULT_TITLE = "channel.configuration.default.title";
-
+    
     public static final String DISCOVERY_USE_DNS = "discovery.dns.enabled";
 
     public static final String PERSIST_PRESENCE_DATA = "users.presence.persist";
-
+    
     public static final String NOTIFICATIONS_SENDTO = "notifications.sendTo";
     public static final String NOTIFICATIONS_CONNECTED = "notifications.connected";
-
+    
     private static final String CONFIGURATION_FILE = "configuration.properties";
 
-    public static final String PURGE_REMOTE_ON_START = "sync.purge-on-start";
+        public static final String PURGE_REMOTE_ON_START = "sync.purge-on-start";
 
     public static final String XMPP_PORT = "xmpp.port";
 
@@ -59,21 +61,23 @@ public class Configuration extends Properties {
     private Configuration() {
         try {
             conf = new Properties();
-            InputStream confFile = this.getClass().getClassLoader().getResourceAsStream(CONFIGURATION_FILE);
+            InputStream confFile = this.getClass().getClassLoader()
+                    .getResourceAsStream(CONFIGURATION_FILE);
             if (confFile != null) {
                 load(confFile);
                 LOGGER.info("Loaded " + CONFIGURATION_FILE + " from classpath.");
             } else {
                 File f = new File(CONFIGURATION_FILE);
                 load(new FileInputStream(f));
-                LOGGER.info("Loaded " + CONFIGURATION_FILE + " from working directory.");
+                LOGGER.info("Loaded " + CONFIGURATION_FILE
+                        + " from working directory.");
             }
         } catch (Exception e) {
             LOGGER.error("Could not load " + CONFIGURATION_FILE + "!");
             System.exit(1);
         }
     }
-
+    
     private void setupCollections() {
         adminUsers = getJIDArrayProperty(CONFIGURATION_ADMIN_USERS);
         autosubscribeChannels = getJIDArrayProperty(CONFIGURATION_CHANNELS_AUTOSUBSCRIBE);
@@ -93,17 +97,30 @@ public class Configuration extends Properties {
         }
         return instance;
     }
+    
+    public static void reset() {
+        instance = null;
+    }
 
     public String getProperty(String key) {
         return conf.getProperty(key);
     }
-
+    
+    @Override
+    public synchronized Object remove(Object key) {
+        return conf.remove(key);
+    }
+    
     public void clear() {
         conf.clear();
     }
 
     public String getProperty(String key, String defaultValue) {
         return conf.getProperty(key, defaultValue);
+    }
+    
+    public void putProperty(String key, String value) {
+        conf.put(key, value);
     }
 
     public void load(InputStream inputStream) throws IOException {
@@ -122,7 +139,6 @@ public class Configuration extends Properties {
     }
 
     private Collection<JID> getJIDArrayProperty(String key) {
-        System.out.println(conf.getProperty(CONFIGURATION_CHANNELS_AUTOSUBSCRIBE));
         Collection<String> props = getStringArrayProperty(key);
 
         Collection<JID> jids = new ArrayList<JID>(props.size());
@@ -137,7 +153,7 @@ public class Configuration extends Properties {
 
         return jids;
     }
-
+    
     public ArrayList<JID> getNotificationsList(String event) {
         ArrayList<JID> notify = new ArrayList<JID>();
         if (!getBooleanProperty(event, false)) {
@@ -168,7 +184,8 @@ public class Configuration extends Properties {
         return getProperty(CONFIGURATION_SERVER_TOPICS_DOMAIN);
     }
 
-    public boolean getBooleanProperty(final String key, final boolean defaultValue) {
+    public boolean getBooleanProperty(final String key,
+            final boolean defaultValue) {
         String value = getProperty(key);
 
         if (value != null) {
@@ -178,17 +195,36 @@ public class Configuration extends Properties {
             if (value.equalsIgnoreCase("false")) {
                 return false;
             }
-            LOGGER.warn("Invalid boolean property value for " + key + ": " + value);
+            LOGGER.warn("Invalid boolean property value for " + key + ": "
+                    + value);
         }
 
         return defaultValue;
     }
 
-    public String getComponentPort() {
+        public String getComponentPort() {
         return this.getProperty(XMPP_PORT, "5347");
     }
 
     public String getXmppHost() {
         return this.getProperty(XMPP_HOST, "127.0.0.1");
+    }
+    
+    public boolean isLocalDomain(String domain) {
+        return LocalDomainChecker.isLocal(domain, this);
+    }
+    
+    public boolean isLocalNode(String nodeId) {
+        if (false == nodeId.matches("/user/.+@.+/.+")) {
+            LOGGER.debug("Node " + nodeId + " has an invalid format");
+            throw new IllegalArgumentException(INVALID_NODE);
+        }
+        String domain = new JID(nodeId.split("/")[2]).getDomain();
+        return isLocalDomain(domain);
+    }
+    
+    public boolean isLocalJID(JID jid) {
+        String domain = jid.getDomain();
+        return isLocalDomain(domain);
     }
 }

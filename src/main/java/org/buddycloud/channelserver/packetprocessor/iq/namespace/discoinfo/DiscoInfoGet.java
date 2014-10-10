@@ -5,6 +5,7 @@ import java.util.TreeMap;
 import java.util.concurrent.BlockingQueue;
 
 import org.apache.log4j.Logger;
+import org.buddycloud.channelserver.Configuration;
 import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.channel.node.configuration.field.AccessModel;
 import org.buddycloud.channelserver.db.exception.NodeStoreException;
@@ -44,16 +45,19 @@ public class DiscoInfoGet implements PacketProcessor<IQ> {
         result = IQ.createResultIQ(reqIQ);
         Element elm = reqIQ.getChildElement();
         node = elm.attributeValue("node");
-        query = result.setChildElement(ELEMENT_NAME, JabberDiscoInfo.NAMESPACE_URI);
-        if (false == channelManager.isLocalJID(requestIq.getFrom())) {
+        query = result.setChildElement(ELEMENT_NAME,
+                JabberDiscoInfo.NAMESPACE_URI);
+        if (false == Configuration.getInstance().isLocalJID(requestIq.getFrom())) {
             result.getElement().addAttribute("remote-server-discover", "false");
         }
         if ((node == null) || (true == node.equals(""))) {
             sendServerDiscoInfo();
             return;
         }
-        if (false == channelManager.isLocalNode(node) && (false == channelManager.isCachedNode(node))) {
-            logger.info("Node " + node + " is remote and not cached so " + "we're going off to get disco#info");
+        if (false == Configuration.getInstance().isLocalNode(node)
+                && (false == channelManager.isCachedNode(node))) {
+            logger.info("Node " + node + " is remote and not cached so "
+                    + "we're going off to get disco#info");
             makeRemoteRequest();
             return;
         }
@@ -66,7 +70,8 @@ public class DiscoInfoGet implements PacketProcessor<IQ> {
             sendNodeConfigurationInformation();
         } catch (NodeStoreException e) {
             logger.error(e);
-            setErrorResponse(PacketError.Type.wait, PacketError.Condition.internal_server_error);
+            setErrorResponse(PacketError.Type.wait,
+                    PacketError.Condition.internal_server_error);
         }
     }
 
@@ -86,8 +91,9 @@ public class DiscoInfoGet implements PacketProcessor<IQ> {
         configuration.putAll(conf);
         for (String key : configuration.keySet()) {
             value = configuration.get(key);
-            if ((true == key.equals(AccessModel.FIELD_NAME)) && (value.equals(AccessModel.local.toString()))
-                    && (false == channelManager.isLocalJID(requestIq.getFrom()))) {
+            if ((true == key.equals(AccessModel.FIELD_NAME))
+                    && (value.equals(AccessModel.local.toString()))
+                    && (false == Configuration.getInstance().isLocalJID(requestIq.getFrom()))) {
                 value = AccessModel.authorize.toString();
             }
             x.addField(key, null, null).addValue(value);

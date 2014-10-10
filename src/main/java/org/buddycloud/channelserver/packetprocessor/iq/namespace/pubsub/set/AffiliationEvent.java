@@ -4,6 +4,7 @@ import java.util.Collection;
 import java.util.concurrent.BlockingQueue;
 
 import org.apache.log4j.Logger;
+import org.buddycloud.channelserver.Configuration;
 import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.db.exception.NodeStoreException;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.JabberPubsub;
@@ -60,14 +61,22 @@ public class AffiliationEvent extends PubSubElementProcessorAbstract {
         if (actor == null) {
             actor = request.getFrom();
         }
-        if (!channelManager.isLocalNode(node)) {
+
+        if (false == nodeProvided()) {
+            outQueue.put(response);
+            return;
+        }
+
+        if (false == Configuration.getInstance().isLocalNode(node)) {
             makeRemoteRequest();
             return;
         }
 
         try {
-            if ((!nodeProvided()) || (!validRequestStanza()) || (!checkNodeExists()) || (!actorHasPermissionToAuthorize())
-                    || (!subscriberHasCurrentAffiliation()) || (userIsModifyingTheirAffiliation()) || (!attemptToChangeAffiliationOfNodeOwner())) {
+
+            if ((false == validRequestStanza()) || (false == checkNodeExists()) || (false == actorHasPermissionToAuthorize())
+                    || (false == subscriberHasCurrentAffiliation()) || (true == userIsModifyingTheirAffiliation())
+                    || (false == attemptToChangeAffiliationOfNodeOwner())) {
                 outQueue.put(response);
                 return;
             }
@@ -117,6 +126,7 @@ public class AffiliationEvent extends PubSubElementProcessorAbstract {
         affiliations.addAttribute(XMLConstants.NODE_ATTR, node);
         affiliation.addAttribute(XMLConstants.JID_ATTR, requestedAffiliationElement.attributeValue(XMLConstants.JID_ATTR));
         affiliation.addAttribute(XMLConstants.AFFILIATION_ELEM, requestedAffiliationElement.attributeValue(XMLConstants.AFFILIATION_ELEM));
+
         Message rootElement = new Message(message);
 
         for (NodeSubscription subscriber : subscribers) {
@@ -136,6 +146,7 @@ public class AffiliationEvent extends PubSubElementProcessorAbstract {
     private void saveUpdatedAffiliation() throws NodeStoreException {
         JID jid = new JID(requestedAffiliationElement.attributeValue(XMLConstants.JID_ATTR));
         Affiliations affiliation = Affiliations.valueOf(requestedAffiliationElement.attributeValue(XMLConstants.AFFILIATION_ELEM));
+
         channelManager.setUserAffiliation(node, jid, affiliation);
     }
 
@@ -144,10 +155,12 @@ public class AffiliationEvent extends PubSubElementProcessorAbstract {
             return true;
         }
         response.setType(IQ.Type.error);
+
         Element nodeIdRequired = new DOMElement(XMLConstants.NODE_ID_REQUIRED, new Namespace("", JabberPubsub.NS_PUBSUB_ERROR));
         Element badRequest = new DOMElement(PacketError.Condition.bad_request.toString(), new Namespace("", JabberPubsub.NS_XMPP_STANZAS));
         Element error = new DOMElement(XMLConstants.ERROR_ELEM);
         error.addAttribute(XMLConstants.TYPE_ATTR, "modify");
+
         error.add(badRequest);
         error.add(nodeIdRequired);
         response.setChildElement(error);
@@ -164,6 +177,7 @@ public class AffiliationEvent extends PubSubElementProcessorAbstract {
                 return false;
             }
             requestedAffiliation = Affiliations.createFromString(requestedAffiliationElement.attributeValue(XMLConstants.AFFILIATION_ELEM));
+
         } catch (NullPointerException e) {
             LOGGER.error(e);
             setErrorCondition(PacketError.Type.modify, PacketError.Condition.bad_request);
@@ -174,6 +188,7 @@ public class AffiliationEvent extends PubSubElementProcessorAbstract {
     }
 
     private boolean subscriberHasCurrentAffiliation() throws NodeStoreException {
+
         usersCurrentMembership = channelManager.getNodeMembership(node, new JID(requestedAffiliationElement.attributeValue(XMLConstants.JID_ATTR)));
 
         if (usersCurrentMembership.getAffiliation().equals(Affiliations.none)) {
@@ -203,6 +218,7 @@ public class AffiliationEvent extends PubSubElementProcessorAbstract {
     private boolean checkNodeExists() throws NodeStoreException {
         if (!channelManager.nodeExists(node)) {
             setErrorCondition(PacketError.Type.cancel, PacketError.Condition.item_not_found);
+
             return false;
         }
         return true;
@@ -211,6 +227,7 @@ public class AffiliationEvent extends PubSubElementProcessorAbstract {
     private void makeRemoteRequest() throws InterruptedException {
         request.setTo(new JID(node.split("/")[2]).getDomain());
         Element actor = request.getElement().element(XMLConstants.PUBSUB_ELEM).addElement(XMLConstants.ACTOR_ELEM, Buddycloud.NS);
+
         actor.addText(request.getFrom().toBareJID());
         outQueue.put(request);
     }

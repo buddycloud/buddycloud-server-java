@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.concurrent.BlockingQueue;
 
 import org.apache.log4j.Logger;
+import org.buddycloud.channelserver.Configuration;
 import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.db.CloseableIterator;
 import org.buddycloud.channelserver.db.exception.NodeStoreException;
@@ -35,6 +36,7 @@ public class SearchSet implements PacketProcessor<IQ> {
     private JID searcher;
 
     public static final Logger LOGGER = Logger.getLogger(SearchSet.class);
+
 
     public SearchSet(BlockingQueue<Packet> outQueue, ChannelManager channelManager) {
         this.channelManager = channelManager;
@@ -67,7 +69,7 @@ public class SearchSet implements PacketProcessor<IQ> {
 
     private boolean isValidRequest() throws Exception {
 
-        if (false == channelManager.isLocalJID(searcher)) {
+        if (false == Configuration.getInstance().isLocalJID(searcher)) {
             sendErrorResponse(PacketError.Type.cancel, PacketError.Condition.not_allowed);
             return false;
         }

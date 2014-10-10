@@ -5,6 +5,7 @@ import java.util.Collection;
 import java.util.concurrent.BlockingQueue;
 
 import org.apache.log4j.Logger;
+import org.buddycloud.channelserver.Configuration;
 import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.db.ClosableIteratorImpl;
 import org.buddycloud.channelserver.db.exception.NodeStoreException;
@@ -51,13 +52,18 @@ public class ItemDelete extends PubSubElementProcessorAbstract {
         if (null == this.actor) {
             this.actor = request.getFrom();
         }
-        if (!channelManager.isLocalNode(node)) {
+        if (!validNodeProvided()) {
+            outQueue.put(response);
+            return;
+        }
+
+        if (!Configuration.getInstance().isLocalNode(node)) {
             makeRemoteRequest();
             return;
         }
 
         try {
-            if (!validNodeProvided() || !nodeExists() || !itemIdProvided() || !itemExists() || !validPayload() || !canDelete()) {
+            if (!nodeExists() || !itemIdProvided() || !itemExists() || !validPayload() || !canDelete()) {
                 outQueue.put(response);
                 return;
             }
@@ -107,6 +113,7 @@ public class ItemDelete extends PubSubElementProcessorAbstract {
                 LOGGER.debug("Subscription [node: " + subscription.getNodeId() + ", listener: " + subscription.getListener() + ", subscription: "
                         + subscription.getSubscription() + "]");
                 if (subscription.getSubscription().equals(Subscriptions.subscribed)) {
+
                     notification.setTo(subscription.getListener());
                     outQueue.put(notification.createCopy());
                 }
@@ -210,7 +217,7 @@ public class ItemDelete extends PubSubElementProcessorAbstract {
     }
 
     private boolean nodeExists() throws NodeStoreException {
-        if ((false == channelManager.isLocalNode(node)) || (false == channelManager.nodeExists(node))) {
+        if ((false == Configuration.getInstance().isLocalNode(node)) || (false == channelManager.nodeExists(node))) {
             setErrorCondition(PacketError.Type.cancel, PacketError.Condition.item_not_found);
             return false;
         }

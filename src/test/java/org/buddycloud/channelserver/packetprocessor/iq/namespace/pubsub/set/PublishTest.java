@@ -6,6 +6,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 import junit.framework.Assert;
 
+import org.buddycloud.channelserver.Configuration;
 import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.channel.validate.AtomEntry;
 import org.buddycloud.channelserver.db.exception.NodeStoreException;
@@ -51,7 +52,7 @@ public class PublishTest extends IQTestHandler {
         channelManager = Mockito.mock(ChannelManager.class);
         validateEntry = Mockito.mock(AtomEntry.class);
 
-        Mockito.when(channelManager.isLocalNode(Mockito.anyString())).thenReturn(true);
+        Configuration.getInstance().putProperty(Configuration.CONFIGURATION_LOCAL_DOMAIN_CHECKER, Boolean.TRUE.toString());
 
         queue = new LinkedBlockingQueue<Packet>();
         publish = new Publish(queue, channelManager);
@@ -65,8 +66,6 @@ public class PublishTest extends IQTestHandler {
         entry = request.getChildElement().element("publish").element("item").element("entry").createCopy();
 
         element = new BaseElement("publish");
-
-        Mockito.when(channelManager.isLocalNode(node)).thenReturn(true);
 
         Mockito.when(channelManager.nodeExists(node)).thenReturn(true);
 
@@ -113,6 +112,7 @@ public class PublishTest extends IQTestHandler {
         Assert.assertNotNull(error);
         Assert.assertEquals(PacketError.Type.modify, error.getType());
         Assert.assertEquals(XMLConstants.NODE_ID_REQUIRED, error.getApplicationConditionName());
+
     }
 
     @Test
@@ -146,17 +146,19 @@ public class PublishTest extends IQTestHandler {
 
     @Test
     public void requestToRemoteNodeResultsInForwardedPacket() throws Exception {
-        Mockito.when(channelManager.isLocalNode(node)).thenReturn(false);
+        Configuration.getInstance().remove(Configuration.CONFIGURATION_LOCAL_DOMAIN_CHECKER);
+        Configuration.getInstance().putProperty(Configuration.CONFIGURATION_SERVER_DOMAIN, "shakespeare.lit");
 
         Assert.assertEquals(new JID("channels.shakespeare.lit"), request.getTo());
 
+        request.getElement().element("pubsub").element("publish").addAttribute("node", "/user/romeo@barracks.lit/posts");
         publish.process(element, jid, request, null);
 
         Assert.assertEquals(1, queue.size());
 
         Packet response = queue.poll();
 
-        Assert.assertEquals(new JID("shakespeare.lit"), response.getTo());
+        Assert.assertEquals(new JID("barracks.lit"), response.getTo());
     }
 
     @Test
@@ -248,6 +250,7 @@ public class PublishTest extends IQTestHandler {
         Assert.assertEquals(PacketError.Type.modify, error.getType());
         Assert.assertEquals(PacketError.Condition.bad_request, error.getCondition());
         Assert.assertEquals(XMLConstants.ITEM_REQUIRED_ELEM, error.getApplicationConditionName());
+
     }
 
     @Test

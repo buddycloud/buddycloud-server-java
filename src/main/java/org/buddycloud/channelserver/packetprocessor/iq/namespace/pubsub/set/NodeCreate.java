@@ -5,6 +5,7 @@ import java.util.concurrent.BlockingQueue;
 
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
+import org.buddycloud.channelserver.Configuration;
 import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.channel.Conf;
 import org.buddycloud.channelserver.channel.node.configuration.NodeConfigurationException;
@@ -38,16 +39,21 @@ public class NodeCreate extends PubSubElementProcessorAbstract {
         response = IQ.createResultIQ(reqIQ);
         request = reqIQ;
         actor = actorJID;
-        node = element.attributeValue(XMLConstants.NODE_ATTR);
 
+        node = element.attributeValue(XMLConstants.NODE_ATTR);
         if (null == actorJID) {
             actor = request.getFrom();
         }
-        if (!channelManager.isLocalNode(node)) {
+        if (!validateNode()) {
+            outQueue.put(response);
+            return;
+        }
+        if (!Configuration.getInstance().isLocalNode(node)) {
             makeRemoteRequest();
             return;
         }
-        if ((!validateNode()) || (doesNodeExist()) || (!actorIsRegistered()) || (!nodeHandledByThisServer())) {
+        if ((doesNodeExist()) || (!actorIsRegistered()) || (!nodeHandledByThisServer())) {
+
             outQueue.put(response);
             return;
         }

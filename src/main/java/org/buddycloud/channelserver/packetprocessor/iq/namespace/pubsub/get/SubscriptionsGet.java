@@ -2,6 +2,7 @@ package org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.get;
 
 import java.util.concurrent.BlockingQueue;
 
+import org.buddycloud.channelserver.Configuration;
 import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.db.exception.NodeStoreException;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.JabberPubsub;
@@ -26,7 +27,6 @@ public class SubscriptionsGet extends PubSubElementProcessorAbstract {
     private JID actorJid;
     private IQ requestIq;
 
-
     public SubscriptionsGet(BlockingQueue<Packet> outQueue, ChannelManager channelManager) {
         this.outQueue = outQueue;
         this.channelManager = channelManager;
@@ -42,8 +42,10 @@ public class SubscriptionsGet extends PubSubElementProcessorAbstract {
         result = IQ.createResultIQ(reqIQ);
         actorJid = actorJID;
         requestIq = reqIQ;
+
         Element pubsub = result.setChildElement(XMLConstants.PUBSUB_ELEM, JabberPubsub.NAMESPACE_URI);
         Element subscriptions = pubsub.addElement(XMLConstants.SUBSCRIPTIONS_ELEM);
+
 
         node = reqIQ.getChildElement().element(XMLConstants.SUBSCRIPTIONS_ELEM).attributeValue(XMLConstants.NODE_ATTR);
 
@@ -56,8 +58,9 @@ public class SubscriptionsGet extends PubSubElementProcessorAbstract {
         if (node == null) {
             isProcessedLocally = getUserMemberships(subscriptions);
         } else {
-            if (!channelManager.isLocalNode(node)) {
+            if (!Configuration.getInstance().isLocalNode(node)) {
                 result.getElement().addAttribute(XMLConstants.REMOTE_SERVER_DISCOVER_ATTR, Boolean.FALSE.toString());
+
             }
             isProcessedLocally = getNodeMemberships(subscriptions);
         }
@@ -81,8 +84,7 @@ public class SubscriptionsGet extends PubSubElementProcessorAbstract {
 
         ResultSet<NodeMembership> cur = channelManager.getNodeMemberships(node);
 
-        if (channelManager.isLocalNode(node)) {
-
+        if (Configuration.getInstance().isLocalNode(node)) {
             subscriptions.addAttribute(XMLConstants.NODE_ATTR, node);
 
             for (NodeMembership ns : cur) {
@@ -106,6 +108,7 @@ public class SubscriptionsGet extends PubSubElementProcessorAbstract {
             if (!channelManager.isCachedNode(node) || (null != requestIq.getElement().element(XMLConstants.PUBSUB_ELEM).element(XMLConstants.SET_ELEM))
                     && !cur.isEmpty()) {
                 makeRemoteRequest(new JID(node.split("/")[2]).getDomain());
+
             }
             return false;
         }
@@ -134,7 +137,8 @@ public class SubscriptionsGet extends PubSubElementProcessorAbstract {
         cur = channelManager.getUserMemberships(actorJid);
 
         if ((null != requestIq.getElement().element(XMLConstants.PUBSUB_ELEM).element("set")) && (!cur.isEmpty())
-                && (!channelManager.isLocalJID(actorJid))) {
+                && (!Configuration.getInstance().isLocalJID(actorJid))) {
+
             makeRemoteRequest(actorJid.getDomain());
             return false;
         }
@@ -145,6 +149,7 @@ public class SubscriptionsGet extends PubSubElementProcessorAbstract {
                     .addAttribute(XMLConstants.JID_ATTR, ns.getUser().toBareJID());
             if (null != ns.getInvitedBy() && isOwnerModerator()) {
                 subscription.addAttribute(XMLConstants.INVITED_BY_ELEM, ns.getInvitedBy().toBareJID());
+
             }
         }
         return true;
@@ -159,6 +164,7 @@ public class SubscriptionsGet extends PubSubElementProcessorAbstract {
         forwarder.setTo(to);
         if (null == forwarder.getElement().element(XMLConstants.PUBSUB_ELEM).element(XMLConstants.ACTOR_ELEM)) {
             Element actor = forwarder.getElement().element(XMLConstants.PUBSUB_ELEM).addElement(XMLConstants.ACTOR_ELEM, Buddycloud.NS);
+
             actor.addText(requestIq.getFrom().toBareJID());
         }
         outQueue.put(forwarder);

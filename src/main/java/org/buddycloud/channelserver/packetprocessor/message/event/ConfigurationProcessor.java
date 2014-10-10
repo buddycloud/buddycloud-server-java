@@ -4,6 +4,7 @@ import java.util.Properties;
 import java.util.concurrent.BlockingQueue;
 
 import org.apache.log4j.Logger;
+import org.buddycloud.channelserver.Configuration;
 import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.channel.node.configuration.Helper;
 import org.buddycloud.channelserver.db.exception.NodeStoreException;
@@ -12,17 +13,19 @@ import org.dom4j.Element;
 import org.xmpp.packet.Message;
 import org.xmpp.packet.Packet;
 
-public class ConfigurationProcessor extends AbstractMessageProcessor {
-
+public class ConfigurationProcessor extends AbstractMessageProcessor  {
+ 
     private Helper helper;
 
-    private static final Logger logger = Logger.getLogger(ConfigurationProcessor.class);
+    private static final Logger logger = Logger
+            .getLogger(ConfigurationProcessor.class);
 
-    public ConfigurationProcessor(BlockingQueue<Packet> outQueue, Properties configuration, ChannelManager channelManager) {
+    public ConfigurationProcessor(BlockingQueue<Packet> outQueue,
+            Properties configuration, ChannelManager channelManager) {
         super(channelManager, configuration, outQueue);
         this.helper = new Helper(channelManager);
     }
-
+    
     public void setConfigurationHelper(Helper helper) {
         this.helper = helper;
     }
@@ -32,7 +35,7 @@ public class ConfigurationProcessor extends AbstractMessageProcessor {
         message = packet;
         getPacketDetails();
 
-        if ((null == node) || (true == channelManager.isLocalNode(node))) {
+        if ((null == node) || (true == Configuration.getInstance().isLocalNode(node))) {
             return;
         }
         sendLocalNotifications(NotificationScheme.validSubscribers);
@@ -40,17 +43,17 @@ public class ConfigurationProcessor extends AbstractMessageProcessor {
     }
 
     private void getPacketDetails() {
-        Element configurationElement = message.getElement().element("event").element("configuration");
+        Element configurationElement = message.getElement().element("event")
+                .element("configuration");
         if (null == configurationElement) {
             return;
         }
-
+        
         node = configurationElement.attributeValue("node");
     }
 
     private void handleDataForm() throws NodeStoreException {
-
-        if (true == channelManager.isLocalNode(node)) {
+        if (true == Configuration.getInstance().isLocalNode(node)) {
             return;
         }
         setNodeConfiguration();
@@ -59,15 +62,15 @@ public class ConfigurationProcessor extends AbstractMessageProcessor {
     private void setNodeConfiguration() throws NodeStoreException {
         addRemoteNode();
         helper.parseEventUpdate(message);
-        channelManager.setNodeConf(node, helper.getValues());
+        channelManager.setNodeConf(node, helper.getValues());    
     }
 
     private void addRemoteNode() {
-        try {
+        try { 
             if (false == channelManager.nodeExists(node)) {
-                channelManager.addRemoteNode(node);
+                channelManager.addRemoteNode(node); 
             }
-        } catch (NodeStoreException e) {
+        } catch (NodeStoreException e) { 
             logger.error(e);
         }
     }

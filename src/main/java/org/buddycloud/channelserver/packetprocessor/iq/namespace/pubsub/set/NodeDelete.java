@@ -4,6 +4,7 @@ import java.util.Collection;
 import java.util.concurrent.BlockingQueue;
 
 import org.apache.log4j.Logger;
+import org.buddycloud.channelserver.Configuration;
 import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.db.exception.NodeStoreException;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.JabberPubsub;
@@ -44,11 +45,11 @@ public class NodeDelete extends PubSubElementProcessorAbstract {
         if (actorJID == null) {
             actor = request.getFrom();
         }
-        if (!validateNode()) {
+        if (!nodePresent() || !nodeValid()) {
             outQueue.put(response);
             return;
         }
-        if (!channelManager.isLocalNode(node)) {
+        if (!Configuration.getInstance().isLocalNode(node)) {
             makeRemoteRequest();
             return;
         }
@@ -107,7 +108,7 @@ public class NodeDelete extends PubSubElementProcessorAbstract {
         return elm.getName().equals("delete");
     }
 
-    private boolean validateNode() {
+    private boolean nodePresent() {
         if (node != null && !node.trim().equals("")) {
             return true;
         }
@@ -149,13 +150,16 @@ public class NodeDelete extends PubSubElementProcessorAbstract {
     }
 
     private boolean nodeHandledByThisServer() {
-        if (!node.matches(NODE_REG_EX)) {
-            setErrorCondition(PacketError.Type.modify, PacketError.Condition.bad_request);
-            return false;
-        }
-
         if (!node.contains("@" + getServerDomain()) && !node.contains("@" + getTopicsDomain())) {
             setErrorCondition(PacketError.Type.modify, PacketError.Condition.not_acceptable);
+            return false;
+        }
+        return true;
+    }
+
+    private boolean nodeValid() {
+        if (!node.matches(NODE_REG_EX)) {
+            setErrorCondition(PacketError.Type.modify, PacketError.Condition.bad_request);
             return false;
         }
         return true;

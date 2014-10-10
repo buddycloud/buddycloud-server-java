@@ -5,6 +5,7 @@ import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 
 import org.apache.log4j.Logger;
+import org.buddycloud.channelserver.Configuration;
 import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.channel.node.configuration.field.AccessModel;
 import org.buddycloud.channelserver.db.CloseableIterator;
@@ -29,6 +30,7 @@ public class ThreadGet extends PubSubElementProcessorAbstract {
 
     private Element pubsub;
     private SAXReader xmlReader;
+
     // RSM details
     private String firstItemId = null;
     private String lastItemId = null;
@@ -37,7 +39,9 @@ public class ThreadGet extends PubSubElementProcessorAbstract {
     private String parentId;
     private NodeViewAcl nodeViewAcl;
     private Map<String, String> nodeConfiguration;
+
     private static final Logger LOGGER = Logger.getLogger(RecentItemsGet.class);
+
 
     public static final String NS_RSM = "http://jabber.org/protocol/rsm";
 
@@ -55,6 +59,8 @@ public class ThreadGet extends PubSubElementProcessorAbstract {
         response = IQ.createResultIQ(reqIQ);
         request = reqIQ;
         actor = actorJID;
+        resultSetManagement = rsm;
+
         if (null == actor) {
             actor = request.getFrom();
         }
@@ -65,11 +71,12 @@ public class ThreadGet extends PubSubElementProcessorAbstract {
         }
 
         try {
-            if (!channelManager.isLocalJID(request.getFrom())) {
+            if (!Configuration.getInstance().isLocalJID(request.getFrom())) {
                 response.getElement().addAttribute(XMLConstants.REMOTE_SERVER_DISCOVER_ATTR, Boolean.FALSE.toString());
             }
             pubsub = response.getElement().addElement(XMLConstants.PUBSUB_ELEM, JabberPubsub.NAMESPACE_URI);
             if ((!userCanViewNode()) || (!itemExists())) {
+
                 outQueue.put(response);
                 return;
             }
@@ -87,7 +94,7 @@ public class ThreadGet extends PubSubElementProcessorAbstract {
     }
 
     private boolean itemExists() throws NodeStoreException {
-        if (null != (channelManager.getNodeItem(node, parentId))) {
+        if (null != channelManager.getNodeItem(node, parentId)) {
             return true;
         }
         createExtendedErrorReply(PacketError.Type.cancel, PacketError.Condition.item_not_found, "parent-item-not-found", Buddycloud.NS_ERROR);
@@ -153,6 +160,7 @@ public class ThreadGet extends PubSubElementProcessorAbstract {
             node = thread.attributeValue(XMLConstants.NODE_ATTR);
             if (null == node) {
                 createExtendedErrorReply(PacketError.Type.modify, PacketError.Condition.bad_request, XMLConstants.NODE_ID_REQUIRED);
+
                 return false;
             }
             parentId = thread.attributeValue(XMLConstants.ITEM_ID);
@@ -162,6 +170,7 @@ public class ThreadGet extends PubSubElementProcessorAbstract {
             }
             if (!channelManager.nodeExists(node)) {
                 setErrorCondition(PacketError.Type.cancel, PacketError.Condition.item_not_found);
+
                 return false;
             }
             nodeConfiguration = channelManager.getNodeConf(node);
@@ -178,7 +187,8 @@ public class ThreadGet extends PubSubElementProcessorAbstract {
     }
 
     private boolean userCanViewNode() throws NodeStoreException {
-        if (getNodeViewAcl().canViewNode(node, channelManager.getNodeMembership(node, actor), getNodeAccessModel(), channelManager.isLocalJID(actor))) {
+        if (getNodeViewAcl().canViewNode(node, channelManager.getNodeMembership(node, actor), getNodeAccessModel(),
+                Configuration.getInstance().isLocalJID(actor))) {
             return true;
         }
         NodeAclRefuseReason reason = getNodeViewAcl().getReason();

@@ -7,6 +7,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 import junit.framework.Assert;
 
+import org.buddycloud.channelserver.Configuration;
 import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.db.exception.NodeStoreException;
 import org.buddycloud.channelserver.packetHandler.iq.IQTestHandler;
@@ -34,33 +35,42 @@ public class RetractItemProcessorTest extends IQTestHandler {
     @Before
     public void setUp() throws Exception {
 
-        JID jid = new JID("juliet@shakespeare.lit");
+        JID jid = new JID("juliet@denmark.lit");
         Properties configuration = new Properties();
-        configuration.setProperty("server.domain.channels", "channels.shakespeare.lit");
+        configuration.setProperty("server.domain.channels",
+                "channels.shakespeare.lit");
         channelManager = Mockito.mock(ChannelManager.class);
 
         ArrayList<NodeMembership> subscribers = new ArrayList<NodeMembership>();
-        subscribers.add(new NodeMembershipImpl("/users/romeo@shakespeare.lit/posts", jid, Subscriptions.subscribed, Affiliations.member, null));
-        Mockito.doReturn(new ResultSetImpl<NodeMembership>(subscribers)).when(channelManager).getNodeMemberships(Mockito.anyString());
-        Mockito.when(channelManager.isLocalNode(Mockito.anyString())).thenReturn(false);
-        Mockito.when(channelManager.isLocalJID(Mockito.any(JID.class))).thenReturn(true);
-
-        retractItemProcessor = new RetractItemProcessor(queue, configuration, channelManager);
+        subscribers.add(new NodeMembershipImpl(
+                "/user/romeo@shakespeare.lit/posts", jid,
+                Subscriptions.subscribed, Affiliations.member, null));
+        Mockito.doReturn(new ResultSetImpl<NodeMembership>(subscribers))
+                .when(channelManager).getNodeMemberships(Mockito.anyString());
+        Configuration.getInstance().remove(
+                Configuration.CONFIGURATION_LOCAL_DOMAIN_CHECKER);
+        Configuration.getInstance().putProperty(
+                Configuration.CONFIGURATION_SERVER_DOMAIN, "denmark.lit");
+        
+        retractItemProcessor = new RetractItemProcessor(queue, configuration,
+                channelManager);
 
         message = new Message();
         message.setType(Message.Type.headline);
-        Element event = message.addChildElement("event", JabberPubsub.NS_PUBSUB_EVENT);
+        Element event = message.addChildElement("event",
+                JabberPubsub.NS_PUBSUB_EVENT);
         Element items = event.addElement("items");
         Element retract = items.addElement("retract");
 
-        items.addAttribute("node", "/users/romeo@shakespeare.lit/posts");
+        items.addAttribute("node", "/user/romeo@shakespeare.lit/posts");
         retract.addAttribute("id", "publish:1");
 
     }
 
     @Test
     public void testLocalNodeEventDoesNotSendNotiifcations() throws Exception {
-        Mockito.when(channelManager.isLocalNode(Mockito.anyString())).thenReturn(true);
+        Configuration.getInstance().putProperty(
+                Configuration.CONFIGURATION_SERVER_DOMAIN, "shakespeare.lit");
 
         retractItemProcessor.process(message);
         Assert.assertEquals(0, queue.size());
@@ -68,7 +78,8 @@ public class RetractItemProcessorTest extends IQTestHandler {
 
     @Test(expected = NodeStoreException.class)
     public void testNodeStoreExceptionIsThrown() throws Exception {
-        Mockito.doThrow(new NodeStoreException()).when(channelManager).getNodeMemberships(Mockito.anyString());
+        Mockito.doThrow(new NodeStoreException()).when(channelManager)
+                .getNodeMemberships(Mockito.anyString());
         retractItemProcessor.process(message);
     }
 
@@ -89,6 +100,7 @@ public class RetractItemProcessorTest extends IQTestHandler {
 
         retractItemProcessor.process(message);
 
-        Mockito.verify(channelManager, Mockito.times(1)).deleteNodeItemById(Mockito.anyString(), Mockito.anyString());
+        Mockito.verify(channelManager, Mockito.times(1)).deleteNodeItemById(
+                Mockito.anyString(), Mockito.anyString());
     }
 }

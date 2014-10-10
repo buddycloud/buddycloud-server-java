@@ -8,9 +8,9 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 import junit.framework.Assert;
 
+import org.buddycloud.channelserver.Configuration;
 import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.channel.node.configuration.Helper;
-import org.buddycloud.channelserver.db.exception.NodeStoreException;
 import org.buddycloud.channelserver.packetHandler.iq.IQTestHandler;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.JabberPubsub;
 import org.buddycloud.channelserver.pubsub.affiliation.Affiliations;
@@ -41,17 +41,24 @@ public class ConfigurationProcessorTest extends IQTestHandler {
     public void setUp() throws Exception {
 
         Properties configuration = new Properties();
-        configuration.setProperty("server.domain.channels", "chgnnels.shakespeare.lit");
+        configuration.setProperty("server.domain.channels",
+                "chgnnels.shakespeare.lit");
 
         channelManager = Mockito.mock(ChannelManager.class);
-        Mockito.when(channelManager.isLocalNode(Mockito.anyString())).thenReturn(false);
-        Mockito.when(channelManager.isLocalJID(Mockito.any(JID.class))).thenReturn(true);
-
+        Configuration.getInstance().remove(
+                Configuration.CONFIGURATION_LOCAL_DOMAIN_CHECKER);
+        Configuration.getInstance().putProperty(
+                Configuration.CONFIGURATION_SERVER_DOMAIN, "shakespeare.lit");
+        
         ArrayList<NodeMembership> members = new ArrayList<NodeMembership>();
-        members.add(new NodeMembershipImpl("/users/romeo@shakespeare.lit/posts", jid, Subscriptions.subscribed, Affiliations.member, null));
-        Mockito.doReturn(new ResultSetImpl<NodeMembership>(members)).when(channelManager).getNodeMemberships(Mockito.anyString());
+        members.add(new NodeMembershipImpl(
+                "/user/romeo@denmark.lit/posts", jid,
+                Subscriptions.subscribed, Affiliations.member, null));
+        Mockito.doReturn(new ResultSetImpl<NodeMembership>(members))
+                .when(channelManager).getNodeMemberships(Mockito.anyString());
 
-        configurationProcessor = new ConfigurationProcessor(queue, configuration, channelManager);
+        configurationProcessor = new ConfigurationProcessor(queue,
+                configuration, channelManager);
 
         HashMap<String, String> nodeConfiguration = new HashMap<String, String>();
         nodeConfiguration.put("config1", "value1");
@@ -62,11 +69,13 @@ public class ConfigurationProcessorTest extends IQTestHandler {
 
         message = new Message();
         message.setType(Message.Type.headline);
-        Element event = message.addChildElement("event", JabberPubsub.NS_PUBSUB_EVENT);
+        Element event = message.addChildElement("event",
+                JabberPubsub.NS_PUBSUB_EVENT);
 
         configurationElement = event.addElement("configuration");
         configurationElement.addAttribute("jid", "romeo@shakespeare.lit");
-        configurationElement.addAttribute("node", "/users/juliet@shakespeare.lit/posts");
+        configurationElement.addAttribute("node",
+                "/user/juliet@denmark.lit/posts");
         dataForm = configurationElement.addElement("x");
         dataForm.addNamespace("", "jabber:x:data");
         dataForm.addAttribute("type", "result");
@@ -78,39 +87,37 @@ public class ConfigurationProcessorTest extends IQTestHandler {
 
     @Test
     public void testEventForLocalNodeIsIgnored() throws Exception {
-
-        Mockito.when(channelManager.isLocalNode(Mockito.anyString())).thenReturn(true);
+        Configuration.getInstance().putProperty(
+                Configuration.CONFIGURATION_SERVER_DOMAIN, "denmark.lit");
         configurationProcessor.process(message);
         Assert.assertEquals(0, queue.size());
     }
 
-    @Test(expected = NodeStoreException.class)
-    public void testNodeStoreExceptionIsThrownWhenExpected() throws Exception {
-
-        Mockito.doThrow(new NodeStoreException()).when(channelManager).isLocalNode(Mockito.anyString());
-        configurationProcessor.process(message);
-    }
-
     @Test
     public void testRemoteNodeIsCreatedIfNotInDataStore() throws Exception {
-        Mockito.when(channelManager.nodeExists(Mockito.anyString())).thenReturn(false);
+        Mockito.when(channelManager.nodeExists(Mockito.anyString()))
+                .thenReturn(false);
 
         configurationProcessor.process(message);
 
-        Mockito.verify(channelManager, Mockito.times(1)).addRemoteNode(Mockito.anyString());
+        Mockito.verify(channelManager, Mockito.times(1)).addRemoteNode(
+                Mockito.anyString());
     }
 
     @Test
     public void testExpectedDetailsAreSavedToTheDataStore() throws Exception {
-        Mockito.when(channelManager.nodeExists(Mockito.anyString())).thenReturn(true);
+        Mockito.when(channelManager.nodeExists(Mockito.anyString()))
+                .thenReturn(true);
 
         configurationProcessor.process(message);
 
         HashMap<String, String> match = new HashMap<String, String>();
         match.put("config1", "value1");
-
-        Mockito.verify(channelManager, Mockito.times(1)).setNodeConf(Mockito.anyString(), Mockito.eq(match));
-        Mockito.verify(channelManager, Mockito.times(0)).addRemoteNode(Mockito.anyString());
+        
+        Mockito.verify(channelManager, Mockito.times(1)).setNodeConf(
+                Mockito.anyString(), Mockito.eq(match));
+        Mockito.verify(channelManager, Mockito.times(0)).addRemoteNode(
+                Mockito.anyString());
     }
 
     @Test

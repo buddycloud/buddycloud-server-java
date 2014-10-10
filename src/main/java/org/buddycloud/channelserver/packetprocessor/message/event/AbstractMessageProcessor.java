@@ -22,42 +22,44 @@ public abstract class AbstractMessageProcessor implements PacketProcessor<Messag
     protected ChannelManager channelManager;
     protected Properties configuration;
     protected BlockingQueue<Packet> outQueue;
-
+    
     public AbstractMessageProcessor(ChannelManager channelManager, Properties configuration, BlockingQueue<Packet> outQueue) {
         this.channelManager = channelManager;
         setConfiguration(configuration);
         this.outQueue = outQueue;
     }
-
+    
     public void setConfiguration(Properties configuration) {
         this.configuration = configuration;
     }
-
+    
     public abstract void process(Message packet) throws Exception;
-
+    
     void sendLocalNotifications(NotificationScheme scheme) throws Exception {
-        sendLocalNotifications(scheme, null);
+        sendLocalNotifications(scheme, null);    
     }
-
+    
     void sendLocalNotifications(NotificationScheme scheme, JID user) throws Exception {
-        ResultSet<NodeMembership> members = channelManager.getNodeMemberships(node);
-        message.setFrom(new JID(configuration.getProperty(Configuration.CONFIGURATION_SERVER_CHANNELS_DOMAIN)));
-
+        ResultSet<NodeMembership> members = channelManager
+                .getNodeMemberships(node);
+        message.setFrom(new JID(configuration
+                .getProperty(Configuration.CONFIGURATION_SERVER_CHANNELS_DOMAIN)));
+        
         for (NodeMembership member : members) {
-            if (false == channelManager.isLocalJID(member.getUser())) {
+            if (false == Configuration.getInstance().isLocalJID(member.getUser())) {
                 continue;
             }
-
             if (scheme.equals(NotificationScheme.validSubscribers) && !userIsValidSubscriber(member)) {
                 continue;
-            } else if (scheme.equals(NotificationScheme.ownerOrModerator) && !userIsOwnerOrModerator(member)) {
+            } 
+            if (scheme.equals(NotificationScheme.ownerOrModerator) && !userIsOwnerOrModerator(member)) {
                 continue;
             }
 
             message.setTo(member.getUser());
             outQueue.put(message.createCopy());
         }
-
+        
         if (null != user) {
             message.setTo(user.toBareJID());
             outQueue.put(message.createCopy());

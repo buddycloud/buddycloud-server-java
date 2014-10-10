@@ -5,6 +5,7 @@ import java.util.Date;
 import java.util.concurrent.BlockingQueue;
 
 import org.apache.log4j.Logger;
+import org.buddycloud.channelserver.Configuration;
 import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.channel.Conf;
 import org.buddycloud.channelserver.db.CloseableIterator;
@@ -28,6 +29,7 @@ import org.xmpp.packet.PacketError.Type;
 public class UserItemsGet extends PubSubElementProcessorAbstract {
 
     private static final Logger LOGGER = Logger.getLogger(UserItemsGet.class);
+
     private Date maxAge;
 
     private Element pubsub;
@@ -65,7 +67,7 @@ public class UserItemsGet extends PubSubElementProcessorAbstract {
             return;
         }
 
-        if (!channelManager.isLocalJID(request.getFrom())) {
+        if (!Configuration.getInstance().isLocalJID(request.getFrom())) {
             response.getElement().addAttribute("remote-server-discover", "false");
         }
         pubsub = response.getElement().addElement("pubsub", JabberPubsub.NAMESPACE_URI);
@@ -150,11 +152,13 @@ public class UserItemsGet extends PubSubElementProcessorAbstract {
             String since = userFeedItems.attributeValue(XMLConstants.SINCE_ATTR);
             String parentOnlyAttribute = userFeedItems.attributeValue(XMLConstants.PARENT_ONLY_ATTR);
             if ((null != parentOnlyAttribute) && (("true".equals(parentOnlyAttribute)) || ("1".equals(parentOnlyAttribute)))) {
+
                 parentOnly = true;
             }
 
             if (null == since) {
                 createExtendedErrorReply(PacketError.Type.modify, PacketError.Condition.bad_request, XMLConstants.SINCE_REQUIRED_ELEM);
+
                 return false;
             }
             maxAge = Conf.parseDate(since);

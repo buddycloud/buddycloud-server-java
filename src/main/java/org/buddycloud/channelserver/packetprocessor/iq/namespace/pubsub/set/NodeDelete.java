@@ -28,7 +28,7 @@ import org.xmpp.resultsetmanagement.ResultSetImpl;
 public class NodeDelete extends PubSubElementProcessorAbstract {
 
     private static final String NODE_REG_EX = "^/user/[^@]+@[^/]+/[^/]+$";
-	private ResultSet<NodeSubscription> subscriptions;
+    private ResultSet<NodeSubscription> subscriptions;
 
     private static final Logger LOGGER = Logger.getLogger(NodeThreadsGet.class);
 
@@ -66,14 +66,14 @@ public class NodeDelete extends PubSubElementProcessorAbstract {
     }
 
     private void getNodeListeners() {
-    	try {
-			subscriptions = channelManager.getNodeSubscriptionListeners(node);
-		} catch (NodeStoreException e) {
-			subscriptions = new ResultSetImpl<NodeSubscription>(new ArrayList<NodeSubscription>());
-		}
-	}
+        try {
+            subscriptions = channelManager.getNodeSubscriptionListeners(node);
+        } catch (NodeStoreException e) {
+            subscriptions = new ResultSetImpl<NodeSubscription>(new ArrayList<NodeSubscription>());
+        }
+    }
 
-	private void sendNotifications() throws NodeStoreException {
+    private void sendNotifications() throws NodeStoreException {
         try {
             Message notification = createNotificationMessage();
             if (subscriptions != null) {

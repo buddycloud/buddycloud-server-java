@@ -52,12 +52,8 @@ public class AffiliationsGet extends PubSubElementProcessorAbstract {
       actor = request.getFrom();
     }
 
-    boolean isProcessedLocally = true;
-    if (node == null) {
-      isProcessedLocally = getUserMemberships(affiliations);
-    } else {
-      isProcessedLocally = getNodeAffiliations(affiliations);
-    }
+    boolean isProcessedLocally =
+        (node == null) ? getUserMemberships(affiliations) : getNodeAffiliations(affiliations);
     if (!isProcessedLocally) {
       return;
     }

@@ -3,6 +3,6 @@
     to="channels.shakespeare.lit"
     id="subscriptions1">
    <pubsub xmlns="http://jabber.org/protocol/pubsub">
-      <affiliations node="/users/pamela@denmark.lit/posts" />
+      <affiliations node="/user/pamela@shakespeare.lit/posts" />
    </pubsub>
 </iq>

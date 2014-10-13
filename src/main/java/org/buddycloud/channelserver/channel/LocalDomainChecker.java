@@ -22,8 +22,7 @@ public class LocalDomainChecker {
         }
         String command = configuration.getProperty(
                 Configuration.CONFIGURATION_LOCAL_DOMAIN_CHECKER);
-        
-        if (command == null) {
+        if (null == command) {
             String serverDomain = configuration
                     .getProperty(Configuration.CONFIGURATION_SERVER_DOMAIN);
             String topicDomain = configuration

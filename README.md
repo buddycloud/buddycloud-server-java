@@ -119,7 +119,7 @@ To declare the content type for a node you must set the node configuration key `
 
 The Buddycloud server can serve multiple domains in a single instance. For this to work, the Buddycloud server must distinguish the domains it serves from remote ones, so that it can properly route packets. This is done by calling an external executable, which path can be configured in the **server.domain.checker** property. 
 
-This executable will be passed the domain name as its single argument and should exit with 0 if this domain is local, with any other exit value otherwise. A good example of such an executable is the [external-domain-checker](https://github.com/buddycloud/hosting/blob/develop/external-domain-checker) of the hosting platform, that checks whether the domain exists on a SQL database.
+This executable gets no arguments and returns a comma-separated-value list of domains that are served locally. A good example of such an executable is the [external-domain-checker](https://github.com/buddycloud/hosting/blob/develop/external-domain-checker) of the hosting platform, that lists all local domains from a SQL database.
 
 A multiple domain deployment is not expected to have the **server.domain** property on its configuration.
 

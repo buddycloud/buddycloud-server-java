@@ -123,15 +123,18 @@ public class AffiliationsGet extends PubSubElementProcessorAbstract {
     for (NodeMembership membership : memberships) {
 
       if (membership.getSubscription().equals(Subscriptions.none)) {
-          continue;
+        continue;
       }
       Element affiliation = affiliations.addElement(XMLConstants.AFFILIATION_ELEM);
       affiliation.addAttribute(XMLConstants.NODE_ATTR, membership.getNodeId());
-      affiliation.addAttribute(XMLConstants.AFFILIATION_ELEM, membership.getAffiliation().toString());
+      affiliation.addAttribute(XMLConstants.AFFILIATION_ELEM, membership.getAffiliation()
+          .toString());
       affiliation.addAttribute(XMLConstants.JID_ATTR, membership.getUser().toBareJID());
 
-      if (membership.getSubscription().equals(Subscriptions.invited) && (null != membership.getInvitedBy())) {
-          affiliation.addAttribute(XMLConstants.INVITED_BY_ATTR, membership.getInvitedBy().toBareJID());
+      if (membership.getSubscription().equals(Subscriptions.invited)
+          && (null != membership.getInvitedBy())) {
+        affiliation.addAttribute(XMLConstants.INVITED_BY_ATTR, membership.getInvitedBy()
+            .toBareJID());
       }
 
     }

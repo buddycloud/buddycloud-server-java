@@ -76,7 +76,7 @@ public class AffiliationsGet extends PubSubElementProcessorAbstract {
     ResultSet<NodeMembership> nodeMemberships;
     nodeMemberships = channelManager.getNodeMemberships(node);
 
-    if ((!nodeMemberships.isEmpty()) && (!Configuration.getInstance().isLocalNode(node))) {
+    if ((nodeMemberships.isEmpty()) && (!Configuration.getInstance().isLocalNode(node))) {
       makeRemoteRequest(node.split("/")[2]);
       return false;
     }

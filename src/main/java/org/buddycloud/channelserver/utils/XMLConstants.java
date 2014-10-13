@@ -22,7 +22,7 @@ public class XMLConstants {
 
     public static final String PUBSUB_ELEM = "pubsub";
 
-    public static final String INVITED_BY_ELEM = "invited-by";
+    public static final String INVITED_BY_ATTR = "invited-by";
 
     public static final String SET_ELEM = "set";
 

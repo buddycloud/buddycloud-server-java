@@ -99,7 +99,7 @@ public class SubscriptionsGet extends PubSubElementProcessorAbstract {
 
                 // Only add the invited by attribute if the user has the necessary priviledges
                 if (null != ns.getInvitedBy() && isUserPriviledged(ns.getUser())) {
-                    subscription.addAttribute(XMLConstants.INVITED_BY_ELEM, ns.getInvitedBy().toBareJID());
+                    subscription.addAttribute(XMLConstants.INVITED_BY_ATTR, ns.getInvitedBy().toBareJID());
                 }
 
             }
@@ -148,7 +148,7 @@ public class SubscriptionsGet extends PubSubElementProcessorAbstract {
                     .addAttribute(XMLConstants.SUBSCRIPTION_ELEM, ns.getSubscription().toString())
                     .addAttribute(XMLConstants.JID_ATTR, ns.getUser().toBareJID());
             if (null != ns.getInvitedBy() && isOwnerModerator()) {
-                subscription.addAttribute(XMLConstants.INVITED_BY_ELEM, ns.getInvitedBy().toBareJID());
+                subscription.addAttribute(XMLConstants.INVITED_BY_ATTR, ns.getInvitedBy().toBareJID());
 
             }
         }

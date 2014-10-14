@@ -338,5 +338,15 @@ public class UnsubscribeSetTest extends IQTestHandler {
                 subscription.attributeValue("subscription"));
 
     }
+    
+    @Test
+    public void acceptsUnubscribeElement() throws Exception {
+      Assert.assertTrue(unsubscribe.accept(new BaseElement("unsubscribe")));
+    }
+    
+    @Test
+    public void rejectsNotUnsubscribeElement() throws Exception {
+        Assert.assertFalse(unsubscribe.accept(new BaseElement("not-unsubscribe")));
+    }
 
 }

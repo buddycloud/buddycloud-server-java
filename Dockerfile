@@ -5,7 +5,7 @@
 
 FROM dockerfile/java
 
-EXPOSE 3000
+MAINTAINER Lloyd Watkin <lloyd@evilprofessor.co.uk>
 
 RUN apt-get update
 RUN apt-get upgrade -y

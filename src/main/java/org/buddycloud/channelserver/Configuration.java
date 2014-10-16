@@ -4,10 +4,17 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Properties;
 
 import org.apache.log4j.Logger;
@@ -15,6 +22,8 @@ import org.buddycloud.channelserver.channel.LocalDomainChecker;
 import org.xmpp.packet.JID;
 
 public class Configuration extends Properties {
+
+
   private static final Logger LOGGER = Logger.getLogger(Configuration.class);
 
   private static final long serialVersionUID = 1L;
@@ -58,6 +67,10 @@ public class Configuration extends Properties {
 
   public static final String DATABASE_ENV = "database";
 
+  private static final String JDBC_CONNECTION_STRING = "jdbc.proxool.driver-url";
+  private static final String JDBC_PASSWORD = "jdbc.password";
+  private static final String JDBC_USER = "jdbc.user";
+
   private static Configuration instance = null;
 
   private Collection<JID> adminUsers = new ArrayList<JID>();
@@ -73,7 +86,7 @@ public class Configuration extends Properties {
       if (null == databaseConnectionString) {
         loadConfigurationFromFile();
       } else {
-        loadConfigurationFromDatabase();
+        loadConfigurationFromDatabase(databaseConnectionString);
       }
 
     } catch (Exception e) {
@@ -82,8 +95,26 @@ public class Configuration extends Properties {
     }
   }
 
-  private void loadConfigurationFromDatabase() {
-    // TODO(lloydwatkin) Auto-generated method stub
+  private void loadConfigurationFromDatabase(String connectionString) throws SQLException {
+    Connection connection = null;
+    try {
+      connection = DriverManager.getConnection(connectionString);
+      PreparedStatement statement = connection.prepareStatement("SELECT \"key\", \"value\" FROM 'configuration';");
+      ResultSet rs = statement.executeQuery();
+      while (rs.next()) {
+          conf.setProperty(rs.getString(1), rs.getString(2));
+      }
+      conf.setProperty(JDBC_CONNECTION_STRING, connectionString);
+      conf.remove(JDBC_USER);
+      conf.remove(JDBC_PASSWORD);
+    } catch (SQLException e) {
+      LOGGER.error("Could not get configuration from database");
+      System.exit(1);
+    } finally {
+      if (null != connection) {
+        connection.close();
+      }
+    }
 
   }
 
@@ -248,16 +279,16 @@ public class Configuration extends Properties {
   }
 
   public String getDatabaseConnectionUrl() {
-    String url = this.getProperty("jdbc.proxool.driver-url");
-    if (this.containsKey("jdbc.user")) {
+    String url = this.getProperty(JDBC_CONNECTION_STRING);
+    if (this.containsKey(JDBC_USER)) {
       url +=
-          "?user=" + this.getProperty("jdbc.user") + "&password="
-              + this.getProperty("jdbc.password");
+          "?user=" + this.getProperty(JDBC_USER) + "&password="
+              + this.getProperty(JDBC_PASSWORD);
     }
     return url;
   }
-  
+
   public boolean containsKey(Object value) {
     return conf.containsKey(value);
- }
+  }
 }

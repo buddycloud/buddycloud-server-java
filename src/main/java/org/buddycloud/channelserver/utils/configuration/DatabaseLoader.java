@@ -9,7 +9,7 @@ import java.sql.SQLException;
 import org.apache.log4j.Logger;
 import org.buddycloud.channelserver.Configuration;
 
-public class DatabaseLoader {
+public class DatabaseLoader implements Loader {
 
   private static final Logger LOGGER = Logger.getLogger(DatabaseLoader.class);
   private Configuration conf;
@@ -20,7 +20,7 @@ public class DatabaseLoader {
     this.conf = conf;
   }
 
-  public void load() throws SQLException {
+  public void load() throws ConfigurationException {
 
     Connection connection = null;
     LOGGER.info("Loading configuration from database");
@@ -36,13 +36,15 @@ public class DatabaseLoader {
       this.conf.removeKey(Configuration.JDBC_USER);
       this.conf.removeKey(Configuration.JDBC_PASSWORD);
     } catch (SQLException e) {
-      e.printStackTrace();
-      e.getMessage();
-      LOGGER.error("Could not get configuration from database");
-      System.exit(1);
+      throw new ConfigurationException("Could not get configuration from database");
     } finally {
-      if (null != connection) {
+      if (null == connection) {
+          return;
+      }
+      try {
         connection.close();
+      } catch (SQLException e) {
+        throw new ConfigurationException("Could not get configuration from database");
       }
     }
   }

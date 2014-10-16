@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.Reader;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -19,7 +20,10 @@ import java.util.Properties;
 
 import org.apache.log4j.Logger;
 import org.buddycloud.channelserver.channel.LocalDomainChecker;
+import org.buddycloud.channelserver.utils.configuration.ConfigurationException;
 import org.buddycloud.channelserver.utils.configuration.DatabaseLoader;
+import org.buddycloud.channelserver.utils.configuration.FileLoader;
+import org.buddycloud.channelserver.utils.configuration.Loader;
 import org.xmpp.packet.JID;
 
 public class Configuration extends Properties {
@@ -56,9 +60,7 @@ public class Configuration extends Properties {
 
   public static final String NOTIFICATIONS_SENDTO = "notifications.sendTo";
   public static final String NOTIFICATIONS_CONNECTED = "notifications.connected";
-
-  private static final String CONFIGURATION_FILE = "configuration.properties";
-
+  
   public static final String PURGE_REMOTE_ON_START = "sync.purge-on-start";
 
   public static final String XMPP_PORT = "xmpp.port";
@@ -78,47 +80,44 @@ public class Configuration extends Properties {
 
   private Properties conf;
 
+  private boolean collectionsSetup = false;
+
   private Configuration() {
     try {
       conf = new Properties();
       String databaseConnectionString = System.getenv(DATABASE_ENV);
+      Loader loader = null;
 
       if (null == databaseConnectionString) {
-        loadConfigurationFromFile();
+        loader = new FileLoader(this);
       } else {
-        DatabaseLoader loader = new DatabaseLoader(this, databaseConnectionString);
-        loader.load();
+        loader = new DatabaseLoader(this, databaseConnectionString);
       }
+      loader.load();
 
-    } catch (Exception e) {
-      LOGGER.error("Could not load configuration");
+    } catch (ConfigurationException e) {
+      LOGGER.error(e.getMessage());
       System.exit(1);
     }
     setupCollections();
   }
 
-  private void loadConfigurationFromFile() throws IOException {
-    InputStream confFile = this.getClass().getClassLoader().getResourceAsStream(CONFIGURATION_FILE);
-    if (confFile != null) {
-      load(confFile);
-      LOGGER.info("Loaded " + CONFIGURATION_FILE + " from classpath.");
-    } else {
-      File f = new File(CONFIGURATION_FILE);
-      load(new FileInputStream(f));
-      LOGGER.info("Loaded " + CONFIGURATION_FILE + " from working directory.");
-    }
-  }
-
   private void setupCollections() {
+    if (true == collectionsSetup) {
+      return;
+    }
     adminUsers = getJIDArrayProperty(CONFIGURATION_ADMIN_USERS);
     autosubscribeChannels = getJIDArrayProperty(CONFIGURATION_CHANNELS_AUTOSUBSCRIBE);
+    collectionsSetup = true;
   }
 
   public Collection<JID> getAdminUsers() {
+    setupCollections();
     return adminUsers;
   }
 
   public Collection<JID> getAutosubscribeChannels() {
+    setupCollections();
     return autosubscribeChannels;
   }
 
@@ -152,10 +151,6 @@ public class Configuration extends Properties {
 
   public void putProperty(String key, String value) {
     conf.put(key, value);
-  }
-
-  public void load(InputStream inputStream) throws IOException {
-    conf.load(inputStream);
   }
 
   private Collection<String> getStringArrayProperty(String key) {
@@ -276,5 +271,10 @@ public class Configuration extends Properties {
   
   public void removeKey(String key) {
     conf.remove(key);
+  }
+  
+  public void load(InputStream stream) throws IOException {
+    collectionsSetup = false;
+    conf.load(stream);
   }
 }

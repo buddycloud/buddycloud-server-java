@@ -36,6 +36,7 @@ public class DatabaseLoader implements Loader {
       this.conf.removeKey(Configuration.JDBC_USER);
       this.conf.removeKey(Configuration.JDBC_PASSWORD);
     } catch (SQLException e) {
+      LOGGER.error(e);
       throw new ConfigurationException("Could not get configuration from database");
     } finally {
       if (null == connection) {
@@ -44,6 +45,7 @@ public class DatabaseLoader implements Loader {
       try {
         connection.close();
       } catch (SQLException e) {
+        LOGGER.error(e);
         throw new ConfigurationException("Could not get configuration from database");
       }
     }

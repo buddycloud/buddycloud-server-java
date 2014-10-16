@@ -213,13 +213,7 @@ public class Configuration extends Properties {
     String value = getProperty(key);
 
     if (value != null) {
-      if (value.equalsIgnoreCase("true")) {
-        return true;
-      }
-      if (value.equalsIgnoreCase("false")) {
-        return false;
-      }
-      LOGGER.warn("Invalid boolean property value for " + key + ": " + value);
+      return Boolean.valueOf(value);
     }
 
     return defaultValue;

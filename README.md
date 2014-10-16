@@ -103,7 +103,7 @@ If you prefer to load your configuration from a database then this is possible. 
 DATABASE="jdbc:postgresql://localhost:5432/buddycloud-server?user=buddycloud&password=tellnoone"
 ```
 
-The server will then use the database values to configure itself.
+The server will then use the database values to configure itself, the `configuration.properties` file will be ignored.
 
 ## Additional content-type plugins
 The buddycloud server supports validation of custom content types by means of a plugin system. By default the buddycloud server supports Atom content. Additional content types can be supported by creating an appropriate validator and packaging it as a plugin.

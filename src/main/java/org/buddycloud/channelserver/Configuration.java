@@ -19,10 +19,10 @@ import java.util.Properties;
 
 import org.apache.log4j.Logger;
 import org.buddycloud.channelserver.channel.LocalDomainChecker;
+import org.buddycloud.channelserver.utils.configuration.DatabaseLoader;
 import org.xmpp.packet.JID;
 
 public class Configuration extends Properties {
-
 
   private static final Logger LOGGER = Logger.getLogger(Configuration.class);
 
@@ -65,11 +65,11 @@ public class Configuration extends Properties {
 
   public static final String XMPP_HOST = "xmpp.host";
 
-  public static final String DATABASE_ENV = "database";
+  public static final String DATABASE_ENV = "DATABASE";
 
-  private static final String JDBC_CONNECTION_STRING = "jdbc.proxool.driver-url";
-  private static final String JDBC_PASSWORD = "jdbc.password";
-  private static final String JDBC_USER = "jdbc.user";
+  public static final String JDBC_CONNECTION_STRING = "jdbc.proxool.driver-url";
+  public static final String JDBC_PASSWORD = "jdbc.password";
+  public static final String JDBC_USER = "jdbc.user";
 
   private static Configuration instance = null;
 
@@ -86,36 +86,15 @@ public class Configuration extends Properties {
       if (null == databaseConnectionString) {
         loadConfigurationFromFile();
       } else {
-        loadConfigurationFromDatabase(databaseConnectionString);
+        DatabaseLoader loader = new DatabaseLoader(this, databaseConnectionString);
+        loader.load();
       }
 
     } catch (Exception e) {
       LOGGER.error("Could not load configuration");
       System.exit(1);
     }
-  }
-
-  private void loadConfigurationFromDatabase(String connectionString) throws SQLException {
-    Connection connection = null;
-    try {
-      connection = DriverManager.getConnection(connectionString);
-      PreparedStatement statement = connection.prepareStatement("SELECT \"key\", \"value\" FROM 'configuration';");
-      ResultSet rs = statement.executeQuery();
-      while (rs.next()) {
-          conf.setProperty(rs.getString(1), rs.getString(2));
-      }
-      conf.setProperty(JDBC_CONNECTION_STRING, connectionString);
-      conf.remove(JDBC_USER);
-      conf.remove(JDBC_PASSWORD);
-    } catch (SQLException e) {
-      LOGGER.error("Could not get configuration from database");
-      System.exit(1);
-    } finally {
-      if (null != connection) {
-        connection.close();
-      }
-    }
-
+    setupCollections();
   }
 
   private void loadConfigurationFromFile() throws IOException {
@@ -177,7 +156,6 @@ public class Configuration extends Properties {
 
   public void load(InputStream inputStream) throws IOException {
     conf.load(inputStream);
-    setupCollections();
   }
 
   private Collection<String> getStringArrayProperty(String key) {
@@ -290,5 +268,13 @@ public class Configuration extends Properties {
 
   public boolean containsKey(Object value) {
     return conf.containsKey(value);
+  }
+  
+  public Object setProperty(String key, String value) {
+    return conf.setProperty(key, value);
+  }
+  
+  public void removeKey(String key) {
+    conf.remove(key);
   }
 }

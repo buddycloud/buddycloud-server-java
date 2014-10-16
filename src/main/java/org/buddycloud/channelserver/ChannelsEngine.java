@@ -72,7 +72,7 @@ public class ChannelsEngine implements Component {
 
     private void sendConnectionNotification(JID jid2) throws ComponentException {
         ArrayList<JID> sendTo =
-                Configuration.getInstance().getNotificationsList(
+                this.configuration.getNotificationsList(
                         Configuration.NOTIFICATIONS_CONNECTED);
         Message message = new Message();
         message.setFrom(jid);

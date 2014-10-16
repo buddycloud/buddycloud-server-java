@@ -95,6 +95,16 @@ Please see [the example configuration file](https://github.com/buddycloud/buddyc
 | sync.purge-on-start                       | false          |            | Purge remote data on server start             |
 | users.presence.persist | false | | If **true** then user presence status is stored in the database rather than in memory |
 
+### Database based configuration
+
+If you prefer to load your configuration from a database then this is possible. Simply load all your configuration key/values into the "configuration" table within the database (__note:__ **jdbc.proxool.driver-url**, **jdbc.user**, and **jdbc.password** values will be ignored). When starting the server set an evironment variable of __DATABASE__ to the Postgres connection string which will connect to your database. For example:
+
+```
+DATABASE="jdbc:postgresql://localhost:5432/buddycloud-server?user=buddycloud&password=tellnoone"
+```
+
+The server will then use the database values to configure itself.
+
 ## Additional content-type plugins
 The buddycloud server supports validation of custom content types by means of a plugin system. By default the buddycloud server supports Atom content. Additional content types can be supported by creating an appropriate validator and packaging it as a plugin.
 

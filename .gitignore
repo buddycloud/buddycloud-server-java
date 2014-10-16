@@ -13,3 +13,4 @@ logs
 *.BASE.*
 *.LOCAL.*
 *.REMOTE.*
+!src/main/resources/log4j.properties

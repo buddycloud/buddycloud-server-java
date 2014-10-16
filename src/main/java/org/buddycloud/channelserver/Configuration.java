@@ -249,12 +249,15 @@ public class Configuration extends Properties {
 
   public String getDatabaseConnectionUrl() {
     String url = this.getProperty("jdbc.proxool.driver-url");
-    String user = this.getProperty("jdbc.user");
-    if (null != user) {
+    if (this.containsKey("jdbc.user")) {
       url +=
           "?user=" + this.getProperty("jdbc.user") + "&password="
               + this.getProperty("jdbc.password");
     }
     return url;
   }
+  
+  public boolean containsKey(Object value) {
+    return conf.containsKey(value);
+ }
 }

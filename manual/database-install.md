@@ -1,46 +1,53 @@
 PostgreSQL schema
 =================
 
-Installation instructions
--------------------------
+# Manually create the buddycloud server database
 
-When installing the server, you must first execute `install.sql`, then all the
-upgrade files in order, i.e. first `upgrade-1.sql`, then `upgrade-2.sql`, etc.:
+```bash
+# switch to the postgres user
+sudo su - postgres
+``
 
-    psql -U <username> -d <db> < install.sql
-    psql -U <username> -d <db> < upgrade-1.sql
+Create a database user and assign it a password (it will not work with a blank password):
 
+```bash
+createuser buddycloud_server --pwprompt --no-superuser --no-createdb --no-createrole
+```
 
-Upgrade instructions
---------------------
+Then just proceed as follows, entering the password you picked whenever asked:
+
+```bash
+# create the database
+createdb --owner buddycloud_server --encoding UTF8 buddycloud_server
+
+# install the schema file (and all upgrade files)
+psql -h 127.0.0.1 -U buddycloud_server -d buddycloud_server < postgres/install.sql
+psql -h 127.0.0.1 -U buddycloud_server -d buddycloud_server < postgres/upgrade-1.sql
+psql -h 127.0.0.1 -U buddycloud_server -d buddycloud_server < postgres/upgrade-2.sql
+# repeat for all upgrade files in numerical order
+```
+
+Now we're done, but we must test that we can connect to the database and that the schema was installed appropriately:
+
+```
+psql -h 127.0.0.1 --username buddycloud_server -d buddycloud_server -c "select * from nodes;"
+```
+
+If you got an output similar to (or exactly like) this, you're good to go. 
+
+# Upgrade instructions
 
 If you need to upgrade the schema version after upgrading the server software,
 you'll need to be a little more careful.
 
-First, stop the server and **back up your DB**. The simplest way to do this is
-to run `pg_dump -c -U <username> <db> > backup.sql`.
-
-Then, read the version notes below: they will tell you what you need to take
-care of.
+First **back up your DB**. The simplest way to do this is to run `pg_dump -c -U <username> <db> > backup.sql`.
 
 Once done you can apply the files needed for your upgrade: if your DB schema is
 currently version 3 and you need version 5, you will apply `upgrade-4.sql` and
 `upgrade-5.sql` but not `upgrade-3.sql` and below.
 
-
-Version notes
-=============
-
-`upgrade-1.sql`
----------------
-
-* This version adds a column and an index to the `items` table. This can take a
-  long time.
-* **Anonymous users**: this will mark users looking like `*@anon.*` as anonymous
-  users that can be removed from the DB. So if someone on your server is
-  following anyone with a JID similar to `*@anon.*`, you will need to remove the
-  "anonymous" flag for these subscriptions (`UPDATE subscriptions SET
-  anonymous=FALSE WHERE "user" LIKE '%@anon.ymo.us';`)
-* **Buggy entries in `items` table**: a bug in sync caused subscription stanzas
-  to be added to the `items` table (XML `<query ...></query>` and node ending
-  with `/subscriptions`). They can (and should) be removed.
+```bash
+psql -h 127.0.0.1 -U buddycloud_server -d buddycloud_server < postgres/upgrade-3.sql
+psql -h 127.0.0.1 -U buddycloud_server -d buddycloud_server < postgres/upgrade-4.sql
+# repeat for all upgrade files in numerical order
+```

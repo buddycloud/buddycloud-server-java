@@ -2,6 +2,8 @@
 
 OPTS=""
 
+export PATH=/config/channel-server/:$PATH
+
 if [ "$DATABASE" != "" ]; then
     OPTS=" $OPTS -DDATABASE=\"$DATABASE\""
 fi

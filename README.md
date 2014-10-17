@@ -12,6 +12,6 @@ Note this points to the main buddycloud repository for the java server.
 
 * [Database setup / upgrade](https://github.com/buddycloud/buddycloud-server-java/blob/master/manual/database-install.md)
 * [Configuration](https://github.com/buddycloud/buddycloud-server-java/blob/master/manual/configuration.md)
-* [Deployment / Docker](https://github.com/buddycloud/buddycloud-server-java/blob/master/manual/deployment.md
+* [Deployment / Docker](https://github.com/buddycloud/buddycloud-server-java/blob/master/manual/deployment.md)
 * [Plugins](https://github.com/buddycloud/buddycloud-server-java/blob/master/manual/deployment.md)
 * [Development / Building](https://github.com/buddycloud/buddycloud-server-java/blob/master/manual/development.md)

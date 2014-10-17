@@ -12,7 +12,7 @@ RUN apt-get upgrade -y
 RUN apt-get install -y maven
 
 RUN git clone https://github.com/buddycloud/buddycloud-server-java.git
-RUN cd buddycloud-server-java && mvn package
+RUN cd buddycloud-server-java && git checkout v0.18.0 && mvn package
 ADD src/main/resources/log4j.properties /data/buddycloud-server-java/
 ADD contrib/docker/start.sh /data/
 RUN chmod +x start.sh

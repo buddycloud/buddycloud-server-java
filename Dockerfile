@@ -9,7 +9,7 @@ MAINTAINER Lloyd Watkin <lloyd@evilprofessor.co.uk>
 
 RUN apt-get update
 RUN apt-get upgrade -y
-RUN apt-get install -y maven
+RUN apt-get install -y --no-install-recommends maven
 
 RUN git clone https://github.com/buddycloud/buddycloud-server-java.git
 RUN cd buddycloud-server-java && mvn package

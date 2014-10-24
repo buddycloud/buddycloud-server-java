@@ -4,6 +4,7 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 
+import org.apache.log4j.Logger;
 import org.buddycloud.channelserver.Configuration;
 import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.channel.node.configuration.Helper;
@@ -28,6 +29,8 @@ import org.xmpp.packet.PacketError.Type;
 public abstract class PubSubElementProcessorAbstract implements PubSubElementProcessor {
     public static final String NS_RSM = "http://jabber.org/protocol/rsm";
 
+    private static final Logger LOGGER = Logger.getLogger(PubSubElementProcessorAbstract.class);
+
     protected BlockingQueue<Packet> outQueue;
     protected ChannelManager channelManager;
     protected Element element;
@@ -39,6 +42,7 @@ public abstract class PubSubElementProcessorAbstract implements PubSubElementPro
     protected String node = null;
     protected Helper configurationHelper;
     protected Map<String, String> nodeConfiguration;
+    protected String parentId;
 
     protected Element resultSetManagement;
     protected String firstItem;
@@ -203,5 +207,37 @@ public abstract class PubSubElementProcessorAbstract implements PubSubElementPro
         Element actor = request.getElement().element("pubsub").addElement("actor", Buddycloud.NS);
         actor.addText(request.getFrom().toBareJID());
         outQueue.put(request);
+    }
+
+    protected boolean isValidStanza() {
+        Element replies = request.getChildElement().element(acceptedElementName);
+        try {
+            node = replies.attributeValue(XMLConstants.NODE_ATTR);
+            if (null == node) {
+                createExtendedErrorReply(PacketError.Type.modify, PacketError.Condition.bad_request, XMLConstants.NODE_ID_REQUIRED);
+
+                return false;
+            }
+            parentId = replies.attributeValue(XMLConstants.ITEM_ID);
+            if (null == parentId) {
+                createExtendedErrorReply(PacketError.Type.modify, PacketError.Condition.bad_request, XMLConstants.ITEM_ID_REQUIRED);
+                return false;
+            }
+            if (!channelManager.nodeExists(node)) {
+                setErrorCondition(PacketError.Type.cancel, PacketError.Condition.item_not_found);
+
+                return false;
+            }
+            nodeConfiguration = channelManager.getNodeConf(node);
+        } catch (NullPointerException e) {
+            LOGGER.error(e);
+            setErrorCondition(PacketError.Type.modify, PacketError.Condition.bad_request);
+            return false;
+        } catch (NodeStoreException e) {
+            LOGGER.error(e);
+            setErrorCondition(PacketError.Type.wait, PacketError.Condition.internal_server_error);
+            return false;
+        }
+        return true;
     }
 }

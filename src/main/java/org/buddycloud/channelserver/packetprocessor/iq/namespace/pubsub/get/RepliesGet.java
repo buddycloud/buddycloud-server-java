@@ -30,9 +30,8 @@ public class RepliesGet extends PubSubElementProcessorAbstract {
     private String lastItemId = null;
     private String afterItemId = null;
     private int maxResults = -1;
-    private String parentId;
 
-    private static final Logger LOGGER = Logger.getLogger(RecentItemsGet.class);
+    public static final Logger LOGGER = Logger.getLogger(RecentItemsGet.class);
 
     public static final String NS_RSM = "http://jabber.org/protocol/rsm";
 
@@ -143,37 +142,5 @@ public class RepliesGet extends PubSubElementProcessorAbstract {
 
             }
         }
-    }
-
-    private boolean isValidStanza() {
-        Element replies = request.getChildElement().element(XMLConstants.REPLIES);
-        try {
-            node = replies.attributeValue(XMLConstants.NODE_ATTR);
-            if (null == node) {
-                createExtendedErrorReply(PacketError.Type.modify, PacketError.Condition.bad_request, XMLConstants.NODE_ID_REQUIRED);
-
-                return false;
-            }
-            parentId = replies.attributeValue(XMLConstants.ITEM_ID);
-            if (null == parentId) {
-                createExtendedErrorReply(PacketError.Type.modify, PacketError.Condition.bad_request, XMLConstants.ITEM_ID_REQUIRED);
-                return false;
-            }
-            if (!channelManager.nodeExists(node)) {
-                setErrorCondition(PacketError.Type.cancel, PacketError.Condition.item_not_found);
-
-                return false;
-            }
-            nodeConfiguration = channelManager.getNodeConf(node);
-        } catch (NullPointerException e) {
-            LOGGER.error(e);
-            setErrorCondition(PacketError.Type.modify, PacketError.Condition.bad_request);
-            return false;
-        } catch (NodeStoreException e) {
-            LOGGER.error(e);
-            setErrorCondition(PacketError.Type.wait, PacketError.Condition.internal_server_error);
-            return false;
-        }
-        return true;
     }
 }

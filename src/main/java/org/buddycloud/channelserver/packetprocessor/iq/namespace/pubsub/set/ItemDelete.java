@@ -38,6 +38,8 @@ public class ItemDelete extends PubSubElementProcessorAbstract {
     public ItemDelete(BlockingQueue<Packet> outQueue, ChannelManager channelManager) {
         this.setOutQueue(outQueue);
         this.setChannelManager(channelManager);
+
+        acceptedElementName = "retract";
     }
 
     @Override
@@ -228,10 +230,5 @@ public class ItemDelete extends PubSubElementProcessorAbstract {
         error.add(nodeIdRequired);
         response.setChildElement(error);
         return false;
-    }
-
-
-    public boolean accept(Element elm) {
-        return elm.getName().equals("retract");
     }
 }

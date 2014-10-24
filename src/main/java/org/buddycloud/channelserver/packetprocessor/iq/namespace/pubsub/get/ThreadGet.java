@@ -33,7 +33,6 @@ public class ThreadGet extends PubSubElementProcessorAbstract {
     private String lastItemId = null;
     private String afterItemId = null;
     private int maxResults = -1;
-    private String parentId;
 
     private static final Logger LOGGER = Logger.getLogger(RecentItemsGet.class);
 
@@ -147,38 +146,6 @@ public class ThreadGet extends PubSubElementProcessorAbstract {
                 LOGGER.error("Error parsing a node entry, ignoring. " + item.getId());
             }
         }
-    }
-
-    private boolean isValidStanza() {
-        Element thread = request.getChildElement().element(XMLConstants.THREAD_ELEM);
-        try {
-            node = thread.attributeValue(XMLConstants.NODE_ATTR);
-            if (null == node) {
-                createExtendedErrorReply(PacketError.Type.modify, PacketError.Condition.bad_request, XMLConstants.NODE_ID_REQUIRED);
-
-                return false;
-            }
-            parentId = thread.attributeValue(XMLConstants.ITEM_ID);
-            if (null == parentId) {
-                createExtendedErrorReply(PacketError.Type.modify, PacketError.Condition.bad_request, XMLConstants.ITEM_ID_REQUIRED);
-                return false;
-            }
-            if (!channelManager.nodeExists(node)) {
-                setErrorCondition(PacketError.Type.cancel, PacketError.Condition.item_not_found);
-
-                return false;
-            }
-            nodeConfiguration = channelManager.getNodeConf(node);
-        } catch (NullPointerException e) {
-            LOGGER.error(e);
-            setErrorCondition(PacketError.Type.modify, PacketError.Condition.bad_request);
-            return false;
-        } catch (NodeStoreException e) {
-            LOGGER.error(e);
-            setErrorCondition(PacketError.Type.wait, PacketError.Condition.internal_server_error);
-            return false;
-        }
-        return true;
     }
 
     public AccessModels getNodeAccessModel() {

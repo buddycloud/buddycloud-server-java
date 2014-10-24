@@ -13,6 +13,7 @@ import org.buddycloud.channelserver.pubsub.model.NodeMembership;
 import org.buddycloud.channelserver.pubsub.model.NodeSubscription;
 import org.buddycloud.channelserver.pubsub.model.impl.NodeSubscriptionImpl;
 import org.buddycloud.channelserver.pubsub.subscription.Subscriptions;
+import org.buddycloud.channelserver.utils.XMLConstants;
 import org.buddycloud.channelserver.utils.node.item.payload.Buddycloud;
 import org.dom4j.Document;
 import org.dom4j.Element;
@@ -35,13 +36,15 @@ public class UnsubscribeSet extends PubSubElementProcessorAbstract {
     public UnsubscribeSet(BlockingQueue<Packet> outQueue, ChannelManager channelManager) {
         this.outQueue = outQueue;
         this.channelManager = channelManager;
+
+        acceptedElementName = XMLConstants.UNSUBSCRIBE_ELEM;
     }
 
     @Override
     public void process(Element elm, JID actorJID, IQ reqIQ, Element rsm) throws Exception {
 
         request = reqIQ;
-        node = request.getChildElement().element("unsubscribe").attributeValue("node");
+        node = request.getChildElement().element(XMLConstants.UNSUBSCRIBE_ELEM).attributeValue(XMLConstants.NODE_ATTR);
         response = IQ.createResultIQ(request);
 
         if ((node == null) || (node.equals(""))) {
@@ -145,10 +148,5 @@ public class UnsubscribeSet extends PubSubElementProcessorAbstract {
     private void missingNodeName() throws InterruptedException {
         createExtendedErrorReply(PacketError.Type.modify, PacketError.Condition.bad_request, NODE_ID_REQUIRED);
         outQueue.put(response);
-    }
-
-    @Override
-    public boolean accept(Element elm) {
-        return elm.getName().equals("unsubscribe");
     }
 }

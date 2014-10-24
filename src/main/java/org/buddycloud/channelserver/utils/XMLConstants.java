@@ -42,7 +42,7 @@ public class XMLConstants {
 
     public static final String TEXT_ELEM = "text";
 
-    public static final Object CREATE_ELEM = "create";
+    public static final String CREATE_ELEM = "create";
 
     public static final String NODE_ID_REQUIRED = "nodeid-required";
 

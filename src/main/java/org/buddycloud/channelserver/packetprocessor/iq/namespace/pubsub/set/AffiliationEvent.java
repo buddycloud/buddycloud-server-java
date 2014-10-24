@@ -74,7 +74,7 @@ public class AffiliationEvent extends PubSubElementProcessorAbstract {
 
         try {
 
-            if ((false == validRequestStanza()) || (false == checkNodeExists()) || (false == actorHasPermissionToAuthorize())
+            if ((false == isValidStanza()) || (false == checkNodeExists()) || (false == actorHasPermissionToAuthorize())
                     || (false == subscriberHasCurrentAffiliation()) || (true == userIsModifyingTheirAffiliation())
                     || (false == attemptToChangeAffiliationOfNodeOwner())) {
                 outQueue.put(response);
@@ -167,7 +167,7 @@ public class AffiliationEvent extends PubSubElementProcessorAbstract {
         return false;
     }
 
-    private boolean validRequestStanza() {
+    protected boolean isValidStanza() {
         try {
             requestedAffiliationElement =
                     request.getElement().element(XMLConstants.PUBSUB_ELEM).element(XMLConstants.AFFILIATIONS_ELEM).element(XMLConstants.AFFILIATION_ELEM);

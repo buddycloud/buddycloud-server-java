@@ -70,11 +70,9 @@ public class RecentItemsGet extends PubSubElementProcessorAbstract {
         }
 
         if (!Configuration.getInstance().isLocalJID(request.getFrom())) {
-            response.getElement().addAttribute("remote-server-discover",
-                    "false");
+            response.getElement().addAttribute("remote-server-discover", "false");
         }
-        pubsub = response.getElement().addElement("pubsub",
-                JabberPubsub.NAMESPACE_URI);
+        pubsub = response.getElement().addElement("pubsub", JabberPubsub.NAMESPACE_URI);
         try {
             parseRsmElement();
             addRecentItems();
@@ -83,8 +81,7 @@ public class RecentItemsGet extends PubSubElementProcessorAbstract {
         } catch (NodeStoreException e) {
             LOGGER.error(e);
             response.getElement().remove(pubsub);
-            setErrorCondition(PacketError.Type.wait,
-                    PacketError.Condition.internal_server_error);
+            setErrorCondition(PacketError.Type.wait, PacketError.Condition.internal_server_error);
         }
         outQueue.put(response);
     }
@@ -149,11 +146,12 @@ public class RecentItemsGet extends PubSubElementProcessorAbstract {
         }
     }
 
-    private boolean isValidStanza() {
+    @Override
+    protected boolean isValidStanza() {
         boolean valid = false;
         String failureReason = null;
 
-        Element recentItems = request.getChildElement().element(XMLConstants.RECENT_ITEMS_ELEM);
+        Element recentItems = request.getChildElement().element(acceptedElementName);
         try {
             String max = recentItems.attributeValue(XMLConstants.MAX_ATTR);
             if (null != max) {

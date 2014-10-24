@@ -146,8 +146,9 @@ public class UserItemsGet extends PubSubElementProcessorAbstract {
         }
     }
 
-    private boolean isValidStanza() {
-        Element userFeedItems = request.getChildElement().element(XMLConstants.USER_ITEMS);
+    @Override
+    protected boolean isValidStanza() {
+        Element userFeedItems = request.getChildElement().element(acceptedElementName);
         try {
             String since = userFeedItems.attributeValue(XMLConstants.SINCE_ATTR);
             String parentOnlyAttribute = userFeedItems.attributeValue(XMLConstants.PARENT_ONLY_ATTR);

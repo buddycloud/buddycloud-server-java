@@ -51,6 +51,8 @@ public class SubscribeSet extends PubSubElementProcessorAbstract {
     public SubscribeSet(BlockingQueue<Packet> outQueue, ChannelManager channelManager) {
         this.outQueue = outQueue;
         this.channelManager = channelManager;
+
+        acceptedElementName = "subscribe";
     }
 
     @Override
@@ -351,6 +353,4 @@ public class SubscribeSet extends PubSubElementProcessorAbstract {
 
         outQueue.put(reply);
     }
-
-    protected String acceptedElementName = "subscribe";
 }

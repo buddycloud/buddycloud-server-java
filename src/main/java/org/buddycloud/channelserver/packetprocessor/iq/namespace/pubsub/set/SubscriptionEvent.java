@@ -47,6 +47,10 @@ public class SubscriptionEvent extends PubSubElementProcessorAbstract {
     public SubscriptionEvent(BlockingQueue<Packet> outQueue, ChannelManager channelManager) {
         setChannelManager(channelManager);
         setOutQueue(outQueue);
+
+        acceptedElementName = XMLConstants.SUBSCRIPTIONS_ELEM;
+
+
     }
 
     /**
@@ -73,7 +77,7 @@ public class SubscriptionEvent extends PubSubElementProcessorAbstract {
             return;
         }
         try {
-            if ((!nodeProvided()) || (!validRequestStanza()) || (!checkNodeExists()) || (!actorHasPermissionToAuthorize())
+            if ((!nodeProvided()) || (!isValidStanza()) || (!checkNodeExists()) || (!actorHasPermissionToAuthorize())
                     || (actorIsModifyingTheirSubscription()) || (!userIsSubscribable())) {
                 outQueue.put(response);
                 return;
@@ -182,7 +186,7 @@ public class SubscriptionEvent extends PubSubElementProcessorAbstract {
         return false;
     }
 
-    private boolean validRequestStanza() {
+    protected boolean isValidStanza() {
         subscriptionElement =
                 request.getElement().element(XMLConstants.PUBSUB_ELEM).element(XMLConstants.SUBSCRIPTIONS_ELEM).element(XMLConstants.SUBSCRIPTION_ELEM);
 
@@ -221,12 +225,5 @@ public class SubscriptionEvent extends PubSubElementProcessorAbstract {
 
         setErrorCondition(PacketError.Type.auth, PacketError.Condition.forbidden);
         return false;
-    }
-
-    /**
-     * Determine if this class is capable of processing incoming stanza
-     */
-    public boolean accept(Element elm) {
-        return XMLConstants.SUBSCRIPTIONS_ELEM.equals(elm.getName());
     }
 }

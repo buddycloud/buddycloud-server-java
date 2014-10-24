@@ -13,6 +13,7 @@ import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.PubSubEl
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.get.NodeThreadsGet;
 import org.buddycloud.channelserver.pubsub.affiliation.Affiliations;
 import org.buddycloud.channelserver.pubsub.model.NodeSubscription;
+import org.buddycloud.channelserver.utils.XMLConstants;
 import org.dom4j.Element;
 import org.dom4j.Namespace;
 import org.dom4j.dom.DOMElement;
@@ -34,6 +35,8 @@ public class NodeDelete extends PubSubElementProcessorAbstract {
     public NodeDelete(BlockingQueue<Packet> outQueue, ChannelManager channelManager) {
         setChannelManager(channelManager);
         setOutQueue(outQueue);
+
+        acceptedElementName = "delete";
     }
 
     public void process(Element elm, JID actorJID, IQ reqIQ, Element rsm) throws Exception {
@@ -42,7 +45,7 @@ public class NodeDelete extends PubSubElementProcessorAbstract {
         this.response = IQ.createResultIQ(reqIQ);
         this.request = reqIQ;
         this.actor = actorJID;
-        this.node = element.attributeValue("node");
+        this.node = element.attributeValue(XMLConstants.NODE_ATTR);
 
         if (actorJID == null) {
             actor = request.getFrom();
@@ -112,10 +115,6 @@ public class NodeDelete extends PubSubElementProcessorAbstract {
         }
         response.setType(IQ.Type.result);
         outQueue.put(response);
-    }
-
-    public boolean accept(Element elm) {
-        return elm.getName().equals("delete");
     }
 
     private boolean nodePresent() {

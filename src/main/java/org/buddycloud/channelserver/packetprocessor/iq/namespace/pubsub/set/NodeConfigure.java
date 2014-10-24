@@ -35,6 +35,8 @@ public class NodeConfigure extends PubSubElementProcessorAbstract {
     public NodeConfigure(BlockingQueue<Packet> outQueue, ChannelManager channelManager) {
         setChannelManager(channelManager);
         setOutQueue(outQueue);
+
+        acceptedElementName = "configure";
     }
 
     public void process(Element elm, JID actorJID, IQ reqIQ, Element rsm) throws Exception {
@@ -165,9 +167,5 @@ public class NodeConfigure extends PubSubElementProcessorAbstract {
         error.add(nodeIdRequired);
         response.setChildElement(error);
         return false;
-    }
-
-    public boolean accept(Element elm) {
-        return elm.getName().equals("configure");
     }
 }

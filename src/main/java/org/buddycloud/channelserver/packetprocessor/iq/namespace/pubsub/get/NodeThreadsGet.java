@@ -115,7 +115,8 @@ public class NodeThreadsGet extends PubSubElementProcessorAbstract {
         }
     }
 
-    private boolean isValidStanza() throws NodeStoreException {
+    @Override
+    protected boolean isValidStanza() {
         try {
             this.node = request.getChildElement().element(XMLConstants.THREADS_ELEM).attributeValue(XMLConstants.NODE_ATTR);
             if (node != null) {

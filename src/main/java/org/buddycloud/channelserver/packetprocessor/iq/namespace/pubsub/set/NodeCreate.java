@@ -31,6 +31,8 @@ public class NodeCreate extends PubSubElementProcessorAbstract {
     public NodeCreate(BlockingQueue<Packet> outQueue, ChannelManager channelManager) {
         setChannelManager(channelManager);
         setOutQueue(outQueue);
+
+        acceptedElementName = XMLConstants.CREATE_ELEM;
     }
 
     public void process(Element elm, JID actorJID, IQ reqIQ, Element rsm) throws Exception {
@@ -75,10 +77,6 @@ public class NodeCreate extends PubSubElementProcessorAbstract {
         }
         response.setType(IQ.Type.result);
         outQueue.put(response);
-    }
-
-    public boolean accept(Element elm) {
-        return XMLConstants.CREATE_ELEM.equals(elm.getName());
     }
 
     private HashMap<String, String> getNodeConfiguration() throws NodeStoreException {

@@ -1,7 +1,6 @@
 package org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.get;
 
 import java.io.StringReader;
-import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 
 import org.apache.log4j.Logger;
@@ -15,8 +14,6 @@ import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.PubSubEl
 import org.buddycloud.channelserver.pubsub.accessmodel.AccessModels;
 import org.buddycloud.channelserver.pubsub.model.NodeItem;
 import org.buddycloud.channelserver.utils.XMLConstants;
-import org.buddycloud.channelserver.utils.node.NodeAclRefuseReason;
-import org.buddycloud.channelserver.utils.node.NodeViewAcl;
 import org.buddycloud.channelserver.utils.node.item.payload.Buddycloud;
 import org.dom4j.DocumentException;
 import org.dom4j.Element;
@@ -37,8 +34,6 @@ public class ThreadGet extends PubSubElementProcessorAbstract {
     private String afterItemId = null;
     private int maxResults = -1;
     private String parentId;
-    private NodeViewAcl nodeViewAcl;
-    private Map<String, String> nodeConfiguration;
 
     private static final Logger LOGGER = Logger.getLogger(RecentItemsGet.class);
 
@@ -186,31 +181,10 @@ public class ThreadGet extends PubSubElementProcessorAbstract {
         return true;
     }
 
-    private boolean userCanViewNode() throws NodeStoreException {
-        if (getNodeViewAcl().canViewNode(node, channelManager.getNodeMembership(node, actor), getNodeAccessModel(),
-                Configuration.getInstance().isLocalJID(actor))) {
-            return true;
-        }
-        NodeAclRefuseReason reason = getNodeViewAcl().getReason();
-        createExtendedErrorReply(reason.getType(), reason.getCondition(), reason.getAdditionalErrorElement());
-        return false;
-    }
-
-    private AccessModels getNodeAccessModel() {
+    public AccessModels getNodeAccessModel() {
         if (!nodeConfiguration.containsKey(AccessModel.FIELD_NAME)) {
             return AccessModels.authorize;
         }
         return AccessModels.createFromString(nodeConfiguration.get(AccessModel.FIELD_NAME));
-    }
-
-    public void setNodeViewAcl(NodeViewAcl acl) {
-        nodeViewAcl = acl;
-    }
-
-    private NodeViewAcl getNodeViewAcl() {
-        if (null == nodeViewAcl) {
-            nodeViewAcl = new NodeViewAcl();
-        }
-        return nodeViewAcl;
     }
 }

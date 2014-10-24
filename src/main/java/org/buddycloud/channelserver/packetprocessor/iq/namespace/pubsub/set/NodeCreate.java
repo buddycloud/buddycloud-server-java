@@ -52,7 +52,7 @@ public class NodeCreate extends PubSubElementProcessorAbstract {
             makeRemoteRequest();
             return;
         }
-        if ((doesNodeExist()) || (!actorIsRegistered()) || (!nodeHandledByThisServer())) {
+        if ((checkNodeExists()) || (!actorIsRegistered()) || (!nodeHandledByThisServer())) {
 
             outQueue.put(response);
             return;
@@ -112,20 +112,13 @@ public class NodeCreate extends PubSubElementProcessorAbstract {
         return false;
     }
 
-    private boolean doesNodeExist() throws NodeStoreException {
+    @Override
+    protected boolean checkNodeExists() throws NodeStoreException {
         if (!channelManager.nodeExists(node)) {
             return false;
         }
         setErrorCondition(PacketError.Type.cancel, PacketError.Condition.conflict);
         return true;
-    }
-
-    private boolean actorIsRegistered() {
-        if (actor.getDomain().equals(getServerDomain())) {
-            return true;
-        }
-        setErrorCondition(PacketError.Type.auth, PacketError.Condition.forbidden);
-        return false;
     }
 
     private boolean nodeHandledByThisServer() {

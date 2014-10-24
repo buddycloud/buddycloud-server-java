@@ -1,12 +1,18 @@
 package org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub;
 
 import java.util.Collection;
+import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 
 import org.buddycloud.channelserver.Configuration;
 import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.channel.node.configuration.Helper;
+import org.buddycloud.channelserver.channel.node.configuration.field.AccessModel;
+import org.buddycloud.channelserver.db.exception.NodeStoreException;
+import org.buddycloud.channelserver.pubsub.accessmodel.AccessModels;
 import org.buddycloud.channelserver.utils.XMLConstants;
+import org.buddycloud.channelserver.utils.node.NodeAclRefuseReason;
+import org.buddycloud.channelserver.utils.node.NodeViewAcl;
 import org.dom4j.Document;
 import org.dom4j.DocumentHelper;
 import org.dom4j.Element;
@@ -31,11 +37,13 @@ public abstract class PubSubElementProcessorAbstract implements PubSubElementPro
     protected String topicsDomain;
     protected String node = null;
     protected Helper configurationHelper;
+    protected Map<String, String> nodeConfiguration;
 
     protected Element resultSetManagement;
     protected String firstItem;
     protected String lastItem;
     protected int totalEntriesCount;
+    protected NodeViewAcl nodeViewAcl;
 
     private Collection<JID> adminUsers;
 
@@ -142,5 +150,50 @@ public abstract class PubSubElementProcessorAbstract implements PubSubElementPro
 
     public boolean accept(Element elm) {
         return acceptedElementName.equals(elm.getName());
+    }
+
+    protected boolean checkNodeExists() throws NodeStoreException {
+        if ((!Configuration.getInstance().isLocalNode(node)) || !channelManager.nodeExists(node)) {
+            setErrorCondition(PacketError.Type.cancel, PacketError.Condition.item_not_found);
+
+            return false;
+        }
+        return true;
+    }
+
+    protected boolean userCanViewNode() throws NodeStoreException {
+        if (getNodeViewAcl().canViewNode(node, channelManager.getNodeMembership(node, actor), getNodeAccessModel(),
+                Configuration.getInstance().isLocalJID(actor))) {
+            return true;
+        }
+        NodeAclRefuseReason reason = getNodeViewAcl().getReason();
+        createExtendedErrorReply(reason.getType(), reason.getCondition(), reason.getAdditionalErrorElement());
+        return false;
+    }
+
+    public void setNodeViewAcl(NodeViewAcl acl) {
+        nodeViewAcl = acl;
+    }
+
+    protected NodeViewAcl getNodeViewAcl() {
+        if (null == nodeViewAcl) {
+            nodeViewAcl = new NodeViewAcl();
+        }
+        return nodeViewAcl;
+    }
+
+    private AccessModels getNodeAccessModel() {
+        if (!nodeConfiguration.containsKey(AccessModel.FIELD_NAME)) {
+            return AccessModels.authorize;
+        }
+        return AccessModels.createFromString(nodeConfiguration.get(AccessModel.FIELD_NAME));
+    }
+
+    protected boolean actorIsRegistered() {
+        if (actor.getDomain().equals(getServerDomain())) {
+            return true;
+        }
+        setErrorCondition(PacketError.Type.auth, PacketError.Condition.forbidden);
+        return false;
     }
 }

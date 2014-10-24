@@ -1,22 +1,17 @@
 package org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.get;
 
 import java.io.StringReader;
-import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 
 import org.apache.log4j.Logger;
 import org.buddycloud.channelserver.Configuration;
 import org.buddycloud.channelserver.channel.ChannelManager;
-import org.buddycloud.channelserver.channel.node.configuration.field.AccessModel;
 import org.buddycloud.channelserver.db.CloseableIterator;
 import org.buddycloud.channelserver.db.exception.NodeStoreException;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.JabberPubsub;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.PubSubElementProcessorAbstract;
-import org.buddycloud.channelserver.pubsub.accessmodel.AccessModels;
 import org.buddycloud.channelserver.pubsub.model.NodeItem;
 import org.buddycloud.channelserver.utils.XMLConstants;
-import org.buddycloud.channelserver.utils.node.NodeAclRefuseReason;
-import org.buddycloud.channelserver.utils.node.NodeViewAcl;
 import org.dom4j.DocumentException;
 import org.dom4j.Element;
 import org.dom4j.io.SAXReader;
@@ -36,8 +31,6 @@ public class RepliesGet extends PubSubElementProcessorAbstract {
     private String afterItemId = null;
     private int maxResults = -1;
     private String parentId;
-    private NodeViewAcl nodeViewAcl;
-    private Map<String, String> nodeConfiguration;
 
     private static final Logger LOGGER = Logger.getLogger(RecentItemsGet.class);
 
@@ -182,33 +175,5 @@ public class RepliesGet extends PubSubElementProcessorAbstract {
             return false;
         }
         return true;
-    }
-
-    private boolean userCanViewNode() throws NodeStoreException {
-        if (nodeViewAcl.canViewNode(node, channelManager.getNodeMembership(node, actor), getNodeAccessModel(),
-                Configuration.getInstance().isLocalJID(actor))) {
-            return true;
-        }
-        NodeAclRefuseReason reason = getNodeViewAcl().getReason();
-        createExtendedErrorReply(reason.getType(), reason.getCondition(), reason.getAdditionalErrorElement());
-        return false;
-    }
-
-    private AccessModels getNodeAccessModel() {
-        if (!nodeConfiguration.containsKey(AccessModel.FIELD_NAME)) {
-            return AccessModels.authorize;
-        }
-        return AccessModels.createFromString(nodeConfiguration.get(AccessModel.FIELD_NAME));
-    }
-
-    public void setNodeViewAcl(NodeViewAcl acl) {
-        nodeViewAcl = acl;
-    }
-
-    private NodeViewAcl getNodeViewAcl() {
-        if (null == nodeViewAcl) {
-            nodeViewAcl = new NodeViewAcl();
-        }
-        return nodeViewAcl;
     }
 }

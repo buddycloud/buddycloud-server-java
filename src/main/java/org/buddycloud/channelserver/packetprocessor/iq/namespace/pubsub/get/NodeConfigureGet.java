@@ -57,7 +57,7 @@ public class NodeConfigureGet extends PubSubElementProcessorAbstract {
         }
 
         try {
-            if (!nodeExists()) {
+            if (!checkNodeExists()) {
                 outQueue.put(response);
                 return;
             }
@@ -98,14 +98,6 @@ public class NodeConfigureGet extends PubSubElementProcessorAbstract {
         configure.addAttribute("node", node);
         configure.add(x.getElement());
         outQueue.put(response);
-    }
-
-    private boolean nodeExists() throws NodeStoreException {
-        if (channelManager.nodeExists(node)) {
-            return true;
-        }
-        setErrorCondition(PacketError.Type.cancel, PacketError.Condition.item_not_found);
-        return false;
     }
 
     private boolean nodeProvided() {

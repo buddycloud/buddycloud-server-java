@@ -139,13 +139,6 @@ public class NodeThreadsGet extends PubSubElementProcessorAbstract {
         return false;
     }
 
-    private boolean checkNodeExists() throws NodeStoreException {
-        if (!channelManager.nodeExists(node)) {
-            setErrorCondition(PacketError.Type.cancel, PacketError.Condition.item_not_found);
-            return false;
-        }
-        return true;
-    }
 
     private AccessModels getNodeAccessModel(Map<String, String> nodeConfiguration) {
         if (!nodeConfiguration.containsKey(AccessModel.FIELD_NAME)) {
@@ -154,7 +147,7 @@ public class NodeThreadsGet extends PubSubElementProcessorAbstract {
         return AccessModels.createFromString(nodeConfiguration.get(AccessModel.FIELD_NAME));
     }
 
-    private boolean userCanViewNode() throws NodeStoreException {
+    protected boolean userCanViewNode() throws NodeStoreException {
         NodeViewAcl nodeViewAcl = new NodeViewAcl();
         Map<String, String> nodeConfiguration = channelManager.getNodeConf(node);
 

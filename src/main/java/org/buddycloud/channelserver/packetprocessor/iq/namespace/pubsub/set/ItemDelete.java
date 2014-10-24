@@ -63,7 +63,7 @@ public class ItemDelete extends PubSubElementProcessorAbstract {
         }
 
         try {
-            if (!nodeExists() || !itemIdProvided() || !itemExists() || !validPayload() || !canDelete()) {
+            if (!checkNodeExists() || !itemIdProvided() || !itemExists() || !validPayload() || !canDelete()) {
                 outQueue.put(response);
                 return;
             }
@@ -214,14 +214,6 @@ public class ItemDelete extends PubSubElementProcessorAbstract {
         error.add(nodeIdRequired);
         response.setChildElement(error);
         return false;
-    }
-
-    private boolean nodeExists() throws NodeStoreException {
-        if ((false == Configuration.getInstance().isLocalNode(node)) || (false == channelManager.nodeExists(node))) {
-            setErrorCondition(PacketError.Type.cancel, PacketError.Condition.item_not_found);
-            return false;
-        }
-        return true;
     }
 
     private boolean validNodeProvided() {

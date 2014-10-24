@@ -56,7 +56,7 @@ public class NodeDelete extends PubSubElementProcessorAbstract {
             makeRemoteRequest();
             return;
         }
-        if (!nodeExists() || !actorIsRegistered() || !nodeHandledByThisServer() || !actorAllowedToDelete()) {
+        if (!checkNodeExists() || !actorIsRegistered() || !nodeHandledByThisServer() || !actorAllowedToDelete()) {
             outQueue.put(response);
             return;
         }
@@ -131,22 +131,6 @@ public class NodeDelete extends PubSubElementProcessorAbstract {
         error.add(badRequest);
         error.add(nodeIdRequired);
         response.setChildElement(error);
-        return false;
-    }
-
-    private boolean nodeExists() throws NodeStoreException {
-        if (channelManager.nodeExists(node)) {
-            return true;
-        }
-        setErrorCondition(PacketError.Type.cancel, PacketError.Condition.item_not_found);
-        return false;
-    }
-
-    private boolean actorIsRegistered() {
-        if (actor.getDomain().equals(getServerDomain())) {
-            return true;
-        }
-        setErrorCondition(PacketError.Type.auth, PacketError.Condition.forbidden);
         return false;
     }
 

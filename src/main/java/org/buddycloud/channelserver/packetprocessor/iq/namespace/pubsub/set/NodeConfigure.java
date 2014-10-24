@@ -57,14 +57,13 @@ public class NodeConfigure extends PubSubElementProcessorAbstract {
             return;
         }
         try {
-            if (!nodeExists() || !actorCanModify()) {
+            if (!checkNodeExists() || !actorCanModify()) {
                 outQueue.put(response);
                 return;
             }
         } catch (NodeStoreException e) {
             LOGGER.error(e);
-            setErrorCondition(PacketError.Type.cancel,
-                    PacketError.Condition.internal_server_error);
+            setErrorCondition(PacketError.Type.cancel, PacketError.Condition.internal_server_error);
             outQueue.put(response);
             return;
         }
@@ -151,14 +150,6 @@ public class NodeConfigure extends PubSubElementProcessorAbstract {
             return true;
         }
         setErrorCondition(PacketError.Type.auth, PacketError.Condition.forbidden);
-        return false;
-    }
-
-    private boolean nodeExists() throws NodeStoreException {
-        if (channelManager.nodeExists(node)) {
-            return true;
-        }
-        setErrorCondition(PacketError.Type.cancel, PacketError.Condition.item_not_found);
         return false;
     }
 

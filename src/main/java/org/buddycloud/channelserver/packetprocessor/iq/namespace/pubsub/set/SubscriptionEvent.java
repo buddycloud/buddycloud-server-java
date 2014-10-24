@@ -223,14 +223,6 @@ public class SubscriptionEvent extends PubSubElementProcessorAbstract {
         return false;
     }
 
-    private boolean checkNodeExists() throws NodeStoreException {
-        if (!channelManager.nodeExists(node)) {
-            setErrorCondition(PacketError.Type.cancel, PacketError.Condition.item_not_found);
-            return false;
-        }
-        return true;
-    }
-
     private void makeRemoteRequest() throws InterruptedException {
         request.setTo(new JID(node.split("/")[2]).getDomain());
         Element actor = request.getElement().element("pubsub").addElement("actor", Buddycloud.NS);

@@ -18,7 +18,6 @@ import org.buddycloud.channelserver.pubsub.model.NodeThread;
 import org.buddycloud.channelserver.utils.XMLConstants;
 import org.buddycloud.channelserver.utils.node.NodeAclRefuseReason;
 import org.buddycloud.channelserver.utils.node.NodeViewAcl;
-import org.buddycloud.channelserver.utils.node.item.payload.Buddycloud;
 import org.dom4j.DocumentException;
 import org.dom4j.Element;
 import org.dom4j.io.SAXReader;
@@ -78,16 +77,6 @@ public class NodeThreadsGet extends PubSubElementProcessorAbstract {
         getNodeThreads();
         addRsmElement();
         outQueue.put(response);
-    }
-
-    private void makeRemoteRequest() throws InterruptedException {
-        String domain = new JID(node.split("/")[2]).getDomain();
-        request.setTo(domain);
-        if (null == request.getElement().element(XMLConstants.PUBSUB_ELEM).element(XMLConstants.ACTOR_ELEM)) {
-            Element actor = request.getElement().element(XMLConstants.PUBSUB_ELEM).addElement(XMLConstants.ACTOR_ELEM, Buddycloud.NS);
-            actor.addText(request.getFrom().toBareJID());
-        }
-        outQueue.put(request);
     }
 
     private void addRsmElement() throws NodeStoreException {

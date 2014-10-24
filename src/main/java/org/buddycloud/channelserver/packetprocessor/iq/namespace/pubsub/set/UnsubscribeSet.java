@@ -30,17 +30,15 @@ public class UnsubscribeSet extends PubSubElementProcessorAbstract {
     public static final String MUST_HAVE_ONE_OWNER = "node-must-have-owner";
 
     private JID unsubscribingJid;
-    
 
-    public UnsubscribeSet(BlockingQueue<Packet> outQueue,
-            ChannelManager channelManager) {
+
+    public UnsubscribeSet(BlockingQueue<Packet> outQueue, ChannelManager channelManager) {
         this.outQueue = outQueue;
         this.channelManager = channelManager;
     }
 
     @Override
-    public void process(Element elm, JID actorJID, IQ reqIQ, Element rsm)
-            throws Exception {
+    public void process(Element elm, JID actorJID, IQ reqIQ, Element rsm) throws Exception {
 
         request = reqIQ;
         node = request.getChildElement().element("unsubscribe").attributeValue("node");
@@ -52,18 +50,16 @@ public class UnsubscribeSet extends PubSubElementProcessorAbstract {
         }
 
         JID from = request.getFrom();
-        if ((false == node.equals("/firehose"))
-                && (false == Configuration.getInstance().isLocalNode(node))) {
+        if ((false == node.equals("/firehose")) && (false == Configuration.getInstance().isLocalNode(node))) {
             makeRemoteRequest();
             return;
         }
         if (actorJID != null) {
             from = actorJID;
         }
-        
-        unsubscribingJid = new JID(request.getChildElement().element("unsubscribe")
-                .attributeValue("jid"));
-        
+
+        unsubscribingJid = new JID(request.getChildElement().element("unsubscribe").attributeValue("jid"));
+
         if (false == unsubscribingJid.toBareJID().equals(from.toBareJID())) {
             failAuthRequired();
             return;
@@ -79,52 +75,35 @@ public class UnsubscribeSet extends PubSubElementProcessorAbstract {
         NodeMembership membership = channelManager.getNodeMembership(node, unsubscribingJid);
 
         // Check that the requesting user is allowed to unsubscribe according to
-        // XEP-0060 section 6.2.3.3        
+        // XEP-0060 section 6.2.3.3
 
         if (!unsubscribingJid.equals(membership.getUser())) {
-            createExtendedErrorReply(
-                    PacketError.Type.auth,
-                    PacketError.Condition.forbidden, 
-                    CAN_NOT_UNSUBSCRIBE_ANOTHER_USER,
-                    Buddycloud.NS
-                );
-            outQueue.put(response);
-            return;
-        }
-        
-        if (membership.getAffiliation().equals(Affiliations.owner) &&
-            (channelManager.getNodeOwners(node).size() < 2)) {
-            
-            createExtendedErrorReply(
-                PacketError.Type.cancel,
-                PacketError.Condition.not_allowed, 
-                MUST_HAVE_ONE_OWNER,
-                Buddycloud.NS
-            );
+            createExtendedErrorReply(PacketError.Type.auth, PacketError.Condition.forbidden, CAN_NOT_UNSUBSCRIBE_ANOTHER_USER, Buddycloud.NS);
             outQueue.put(response);
             return;
         }
 
-        NodeSubscription newSubscription = new NodeSubscriptionImpl(
-                membership.getNodeId(),
-                membership.getUser(),
-                membership.getListener(), Subscriptions.none, null);
+        if (membership.getAffiliation().equals(Affiliations.owner) && (channelManager.getNodeOwners(node).size() < 2)) {
+
+            createExtendedErrorReply(PacketError.Type.cancel, PacketError.Condition.not_allowed, MUST_HAVE_ONE_OWNER, Buddycloud.NS);
+            outQueue.put(response);
+            return;
+        }
+
+        NodeSubscription newSubscription =
+                new NodeSubscriptionImpl(membership.getNodeId(), membership.getUser(), membership.getListener(), Subscriptions.none, null);
 
         channelManager.addUserSubscription(newSubscription);
-        if (!Affiliations.outcast.equals(
-                membership.getAffiliation())) {
-            channelManager.setUserAffiliation(node, unsubscribingJid,
-                    Affiliations.none);
+        if (!Affiliations.outcast.equals(membership.getAffiliation())) {
+            channelManager.setUserAffiliation(node, unsubscribingJid, Affiliations.none);
         }
 
         outQueue.put(response);
         notifySubscribers();
     }
 
-    private void notifySubscribers() throws NodeStoreException,
-            InterruptedException {
-        ResultSet<NodeSubscription> subscribers = channelManager
-                .getNodeSubscriptionListeners(node);
+    private void notifySubscribers() throws NodeStoreException, InterruptedException {
+        ResultSet<NodeSubscription> subscribers = channelManager.getNodeSubscriptionListeners(node);
 
         Document document = getDocumentHelper();
         Element message = document.addElement("message");
@@ -133,8 +112,7 @@ public class UnsubscribeSet extends PubSubElementProcessorAbstract {
         Element subscription = event.addElement("subscription");
         subscription.addAttribute("node", node);
         subscription.addAttribute("jid", unsubscribingJid.toBareJID());
-        subscription
-                .addAttribute("subscription", Subscriptions.none.toString());
+        subscription.addAttribute("subscription", Subscriptions.none.toString());
         message.addAttribute("from", request.getTo().toString());
         message.addAttribute("type", "headline");
         // "None" because we don't glorify the bad
@@ -144,13 +122,13 @@ public class UnsubscribeSet extends PubSubElementProcessorAbstract {
         affiliation.addAttribute("node", node);
 
         Message rootElement = new Message(message);
-        
+
         for (NodeSubscription subscriber : subscribers) {
             Message notification = rootElement.createCopy();
             notification.setTo(subscriber.getUser());
             outQueue.put(notification);
         }
-        
+
         Collection<JID> admins = getAdminUsers();
         for (JID admin : admins) {
             Message notification = rootElement.createCopy();
@@ -169,15 +147,6 @@ public class UnsubscribeSet extends PubSubElementProcessorAbstract {
         outQueue.put(response);
     }
 
-    private void makeRemoteRequest() throws InterruptedException {
-        request.setTo(new JID(node.split("/")[2]).getDomain());
-        Element actor = request.getElement()
-            .element("pubsub")
-            .addElement("actor", Buddycloud.NS);
-        actor.addText(request.getFrom().toBareJID());
-        outQueue.put(request);
-    }
-    
     @Override
     public boolean accept(Element elm) {
         return elm.getName().equals("unsubscribe");

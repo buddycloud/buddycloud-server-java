@@ -310,7 +310,12 @@ public class NodeItemsGet implements PubSubElementProcessor {
         reply.setChildElement(error);
     }
 
+
+    protected String acceptedElemString = "items";
+
+    @Override
     public boolean accept(Element elm) {
-        return elm.getName().equals("items");
+        return acceptedElemString.equals(elm.getName());
     }
+
 }

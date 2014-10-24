@@ -117,24 +117,17 @@ public class SubscribeSet extends PubSubElementProcessorAbstract {
             Affiliations defaultAffiliation = Affiliations.member;
             Subscriptions defaultSubscription = Subscriptions.none;
 
-            if (!membership.getSubscription().equals(Subscriptions.invited)
-                    && !membership.getSubscription().in(Subscriptions.none)
+            if (!membership.getSubscription().equals(Subscriptions.invited) && !membership.getSubscription().in(Subscriptions.none)
                     && !membership.getAffiliation().in(Affiliations.none)) {
-                LOGGER.debug("User already has a '"
-                        + membership.getSubscription().toString()
-                        + "' subscription");
+                LOGGER.debug("User already has a '" + membership.getSubscription().toString() + "' subscription");
                 defaultAffiliation = membership.getAffiliation();
                 defaultSubscription = membership.getSubscription();
             } else {
                 try {
-                    String nodeDefaultAffiliation = nodeConf
-                            .get(Conf.DEFAULT_AFFILIATION);
-                    LOGGER.debug("Node default affiliation: '"
-                            + nodeDefaultAffiliation + "'");
-                    if (!Affiliations.none.equals(Affiliations
-                            .createFromString(nodeDefaultAffiliation))) {
-                        defaultAffiliation = Affiliations
-                                .createFromString(nodeDefaultAffiliation);
+                    String nodeDefaultAffiliation = nodeConf.get(Conf.DEFAULT_AFFILIATION);
+                    LOGGER.debug("Node default affiliation: '" + nodeDefaultAffiliation + "'");
+                    if (!Affiliations.none.equals(Affiliations.createFromString(nodeDefaultAffiliation))) {
+                        defaultAffiliation = Affiliations.createFromString(nodeDefaultAffiliation);
                     }
                 } catch (NullPointerException e) {
                     LOGGER.error("Could not create affiliation.", e);
@@ -142,15 +135,10 @@ public class SubscribeSet extends PubSubElementProcessorAbstract {
                 }
                 defaultSubscription = Subscriptions.subscribed;
                 String accessModel = nodeConf.get(Conf.ACCESS_MODEL);
-                if ((null == accessModel)
-                        || (true == accessModel.equals(AccessModels.authorize
-                                .toString()))
-                        || (true == accessModel.equals(AccessModels.whitelist
-                                .toString()))) {
+                if ((null == accessModel) || (true == accessModel.equals(AccessModels.authorize.toString()))
+                        || (true == accessModel.equals(AccessModels.whitelist.toString()))) {
                     defaultSubscription = Subscriptions.pending;
-                } else if ((true == accessModel.equals(AccessModels.local
-                        .toString()) && (false == Configuration.getInstance()
-                        .isLocalJID(subscribingJid)))) {
+                } else if ((true == accessModel.equals(AccessModels.local.toString()) && (false == Configuration.getInstance().isLocalJID(subscribingJid)))) {
                     defaultSubscription = Subscriptions.pending;
                 }
 
@@ -183,16 +171,13 @@ public class SubscribeSet extends PubSubElementProcessorAbstract {
         }
     }
 
-    private boolean handleNodeSubscription(Element elm, JID actorJID,
-            JID subscribingJid) throws NodeStoreException, InterruptedException {
+    private boolean handleNodeSubscription(Element elm, JID actorJID, JID subscribingJid) throws NodeStoreException, InterruptedException {
         boolean isLocalNode = false;
         try {
             isLocalNode = Configuration.getInstance().isLocalNode(node);
         } catch (IllegalArgumentException e) {
             LOGGER.debug(e);
-            createExtendedErrorReply(PacketError.Type.modify,
-                    PacketError.Condition.bad_request, INVALID_NODE_FORMAT,
-                    Buddycloud.NS_ERROR);
+            createExtendedErrorReply(PacketError.Type.modify, PacketError.Condition.bad_request, INVALID_NODE_FORMAT, Buddycloud.NS_ERROR);
             outQueue.put(response);
             return false;
         }
@@ -237,13 +222,6 @@ public class SubscribeSet extends PubSubElementProcessorAbstract {
             return false;
         }
         return true;
-    }
-
-    private void makeRemoteRequest() throws InterruptedException {
-        request.setTo(new JID(node.split("/")[2]).getDomain());
-        Element actor = request.getElement().element("pubsub").addElement("actor", Buddycloud.NS);
-        actor.addText(request.getFrom().toBareJID());
-        outQueue.put(request);
     }
 
     private void notifySubscribers(Subscriptions subscriptionStatus, Affiliations affiliationType, JID subscribingJid) throws NodeStoreException,
@@ -374,8 +352,5 @@ public class SubscribeSet extends PubSubElementProcessorAbstract {
         outQueue.put(reply);
     }
 
-    @Override
-    public boolean accept(Element elm) {
-        return elm.getName().equals("subscribe");
-    }
+    protected String acceptedElementName = "subscribe";
 }

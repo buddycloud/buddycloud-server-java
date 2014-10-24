@@ -223,13 +223,6 @@ public class SubscriptionEvent extends PubSubElementProcessorAbstract {
         return false;
     }
 
-    private void makeRemoteRequest() throws InterruptedException {
-        request.setTo(new JID(node.split("/")[2]).getDomain());
-        Element actor = request.getElement().element("pubsub").addElement("actor", Buddycloud.NS);
-        actor.addText(request.getFrom().toBareJID());
-        outQueue.put(request);
-    }
-
     /**
      * Determine if this class is capable of processing incoming stanza
      */

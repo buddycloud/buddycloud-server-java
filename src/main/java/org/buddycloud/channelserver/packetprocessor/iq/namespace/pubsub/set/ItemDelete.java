@@ -16,7 +16,6 @@ import org.buddycloud.channelserver.pubsub.model.NodeItem;
 import org.buddycloud.channelserver.pubsub.model.NodeSubscription;
 import org.buddycloud.channelserver.pubsub.model.impl.GlobalItemIDImpl;
 import org.buddycloud.channelserver.pubsub.subscription.Subscriptions;
-import org.buddycloud.channelserver.utils.node.item.payload.Buddycloud;
 import org.dom4j.Element;
 import org.dom4j.Namespace;
 import org.dom4j.dom.DOMElement;
@@ -231,11 +230,6 @@ public class ItemDelete extends PubSubElementProcessorAbstract {
         return false;
     }
 
-    private void makeRemoteRequest() throws InterruptedException {
-        request.setTo(new JID(node.split("/")[2]).getDomain());
-        request.getElement().element("pubsub").addElement("actor", Buddycloud.NS).addText(actor.toBareJID());
-        outQueue.put(request);
-    }
 
     public boolean accept(Element elm) {
         return elm.getName().equals("retract");

@@ -13,6 +13,7 @@ import org.buddycloud.channelserver.pubsub.accessmodel.AccessModels;
 import org.buddycloud.channelserver.utils.XMLConstants;
 import org.buddycloud.channelserver.utils.node.NodeAclRefuseReason;
 import org.buddycloud.channelserver.utils.node.NodeViewAcl;
+import org.buddycloud.channelserver.utils.node.item.payload.Buddycloud;
 import org.dom4j.Document;
 import org.dom4j.DocumentHelper;
 import org.dom4j.Element;
@@ -195,5 +196,12 @@ public abstract class PubSubElementProcessorAbstract implements PubSubElementPro
         }
         setErrorCondition(PacketError.Type.auth, PacketError.Condition.forbidden);
         return false;
+    }
+
+    protected void makeRemoteRequest() throws InterruptedException {
+        request.setTo(new JID(node.split("/")[2]).getDomain());
+        Element actor = request.getElement().element("pubsub").addElement("actor", Buddycloud.NS);
+        actor.addText(request.getFrom().toBareJID());
+        outQueue.put(request);
     }
 }

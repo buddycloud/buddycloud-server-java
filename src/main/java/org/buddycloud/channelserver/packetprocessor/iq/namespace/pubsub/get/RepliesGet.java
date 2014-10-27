@@ -33,8 +33,6 @@ public class RepliesGet extends PubSubElementProcessorAbstract {
 
     public static final Logger LOGGER = Logger.getLogger(RecentItemsGet.class);
 
-    public static final String NS_RSM = "http://jabber.org/protocol/rsm";
-
     public RepliesGet(BlockingQueue<Packet> outQueue, ChannelManager channelManager) {
         setChannelManager(channelManager);
         setOutQueue(outQueue);
@@ -64,7 +62,7 @@ public class RepliesGet extends PubSubElementProcessorAbstract {
             if (!Configuration.getInstance().isLocalJID(request.getFrom())) {
                 response.getElement().addAttribute(XMLConstants.REMOTE_SERVER_DISCOVER_ATTR, Boolean.FALSE.toString());
             }
-            pubsub = response.getElement().addElement("pubsub", JabberPubsub.NAMESPACE_URI);
+            pubsub = response.getElement().addElement(XMLConstants.PUBSUB_ELEM, JabberPubsub.NAMESPACE_URI);
             if ((!userCanViewNode()) || (!itemExists())) {
                 outQueue.put(response);
                 return;
@@ -91,7 +89,7 @@ public class RepliesGet extends PubSubElementProcessorAbstract {
     }
 
     private void parseRsmElement() {
-        Element rsmElement = request.getChildElement().element("set");
+        Element rsmElement = request.getChildElement().element(XMLConstants.SET_ELEM);
         if (null == rsmElement) {
             return;
         }
@@ -109,7 +107,7 @@ public class RepliesGet extends PubSubElementProcessorAbstract {
         if (null == firstItemId) {
             return;
         }
-        Element rsm = pubsub.addElement("set");
+        Element rsm = pubsub.addElement(XMLConstants.SET_ELEM);
         rsm.addNamespace("", NS_RSM);
         rsm.addElement("first").setText(firstItemId);
         rsm.addElement("last").setText(lastItemId);
@@ -122,16 +120,16 @@ public class RepliesGet extends PubSubElementProcessorAbstract {
         NodeItem item;
         Element entry;
         Element itemElement;
-        Element itemsElement = pubsub.addElement("items");
-        itemsElement.addAttribute("node", node);
+        Element itemsElement = pubsub.addElement(XMLConstants.ITEMS_ELEM);
+        itemsElement.addAttribute(XMLConstants.NODE_ATTR, node);
 
         while (items.hasNext()) {
             item = items.next();
 
             try {
                 entry = xmlReader.read(new StringReader(item.getPayload())).getRootElement();
-                itemElement = itemsElement.addElement("item");
-                itemElement.addAttribute("id", item.getId());
+                itemElement = itemsElement.addElement(XMLConstants.ITEM_ELEM);
+                itemElement.addAttribute(XMLConstants.ID_ATTR, item.getId());
                 if (null == firstItemId) {
                     firstItemId = item.getId();
                 }

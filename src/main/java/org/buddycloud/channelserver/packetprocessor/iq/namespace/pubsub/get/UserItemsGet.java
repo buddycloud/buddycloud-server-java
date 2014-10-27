@@ -68,9 +68,9 @@ public class UserItemsGet extends PubSubElementProcessorAbstract {
         }
 
         if (!Configuration.getInstance().isLocalJID(request.getFrom())) {
-            response.getElement().addAttribute("remote-server-discover", "false");
+            response.getElement().addAttribute(XMLConstants.REMOTE_SERVER_DISCOVER_ATTR, Boolean.FALSE.toString());
         }
-        pubsub = response.getElement().addElement("pubsub", JabberPubsub.NAMESPACE_URI);
+        pubsub = response.getElement().addElement(XMLConstants.PUBSUB_ELEM, JabberPubsub.NAMESPACE_URI);
         try {
             if (parseRsmElement()) {
                 addRecentItems();
@@ -132,8 +132,8 @@ public class UserItemsGet extends PubSubElementProcessorAbstract {
             }
             try {
                 Element entry = xmlReader.read(new StringReader(item.getPayload())).getRootElement();
-                Element itemElement = itemsElement.addElement("item");
-                itemElement.addAttribute("id", item.getId());
+                Element itemElement = itemsElement.addElement(XMLConstants.ITEM_ELEM);
+                itemElement.addAttribute(XMLConstants.ID_ATTR, item.getId());
 
                 if (null == firstItemId) {
                     firstItemId = new GlobalItemIDImpl(null, item.getNodeId(), item.getId());
@@ -152,7 +152,7 @@ public class UserItemsGet extends PubSubElementProcessorAbstract {
         try {
             String since = userFeedItems.attributeValue(XMLConstants.SINCE_ATTR);
             String parentOnlyAttribute = userFeedItems.attributeValue(XMLConstants.PARENT_ONLY_ATTR);
-            if ((null != parentOnlyAttribute) && (("true".equals(parentOnlyAttribute)) || ("1".equals(parentOnlyAttribute)))) {
+            if ((null != parentOnlyAttribute) && ((Boolean.TRUE.toString().equals(parentOnlyAttribute)) || ("1".equals(parentOnlyAttribute)))) {
 
                 parentOnly = true;
             }

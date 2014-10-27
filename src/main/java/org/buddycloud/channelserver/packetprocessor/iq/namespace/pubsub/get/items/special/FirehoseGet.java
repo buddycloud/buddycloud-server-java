@@ -11,6 +11,7 @@ import org.buddycloud.channelserver.db.exception.NodeStoreException;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.JabberPubsub;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.PubSubElementProcessorAbstract;
 import org.buddycloud.channelserver.pubsub.model.NodeItem;
+import org.buddycloud.channelserver.utils.XMLConstants;
 import org.dom4j.DocumentException;
 import org.dom4j.Element;
 import org.dom4j.io.SAXReader;
@@ -23,7 +24,7 @@ public class FirehoseGet extends PubSubElementProcessorAbstract {
 
     private static final int DEFAULT_MAX_RESULTS = 50;
     private static final Logger LOGGER = Logger.getLogger(FirehoseGet.class);
-    
+
     private Element pubsub;
     private SAXReader xmlReader;
     private boolean isAdmin = false;
@@ -34,20 +35,18 @@ public class FirehoseGet extends PubSubElementProcessorAbstract {
     private String afterItemId = null;
     private int maxResults = -1;
 
-    public FirehoseGet(BlockingQueue<Packet> outQueue,
-            ChannelManager channelManager) {
+    public FirehoseGet(BlockingQueue<Packet> outQueue, ChannelManager channelManager) {
         setChannelManager(channelManager);
         setOutQueue(outQueue);
         xmlReader = new SAXReader();
     }
 
     @Override
-    public void process(Element elm, JID actorJID, IQ reqIQ, Element rsm)
-            throws Exception {
+    public void process(Element elm, JID actorJID, IQ reqIQ, Element rsm) throws Exception {
         response = IQ.createResultIQ(reqIQ);
         request = reqIQ;
         actor = actorJID;
-        node = elm.attributeValue("node");
+        node = elm.attributeValue(XMLConstants.NODE_ATTR);
         resultSetManagement = rsm;
 
         if (null == actor) {
@@ -56,12 +55,10 @@ public class FirehoseGet extends PubSubElementProcessorAbstract {
         determineAdminUserStatus();
 
         if (false == Configuration.getInstance().isLocalJID(request.getFrom())) {
-            response.getElement().addAttribute("remote-server-discover",
-                    "false");
+            response.getElement().addAttribute(XMLConstants.REMOTE_SERVER_DISCOVER_ATTR, Boolean.FALSE.toString());
         }
 
-        pubsub = response.getElement().addElement("pubsub",
-                JabberPubsub.NAMESPACE_URI);
+        pubsub = response.getElement().addElement(XMLConstants.PUBSUB_ELEM, JabberPubsub.NAMESPACE_URI);
         try {
             parseRsmElement();
             addItems();
@@ -70,8 +67,7 @@ public class FirehoseGet extends PubSubElementProcessorAbstract {
         } catch (NodeStoreException e) {
             LOGGER.error(e);
             response.getElement().remove(pubsub);
-            setErrorCondition(PacketError.Type.wait,
-                    PacketError.Condition.internal_server_error);
+            setErrorCondition(PacketError.Type.wait, PacketError.Condition.internal_server_error);
         }
         outQueue.put(response);
 
@@ -104,21 +100,18 @@ public class FirehoseGet extends PubSubElementProcessorAbstract {
         if (firstItemId == null) {
             return;
         }
-        Element rsm = pubsub.addElement("set");
+        Element rsm = pubsub.addElement(XMLConstants.SET_ELEM);
         rsm.addNamespace("", NS_RSM);
         rsm.addElement("first").setText(firstItemId);
         rsm.addElement("last").setText(lastItemId);
-        rsm.addElement("count").setText(
-                String.valueOf(channelManager.getFirehoseItemCount(
-                        isAdmin, actor.getDomain())));
+        rsm.addElement("count").setText(String.valueOf(channelManager.getFirehoseItemCount(isAdmin, actor.getDomain())));
     }
 
     private void addItems() throws NodeStoreException {
         if (-1 == maxResults) {
             maxResults = DEFAULT_MAX_RESULTS;
         }
-        CloseableIterator<NodeItem> items = channelManager.getFirehose(
-                maxResults, afterItemId, isAdmin, actor.getDomain());
+        CloseableIterator<NodeItem> items = channelManager.getFirehose(maxResults, afterItemId, isAdmin, actor.getDomain());
         String lastNode = "";
         Element itemsElement = null;
         while (items.hasNext()) {
@@ -129,8 +122,7 @@ public class FirehoseGet extends PubSubElementProcessorAbstract {
                 lastNode = item.getNodeId();
             }
             try {
-                Element entry = xmlReader.read(new StringReader(item.getPayload()))
-                        .getRootElement();
+                Element entry = xmlReader.read(new StringReader(item.getPayload())).getRootElement();
                 Element itemElement = itemsElement.addElement("item");
                 itemElement.addAttribute("id", item.getId());
                 if (null == firstItemId) {
@@ -139,8 +131,7 @@ public class FirehoseGet extends PubSubElementProcessorAbstract {
                 lastItemId = item.getId();
                 itemElement.add(entry);
             } catch (DocumentException e) {
-                LOGGER.error("Error parsing a node entry, ignoring. "
-                        + item.getId());
+                LOGGER.error("Error parsing a node entry, ignoring. " + item.getId());
             }
         }
     }

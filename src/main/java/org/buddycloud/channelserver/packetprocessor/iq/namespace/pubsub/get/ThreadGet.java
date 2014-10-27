@@ -36,9 +36,6 @@ public class ThreadGet extends PubSubElementProcessorAbstract {
 
     private static final Logger LOGGER = Logger.getLogger(RecentItemsGet.class);
 
-
-    public static final String NS_RSM = "http://jabber.org/protocol/rsm";
-
     public ThreadGet(BlockingQueue<Packet> outQueue, ChannelManager channelManager) {
         setChannelManager(channelManager);
         setOutQueue(outQueue);
@@ -96,7 +93,7 @@ public class ThreadGet extends PubSubElementProcessorAbstract {
     }
 
     private void parseRsmElement() {
-        Element rsmElement = request.getChildElement().element("set");
+        Element rsmElement = request.getChildElement().element(XMLConstants.SET_ELEM);
         if (null == rsmElement) {
             return;
         }

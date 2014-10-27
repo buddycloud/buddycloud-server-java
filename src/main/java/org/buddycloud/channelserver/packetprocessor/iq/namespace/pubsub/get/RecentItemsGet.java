@@ -57,7 +57,7 @@ public class RecentItemsGet extends PubSubElementProcessorAbstract {
         response = IQ.createResultIQ(reqIQ);
         request = reqIQ;
         actor = actorJID;
-        node = elm.attributeValue("node");
+        node = elm.attributeValue(XMLConstants.NODE_ATTR);
         resultSetManagement = rsm;
 
         if (null == actor) {
@@ -70,9 +70,9 @@ public class RecentItemsGet extends PubSubElementProcessorAbstract {
         }
 
         if (!Configuration.getInstance().isLocalJID(request.getFrom())) {
-            response.getElement().addAttribute("remote-server-discover", "false");
+            response.getElement().addAttribute(XMLConstants.REMOTE_SERVER_DISCOVER_ATTR, Boolean.FALSE.toString());
         }
-        pubsub = response.getElement().addElement("pubsub", JabberPubsub.NAMESPACE_URI);
+        pubsub = response.getElement().addElement(XMLConstants.PUBSUB_ELEM, JabberPubsub.NAMESPACE_URI);
         try {
             parseRsmElement();
             addRecentItems();

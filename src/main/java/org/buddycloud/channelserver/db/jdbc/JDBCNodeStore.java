@@ -47,7 +47,7 @@ import org.xmpp.resultsetmanagement.ResultSetImpl;
 
 public class JDBCNodeStore implements NodeStore {
 
-    private Logger logger = Logger.getLogger(JDBCNodeStore.class);
+    private static final Logger LOGGER = Logger.getLogger(JDBCNodeStore.class);
     private final Connection conn;
     private final NodeStoreSQLDialect dialect;
     private final Deque<JDBCTransaction> transactionStack;
@@ -356,7 +356,7 @@ public class JDBCNodeStore implements NodeStore {
                 t.commit();
             }
         } catch (SQLException e) {
-            logger.debug("Error adding new subscription: " + e.getMessage());
+            LOGGER.debug("Error adding new subscription: " + e.getMessage());
             throw new NodeStoreException(e);
         } finally {
             close(deleteStatement);
@@ -505,26 +505,23 @@ public class JDBCNodeStore implements NodeStore {
             close(stmt); // Will implicitly close the resultset if required
         }
     }
-    
+
     @Override
-    public CloseableIterator<NodeItem> getFirehose(int limit,
-            String afterItemId, boolean isAdmin, String actorDomain) throws NodeStoreException {
-    
+    public CloseableIterator<NodeItem> getFirehose(int limit, String afterItemId, boolean isAdmin, String actorDomain) throws NodeStoreException {
+
         PreparedStatement stmt = null;
         Date beforeDate = null;
-    
+
         if (afterItemId != null) {
-            beforeDate = getNodeItem(GlobalItemIDImpl.fromBuddycloudString(
-                    afterItemId)).getUpdated();
+            beforeDate = getNodeItem(GlobalItemIDImpl.fromBuddycloudString(afterItemId)).getUpdated();
         } else {
             beforeDate = new Date();
         }
-    
+
         if (limit < 0) {
-            throw new IllegalArgumentException(
-                    "Invalid value for parameter count: " + limit);
+            throw new IllegalArgumentException("Invalid value for parameter count: " + limit);
         }
-    
+
         try {
             stmt = conn.prepareStatement(dialect.selectItemsForLocalNodesBeforeDate());
             stmt.setTimestamp(1, new java.sql.Timestamp(beforeDate.getTime()));
@@ -536,16 +533,15 @@ public class JDBCNodeStore implements NodeStore {
             stmt.setBoolean(7, isAdmin);
             stmt.setString(8, getLocalDomainRegex());
             stmt.setInt(9, limit);
-    
+
             java.sql.ResultSet rs = stmt.executeQuery();
-    
+
             LinkedList<NodeItem> results = new LinkedList<NodeItem>();
-    
+
             while (rs.next()) {
-                results.push(new NodeItemImpl(rs.getString(1), rs.getString(2),
-                        rs.getTimestamp(3), rs.getString(4), rs.getString(5), rs.getTimestamp(6)));
+                results.push(new NodeItemImpl(rs.getString(1), rs.getString(2), rs.getTimestamp(3), rs.getString(4), rs.getString(5), rs.getTimestamp(6)));
             }
-    
+
             return new ClosableIteratorImpl<NodeItem>(results.iterator());
         } catch (SQLException e) {
             throw new NodeStoreException(e);
@@ -553,12 +549,11 @@ public class JDBCNodeStore implements NodeStore {
             close(stmt); // Will implicitly close the resultset if required
         }
     }
-    
+
     @Override
-    public int getFirehoseItemCount(boolean isAdmin, String actorDomain)
-            throws NodeStoreException {
+    public int getFirehoseItemCount(boolean isAdmin, String actorDomain) throws NodeStoreException {
         PreparedStatement stmt = null;
-    
+
         try {
             stmt = conn.prepareStatement(dialect.countItemsForLocalNodes());
             stmt.setString(1, Conf.ACCESS_MODEL);
@@ -568,7 +563,7 @@ public class JDBCNodeStore implements NodeStore {
             stmt.setString(5, getDomainRegex(actorDomain));
             stmt.setBoolean(6, isAdmin);
             stmt.setString(7, getLocalDomainRegex());
-            
+
             java.sql.ResultSet rs = stmt.executeQuery();
             if (!rs.next()) {
                 return 0; // This really shouldn't happen!
@@ -578,19 +573,19 @@ public class JDBCNodeStore implements NodeStore {
             throw new NodeStoreException(e);
         } finally {
             close(stmt); // Will implicitly close the resultset if
-                            // required
+                         // required
         }
     }
-    
-    private static final String POSIX_SPECIAL_CHARS = "\\.^$*+?()[{|"; 
-    
+
+    private static final String POSIX_SPECIAL_CHARS = "\\.^$*+?()[{|";
+
     private static String posixRegexQuote(String str) {
         for (Character p : POSIX_SPECIAL_CHARS.toCharArray()) {
             str = str.replace(p.toString(), "\\" + p.toString());
         }
         return str;
     }
-    
+
     private static String getLocalDomainRegex() {
         String serverDomain = Configuration.getInstance().getServerDomain();
         String serverTopicsDomain = Configuration.getInstance().getServerTopicsDomain();
@@ -604,16 +599,15 @@ public class JDBCNodeStore implements NodeStore {
         for (String localDomain : LocalDomainChecker.getLocalDomains(Configuration.getInstance())) {
             localDomains.add(posixRegexQuote(localDomain));
         }
-        
-        String domainRegex = localDomains.isEmpty() ? ".*" : 
-            getDomainRegex(StringUtils.join(localDomains, "|"));
+
+        String domainRegex = localDomains.isEmpty() ? ".*" : getDomainRegex(StringUtils.join(localDomains, "|"));
         return domainRegex;
     }
-    
+
     private static String getDomainRegex(String localDomains) {
-        return ".*@(" + localDomains  + ")\\/.*";
+        return ".*@(" + localDomains + ")\\/.*";
     }
-    
+
     @Override
     public List<String> getLocalNodesList() throws NodeStoreException {
         PreparedStatement stmt = null;
@@ -869,7 +863,7 @@ public class JDBCNodeStore implements NodeStore {
             return rs.getInt("count");
 
         } catch (SQLException e) {
-            logger.error(e);
+            LOGGER.error(e);
             throw new NodeStoreException(e);
         }
     }
@@ -930,7 +924,7 @@ public class JDBCNodeStore implements NodeStore {
 
             return count;
         } catch (SQLException e) {
-            logger.error(e);
+            LOGGER.error(e);
             throw new NodeStoreException(e);
         } finally {
             close(stmt); // Will implicitly close the resultset if required
@@ -1674,7 +1668,7 @@ public class JDBCNodeStore implements NodeStore {
                     // stmt.getConnection().close();
                 }
             } catch (SQLException e) {
-                logger.error("SQLException thrown while trying to close a statement", e);
+                LOGGER.error("SQLException thrown while trying to close a statement", e);
             }
         }
     }

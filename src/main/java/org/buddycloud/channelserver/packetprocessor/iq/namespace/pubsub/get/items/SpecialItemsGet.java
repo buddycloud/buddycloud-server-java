@@ -20,6 +20,8 @@ public class SpecialItemsGet extends PubSubElementProcessorAbstract {
     public SpecialItemsGet(BlockingQueue<Packet> outQueue, ChannelManager channelManager) {
         setChannelManager(channelManager);
         setOutQueue(outQueue);
+
+        acceptedElementName = XMLConstants.ITEMS_ELEM;
     }
 
     @Override
@@ -39,10 +41,5 @@ public class SpecialItemsGet extends PubSubElementProcessorAbstract {
     private void featureNotImplementedError() throws InterruptedException {
         setErrorCondition(PacketError.Type.cancel, PacketError.Condition.feature_not_implemented);
         outQueue.put(response);
-    }
-
-    @Override
-    public boolean accept(Element elm) {
-        return XMLConstants.ITEMS_ELEM.equals(elm.getName());
     }
 }

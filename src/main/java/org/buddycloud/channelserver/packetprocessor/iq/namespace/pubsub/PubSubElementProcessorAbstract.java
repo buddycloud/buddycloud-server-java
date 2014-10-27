@@ -18,6 +18,7 @@ import org.buddycloud.channelserver.utils.node.item.payload.Buddycloud;
 import org.dom4j.Document;
 import org.dom4j.DocumentHelper;
 import org.dom4j.Element;
+import org.dom4j.Namespace;
 import org.dom4j.dom.DOMElement;
 import org.xmpp.packet.IQ;
 import org.xmpp.packet.JID;
@@ -43,6 +44,11 @@ public abstract class PubSubElementProcessorAbstract implements PubSubElementPro
     protected Helper configurationHelper;
     protected Map<String, String> nodeConfiguration;
     protected String parentId;
+    protected Element pubsub;
+
+    // RSM details
+    protected int maxResults = -1;
+    protected String afterItemId = null;
 
     protected Element resultSetManagement;
     protected String firstItem;
@@ -160,7 +166,6 @@ public abstract class PubSubElementProcessorAbstract implements PubSubElementPro
     protected boolean checkNodeExists() throws NodeStoreException {
         if ((!Configuration.getInstance().isLocalNode(node)) || !channelManager.nodeExists(node)) {
             setErrorCondition(PacketError.Type.cancel, PacketError.Condition.item_not_found);
-
             return false;
         }
         return true;
@@ -197,14 +202,15 @@ public abstract class PubSubElementProcessorAbstract implements PubSubElementPro
     protected boolean actorIsRegistered() {
         if (actor.getDomain().equals(getServerDomain())) {
             return true;
+        } else {
+            setErrorCondition(PacketError.Type.auth, PacketError.Condition.forbidden);
+            return false;
         }
-        setErrorCondition(PacketError.Type.auth, PacketError.Condition.forbidden);
-        return false;
     }
 
     protected void makeRemoteRequest() throws InterruptedException {
         request.setTo(new JID(node.split("/")[2]).getDomain());
-        Element actor = request.getElement().element("pubsub").addElement("actor", Buddycloud.NS);
+        Element actor = request.getElement().element(XMLConstants.PUBSUB_ELEM).addElement(XMLConstants.ACTOR_ELEM, Buddycloud.NS);
         actor.addText(request.getFrom().toBareJID());
         outQueue.put(request);
     }
@@ -239,5 +245,81 @@ public abstract class PubSubElementProcessorAbstract implements PubSubElementPro
             return false;
         }
         return true;
+    }
+
+    @Override
+    public void process(Element elm, JID actorJID, IQ reqIQ, Element rsm) throws Exception {
+        response = IQ.createResultIQ(reqIQ);
+        request = reqIQ;
+        actor = actorJID;
+        node = elm.attributeValue(XMLConstants.NODE_ATTR);
+        resultSetManagement = rsm;
+
+        if (null == actor) {
+            actor = request.getFrom();
+        }
+
+        if (!isValidStanza()) {
+            outQueue.put(response);
+            return;
+        }
+
+        if (!Configuration.getInstance().isLocalJID(request.getFrom())) {
+            response.getElement().addAttribute(XMLConstants.REMOTE_SERVER_DISCOVER_ATTR, Boolean.FALSE.toString());
+        }
+        pubsub = response.getElement().addElement(XMLConstants.PUBSUB_ELEM, JabberPubsub.NAMESPACE_URI);
+        try {
+            if (parseRsmElement()) {
+                addRecentItems();
+                addRsmElement();
+            }
+        } catch (NodeStoreException e) {
+            LOGGER.error(e);
+            response.getElement().remove(pubsub);
+            setErrorCondition(PacketError.Type.wait, PacketError.Condition.internal_server_error);
+        }
+        outQueue.put(response);
+    }
+
+    protected boolean parseRsmElement() throws NodeStoreException {
+        Element rsmElement = request.getChildElement().element(XMLConstants.SET_ELEM);
+        if (null == rsmElement) {
+            return true;
+        }
+        Element max;
+        if (null != (max = rsmElement.element("max"))) {
+            maxResults = Integer.parseInt(max.getTextTrim());
+        }
+        Element after;
+        if (null != (after = rsmElement.element("after"))) {
+            afterItemId = after.getTextTrim();
+        }
+
+        return true;
+    };
+
+    protected void addRecentItems() throws NodeStoreException {
+        // Empty implementation
+        return;
+    }
+
+    protected void addRsmElement() throws NodeStoreException {
+        // Empty implementation
+        return;
+    }
+
+    protected boolean nodePresent() {
+        if (node != null && !"".equals(node)) {
+            return true;
+        }
+        response.setType(IQ.Type.error);
+        Element nodeIdRequired = new DOMElement(XMLConstants.NODE_ID_REQUIRED, new Namespace("", JabberPubsub.NS_PUBSUB_ERROR));
+        Element badRequest = new DOMElement(PacketError.Condition.bad_request.toXMPP(), new Namespace("", JabberPubsub.NS_XMPP_STANZAS));
+        Element error = new DOMElement(XMLConstants.ERROR_ELEM);
+        error.addAttribute(XMLConstants.TYPE_ATTR, "modify");
+        error.add(badRequest);
+        error.add(nodeIdRequired);
+        response.setChildElement(error);
+        return false;
     }
 }

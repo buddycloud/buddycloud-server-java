@@ -15,8 +15,6 @@ import org.buddycloud.channelserver.pubsub.affiliation.Affiliations;
 import org.buddycloud.channelserver.pubsub.model.NodeSubscription;
 import org.buddycloud.channelserver.utils.XMLConstants;
 import org.dom4j.Element;
-import org.dom4j.Namespace;
-import org.dom4j.dom.DOMElement;
 import org.xmpp.packet.IQ;
 import org.xmpp.packet.JID;
 import org.xmpp.packet.Message;
@@ -115,21 +113,6 @@ public class NodeDelete extends PubSubElementProcessorAbstract {
         }
         response.setType(IQ.Type.result);
         outQueue.put(response);
-    }
-
-    private boolean nodePresent() {
-        if (node != null && !node.trim().equals("")) {
-            return true;
-        }
-        response.setType(IQ.Type.error);
-        Element nodeIdRequired = new DOMElement("nodeid-required", new Namespace("", JabberPubsub.NS_PUBSUB_ERROR));
-        Element badRequest = new DOMElement(PacketError.Condition.bad_request.toXMPP(), new Namespace("", JabberPubsub.NS_XMPP_STANZAS));
-        Element error = new DOMElement("error");
-        error.addAttribute("type", "modify");
-        error.add(badRequest);
-        error.add(nodeIdRequired);
-        response.setChildElement(error);
-        return false;
     }
 
     private boolean actorAllowedToDelete() throws NodeStoreException {

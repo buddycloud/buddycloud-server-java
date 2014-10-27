@@ -5,12 +5,10 @@ import java.util.Date;
 import java.util.concurrent.BlockingQueue;
 
 import org.apache.log4j.Logger;
-import org.buddycloud.channelserver.Configuration;
 import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.channel.Conf;
 import org.buddycloud.channelserver.db.CloseableIterator;
 import org.buddycloud.channelserver.db.exception.NodeStoreException;
-import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.JabberPubsub;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.PubSubElementProcessorAbstract;
 import org.buddycloud.channelserver.pubsub.model.GlobalItemID;
 import org.buddycloud.channelserver.pubsub.model.NodeItem;
@@ -19,8 +17,6 @@ import org.buddycloud.channelserver.utils.XMLConstants;
 import org.dom4j.DocumentException;
 import org.dom4j.Element;
 import org.dom4j.io.SAXReader;
-import org.xmpp.packet.IQ;
-import org.xmpp.packet.JID;
 import org.xmpp.packet.Packet;
 import org.xmpp.packet.PacketError;
 import org.xmpp.packet.PacketError.Condition;
@@ -28,11 +24,10 @@ import org.xmpp.packet.PacketError.Type;
 
 public class UserItemsGet extends PubSubElementProcessorAbstract {
 
-    private static final Logger LOGGER = Logger.getLogger(UserItemsGet.class);
+    public static final Logger LOGGER = Logger.getLogger(UserItemsGet.class);
 
     private Date maxAge;
 
-    private Element pubsub;
     private SAXReader xmlReader;
 
     // RSM details
@@ -50,42 +45,7 @@ public class UserItemsGet extends PubSubElementProcessorAbstract {
         acceptedElementName = XMLConstants.USER_ITEMS;
     }
 
-    @Override
-    public void process(Element elm, JID actorJID, IQ reqIQ, Element rsm) throws Exception {
-        response = IQ.createResultIQ(reqIQ);
-        request = reqIQ;
-        actor = actorJID;
-        node = elm.attributeValue(XMLConstants.NODE_ATTR);
-        resultSetManagement = rsm;
-
-        if (null == actor) {
-            actor = request.getFrom();
-        }
-
-        if (!isValidStanza()) {
-            outQueue.put(response);
-            return;
-        }
-
-        if (!Configuration.getInstance().isLocalJID(request.getFrom())) {
-            response.getElement().addAttribute(XMLConstants.REMOTE_SERVER_DISCOVER_ATTR, Boolean.FALSE.toString());
-        }
-        pubsub = response.getElement().addElement(XMLConstants.PUBSUB_ELEM, JabberPubsub.NAMESPACE_URI);
-        try {
-            if (parseRsmElement()) {
-                addRecentItems();
-                addRsmElement();
-            }
-        } catch (NodeStoreException e) {
-            LOGGER.error(e);
-            response.getElement().remove(pubsub);
-            setErrorCondition(PacketError.Type.wait, PacketError.Condition.internal_server_error);
-        }
-        outQueue.put(response);
-
-    }
-
-    private boolean parseRsmElement() {
+    protected boolean parseRsmElement() {
         if (null == resultSetManagement) {
             return true;
         }
@@ -105,10 +65,11 @@ public class UserItemsGet extends PubSubElementProcessorAbstract {
                 return false;
             }
         }
+
         return true;
     }
 
-    private void addRsmElement() throws NodeStoreException {
+    public void addRsmElement() throws NodeStoreException {
         if (null == firstItemId) {
             return;
         }
@@ -119,7 +80,7 @@ public class UserItemsGet extends PubSubElementProcessorAbstract {
         rsm.addElement("count", NS_RSM).setText(String.valueOf(channelManager.getCountUserFeedItems(actor, maxAge, parentOnly)));
     }
 
-    private void addRecentItems() throws NodeStoreException {
+    protected void addRecentItems() throws NodeStoreException {
         CloseableIterator<NodeItem> items = channelManager.getUserFeedItems(actor, maxAge, maxResults, afterItemId, parentOnly);
         String lastNodeId = "";
         Element itemsElement = null;
@@ -147,13 +108,12 @@ public class UserItemsGet extends PubSubElementProcessorAbstract {
     }
 
     @Override
-    protected boolean isValidStanza() {
+    public boolean isValidStanza() {
         Element userFeedItems = request.getChildElement().element(acceptedElementName);
         try {
             String since = userFeedItems.attributeValue(XMLConstants.SINCE_ATTR);
             String parentOnlyAttribute = userFeedItems.attributeValue(XMLConstants.PARENT_ONLY_ATTR);
             if ((null != parentOnlyAttribute) && ((Boolean.TRUE.toString().equals(parentOnlyAttribute)) || ("1".equals(parentOnlyAttribute)))) {
-
                 parentOnly = true;
             }
 

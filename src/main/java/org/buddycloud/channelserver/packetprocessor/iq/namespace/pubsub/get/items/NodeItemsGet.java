@@ -11,7 +11,7 @@ import org.buddycloud.channelserver.channel.node.configuration.field.AccessModel
 import org.buddycloud.channelserver.db.CloseableIterator;
 import org.buddycloud.channelserver.db.exception.NodeStoreException;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.JabberPubsub;
-import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.PubSubElementProcessor;
+import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.PubSubElementProcessorAbstract;
 import org.buddycloud.channelserver.pubsub.accessmodel.AccessModels;
 import org.buddycloud.channelserver.pubsub.model.GlobalItemID;
 import org.buddycloud.channelserver.pubsub.model.NodeItem;
@@ -19,7 +19,6 @@ import org.buddycloud.channelserver.pubsub.model.NodeMembership;
 import org.buddycloud.channelserver.pubsub.model.impl.GlobalItemIDImpl;
 import org.buddycloud.channelserver.utils.XMLConstants;
 import org.buddycloud.channelserver.utils.node.NodeAclRefuseReason;
-import org.buddycloud.channelserver.utils.node.NodeViewAcl;
 import org.buddycloud.channelserver.utils.node.item.payload.Buddycloud;
 import org.dom4j.DocumentException;
 import org.dom4j.Element;
@@ -32,7 +31,7 @@ import org.xmpp.packet.PacketError;
 import org.xmpp.packet.PacketError.Condition;
 import org.xmpp.packet.PacketError.Type;
 
-public class NodeItemsGet implements PubSubElementProcessor {
+public class NodeItemsGet extends PubSubElementProcessorAbstract {
     private static final Logger LOGGER = Logger.getLogger(NodeItemsGet.class);
 
     public static final int MAX_ITEMS_TO_RETURN = 50;
@@ -50,7 +49,6 @@ public class NodeItemsGet implements PubSubElementProcessor {
     private Element resultSetManagement;
     private Element element;
 
-    private NodeViewAcl nodeViewAcl;
     private Map<String, String> nodeDetails;
 
     private int rsmEntriesCount;
@@ -60,33 +58,24 @@ public class NodeItemsGet implements PubSubElementProcessor {
     public NodeItemsGet(BlockingQueue<Packet> outQueue, ChannelManager channelManager) {
         this.outQueue = outQueue;
         setChannelManager(channelManager);
+
+        this.acceptedElementName = XMLConstants.ITEMS_ELEM;
     }
 
     public void setChannelManager(ChannelManager ds) {
         channelManager = ds;
     }
 
-    public void setNodeViewAcl(NodeViewAcl acl) {
-        nodeViewAcl = acl;
-    }
-
-    private NodeViewAcl getNodeViewAcl() {
-        if (null == nodeViewAcl) {
-            nodeViewAcl = new NodeViewAcl();
-        }
-        return nodeViewAcl;
-    }
-
     @Override
     public void process(Element elm, JID actorJID, IQ reqIQ, Element rsm) throws Exception {
-        node = elm.attributeValue("node");
+        node = elm.attributeValue(XMLConstants.NODE_ATTR);
         requestIq = reqIQ;
         reply = IQ.createResultIQ(reqIQ);
         element = elm;
         resultSetManagement = rsm;
 
         if (!Configuration.getInstance().isLocalJID(requestIq.getFrom())) {
-            reply.getElement().addAttribute("remote-server-discover", "false");
+            reply.getElement().addAttribute(XMLConstants.REMOTE_SERVER_DISCOVER_ATTR, Boolean.FALSE.toString());
         }
 
         boolean isCached = channelManager.isCachedNode(node);
@@ -104,7 +93,7 @@ public class NodeItemsGet implements PubSubElementProcessor {
         }
 
         try {
-            if (!nodeExists()) {
+            if (!checkNodeExists()) {
                 setErrorCondition(PacketError.Type.cancel, PacketError.Condition.item_not_found);
                 outQueue.put(reply);
                 return;
@@ -115,7 +104,7 @@ public class NodeItemsGet implements PubSubElementProcessor {
                 return;
             }
             xmlReader = new SAXReader();
-            if (element.element("item") == null) {
+            if (element.element(XMLConstants.ITEM_ELEM) == null) {
                 getItems();
             } else {
                 if (!getItem()) {
@@ -148,7 +137,8 @@ public class NodeItemsGet implements PubSubElementProcessor {
         return true;
     }
 
-    private void makeRemoteRequest() throws InterruptedException {
+    @Override
+    protected void makeRemoteRequest() throws InterruptedException {
         requestIq.setTo(new JID(node.split("/")[2]).getDomain());
         if (null == requestIq.getElement().element(XMLConstants.PUBSUB_ELEM).element(XMLConstants.ACTOR_ELEM)) {
             Element actor = requestIq.getElement().element(XMLConstants.PUBSUB_ELEM).addElement(XMLConstants.ACTOR_ELEM, Buddycloud.NS);
@@ -157,7 +147,8 @@ public class NodeItemsGet implements PubSubElementProcessor {
         outQueue.put(requestIq);
     }
 
-    private boolean nodeExists() throws NodeStoreException {
+    @Override
+    protected boolean checkNodeExists() throws NodeStoreException {
 
         if (channelManager.nodeExists(node)) {
             nodeDetails = channelManager.getNodeConf(node);
@@ -167,7 +158,8 @@ public class NodeItemsGet implements PubSubElementProcessor {
         return false;
     }
 
-    private void setErrorCondition(Type type, Condition condition) {
+    @Override
+    protected void setErrorCondition(Type type, Condition condition) {
         reply.setType(IQ.Type.error);
         PacketError error = new PacketError(condition, type);
         reply.setError(error);
@@ -242,7 +234,8 @@ public class NodeItemsGet implements PubSubElementProcessor {
         reply.setChildElement(pubsub);
     }
 
-    private boolean userCanViewNode() throws NodeStoreException {
+    @Override
+    protected boolean userCanViewNode() throws NodeStoreException {
         NodeMembership nodeMembership = channelManager.getNodeMembership(node, actor);
 
         if (getNodeViewAcl().canViewNode(node, nodeMembership, getNodeAccessModel(), Configuration.getInstance().isLocalJID(actor))) {
@@ -291,7 +284,7 @@ public class NodeItemsGet implements PubSubElementProcessor {
     private void addItemToResponse(NodeItem nodeItem, Element parent) {
         try {
             entry = xmlReader.read(new StringReader(nodeItem.getPayload())).getRootElement();
-            Element item = parent.addElement("item");
+            Element item = parent.addElement(XMLConstants.ITEM_ELEM);
             item.addAttribute("id", nodeItem.getId());
             item.add(entry);
         } catch (DocumentException e) {
@@ -299,7 +292,7 @@ public class NodeItemsGet implements PubSubElementProcessor {
         }
     }
 
-    private void createExtendedErrorReply(Type type, Condition condition, String additionalElement) {
+    protected void createExtendedErrorReply(Type type, Condition condition, String additionalElement) {
         reply.setType(IQ.Type.error);
         Element standardError = new DOMElement(condition.toString(), new org.dom4j.Namespace("", JabberPubsub.NS_XMPP_STANZAS));
         Element extraError = new DOMElement(additionalElement, new org.dom4j.Namespace("", JabberPubsub.NS_PUBSUB_ERROR));
@@ -308,14 +301,6 @@ public class NodeItemsGet implements PubSubElementProcessor {
         error.add(standardError);
         error.add(extraError);
         reply.setChildElement(error);
-    }
-
-
-    protected String acceptedElemString = "items";
-
-    @Override
-    public boolean accept(Element elm) {
-        return acceptedElemString.equals(elm.getName());
     }
 
 }

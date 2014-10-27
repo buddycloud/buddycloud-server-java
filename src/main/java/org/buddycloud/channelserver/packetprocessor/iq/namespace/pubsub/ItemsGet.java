@@ -30,9 +30,9 @@ public class ItemsGet extends PubSubElementProcessorAbstract {
     public void process(Element elm, JID actorJID, IQ reqIQ, Element rsm) throws Exception {
         request = reqIQ;
 
-        String node = elm.attributeValue("node");
+        String node = elm.attributeValue(XMLConstants.NAME_ELEM);
         if (null == node) {
-            createExtendedErrorReply(PacketError.Type.modify, PacketError.Condition.bad_request, "nodeid-required");
+            createExtendedErrorReply(PacketError.Type.modify, PacketError.Condition.bad_request, XMLConstants.NODE_ID_REQUIRED);
             outQueue.put(response);
             return;
         }

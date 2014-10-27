@@ -79,7 +79,7 @@ public class NodeThreadsGet extends PubSubElementProcessorAbstract {
         outQueue.put(response);
     }
 
-    private void addRsmElement() throws NodeStoreException {
+    protected void addRsmElement() throws NodeStoreException {
         if (firstItem == null) {
             return;
         }
@@ -118,7 +118,7 @@ public class NodeThreadsGet extends PubSubElementProcessorAbstract {
     @Override
     protected boolean isValidStanza() {
         try {
-            this.node = request.getChildElement().element(XMLConstants.THREADS_ELEM).attributeValue(XMLConstants.NODE_ATTR);
+            this.node = request.getChildElement().element(acceptedElementName).attributeValue(XMLConstants.NODE_ATTR);
             if (node != null) {
                 return true;
             }
@@ -151,7 +151,7 @@ public class NodeThreadsGet extends PubSubElementProcessorAbstract {
         return false;
     }
 
-    private boolean parseRsmElement() throws NodeStoreException {
+    protected boolean parseRsmElement() throws NodeStoreException {
         if (resultSetManagement == null) {
             return true;
         }
@@ -167,6 +167,7 @@ public class NodeThreadsGet extends PubSubElementProcessorAbstract {
                 return false;
             }
         }
+
         return true;
     }
 

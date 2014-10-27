@@ -11,12 +11,9 @@ import org.buddycloud.channelserver.channel.Conf;
 import org.buddycloud.channelserver.channel.node.configuration.NodeConfigurationException;
 import org.buddycloud.channelserver.channel.node.configuration.field.Creator;
 import org.buddycloud.channelserver.db.exception.NodeStoreException;
-import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.JabberPubsub;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.PubSubElementProcessorAbstract;
 import org.buddycloud.channelserver.utils.XMLConstants;
 import org.dom4j.Element;
-import org.dom4j.Namespace;
-import org.dom4j.dom.DOMElement;
 import org.xmpp.packet.IQ;
 import org.xmpp.packet.JID;
 import org.xmpp.packet.Packet;
@@ -45,7 +42,7 @@ public class NodeCreate extends PubSubElementProcessorAbstract {
         if (null == actorJID) {
             actor = request.getFrom();
         }
-        if (!validateNode()) {
+        if (!nodePresent()) {
             outQueue.put(response);
             return;
         }
@@ -92,21 +89,6 @@ public class NodeCreate extends PubSubElementProcessorAbstract {
         defaultConfiguration.putAll(configuration);
 
         return defaultConfiguration;
-    }
-
-    private boolean validateNode() {
-        if ((node != null) && !"".equals(node.trim())) {
-            return true;
-        }
-        response.setType(IQ.Type.error);
-        Element nodeIdRequired = new DOMElement(XMLConstants.NODE_ID_REQUIRED, new Namespace("", JabberPubsub.NS_PUBSUB_ERROR));
-        Element badRequest = new DOMElement(PacketError.Condition.bad_request.toXMPP(), new Namespace("", JabberPubsub.NS_XMPP_STANZAS));
-        Element error = new DOMElement(XMLConstants.ERROR_ELEM);
-        error.addAttribute(XMLConstants.TYPE_ATTR, "modify");
-        error.add(badRequest);
-        error.add(nodeIdRequired);
-        response.setChildElement(error);
-        return false;
     }
 
     @Override

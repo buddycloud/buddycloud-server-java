@@ -51,6 +51,7 @@ public class PubSubResult implements PacketProcessor<IQ> {
             federatedQueueManager.passResponseToRequester(reqIQ.createCopy());
 
             Element pubsub = reqIQ.getChildElement();
+            @SuppressWarnings("unchecked")
             List<Element> elements = pubsub.elements();
 
             boolean handled = false;

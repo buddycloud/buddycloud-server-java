@@ -92,10 +92,10 @@ public class ThreadGet extends PubSubElementProcessorAbstract {
         return false;
     }
 
-    private void parseRsmElement() {
+    protected boolean parseRsmElement() {
         Element rsmElement = request.getChildElement().element(XMLConstants.SET_ELEM);
         if (null == rsmElement) {
-            return;
+            return true;
         }
         Element max;
         Element after;
@@ -105,9 +105,11 @@ public class ThreadGet extends PubSubElementProcessorAbstract {
         if (null != (after = rsmElement.element("after"))) {
             afterItemId = after.getTextTrim();
         }
+
+        return true;
     }
 
-    private void addRsmElement() throws NodeStoreException {
+    protected void addRsmElement() throws NodeStoreException {
         if (null == firstItemId) {
             return;
         }

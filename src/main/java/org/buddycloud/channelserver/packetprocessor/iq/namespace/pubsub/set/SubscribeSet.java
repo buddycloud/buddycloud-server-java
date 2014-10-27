@@ -52,16 +52,16 @@ public class SubscribeSet extends PubSubElementProcessorAbstract {
         this.outQueue = outQueue;
         this.channelManager = channelManager;
 
-        acceptedElementName = "subscribe";
+        acceptedElementName = XMLConstants.SUBSCRIBE_ELEM;
     }
 
     @Override
     public void process(Element elm, JID actorJID, IQ reqIQ, Element rsm) throws Exception {
 
-        node = reqIQ.getChildElement().element("subscribe").attributeValue("node");
+        node = reqIQ.getChildElement().element(acceptedElementName).attributeValue(XMLConstants.NODE_ATTR);
         request = reqIQ;
 
-        if ((node == null) || (node.equals(""))) {
+        if ((node == null) || "".equals(node)) {
             missingNodeName();
             return;
         }
@@ -340,12 +340,12 @@ public class SubscribeSet extends PubSubElementProcessorAbstract {
         IQ reply = IQ.createResultIQ(request);
         reply.setType(Type.error);
 
-        Element badRequest = new DOMElement("bad-request", new org.dom4j.Namespace("", JabberPubsub.NS_XMPP_STANZAS));
+        Element badRequest = new DOMElement(XMLConstants.BAD_REQUEST_ELEM, new org.dom4j.Namespace("", JabberPubsub.NS_XMPP_STANZAS));
 
         Element nodeIdRequired = new DOMElement(MISSING_NODE_ID, new org.dom4j.Namespace("", JabberPubsub.NS_PUBSUB_ERROR));
 
-        Element error = new DOMElement("error");
-        error.addAttribute("type", "modify");
+        Element error = new DOMElement(XMLConstants.ERROR_ELEM);
+        error.addAttribute(XMLConstants.TYPE_ATTR, "modify");
         error.add(badRequest);
         error.add(nodeIdRequired);
 

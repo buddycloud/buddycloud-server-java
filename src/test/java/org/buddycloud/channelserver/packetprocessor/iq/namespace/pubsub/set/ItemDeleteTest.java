@@ -13,6 +13,7 @@ import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.db.ClosableIteratorImpl;
 import org.buddycloud.channelserver.db.exception.NodeStoreException;
 import org.buddycloud.channelserver.packetHandler.iq.IQTestHandler;
+import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.PubSubElementProcessorAbstract;
 import org.buddycloud.channelserver.pubsub.affiliation.Affiliations;
 import org.buddycloud.channelserver.pubsub.model.NodeItem;
 import org.buddycloud.channelserver.pubsub.model.NodeSubscription;
@@ -34,7 +35,7 @@ import org.xmpp.resultsetmanagement.ResultSetImpl;
 public class ItemDeleteTest extends IQTestHandler {
     private IQ request;
     private ChannelManager channelManager;
-    private ItemDelete itemDelete;
+    private PubSubElementProcessorAbstract itemDelete;
     private JID jid = new JID("juliet@shakespeare.lit");
     private Element element;
     private BlockingQueue<Packet> queue = new LinkedBlockingQueue<Packet>();

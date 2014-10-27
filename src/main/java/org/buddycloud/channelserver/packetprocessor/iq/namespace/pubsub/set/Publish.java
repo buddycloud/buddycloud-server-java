@@ -145,7 +145,7 @@ public class Publish extends PubSubElementProcessorAbstract {
     }
 
     private boolean isRequestValid() throws Exception {
-        item = request.getChildElement().element("publish").element("item");
+        item = request.getChildElement().element(acceptedElementName).element(XMLConstants.ITEM_ELEM);
         if (null == item) {
             createExtendedErrorReply(PacketError.Type.modify, PacketError.Condition.bad_request, XMLConstants.ITEM_REQUIRED_ELEM);
             outQueue.put(response);

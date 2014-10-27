@@ -47,7 +47,7 @@ public class UnsubscribeSet extends PubSubElementProcessorAbstract {
         node = request.getChildElement().element(XMLConstants.UNSUBSCRIBE_ELEM).attributeValue(XMLConstants.NODE_ATTR);
         response = IQ.createResultIQ(request);
 
-        if ((node == null) || (node.equals(""))) {
+        if ((node == null) || "".equals(node)) {
             missingNodeName();
             return;
         }
@@ -61,7 +61,7 @@ public class UnsubscribeSet extends PubSubElementProcessorAbstract {
             from = actorJID;
         }
 
-        unsubscribingJid = new JID(request.getChildElement().element("unsubscribe").attributeValue("jid"));
+        unsubscribingJid = new JID(request.getChildElement().element(XMLConstants.UNSUBSCRIBE_ELEM).attributeValue(XMLConstants.JID_ATTR));
 
         if (false == unsubscribingJid.toBareJID().equals(from.toBareJID())) {
             failAuthRequired();

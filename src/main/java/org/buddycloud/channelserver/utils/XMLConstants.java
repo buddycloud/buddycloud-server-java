@@ -126,6 +126,16 @@ public class XMLConstants {
 
     public static final String AUTHOR_ELEM = "author";
 
+    public static final String RETRACT_ELEM = "retract";
+
+    public static final String NOTIFY_ATTR = "notify";
+
+    public static final String SUBSCRIBE_ELEM = "subscribe";
+
+    public static final String BAD_REQUEST_ELEM = "bad-request";
+
+    public static final String SUBSCRIPTION_ATTR = "subscription";
+
     // Private (hidden) constructor
     private XMLConstants() {
 

@@ -28,8 +28,6 @@ public class RepliesGet extends PubSubElementProcessorAbstract {
     // RSM details
     private String firstItemId = null;
     private String lastItemId = null;
-    private String afterItemId = null;
-    private int maxResults = -1;
 
     public static final Logger LOGGER = Logger.getLogger(RecentItemsGet.class);
 
@@ -88,22 +86,7 @@ public class RepliesGet extends PubSubElementProcessorAbstract {
         return false;
     }
 
-    private void parseRsmElement() {
-        Element rsmElement = request.getChildElement().element(XMLConstants.SET_ELEM);
-        if (null == rsmElement) {
-            return;
-        }
-        Element max;
-        Element after;
-        if (null != (max = rsmElement.element("max"))) {
-            maxResults = Integer.parseInt(max.getTextTrim());
-        }
-        if (null != (after = rsmElement.element("after"))) {
-            afterItemId = after.getTextTrim();
-        }
-    }
-
-    private void addRsmElement() throws NodeStoreException {
+    protected void addRsmElement() throws NodeStoreException {
         if (null == firstItemId) {
             return;
         }

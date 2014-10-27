@@ -39,6 +39,8 @@ public class FirehoseGet extends PubSubElementProcessorAbstract {
         setChannelManager(channelManager);
         setOutQueue(outQueue);
         xmlReader = new SAXReader();
+
+        acceptedElementName = XMLConstants.ITEMS_ELEM;
     }
 
     @Override
@@ -82,21 +84,8 @@ public class FirehoseGet extends PubSubElementProcessorAbstract {
         }
     }
 
-    private void parseRsmElement() {
-        if (null == resultSetManagement) {
-            return;
-        }
-        Element max = resultSetManagement.element("max");
-        if (max != null) {
-            maxResults = Integer.parseInt(max.getTextTrim());
-        }
-        Element after = resultSetManagement.element("after");
-        if (after != null) {
-            afterItemId = after.getTextTrim();
-        }
-    }
-
-    private void addRsmElement() throws NodeStoreException {
+    @Override
+    protected void addRsmElement() throws NodeStoreException {
         if (firstItemId == null) {
             return;
         }
@@ -116,15 +105,15 @@ public class FirehoseGet extends PubSubElementProcessorAbstract {
         Element itemsElement = null;
         while (items.hasNext()) {
             NodeItem item = items.next();
-            if (false == item.getNodeId().equals(lastNode)) {
-                itemsElement = pubsub.addElement("items");
+            if (!item.getNodeId().equals(lastNode)) {
+                itemsElement = pubsub.addElement(XMLConstants.ITEMS_ELEM);
                 itemsElement.addAttribute("node", item.getNodeId());
                 lastNode = item.getNodeId();
             }
             try {
                 Element entry = xmlReader.read(new StringReader(item.getPayload())).getRootElement();
-                Element itemElement = itemsElement.addElement("item");
-                itemElement.addAttribute("id", item.getId());
+                Element itemElement = itemsElement.addElement(XMLConstants.ITEM_ELEM);
+                itemElement.addAttribute(XMLConstants.ID_ATTR, item.getId());
                 if (null == firstItemId) {
                     firstItemId = item.getId();
                 }
@@ -134,10 +123,5 @@ public class FirehoseGet extends PubSubElementProcessorAbstract {
                 LOGGER.error("Error parsing a node entry, ignoring. " + item.getId());
             }
         }
-    }
-
-    @Override
-    public boolean accept(Element elm) {
-        return elm.getName().equals("items");
     }
 }

@@ -86,9 +86,10 @@ public class RecentItemsGet extends PubSubElementProcessorAbstract {
         outQueue.put(response);
     }
 
-    private void parseRsmElement() {
+    @Override
+    protected boolean parseRsmElement() {
         if (null == resultSetManagement) {
-            return;
+            return true;
         }
 
         Element max = null;
@@ -103,12 +104,15 @@ public class RecentItemsGet extends PubSubElementProcessorAbstract {
             } catch (IllegalArgumentException e) {
                 LOGGER.error(e);
                 createExtendedErrorReply(Type.modify, Condition.bad_request, "Could not parse the 'after' id: " + after);
-                return;
+                return false;
             }
         }
+
+        return true;
     }
 
-    private void addRsmElement() throws NodeStoreException {
+    @Override
+    protected void addRsmElement() throws NodeStoreException {
         if (null == firstItemId) {
             return;
         }
@@ -119,21 +123,22 @@ public class RecentItemsGet extends PubSubElementProcessorAbstract {
         rsm.addElement("count", NS_RSM).setText(String.valueOf(channelManager.getCountRecentItems(actor, maxAge, maxItems, NODE_SUFFIX, parentOnly)));
     }
 
-    private void addRecentItems() throws NodeStoreException {
+    @Override
+    protected void addRecentItems() throws NodeStoreException {
         CloseableIterator<NodeItem> items = channelManager.getRecentItems(actor, maxAge, maxItems, maxResults, afterItemId, NODE_SUFFIX, parentOnly);
         String lastNodeId = "";
         Element itemsElement = null;
         while (items.hasNext()) {
             NodeItem item = items.next();
             if (!item.getNodeId().equals(lastNodeId)) {
-                itemsElement = pubsub.addElement("items");
-                itemsElement.addAttribute("node", item.getNodeId());
+                itemsElement = pubsub.addElement(XMLConstants.ITEMS_ELEM);
+                itemsElement.addAttribute(XMLConstants.NODE_ATTR, item.getNodeId());
                 lastNodeId = item.getNodeId();
             }
             try {
                 Element entry = xmlReader.read(new StringReader(item.getPayload())).getRootElement();
-                Element itemElement = itemsElement.addElement("item");
-                itemElement.addAttribute("id", item.getId());
+                Element itemElement = itemsElement.addElement(XMLConstants.ITEM_ELEM);
+                itemElement.addAttribute(XMLConstants.ID_ATTR, item.getId());
 
                 if (null == firstItemId) {
                     firstItemId = new GlobalItemIDImpl(null, item.getNodeId(), item.getId());

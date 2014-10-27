@@ -11,6 +11,7 @@ import org.buddycloud.channelserver.channel.node.configuration.field.AccessModel
 import org.buddycloud.channelserver.db.exception.NodeStoreException;
 import org.buddycloud.channelserver.packetprocessor.PacketProcessor;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.JabberPubsub;
+import org.buddycloud.channelserver.utils.XMLConstants;
 import org.dom4j.Element;
 import org.xmpp.forms.DataForm;
 import org.xmpp.forms.FormField;
@@ -44,20 +45,17 @@ public class DiscoInfoGet implements PacketProcessor<IQ> {
         requestIq = reqIQ;
         result = IQ.createResultIQ(reqIQ);
         Element elm = reqIQ.getChildElement();
-        node = elm.attributeValue("node");
-        query = result.setChildElement(ELEMENT_NAME,
-                JabberDiscoInfo.NAMESPACE_URI);
+        node = elm.attributeValue(XMLConstants.NODE_ATTR);
+        query = result.setChildElement(ELEMENT_NAME, JabberDiscoInfo.NAMESPACE_URI);
         if (false == Configuration.getInstance().isLocalJID(requestIq.getFrom())) {
-            result.getElement().addAttribute("remote-server-discover", "false");
+            result.getElement().addAttribute(XMLConstants.REMOTE_SERVER_DISCOVER_ATTR, Boolean.FALSE.toString());
         }
-        if ((node == null) || (true == node.equals(""))) {
+        if ((node == null) || ("".equals(node))) {
             sendServerDiscoInfo();
             return;
         }
-        if (false == Configuration.getInstance().isLocalNode(node)
-                && (false == channelManager.isCachedNode(node))) {
-            logger.info("Node " + node + " is remote and not cached so "
-                    + "we're going off to get disco#info");
+        if (false == Configuration.getInstance().isLocalNode(node) && (false == channelManager.isCachedNode(node))) {
+            logger.info("Node " + node + " is remote and not cached so " + "we're going off to get disco#info");
             makeRemoteRequest();
             return;
         }
@@ -70,8 +68,7 @@ public class DiscoInfoGet implements PacketProcessor<IQ> {
             sendNodeConfigurationInformation();
         } catch (NodeStoreException e) {
             logger.error(e);
-            setErrorResponse(PacketError.Type.wait,
-                    PacketError.Condition.internal_server_error);
+            setErrorResponse(PacketError.Type.wait, PacketError.Condition.internal_server_error);
         }
     }
 
@@ -91,15 +88,14 @@ public class DiscoInfoGet implements PacketProcessor<IQ> {
         configuration.putAll(conf);
         for (String key : configuration.keySet()) {
             value = configuration.get(key);
-            if ((true == key.equals(AccessModel.FIELD_NAME))
-                    && (value.equals(AccessModel.local.toString()))
+            if ((true == key.equals(AccessModel.FIELD_NAME)) && (value.equals(AccessModel.local.toString()))
                     && (false == Configuration.getInstance().isLocalJID(requestIq.getFrom()))) {
                 value = AccessModel.authorize.toString();
             }
             x.addField(key, null, null).addValue(value);
         }
 
-        query.addAttribute("node", node);
+        query.addAttribute(XMLConstants.NODE_ATTR, node);
         query.addElement("identity").addAttribute("category", "pubsub").addAttribute("type", "leaf");
         query.addElement("feature").addAttribute("var", "http://jabber.org/protocol/pubsub");
 

@@ -17,8 +17,6 @@ import org.buddycloud.channelserver.utils.XMLConstants;
 import org.buddycloud.channelserver.utils.node.item.payload.Buddycloud;
 import org.dom4j.Document;
 import org.dom4j.Element;
-import org.dom4j.Namespace;
-import org.dom4j.dom.DOMElement;
 import org.xmpp.packet.IQ;
 import org.xmpp.packet.JID;
 import org.xmpp.packet.Message;
@@ -47,6 +45,10 @@ public class SubscriptionEvent extends PubSubElementProcessorAbstract {
     public SubscriptionEvent(BlockingQueue<Packet> outQueue, ChannelManager channelManager) {
         setChannelManager(channelManager);
         setOutQueue(outQueue);
+
+        acceptedElementName = XMLConstants.SUBSCRIPTIONS_ELEM;
+
+
     }
 
     /**
@@ -57,13 +59,13 @@ public class SubscriptionEvent extends PubSubElementProcessorAbstract {
         response = IQ.createResultIQ(reqIQ);
         request = reqIQ;
         actor = actorJID;
-        node = element.attributeValue("node");
+        node = element.attributeValue(XMLConstants.NODE_ATTR);
 
         if (actor == null) {
             actor = request.getFrom();
         }
 
-        if (!nodeProvided()) {
+        if (!nodePresent()) {
             outQueue.put(response);
             return;
         }
@@ -73,8 +75,8 @@ public class SubscriptionEvent extends PubSubElementProcessorAbstract {
             return;
         }
         try {
-            if ((!nodeProvided()) || (!validRequestStanza()) || (!checkNodeExists()) || (!actorHasPermissionToAuthorize())
-                    || (actorIsModifyingTheirSubscription()) || (!userIsSubscribable())) {
+            if ((!isValidStanza()) || (!checkNodeExists()) || (!actorHasPermissionToAuthorize()) || (actorIsModifyingTheirSubscription())
+                    || (!userIsSubscribable())) {
                 outQueue.put(response);
                 return;
             }
@@ -90,7 +92,7 @@ public class SubscriptionEvent extends PubSubElementProcessorAbstract {
     }
 
     private boolean actorIsModifyingTheirSubscription() {
-        if (actor.toBareJID().equals(subscriptionElement.attributeValue("jid"))) {
+        if (actor.toBareJID().equals(subscriptionElement.attributeValue(XMLConstants.JID_ATTR))) {
             createExtendedErrorReply(PacketError.Type.cancel, PacketError.Condition.not_allowed, CAN_NOT_MODIFY_OWN_SUBSCRIPTION, Buddycloud.NS_ERROR);
             return true;
         }
@@ -121,7 +123,7 @@ public class SubscriptionEvent extends PubSubElementProcessorAbstract {
         Subscriptions newSubscription = Subscriptions.valueOf(subscriptionElement.attributeValue(XMLConstants.SUBSCRIPTION_ELEM));
 
         if (newSubscription.equals(Subscriptions.invited)) {
-            subscription.addAttribute("invited-by", actor.toBareJID());
+            subscription.addAttribute(XMLConstants.INVITED_BY_ATTR, actor.toBareJID());
         }
 
         for (NodeSubscription subscriber : subscribers) {
@@ -146,7 +148,7 @@ public class SubscriptionEvent extends PubSubElementProcessorAbstract {
         if (newSubscription.equals(Subscriptions.invited)) {
             Message alertInvitedUser = rootElement.createCopy();
             JID to = jid;
-            alertInvitedUser.getElement().attribute("remote-server-discover").detach();
+            alertInvitedUser.getElement().attribute(XMLConstants.REMOTE_SERVER_DISCOVER_ATTR).detach();
             if (!Configuration.getInstance().isLocalJID(jid)) {
                 to = invitedUsersDomain;
             }
@@ -159,46 +161,32 @@ public class SubscriptionEvent extends PubSubElementProcessorAbstract {
         if (requestedSubscription.equals(Subscriptions.invited)) {
             invitedBy = actor;
         }
-        jid = new JID(subscriptionElement.attributeValue("jid"));
+        jid = new JID(subscriptionElement.attributeValue(XMLConstants.JID_ATTR));
         NodeSubscription newSubscription =
                 new NodeSubscriptionImpl(node, jid, currentMembership.getListener(), Subscriptions.valueOf(subscriptionElement
-                        .attributeValue("subscription")), invitedBy);
+                        .attributeValue(XMLConstants.SUBSCRIPTION_ATTR)), invitedBy);
 
         channelManager.addUserSubscription(newSubscription);
     }
 
-    private boolean nodeProvided() {
-        if (null != node) {
-            return true;
-        }
-        response.setType(IQ.Type.error);
-        Element nodeIdRequired = new DOMElement("nodeid-required", new Namespace("", JabberPubsub.NS_PUBSUB_ERROR));
-        Element badRequest = new DOMElement(PacketError.Condition.bad_request.toString(), new Namespace("", JabberPubsub.NS_XMPP_STANZAS));
-        Element error = new DOMElement("error");
-        error.addAttribute("type", "modify");
-        error.add(badRequest);
-        error.add(nodeIdRequired);
-        response.setChildElement(error);
-        return false;
-    }
-
-    private boolean validRequestStanza() {
+    protected boolean isValidStanza() {
         subscriptionElement =
                 request.getElement().element(XMLConstants.PUBSUB_ELEM).element(XMLConstants.SUBSCRIPTIONS_ELEM).element(XMLConstants.SUBSCRIPTION_ELEM);
 
 
-        if ((null == subscriptionElement) || (null == subscriptionElement.attribute("jid")) || (null == subscriptionElement.attribute("subscription"))) {
+        if ((null == subscriptionElement) || (null == subscriptionElement.attribute(XMLConstants.JID_ATTR))
+                || (null == subscriptionElement.attribute(XMLConstants.SUBSCRIPTION_ATTR))) {
             setErrorCondition(PacketError.Type.modify, PacketError.Condition.bad_request);
             return false;
         }
 
         requestedSubscription = Subscriptions.createFromString(subscriptionElement.attributeValue(XMLConstants.SUBSCRIPTION_ELEM));
-        subscriptionElement.addAttribute("subscription", requestedSubscription.toString());
+        subscriptionElement.addAttribute(XMLConstants.SUBSCRIPTION_ATTR, requestedSubscription.toString());
         return true;
     }
 
     private boolean userIsSubscribable() throws NodeStoreException {
-        currentMembership = channelManager.getNodeMembership(node, new JID(subscriptionElement.attributeValue("jid")));
+        currentMembership = channelManager.getNodeMembership(node, new JID(subscriptionElement.attributeValue(XMLConstants.JID_ATTR)));
         if (currentMembership.getSubscription().equals(Subscriptions.none) && requestedSubscription.equals(Subscriptions.invited)) {
             return true;
         }
@@ -221,27 +209,5 @@ public class SubscriptionEvent extends PubSubElementProcessorAbstract {
 
         setErrorCondition(PacketError.Type.auth, PacketError.Condition.forbidden);
         return false;
-    }
-
-    private boolean checkNodeExists() throws NodeStoreException {
-        if (!channelManager.nodeExists(node)) {
-            setErrorCondition(PacketError.Type.cancel, PacketError.Condition.item_not_found);
-            return false;
-        }
-        return true;
-    }
-
-    private void makeRemoteRequest() throws InterruptedException {
-        request.setTo(new JID(node.split("/")[2]).getDomain());
-        Element actor = request.getElement().element("pubsub").addElement("actor", Buddycloud.NS);
-        actor.addText(request.getFrom().toBareJID());
-        outQueue.put(request);
-    }
-
-    /**
-     * Determine if this class is capable of processing incoming stanza
-     */
-    public boolean accept(Element elm) {
-        return XMLConstants.SUBSCRIPTIONS_ELEM.equals(elm.getName());
     }
 }

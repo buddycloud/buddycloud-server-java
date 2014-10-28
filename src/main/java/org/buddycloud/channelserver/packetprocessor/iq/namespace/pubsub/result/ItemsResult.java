@@ -15,6 +15,7 @@ import org.buddycloud.channelserver.pubsub.model.impl.GlobalItemIDImpl;
 import org.buddycloud.channelserver.pubsub.model.impl.NodeItemImpl;
 import org.buddycloud.channelserver.pubsub.model.impl.NodeSubscriptionImpl;
 import org.buddycloud.channelserver.pubsub.subscription.Subscriptions;
+import org.buddycloud.channelserver.utils.XMLConstants;
 import org.dom4j.Element;
 import org.xmpp.packet.IQ;
 import org.xmpp.packet.JID;
@@ -22,11 +23,13 @@ import org.xmpp.packet.JID;
 public class ItemsResult extends PubSubElementProcessorAbstract {
 
     private static final String MISSING_NODE = "Missing node";
-    private static final Logger logger = Logger.getLogger(ItemsResult.class);
+    private static final Logger LOGGER = Logger.getLogger(ItemsResult.class);
     private boolean subscriptionNode = false;
 
     public ItemsResult(ChannelManager channelManager) {
         this.channelManager = channelManager;
+
+        this.acceptedElementName = XMLConstants.ITEMS_ELEM;
     }
 
     public void process(Element elm, JID actorJID, IQ reqIQ, Element rsm) throws Exception {
@@ -34,29 +37,29 @@ public class ItemsResult extends PubSubElementProcessorAbstract {
         this.request = reqIQ;
 
         if (-1 != request.getFrom().toString().indexOf("@")) {
-            logger.debug("Ignoring result packet, only interested in stanzas " + "from other buddycloud servers");
+            LOGGER.debug("Ignoring result packet, only interested in stanzas " + "from other buddycloud servers");
             return;
         }
 
-        if (null != elm.attributeValue("node")) {
-            this.setNode(elm.attributeValue("node"));
+        if (null != elm.attributeValue(XMLConstants.NODE_ATTR)) {
+            this.setNode(elm.attributeValue(XMLConstants.NODE_ATTR));
         }
 
-        if ((null == node) || (true == node.equals(""))) {
+        if ((null == node) || "".equals(node)) {
             throw new NullPointerException(MISSING_NODE);
         }
 
-        subscriptionNode = (true == node.substring(node.length() - 13, node.length()).equals("subscriptions"));
+        subscriptionNode = (node.substring(node.length() - 13, node.length()).equals(XMLConstants.SUBSCRIPTIONS_ELEM));
 
-        if ((false == subscriptionNode) && (false == channelManager.nodeExists(node))) {
+        if ((!subscriptionNode) && (!channelManager.nodeExists(node))) {
             channelManager.addRemoteNode(node);
         }
 
         @SuppressWarnings("unchecked")
-        List<Element> items = request.getElement().element("pubsub").element("items").elements("item");
+        List<Element> items = request.getElement().element(XMLConstants.PUBSUB_ELEM).element(XMLConstants.ITEMS_ELEM).elements(XMLConstants.ITEM_ELEM);
 
         for (Element item : items) {
-            if (true == subscriptionNode) {
+            if (subscriptionNode) {
                 processSubscriptionItem(item);
             } else {
                 processPublishedItem(item);
@@ -66,33 +69,32 @@ public class ItemsResult extends PubSubElementProcessorAbstract {
 
     @SuppressWarnings("unchecked")
     private void processSubscriptionItem(Element item) throws NodeStoreException {
-        JID user = new JID(item.attributeValue("id"));
-        List<Element> items = item.element("query").elements("item");
+        JID user = new JID(item.attributeValue(XMLConstants.ID_ATTR));
+        List<Element> items = item.element("query").elements(XMLConstants.ITEM_ELEM);
         for (Element subscription : items) {
             try {
                 addSubscription(subscription, user);
             } catch (IllegalArgumentException e) {
-                logger.error(e);
+                LOGGER.error(e);
             }
         }
     }
 
     private void addSubscription(Element item, JID user) throws NodeStoreException {
 
-        String node = item.attributeValue("node");
+        String node = item.attributeValue(XMLConstants.NODE_ATTR);
 
         // If its a local JID and/or a local node, that's our turf!
-        if ((true == Configuration.getInstance().isLocalNode(node))
-                && (true == Configuration.getInstance().isLocalJID(user))) {
+        if ((Configuration.getInstance().isLocalNode(node)) && (Configuration.getInstance().isLocalJID(user))) {
             return;
         }
-        if (true == Configuration.getInstance().isLocalNode(node)) {
+        if (Configuration.getInstance().isLocalNode(node)) {
             return;
         }
 
         JID listener = request.getFrom();
-        Subscriptions sub = Subscriptions.createFromString(item.attributeValue("subscription"));
-        Affiliations aff = Affiliations.createFromString(item.attributeValue("affiliation"));
+        Subscriptions sub = Subscriptions.createFromString(item.attributeValue(XMLConstants.SUBSCRIPTION_ELEM));
+        Affiliations aff = Affiliations.createFromString(item.attributeValue(XMLConstants.AFFILIATION_ELEM));
         NodeSubscription subscription = new NodeSubscriptionImpl(node, user, listener, sub, null);
 
         if (false == channelManager.nodeExists(node)) {
@@ -110,7 +112,7 @@ public class ItemsResult extends PubSubElementProcessorAbstract {
         try {
             // Probably a tombstone'd item
             if (null == entry.elementText("updated")) {
-                logger.debug("Entry has no 'updated' element, won't process");
+                LOGGER.debug("Entry has no 'updated' element, won't process");
                 return;
             }
             String inReplyTo = null;
@@ -125,17 +127,13 @@ public class ItemsResult extends PubSubElementProcessorAbstract {
             try {
                 channelManager.deleteNodeItemById(node, entry.elementText("id"));
             } catch (NodeStoreException e) {
-                logger.error("Attempt to delete an item which didn't exist... its ok");
+                LOGGER.error("Attempt to delete an item which didn't exist... its ok");
             }
             channelManager.addNodeItem(nodeItem);
         } catch (IllegalArgumentException e) {
-            logger.error(e);
+            LOGGER.error(e);
             e.printStackTrace();
             return;
         }
-    }
-
-    public boolean accept(Element elm) {
-        return elm.getName().equals("items");
     }
 }

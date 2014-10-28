@@ -1,7 +1,6 @@
 package org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.get;
 
 import java.io.StringReader;
-import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 
 import org.apache.log4j.Logger;
@@ -15,8 +14,6 @@ import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.PubSubEl
 import org.buddycloud.channelserver.pubsub.accessmodel.AccessModels;
 import org.buddycloud.channelserver.pubsub.model.NodeItem;
 import org.buddycloud.channelserver.utils.XMLConstants;
-import org.buddycloud.channelserver.utils.node.NodeAclRefuseReason;
-import org.buddycloud.channelserver.utils.node.NodeViewAcl;
 import org.buddycloud.channelserver.utils.node.item.payload.Buddycloud;
 import org.dom4j.DocumentException;
 import org.dom4j.Element;
@@ -36,14 +33,8 @@ public class ThreadGet extends PubSubElementProcessorAbstract {
     private String lastItemId = null;
     private String afterItemId = null;
     private int maxResults = -1;
-    private String parentId;
-    private NodeViewAcl nodeViewAcl;
-    private Map<String, String> nodeConfiguration;
 
     private static final Logger LOGGER = Logger.getLogger(RecentItemsGet.class);
-
-
-    public static final String NS_RSM = "http://jabber.org/protocol/rsm";
 
     public ThreadGet(BlockingQueue<Packet> outQueue, ChannelManager channelManager) {
         setChannelManager(channelManager);
@@ -101,10 +92,10 @@ public class ThreadGet extends PubSubElementProcessorAbstract {
         return false;
     }
 
-    private void parseRsmElement() {
-        Element rsmElement = request.getChildElement().element("set");
+    protected boolean parseRsmElement() {
+        Element rsmElement = request.getChildElement().element(XMLConstants.SET_ELEM);
         if (null == rsmElement) {
-            return;
+            return true;
         }
         Element max;
         Element after;
@@ -114,9 +105,11 @@ public class ThreadGet extends PubSubElementProcessorAbstract {
         if (null != (after = rsmElement.element("after"))) {
             afterItemId = after.getTextTrim();
         }
+
+        return true;
     }
 
-    private void addRsmElement() throws NodeStoreException {
+    protected void addRsmElement() throws NodeStoreException {
         if (null == firstItemId) {
             return;
         }
@@ -154,63 +147,10 @@ public class ThreadGet extends PubSubElementProcessorAbstract {
         }
     }
 
-    private boolean isValidStanza() {
-        Element thread = request.getChildElement().element(XMLConstants.THREAD_ELEM);
-        try {
-            node = thread.attributeValue(XMLConstants.NODE_ATTR);
-            if (null == node) {
-                createExtendedErrorReply(PacketError.Type.modify, PacketError.Condition.bad_request, XMLConstants.NODE_ID_REQUIRED);
-
-                return false;
-            }
-            parentId = thread.attributeValue(XMLConstants.ITEM_ID);
-            if (null == parentId) {
-                createExtendedErrorReply(PacketError.Type.modify, PacketError.Condition.bad_request, XMLConstants.ITEM_ID_REQUIRED);
-                return false;
-            }
-            if (!channelManager.nodeExists(node)) {
-                setErrorCondition(PacketError.Type.cancel, PacketError.Condition.item_not_found);
-
-                return false;
-            }
-            nodeConfiguration = channelManager.getNodeConf(node);
-        } catch (NullPointerException e) {
-            LOGGER.error(e);
-            setErrorCondition(PacketError.Type.modify, PacketError.Condition.bad_request);
-            return false;
-        } catch (NodeStoreException e) {
-            LOGGER.error(e);
-            setErrorCondition(PacketError.Type.wait, PacketError.Condition.internal_server_error);
-            return false;
-        }
-        return true;
-    }
-
-    private boolean userCanViewNode() throws NodeStoreException {
-        if (getNodeViewAcl().canViewNode(node, channelManager.getNodeMembership(node, actor), getNodeAccessModel(),
-                Configuration.getInstance().isLocalJID(actor))) {
-            return true;
-        }
-        NodeAclRefuseReason reason = getNodeViewAcl().getReason();
-        createExtendedErrorReply(reason.getType(), reason.getCondition(), reason.getAdditionalErrorElement());
-        return false;
-    }
-
-    private AccessModels getNodeAccessModel() {
+    public AccessModels getNodeAccessModel() {
         if (!nodeConfiguration.containsKey(AccessModel.FIELD_NAME)) {
             return AccessModels.authorize;
         }
         return AccessModels.createFromString(nodeConfiguration.get(AccessModel.FIELD_NAME));
-    }
-
-    public void setNodeViewAcl(NodeViewAcl acl) {
-        nodeViewAcl = acl;
-    }
-
-    private NodeViewAcl getNodeViewAcl() {
-        if (null == nodeViewAcl) {
-            nodeViewAcl = new NodeViewAcl();
-        }
-        return nodeViewAcl;
     }
 }

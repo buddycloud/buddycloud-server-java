@@ -10,6 +10,7 @@ import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.PubSubEl
 import org.buddycloud.channelserver.pubsub.model.NodeSubscription;
 import org.buddycloud.channelserver.pubsub.model.impl.NodeSubscriptionImpl;
 import org.buddycloud.channelserver.pubsub.subscription.Subscriptions;
+import org.buddycloud.channelserver.utils.XMLConstants;
 import org.dom4j.Element;
 import org.xmpp.packet.IQ;
 import org.xmpp.packet.JID;
@@ -20,10 +21,12 @@ public class SubscriptionsResult extends PubSubElementProcessorAbstract {
     private boolean ownerRequest;
     private String lastNode = "";
 
-    private static final Logger logger = Logger.getLogger(SubscriptionsResult.class);
+    private static final Logger LOGGER = Logger.getLogger(SubscriptionsResult.class);
 
     public SubscriptionsResult(ChannelManager channelManager) {
         this.channelManager = channelManager;
+
+        this.acceptedElementName = XMLConstants.SUBSCRIPTIONS_ELEM;
     }
 
     @Override
@@ -31,14 +34,20 @@ public class SubscriptionsResult extends PubSubElementProcessorAbstract {
         this.request = reqIQ;
 
         if (-1 != request.getFrom().toString().indexOf("@")) {
-            logger.debug("Ignoring result packet, only interested in stanzas " + "from other buddycloud servers");
+            LOGGER.debug("Ignoring result packet, only interested in stanzas " + "from other buddycloud servers");
             return;
         }
 
-        ownerRequest = ((null == node) || (true == node.equals("")));
+        ownerRequest = ((null == node) || "".equals(node));
+
+        addSubscriptions();
+    }
+
+    private void addSubscriptions() throws NodeStoreException {
 
         @SuppressWarnings("unchecked")
-        List<Element> subscriptions = request.getElement().element("pubsub").element("subscriptions").elements("subscription");
+        List<Element> subscriptions =
+                request.getElement().element(XMLConstants.PUBSUB_ELEM).element(XMLConstants.SUBSCRIPTIONS_ELEM).elements(XMLConstants.SUBSCRIPTION_ELEM);
 
         for (Element subscription : subscriptions) {
             addSubscription(subscription);
@@ -47,33 +56,29 @@ public class SubscriptionsResult extends PubSubElementProcessorAbstract {
 
     private void addSubscription(Element subscription) throws NodeStoreException {
 
-        if (true == ownerRequest) {
-            node = subscription.attributeValue("node");
+        if (ownerRequest) {
+            node = subscription.attributeValue(XMLConstants.NODE_ATTR);
         }
 
-        if ((false == lastNode.equals(node)) && (false == channelManager.nodeExists(node))) {
+        if ((!lastNode.equals(node)) && (!channelManager.nodeExists(node))) {
             channelManager.addRemoteNode(node);
         }
 
-        JID jid = new JID(subscription.attributeValue("jid"));
+        JID jid = new JID(subscription.attributeValue(XMLConstants.JID_ATTR));
 
         JID listener = request.getFrom();
         if (Configuration.getInstance().isLocalJID(jid)) {
             listener = jid;
         }
         JID invitedBy = null;
-        if (null != subscription.attributeValue("invited-by")) {
-            invitedBy = new JID(subscription.attributeValue("invited-by"));
+        if (null != subscription.attributeValue(XMLConstants.INVITED_BY_ATTR)) {
+            invitedBy = new JID(subscription.attributeValue(XMLConstants.INVITED_BY_ATTR));
         }
 
         NodeSubscription nodeSubscription =
-                new NodeSubscriptionImpl(node, jid, listener, Subscriptions.createFromString(subscription.attributeValue("subscription")), invitedBy);
+                new NodeSubscriptionImpl(node, jid, listener, Subscriptions.createFromString(subscription.attributeValue(XMLConstants.SUBSCRIPTION_ELEM)),
+                        invitedBy);
         channelManager.addUserSubscription(nodeSubscription);
         lastNode = node;
-    }
-
-    @Override
-    public boolean accept(Element elm) {
-        return elm.getName().equals("subscriptions");
     }
 }

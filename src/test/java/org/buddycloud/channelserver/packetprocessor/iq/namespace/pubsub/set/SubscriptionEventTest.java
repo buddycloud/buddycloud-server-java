@@ -20,6 +20,7 @@ import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.db.exception.NodeStoreException;
 import org.buddycloud.channelserver.packetHandler.iq.IQTestHandler;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.JabberPubsub;
+import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.PubSubElementProcessorAbstract;
 import org.buddycloud.channelserver.pubsub.affiliation.Affiliations;
 import org.buddycloud.channelserver.pubsub.model.NodeMembership;
 import org.buddycloud.channelserver.pubsub.model.NodeSubscription;
@@ -41,7 +42,7 @@ import org.xmpp.resultsetmanagement.ResultSetImpl;
 
 public class SubscriptionEventTest extends IQTestHandler {
     private IQ request;
-    private SubscriptionEvent event;
+    private PubSubElementProcessorAbstract event;
     private Element element;
     private BlockingQueue<Packet> queue = new LinkedBlockingQueue<Packet>();
 

@@ -19,7 +19,6 @@ import org.buddycloud.channelserver.pubsub.model.NodeSubscription;
 import org.buddycloud.channelserver.pubsub.model.impl.NodeItemImpl;
 import org.buddycloud.channelserver.pubsub.subscription.Subscriptions;
 import org.buddycloud.channelserver.utils.XMLConstants;
-import org.buddycloud.channelserver.utils.node.item.payload.Buddycloud;
 import org.dom4j.Element;
 import org.dom4j.dom.DOMElement;
 import org.xmpp.packet.IQ;
@@ -146,7 +145,7 @@ public class Publish extends PubSubElementProcessorAbstract {
     }
 
     private boolean isRequestValid() throws Exception {
-        item = request.getChildElement().element("publish").element("item");
+        item = request.getChildElement().element(acceptedElementName).element(XMLConstants.ITEM_ELEM);
         if (null == item) {
             createExtendedErrorReply(PacketError.Type.modify, PacketError.Condition.bad_request, XMLConstants.ITEM_REQUIRED_ELEM);
             outQueue.put(response);
@@ -277,13 +276,6 @@ public class Publish extends PubSubElementProcessorAbstract {
             msg.setTo(admin);
             outQueue.put(msg.createCopy());
         }
-    }
-
-    private void makeRemoteRequest() throws InterruptedException {
-        request.setTo(new JID(node.split("/")[2]).getDomain());
-        Element actor = request.getElement().element("pubsub").addElement("actor", Buddycloud.NS);
-        actor.addText(request.getFrom().toBareJID());
-        outQueue.put(request);
     }
 
 }

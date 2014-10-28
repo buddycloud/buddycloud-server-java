@@ -8,6 +8,7 @@ import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.db.exception.NodeStoreException;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.PubSubElementProcessorAbstract;
 import org.buddycloud.channelserver.pubsub.affiliation.Affiliations;
+import org.buddycloud.channelserver.utils.XMLConstants;
 import org.dom4j.Element;
 import org.xmpp.packet.IQ;
 import org.xmpp.packet.JID;
@@ -18,10 +19,12 @@ public class AffiliationsResult extends PubSubElementProcessorAbstract {
     private boolean ownerRequest;
     private String lastNode = "";
 
-    private static final Logger logger = Logger.getLogger(AffiliationsResult.class);
+    private static final Logger LOGGER = Logger.getLogger(AffiliationsResult.class);
 
     public AffiliationsResult(ChannelManager channelManager) {
         this.channelManager = channelManager;
+
+        acceptedElementName = XMLConstants.AFFILIATIONS_ELEM;
     }
 
     @Override
@@ -29,14 +32,16 @@ public class AffiliationsResult extends PubSubElementProcessorAbstract {
         this.request = reqIQ;
 
         if (-1 != request.getFrom().toString().indexOf("@")) {
-            logger.debug("Ignoring result packet, only interested in stanzas " + "from other buddycloud servers");
+            LOGGER.debug("Ignoring result packet, only interested in stanzas " + "from other buddycloud servers");
             return;
         }
 
-        ownerRequest = ((null == node) || (true == node.equals("")));
+        ownerRequest = ((null == node) || "".equals(node));
 
         @SuppressWarnings("unchecked")
-        List<Element> affiliations = reverseList(request.getElement().element("pubsub").element("affiliations").elements("affiliation"));
+        List<Element> affiliations =
+                reverseList(request.getElement().element(XMLConstants.PUBSUB_ELEM).element(XMLConstants.AFFILIATIONS_ELEM)
+                        .elements(XMLConstants.AFFILIATION_ELEM));
 
         for (Element affiliation : affiliations) {
             addAffiliation(affiliation);
@@ -53,21 +58,16 @@ public class AffiliationsResult extends PubSubElementProcessorAbstract {
 
     private void addAffiliation(Element affiliation) throws NodeStoreException {
 
-        if (true == ownerRequest) {
-            node = affiliation.attributeValue("node");
+        if (ownerRequest) {
+            node = affiliation.attributeValue(XMLConstants.NODE_ATTR);
         }
 
-        if ((false == lastNode.equals(node)) && (false == channelManager.nodeExists(node))) {
+        if ((!lastNode.equals(node)) && (!channelManager.nodeExists(node))) {
             channelManager.addRemoteNode(node);
         }
 
-        JID jid = new JID(affiliation.attributeValue("jid"));
-        channelManager.setUserAffiliation(node, jid, Affiliations.createFromString(affiliation.attributeValue("affiliation")));
+        JID jid = new JID(affiliation.attributeValue(XMLConstants.JID_ATTR));
+        channelManager.setUserAffiliation(node, jid, Affiliations.createFromString(affiliation.attributeValue(XMLConstants.AFFILIATION_ELEM)));
         lastNode = node;
-    }
-
-    @Override
-    public boolean accept(Element elm) {
-        return elm.getName().equals("affiliations");
     }
 }

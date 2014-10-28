@@ -356,7 +356,7 @@ public class JDBCNodeStore implements NodeStore {
                 t.commit();
             }
         } catch (SQLException e) {
-            LOGGER.debug("Error adding new subscription: " + e.getMessage());
+            LOGGER.debug("Error adding new subscription: " + e.getMessage(), e);
             throw new NodeStoreException(e);
         } finally {
             close(deleteStatement);

@@ -22,8 +22,8 @@ createdb --owner buddycloud_server --encoding UTF8 buddycloud_server
 
 # install the schema file (and all upgrade files)
 psql -h 127.0.0.1 -U buddycloud_server -d buddycloud_server < postgres/install.sql
-psql -h 127.0.0.1 -U buddycloud_server -d buddycloud_server < postgres/upgrade-1.sql
-psql -h 127.0.0.1 -U buddycloud_server -d buddycloud_server < postgres/upgrade-2.sql
+psql -h 127.0.0.1 -U buddycloud_server -d buddycloud_server < postgres/upgrade.1.sql
+psql -h 127.0.0.1 -U buddycloud_server -d buddycloud_server < postgres/upgrade.2.sql
 # repeat for all upgrade files in numerical order
 ```
 
@@ -43,11 +43,11 @@ you'll need to be a little more careful.
 First **back up your DB**. The simplest way to do this is to run `pg_dump -c -U <username> <db> > backup.sql`.
 
 Once done you can apply the files needed for your upgrade: if your DB schema is
-currently version 3 and you need version 5, you will apply `upgrade-4.sql` and
-`upgrade-5.sql` but not `upgrade-3.sql` and below.
+currently version 3 and you need version 5, you will apply `upgrade.4.sql` and
+`upgrade-5.sql` but not `upgrade.3.sql` and below.
 
 ```bash
-psql -h 127.0.0.1 -U buddycloud_server -d buddycloud_server < postgres/upgrade-3.sql
-psql -h 127.0.0.1 -U buddycloud_server -d buddycloud_server < postgres/upgrade-4.sql
+psql -h 127.0.0.1 -U buddycloud_server -d buddycloud_server < postgres/upgrade.3.sql
+psql -h 127.0.0.1 -U buddycloud_server -d buddycloud_server < postgres/upgrade.4.sql
 # repeat for all upgrade files in numerical order
 ```

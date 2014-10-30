@@ -16,8 +16,6 @@ import org.buddycloud.channelserver.utils.XMLConstants;
 import org.buddycloud.channelserver.utils.node.item.payload.Buddycloud;
 import org.dom4j.Document;
 import org.dom4j.Element;
-import org.dom4j.Namespace;
-import org.dom4j.dom.DOMElement;
 import org.xmpp.packet.IQ;
 import org.xmpp.packet.JID;
 import org.xmpp.packet.Message;
@@ -62,7 +60,7 @@ public class AffiliationEvent extends PubSubElementProcessorAbstract {
             actor = request.getFrom();
         }
 
-        if (false == nodeProvided()) {
+        if (!nodePresent()) {
             outQueue.put(response);
             return;
         }
@@ -74,7 +72,7 @@ public class AffiliationEvent extends PubSubElementProcessorAbstract {
 
         try {
 
-            if ((false == validRequestStanza()) || (false == checkNodeExists()) || (false == actorHasPermissionToAuthorize())
+            if ((false == isValidStanza()) || (false == checkNodeExists()) || (false == actorHasPermissionToAuthorize())
                     || (false == subscriberHasCurrentAffiliation()) || (true == userIsModifyingTheirAffiliation())
                     || (false == attemptToChangeAffiliationOfNodeOwner())) {
                 outQueue.put(response);
@@ -91,7 +89,7 @@ public class AffiliationEvent extends PubSubElementProcessorAbstract {
     }
 
     private boolean userIsModifyingTheirAffiliation() {
-        if (actor.toBareJID().equals(requestedAffiliationElement.attributeValue("jid"))) {
+        if (actor.toBareJID().equals(requestedAffiliationElement.attributeValue(XMLConstants.JID_ATTR))) {
             createExtendedErrorReply(PacketError.Type.cancel, PacketError.Condition.not_allowed, CAN_NOT_MODIFY_OWN_AFFILIATION, Buddycloud.NS_ERROR);
             return true;
         }
@@ -150,24 +148,7 @@ public class AffiliationEvent extends PubSubElementProcessorAbstract {
         channelManager.setUserAffiliation(node, jid, affiliation);
     }
 
-    private boolean nodeProvided() {
-        if (null != node) {
-            return true;
-        }
-        response.setType(IQ.Type.error);
-
-        Element nodeIdRequired = new DOMElement(XMLConstants.NODE_ID_REQUIRED, new Namespace("", JabberPubsub.NS_PUBSUB_ERROR));
-        Element badRequest = new DOMElement(PacketError.Condition.bad_request.toString(), new Namespace("", JabberPubsub.NS_XMPP_STANZAS));
-        Element error = new DOMElement(XMLConstants.ERROR_ELEM);
-        error.addAttribute(XMLConstants.TYPE_ATTR, "modify");
-
-        error.add(badRequest);
-        error.add(nodeIdRequired);
-        response.setChildElement(error);
-        return false;
-    }
-
-    private boolean validRequestStanza() {
+    protected boolean isValidStanza() {
         try {
             requestedAffiliationElement =
                     request.getElement().element(XMLConstants.PUBSUB_ELEM).element(XMLConstants.AFFILIATIONS_ELEM).element(XMLConstants.AFFILIATION_ELEM);
@@ -183,7 +164,7 @@ public class AffiliationEvent extends PubSubElementProcessorAbstract {
             setErrorCondition(PacketError.Type.modify, PacketError.Condition.bad_request);
             return false;
         }
-        requestedAffiliationElement.addAttribute("affiliation", requestedAffiliation.toString());
+        requestedAffiliationElement.addAttribute(XMLConstants.AFFILIATION_ELEM, requestedAffiliation.toString());
         return true;
     }
 
@@ -213,22 +194,5 @@ public class AffiliationEvent extends PubSubElementProcessorAbstract {
             return false;
         }
         return true;
-    }
-
-    private boolean checkNodeExists() throws NodeStoreException {
-        if (!channelManager.nodeExists(node)) {
-            setErrorCondition(PacketError.Type.cancel, PacketError.Condition.item_not_found);
-
-            return false;
-        }
-        return true;
-    }
-
-    private void makeRemoteRequest() throws InterruptedException {
-        request.setTo(new JID(node.split("/")[2]).getDomain());
-        Element actor = request.getElement().element(XMLConstants.PUBSUB_ELEM).addElement(XMLConstants.ACTOR_ELEM, Buddycloud.NS);
-
-        actor.addText(request.getFrom().toBareJID());
-        outQueue.put(request);
     }
 }

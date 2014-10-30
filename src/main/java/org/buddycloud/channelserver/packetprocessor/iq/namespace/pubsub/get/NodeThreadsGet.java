@@ -18,7 +18,6 @@ import org.buddycloud.channelserver.pubsub.model.NodeThread;
 import org.buddycloud.channelserver.utils.XMLConstants;
 import org.buddycloud.channelserver.utils.node.NodeAclRefuseReason;
 import org.buddycloud.channelserver.utils.node.NodeViewAcl;
-import org.buddycloud.channelserver.utils.node.item.payload.Buddycloud;
 import org.dom4j.DocumentException;
 import org.dom4j.Element;
 import org.dom4j.io.SAXReader;
@@ -80,17 +79,7 @@ public class NodeThreadsGet extends PubSubElementProcessorAbstract {
         outQueue.put(response);
     }
 
-    private void makeRemoteRequest() throws InterruptedException {
-        String domain = new JID(node.split("/")[2]).getDomain();
-        request.setTo(domain);
-        if (null == request.getElement().element(XMLConstants.PUBSUB_ELEM).element(XMLConstants.ACTOR_ELEM)) {
-            Element actor = request.getElement().element(XMLConstants.PUBSUB_ELEM).addElement(XMLConstants.ACTOR_ELEM, Buddycloud.NS);
-            actor.addText(request.getFrom().toBareJID());
-        }
-        outQueue.put(request);
-    }
-
-    private void addRsmElement() throws NodeStoreException {
+    protected void addRsmElement() throws NodeStoreException {
         if (firstItem == null) {
             return;
         }
@@ -126,9 +115,10 @@ public class NodeThreadsGet extends PubSubElementProcessorAbstract {
         }
     }
 
-    private boolean isValidStanza() throws NodeStoreException {
+    @Override
+    protected boolean isValidStanza() {
         try {
-            this.node = request.getChildElement().element(XMLConstants.THREADS_ELEM).attributeValue(XMLConstants.NODE_ATTR);
+            this.node = request.getChildElement().element(acceptedElementName).attributeValue(XMLConstants.NODE_ATTR);
             if (node != null) {
                 return true;
             }
@@ -139,13 +129,6 @@ public class NodeThreadsGet extends PubSubElementProcessorAbstract {
         return false;
     }
 
-    private boolean checkNodeExists() throws NodeStoreException {
-        if (!channelManager.nodeExists(node)) {
-            setErrorCondition(PacketError.Type.cancel, PacketError.Condition.item_not_found);
-            return false;
-        }
-        return true;
-    }
 
     private AccessModels getNodeAccessModel(Map<String, String> nodeConfiguration) {
         if (!nodeConfiguration.containsKey(AccessModel.FIELD_NAME)) {
@@ -154,7 +137,7 @@ public class NodeThreadsGet extends PubSubElementProcessorAbstract {
         return AccessModels.createFromString(nodeConfiguration.get(AccessModel.FIELD_NAME));
     }
 
-    private boolean userCanViewNode() throws NodeStoreException {
+    protected boolean userCanViewNode() throws NodeStoreException {
         NodeViewAcl nodeViewAcl = new NodeViewAcl();
         Map<String, String> nodeConfiguration = channelManager.getNodeConf(node);
 
@@ -168,7 +151,7 @@ public class NodeThreadsGet extends PubSubElementProcessorAbstract {
         return false;
     }
 
-    private boolean parseRsmElement() throws NodeStoreException {
+    protected boolean parseRsmElement() throws NodeStoreException {
         if (resultSetManagement == null) {
             return true;
         }
@@ -184,6 +167,7 @@ public class NodeThreadsGet extends PubSubElementProcessorAbstract {
                 return false;
             }
         }
+
         return true;
     }
 

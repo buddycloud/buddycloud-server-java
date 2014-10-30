@@ -15,6 +15,7 @@ import org.buddycloud.channelserver.channel.node.configuration.NodeConfiguration
 import org.buddycloud.channelserver.channel.node.configuration.field.NodeTitle;
 import org.buddycloud.channelserver.db.exception.NodeStoreException;
 import org.buddycloud.channelserver.packetHandler.iq.IQTestHandler;
+import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.PubSubElementProcessorAbstract;
 import org.dom4j.Element;
 import org.dom4j.tree.BaseElement;
 import org.junit.Before;
@@ -28,7 +29,7 @@ import org.xmpp.packet.PacketError;
 public class NodeCreateTest extends IQTestHandler {
     private IQ request;
     private ChannelManager channelManager;
-    private NodeCreate nodeCreate;
+    private PubSubElementProcessorAbstract nodeCreate;
     private JID jid;
     private Element element;
     private BlockingQueue<Packet> queue = new LinkedBlockingQueue<Packet>();

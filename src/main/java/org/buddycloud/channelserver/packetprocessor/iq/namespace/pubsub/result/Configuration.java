@@ -7,6 +7,7 @@ import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.channel.node.configuration.NodeConfigurationException;
 import org.buddycloud.channelserver.db.exception.NodeStoreException;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.PubSubElementProcessorAbstract;
+import org.buddycloud.channelserver.utils.XMLConstants;
 import org.dom4j.Element;
 import org.xmpp.packet.IQ;
 import org.xmpp.packet.JID;
@@ -16,10 +17,12 @@ public class Configuration extends PubSubElementProcessorAbstract {
     private IQ request;
     Element configure;
 
-    private static final Logger logger = Logger.getLogger(Configuration.class);
+    private static final Logger LOGGER = Logger.getLogger(Configuration.class);
 
     public Configuration(ChannelManager channelManager) {
         this.channelManager = channelManager;
+
+        acceptedElementName = XMLConstants.CONFIGURE_ELEM;
     }
 
     @Override
@@ -27,12 +30,12 @@ public class Configuration extends PubSubElementProcessorAbstract {
         this.request = reqIQ;
 
         if (-1 != request.getFrom().toString().indexOf("@")) {
-            logger.debug("Ignoring result packet, only interested in stanzas " + "from other buddycloud servers");
+            LOGGER.debug("Ignoring result packet, only interested in stanzas " + "from other buddycloud servers");
             return;
         }
 
-        configure = request.getChildElement().element("configure");
-        node = configure.attributeValue("node");
+        configure = request.getChildElement().element(XMLConstants.CONFIGURE_ELEM);
+        node = configure.attributeValue(XMLConstants.NODE_ATTR);
         if (0 == node.length()) {
             return;
         }
@@ -49,9 +52,9 @@ public class Configuration extends PubSubElementProcessorAbstract {
             getNodeConfigurationHelper().setNode(node);
             updateNodeConfiguration(getNodeConfigurationHelper().getValues());
         } catch (NodeConfigurationException e) {
-            logger.error("Node configuration exception", e);
+            LOGGER.error("Node configuration exception", e);
         } catch (NodeStoreException e) {
-            logger.error("Data Store Exception", e);
+            LOGGER.error("Data Store Exception", e);
         }
     }
 
@@ -59,8 +62,4 @@ public class Configuration extends PubSubElementProcessorAbstract {
         channelManager.setNodeConf(node, configuration);
     }
 
-    @Override
-    public boolean accept(Element elm) {
-        return elm.getName().equals("configure");
-    }
 }

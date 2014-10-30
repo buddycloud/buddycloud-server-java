@@ -10,16 +10,13 @@ import org.buddycloud.channelserver.Configuration;
 import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.channel.node.configuration.NodeConfigurationException;
 import org.buddycloud.channelserver.db.exception.NodeStoreException;
-import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.JabberPubsub;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.PubSubElementProcessorAbstract;
 import org.buddycloud.channelserver.pubsub.affiliation.Affiliations;
 import org.buddycloud.channelserver.pubsub.event.Event;
 import org.buddycloud.channelserver.pubsub.model.NodeSubscription;
-import org.buddycloud.channelserver.utils.node.item.payload.Buddycloud;
+import org.buddycloud.channelserver.utils.XMLConstants;
 import org.dom4j.Document;
 import org.dom4j.Element;
-import org.dom4j.Namespace;
-import org.dom4j.dom.DOMElement;
 import org.xmpp.forms.DataForm;
 import org.xmpp.forms.FormField;
 import org.xmpp.packet.IQ;
@@ -36,6 +33,8 @@ public class NodeConfigure extends PubSubElementProcessorAbstract {
     public NodeConfigure(BlockingQueue<Packet> outQueue, ChannelManager channelManager) {
         setChannelManager(channelManager);
         setOutQueue(outQueue);
+
+        acceptedElementName = "configure";
     }
 
     public void process(Element elm, JID actorJID, IQ reqIQ, Element rsm) throws Exception {
@@ -43,12 +42,12 @@ public class NodeConfigure extends PubSubElementProcessorAbstract {
         response = IQ.createResultIQ(reqIQ);
         request = reqIQ;
         actor = actorJID;
-        node = element.attributeValue("node");
+        node = element.attributeValue(XMLConstants.NODE_ATTR);
 
         if (null == actor) {
             actor = request.getFrom();
         }
-        if (!nodeProvided()) {
+        if (!nodePresent()) {
             outQueue.put(response);
             return;
         }
@@ -57,14 +56,13 @@ public class NodeConfigure extends PubSubElementProcessorAbstract {
             return;
         }
         try {
-            if (!nodeExists() || !actorCanModify()) {
+            if (!checkNodeExists() || !actorCanModify()) {
                 outQueue.put(response);
                 return;
             }
         } catch (NodeStoreException e) {
             LOGGER.error(e);
-            setErrorCondition(PacketError.Type.cancel,
-                    PacketError.Condition.internal_server_error);
+            setErrorCondition(PacketError.Type.cancel, PacketError.Condition.internal_server_error);
             outQueue.put(response);
             return;
         }
@@ -152,39 +150,5 @@ public class NodeConfigure extends PubSubElementProcessorAbstract {
         }
         setErrorCondition(PacketError.Type.auth, PacketError.Condition.forbidden);
         return false;
-    }
-
-    private boolean nodeExists() throws NodeStoreException {
-        if (channelManager.nodeExists(node)) {
-            return true;
-        }
-        setErrorCondition(PacketError.Type.cancel, PacketError.Condition.item_not_found);
-        return false;
-    }
-
-    private boolean nodeProvided() {
-        if ((null != node) && !node.equals("")) {
-            return true;
-        }
-        response.setType(IQ.Type.error);
-        Element nodeIdRequired = new DOMElement("nodeid-required", new Namespace("", JabberPubsub.NS_PUBSUB_ERROR));
-        Element badRequest = new DOMElement(PacketError.Condition.bad_request.toXMPP(), new Namespace("", JabberPubsub.NS_XMPP_STANZAS));
-        Element error = new DOMElement("error");
-        error.addAttribute("type", "modify");
-        error.add(badRequest);
-        error.add(nodeIdRequired);
-        response.setChildElement(error);
-        return false;
-    }
-
-    private void makeRemoteRequest() throws InterruptedException {
-        request.setTo(new JID(node.split("/")[2]).getDomain());
-        Element actor = request.getElement().element("pubsub").addElement("actor", Buddycloud.NS);
-        actor.addText(request.getFrom().toBareJID());
-        outQueue.put(request);
-    }
-
-    public boolean accept(Element elm) {
-        return elm.getName().equals("configure");
     }
 }

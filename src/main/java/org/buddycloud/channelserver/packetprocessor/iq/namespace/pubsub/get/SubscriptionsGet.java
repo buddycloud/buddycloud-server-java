@@ -46,7 +46,6 @@ public class SubscriptionsGet extends PubSubElementProcessorAbstract {
         Element pubsub = result.setChildElement(XMLConstants.PUBSUB_ELEM, JabberPubsub.NAMESPACE_URI);
         Element subscriptions = pubsub.addElement(XMLConstants.SUBSCRIPTIONS_ELEM);
 
-
         node = reqIQ.getChildElement().element(XMLConstants.SUBSCRIPTIONS_ELEM).attributeValue(XMLConstants.NODE_ATTR);
 
         if (null == actorJid) {

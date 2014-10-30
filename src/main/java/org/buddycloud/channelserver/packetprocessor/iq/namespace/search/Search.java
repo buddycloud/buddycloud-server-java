@@ -13,7 +13,7 @@ import org.xmpp.packet.PacketError;
 public class Search implements PacketProcessor<IQ> {
     
     public static final String ELEMENT_NAME = "query";
-    private static final Logger logger = Logger.getLogger(Search.class);
+    private static final Logger LOGGER = Logger.getLogger(Search.class);
     
     public static final String NAMESPACE_URI = "jabber:iq:search";
 
@@ -34,11 +34,11 @@ public class Search implements PacketProcessor<IQ> {
     public void process(IQ reqIQ) throws Exception {
         request = reqIQ;
         if (request.getType().equals(Type.get)) {
-            logger.trace("Using search processor: SearchGet");
+            LOGGER.trace("Using search processor: SearchGet");
             this.searchGet.process(request);
             return;
         } else if (request.getType().equals(Type.set)) {
-            logger.trace("Using search processor: SearchSet");
+            LOGGER.trace("Using search processor: SearchSet");
             this.searchSet.process(request);
             return;
         }

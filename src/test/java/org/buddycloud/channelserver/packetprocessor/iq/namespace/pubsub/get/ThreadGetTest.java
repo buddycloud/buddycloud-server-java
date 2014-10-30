@@ -12,6 +12,7 @@ import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.db.ClosableIteratorImpl;
 import org.buddycloud.channelserver.db.exception.NodeStoreException;
 import org.buddycloud.channelserver.packetHandler.iq.IQTestHandler;
+import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.PubSubElementProcessorAbstract;
 import org.buddycloud.channelserver.pubsub.accessmodel.AccessModels;
 import org.buddycloud.channelserver.pubsub.model.NodeItem;
 import org.buddycloud.channelserver.pubsub.model.impl.NodeItemImpl;
@@ -33,7 +34,7 @@ public class ThreadGetTest extends IQTestHandler {
 
     private static final Integer TOTAL_RESULTS = 4;
     private IQ request;
-    private ThreadGet threadGet;
+    private PubSubElementProcessorAbstract threadGet;
     private Element element;
     private BlockingQueue<Packet> queue = new LinkedBlockingQueue<Packet>();
 
@@ -198,7 +199,7 @@ public class ThreadGetTest extends IQTestHandler {
     public void testRsmElementIsAddedCorrectly() throws Exception {
 
         Element rsm = request.getChildElement().addElement("set");
-        rsm.addNamespace("", ThreadGet.NS_RSM);
+        rsm.addNamespace("", PubSubElementProcessorAbstract.NS_RSM);
         rsm.addElement("max").setText("4");
         rsm.addElement("after").setText("1");
 

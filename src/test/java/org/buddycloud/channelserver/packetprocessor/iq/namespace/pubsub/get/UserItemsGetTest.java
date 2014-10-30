@@ -20,6 +20,7 @@ import org.buddycloud.channelserver.db.ClosableIteratorImpl;
 import org.buddycloud.channelserver.db.exception.NodeStoreException;
 import org.buddycloud.channelserver.packetHandler.iq.IQTestHandler;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.JabberPubsub;
+import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.PubSubElementProcessorAbstract;
 import org.buddycloud.channelserver.pubsub.affiliation.Affiliations;
 import org.buddycloud.channelserver.pubsub.model.GlobalItemID;
 import org.buddycloud.channelserver.pubsub.model.NodeItem;
@@ -43,7 +44,7 @@ import org.xmpp.packet.PacketError;
 public class UserItemsGetTest extends IQTestHandler {
 
     private IQ request;
-    private UserItemsGet userItemsGet;
+    private PubSubElementProcessorAbstract userItemsGet;
     private Element element;
     private BlockingQueue<Packet> queue = new LinkedBlockingQueue<Packet>();
 
@@ -217,7 +218,7 @@ public class UserItemsGetTest extends IQTestHandler {
                 results.size());
 
         Element rsm = request.getElement().addElement("rsm");
-        rsm.addNamespace("", UserItemsGet.NS_RSM);
+        rsm.addNamespace("", PubSubElementProcessorAbstract.NS_RSM);
         rsm.addElement("max").addText("2");
         rsm.addElement("after").addText("node1:1");
 

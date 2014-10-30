@@ -42,7 +42,7 @@ public class XMLConstants {
 
     public static final String TEXT_ELEM = "text";
 
-    public static final Object CREATE_ELEM = "create";
+    public static final String CREATE_ELEM = "create";
 
     public static final String NODE_ID_REQUIRED = "nodeid-required";
 
@@ -125,6 +125,16 @@ public class XMLConstants {
     public static final String ACTIVITY_OBJECT_TYPE_ELEM = "activity:object-type";
 
     public static final String AUTHOR_ELEM = "author";
+
+    public static final String RETRACT_ELEM = "retract";
+
+    public static final String NOTIFY_ATTR = "notify";
+
+    public static final String SUBSCRIBE_ELEM = "subscribe";
+
+    public static final String BAD_REQUEST_ELEM = "bad-request";
+
+    public static final String SUBSCRIPTION_ATTR = "subscription";
 
     // Private (hidden) constructor
     private XMLConstants() {

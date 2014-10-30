@@ -14,6 +14,7 @@ import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.get.Repl
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.get.SubscriptionsGet;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.get.ThreadGet;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.get.UserItemsGet;
+import org.buddycloud.channelserver.utils.XMLConstants;
 import org.dom4j.Element;
 import org.dom4j.Namespace;
 import org.dom4j.QName;
@@ -53,8 +54,8 @@ public class PubSubGet implements PacketProcessor<IQ> {
         Element pubsub = reqIQ.getChildElement();
 
         JID actorJID = null;
-        if (pubsub.element("actor") != null) {
-            actorJID = new JID(pubsub.element("actor").getTextTrim());
+        if (pubsub.element(XMLConstants.ACTOR_ELEM) != null) {
+            actorJID = new JID(pubsub.element(XMLConstants.ACTOR_ELEM).getTextTrim());
             /**
              * TODO(lloydwatkin) validate here that the JID is somehow sane. We could check that the
              * domains are the same etc.

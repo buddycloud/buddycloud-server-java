@@ -16,7 +16,7 @@ import org.buddycloud.channelserver.pubsub.model.NodeItem;
 import org.buddycloud.channelserver.pubsub.model.NodeSubscription;
 import org.buddycloud.channelserver.pubsub.model.impl.GlobalItemIDImpl;
 import org.buddycloud.channelserver.pubsub.subscription.Subscriptions;
-import org.buddycloud.channelserver.utils.node.item.payload.Buddycloud;
+import org.buddycloud.channelserver.utils.XMLConstants;
 import org.dom4j.Element;
 import org.dom4j.Namespace;
 import org.dom4j.dom.DOMElement;
@@ -39,6 +39,8 @@ public class ItemDelete extends PubSubElementProcessorAbstract {
     public ItemDelete(BlockingQueue<Packet> outQueue, ChannelManager channelManager) {
         this.setOutQueue(outQueue);
         this.setChannelManager(channelManager);
+
+        acceptedElementName = "retract";
     }
 
     @Override
@@ -47,12 +49,12 @@ public class ItemDelete extends PubSubElementProcessorAbstract {
         element = elm;
         request = reqIQ;
         response = IQ.createResultIQ(request);
-        node = element.attributeValue("node");
+        node = element.attributeValue(XMLConstants.NODE_ATTR);
         this.actor = actor;
         if (null == this.actor) {
             this.actor = request.getFrom();
         }
-        if (!validNodeProvided()) {
+        if (!nodePresent()) {
             outQueue.put(response);
             return;
         }
@@ -63,7 +65,7 @@ public class ItemDelete extends PubSubElementProcessorAbstract {
         }
 
         try {
-            if (!nodeExists() || !itemIdProvided() || !itemExists() || !validPayload() || !canDelete()) {
+            if (!checkNodeExists() || !itemIdProvided() || !itemExists() || !validPayload() || !canDelete()) {
                 outQueue.put(response);
                 return;
             }
@@ -101,9 +103,10 @@ public class ItemDelete extends PubSubElementProcessorAbstract {
 
     private void sendNotifications(String node, GlobalItemID itemId) throws NodeStoreException {
         try {
-            String notify = request.getElement().element("pubsub").element("retract").attributeValue("notify");
+            String notify =
+                    request.getElement().element(XMLConstants.PUBSUB_ELEM).element(XMLConstants.RETRACT_ELEM).attributeValue(XMLConstants.NOTIFY_ATTR);
 
-            if ((notify != null) && (notify.equals("false") || notify.equals("0"))) {
+            if ((notify != null) && (Boolean.FALSE.toString().equals(notify) || notify.equals("0"))) {
                 return;
             }
             ResultSet<NodeSubscription> subscriptions = channelManager.getNodeSubscriptionListeners(node);
@@ -195,10 +198,12 @@ public class ItemDelete extends PubSubElementProcessorAbstract {
     }
 
     private boolean itemIdProvided() {
-        String id = request.getElement().element("pubsub").element("retract").element("item").attributeValue("id");
+        String id =
+                request.getElement().element(XMLConstants.PUBSUB_ELEM).element(XMLConstants.RETRACT_ELEM).element(XMLConstants.ITEM_ELEM)
+                        .attributeValue(XMLConstants.ID_ATTR);
 
         if ((id != null) && !id.isEmpty()) {
-            if (true == GlobalItemIDImpl.isGlobalId(id)) {
+            if (GlobalItemIDImpl.isGlobalId(id)) {
                 itemId = GlobalItemIDImpl.fromBuddycloudString(id);
             } else {
                 itemId = new GlobalItemIDImpl(new JID(this.getServerDomain()), node, id);
@@ -214,38 +219,5 @@ public class ItemDelete extends PubSubElementProcessorAbstract {
         error.add(nodeIdRequired);
         response.setChildElement(error);
         return false;
-    }
-
-    private boolean nodeExists() throws NodeStoreException {
-        if ((false == Configuration.getInstance().isLocalNode(node)) || (false == channelManager.nodeExists(node))) {
-            setErrorCondition(PacketError.Type.cancel, PacketError.Condition.item_not_found);
-            return false;
-        }
-        return true;
-    }
-
-    private boolean validNodeProvided() {
-        if (node != null && !node.equals("")) {
-            return true;
-        }
-        response.setType(IQ.Type.error);
-        Element nodeIdRequired = new DOMElement("nodeid-required", new Namespace("", JabberPubsub.NS_PUBSUB_ERROR));
-        Element badRequest = new DOMElement(PacketError.Condition.bad_request.toXMPP(), new Namespace("", JabberPubsub.NS_XMPP_STANZAS));
-        Element error = new DOMElement("error");
-        error.addAttribute("type", "modify");
-        error.add(badRequest);
-        error.add(nodeIdRequired);
-        response.setChildElement(error);
-        return false;
-    }
-
-    private void makeRemoteRequest() throws InterruptedException {
-        request.setTo(new JID(node.split("/")[2]).getDomain());
-        request.getElement().element("pubsub").addElement("actor", Buddycloud.NS).addText(actor.toBareJID());
-        outQueue.put(request);
-    }
-
-    public boolean accept(Element elm) {
-        return elm.getName().equals("retract");
     }
 }

@@ -34,7 +34,7 @@ public class Main {
     int channelCounter = 0;
     while (false == startChannelComponent()) {
       Thread.sleep(componentConnectionDelay);
-      LOGGER.info("Waiting for component connection");
+      LOGGER.info("Waiting for component connection (attempt " + channelCounter + ")");
       ++channelCounter;
       if (channelCounter > 5) {
         throw new Exception("Unable to connect channel component");
@@ -43,7 +43,7 @@ public class Main {
     int topicCounter = 0;
     while (false == startTopicComponent()) {
       Thread.sleep(componentConnectionDelay);
-      LOGGER.info("Waiting for topic component connection");
+      LOGGER.info("Waiting for topic component connection (attempt " + topicCounter + ")");
       ++topicCounter;
       if (topicCounter > 5) {
         throw new Exception("Unable to connect topic component");

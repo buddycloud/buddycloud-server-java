@@ -8,10 +8,14 @@ import org.xmpp.component.ComponentException;
 
 public class Main {
 
+  public static final String UNABLE_TO_CONNECT_CHANNEL_COMPONENT = "Unable to connect channel component";
+  public static final String UNABLE_TO_CONNECT_TOPIC_COMPONENT = "Unable to connect topic component";
   private static final Logger LOGGER = Logger.getLogger(Main.class);
   public static final String MISSING_CHANNEL_COMPONENT_CONFIGURATION = "Property server.domain.channels is mandatory";
   private static Configuration configuration;
   private static long componentConnectionDelay;
+  private static TopicsComponent topicComponent;
+  private static XmppComponent channelComponent;
 
   public static void main(String[] args) throws Exception {
     startComponents();
@@ -37,7 +41,7 @@ public class Main {
       LOGGER.info("Waiting for component connection (attempt " + channelCounter + ")");
       ++channelCounter;
       if (channelCounter > 5) {
-        throw new Exception("Unable to connect channel component");
+        throw new Exception(UNABLE_TO_CONNECT_CHANNEL_COMPONENT);
       }
     }
     int topicCounter = 0;
@@ -46,7 +50,7 @@ public class Main {
       LOGGER.info("Waiting for topic component connection (attempt " + topicCounter + ")");
       ++topicCounter;
       if (topicCounter > 5) {
-        throw new Exception("Unable to connect topic component");
+        throw new Exception(UNABLE_TO_CONNECT_TOPIC_COMPONENT);
       }
     }
     hang();
@@ -57,8 +61,15 @@ public class Main {
     if (topicDomain == null) {
       return true;
     }
-    TopicsComponent component = new TopicsComponent(configuration, topicDomain);
-    return component.run();
+    getTopicComponent(topicDomain);
+    return topicComponent.run();
+  }
+
+  private static TopicsComponent getTopicComponent(String topicDomain) {
+    if (null == topicComponent) {
+        topicComponent = new TopicsComponent(configuration, topicDomain);
+    }
+    return topicComponent;
   }
 
   private static boolean startChannelComponent() throws Exception {
@@ -67,10 +78,25 @@ public class Main {
     if (channelDomain == null) {
       throw new IllegalArgumentException(MISSING_CHANNEL_COMPONENT_CONFIGURATION);
     }
-    XmppComponent component = new XmppComponent(configuration, channelDomain);
+    XmppComponent component = getChannelComponent(channelDomain);
     return component.run();
   }
 
+  private static XmppComponent getChannelComponent(String channelDomain) throws ProxoolException {
+    if (null == channelComponent) {
+        channelComponent = new XmppComponent(configuration, channelDomain);
+    }
+    return channelComponent;
+  }
+  
+  public static void setChannelComponent(XmppComponent component) {
+    channelComponent = component;
+  }
+  
+  public static void setTopicComponent(TopicsComponent component) {
+    topicComponent = component;
+  }
+  
   private static void hang() {
     while (true) {
       try {

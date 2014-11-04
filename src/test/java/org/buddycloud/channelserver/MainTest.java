@@ -37,21 +37,34 @@ public class MainTest {
       }
     }
     
-    @Test(expected=Exception.class)
+    @Test
     public void attemptsToReconnectIfInitialConnectionFails() throws Exception {
       configuration.setProperty(Configuration.COMPONENT_STARTUP_DELAY, "1");
       XmppComponent xmpp = Mockito.mock(XmppComponent.class);
       Mockito.when(xmpp.run()).thenReturn(false);
-      Main.main(null);
+      try {
+        Main.setChannelComponent(xmpp);
+          Main.main(null);
+          fail();
+      } catch (Exception e) {
+          Assert.assertEquals(Main.UNABLE_TO_CONNECT_CHANNEL_COMPONENT, e.getMessage());
+      }
     }
     
-    @Test(expected=Exception.class)
+    @Test
     public void attemptsToReconnectIfTopicComponentInitialConnectionFails() throws Exception {
       configuration.setProperty(Configuration.COMPONENT_STARTUP_DELAY, "1");
       XmppComponent channelsComponent = Mockito.mock(XmppComponent.class);
       Mockito.when(channelsComponent.run()).thenReturn(true);
       TopicsComponent topicsComponent = Mockito.mock(TopicsComponent.class);
       Mockito.when(topicsComponent.run()).thenReturn(false);
-      Main.main(null);
+      try {
+        Main.setTopicComponent(topicsComponent);
+        Main.setChannelComponent(channelsComponent);
+        Main.main(null);
+        fail();
+    } catch (Exception e) {
+        Assert.assertEquals(Main.UNABLE_TO_CONNECT_TOPIC_COMPONENT, e.getMessage());
+    }
     }
 }

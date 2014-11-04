@@ -8,34 +8,34 @@ import org.xmpp.component.ComponentException;
 
 public class Main {
 
-  private static final Logger LOG = Logger.getLogger(Main.class);
+  private static final Logger LOGGER = Logger.getLogger(Main.class);
   private static Configuration configuration;
 
   public static void main(String[] args) {
     try {
       startComponents();
     } catch (Exception e) {
-      LOG.error("Failed during initialization.", e);
+      LOGGER.error("Failed during initialization.", e);
     }
   }
 
   private static void startComponents() throws Exception {
     PropertyConfigurator.configure("log4j.properties");
-    LOG.info("Starting Buddycloud channel mockup version...");
+    LOGGER.info("Starting Buddycloud channel mockup version...");
 
     configuration = Configuration.getInstance();
 
-    LOG.info("Connecting to '" + configuration.getXmppHost() + ":"
+    LOGGER.info("Connecting to '" + configuration.getXmppHost() + ":"
         + configuration.getComponentPort() + "' and trying to claim address '"
         + configuration.getProperty("server.domain") + "'.");
 
     while (false == startChannelComponent()) {
       Thread.sleep(5000);
-      LOG.info("Waiting for component connection");
+      LOGGER.info("Waiting for component connection");
     }
     while (false == startTopicComponent()) {
       Thread.sleep(5000);
-      LOG.info("Waiting for topic component connection");
+      LOGGER.info("Waiting for topic component connection");
     }
     hang();
   }
@@ -74,7 +74,7 @@ public class Main {
       try {
         Thread.sleep(5000);
       } catch (InterruptedException e) {
-        LOG.error(e);
+        LOGGER.error(e);
       }
     }
   }

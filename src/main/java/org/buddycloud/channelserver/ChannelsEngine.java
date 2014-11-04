@@ -65,7 +65,7 @@ public class ChannelsEngine implements Component {
         startQueueConsumers();
 
         serverSync();
-        LOGGER.info("XMPP Component started. We are '" + jid.toString()
+        LOGGER.info("XMPP ComponentBase started. We are '" + jid.toString()
                 + "' and ready to accept packages.");
         sendConnectionNotification(jid);
     }

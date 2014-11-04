@@ -28,6 +28,7 @@ Please see [the example configuration file](https://github.com/buddycloud/buddyc
 | discovery.dns.enabled                     | true           |            | Allow DNS discovery of other channel servers  |
 | sync.purge-on-start                       | false          |            | Purge remote data on server start             |
 | users.presence.persist | false | | If **true** then user presence status is stored in the database rather than in memory |
+| component.startup.delay | 5000 | | If component can't connect wait this amount of milliseconds until trying again (maximum of 5 times before fail |
 
 ## Database based configuration
 

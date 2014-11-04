@@ -73,6 +73,8 @@ public class Configuration extends Properties {
   public static final String JDBC_PASSWORD = "jdbc.password";
   public static final String JDBC_USER = "jdbc.user";
 
+  public static final String COMPONENT_STARTUP_DELAY = "component.startup.delay";
+
   private static Configuration instance = null;
 
   private Collection<JID> adminUsers = new ArrayList<JID>();

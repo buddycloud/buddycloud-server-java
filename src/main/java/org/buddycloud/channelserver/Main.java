@@ -9,14 +9,12 @@ import org.xmpp.component.ComponentException;
 public class Main {
 
   private static final Logger LOGGER = Logger.getLogger(Main.class);
+  public static final String MISSING_CHANNEL_COMPONENT_CONFIGURATION = "Property server.domain.channels is mandatory";
   private static Configuration configuration;
+  private static long componentConnectionDelay;
 
-  public static void main(String[] args) {
-    try {
-      startComponents();
-    } catch (Exception e) {
-      LOGGER.error("Failed during initialization.", e);
-    }
+  public static void main(String[] args) throws Exception {
+    startComponents();
   }
 
   private static void startComponents() throws Exception {
@@ -25,48 +23,52 @@ public class Main {
 
     configuration = Configuration.getInstance();
 
+    componentConnectionDelay = Long.parseLong(
+        configuration.getProperty(Configuration.COMPONENT_STARTUP_DELAY, "5000")
+    );
+        
     LOGGER.info("Connecting to '" + configuration.getXmppHost() + ":"
         + configuration.getComponentPort() + "' and trying to claim address '"
         + configuration.getProperty("server.domain") + "'.");
 
+    int channelCounter = 0;
     while (false == startChannelComponent()) {
-      Thread.sleep(5000);
+      Thread.sleep(componentConnectionDelay);
       LOGGER.info("Waiting for component connection");
+      ++channelCounter;
+      if (channelCounter > 5) {
+        throw new Exception("Unable to connect channel component");
+      }
     }
+    int topicCounter = 0;
     while (false == startTopicComponent()) {
-      Thread.sleep(5000);
+      Thread.sleep(componentConnectionDelay);
       LOGGER.info("Waiting for topic component connection");
+      ++topicCounter;
+      if (topicCounter > 5) {
+        throw new Exception("Unable to connect topic component");
+      }
     }
     hang();
   }
 
-  private static boolean startTopicComponent() {
+  private static boolean startTopicComponent() throws Exception {
     String topicDomain = configuration.getProperty(Configuration.CONFIGURATION_SERVER_TOPICS_DOMAIN);
     if (topicDomain == null) {
       return true;
     }
-    try {
-      new TopicsComponent(configuration, topicDomain).run();
-    } catch (ComponentException e) {
-      return false;
-    }
-    return true;
+    TopicsComponent component = new TopicsComponent(configuration, topicDomain);
+    return component.run();
   }
 
   private static boolean startChannelComponent() throws Exception {
     String channelDomain =
         configuration.getProperty(Configuration.CONFIGURATION_SERVER_CHANNELS_DOMAIN);
     if (channelDomain == null) {
-      throw new IllegalArgumentException("Property server.domain.channels is mandatory.");
+      throw new IllegalArgumentException(MISSING_CHANNEL_COMPONENT_CONFIGURATION);
     }
-    try {
-      new XmppComponent(configuration, channelDomain).run();
-    } catch (ComponentException e) {
-      return false;
-    } catch (ProxoolException e) {
-      throw new NodeStoreException(e);
-    }
-    return true;
+    XmppComponent component = new XmppComponent(configuration, channelDomain);
+    return component.run();
   }
 
   private static void hang() {

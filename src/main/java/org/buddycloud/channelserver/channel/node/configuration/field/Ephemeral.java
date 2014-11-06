@@ -1,10 +1,10 @@
 package org.buddycloud.channelserver.channel.node.configuration.field;
 
-public class Advertise extends Field {
-  public static final String FIELD_NAME = "buddycloud#advertise_node";
-  public static final String DEFAULT_VALUE = Advertise.models.TRUE.toString();
+public class Ephemeral extends Field {
+  public static final String FIELD_NAME = "buddycloud#ephemeral";
+  public static final String DEFAULT_VALUE = Ephemeral.models.TRUE.toString();
 
-  public Advertise() {
+  public Ephemeral() {
     name = FIELD_NAME;
   }
 
@@ -22,7 +22,7 @@ public class Advertise extends Field {
   }
 
   public boolean isValid() {
-    return (getValue().equals(Advertise.models.TRUE.toString()) || getValue().equals(
-        Advertise.models.FALSE.toString()));
+    return (getValue().equals(Ephemeral.models.TRUE.toString()) || getValue().equals(
+        Ephemeral.models.FALSE.toString()));
   }
 }

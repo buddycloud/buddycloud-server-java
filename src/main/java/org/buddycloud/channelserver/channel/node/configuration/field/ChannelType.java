@@ -9,7 +9,7 @@ public class ChannelType extends Field {
     }
 
     public enum models {
-        PERSONAL("personal"), TOPIC("topic");
+        PERSONAL("personal"), TOPIC("topic"), EPHEMERAL("ephemeral");
         String model = null;
 
         private models(String model) {

@@ -2,7 +2,7 @@ package org.buddycloud.channelserver.channel.node.configuration.field;
 
 public class Ephemeral extends Field {
   public static final String FIELD_NAME = "buddycloud#ephemeral";
-  public static final String DEFAULT_VALUE = Ephemeral.models.TRUE.toString();
+  public static final String DEFAULT_VALUE = Ephemeral.models.FALSE.toString();
 
   public Ephemeral() {
     name = FIELD_NAME;

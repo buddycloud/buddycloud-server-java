@@ -9,7 +9,7 @@ public class ChannelType extends Field {
   }
 
   public enum models {
-    PERSONAL("personal"), TOPIC("topic"), EPHEMERAL("ephemeral");
+    PERSONAL("personal"), TOPIC("topic");
     String model = null;
 
     private models(String model) {
@@ -23,7 +23,6 @@ public class ChannelType extends Field {
 
   public boolean isValid() {
     return (getValue().equals(ChannelType.models.PERSONAL.toString())
-        || getValue().equals(ChannelType.models.TOPIC.toString()) || getValue().equals(
-        ChannelType.models.EPHEMERAL.toString()));
+        || getValue().equals(ChannelType.models.TOPIC.toString()));
   }
 }

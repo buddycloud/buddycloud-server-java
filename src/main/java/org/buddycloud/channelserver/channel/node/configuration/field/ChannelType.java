@@ -22,6 +22,8 @@ public class ChannelType extends Field {
     }
 
     public boolean isValid() {
-        return (getValue().equals(ChannelType.models.PERSONAL.toString()) || getValue().equals(ChannelType.models.TOPIC.toString()));
+        return (getValue().equals(ChannelType.models.PERSONAL.toString()) ||
+            getValue().equals(ChannelType.models.TOPIC.toString()) ||
+            getValue().equals(ChannelType.models.EPHEMERAL.toString()));
     }
 }

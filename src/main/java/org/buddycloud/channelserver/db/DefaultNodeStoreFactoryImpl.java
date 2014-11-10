@@ -33,7 +33,7 @@ public class DefaultNodeStoreFactoryImpl implements NodeStoreFactory {
         Connection connection = null;
         try {
             connection = new JDBCConnectionFactory(configuration).getConnection();
-            return new JDBCNodeStore(connection, new Sql92NodeStoreDialect());
+            return new JDBCNodeStore(connection, new Sql92NodeStoreDialect(), configuration);
         } catch (Exception e) {
             LOGGER.error("JDBCNodeStore failed to initialize.", e);
         }

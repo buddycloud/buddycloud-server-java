@@ -17,9 +17,11 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Properties;
 
 import junit.framework.Assert;
 
+import org.buddycloud.channelserver.Configuration;
 import org.buddycloud.channelserver.channel.node.configuration.field.AccessModel;
 import org.buddycloud.channelserver.db.ClosableIteratorImpl;
 import org.buddycloud.channelserver.db.CloseableIterator;
@@ -911,7 +913,7 @@ public class JDBCNodeStoreTest extends JDBCNodeStoreAbstract {
     public void testBeginTransaction() throws Exception {
         Connection conn = Mockito.mock(Connection.class);
         JDBCNodeStore store = new JDBCNodeStore(conn,
-                mock(NodeStoreSQLDialect.class));
+                mock(NodeStoreSQLDialect.class), configuration);
 
         NodeStore.Transaction t = store.beginTransaction();
 
@@ -924,7 +926,7 @@ public class JDBCNodeStoreTest extends JDBCNodeStoreAbstract {
     public void testCommitTransaction() throws Exception {
         Connection conn = Mockito.mock(Connection.class);
         JDBCNodeStore store = new JDBCNodeStore(conn,
-                mock(NodeStoreSQLDialect.class));
+                mock(NodeStoreSQLDialect.class), configuration);
 
         NodeStore.Transaction t = store.beginTransaction();
         t.commit();
@@ -937,7 +939,7 @@ public class JDBCNodeStoreTest extends JDBCNodeStoreAbstract {
     public void testCloseTransaction() throws Exception {
         Connection conn = Mockito.mock(Connection.class);
         JDBCNodeStore store = new JDBCNodeStore(conn,
-                mock(NodeStoreSQLDialect.class));
+                mock(NodeStoreSQLDialect.class), configuration);
 
         NodeStore.Transaction t = store.beginTransaction();
         t.close();
@@ -952,7 +954,7 @@ public class JDBCNodeStoreTest extends JDBCNodeStoreAbstract {
             throws Exception {
         Connection conn = Mockito.mock(Connection.class);
         JDBCNodeStore store = new JDBCNodeStore(conn,
-                mock(NodeStoreSQLDialect.class));
+                mock(NodeStoreSQLDialect.class), configuration);
 
         NodeStore.Transaction t = store.beginTransaction();
         t.commit();
@@ -966,7 +968,7 @@ public class JDBCNodeStoreTest extends JDBCNodeStoreAbstract {
     public void testNestedTransactionsOnlySetAutoCommitOnce() throws Exception {
         Connection conn = Mockito.mock(Connection.class);
         JDBCNodeStore store = new JDBCNodeStore(conn,
-                mock(NodeStoreSQLDialect.class));
+                mock(NodeStoreSQLDialect.class), configuration);
 
         store.beginTransaction();
 
@@ -985,7 +987,7 @@ public class JDBCNodeStoreTest extends JDBCNodeStoreAbstract {
             throws Exception {
         Connection conn = Mockito.mock(Connection.class);
         JDBCNodeStore store = new JDBCNodeStore(conn,
-                mock(NodeStoreSQLDialect.class));
+                mock(NodeStoreSQLDialect.class), configuration);
 
         InOrder inOrder = inOrder(conn);
 
@@ -1013,7 +1015,7 @@ public class JDBCNodeStoreTest extends JDBCNodeStoreAbstract {
     public void testNestedTransactionsWithRollbackInMiddle() throws Exception {
         Connection conn = Mockito.mock(Connection.class);
         JDBCNodeStore store = new JDBCNodeStore(conn,
-                mock(NodeStoreSQLDialect.class));
+                mock(NodeStoreSQLDialect.class), configuration);
 
         NodeStore.Transaction t1 = store.beginTransaction();
         NodeStore.Transaction t2 = store.beginTransaction();
@@ -1029,7 +1031,7 @@ public class JDBCNodeStoreTest extends JDBCNodeStoreAbstract {
             throws Exception {
         Connection conn = Mockito.mock(Connection.class);
         JDBCNodeStore store = new JDBCNodeStore(conn,
-                mock(NodeStoreSQLDialect.class));
+                mock(NodeStoreSQLDialect.class), configuration);
 
         NodeStore.Transaction t1 = store.beginTransaction();
         NodeStore.Transaction t2 = store.beginTransaction();

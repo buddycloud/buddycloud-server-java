@@ -41,7 +41,7 @@ public class TopicsEngine implements Component {
         this.jid = jid;
         this.manager = manager;
 
-        LOGGER.info("XMPP Component started. We are '" + jid.toString() + "' and ready to accept packages.");
+        LOGGER.info("XMPP component started. We are '" + jid.toString() + "' and ready to accept packages.");
     }
 
     @Override

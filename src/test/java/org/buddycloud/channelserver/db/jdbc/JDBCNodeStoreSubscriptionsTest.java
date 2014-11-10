@@ -9,6 +9,8 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 
+import junit.framework.Assert;
+
 import org.apache.commons.collections.CollectionUtils;
 import org.buddycloud.channelserver.packetHandler.iq.IQTestHandler;
 import org.buddycloud.channelserver.pubsub.affiliation.Affiliations;
@@ -207,5 +209,13 @@ public class JDBCNodeStoreSubscriptionsTest extends JDBCNodeStoreAbstract {
 
         ResultSet<NodeSubscription> changes = store.getSubscriptionChanges(TEST_SERVER1_USER1_JID, new Date(0), new Date());
         assertEquals(0, changes.size());
+    }
+    
+    @Test
+    public void returnsCountOfLocalSubscriptionsToNode() throws Exception {
+      dbTester.loadData("node_1");
+      store.addUserSubscription(new NodeSubscriptionImpl(TEST_SERVER1_NODE1_ID, new JID("test@extern.al"), Subscriptions.subscribed, null));
+      Assert.assertEquals(3, store.getCountLocalSubscriptionsToNode(TEST_SERVER1_NODE1_ID));
+      Assert.assertEquals(0, store.getCountLocalSubscriptionsToNode(TEST_SERVER1_NODE2_ID));
     }
 }

@@ -497,6 +497,15 @@ public interface NodeStore {
      */
     boolean userHasRatedPost(String node, JID user, GlobalItemID id) throws NodeStoreException;
 
+    /** 
+     * Get a count of valid local subscriptions to a node
+     * 
+     * @param node
+     * @return
+     * @throws NodeStoreException 
+     */
+    int getCountLocalSubscriptionsToNode(String node) throws NodeStoreException;
+    
     /**
      * Delete user posts
      * 

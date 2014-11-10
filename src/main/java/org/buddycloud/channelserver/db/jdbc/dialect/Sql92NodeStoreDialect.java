@@ -304,6 +304,13 @@ public class Sql92NodeStoreDialect implements NodeStoreSQLDialect {
             + "WHERE \"node\" IN (SELECT \"node\" FROM \"subscriptions\" WHERE \"subscription\" = 'subscribed' AND \"user\" = ?) " + "AND \"updated\" > ?"
             + "%parent%;";
 
+    private static final String SELECT_COUNT_VALID_LOCAL_SUBSCRIPTIONS_TO_NODE = ""
+        + "SELECT COUNT(*) AS \"count\" "
+        + "FROM \"subscriptions\" "
+        + "WHERE \"node\" = ? AND "
+        + "\"subscription\" = 'subscribed' AND "
+        + "\"user\" LIKE ?;";
+
     @Override
     public String insertNode() {
         return INSERT_NODE;
@@ -670,6 +677,11 @@ public class Sql92NodeStoreDialect implements NodeStoreSQLDialect {
     @Override
     public String selectLocalNodes() {
         return SELECT_LOCAL_NODES;
+    }
+
+    @Override
+    public String countLocalValidSubscriptionsForNode() {
+      return SELECT_COUNT_VALID_LOCAL_SUBSCRIPTIONS_TO_NODE;
     }
 
 }

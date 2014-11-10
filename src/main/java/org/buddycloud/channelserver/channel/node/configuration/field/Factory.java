@@ -38,6 +38,14 @@ public class Factory {
             ChannelType field = new ChannelType();
             setValue(field, value);
             return field;
+        } else if (type.equals(Advertise.FIELD_NAME)) {
+            Advertise field = new Advertise();
+            setValue(field, value);
+            return field;
+        } else if (type.equals(Ephemeral.FIELD_NAME)) {
+            Ephemeral field = new Ephemeral();
+            setValue(field, value);
+            return field;
         } else {
             Generic field = new Generic();
             field.setName(type);

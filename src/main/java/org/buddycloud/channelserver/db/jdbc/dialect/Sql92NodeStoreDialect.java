@@ -143,15 +143,23 @@ public class Sql92NodeStoreDialect implements NodeStoreSQLDialect {
     private static final String SELECT_COUNT_ITEM_THREAD = "" + "SELECT COUNT(\"id\") " + "FROM \"items\" WHERE \"node\" = ? "
             + "AND (\"in_reply_to\" LIKE ? OR \"id\" = ?) ";
 
-    private static final String SELECT_LOCAL_NODES = 
-            "SELECT \"node\" " +
-            "FROM \"nodes\" " +
-            "WHERE \"node\" ~ ? ";
+    private static final String SELECT_LOCAL_NODES =
+        "SELECT \"nodes\".\"node\", \"config\".\"value\" AS \"value\" " +
+        "FROM \"nodes\" " +
+        "LEFT JOIN \"node_config\" AS \"config\" " +
+        "ON \"config\".\"node\" = \"nodes\".\"node\" AND " +
+        "\"config\".\"key\" = 'buddycloud#advertise_node' " +
+        "WHERE \"nodes\".\"node\" ~ ? AND " +
+        "(\"value\" = 'true' OR \"value\" IS NULL);";
     
     private static final String SELECT_REMOTE_NODES =     
-            "SELECT \"node\" " +
+            "SELECT \"nodes\".\"node\", \"config\".\"value\" AS \"value\" " +
             "FROM \"nodes\" " +
-            "WHERE \"node\" !~ ?";
+            "LEFT JOIN \"node_config\" AS \"config\" " +
+            "ON \"config\".\"node\" = \"nodes\".\"node\" AND " +
+            "\"config\".\"key\" = 'buddycloud#advertise_node' " +
+            "WHERE \"nodes\".\"node\" !~ ? AND " +
+            "(\"value\" = 'true' OR \"value\" IS NULL);";
     
     private static final String SELECT_ITEMS_FROM_LOCAL_NODES_BEFORE_DATE = 
             "SELECT \"items\".\"node\", \"id\", \"items\".\"updated\", \"xml\", \"in_reply_to\", \"created\" " +
@@ -206,8 +214,14 @@ public class Sql92NodeStoreDialect implements NodeStoreSQLDialect {
 
     private static final String DELETE_NODE = "DELETE FROM \"nodes\" WHERE \"node\" = ?;";
 
-    private static final String SELECT_NODE_LIST = "SELECT \"node\" FROM \"nodes\";";
-
+    private static final String SELECT_NODE_LIST =
+        "SELECT \"nodes\".\"node\", \"config\".\"value\" AS \"value\" " +
+        "FROM \"nodes\" " +
+        "LEFT JOIN \"node_config\" AS \"config\" " +
+        "ON \"config\".\"node\" = \"nodes\".\"node\" AND " +
+        "\"config\".\"key\" = 'buddycloud#advertise_node' " +
+        "WHERE (\"value\" = 'true' OR \"value\" IS NULL);";
+    
     private static final String DELETE_ITEMS = "DELETE FROM \"items\" WHERE \"node\" = ?;";
 
     private static final String SELECT_USER_ITEMS = "SELECT \"node\", \"id\", \"updated\", \"xml\", \"in_reply_to\", \"created\""

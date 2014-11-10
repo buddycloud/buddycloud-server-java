@@ -626,7 +626,14 @@ public class JDBCNodeStoreTest extends JDBCNodeStoreAbstract {
     public void testGetNodeListReturnsExpectedNodes() throws Exception {
         dbTester.loadData("node_1");
         dbTester.loadData("node_2");
-        assertEquals(2, store.getNodeList().size());
+        dbTester.loadData("advertise_nodes");
+        
+        ArrayList<String> nodeList = store.getNodeList();
+        
+        assertEquals(6, nodeList.size());
+        
+        Assert.assertEquals("/user/advertised@server1/posts", nodeList.get(0));
+        Assert.assertEquals("/user/advertised@server2/posts", nodeList.get(1));  
     }
 
     @Test

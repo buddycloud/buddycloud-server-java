@@ -139,4 +139,47 @@ public class SubscriptionProcessorTest extends IQTestHandler {
         Assert.assertEquals(Subscriptions.invited, newSubscription.getValue().getSubscription());
         Assert.assertEquals(node, newSubscription.getValue().getNodeId());
     }
+    
+    @Test
+    public void noLocalSubscriberCausesNodeToBeDeletedOnLastUnsubscribe() throws Exception {
+      Mockito.when(channelManager.getCountLocalSubscriptionsToNode(Mockito.anyString())).thenReturn(0);
+      
+      Message message = new Message();
+      message.setType(Message.Type.headline);
+      Element event = message.addChildElement("event",
+              JabberPubsub.NS_PUBSUB_EVENT);
+      
+      subscription = event.addElement("subscription");
+      subscription.addAttribute("jid", "romeo@shakespeare.lit");
+      subscription
+              .addAttribute("node", node);
+      subscription.addAttribute("subscription",
+              Subscriptions.none.toString());
+      
+      subscriptionProcessor.process(message);
+
+      verify(channelManager, times(1)).deleteNode(Mockito.anyString());
+    }
+    
+    
+    @Test
+    public void whenLocalSubscribersNodeIsNotDeletedOnUnsubscribe() throws Exception {
+      Mockito.when(channelManager.getCountLocalSubscriptionsToNode(Mockito.anyString())).thenReturn(1);
+      
+      Message message = new Message();
+      message.setType(Message.Type.headline);
+      Element event = message.addChildElement("event",
+              JabberPubsub.NS_PUBSUB_EVENT);
+      
+      subscription = event.addElement("subscription");
+      subscription.addAttribute("jid", "romeo@shakespeare.lit");
+      subscription
+              .addAttribute("node", node);
+      subscription.addAttribute("subscription",
+              Subscriptions.none.toString());
+      
+      subscriptionProcessor.process(message);
+
+      verify(channelManager, times(0)).deleteNode(Mockito.anyString());
+    }
 }

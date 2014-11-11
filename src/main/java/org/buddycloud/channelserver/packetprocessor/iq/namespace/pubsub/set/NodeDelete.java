@@ -7,7 +7,6 @@ import java.util.concurrent.BlockingQueue;
 import org.apache.log4j.Logger;
 import org.buddycloud.channelserver.Configuration;
 import org.buddycloud.channelserver.channel.ChannelManager;
-import org.buddycloud.channelserver.channel.node.configuration.field.Ephemeral;
 import org.buddycloud.channelserver.db.exception.NodeStoreException;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.JabberPubsub;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.PubSubElementProcessorAbstract;
@@ -24,9 +23,6 @@ import org.xmpp.packet.Packet;
 import org.xmpp.packet.PacketError;
 import org.xmpp.resultsetmanagement.ResultSet;
 import org.xmpp.resultsetmanagement.ResultSetImpl;
-import org.xmpp.util.XMPPConstants;
-
-import sun.tools.tree.AddExpression;
 
 public class NodeDelete extends PubSubElementProcessorAbstract {
 
@@ -75,7 +71,8 @@ public class NodeDelete extends PubSubElementProcessorAbstract {
     if (!channelManager.isEphemeralNode(node)) {
       return false;
     }
-    createExtendedErrorReply(PacketError.Type.cancel, PacketError.Condition.not_allowed, XMLConstants.CAN_NOT_DELETE_EPHEMERAL_NODE, Buddycloud.NS_ERROR);
+    createExtendedErrorReply(PacketError.Type.cancel, PacketError.Condition.not_allowed,
+        XMLConstants.CAN_NOT_DELETE_EPHEMERAL_NODE, Buddycloud.NS_ERROR);
     return true;
   }
 

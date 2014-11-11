@@ -34,307 +34,292 @@ import org.xmpp.resultsetmanagement.ResultSetImpl;
 
 public class NodeDeleteTest extends IQTestHandler {
 
-    private ChannelManager channelManager;
-    private LinkedBlockingQueue<Packet> queue;
-    private NodeDelete nodeDelete;
-    private BaseElement element;
-    private JID jid = new JID("juliet@shakespeare.lit");
-    private IQ request;
-    private Element deleteEl;
+  private ChannelManager channelManager;
+  private LinkedBlockingQueue<Packet> queue;
+  private NodeDelete nodeDelete;
+  private BaseElement element;
+  private JID jid = new JID("juliet@shakespeare.lit");
+  private IQ request;
+  private Element deleteEl;
 
-    @Before
-    public void setUp() throws Exception {
-        this.channelManager = Mockito.mock(ChannelManager.class);
-        
-        Mockito.when(channelManager.isEphemeralNode(Mockito.anyString())).thenReturn(false);
-        
-        this.queue = new LinkedBlockingQueue<Packet>();
-        this.nodeDelete = new NodeDelete(queue, channelManager);
-        this.nodeDelete.setServerDomain("shakespeare.lit");
-        this.element = new BaseElement("delete");
-        Configuration.getInstance().putProperty(
-                Configuration.CONFIGURATION_LOCAL_DOMAIN_CHECKER, Boolean.TRUE.toString());
-        request = readStanzaAsIq("/iq/pubsub/delete/request-with-node.stanza");
-        deleteEl = request.getChildElement().element("delete");
-    }
+  @Before
+  public void setUp() throws Exception {
+    this.channelManager = Mockito.mock(ChannelManager.class);
 
-    @After
-    public void tearDown() {
-        Mockito.reset(channelManager);
-    }
+    Mockito.when(channelManager.isEphemeralNode(Mockito.anyString())).thenReturn(false);
 
-    @Test
-    public void testPassingDeleteAsElementName() {
-        Assert.assertTrue(nodeDelete.accept(element));
-    }
+    this.queue = new LinkedBlockingQueue<Packet>();
+    this.nodeDelete = new NodeDelete(queue, channelManager);
+    this.nodeDelete.setServerDomain("shakespeare.lit");
+    this.element = new BaseElement("delete");
+    Configuration.getInstance().putProperty(Configuration.CONFIGURATION_LOCAL_DOMAIN_CHECKER,
+        Boolean.TRUE.toString());
+    request = readStanzaAsIq("/iq/pubsub/delete/request-with-node.stanza");
+    deleteEl = request.getChildElement().element("delete");
+  }
 
-    @Test
-    public void testPassingNotDeleteAsElementName() {
-        Element element = new BaseElement("not-delete");
-        Assert.assertFalse(nodeDelete.accept(element));
-    }
+  @After
+  public void tearDown() {
+    Mockito.reset(channelManager);
+  }
 
-    @Test
-    public void testStanzaWithNoNode() throws Exception {
-        IQ request = readStanzaAsIq("/iq/pubsub/delete/request-no-node.stanza");
-        Element deleteEl = request.getChildElement().element("delete");
-        nodeDelete.process(deleteEl, jid, request, null);
-        Packet response = queue.poll();
+  @Test
+  public void testPassingDeleteAsElementName() {
+    Assert.assertTrue(nodeDelete.accept(element));
+  }
 
-        PacketError error = response.getError();
-        Assert.assertNotNull(error);
-        Assert.assertEquals(PacketError.Type.modify, error.getType());
-        Assert.assertEquals("nodeid-required",
-                error.getApplicationConditionName());
-    }
+  @Test
+  public void testPassingNotDeleteAsElementName() {
+    Element element = new BaseElement("not-delete");
+    Assert.assertFalse(nodeDelete.accept(element));
+  }
 
-    @Test
-    public void testStanzaWithEmptyNode() throws Exception {
-        IQ request = readStanzaAsIq("/iq/pubsub/delete/request-empty-node.stanza");
-        Element deleteEl = request.getChildElement().element("delete");
-        nodeDelete.process(deleteEl, jid, request, null);
-        Packet response = queue.poll();
+  @Test
+  public void testStanzaWithNoNode() throws Exception {
+    IQ request = readStanzaAsIq("/iq/pubsub/delete/request-no-node.stanza");
+    Element deleteEl = request.getChildElement().element("delete");
+    nodeDelete.process(deleteEl, jid, request, null);
+    Packet response = queue.poll();
 
-        PacketError error = response.getError();
-        Assert.assertNotNull(error);
-        Assert.assertEquals(PacketError.Type.modify, error.getType());
-        Assert.assertEquals("nodeid-required",
-                error.getApplicationConditionName());
-    }
+    PacketError error = response.getError();
+    Assert.assertNotNull(error);
+    Assert.assertEquals(PacketError.Type.modify, error.getType());
+    Assert.assertEquals("nodeid-required", error.getApplicationConditionName());
+  }
 
-    @Test
-    public void testNonLocalNode() throws Exception {
-        IQ request = readStanzaAsIq("/iq/pubsub/delete/request-with-node.stanza");
-        Element deleteEl = request.getChildElement().element("delete");
+  @Test
+  public void testStanzaWithEmptyNode() throws Exception {
+    IQ request = readStanzaAsIq("/iq/pubsub/delete/request-empty-node.stanza");
+    Element deleteEl = request.getChildElement().element("delete");
+    nodeDelete.process(deleteEl, jid, request, null);
+    Packet response = queue.poll();
 
-        Configuration.getInstance().putProperty(
-                Configuration.CONFIGURATION_LOCAL_DOMAIN_CHECKER, Boolean.FALSE.toString());
+    PacketError error = response.getError();
+    Assert.assertNotNull(error);
+    Assert.assertEquals(PacketError.Type.modify, error.getType());
+    Assert.assertEquals("nodeid-required", error.getApplicationConditionName());
+  }
 
-        nodeDelete.process(deleteEl, jid, request, null);
-        Packet response = queue.poll();
+  @Test
+  public void testNonLocalNode() throws Exception {
+    IQ request = readStanzaAsIq("/iq/pubsub/delete/request-with-node.stanza");
+    Element deleteEl = request.getChildElement().element("delete");
 
-        Assert.assertNull(response.getError());
-        Element actorEl = response.getElement().element("pubsub")
-                .element("actor");
-        Assert.assertEquals(jid.toBareJID(), actorEl.getText());
-    }
+    Configuration.getInstance().putProperty(Configuration.CONFIGURATION_LOCAL_DOMAIN_CHECKER,
+        Boolean.FALSE.toString());
 
-    @Test
-    public void testInexistentNode() throws Exception {
-        IQ request = readStanzaAsIq("/iq/pubsub/delete/request-with-node.stanza");
-        Element deleteEl = request.getChildElement().element("delete");
+    nodeDelete.process(deleteEl, jid, request, null);
+    Packet response = queue.poll();
 
-        String node = deleteEl.attributeValue("node");
-        Mockito.when(channelManager.nodeExists(node)).thenReturn(false);
+    Assert.assertNull(response.getError());
+    Element actorEl = response.getElement().element("pubsub").element("actor");
+    Assert.assertEquals(jid.toBareJID(), actorEl.getText());
+  }
 
-        nodeDelete.process(deleteEl, jid, request, null);
-        Packet response = queue.poll();
+  @Test
+  public void testInexistentNode() throws Exception {
+    IQ request = readStanzaAsIq("/iq/pubsub/delete/request-with-node.stanza");
+    Element deleteEl = request.getChildElement().element("delete");
 
-        PacketError error = response.getError();
-        Assert.assertNotNull(error);
-        Assert.assertEquals(PacketError.Type.cancel, error.getType());
-        Assert.assertEquals(PacketError.Condition.item_not_found,
-                error.getCondition());
-    }
+    String node = deleteEl.attributeValue("node");
+    Mockito.when(channelManager.nodeExists(node)).thenReturn(false);
 
-    @Test
-    public void testNotRegisteredActor() throws Exception {
-        IQ request = readStanzaAsIq("/iq/pubsub/delete/request-with-node.stanza");
-        Element deleteEl = request.getChildElement().element("delete");
+    nodeDelete.process(deleteEl, jid, request, null);
+    Packet response = queue.poll();
 
-        String node = deleteEl.attributeValue("node");
-        Mockito.when(channelManager.nodeExists(node)).thenReturn(true);
-        nodeDelete.setServerDomain("fake.domain");
+    PacketError error = response.getError();
+    Assert.assertNotNull(error);
+    Assert.assertEquals(PacketError.Type.cancel, error.getType());
+    Assert.assertEquals(PacketError.Condition.item_not_found, error.getCondition());
+  }
 
-        nodeDelete.process(deleteEl, jid, request, null);
-        Packet response = queue.poll();
+  @Test
+  public void testNotRegisteredActor() throws Exception {
+    IQ request = readStanzaAsIq("/iq/pubsub/delete/request-with-node.stanza");
+    Element deleteEl = request.getChildElement().element("delete");
 
-        PacketError error = response.getError();
-        Assert.assertNotNull(error);
-        Assert.assertEquals(PacketError.Type.auth, error.getType());
-        Assert.assertEquals(PacketError.Condition.forbidden,
-                error.getCondition());
-    }
+    String node = deleteEl.attributeValue("node");
+    Mockito.when(channelManager.nodeExists(node)).thenReturn(true);
+    nodeDelete.setServerDomain("fake.domain");
 
-    @Test
-    public void testNotAffiliatedActor() throws Exception {
-        IQ request = readStanzaAsIq("/iq/pubsub/delete/request-with-node.stanza");
-        Element deleteEl = request.getChildElement().element("delete");
+    nodeDelete.process(deleteEl, jid, request, null);
+    Packet response = queue.poll();
 
-        String node = deleteEl.attributeValue("node");
-        Mockito.when(channelManager.nodeExists(node)).thenReturn(true);
-        Mockito.when(channelManager.getNodeMembership(node, jid)).thenReturn(
-                new NodeMembershipImpl(node, jid, Subscriptions.subscribed,
-                        Affiliations.none, null));
+    PacketError error = response.getError();
+    Assert.assertNotNull(error);
+    Assert.assertEquals(PacketError.Type.auth, error.getType());
+    Assert.assertEquals(PacketError.Condition.forbidden, error.getCondition());
+  }
 
-        nodeDelete.process(deleteEl, jid, request, null);
-        Packet response = queue.poll();
+  @Test
+  public void testNotAffiliatedActor() throws Exception {
+    IQ request = readStanzaAsIq("/iq/pubsub/delete/request-with-node.stanza");
+    Element deleteEl = request.getChildElement().element("delete");
 
-        PacketError error = response.getError();
-        Assert.assertNotNull(error);
-        Assert.assertEquals(PacketError.Type.auth, error.getType());
-        Assert.assertEquals(PacketError.Condition.not_authorized,
-                error.getCondition());
-    }
+    String node = deleteEl.attributeValue("node");
+    Mockito.when(channelManager.nodeExists(node)).thenReturn(true);
+    Mockito.when(channelManager.getNodeMembership(node, jid)).thenReturn(
+        new NodeMembershipImpl(node, jid, Subscriptions.subscribed, Affiliations.none, null));
 
-    @Test
-    public void testActorIsNotOwner() throws Exception {
-        IQ request = readStanzaAsIq("/iq/pubsub/delete/request-with-node.stanza");
-        Element deleteEl = request.getChildElement().element("delete");
+    nodeDelete.process(deleteEl, jid, request, null);
+    Packet response = queue.poll();
 
-        String node = deleteEl.attributeValue("node");
-        Mockito.when(channelManager.nodeExists(node)).thenReturn(true);
+    PacketError error = response.getError();
+    Assert.assertNotNull(error);
+    Assert.assertEquals(PacketError.Type.auth, error.getType());
+    Assert.assertEquals(PacketError.Condition.not_authorized, error.getCondition());
+  }
 
-        Mockito.when(channelManager.getNodeMembership(node, jid)).thenReturn(
-                new NodeMembershipImpl(node, jid, Subscriptions.subscribed,
-                        Affiliations.moderator, null));
+  @Test
+  public void testActorIsNotOwner() throws Exception {
+    IQ request = readStanzaAsIq("/iq/pubsub/delete/request-with-node.stanza");
+    Element deleteEl = request.getChildElement().element("delete");
 
-        nodeDelete.process(deleteEl, jid, request, null);
-        Packet response = queue.poll();
+    String node = deleteEl.attributeValue("node");
+    Mockito.when(channelManager.nodeExists(node)).thenReturn(true);
 
-        PacketError error = response.getError();
-        Assert.assertNotNull(error);
-        Assert.assertEquals(PacketError.Type.auth, error.getType());
-        Assert.assertEquals(PacketError.Condition.not_authorized,
-                error.getCondition());
-    }
+    Mockito.when(channelManager.getNodeMembership(node, jid)).thenReturn(
+        new NodeMembershipImpl(node, jid, Subscriptions.subscribed, Affiliations.moderator, null));
 
-    @Test
-    public void testBadFormattedNode() throws Exception {
-        IQ request = readStanzaAsIq("/iq/pubsub/delete/request-bad-formatted-node.stanza");
-        Element deleteEl = request.getChildElement().element("delete");
+    nodeDelete.process(deleteEl, jid, request, null);
+    Packet response = queue.poll();
 
-        String node = deleteEl.attributeValue("node");
-        Mockito.when(channelManager.nodeExists(node)).thenReturn(true);
+    PacketError error = response.getError();
+    Assert.assertNotNull(error);
+    Assert.assertEquals(PacketError.Type.auth, error.getType());
+    Assert.assertEquals(PacketError.Condition.not_authorized, error.getCondition());
+  }
 
-        nodeDelete.process(deleteEl, jid, request, null);
-        Packet response = queue.poll();
+  @Test
+  public void testBadFormattedNode() throws Exception {
+    IQ request = readStanzaAsIq("/iq/pubsub/delete/request-bad-formatted-node.stanza");
+    Element deleteEl = request.getChildElement().element("delete");
 
-        PacketError error = response.getError();
-        Assert.assertNotNull(error);
-        Assert.assertEquals(PacketError.Type.modify, error.getType());
-        Assert.assertEquals(PacketError.Condition.bad_request,
-                error.getCondition());
-    }
+    String node = deleteEl.attributeValue("node");
+    Mockito.when(channelManager.nodeExists(node)).thenReturn(true);
 
-    @Test
-    public void testNodeFromUnknownDomain() throws Exception {
-        IQ request = readStanzaAsIq("/iq/pubsub/delete/request-unknown-domain-node.stanza");
-        Element deleteEl = request.getChildElement().element("delete");
+    nodeDelete.process(deleteEl, jid, request, null);
+    Packet response = queue.poll();
 
-        String node = deleteEl.attributeValue("node");
-        Mockito.when(channelManager.nodeExists(node)).thenReturn(true);
+    PacketError error = response.getError();
+    Assert.assertNotNull(error);
+    Assert.assertEquals(PacketError.Type.modify, error.getType());
+    Assert.assertEquals(PacketError.Condition.bad_request, error.getCondition());
+  }
 
-        nodeDelete.process(deleteEl, jid, request, null);
-        Packet response = queue.poll();
+  @Test
+  public void testNodeFromUnknownDomain() throws Exception {
+    IQ request = readStanzaAsIq("/iq/pubsub/delete/request-unknown-domain-node.stanza");
+    Element deleteEl = request.getChildElement().element("delete");
 
-        PacketError error = response.getError();
-        Assert.assertNotNull(error);
-        Assert.assertEquals(PacketError.Type.modify, error.getType());
-        Assert.assertEquals(PacketError.Condition.not_acceptable,
-                error.getCondition());
-    }
+    String node = deleteEl.attributeValue("node");
+    Mockito.when(channelManager.nodeExists(node)).thenReturn(true);
 
-    @Test
-    public void testSuccessfulDeleteNoSubscribers() throws Exception {
-        IQ request = readStanzaAsIq("/iq/pubsub/delete/request-with-node.stanza");
-        Element deleteEl = request.getChildElement().element("delete");
+    nodeDelete.process(deleteEl, jid, request, null);
+    Packet response = queue.poll();
 
-        String node = deleteEl.attributeValue("node");
-        Mockito.when(channelManager.nodeExists(node)).thenReturn(true);
+    PacketError error = response.getError();
+    Assert.assertNotNull(error);
+    Assert.assertEquals(PacketError.Type.modify, error.getType());
+    Assert.assertEquals(PacketError.Condition.not_acceptable, error.getCondition());
+  }
 
-        Mockito.when(channelManager.getNodeMembership(node, jid)).thenReturn(
-                new NodeMembershipImpl(node, jid, Subscriptions.subscribed,
-                        Affiliations.owner, null));
+  @Test
+  public void testSuccessfulDeleteNoSubscribers() throws Exception {
+    IQ request = readStanzaAsIq("/iq/pubsub/delete/request-with-node.stanza");
+    Element deleteEl = request.getChildElement().element("delete");
 
-        nodeDelete.process(deleteEl, jid, request, null);
-        IQ response = (IQ) queue.poll();
+    String node = deleteEl.attributeValue("node");
+    Mockito.when(channelManager.nodeExists(node)).thenReturn(true);
 
-        Assert.assertNull(response.getError());
-        Assert.assertEquals(request.getID(), response.getID());
-        Assert.assertEquals(Type.result, response.getType());
+    Mockito.when(channelManager.getNodeMembership(node, jid)).thenReturn(
+        new NodeMembershipImpl(node, jid, Subscriptions.subscribed, Affiliations.owner, null));
 
-        int adminCount = Configuration.getInstance().getAdminUsers().size();
-        Assert.assertEquals(adminCount, queue.size());
-    }
+    nodeDelete.process(deleteEl, jid, request, null);
+    IQ response = (IQ) queue.poll();
 
-    @Test
-    public void testSuccessfulDeleteWithSubscribers() throws Exception {
-        IQ request = readStanzaAsIq("/iq/pubsub/delete/request-with-node.stanza");
-        Element deleteEl = request.getChildElement().element("delete");
+    Assert.assertNull(response.getError());
+    Assert.assertEquals(request.getID(), response.getID());
+    Assert.assertEquals(Type.result, response.getType());
 
-        String node = deleteEl.attributeValue("node");
-        Mockito.when(channelManager.nodeExists(node)).thenReturn(true);
+    int adminCount = Configuration.getInstance().getAdminUsers().size();
+    Assert.assertEquals(adminCount, queue.size());
+  }
 
-        Mockito.when(channelManager.getNodeMembership(node, jid)).thenReturn(
-                new NodeMembershipImpl(node, jid, Subscriptions.subscribed,
-                        Affiliations.owner, null));
+  @Test
+  public void testSuccessfulDeleteWithSubscribers() throws Exception {
+    IQ request = readStanzaAsIq("/iq/pubsub/delete/request-with-node.stanza");
+    Element deleteEl = request.getChildElement().element("delete");
 
-        JID subscriberJid = new JID("subscriber@shakespeare.lit");
-        NodeSubscriptionImpl subscription = new NodeSubscriptionImpl(node,
-                subscriberJid, subscriberJid, Subscriptions.subscribed, null);
-        List<NodeSubscription> subscriptions = new LinkedList<NodeSubscription>();
-        subscriptions.add(subscription);
+    String node = deleteEl.attributeValue("node");
+    Mockito.when(channelManager.nodeExists(node)).thenReturn(true);
 
-        Mockito.when(channelManager.getNodeSubscriptionListeners(node))
-                .thenReturn(new ResultSetImpl<NodeSubscription>(subscriptions));
+    Mockito.when(channelManager.getNodeMembership(node, jid)).thenReturn(
+        new NodeMembershipImpl(node, jid, Subscriptions.subscribed, Affiliations.owner, null));
 
-        nodeDelete.process(deleteEl, jid, request, null);
-        IQ response = (IQ) queue.poll();
+    JID subscriberJid = new JID("subscriber@shakespeare.lit");
+    NodeSubscriptionImpl subscription =
+        new NodeSubscriptionImpl(node, subscriberJid, subscriberJid, Subscriptions.subscribed, null);
+    List<NodeSubscription> subscriptions = new LinkedList<NodeSubscription>();
+    subscriptions.add(subscription);
 
-        Assert.assertNull(response.getError());
-        Assert.assertEquals(request.getID(), response.getID());
-        Assert.assertEquals(Type.result, response.getType());
+    Mockito.when(channelManager.getNodeSubscriptionListeners(node)).thenReturn(
+        new ResultSetImpl<NodeSubscription>(subscriptions));
 
-        Message subscriberNotification = (Message) queue.poll();
-        Assert.assertNotNull(subscriberNotification);
-        Assert.assertEquals(subscriberJid, subscriberNotification.getTo());
+    nodeDelete.process(deleteEl, jid, request, null);
+    IQ response = (IQ) queue.poll();
 
-        Element eventEl = subscriberNotification.getElement().element("event");
-        Assert.assertNotNull(eventEl);
-        Assert.assertEquals(node,
-                eventEl.element("delete").attributeValue("node"));
-    }
-    
-    @Test
-    public void databaseExceptionWhenGettingListenersSendsMinimalNotifications() throws Exception {
+    Assert.assertNull(response.getError());
+    Assert.assertEquals(request.getID(), response.getID());
+    Assert.assertEquals(Type.result, response.getType());
 
-        String node = deleteEl.attributeValue("node");
-        Mockito.when(channelManager.nodeExists(node)).thenReturn(true);
+    Message subscriberNotification = (Message) queue.poll();
+    Assert.assertNotNull(subscriberNotification);
+    Assert.assertEquals(subscriberJid, subscriberNotification.getTo());
 
-        Mockito.doThrow(new NodeStoreException()).when(channelManager)
-            .getNodeSubscriptionListeners(Mockito.anyString());
-        
-        Mockito.when(channelManager.getNodeMembership(node, jid)).thenReturn(
-                new NodeMembershipImpl(node, jid, Subscriptions.subscribed,
-                        Affiliations.owner, null));
+    Element eventEl = subscriberNotification.getElement().element("event");
+    Assert.assertNotNull(eventEl);
+    Assert.assertEquals(node, eventEl.element("delete").attributeValue("node"));
+  }
 
-        nodeDelete.process(deleteEl, jid, request, null);
-        IQ response = (IQ) queue.poll();
+  @Test
+  public void databaseExceptionWhenGettingListenersSendsMinimalNotifications() throws Exception {
 
-        Assert.assertNull(response.getError());
-        Assert.assertEquals(request.getID(), response.getID());
-        Assert.assertEquals(Type.result, response.getType());
+    String node = deleteEl.attributeValue("node");
+    Mockito.when(channelManager.nodeExists(node)).thenReturn(true);
 
-        int adminCount = Configuration.getInstance().getAdminUsers().size();
-        Assert.assertEquals(adminCount, queue.size());
-    }
-    
-    @Test
-    public void canNotDeleteAnEphemeralNode() throws Exception {
+    Mockito.doThrow(new NodeStoreException()).when(channelManager)
+        .getNodeSubscriptionListeners(Mockito.anyString());
 
-      Mockito.when(channelManager.nodeExists(Mockito.anyString())).thenReturn(true);
-      Mockito.when(channelManager.isEphemeralNode(Mockito.anyString())).thenReturn(true);
-      
-      nodeDelete.process(deleteEl, jid, request, null);
-      Packet response = queue.poll();
+    Mockito.when(channelManager.getNodeMembership(node, jid)).thenReturn(
+        new NodeMembershipImpl(node, jid, Subscriptions.subscribed, Affiliations.owner, null));
 
-      PacketError error = response.getError();
-      Assert.assertNotNull(error);
-      Assert.assertEquals(PacketError.Type.cancel, error.getType());
-      Assert.assertEquals(PacketError.Condition.not_allowed,
-              error.getCondition());
-      Assert.assertEquals(XMLConstants.CAN_NOT_DELETE_EPHEMERAL_NODE, error.getApplicationConditionName());
-      Assert.assertEquals(Buddycloud.NS_ERROR, error.getApplicationConditionNamespaceURI());
-    }
+    nodeDelete.process(deleteEl, jid, request, null);
+    IQ response = (IQ) queue.poll();
+
+    Assert.assertNull(response.getError());
+    Assert.assertEquals(request.getID(), response.getID());
+    Assert.assertEquals(Type.result, response.getType());
+
+    int adminCount = Configuration.getInstance().getAdminUsers().size();
+    Assert.assertEquals(adminCount, queue.size());
+  }
+
+  @Test
+  public void canNotDeleteAnEphemeralNode() throws Exception {
+
+    Mockito.when(channelManager.nodeExists(Mockito.anyString())).thenReturn(true);
+    Mockito.when(channelManager.isEphemeralNode(Mockito.anyString())).thenReturn(true);
+
+    nodeDelete.process(deleteEl, jid, request, null);
+    Packet response = queue.poll();
+
+    PacketError error = response.getError();
+    Assert.assertNotNull(error);
+    Assert.assertEquals(PacketError.Type.cancel, error.getType());
+    Assert.assertEquals(PacketError.Condition.not_allowed, error.getCondition());
+    Assert.assertEquals(XMLConstants.CAN_NOT_DELETE_EPHEMERAL_NODE,
+        error.getApplicationConditionName());
+    Assert.assertEquals(Buddycloud.NS_ERROR, error.getApplicationConditionNamespaceURI());
+  }
 }

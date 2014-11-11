@@ -8,6 +8,7 @@ import junit.framework.Assert;
 
 import org.buddycloud.channelserver.Configuration;
 import org.buddycloud.channelserver.channel.ChannelManager;
+import org.buddycloud.channelserver.channel.node.configuration.field.Ephemeral;
 import org.buddycloud.channelserver.db.exception.NodeStoreException;
 import org.buddycloud.channelserver.packetHandler.iq.IQTestHandler;
 import org.buddycloud.channelserver.pubsub.affiliation.Affiliations;
@@ -15,6 +16,8 @@ import org.buddycloud.channelserver.pubsub.model.NodeSubscription;
 import org.buddycloud.channelserver.pubsub.model.impl.NodeMembershipImpl;
 import org.buddycloud.channelserver.pubsub.model.impl.NodeSubscriptionImpl;
 import org.buddycloud.channelserver.pubsub.subscription.Subscriptions;
+import org.buddycloud.channelserver.utils.XMLConstants;
+import org.buddycloud.channelserver.utils.node.item.payload.Buddycloud;
 import org.dom4j.Element;
 import org.dom4j.tree.BaseElement;
 import org.junit.After;
@@ -36,6 +39,8 @@ public class NodeDeleteTest extends IQTestHandler {
     private NodeDelete nodeDelete;
     private BaseElement element;
     private JID jid = new JID("juliet@shakespeare.lit");
+    private IQ request;
+    private Element deleteEl;
 
     @Before
     public void setUp() throws Exception {
@@ -46,6 +51,8 @@ public class NodeDeleteTest extends IQTestHandler {
         this.element = new BaseElement("delete");
         Configuration.getInstance().putProperty(
                 Configuration.CONFIGURATION_LOCAL_DOMAIN_CHECKER, Boolean.TRUE.toString());
+        request = readStanzaAsIq("/iq/pubsub/delete/request-with-node.stanza");
+        deleteEl = request.getChildElement().element("delete");
     }
 
     @After
@@ -288,8 +295,6 @@ public class NodeDeleteTest extends IQTestHandler {
     
     @Test
     public void databaseExceptionWhenGettingListenersSendsMinimalNotifications() throws Exception {
-        IQ request = readStanzaAsIq("/iq/pubsub/delete/request-with-node.stanza");
-        Element deleteEl = request.getChildElement().element("delete");
 
         String node = deleteEl.attributeValue("node");
         Mockito.when(channelManager.nodeExists(node)).thenReturn(true);
@@ -310,5 +315,23 @@ public class NodeDeleteTest extends IQTestHandler {
 
         int adminCount = Configuration.getInstance().getAdminUsers().size();
         Assert.assertEquals(adminCount, queue.size());
+    }
+    
+    @Test
+    public void canNotDeleteAnEphemeralNode() throws Exception {
+
+      Mockito.when(channelManager.nodeExists(Mockito.anyString())).thenReturn(true);
+      Mockito.when(channelManager.getNodeConfValue(Mockito.anyString(), Mockito.eq(Ephemeral.FIELD_NAME))).thenReturn("true");
+      
+      nodeDelete.process(deleteEl, jid, request, null);
+      Packet response = queue.poll();
+
+      PacketError error = response.getError();
+      Assert.assertNotNull(error);
+      Assert.assertEquals(PacketError.Type.cancel, error.getType());
+      Assert.assertEquals(PacketError.Condition.not_allowed,
+              error.getCondition());
+      Assert.assertEquals(XMLConstants.CAN_NOT_DELETE_EPHEMERAL_NODE, error.getApplicationConditionName());
+      Assert.assertEquals(Buddycloud.NS_ERROR, error.getApplicationConditionNamespaceURI());
     }
 }

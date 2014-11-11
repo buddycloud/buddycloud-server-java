@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.buddycloud.channelserver.Configuration;
+import org.buddycloud.channelserver.channel.node.configuration.field.Ephemeral;
 import org.buddycloud.channelserver.db.NodeStore;
 import org.buddycloud.channelserver.pubsub.affiliation.Affiliations;
 import org.junit.After;
@@ -164,5 +165,23 @@ public class ChannelManagerImplTest {
         
         // If nothing is specified, the default affiliation is "member"
         assertEquals("Incorrect default affiliation", Affiliations.member, affiliation);
+    }
+    
+    @Test
+    public void returnsEphemeralNodeIsFalseIfNoConfiguratonVaueProvided() throws Exception {
+      Mockito.when(nodeStore.getNodeConfValue(Mockito.anyString(), Mockito.eq(Ephemeral.FIELD_NAME))).thenReturn(null);
+      assertFalse(channelManager.isEphemeralNode(user1));
+    }
+    
+    @Test
+    public void returnsEphemeralNodeIsFalseIfConfigurationValueIsNotTrue() throws Exception {
+      Mockito.when(nodeStore.getNodeConfValue(Mockito.anyString(), Mockito.eq(Ephemeral.FIELD_NAME))).thenReturn("no way is this true");
+      assertFalse(channelManager.isEphemeralNode(user1));
+    }
+    
+    @Test
+    public void returnsEphemeralNodeIsTrueIfConfigurationValueIsTrue() throws Exception {
+      Mockito.when(nodeStore.getNodeConfValue(Mockito.anyString(), Mockito.eq(Ephemeral.FIELD_NAME))).thenReturn("true");
+      assertTrue(channelManager.isEphemeralNode(user1));
     }
 }

@@ -72,8 +72,7 @@ public class NodeDelete extends PubSubElementProcessorAbstract {
   }
 
   private boolean isEphemeralNode() throws NodeStoreException {
-    String ephemeral = channelManager.getNodeConfValue(node, Ephemeral.FIELD_NAME);
-    if ((null == ephemeral) || !ephemeral.equals("true")) {
+    if (!channelManager.isEphemeralNode(node)) {
       return false;
     }
     createExtendedErrorReply(PacketError.Type.cancel, PacketError.Condition.not_allowed, XMLConstants.CAN_NOT_DELETE_EPHEMERAL_NODE, Buddycloud.NS_ERROR);

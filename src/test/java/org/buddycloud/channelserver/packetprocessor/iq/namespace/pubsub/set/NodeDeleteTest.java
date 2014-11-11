@@ -45,6 +45,9 @@ public class NodeDeleteTest extends IQTestHandler {
     @Before
     public void setUp() throws Exception {
         this.channelManager = Mockito.mock(ChannelManager.class);
+        
+        Mockito.when(channelManager.isEphemeralNode(Mockito.anyString())).thenReturn(false);
+        
         this.queue = new LinkedBlockingQueue<Packet>();
         this.nodeDelete = new NodeDelete(queue, channelManager);
         this.nodeDelete.setServerDomain("shakespeare.lit");
@@ -321,7 +324,7 @@ public class NodeDeleteTest extends IQTestHandler {
     public void canNotDeleteAnEphemeralNode() throws Exception {
 
       Mockito.when(channelManager.nodeExists(Mockito.anyString())).thenReturn(true);
-      Mockito.when(channelManager.getNodeConfValue(Mockito.anyString(), Mockito.eq(Ephemeral.FIELD_NAME))).thenReturn("true");
+      Mockito.when(channelManager.isEphemeralNode(Mockito.anyString())).thenReturn(true);
       
       nodeDelete.process(deleteEl, jid, request, null);
       Packet response = queue.poll();

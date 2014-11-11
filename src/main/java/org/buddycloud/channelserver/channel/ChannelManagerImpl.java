@@ -7,6 +7,7 @@ import java.util.Map;
 
 import org.apache.log4j.Logger;
 import org.buddycloud.channelserver.Configuration;
+import org.buddycloud.channelserver.channel.node.configuration.field.Ephemeral;
 import org.buddycloud.channelserver.db.ClosableIteratorImpl;
 import org.buddycloud.channelserver.db.CloseableIterator;
 import org.buddycloud.channelserver.db.NodeStore;
@@ -410,6 +411,15 @@ public class ChannelManagerImpl implements ChannelManager {
     @Override
     public List<String> getRemoteNodesList() throws NodeStoreException {
         return nodeStore.getRemoteNodesList();
+    }
+
+    @Override
+    public boolean isEphemeralNode(String node) throws NodeStoreException {
+      String ephemeral = getNodeConfValue(node, Ephemeral.FIELD_NAME);
+      if ((null == ephemeral) || !ephemeral.equals("true")) {
+        return false;
+      }
+      return true;
     }
 
 }

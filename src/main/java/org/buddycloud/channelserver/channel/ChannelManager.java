@@ -47,4 +47,13 @@ public interface ChannelManager extends NodeStore {
      */
     CloseableIterator<NodeItem> performSearch(JID searcher, List content, JID author, int page, int rpp) throws NodeStoreException;
 
+    /**
+     * Returns true if node is ephemeral
+     * 
+     * @param node
+     * @return
+     * @throws NodeStoreException 
+     */
+    boolean isEphemeralNode(String node) throws NodeStoreException;
+
 }

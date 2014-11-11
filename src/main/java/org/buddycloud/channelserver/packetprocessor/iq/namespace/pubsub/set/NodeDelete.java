@@ -7,6 +7,7 @@ import java.util.concurrent.BlockingQueue;
 import org.apache.log4j.Logger;
 import org.buddycloud.channelserver.Configuration;
 import org.buddycloud.channelserver.channel.ChannelManager;
+import org.buddycloud.channelserver.channel.node.configuration.field.Ephemeral;
 import org.buddycloud.channelserver.db.exception.NodeStoreException;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.JabberPubsub;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.PubSubElementProcessorAbstract;
@@ -25,119 +26,129 @@ import org.xmpp.resultsetmanagement.ResultSetImpl;
 
 public class NodeDelete extends PubSubElementProcessorAbstract {
 
-    private static final String NODE_REG_EX = "^/user/[^@]+@[^/]+/[^/]+$";
-    private ResultSet<NodeSubscription> subscriptions;
+  private static final String NODE_REG_EX = "^/user/[^@]+@[^/]+/[^/]+$";
+  private ResultSet<NodeSubscription> subscriptions;
 
-    private static final Logger LOGGER = Logger.getLogger(NodeThreadsGet.class);
+  private static final Logger LOGGER = Logger.getLogger(NodeThreadsGet.class);
 
-    public NodeDelete(BlockingQueue<Packet> outQueue, ChannelManager channelManager) {
-        setChannelManager(channelManager);
-        setOutQueue(outQueue);
+  public NodeDelete(BlockingQueue<Packet> outQueue, ChannelManager channelManager) {
+    setChannelManager(channelManager);
+    setOutQueue(outQueue);
 
-        acceptedElementName = "delete";
+    acceptedElementName = "delete";
+  }
+
+  public void process(Element elm, JID actorJID, IQ reqIQ, Element rsm) throws Exception {
+
+    this.element = elm;
+    this.response = IQ.createResultIQ(reqIQ);
+    this.request = reqIQ;
+    this.actor = actorJID;
+    this.node = element.attributeValue(XMLConstants.NODE_ATTR);
+
+    if (actorJID == null) {
+      actor = request.getFrom();
     }
-
-    public void process(Element elm, JID actorJID, IQ reqIQ, Element rsm) throws Exception {
-
-        this.element = elm;
-        this.response = IQ.createResultIQ(reqIQ);
-        this.request = reqIQ;
-        this.actor = actorJID;
-        this.node = element.attributeValue(XMLConstants.NODE_ATTR);
-
-        if (actorJID == null) {
-            actor = request.getFrom();
-        }
-        if (!nodePresent() || !nodeValid()) {
-            outQueue.put(response);
-            return;
-        }
-        if (!Configuration.getInstance().isLocalNode(node)) {
-            makeRemoteRequest();
-            return;
-        }
-        if (!checkNodeExists() || !actorIsRegistered() || !nodeHandledByThisServer() || !actorAllowedToDelete()) {
-            outQueue.put(response);
-            return;
-        }
-        getNodeListeners();
-        deleteNode();
-        sendNotifications();
+    if (!nodePresent() || !nodeValid()) {
+      outQueue.put(response);
+      return;
     }
+    if (!Configuration.getInstance().isLocalNode(node)) {
+      makeRemoteRequest();
+      return;
+    }
+    if (!checkNodeExists() || !actorIsRegistered() || !nodeHandledByThisServer()
+        || isEphemeralNode() || !actorAllowedToDelete()) {
+      outQueue.put(response);
+      return;
+    }
+    getNodeListeners();
+    deleteNode();
+    sendNotifications();
+  }
 
-    private void getNodeListeners() {
-        try {
-            subscriptions = channelManager.getNodeSubscriptionListeners(node);
-        } catch (NodeStoreException e) {
-            subscriptions = new ResultSetImpl<NodeSubscription>(new ArrayList<NodeSubscription>());
+  private boolean isEphemeralNode() throws NodeStoreException {
+    String ephemeral = channelManager.getNodeConfValue(node, Ephemeral.FIELD_NAME);
+    if ((null == ephemeral) || !ephemeral.equals("false")) {
+      return false;
+    }
+    return true;
+  }
+
+  private void getNodeListeners() {
+    try {
+      subscriptions = channelManager.getNodeSubscriptionListeners(node);
+    } catch (NodeStoreException e) {
+      subscriptions = new ResultSetImpl<NodeSubscription>(new ArrayList<NodeSubscription>());
+    }
+  }
+
+  private void sendNotifications() throws NodeStoreException {
+    try {
+      Message notification = createNotificationMessage();
+      if (subscriptions != null) {
+        for (NodeSubscription subscription : subscriptions) {
+          notification.setTo(subscription.getListener().toString());
+          outQueue.put(notification.createCopy());
         }
+      }
+      Collection<JID> admins = getAdminUsers();
+      for (JID admin : admins) {
+        notification.setTo(admin);
+        outQueue.put(notification.createCopy());
+      }
+    } catch (Exception e) {
+      LOGGER.error(e);
     }
+  }
 
-    private void sendNotifications() throws NodeStoreException {
-        try {
-            Message notification = createNotificationMessage();
-            if (subscriptions != null) {
-                for (NodeSubscription subscription : subscriptions) {
-                    notification.setTo(subscription.getListener().toString());
-                    outQueue.put(notification.createCopy());
-                }
-            }
-            Collection<JID> admins = getAdminUsers();
-            for (JID admin : admins) {
-                notification.setTo(admin);
-                outQueue.put(notification.createCopy());
-            }
-        } catch (Exception e) {
-            LOGGER.error(e);
-        }
+  private Message createNotificationMessage() {
+    Message notification = new Message();
+    notification.setType(Message.Type.headline);
+    notification.getElement().addAttribute("remote-server-discover", "false");
+    Element eventEl = notification.addChildElement("event", JabberPubsub.NS_PUBSUB_EVENT);
+    Element deleteEl = eventEl.addElement("delete");
+    deleteEl.addAttribute("node", node);
+    return notification;
+  }
+
+  private void deleteNode() throws InterruptedException {
+    try {
+      channelManager.deleteNode(node);
+    } catch (NodeStoreException e) {
+      LOGGER.error(e);
+      setErrorCondition(PacketError.Type.wait, PacketError.Condition.internal_server_error);
+      outQueue.put(response);
+      return;
     }
+    response.setType(IQ.Type.result);
+    outQueue.put(response);
+  }
 
-    private Message createNotificationMessage() {
-        Message notification = new Message();
-        notification.setType(Message.Type.headline);
-        notification.getElement().addAttribute("remote-server-discover", "false");
-        Element eventEl = notification.addChildElement("event", JabberPubsub.NS_PUBSUB_EVENT);
-        Element deleteEl = eventEl.addElement("delete");
-        deleteEl.addAttribute("node", node);
-        return notification;
+  private boolean actorAllowedToDelete() throws NodeStoreException {
+    boolean isOwner =
+        channelManager.getNodeMembership(node, actor).getAffiliation().equals(Affiliations.owner);
+
+    if (isOwner) {
+      return true;
     }
+    setErrorCondition(PacketError.Type.auth, PacketError.Condition.not_authorized);
+    return false;
+  }
 
-    private void deleteNode() throws InterruptedException {
-        try {
-            channelManager.deleteNode(node);
-        } catch (NodeStoreException e) {
-            LOGGER.error(e);
-            setErrorCondition(PacketError.Type.wait, PacketError.Condition.internal_server_error);
-            outQueue.put(response);
-            return;
-        }
-        response.setType(IQ.Type.result);
-        outQueue.put(response);
+  private boolean nodeHandledByThisServer() {
+    if (!node.contains("@" + getServerDomain()) && !node.contains("@" + getTopicsDomain())) {
+      setErrorCondition(PacketError.Type.modify, PacketError.Condition.not_acceptable);
+      return false;
     }
+    return true;
+  }
 
-    private boolean actorAllowedToDelete() throws NodeStoreException {
-        boolean isOwner = channelManager.getNodeMembership(node, actor).getAffiliation().equals(Affiliations.owner);
-
-        if (isOwner) {
-            return true;
-        }
-        setErrorCondition(PacketError.Type.auth, PacketError.Condition.not_authorized);
-        return false;
+  private boolean nodeValid() {
+    if (!node.matches(NODE_REG_EX)) {
+      setErrorCondition(PacketError.Type.modify, PacketError.Condition.bad_request);
+      return false;
     }
-
-    private boolean nodeHandledByThisServer() {
-        if (!node.contains("@" + getServerDomain()) && !node.contains("@" + getTopicsDomain())) {
-            setErrorCondition(PacketError.Type.modify, PacketError.Condition.not_acceptable);
-            return false;
-        }
-        return true;
-    }
-
-    private boolean nodeValid() {
-        if (!node.matches(NODE_REG_EX)) {
-            setErrorCondition(PacketError.Type.modify, PacketError.Condition.bad_request);
-            return false;
-        }
-        return true;
-    }
+    return true;
+  }
 }

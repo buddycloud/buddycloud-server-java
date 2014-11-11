@@ -8,7 +8,6 @@ import junit.framework.Assert;
 
 import org.buddycloud.channelserver.Configuration;
 import org.buddycloud.channelserver.channel.ChannelManager;
-import org.buddycloud.channelserver.channel.node.configuration.field.Ephemeral;
 import org.buddycloud.channelserver.db.exception.NodeStoreException;
 import org.buddycloud.channelserver.packetHandler.iq.IQTestHandler;
 import org.buddycloud.channelserver.pubsub.affiliation.Affiliations;

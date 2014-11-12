@@ -136,6 +136,8 @@ public class XMLConstants {
 
     public static final String SUBSCRIPTION_ATTR = "subscription";
 
+    public static final String CAN_NOT_DELETE_EPHEMERAL_NODE = "can-not-delete-ephemeral-node";
+
     // Private (hidden) constructor
     private XMLConstants() {
 

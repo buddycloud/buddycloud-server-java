@@ -12,6 +12,7 @@ import org.buddycloud.channelserver.Configuration;
 import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.channel.Conf;
 import org.buddycloud.channelserver.channel.node.configuration.field.AccessModel;
+import org.buddycloud.channelserver.channel.node.configuration.field.Ephemeral;
 import org.buddycloud.channelserver.packetHandler.iq.IQTestHandler;
 import org.buddycloud.channelserver.pubsub.affiliation.Affiliations;
 import org.buddycloud.channelserver.pubsub.model.NodeMembership;
@@ -324,6 +325,28 @@ public class SubscribeSetTest extends IQTestHandler {
         Assert.assertEquals(Buddycloud.NS_ERROR,
                 error.getApplicationConditionNamespaceURI());
 
+    }
+    
+    @Test
+    public void ifEphemerialNodeUserSubscribesAsModerator() throws Exception {
+
+      Map<String, String> configuration = new HashMap<String, String>();
+      configuration.put(Conf.ACCESS_MODEL, AccessModel.open.toString());
+      configuration.put(Ephemeral.FIELD_NAME, "true");
+      configuration.put(Conf.DEFAULT_AFFILIATION,
+              Affiliations.publisher.toString());
+      Mockito.when(channelManager.getNodeConf(Mockito.anyString()))
+              .thenReturn(configuration);
+      Mockito.when(channelManager.isEphemeralNode(Mockito.anyString())).thenReturn(true);
+
+      subscribe.process(element, new JID("francisco@denmark.lit"), request,
+              null);
+
+      Mockito.verify(channelManager).setUserAffiliation(Mockito.anyString(),
+              Mockito.any(JID.class), Mockito.eq(Affiliations.moderator));
+
+      IQ response = (IQ) queue.poll();
+      Assert.assertEquals(IQ.Type.result, response.getType());
     }
 
 }

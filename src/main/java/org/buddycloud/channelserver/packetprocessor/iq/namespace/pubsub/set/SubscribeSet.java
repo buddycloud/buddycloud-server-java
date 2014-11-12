@@ -150,6 +150,10 @@ public class SubscribeSet extends PubSubElementProcessorAbstract {
                 if (!membership.getAffiliation().in(Affiliations.none)) {
                     defaultAffiliation = membership.getAffiliation();
                 }
+                
+                if (channelManager.isEphemeralNode(node) && !defaultAffiliation.equals(Affiliations.owner)) {
+                  defaultAffiliation = Affiliations.moderator;
+                }
                 channelManager.setUserAffiliation(node, subscribingJid, defaultAffiliation);
             }
 

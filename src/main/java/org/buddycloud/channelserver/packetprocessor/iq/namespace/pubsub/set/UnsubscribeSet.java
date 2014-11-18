@@ -26,127 +26,137 @@ import org.xmpp.resultsetmanagement.ResultSet;
 
 public class UnsubscribeSet extends PubSubElementProcessorAbstract {
 
-    public static final String NODE_ID_REQUIRED = "nodeid-required";
-    public static final String CAN_NOT_UNSUBSCRIBE_ANOTHER_USER = "can-only-unsubscribe-self";
-    public static final String MUST_HAVE_ONE_OWNER = "node-must-have-owner";
+  public static final String NODE_ID_REQUIRED = "nodeid-required";
+  public static final String CAN_NOT_UNSUBSCRIBE_ANOTHER_USER = "can-only-unsubscribe-self";
+  public static final String MUST_HAVE_ONE_OWNER = "node-must-have-owner";
 
-    private JID unsubscribingJid;
+  private JID unsubscribingJid;
 
 
-    public UnsubscribeSet(BlockingQueue<Packet> outQueue, ChannelManager channelManager) {
-        this.outQueue = outQueue;
-        this.channelManager = channelManager;
+  public UnsubscribeSet(BlockingQueue<Packet> outQueue, ChannelManager channelManager) {
+    this.outQueue = outQueue;
+    this.channelManager = channelManager;
 
-        acceptedElementName = XMLConstants.UNSUBSCRIBE_ELEM;
+    acceptedElementName = XMLConstants.UNSUBSCRIBE_ELEM;
+  }
+
+  @Override
+  public void process(Element elm, JID actorJID, IQ reqIQ, Element rsm) throws Exception {
+
+    request = reqIQ;
+    node =
+        request.getChildElement().element(XMLConstants.UNSUBSCRIBE_ELEM)
+            .attributeValue(XMLConstants.NODE_ATTR);
+    response = IQ.createResultIQ(request);
+
+    if ((node == null) || "".equals(node)) {
+      missingNodeName();
+      return;
     }
 
-    @Override
-    public void process(Element elm, JID actorJID, IQ reqIQ, Element rsm) throws Exception {
-
-        request = reqIQ;
-        node = request.getChildElement().element(XMLConstants.UNSUBSCRIBE_ELEM).attributeValue(XMLConstants.NODE_ATTR);
-        response = IQ.createResultIQ(request);
-
-        if ((node == null) || "".equals(node)) {
-            missingNodeName();
-            return;
-        }
-
-        JID from = request.getFrom();
-        if ((false == node.equals("/firehose")) && (false == Configuration.getInstance().isLocalNode(node))) {
-            makeRemoteRequest();
-            return;
-        }
-        if (actorJID != null) {
-            from = actorJID;
-        }
-
-        unsubscribingJid = new JID(request.getChildElement().element(XMLConstants.UNSUBSCRIBE_ELEM).attributeValue(XMLConstants.JID_ATTR));
-
-        if (false == unsubscribingJid.toBareJID().equals(from.toBareJID())) {
-            failAuthRequired();
-            return;
-        }
-
-
-        if (false == channelManager.nodeExists(node)) {
-            setErrorCondition(PacketError.Type.cancel, PacketError.Condition.item_not_found);
-            outQueue.put(response);
-            return;
-        }
-
-        NodeMembership membership = channelManager.getNodeMembership(node, unsubscribingJid);
-
-        // Check that the requesting user is allowed to unsubscribe according to
-        // XEP-0060 section 6.2.3.3
-
-        if (!unsubscribingJid.equals(membership.getUser())) {
-            createExtendedErrorReply(PacketError.Type.auth, PacketError.Condition.forbidden, CAN_NOT_UNSUBSCRIBE_ANOTHER_USER, Buddycloud.NS);
-            outQueue.put(response);
-            return;
-        }
-
-        if (membership.getAffiliation().equals(Affiliations.owner) && (channelManager.getNodeOwners(node).size() < 2)) {
-
-            createExtendedErrorReply(PacketError.Type.cancel, PacketError.Condition.not_allowed, MUST_HAVE_ONE_OWNER, Buddycloud.NS);
-            outQueue.put(response);
-            return;
-        }
-
-        NodeSubscription newSubscription =
-                new NodeSubscriptionImpl(membership.getNodeId(), membership.getUser(), membership.getListener(), Subscriptions.none, null);
-
-        channelManager.addUserSubscription(newSubscription);
-        if (!Affiliations.outcast.equals(membership.getAffiliation())) {
-            channelManager.setUserAffiliation(node, unsubscribingJid, Affiliations.none);
-        }
-
-        outQueue.put(response);
-        notifySubscribers();
+    JID from = request.getFrom();
+    if ((false == node.equals("/firehose"))
+        && (false == Configuration.getInstance().isLocalNode(node))) {
+      makeRemoteRequest();
+      return;
+    }
+    if (actorJID != null) {
+      from = actorJID;
     }
 
-    private void notifySubscribers() throws NodeStoreException, InterruptedException {
-        ResultSet<NodeSubscription> subscribers = channelManager.getNodeSubscriptionListeners(node);
+    unsubscribingJid =
+        new JID(request.getChildElement().element(XMLConstants.UNSUBSCRIBE_ELEM)
+            .attributeValue(XMLConstants.JID_ATTR));
 
-        Document document = getDocumentHelper();
-        Element message = document.addElement("message");
-        message.addAttribute("remote-server-discover", "false");
-        Element event = message.addElement("event", Event.NAMESPACE);
-        Element subscription = event.addElement("subscription");
-        subscription.addAttribute("node", node);
-        subscription.addAttribute("jid", unsubscribingJid.toBareJID());
-        subscription.addAttribute("subscription", Subscriptions.none.toString());
-        message.addAttribute("from", request.getTo().toString());
-        message.addAttribute("type", "headline");
-        // "None" because we don't glorify the bad
-        Element affiliations = event.addElement("affiliations");
-        Element affiliation = affiliations.addElement("affiliation");
-        affiliation.addAttribute("jid", unsubscribingJid.toBareJID());
-        affiliation.addAttribute("node", node);
-
-        Message rootElement = new Message(message);
-
-        for (NodeSubscription subscriber : subscribers) {
-            Message notification = rootElement.createCopy();
-            notification.setTo(subscriber.getUser());
-            outQueue.put(notification);
-        }
-
-        Collection<JID> admins = getAdminUsers();
-        for (JID admin : admins) {
-            Message notification = rootElement.createCopy();
-            notification.setTo(admin);
-            outQueue.put(notification);
-        }
+    if (false == unsubscribingJid.toBareJID().equals(from.toBareJID())) {
+      failAuthRequired();
+      return;
     }
 
-    private void failAuthRequired() throws InterruptedException {
-        setErrorCondition(PacketError.Type.auth, PacketError.Condition.not_authorized);
-        outQueue.put(response);
+
+    if (false == channelManager.nodeExists(node)) {
+      setErrorCondition(PacketError.Type.cancel, PacketError.Condition.item_not_found);
+      outQueue.put(response);
+      return;
     }
 
-    private void missingNodeName() throws InterruptedException {
-        createExtendedErrorReply(PacketError.Type.modify, PacketError.Condition.bad_request, NODE_ID_REQUIRED);
-        outQueue.put(response);
+    NodeMembership membership = channelManager.getNodeMembership(node, unsubscribingJid);
+
+    // Check that the requesting user is allowed to unsubscribe according to
+    // XEP-0060 section 6.2.3.3
+
+    if (!unsubscribingJid.equals(membership.getUser())) {
+      createExtendedErrorReply(PacketError.Type.auth, PacketError.Condition.forbidden,
+          CAN_NOT_UNSUBSCRIBE_ANOTHER_USER, Buddycloud.NS);
+      outQueue.put(response);
+      return;
     }
+
+    if (membership.getAffiliation().equals(Affiliations.owner)
+        && (channelManager.getNodeOwners(node).size() < 2)) {
+
+      createExtendedErrorReply(PacketError.Type.cancel, PacketError.Condition.not_allowed,
+          MUST_HAVE_ONE_OWNER, Buddycloud.NS);
+      outQueue.put(response);
+      return;
+    }
+
+    NodeSubscription newSubscription =
+        new NodeSubscriptionImpl(membership.getNodeId(), membership.getUser(),
+            membership.getListener(), Subscriptions.none, null);
+
+    channelManager.addUserSubscription(newSubscription);
+    if (!Affiliations.outcast.equals(membership.getAffiliation())) {
+      channelManager.setUserAffiliation(node, unsubscribingJid, Affiliations.none);
+    }
+
+    outQueue.put(response);
+    notifySubscribers();
+  }
+
+  private void notifySubscribers() throws NodeStoreException, InterruptedException {
+    ResultSet<NodeSubscription> subscribers = channelManager.getNodeSubscriptionListeners(node);
+
+    Document document = getDocumentHelper();
+    Element message = document.addElement("message");
+    message.addAttribute("remote-server-discover", "false");
+    Element event = message.addElement("event", Event.NAMESPACE);
+    Element subscription = event.addElement("subscription");
+    subscription.addAttribute("node", node);
+    subscription.addAttribute("jid", unsubscribingJid.toBareJID());
+    subscription.addAttribute("subscription", Subscriptions.none.toString());
+    message.addAttribute("from", request.getTo().toString());
+    message.addAttribute("type", "headline");
+    // "None" because we don't glorify the bad
+    Element affiliations = event.addElement("affiliations");
+    Element affiliation = affiliations.addElement("affiliation");
+    affiliation.addAttribute("jid", unsubscribingJid.toBareJID());
+    affiliation.addAttribute("node", node);
+
+    Message rootElement = new Message(message);
+
+    for (NodeSubscription subscriber : subscribers) {
+      Message notification = rootElement.createCopy();
+      notification.setTo(subscriber.getUser());
+      outQueue.put(notification);
+    }
+
+    Collection<JID> admins = getAdminUsers();
+    for (JID admin : admins) {
+      Message notification = rootElement.createCopy();
+      notification.setTo(admin);
+      outQueue.put(notification);
+    }
+  }
+
+  private void failAuthRequired() throws InterruptedException {
+    setErrorCondition(PacketError.Type.auth, PacketError.Condition.not_authorized);
+    outQueue.put(response);
+  }
+
+  private void missingNodeName() throws InterruptedException {
+    createExtendedErrorReply(PacketError.Type.modify, PacketError.Condition.bad_request,
+        NODE_ID_REQUIRED);
+    outQueue.put(response);
+  }
 }

@@ -324,4 +324,28 @@ public class UnsubscribeSetTest extends IQTestHandler {
     Assert.assertFalse(unsubscribe.accept(new BaseElement("not-unsubscribe")));
   }
 
+  @Test
+  public void doesNotDeleteEphemeralNodeIfThereAreSubscribers() throws Exception {
+    Mockito.when(channelManager.isEphemeralNode(Mockito.anyString())).thenReturn(true);
+    ArrayList<NodeMembership> members = new ArrayList<NodeMembership>();
+    members.add(new NodeMembershipImpl(node, jid, Subscriptions.subscribed, Affiliations.member, null));
+    Mockito.when(channelManager.getNodeMemberships(Mockito.eq(node))).thenReturn(
+        new ResultSetImpl<NodeMembership>(members));
+    
+    unsubscribe.process(element, jid, request, null);
+    
+    Mockito.verify(channelManager, Mockito.times(0)).deleteNode(Mockito.eq(node));
+  }
+
+  @Test
+  public void deletesEphemeralNodeIfThereAreNoSubscribers() throws Exception {
+    Mockito.when(channelManager.isEphemeralNode(Mockito.anyString())).thenReturn(true);
+    Mockito.when(channelManager.getNodeMemberships(Mockito.eq(node))).thenReturn(
+        new ResultSetImpl<NodeMembership>(new ArrayList<NodeMembership>()));
+    
+    unsubscribe.process(element, jid, request, null);
+    
+    Mockito.verify(channelManager, Mockito.times(1)).deleteNode(Mockito.eq(node));
+  }
+
 }

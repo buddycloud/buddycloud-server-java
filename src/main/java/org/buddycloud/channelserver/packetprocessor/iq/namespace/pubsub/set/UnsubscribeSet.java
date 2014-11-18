@@ -31,6 +31,7 @@ public class UnsubscribeSet extends PubSubElementProcessorAbstract {
   public static final String MUST_HAVE_ONE_OWNER = "node-must-have-owner";
 
   private JID unsubscribingJid;
+  private boolean isEphemeralNode;
 
 
   public UnsubscribeSet(BlockingQueue<Packet> outQueue, ChannelManager channelManager) {
@@ -91,9 +92,12 @@ public class UnsubscribeSet extends PubSubElementProcessorAbstract {
       outQueue.put(response);
       return;
     }
+    
+    isEphemeralNode = channelManager.isEphemeralNode(node);
 
     if (membership.getAffiliation().equals(Affiliations.owner)
-        && (channelManager.getNodeOwners(node).size() < 2)) {
+        && (channelManager.getNodeOwners(node).size() < 2)
+        && !isEphemeralNode) {
 
       createExtendedErrorReply(PacketError.Type.cancel, PacketError.Condition.not_allowed,
           MUST_HAVE_ONE_OWNER, Buddycloud.NS);
@@ -112,6 +116,16 @@ public class UnsubscribeSet extends PubSubElementProcessorAbstract {
 
     outQueue.put(response);
     notifySubscribers();
+    removeIfLastEphemeralSubcriber();
+  }
+
+  private void removeIfLastEphemeralSubcriber() throws NodeStoreException {
+    if (!isEphemeralNode) {
+      return;
+    }
+    if (0 == channelManager.getNodeMemberships(node).size()) {
+      channelManager.deleteNode(node);
+    }
   }
 
   private void notifySubscribers() throws NodeStoreException, InterruptedException {

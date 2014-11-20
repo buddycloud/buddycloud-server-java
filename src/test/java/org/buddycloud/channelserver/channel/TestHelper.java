@@ -21,6 +21,7 @@ public class TestHelper {
     InQueueConsumer consumer;
     
     ChannelManagerFactory channelManagerFactory;
+    private Configuration configuration;
     
     public TestHelper() throws FileNotFoundException, IOException {
         initialiseChannelManagerFactory();
@@ -29,6 +30,7 @@ public class TestHelper {
         inQueue = new LinkedBlockingQueue<Packet>();
         consumer = new InQueueConsumer(outQueue, Configuration.getInstance(), inQueue, channelManagerFactory, null, null);
         consumer.start();
+        configuration = Configuration.getInstance();
     }
     
     public LinkedBlockingQueue<Packet> getOutQueue() {
@@ -53,7 +55,7 @@ public class TestHelper {
             @Override
             public NodeStore create() {
                     try {
-                        return new JDBCNodeStore(new DatabaseTester().getConnection(), new Sql92NodeStoreDialect());
+                        return new JDBCNodeStore(new DatabaseTester().getConnection(), new Sql92NodeStoreDialect(), configuration);
                     } catch (SQLException e) {
                         e.printStackTrace();
                     } catch (IOException e) {

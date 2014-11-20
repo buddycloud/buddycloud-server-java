@@ -430,4 +430,9 @@ public class ChannelManagerImpl implements ChannelManager {
     return true;
   }
 
+    @Override
+    public int getCountLocalSubscriptionsToNode(String node) throws NodeStoreException {
+      return nodeStore.getCountLocalSubscriptionsToNode(node);
+    }
+
 }

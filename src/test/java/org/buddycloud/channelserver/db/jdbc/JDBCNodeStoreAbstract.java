@@ -7,8 +7,10 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Properties;
 import java.util.Map.Entry;
 
+import org.buddycloud.channelserver.Configuration;
 import org.buddycloud.channelserver.db.jdbc.dialect.Sql92NodeStoreDialect;
 import org.buddycloud.channelserver.packetHandler.iq.IQTestHandler;
 import org.buddycloud.channelserver.pubsub.model.NodeItem;
@@ -73,19 +75,21 @@ public abstract class JDBCNodeStoreAbstract {
 
     DatabaseTester dbTester;
     Connection conn;
+    Configuration configuration;
 
     JDBCNodeStore store;
 
     public JDBCNodeStoreAbstract() throws SQLException, IOException, ClassNotFoundException {
         dbTester = new DatabaseTester();
         IQTestHandler.readConf();
+        this.configuration = Configuration.getInstance();
     }
 
     @Before
     public void setUp() throws Exception {
         dbTester.initialise();
 
-        store = new JDBCNodeStore(dbTester.getConnection(), new Sql92NodeStoreDialect());
+        store = new JDBCNodeStore(dbTester.getConnection(), new Sql92NodeStoreDialect(), configuration);
     }
 
     @After

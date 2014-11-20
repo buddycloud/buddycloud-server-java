@@ -49,7 +49,15 @@ public class SubscriptionProcessor extends AbstractMessageProcessor {
             sendLocalNotifications(NotificationScheme.validSubscribers, null);
         } else if (subscription.equals(Subscriptions.none)) {
             sendLocalNotifications(NotificationScheme.validSubscribers, jid);
+            deleteNodeIfLastSubscriber();
         }
+    }
+
+    private void deleteNodeIfLastSubscriber() throws NodeStoreException {
+      if (0 == channelManager.getCountLocalSubscriptionsToNode(node)) {
+        channelManager.deleteNode(node);
+      }
+      
     }
 
     private void handleSubscriptionElement() throws NodeStoreException {

@@ -52,15 +52,18 @@ public class JDBCNodeStore implements NodeStore {
     private final NodeStoreSQLDialect dialect;
     private final Deque<JDBCTransaction> transactionStack;
     private boolean transactionHasBeenRolledBack = false;
+    private Configuration configuration;
 
     /**
      * Create a new node store connection backed by the given JDBC {@link Connection}.
      * 
      * @param conn the connection to the backing database.
+     * @param configuration 
      */
-    public JDBCNodeStore(final Connection conn, final NodeStoreSQLDialect dialect) {
+    public JDBCNodeStore(final Connection conn, final NodeStoreSQLDialect dialect, Configuration configuration) {
         this.conn = conn;
         this.dialect = dialect;
+        this.configuration = configuration;
         transactionStack = new ArrayDeque<JDBCTransaction>();
     }
 
@@ -677,6 +680,30 @@ public class JDBCNodeStore implements NodeStore {
         } finally {
             close(stmt); // Will implicitly close the resultset if required
         }
+    }
+    
+    @Override
+    public int getCountLocalSubscriptionsToNode(String node) throws NodeStoreException {
+
+      PreparedStatement stmt = null;
+
+      try {
+          stmt = conn.prepareStatement(dialect.countLocalValidSubscriptionsForNode());
+          stmt.setString(1, node);
+          stmt.setString(2, "%@" + configuration.getServerDomain());
+
+          java.sql.ResultSet rs = stmt.executeQuery();
+
+          stmt = null; // Prevent the finally block from closing the
+                       // statement
+
+          rs.next();
+          return rs.getInt("count");
+
+      } catch (SQLException e) {
+          LOGGER.error(e);
+          throw new NodeStoreException(e);
+      }
     }
 
     @Override
@@ -1800,6 +1827,8 @@ public class JDBCNodeStore implements NodeStore {
         String countUserAffiliations();
 
         String countSubscriptionsForNode();
+        
+        String countLocalValidSubscriptionsForNode();
 
         String countSubscriptionsToNodeForOwner();
 

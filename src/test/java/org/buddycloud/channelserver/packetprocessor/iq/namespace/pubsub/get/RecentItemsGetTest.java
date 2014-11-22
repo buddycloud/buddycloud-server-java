@@ -135,6 +135,26 @@ public class RecentItemsGetTest extends IQTestHandler {
     }
 
     @Test
+    public void providingAnActorValueMeansThisIsUsed() throws Exception {
+
+        JID actor = new JID("actor@server.org");
+        IQ request = this.request.createCopy();
+        request.setFrom(new JID("channels.server.com"));
+        
+        Mockito.when(
+                channelManager.getRecentItems(Mockito.eq(actor), Mockito.any(Date.class), Mockito.anyInt(), Mockito.anyInt(),
+                        Mockito.any(GlobalItemID.class), Mockito.anyString(), Mockito.anyBoolean())).thenThrow(new NodeStoreException());
+
+        recentItemsGet.process(element, actor, request, null);
+        Packet response = queue.poll();
+
+        PacketError error = response.getError();
+        Assert.assertNotNull(error);
+        Assert.assertEquals(PacketError.Type.wait, error.getType());
+        Assert.assertEquals(PacketError.Condition.internal_server_error, error.getCondition());
+    }
+    
+    @Test
     public void testNodeStoreExceptionGeneratesAnErrorStanza() throws Exception {
 
         Mockito.when(

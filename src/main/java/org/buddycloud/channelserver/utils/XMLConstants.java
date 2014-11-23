@@ -138,6 +138,10 @@ public class XMLConstants {
 
     public static final String CAN_NOT_DELETE_EPHEMERAL_NODE = "can-not-delete-ephemeral-node";
 
+    public static final String POLICY_VIOLATION = "policy-violation";
+
+    public static final String INVALID_NODE = "invalid-node";
+    
     // Private (hidden) constructor
     private XMLConstants() {
 

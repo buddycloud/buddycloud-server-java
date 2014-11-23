@@ -24,11 +24,7 @@ import org.xmpp.packet.JID;
 import org.xmpp.packet.Packet;
 import org.xmpp.packet.PacketError;
 
-public class PubSubGet implements PacketProcessor<IQ> {
-
-    private final BlockingQueue<Packet> outQueue;
-    private final ChannelManager channelManager;
-    private final List<PubSubElementProcessor> elementProcessors = new LinkedList<PubSubElementProcessor>();
+public class PubSubGet extends PacketProcessorAbstract {
 
     public PubSubGet(BlockingQueue<Packet> outQueue, ChannelManager channelManager) {
         this.outQueue = outQueue;
@@ -46,63 +42,6 @@ public class PubSubGet implements PacketProcessor<IQ> {
         elementProcessors.add(new NodeConfigureGet(outQueue, channelManager));
         elementProcessors.add(new NodeThreadsGet(outQueue, channelManager));
         elementProcessors.add(new RepliesGet(outQueue, channelManager));
-    }
-
-    @Override
-    public void process(IQ reqIQ) throws Exception {
-
-        Element pubsub = reqIQ.getChildElement();
-
-        JID actorJID = null;
-        if (pubsub.element(XMLConstants.ACTOR_ELEM) != null) {
-            actorJID = new JID(pubsub.element(XMLConstants.ACTOR_ELEM).getTextTrim());
-            /**
-             * TODO(lloydwatkin) validate here that the JID is somehow sane. We could check that the
-             * domains are the same etc.
-             */
-            // actor = actorJID.toBareJID();
-        }
-
-        // Let's get the possible rsm element
-        Element rsm = pubsub.element(new QName("set", new Namespace("", "http://jabber.org/protocol/rsm")));
-
-        @SuppressWarnings("unchecked")
-        List<Element> elements = pubsub.elements();
-
-        boolean handled = false;
-        for (Element x : elements) {
-            for (PubSubElementProcessor elementProcessor : elementProcessors) {
-                if (elementProcessor.accept(x)) {
-                    elementProcessor.process(x, actorJID, reqIQ, rsm);
-                    handled = true;
-                }
-            }
-        }
-
-        if (!handled) {
-
-            // <iq type='error'
-            // from='pubsub.shakespeare.lit'
-            // to='hamlet@denmark.lit/elsinore'
-            // id='create1'>
-            // <error type='cancel'>
-            // <feature-not-implemented xmlns='urn:ietf:params:xml:ns:xmpp-stanzas'/>
-            // <unsupported xmlns='http://jabber.org/protocol/pubsub#errors'
-            // feature='create-nodes'/>
-            // </error>
-            // </iq>
-
-            // TODO(lloydwatkin) fix this. Now we just reply unexpected_request.
-            // We should answer something like above.
-
-            IQ reply = IQ.createResultIQ(reqIQ);
-            reply.setChildElement(reqIQ.getChildElement().createCopy());
-            reply.setType(Type.error);
-            PacketError pe = new PacketError(org.xmpp.packet.PacketError.Condition.unexpected_request, org.xmpp.packet.PacketError.Type.wait);
-            reply.setError(pe);
-            outQueue.put(reply);
-
-        }
     }
 
 }

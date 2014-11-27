@@ -406,7 +406,12 @@ public class JDBCNodeStore implements NodeStore {
     public ResultSet<NodeMembership> getUserMemberships(JID jid, boolean ephemeral) throws NodeStoreException {
         PreparedStatement stmt = null;
         try {
-            stmt = conn.prepareStatement(dialect.selectUserMemberships());
+            String sql = dialect.selectUserMemberships();
+            String replace = "!=";
+            if (ephemeral) {
+              replace = "=";
+            }
+            stmt = conn.prepareStatement(sql.replace("%equals%", replace));
             stmt.setString(1, jid.toBareJID());
             java.sql.ResultSet rs = stmt.executeQuery();
 

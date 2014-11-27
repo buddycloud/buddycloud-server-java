@@ -85,4 +85,47 @@ public class JDBCNodeStoreUserMembershipsTest extends JDBCNodeStoreAbstract {
 
         assertTrue(newDate.after(originalDate));
     }
+    
+    
+    @Test
+    public void settingEphmeralToTrueOnlyReturnsMembershipsToEphemeralNodes() throws Exception {
+      assertTrue(false);
+      // Make a couple of these nodes ephemeral - include both no 'true' and a 'false'
+      dbTester.loadData("node_1");
+      dbTester.loadData("node_2");
+
+      ResultSet<NodeMembership> result = store.getUserMemberships(TEST_SERVER1_USER1_JID);
+
+      HashSet<NodeMembership> expected = new HashSet<NodeMembership>() {
+          {
+              add(new NodeMembershipImpl(TEST_SERVER1_NODE1_ID, TEST_SERVER1_USER1_JID, Subscriptions.subscribed, Affiliations.owner, null, new Date()));
+              add(new NodeMembershipImpl(TEST_SERVER1_NODE2_ID, TEST_SERVER1_USER1_JID, Subscriptions.subscribed, Affiliations.publisher, null,
+                      new Date()));
+          }
+      };
+
+      assertEquals("Incorrect number of user memberships returned", expected.size(), result.size());
+      assertTrue("Incorrect user memberships returned", CollectionUtils.isEqualCollection(expected, result));
+    }
+    
+    @Test
+    public void settingEphemeralToFalseOnlyReturnsMembershipsForNonEphemeralNodes() throws Exception {
+      assertTrue(false);
+      // Make a couple of these nodes ephemeral - include both no 'true' and a 'false'
+      dbTester.loadData("node_1");
+      dbTester.loadData("node_2");
+
+      ResultSet<NodeMembership> result = store.getUserMemberships(TEST_SERVER1_USER1_JID);
+
+      HashSet<NodeMembership> expected = new HashSet<NodeMembership>() {
+          {
+              add(new NodeMembershipImpl(TEST_SERVER1_NODE1_ID, TEST_SERVER1_USER1_JID, Subscriptions.subscribed, Affiliations.owner, null, new Date()));
+              add(new NodeMembershipImpl(TEST_SERVER1_NODE2_ID, TEST_SERVER1_USER1_JID, Subscriptions.subscribed, Affiliations.publisher, null,
+                      new Date()));
+          }
+      };
+
+      assertEquals("Incorrect number of user memberships returned", expected.size(), result.size());
+      assertTrue("Incorrect user memberships returned", CollectionUtils.isEqualCollection(expected, result));
+    }
 }

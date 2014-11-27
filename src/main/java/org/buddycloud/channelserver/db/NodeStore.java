@@ -127,8 +127,20 @@ public interface NodeStore {
      */
     void addUserSubscription(NodeSubscription subscription) throws NodeStoreException;
 
+    
     /**
      * Get a user's node memberships (subscription + affiliation)
+     * 
+     * @param jid
+     * @return
+     * @throws NodeStoreException
+     */
+    ResultSet<NodeMembership> getUserMemberships(JID jid, boolean ephemeral)
+        throws NodeStoreException;
+    
+    /**
+     * Get a user's node memberships (subscription + affiliation)
+     * Default ephemeral to false
      * 
      * @param jid
      * @return

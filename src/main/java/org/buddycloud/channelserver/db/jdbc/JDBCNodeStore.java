@@ -396,9 +396,14 @@ public class JDBCNodeStore implements NodeStore {
             close(stmt); // Will implicitly close the resultset if required
         }
     }
-
+    
     @Override
     public ResultSet<NodeMembership> getUserMemberships(JID jid) throws NodeStoreException {
+      return getUserMemberships(jid, false);
+    }
+
+    @Override
+    public ResultSet<NodeMembership> getUserMemberships(JID jid, boolean ephemeral) throws NodeStoreException {
         PreparedStatement stmt = null;
         try {
             stmt = conn.prepareStatement(dialect.selectUserMemberships());

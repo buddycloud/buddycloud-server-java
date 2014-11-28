@@ -26,6 +26,7 @@ public class SubscriptionsGet extends PubSubElementProcessorAbstract {
     private String node;
     private JID actorJid;
     private IQ requestIq;
+    private boolean ephemeral = false;
 
     public SubscriptionsGet(BlockingQueue<Packet> outQueue, ChannelManager channelManager) {
         this.outQueue = outQueue;
@@ -133,7 +134,15 @@ public class SubscriptionsGet extends PubSubElementProcessorAbstract {
     private boolean getUserMemberships(Element subscriptions) throws NodeStoreException, InterruptedException {
         // let's get all subscriptions.
         ResultSet<NodeMembership> cur;
-        cur = channelManager.getUserMemberships(actorJid);
+        
+        String ephemeralValue =
+            request.getChildElement().element(XMLConstants.SUBSCRIPTIONS_ELEM)
+                .attributeValue(XMLConstants.EPHEMERAL);
+        if ((null != ephemeralValue) && ephemeralValue.equals("true")) {
+          ephemeral = true;
+        }
+        
+        cur = channelManager.getUserMemberships(actorJid, ephemeral);
 
         if ((null != requestIq.getElement().element(XMLConstants.PUBSUB_ELEM).element("set")) && (!cur.isEmpty())
                 && (!Configuration.getInstance().isLocalJID(actorJid))) {

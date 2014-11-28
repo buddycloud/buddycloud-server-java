@@ -207,5 +207,24 @@ public class SubscriptionsGetTest extends IQTestHandler {
         Assert.assertEquals(1, response.getChildElement().element("subscriptions").elements("subscription").size());
 
     }
+    
+    
+    @Test
+    public void canRequestUserSubscriptionsForEphemeralOnlyNodes() throws Exception {
+      Assert.assertTrue(false);
+      Mockito.verify(channelManager, Mockito.times(1)).getUserMemberships(Mockito.any(JID.class), Mockito.eq(true));
+    }
+    
+    @Test
+    public void notProvidingEphemeralAttributeForUserSubscriptionsResultsInNotEphemeralNodeGathering() throws Exception {
+      Assert.assertTrue(false);
+      Mockito.verify(channelManager, Mockito.times(1)).getUserMemberships(Mockito.any(JID.class), Mockito.eq(false));
+    }
+    
+    @Test
+    public void providingAnIncorrectValueForEphemeralAttributeResultsInNotEphemeralGatheringOfUserSubscriptions() throws Exception {
+      Assert.assertTrue(false);
+      Mockito.verify(channelManager, Mockito.times(1)).getUserMemberships(Mockito.any(JID.class), Mockito.eq(false));
+    }
 
 }

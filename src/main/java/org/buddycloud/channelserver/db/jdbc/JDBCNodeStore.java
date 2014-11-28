@@ -407,9 +407,9 @@ public class JDBCNodeStore implements NodeStore {
         PreparedStatement stmt = null;
         try {
             String sql = dialect.selectUserMemberships();
-            String replace = "!=";
+            String replace = "IS NULL OR \"node_config\".\"value\" != 'true'";
             if (ephemeral) {
-              replace = "=";
+              replace = "= 'true'";
             }
             stmt = conn.prepareStatement(sql.replace("%equals%", replace));
             stmt.setString(1, jid.toBareJID());

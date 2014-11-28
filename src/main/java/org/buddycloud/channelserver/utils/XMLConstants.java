@@ -40,6 +40,8 @@ public class XMLConstants {
 
     public static final String ERROR_ELEM = "error";
 
+    public static final String EPHEMERAL = "ephemeral";
+    
     public static final String TEXT_ELEM = "text";
 
     public static final String CREATE_ELEM = "create";

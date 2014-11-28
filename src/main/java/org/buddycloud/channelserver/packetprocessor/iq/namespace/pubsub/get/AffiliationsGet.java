@@ -121,7 +121,7 @@ public class AffiliationsGet extends PubSubElementProcessorAbstract {
 
     String ephemeralValue =
         request.getChildElement().element(XMLConstants.AFFILIATIONS_ELEM)
-            .attributeValue(XMLConstants.EPHEMERAL);
+            .attributeValue(XMLConstants.BUDDYCLOUD_XMLNS_PREFIX + XMLConstants.EPHEMERAL);
     if ((null != ephemeralValue) && ephemeralValue.equals("true")) {
       ephemeral = true;
     }

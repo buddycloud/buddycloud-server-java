@@ -136,12 +136,12 @@ public class SubscriptionsGet extends PubSubElementProcessorAbstract {
         ResultSet<NodeMembership> cur;
         
         String ephemeralValue =
-            request.getChildElement().element(XMLConstants.SUBSCRIPTIONS_ELEM)
-                .attributeValue(XMLConstants.EPHEMERAL);
+            requestIq.getChildElement().element(XMLConstants.SUBSCRIPTIONS_ELEM)
+                .attributeValue(XMLConstants.BUDDYCLOUD_XMLNS_PREFIX + XMLConstants.EPHEMERAL);
         if ((null != ephemeralValue) && ephemeralValue.equals("true")) {
           ephemeral = true;
         }
-        
+
         cur = channelManager.getUserMemberships(actorJid, ephemeral);
 
         if ((null != requestIq.getElement().element(XMLConstants.PUBSUB_ELEM).element("set")) && (!cur.isEmpty())

@@ -140,6 +140,8 @@ public class XMLConstants {
 
     public static final String CAN_NOT_DELETE_EPHEMERAL_NODE = "can-not-delete-ephemeral-node";
 
+    public static final String BUDDYCLOUD_XMLNS_PREFIX = "bc:";
+
     // Private (hidden) constructor
     private XMLConstants() {
 

@@ -427,7 +427,7 @@ public class AffiliationsGetTest extends IQTestHandler {
         request.getElement().element(XMLConstants.PUBSUB_ELEM)
             .element(XMLConstants.AFFILIATIONS_ELEM);
     affiliations.addNamespace("bc", Buddycloud.NS);
-    affiliations.addAttribute("ephemeral", "true");
+    affiliations.addAttribute("bc:ephemeral", "true");
 
     try {
       affiliationsGet.process(element, jid, request, null);

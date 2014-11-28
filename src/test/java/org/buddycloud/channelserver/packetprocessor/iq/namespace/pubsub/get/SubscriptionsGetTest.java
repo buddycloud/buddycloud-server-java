@@ -14,6 +14,8 @@ import org.buddycloud.channelserver.pubsub.affiliation.Affiliations;
 import org.buddycloud.channelserver.pubsub.model.NodeMembership;
 import org.buddycloud.channelserver.pubsub.model.impl.NodeMembershipImpl;
 import org.buddycloud.channelserver.pubsub.subscription.Subscriptions;
+import org.buddycloud.channelserver.utils.XMLConstants;
+import org.buddycloud.channelserver.utils.node.item.payload.Buddycloud;
 import org.dom4j.Element;
 import org.dom4j.tree.BaseElement;
 import org.junit.Before;
@@ -74,7 +76,7 @@ public class SubscriptionsGetTest extends IQTestHandler {
         ArrayList<NodeMembership> members = new ArrayList<NodeMembership>();
         members.add(new NodeMembershipImpl(node, jid, Subscriptions.invited, Affiliations.publisher, invitedBy));
 
-        Mockito.when(channelManager.getUserMemberships(Mockito.any(JID.class))).thenReturn(new ResultSetImpl<NodeMembership>(members));
+        Mockito.when(channelManager.getUserMemberships(Mockito.any(JID.class), Mockito.eq(false))).thenReturn(new ResultSetImpl<NodeMembership>(members));
 
         subscriptionsGet.process(element, jid, userRequest, null);
 
@@ -211,19 +213,46 @@ public class SubscriptionsGetTest extends IQTestHandler {
     
     @Test
     public void canRequestUserSubscriptionsForEphemeralOnlyNodes() throws Exception {
-      Assert.assertTrue(false);
+      IQ request = userRequest.createCopy();
+      Element subscriptions =
+          request.getElement().element(XMLConstants.PUBSUB_ELEM)
+              .element(XMLConstants.SUBSCRIPTIONS_ELEM);
+      subscriptions.addNamespace("bc", Buddycloud.NS);
+      subscriptions.addAttribute("bc:ephemeral", "true");     
+
+      try {
+        subscriptionsGet.process(element, jid, request, null);
+      } catch (NullPointerException e) {
+        
+      }
       Mockito.verify(channelManager, Mockito.times(1)).getUserMemberships(Mockito.any(JID.class), Mockito.eq(true));
     }
     
     @Test
     public void notProvidingEphemeralAttributeForUserSubscriptionsResultsInNotEphemeralNodeGathering() throws Exception {
-      Assert.assertTrue(false);
+      try {
+        subscriptionsGet.process(element, jid, userRequest, null);
+      } catch (NullPointerException e) {
+        
+      }
       Mockito.verify(channelManager, Mockito.times(1)).getUserMemberships(Mockito.any(JID.class), Mockito.eq(false));
     }
     
     @Test
     public void providingAnIncorrectValueForEphemeralAttributeResultsInNotEphemeralGatheringOfUserSubscriptions() throws Exception {
-      Assert.assertTrue(false);
+
+      IQ request = userRequest.createCopy();
+      Element subscriptions =
+          request.getElement().element(XMLConstants.PUBSUB_ELEM)
+              .element(XMLConstants.SUBSCRIPTIONS_ELEM);
+      subscriptions.addNamespace("bc", Buddycloud.NS);
+      subscriptions.addAttribute("bc:ephemeral", "sure");
+      
+      try {
+        subscriptionsGet.process(element, jid, request, null);
+      } catch (NullPointerException e) {
+        
+      }
       Mockito.verify(channelManager, Mockito.times(1)).getUserMemberships(Mockito.any(JID.class), Mockito.eq(false));
     }
 

@@ -378,6 +378,12 @@ public class ChannelManagerImpl implements ChannelManager {
   public ResultSet<NodeMembership> getUserMemberships(JID jid) throws NodeStoreException {
     return nodeStore.getUserMemberships(jid);
   }
+  
+  @Override
+  public ResultSet<NodeMembership> getUserMemberships(JID jid, boolean ephemeral)
+      throws NodeStoreException {
+    return nodeStore.getUserMemberships(jid, ephemeral);
+  }
 
   @Override
   public ResultSet<NodeMembership> getNodeMemberships(String nodeId) throws NodeStoreException {

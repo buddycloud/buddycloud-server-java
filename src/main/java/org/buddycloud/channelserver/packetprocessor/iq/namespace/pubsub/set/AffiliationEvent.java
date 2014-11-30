@@ -28,6 +28,7 @@ public class AffiliationEvent extends PubSubElementProcessorAbstract {
   Element requestedAffiliationElement;
   NodeMembership usersCurrentMembership;
   private Affiliations requestedAffiliation;
+  private NodeMembership membership;
 
   private static final Logger LOGGER = Logger.getLogger(AffiliationEvent.class);
 
@@ -202,12 +203,17 @@ public class AffiliationEvent extends PubSubElementProcessorAbstract {
       setErrorCondition(PacketError.Type.modify, PacketError.Condition.unexpected_request);
       return false;
     }
+    if (membership.getAffiliation().equals(Affiliations.moderator)
+        && usersCurrentMembership.getAffiliation().canAuthorize()) {
+      setErrorCondition(PacketError.Type.auth, PacketError.Condition.forbidden);
+      return false;
+    }
     return true;
   }
 
   private boolean actorHasPermissionToAuthorize() throws NodeStoreException {
 
-    NodeMembership membership = channelManager.getNodeMembership(node, actor);
+    membership = channelManager.getNodeMembership(node, actor);
     if (!membership.getAffiliation().canAuthorize()) {
       setErrorCondition(PacketError.Type.auth, PacketError.Condition.not_authorized);
       return false;

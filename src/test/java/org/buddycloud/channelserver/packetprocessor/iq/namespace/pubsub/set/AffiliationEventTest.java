@@ -395,4 +395,47 @@ public class AffiliationEventTest extends IQTestHandler {
     Assert.assertEquals(PacketError.Type.cancel, error.getType());
     Assert.assertEquals(PacketError.Condition.not_allowed, error.getCondition());
   }
+
+  @Test
+  public void moderatorsCantAffectAffiliationOfOwner() throws Exception {
+    Mockito.when(channelManager.nodeExists(node)).thenReturn(true);
+
+    Mockito.when(channelManager.getNodeMembership(Mockito.anyString(), Mockito.eq(jid)))
+        .thenReturn(
+            new NodeMembershipImpl(node, jid, Subscriptions.subscribed, Affiliations.moderator,
+                null));
+    Mockito.when(
+        channelManager.getNodeMembership(Mockito.anyString(),
+            Mockito.eq(new JID("francisco@denmark.lit")))).thenReturn(
+        new NodeMembershipImpl(node, jid, Subscriptions.none, Affiliations.owner, null));
+
+    event.process(element, jid, request, null);
+    Packet response = queue.poll();
+    PacketError error = response.getError();
+    Assert.assertNotNull(error);
+    Assert.assertEquals(PacketError.Type.auth, error.getType());
+    Assert.assertEquals(PacketError.Condition.forbidden, error.getCondition());
+  }
+
+  @Test
+  public void moderatorCantAffectAffiliationOfAnotherModerator() throws Exception {
+    Mockito.when(channelManager.nodeExists(node)).thenReturn(true);
+
+    Mockito.when(channelManager.getNodeMembership(Mockito.anyString(), Mockito.eq(jid)))
+        .thenReturn(
+            new NodeMembershipImpl(node, jid, Subscriptions.subscribed, Affiliations.moderator,
+                null));
+    Mockito.when(
+        channelManager.getNodeMembership(Mockito.anyString(),
+            Mockito.eq(new JID("francisco@denmark.lit")))).thenReturn(
+        new NodeMembershipImpl(node, jid, Subscriptions.none, Affiliations.moderator, null));
+
+    event.process(element, jid, request, null);
+    Packet response = queue.poll();
+    PacketError error = response.getError();
+    Assert.assertNotNull(error);
+    Assert.assertEquals(PacketError.Type.auth, error.getType());
+    Assert.assertEquals(PacketError.Condition.forbidden, error.getCondition());
+  }
+
 }

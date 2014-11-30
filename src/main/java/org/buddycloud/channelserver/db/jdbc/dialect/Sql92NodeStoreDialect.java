@@ -272,9 +272,14 @@ public class Sql92NodeStoreDialect implements NodeStoreSQLDialect {
             + "END AS \"subscription\", " + "CASE WHEN \"affiliations\".\"affiliation\" != '' " + "THEN \"affiliations\".\"affiliation\" "
             + "ELSE 'none' " + "END AS \"affiliation\", " + "\"subscriptions\".\"invited_by\" AS \"invited_by\","
             + "CASE WHEN \"affiliations\".\"updated\" > \"subscriptions\".\"updated\" " + "THEN \"affiliations\".\"updated\" "
-            + "ELSE \"subscriptions\".\"updated\" " + "END AS \"updated\" " + "FROM \"subscriptions\" " + "LEFT JOIN \"affiliations\" "
+            + "ELSE \"subscriptions\".\"updated\" " + "END AS \"updated\" " + "FROM \"subscriptions\" " 
+            + "LEFT JOIN \"node_config\" ON (\"node_config\".\"node\" = \"subscriptions\".\"node\" AND \"node_config\".\"key\" = 'buddycloud#ephemeral') "
+            
+            + "LEFT JOIN \"affiliations\" "
             + "ON \"subscriptions\".\"node\" = \"affiliations\".\"node\" AND \"affiliations\".\"user\" = \"subscriptions\".\"user\" " + "WHERE "
-            + "(\"subscriptions\".\"user\" = ?) " + "ORDER BY \"updated\" DESC; ";
+            + "(\"subscriptions\".\"user\" = ?) " 
+            + "AND (\"node_config\".\"value\" %equals%)"
+            + "ORDER BY \"updated\" DESC; ";
 
     private static final String SELECT_NODE_MEMBERSHIPS = "" + "SELECT " + "CASE WHEN \"subscriptions\".\"node\" != '' "
             + "THEN \"subscriptions\".\"node\" " + "ELSE \"affiliations\".\"node\" " + "END AS \"node\"," + "CASE WHEN \"subscriptions\".\"user\" != '' "

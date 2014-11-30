@@ -40,6 +40,8 @@ public class XMLConstants {
 
     public static final String ERROR_ELEM = "error";
 
+    public static final String EPHEMERAL = "ephemeral";
+    
     public static final String TEXT_ELEM = "text";
 
     public static final String CREATE_ELEM = "create";
@@ -137,6 +139,8 @@ public class XMLConstants {
     public static final String SUBSCRIPTION_ATTR = "subscription";
 
     public static final String CAN_NOT_DELETE_EPHEMERAL_NODE = "can-not-delete-ephemeral-node";
+
+    public static final String BUDDYCLOUD_XMLNS_PREFIX = "bc:";
 
     // Private (hidden) constructor
     private XMLConstants() {

@@ -66,4 +66,5 @@ public class JDBCNodeStoreMembershipTest extends JDBCNodeStoreAbstract {
 
         assertTrue(newDate.after(originalDate));
     }
+
 }

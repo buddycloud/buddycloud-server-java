@@ -396,12 +396,22 @@ public class JDBCNodeStore implements NodeStore {
             close(stmt); // Will implicitly close the resultset if required
         }
     }
-
+    
     @Override
     public ResultSet<NodeMembership> getUserMemberships(JID jid) throws NodeStoreException {
+      return getUserMemberships(jid, false);
+    }
+
+    @Override
+    public ResultSet<NodeMembership> getUserMemberships(JID jid, boolean ephemeral) throws NodeStoreException {
         PreparedStatement stmt = null;
         try {
-            stmt = conn.prepareStatement(dialect.selectUserMemberships());
+            String sql = dialect.selectUserMemberships();
+            String replace = "IS NULL OR \"node_config\".\"value\" != 'true'";
+            if (ephemeral) {
+              replace = "= 'true'";
+            }
+            stmt = conn.prepareStatement(sql.replace("%equals%", replace));
             stmt.setString(1, jid.toBareJID());
             java.sql.ResultSet rs = stmt.executeQuery();
 

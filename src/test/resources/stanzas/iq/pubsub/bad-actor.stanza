@@ -1,0 +1,9 @@
+<iq type="get"
+    from="channels.denmark.lit"
+    to="channels.shakespeare.lit"
+    id="items1">
+   <pubsub xmlns="http://jabber.org/protocol/pubsub">
+      <items node="/user/francisco@denmark.lit/posts"/>
+      <actor xmlns="http://buddycloud.org/v1">francisco@holland.lit</actor>
+   </pubsub>
+</iq>

@@ -142,6 +142,10 @@ public class XMLConstants {
 
     public static final String BUDDYCLOUD_XMLNS_PREFIX = "bc:";
 
+    public static final String POLICY_VIOLATION = "policy-violation";
+
+    public static final String INVALID_NODE = "invalid-node";
+    
     // Private (hidden) constructor
     private XMLConstants() {
 

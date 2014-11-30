@@ -1,11 +1,8 @@
 package org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub;
 
-import java.util.LinkedList;
-import java.util.List;
 import java.util.concurrent.BlockingQueue;
 
 import org.buddycloud.channelserver.channel.ChannelManager;
-import org.buddycloud.channelserver.packetprocessor.PacketProcessor;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.set.AffiliationEvent;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.set.ItemDelete;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.set.NodeConfigure;
@@ -15,19 +12,9 @@ import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.set.Publ
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.set.SubscribeSet;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.set.SubscriptionEvent;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.set.UnsubscribeSet;
-import org.buddycloud.channelserver.utils.XMLConstants;
-import org.dom4j.Element;
-import org.xmpp.packet.IQ;
-import org.xmpp.packet.IQ.Type;
-import org.xmpp.packet.JID;
 import org.xmpp.packet.Packet;
-import org.xmpp.packet.PacketError;
 
-public class PubSubSet implements PacketProcessor<IQ> {
-
-    private final BlockingQueue<Packet> outQueue;
-    private final ChannelManager channelManager;
-    private final List<PubSubElementProcessor> elementProcessors = new LinkedList<PubSubElementProcessor>();
+public class PubSubSet extends PacketProcessorAbstract {
 
     public PubSubSet(BlockingQueue<Packet> outQueue, ChannelManager channelManager) {
         this.outQueue = outQueue;
@@ -45,65 +32,6 @@ public class PubSubSet implements PacketProcessor<IQ> {
         elementProcessors.add(new AffiliationEvent(outQueue, channelManager));
         elementProcessors.add(new ItemDelete(outQueue, channelManager));
         elementProcessors.add(new NodeDelete(outQueue, channelManager));
-    }
-
-    @Override
-    public void process(IQ reqIQ) throws Exception {
-
-        Element pubsub = reqIQ.getChildElement();
-
-        // Let's get the possible actor
-        JID actorJID = null;
-        if (pubsub.elementText(XMLConstants.ACTOR_ELEM) != null) {
-            actorJID = new JID(pubsub.elementText(XMLConstants.ACTOR_ELEM).trim());
-            /**
-             * TODO(lloydwatkin) validate here that the JID is somehow sane. We could check that the
-             * domains are the same etc.
-             * 
-             */
-            // something like this:
-            // reqIQ.getFrom().getDomain().contains(actorJID.getDomain());
-            //
-            // If not, return not-allowed or bad request?
-            // <error type='cancel'>
-            // <not-allowed xmlns='urn:ietf:params:xml:ns:xmpp-stanzas'/>
-            //
-            // or ?
-            //
-            // <bad-request xmlns='urn:ietf:params:xml:ns:xmpp-stanzas'/>
-            // </error>
-            //
-            // actor = actorJID.toBareJID();
-
-            if (!reqIQ.getFrom().getDomain().contains(actorJID.getDomain())) {
-                IQ reply = IQ.createResultIQ(reqIQ);
-                reply.setChildElement(reqIQ.getChildElement().createCopy());
-                reply.setType(Type.error);
-                PacketError pe = new PacketError(org.xmpp.packet.PacketError.Condition.bad_request, org.xmpp.packet.PacketError.Type.cancel);
-                reply.setError(pe);
-                outQueue.put(reply);
-                return;
-            }
-        }
-
-        @SuppressWarnings("unchecked")
-        List<Element> elements = pubsub.elements();
-
-        for (Element x : elements) {
-            for (PubSubElementProcessor elementProcessor : elementProcessors) {
-                if (elementProcessor.accept(x)) {
-                    elementProcessor.process(x, actorJID, reqIQ, null);
-                    return;
-                }
-            }
-        }
-
-        IQ reply = IQ.createResultIQ(reqIQ);
-        reply.setChildElement(reqIQ.getChildElement().createCopy());
-        reply.setType(Type.error);
-        PacketError pe = new PacketError(org.xmpp.packet.PacketError.Condition.unexpected_request, org.xmpp.packet.PacketError.Type.wait);
-        reply.setError(pe);
-        outQueue.put(reply);
     }
 
 }

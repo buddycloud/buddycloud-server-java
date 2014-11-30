@@ -19,13 +19,10 @@ import org.xmpp.packet.IQ.Type;
 import org.xmpp.packet.Packet;
 import org.xmpp.packet.PacketError;
 
-public class PubSubResult implements PacketProcessor<IQ> {
+public class PubSubResult extends PacketProcessorAbstract {
 
     private Logger LOGGER = Logger.getLogger(PubSubResult.class);
-    private final BlockingQueue<Packet> outQueue;
-
     private FederatedQueueManager federatedQueueManager;
-    private ChannelManager channelManager;
 
     private final List<PubSubElementProcessorAbstract> elementProcessors = new LinkedList<PubSubElementProcessorAbstract>();
 
@@ -72,17 +69,6 @@ public class PubSubResult implements PacketProcessor<IQ> {
         } catch (UnknownFederatedPacketException e) {
             LOGGER.error(e);
         }
-        if (IQ.Type.result != reqIQ.getType()) {
-            sendUnexpectedRequestResponse(reqIQ);
-        }
     }
 
-    private void sendUnexpectedRequestResponse(IQ reqIQ) throws InterruptedException {
-        IQ reply = IQ.createResultIQ(reqIQ);
-        reply.setChildElement(reqIQ.getChildElement().createCopy());
-        reply.setType(Type.error);
-        PacketError pe = new PacketError(org.xmpp.packet.PacketError.Condition.unexpected_request, org.xmpp.packet.PacketError.Type.wait);
-        reply.setError(pe);
-        outQueue.put(reply);
-    }
 }

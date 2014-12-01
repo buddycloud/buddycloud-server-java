@@ -1,28 +1,18 @@
 package org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub;
 
-import java.util.LinkedList;
-import java.util.List;
 import java.util.concurrent.BlockingQueue;
 
 import org.buddycloud.channelserver.channel.ChannelManager;
-import org.buddycloud.channelserver.packetprocessor.PacketProcessor;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.get.AffiliationsGet;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.get.NodeConfigureGet;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.get.NodeThreadsGet;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.get.RecentItemsGet;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.get.RepliesGet;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.get.SubscriptionsGet;
+import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.get.SubscriptionsWithMetadataGet;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.get.ThreadGet;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.get.UserItemsGet;
-import org.buddycloud.channelserver.utils.XMLConstants;
-import org.dom4j.Element;
-import org.dom4j.Namespace;
-import org.dom4j.QName;
-import org.xmpp.packet.IQ;
-import org.xmpp.packet.IQ.Type;
-import org.xmpp.packet.JID;
 import org.xmpp.packet.Packet;
-import org.xmpp.packet.PacketError;
 
 public class PubSubGet extends PacketProcessorAbstract {
 
@@ -42,6 +32,7 @@ public class PubSubGet extends PacketProcessorAbstract {
         elementProcessors.add(new NodeConfigureGet(outQueue, channelManager));
         elementProcessors.add(new NodeThreadsGet(outQueue, channelManager));
         elementProcessors.add(new RepliesGet(outQueue, channelManager));
+        elementProcessors.add(new SubscriptionsWithMetadataGet(outQueue, channelManager));
     }
 
 }

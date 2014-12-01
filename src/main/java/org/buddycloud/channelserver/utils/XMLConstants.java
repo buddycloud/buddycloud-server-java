@@ -19,6 +19,10 @@ public class XMLConstants {
     public static final String SUBSCRIPTION_ELEM = "subscription";
 
     public static final String SUBSCRIPTIONS_ELEM = "subscriptions";
+    
+    public static final String SUBSCRIPTIONS_WITH_METADATA_ELEM = "subscriptions-with-metadata";
+    
+    public static final String SUBSCRIPTION_WITH_METADATA_ELEM = "subscription-with-metadata";
 
     public static final String PUBSUB_ELEM = "pubsub";
 

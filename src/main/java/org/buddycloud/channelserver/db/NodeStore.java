@@ -12,6 +12,7 @@ import org.buddycloud.channelserver.pubsub.model.GlobalItemID;
 import org.buddycloud.channelserver.pubsub.model.NodeAffiliation;
 import org.buddycloud.channelserver.pubsub.model.NodeItem;
 import org.buddycloud.channelserver.pubsub.model.NodeMembership;
+import org.buddycloud.channelserver.pubsub.model.NodeMembershipWithConfiguration;
 import org.buddycloud.channelserver.pubsub.model.NodeSubscription;
 import org.buddycloud.channelserver.pubsub.model.NodeThread;
 import org.xmpp.packet.JID;
@@ -147,6 +148,19 @@ public interface NodeStore {
      * @throws NodeStoreException
      */
     ResultSet<NodeMembership> getUserMemberships(JID jid) throws NodeStoreException;
+    
+    /**
+     * Get a user's node memberships (subscription + affiliation) with configuration
+     * 
+     * @param jid
+     * @param configurationFilter the list of configuration fields to be returned
+     * @param subscriptionsFilter map with configuration fields and corresponding 
+     *                            values that will filter the returning subscription list. 
+     * @return
+     * @throws NodeStoreException
+     */
+    ResultSet<NodeMembershipWithConfiguration> getUserMembershipsWithConfiguration(JID jid, List<String> configurationFilter, 
+        Map<String, String> subscriptionsFilter) throws NodeStoreException;
 
     /**
      * Get a node's members

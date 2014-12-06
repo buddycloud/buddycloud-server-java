@@ -17,6 +17,7 @@ import org.buddycloud.channelserver.pubsub.model.GlobalItemID;
 import org.buddycloud.channelserver.pubsub.model.NodeAffiliation;
 import org.buddycloud.channelserver.pubsub.model.NodeItem;
 import org.buddycloud.channelserver.pubsub.model.NodeMembership;
+import org.buddycloud.channelserver.pubsub.model.NodeMembershipWithConfiguration;
 import org.buddycloud.channelserver.pubsub.model.NodeSubscription;
 import org.buddycloud.channelserver.pubsub.model.NodeThread;
 import org.xmpp.packet.JID;
@@ -377,6 +378,12 @@ public class ChannelManagerImpl implements ChannelManager {
   @Override
   public ResultSet<NodeMembership> getUserMemberships(JID jid) throws NodeStoreException {
     return nodeStore.getUserMemberships(jid);
+  }
+  
+  @Override
+  public ResultSet<NodeMembershipWithConfiguration> getUserMembershipsWithConfiguration(JID jid, List<String> configurationFilter, 
+      Map<String, String> subscriptionsFilter) throws NodeStoreException {
+    return nodeStore.getUserMembershipsWithConfiguration(jid, configurationFilter, subscriptionsFilter);
   }
   
   @Override

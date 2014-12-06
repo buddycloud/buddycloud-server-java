@@ -9,7 +9,7 @@ import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.get.Node
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.get.RecentItemsGet;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.get.RepliesGet;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.get.SubscriptionsGet;
-import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.get.SubscriptionsWithMetadataGet;
+import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.get.SubscriptionsWithConfigurationGet;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.get.ThreadGet;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.get.UserItemsGet;
 import org.xmpp.packet.Packet;
@@ -32,7 +32,7 @@ public class PubSubGet extends PacketProcessorAbstract {
         elementProcessors.add(new NodeConfigureGet(outQueue, channelManager));
         elementProcessors.add(new NodeThreadsGet(outQueue, channelManager));
         elementProcessors.add(new RepliesGet(outQueue, channelManager));
-        elementProcessors.add(new SubscriptionsWithMetadataGet(outQueue, channelManager));
+        elementProcessors.add(new SubscriptionsWithConfigurationGet(outQueue, channelManager));
     }
 
 }

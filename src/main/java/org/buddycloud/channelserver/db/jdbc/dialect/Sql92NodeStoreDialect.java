@@ -282,46 +282,46 @@ public class Sql92NodeStoreDialect implements NodeStoreSQLDialect {
             + "ORDER BY \"updated\" DESC; ";
     
     private static final String SELECT_USER_MEMBERSHIPS_WITH_CONFIGURATION = "SELECT " +
-    		"CASE WHEN \"subscriptions\".\"node\" != '' THEN " +
-    		    "\"subscriptions\".\"node\" " + 
-    		"ELSE " +
-    		    "\"affiliations\".\"node\" " + 
-    		"END AS \"node\"," + 
-    		
-    		"CASE WHEN \"subscriptions\".\"user\" != '' THEN " +
-    		    "\"subscriptions\".\"user\" " + 
-    		"ELSE " +
-    		    "\"affiliations\".\"user\" " + 
-    		"END AS \"user\", " + 
-    		
-    		"CASE WHEN \"subscriptions\".\"listener\" != '' THEN " +
-    		    "\"subscriptions\".\"listener\" " +
-    		"WHEN \"subscriptions\".\"user\" != '' THEN " +
-    		    "\"subscriptions\".\"user\" " + 
-    		"ELSE " +
-    		    "\"affiliations\".\"user\" " + 
-    		"END AS \"listener\", " + 
-    		
-    		"CASE WHEN \"subscriptions\".\"subscription\" != '' THEN " +
-    		    "\"subscriptions\".\"subscription\" " + 
-    		"ELSE " +
-    		    "'none' " + 
-    		"END AS \"subscription\", " + 
-    		
-    		"CASE WHEN \"affiliations\".\"affiliation\" != '' THEN " +
-    		    "\"affiliations\".\"affiliation\" " + 
-    		"ELSE " +
-    		    "'none' " + 
-    		"END AS \"affiliation\", " + 
-    		
-    		"\"subscriptions\".\"invited_by\" AS \"invited_by\", " +
-    		
+            "CASE WHEN \"subscriptions\".\"node\" != '' THEN " +
+                "\"subscriptions\".\"node\" " + 
+            "ELSE " +
+                "\"affiliations\".\"node\" " + 
+            "END AS \"node\"," + 
+                
+            "CASE WHEN \"subscriptions\".\"user\" != '' THEN " +
+                "\"subscriptions\".\"user\" " + 
+            "ELSE " +
+                "\"affiliations\".\"user\" " + 
+            "END AS \"user\", " + 
+            
+            "CASE WHEN \"subscriptions\".\"listener\" != '' THEN " +
+                "\"subscriptions\".\"listener\" " +
+            "WHEN \"subscriptions\".\"user\" != '' THEN " +
+                "\"subscriptions\".\"user\" " + 
+            "ELSE " +
+                "\"affiliations\".\"user\" " + 
+            "END AS \"listener\", " + 
+            
+            "CASE WHEN \"subscriptions\".\"subscription\" != '' THEN " +
+                "\"subscriptions\".\"subscription\" " + 
+            "ELSE " +
+                "'none' " + 
+            "END AS \"subscription\", " + 
+            
+            "CASE WHEN \"affiliations\".\"affiliation\" != '' THEN " +
+                "\"affiliations\".\"affiliation\" " + 
+            "ELSE " +
+                "'none' " + 
+            "END AS \"affiliation\", " + 
+            
+            "\"subscriptions\".\"invited_by\" AS \"invited_by\", " +
+            
             "CASE WHEN \"affiliations\".\"updated\" > \"subscriptions\".\"updated\" THEN " +
                 "\"affiliations\".\"updated\" " +
             "ELSE " +
                 "\"subscriptions\".\"updated\" " + 
             "END AS \"updated\", " + 
-    		
+            
             "\"node_config\".\"key\" AS \"config_key\", " +
             
             "\"node_config\".\"value\" AS \"config_value\" " +
@@ -341,13 +341,13 @@ public class Sql92NodeStoreDialect implements NodeStoreSQLDialect {
                     "TRUE " +
                 "END) " +
             
-            "LEFT JOIN \"affiliations\" ON \"subscriptions\".\"node\" = \"affiliations\".\"node\" AND \"affiliations\".\"user\" = \"subscriptions\".\"user\" " + 
+            "LEFT JOIN \"affiliations\" ON \"subscriptions\".\"node\" = \"affiliations\".\"node\" AND " +
+                "\"affiliations\".\"user\" = \"subscriptions\".\"user\" " + 
             
             "WHERE (\"subscriptions\".\"user\" = ?) " +
             
             "ORDER BY \"updated\" DESC; ";
     
-
     private static final String SELECT_NODE_MEMBERSHIPS = "" + "SELECT " + "CASE WHEN \"subscriptions\".\"node\" != '' "
             + "THEN \"subscriptions\".\"node\" " + "ELSE \"affiliations\".\"node\" " + "END AS \"node\"," + "CASE WHEN \"subscriptions\".\"user\" != '' "
             + "THEN \"subscriptions\".\"user\" " + "ELSE \"affiliations\".\"user\" " + "END AS \"user\", " + "CASE "

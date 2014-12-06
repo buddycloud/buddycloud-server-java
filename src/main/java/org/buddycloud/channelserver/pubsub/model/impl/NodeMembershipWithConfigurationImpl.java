@@ -32,7 +32,7 @@ public class NodeMembershipWithConfigurationImpl implements NodeMembershipWithCo
       return false;
     }
     return this.membership.equals(
-        ((NodeMembershipWithConfigurationImpl)obj).getMembership());
+        ((NodeMembershipWithConfigurationImpl) obj).getMembership());
   }
   
   public void putConfiguration(String key, String value) {

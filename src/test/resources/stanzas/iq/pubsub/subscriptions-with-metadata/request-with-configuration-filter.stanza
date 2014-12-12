@@ -1,0 +1,12 @@
+<iq type="get"
+    from="francisco@denmark.lit/barracks"
+    to="channels.shakespeare.lit"
+    id="subscriptions1">
+   <pubsub xmlns="http://jabber.org/protocol/pubsub">
+      <subscriptions-with-configuration xmlns="http://buddycloud.org/v1">
+        <configuration-filter>
+          <allow field="key1"/>
+        </configuration-filter>
+      </subscriptions-with-configuration>
+   </pubsub>
+</iq>

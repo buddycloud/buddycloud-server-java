@@ -32,12 +32,14 @@ import org.buddycloud.channelserver.pubsub.model.GlobalItemID;
 import org.buddycloud.channelserver.pubsub.model.NodeAffiliation;
 import org.buddycloud.channelserver.pubsub.model.NodeItem;
 import org.buddycloud.channelserver.pubsub.model.NodeMembership;
+import org.buddycloud.channelserver.pubsub.model.NodeMembershipWithConfiguration;
 import org.buddycloud.channelserver.pubsub.model.NodeSubscription;
 import org.buddycloud.channelserver.pubsub.model.NodeThread;
 import org.buddycloud.channelserver.pubsub.model.impl.GlobalItemIDImpl;
 import org.buddycloud.channelserver.pubsub.model.impl.NodeAffiliationImpl;
 import org.buddycloud.channelserver.pubsub.model.impl.NodeItemImpl;
 import org.buddycloud.channelserver.pubsub.model.impl.NodeMembershipImpl;
+import org.buddycloud.channelserver.pubsub.model.impl.NodeMembershipWithConfigurationImpl;
 import org.buddycloud.channelserver.pubsub.model.impl.NodeSubscriptionImpl;
 import org.buddycloud.channelserver.pubsub.model.impl.NodeThreadImpl;
 import org.buddycloud.channelserver.pubsub.subscription.Subscriptions;
@@ -400,6 +402,71 @@ public class JDBCNodeStore implements NodeStore {
     @Override
     public ResultSet<NodeMembership> getUserMemberships(JID jid) throws NodeStoreException {
       return getUserMemberships(jid, false);
+    }
+    
+    @Override
+    public ResultSet<NodeMembershipWithConfiguration> getUserMembershipsWithConfiguration(JID jid, List<String> configurationFilter, 
+        Map<String, String> subscriptionsFilter) throws NodeStoreException {
+      PreparedStatement stmt = null;
+      try {
+          String sql = dialect.selectUserMembershipsWithConfiguration();
+          sql = sql.replace("%configFilter%", getCollectionStatement(configurationFilter.size()));
+          sql = sql.replace("%subscriptionFilter%", getCollectionStatement(subscriptionsFilter.size()));
+          
+          stmt = conn.prepareStatement(sql);
+          
+          int parameterIdx = 1;
+          for (Entry<String, String> subscriptionFilterEntry : subscriptionsFilter.entrySet()) {
+            stmt.setString(parameterIdx++, subscriptionFilterEntry.getKey() + ";" + subscriptionFilterEntry.getValue());
+          }
+          stmt.setInt(parameterIdx++, subscriptionsFilter.size());
+          
+          stmt.setInt(parameterIdx++, configurationFilter.size());
+          for (String configurationValue : configurationFilter) {
+            stmt.setString(parameterIdx++, configurationValue);
+          }
+          
+          stmt.setString(parameterIdx, jid.toBareJID());
+          java.sql.ResultSet rs = stmt.executeQuery();
+
+          Map<String, NodeMembershipWithConfiguration> memberships = new HashMap<String, NodeMembershipWithConfiguration>(); 
+          
+          while (rs.next()) {
+            String nodeId = rs.getString(1);
+            NodeMembershipWithConfigurationImpl membership = (NodeMembershipWithConfigurationImpl) memberships.get(nodeId);
+            if (membership == null) {
+              JID inviter = null;
+              if (null != rs.getString(6)) {
+                inviter = new JID(rs.getString(6));
+              }
+              membership = new NodeMembershipWithConfigurationImpl(new NodeMembershipImpl(nodeId, 
+                  new JID(rs.getString(2)), new JID(rs.getString(3)),
+                  Subscriptions.valueOf(rs.getString(4)), Affiliations.valueOf(rs.getString(5)), 
+                  inviter, rs.getTimestamp(7)), new HashMap<String, String>());
+              memberships.put(nodeId, membership);
+            }
+            membership.putConfiguration(rs.getString(8), rs.getString(9));
+          }
+          return new ResultSetImpl<NodeMembershipWithConfiguration>(memberships.values());
+      } catch (SQLException e) {
+          throw new NodeStoreException(e);
+      } finally {
+          close(stmt); // Will implicitly close the resultset if required
+      }
+    }
+    
+    private static String getCollectionStatement(int collectionLength) {
+      if (collectionLength == 0) {
+        return "'%'";
+      }
+      StringBuilder strBuilder = new StringBuilder();
+      for (int i = 0; i < collectionLength; i++) {
+        if (i > 0) {
+          strBuilder.append(",");
+        }
+        strBuilder.append("?");
+      }
+      return strBuilder.toString();
     }
 
     @Override
@@ -1813,6 +1880,8 @@ public class JDBCNodeStore implements NodeStore {
         String selectNodeMemberships();
 
         String selectUserMemberships();
+        
+        String selectUserMembershipsWithConfiguration();
 
         String selectMembership();
 

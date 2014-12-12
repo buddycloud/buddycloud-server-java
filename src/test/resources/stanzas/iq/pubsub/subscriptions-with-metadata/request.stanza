@@ -3,6 +3,6 @@
     to="channels.shakespeare.lit"
     id="subscriptions1">
    <pubsub xmlns="http://jabber.org/protocol/pubsub">
-      <subscriptions-with-metadata xmlns="http://buddycloud.org/v1"/>
+      <subscriptions-with-configuration xmlns="http://buddycloud.org/v1"/>
    </pubsub>
 </iq>

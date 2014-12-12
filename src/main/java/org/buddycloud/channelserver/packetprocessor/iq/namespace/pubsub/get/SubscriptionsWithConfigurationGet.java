@@ -55,7 +55,7 @@ public class SubscriptionsWithConfigurationGet extends PubSubElementProcessorAbs
     Element pubsubReplyEl = result.setChildElement(
         XMLConstants.PUBSUB_ELEM, JabberPubsub.NAMESPACE_URI);
     Element subscriptionsReplyEl = pubsubReplyEl.addElement(
-        XMLConstants.SUBSCRIPTIONS_WITH_METADATA_ELEM, Buddycloud.NS);
+        XMLConstants.SUBSCRIPTIONS_WITH_CONFIGURATION_ELEM, Buddycloud.NS);
 
     Map<String, String> subscriptionsFilter = new HashMap<String, String>();
     Element subscriptionFilterEl = subscriptionsEl.element(SUBSCRIPTION_FILTER_EL);
@@ -87,7 +87,7 @@ public class SubscriptionsWithConfigurationGet extends PubSubElementProcessorAbs
     ResultSet<NodeMembershipWithConfiguration> cur = channelManager.getUserMembershipsWithConfiguration(actor, configurationFilter, subscriptionsFilter);
 
     for (NodeMembershipWithConfiguration ns : cur) {
-      Element subscription = subscriptionsRespEl.addElement(XMLConstants.SUBSCRIPTION_WITH_METADATA_ELEM);
+      Element subscription = subscriptionsRespEl.addElement(XMLConstants.SUBSCRIPTION_WITH_CONFIGURATION_ELEM);
       String nodeId = ns.getMembership().getNodeId();
       subscription.addAttribute(XMLConstants.NODE_ATTR, nodeId)
           .addAttribute(XMLConstants.SUBSCRIPTION_ELEM, ns.getMembership().getSubscription().toString())
@@ -131,7 +131,7 @@ public class SubscriptionsWithConfigurationGet extends PubSubElementProcessorAbs
   
   @Override
   public boolean accept(Element elm) {
-    return XMLConstants.SUBSCRIPTIONS_WITH_METADATA_ELEM.equals(elm.getName());
+    return XMLConstants.SUBSCRIPTIONS_WITH_CONFIGURATION_ELEM.equals(elm.getName());
   }
 
 }

@@ -44,7 +44,7 @@ public class SubscriptionsWithConfigurationGetTest extends IQTestHandler {
     this.queue = new LinkedBlockingQueue<Packet>();
     this.channelManager = Mockito.mock(ChannelManager.class);
     this.subscriptionsWithMetadataGet = new SubscriptionsWithConfigurationGet(queue, channelManager);
-    this.element = new BaseElement(XMLConstants.SUBSCRIPTIONS_WITH_METADATA_ELEM);
+    this.element = new BaseElement(XMLConstants.SUBSCRIPTIONS_WITH_CONFIGURATION_ELEM);
     
     Configuration.getInstance().putProperty(
         Configuration.CONFIGURATION_LOCAL_DOMAIN_CHECKER, Boolean.TRUE.toString());
@@ -68,7 +68,7 @@ public class SubscriptionsWithConfigurationGetTest extends IQTestHandler {
     Configuration.getInstance().putProperty(
         Configuration.CONFIGURATION_LOCAL_DOMAIN_CHECKER, Boolean.FALSE.toString());
     
-    Element el = reqIQ.getChildElement().element(XMLConstants.SUBSCRIPTIONS_WITH_METADATA_ELEM);
+    Element el = reqIQ.getChildElement().element(XMLConstants.SUBSCRIPTIONS_WITH_CONFIGURATION_ELEM);
     subscriptionsWithMetadataGet.process(el, jid, reqIQ, null);
     Assert.assertEquals(1, queue.size());
     IQ response = (IQ) queue.poll();
@@ -85,12 +85,12 @@ public class SubscriptionsWithConfigurationGetTest extends IQTestHandler {
         Mockito.any(JID.class), Mockito.anyList(), Mockito.anyMap())).thenReturn(
             new ResultSetImpl<NodeMembershipWithConfiguration>(new LinkedList<NodeMembershipWithConfiguration>()));
     
-    Element el = reqIQ.getChildElement().element(XMLConstants.SUBSCRIPTIONS_WITH_METADATA_ELEM);
+    Element el = reqIQ.getChildElement().element(XMLConstants.SUBSCRIPTIONS_WITH_CONFIGURATION_ELEM);
     subscriptionsWithMetadataGet.process(el, jid, reqIQ, null);
     Assert.assertEquals(1, queue.size());
     IQ response = (IQ) queue.poll();
     Assert.assertEquals(0, response.getChildElement()
-        .element("subscriptions-with-metadata")
+        .element("subscriptions-with-configuration")
         .elements().size());
   }
   
@@ -112,15 +112,15 @@ public class SubscriptionsWithConfigurationGetTest extends IQTestHandler {
         Mockito.any(JID.class), Mockito.anyList(), Mockito.anyMap())).thenReturn(
             new ResultSetImpl<NodeMembershipWithConfiguration>(subscriptions));
     
-    Element el = reqIQ.getChildElement().element(XMLConstants.SUBSCRIPTIONS_WITH_METADATA_ELEM);
+    Element el = reqIQ.getChildElement().element(XMLConstants.SUBSCRIPTIONS_WITH_CONFIGURATION_ELEM);
     subscriptionsWithMetadataGet.process(el, jid, reqIQ, null);
     Assert.assertEquals(1, queue.size());
     
     IQ response = (IQ) queue.poll();
-    Element subscriptionsEl = response.getChildElement().element("subscriptions-with-metadata");
-    Assert.assertEquals(1, subscriptionsEl.elements("subscription-with-metadata").size());
+    Element subscriptionsEl = response.getChildElement().element("subscriptions-with-configuration");
+    Assert.assertEquals(1, subscriptionsEl.elements("subscription-with-configuration").size());
     
-    Element subscriptionEl = subscriptionsEl.element("subscription-with-metadata");
+    Element subscriptionEl = subscriptionsEl.element("subscription-with-configuration");
     Assert.assertEquals(node1, subscriptionEl.attributeValue("node"));
     Assert.assertEquals(jid.toBareJID(), subscriptionEl.attributeValue("jid"));
     
@@ -157,13 +157,13 @@ public class SubscriptionsWithConfigurationGetTest extends IQTestHandler {
         Mockito.any(JID.class), Mockito.anyList(), Mockito.anyMap())).thenReturn(
             new ResultSetImpl<NodeMembershipWithConfiguration>(subscriptions));
     
-    Element el = reqIQ.getChildElement().element(XMLConstants.SUBSCRIPTIONS_WITH_METADATA_ELEM);
+    Element el = reqIQ.getChildElement().element(XMLConstants.SUBSCRIPTIONS_WITH_CONFIGURATION_ELEM);
     subscriptionsWithMetadataGet.process(el, jid, reqIQ, null);
     Assert.assertEquals(1, queue.size());
     
     IQ response = (IQ) queue.poll();
-    Element subscriptionsEl = response.getChildElement().element("subscriptions-with-metadata");
-    Assert.assertEquals(2, subscriptionsEl.elements("subscription-with-metadata").size());
+    Element subscriptionsEl = response.getChildElement().element("subscriptions-with-configuration");
+    Assert.assertEquals(2, subscriptionsEl.elements("subscription-with-configuration").size());
   }
   
   @SuppressWarnings("unchecked")
@@ -187,13 +187,13 @@ public class SubscriptionsWithConfigurationGetTest extends IQTestHandler {
         Mockito.any(JID.class), Mockito.anyList(), Mockito.eq(subscriptionFilter))).thenReturn(
             new ResultSetImpl<NodeMembershipWithConfiguration>(subscriptions));
     
-    Element el = reqIQ.getChildElement().element(XMLConstants.SUBSCRIPTIONS_WITH_METADATA_ELEM);
+    Element el = reqIQ.getChildElement().element(XMLConstants.SUBSCRIPTIONS_WITH_CONFIGURATION_ELEM);
     subscriptionsWithMetadataGet.process(el, jid, reqIQ, null);
     Assert.assertEquals(1, queue.size());
     
     IQ response = (IQ) queue.poll();
-    Element subscriptionsEl = response.getChildElement().element("subscriptions-with-metadata");
-    Assert.assertEquals(1, subscriptionsEl.elements("subscription-with-metadata").size());
+    Element subscriptionsEl = response.getChildElement().element("subscriptions-with-configuration");
+    Assert.assertEquals(1, subscriptionsEl.elements("subscription-with-configuration").size());
   }
   
   @SuppressWarnings("unchecked")
@@ -216,13 +216,13 @@ public class SubscriptionsWithConfigurationGetTest extends IQTestHandler {
         Mockito.any(JID.class), Mockito.eq(configurationFilter), Mockito.anyMap())).thenReturn(
             new ResultSetImpl<NodeMembershipWithConfiguration>(subscriptions));
     
-    Element el = reqIQ.getChildElement().element(XMLConstants.SUBSCRIPTIONS_WITH_METADATA_ELEM);
+    Element el = reqIQ.getChildElement().element(XMLConstants.SUBSCRIPTIONS_WITH_CONFIGURATION_ELEM);
     subscriptionsWithMetadataGet.process(el, jid, reqIQ, null);
     Assert.assertEquals(1, queue.size());
     
     IQ response = (IQ) queue.poll();
-    Element subscriptionsEl = response.getChildElement().element("subscriptions-with-metadata");
-    Assert.assertEquals(1, subscriptionsEl.elements("subscription-with-metadata").size());
+    Element subscriptionsEl = response.getChildElement().element("subscriptions-with-configuration");
+    Assert.assertEquals(1, subscriptionsEl.elements("subscription-with-configuration").size());
   }
 
   @SuppressWarnings("unchecked")

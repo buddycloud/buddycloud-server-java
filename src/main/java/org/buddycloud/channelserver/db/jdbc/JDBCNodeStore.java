@@ -401,7 +401,29 @@ public class JDBCNodeStore implements NodeStore {
     
     @Override
     public ResultSet<NodeMembership> getUserMemberships(JID jid) throws NodeStoreException {
-      return getUserMemberships(jid, false);
+      PreparedStatement stmt = null;
+      try {
+          stmt = conn.prepareStatement(dialect.selectUserMemberships());
+          stmt.setString(1, jid.toBareJID());
+          java.sql.ResultSet rs = stmt.executeQuery();
+
+          ArrayList<NodeMembership> result = new ArrayList<NodeMembership>();
+          while (rs.next()) {
+              JID inviter = null;
+              if (null != rs.getString(6)) {
+                  inviter = new JID(rs.getString(6));
+              }
+              NodeMembershipImpl membership =
+                      new NodeMembershipImpl(rs.getString(1), new JID(rs.getString(2)), new JID(rs.getString(3)),
+                              Subscriptions.valueOf(rs.getString(4)), Affiliations.valueOf(rs.getString(5)), inviter, rs.getTimestamp(7));
+              result.add(membership);
+          }
+          return new ResultSetImpl<NodeMembership>(result);
+      } catch (SQLException e) {
+          throw new NodeStoreException(e);
+      } finally {
+          close(stmt); // Will implicitly close the resultset if required
+      }
     }
     
     @Override
@@ -473,7 +495,7 @@ public class JDBCNodeStore implements NodeStore {
     public ResultSet<NodeMembership> getUserMemberships(JID jid, boolean ephemeral) throws NodeStoreException {
         PreparedStatement stmt = null;
         try {
-            String sql = dialect.selectUserMemberships();
+            String sql = dialect.selectUserMembershipsFilteredByEphemeral();
             String replace = "IS NULL OR \"node_config\".\"value\" != 'true'";
             if (ephemeral) {
               replace = "= 'true'";
@@ -1885,6 +1907,8 @@ public class JDBCNodeStore implements NodeStore {
         String selectNodeMemberships();
 
         String selectUserMemberships();
+        
+        String selectUserMembershipsFilteredByEphemeral();
         
         String selectUserMembershipsWithConfiguration();
 

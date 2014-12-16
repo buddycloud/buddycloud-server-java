@@ -263,7 +263,7 @@ public class Sql92NodeStoreDialect implements NodeStoreSQLDialect {
             + "ON \"subscriptions\".\"node\" = \"affiliations\".\"node\" AND \"affiliations\".\"user\" = \"subscriptions\".\"user\" " + "WHERE "
             + "(\"subscriptions\".\"user\" = ? AND \"subscriptions\".\"node\" =  ?) " + "ORDER BY \"updated\" DESC; ";
 
-    private static final String SELECT_USER_MEMBERSHIPS = "" + "SELECT " + "CASE WHEN \"subscriptions\".\"node\" != '' "
+    private static final String SELECT_USER_MEMBERSHIPS_FILTERED_BY_EPHEMERAL = "" + "SELECT " + "CASE WHEN \"subscriptions\".\"node\" != '' "
             + "THEN \"subscriptions\".\"node\" " + "ELSE \"affiliations\".\"node\" " + "END AS \"node\"," + "CASE WHEN \"subscriptions\".\"user\" != '' "
             + "THEN \"subscriptions\".\"user\" " + "ELSE \"affiliations\".\"user\" " + "END AS \"user\", " + "CASE "
             + "WHEN \"subscriptions\".\"listener\" != '' THEN \"subscriptions\".\"listener\" "
@@ -279,6 +279,22 @@ public class Sql92NodeStoreDialect implements NodeStoreSQLDialect {
             + "ON \"subscriptions\".\"node\" = \"affiliations\".\"node\" AND \"affiliations\".\"user\" = \"subscriptions\".\"user\" " + "WHERE "
             + "(\"subscriptions\".\"user\" = ?) " 
             + "AND (\"node_config\".\"value\" %equals%)"
+            + "ORDER BY \"updated\" DESC; ";
+    
+    private static final String SELECT_USER_MEMBERSHIPS = "" + "SELECT " + "CASE WHEN \"subscriptions\".\"node\" != '' "
+            + "THEN \"subscriptions\".\"node\" " + "ELSE \"affiliations\".\"node\" " + "END AS \"node\"," + "CASE WHEN \"subscriptions\".\"user\" != '' "
+            + "THEN \"subscriptions\".\"user\" " + "ELSE \"affiliations\".\"user\" " + "END AS \"user\", " + "CASE "
+            + "WHEN \"subscriptions\".\"listener\" != '' THEN \"subscriptions\".\"listener\" "
+            + "WHEN \"subscriptions\".\"user\" != '' THEN \"subscriptions\".\"user\" " + "ELSE \"affiliations\".\"user\" " + "END AS \"listener\", "
+            + "CASE WHEN \"subscriptions\".\"subscription\" != '' " + "THEN \"subscriptions\".\"subscription\" " + "ELSE 'none' "
+            + "END AS \"subscription\", " + "CASE WHEN \"affiliations\".\"affiliation\" != '' " + "THEN \"affiliations\".\"affiliation\" "
+            + "ELSE 'none' " + "END AS \"affiliation\", " + "\"subscriptions\".\"invited_by\" AS \"invited_by\","
+            + "CASE WHEN \"affiliations\".\"updated\" > \"subscriptions\".\"updated\" " + "THEN \"affiliations\".\"updated\" "
+            + "ELSE \"subscriptions\".\"updated\" " + "END AS \"updated\" " + "FROM \"subscriptions\" " 
+            
+            + "LEFT JOIN \"affiliations\" "
+            + "ON \"subscriptions\".\"node\" = \"affiliations\".\"node\" AND \"affiliations\".\"user\" = \"subscriptions\".\"user\" " + "WHERE "
+            + "(\"subscriptions\".\"user\" = ?) " 
             + "ORDER BY \"updated\" DESC; ";
     
     private static final String SELECT_USER_MEMBERSHIPS_WITH_CONFIGURATION = "SELECT " +
@@ -692,6 +708,11 @@ public class Sql92NodeStoreDialect implements NodeStoreSQLDialect {
         return SELECT_NODE_MEMBERSHIP;
     }
 
+    @Override
+    public String selectUserMembershipsFilteredByEphemeral() {
+        return SELECT_USER_MEMBERSHIPS_FILTERED_BY_EPHEMERAL;
+    }
+    
     @Override
     public String selectUserMemberships() {
         return SELECT_USER_MEMBERSHIPS;

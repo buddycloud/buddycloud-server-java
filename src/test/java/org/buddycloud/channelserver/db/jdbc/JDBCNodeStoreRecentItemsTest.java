@@ -54,6 +54,25 @@ public class JDBCNodeStoreRecentItemsTest extends JDBCNodeStoreAbstract {
             TEST_SERVER1_USER1_JID, new Date(), -1, -1, null, null, false);
         assertEquals(false, items.hasNext());
     }
+    
+    @Test
+    public void testGetRecentItemsFromEphemeralNode() throws Exception {
+
+        Date since = new Date();
+        dbTester.loadData("node_1");
+        store.setNodeConfValue(TEST_SERVER1_NODE1_ID, "buddycloud#ephemeral", "true");
+
+        NodeItem nodeItem1 = new NodeItemImpl(TEST_SERVER1_NODE1_ID, "123", new Date(), "payload");
+        store.addNodeItem(nodeItem1);
+
+        Thread.sleep(20);
+
+        CloseableIterator<NodeItem> items = store.getRecentItems(TEST_SERVER1_USER1_JID, since, -1, -1, null, null, false);
+
+        // 2 -> 1 on purpose results are most recent first!
+        assertSameNodeItem(items.next(), nodeItem1);
+        assertEquals(false, items.hasNext());
+    }
 
     @Test
     public void testGetRecentItemsCanBePaged() throws Exception {

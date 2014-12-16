@@ -47,6 +47,13 @@ public class JDBCNodeStoreRecentItemsTest extends JDBCNodeStoreAbstract {
         assertSameNodeItem(items.next(), nodeItem1);
         assertEquals(false, items.hasNext());
     }
+    
+    @Test
+    public void testGetRecentItemsNoSubscriptions() throws Exception {
+        CloseableIterator<NodeItem> items = store.getRecentItems(
+            TEST_SERVER1_USER1_JID, new Date(), -1, -1, null, null, false);
+        assertEquals(false, items.hasNext());
+    }
 
     @Test
     public void testGetRecentItemsCanBePaged() throws Exception {

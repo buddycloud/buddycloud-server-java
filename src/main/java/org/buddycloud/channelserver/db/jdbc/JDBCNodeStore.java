@@ -1058,6 +1058,11 @@ public class JDBCNodeStore implements NodeStore {
 
             ResultSet<NodeMembership> subscriptions = this.getUserMemberships(user);
 
+            if (subscriptions == null || subscriptions.isEmpty()) {
+                return new ClosableIteratorImpl<NodeItem>(
+                    new ArrayList<NodeItem>().iterator());
+            }
+            
             ArrayList<String> queryParts = new ArrayList<String>();
             ArrayList<Object> parameters = new ArrayList<Object>();
 

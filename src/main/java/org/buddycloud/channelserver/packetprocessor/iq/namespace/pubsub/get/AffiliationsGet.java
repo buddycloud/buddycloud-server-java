@@ -13,6 +13,8 @@ import org.buddycloud.channelserver.pubsub.subscription.Subscriptions;
 import org.buddycloud.channelserver.utils.XMLConstants;
 import org.buddycloud.channelserver.utils.node.item.payload.Buddycloud;
 import org.dom4j.Element;
+import org.dom4j.Namespace;
+import org.dom4j.QName;
 import org.xmpp.packet.IQ;
 import org.xmpp.packet.JID;
 import org.xmpp.packet.Packet;
@@ -121,7 +123,7 @@ public class AffiliationsGet extends PubSubElementProcessorAbstract {
 
     String ephemeralValue =
         request.getChildElement().element(XMLConstants.AFFILIATIONS_ELEM)
-            .attributeValue(XMLConstants.BUDDYCLOUD_XMLNS_PREFIX + XMLConstants.EPHEMERAL);
+            .attributeValue(new QName(XMLConstants.EPHEMERAL, Namespace.get(Buddycloud.NS)));
     if ((null != ephemeralValue) && ephemeralValue.equals("true")) {
       ephemeral = true;
     }

@@ -17,6 +17,8 @@ import org.buddycloud.channelserver.pubsub.subscription.Subscriptions;
 import org.buddycloud.channelserver.utils.XMLConstants;
 import org.buddycloud.channelserver.utils.node.item.payload.Buddycloud;
 import org.dom4j.Element;
+import org.dom4j.Namespace;
+import org.dom4j.QName;
 import org.dom4j.tree.BaseElement;
 import org.junit.Before;
 import org.junit.Test;
@@ -218,7 +220,8 @@ public class SubscriptionsGetTest extends IQTestHandler {
           request.getElement().element(XMLConstants.PUBSUB_ELEM)
               .element(XMLConstants.SUBSCRIPTIONS_ELEM);
       subscriptions.addNamespace("bc", Buddycloud.NS);
-      subscriptions.addAttribute("bc:ephemeral", "true");     
+      subscriptions.addAttribute(new QName(
+          XMLConstants.EPHEMERAL, Namespace.get(Buddycloud.NS)), "true");     
 
       try {
         subscriptionsGet.process(element, jid, request, null);
@@ -246,7 +249,8 @@ public class SubscriptionsGetTest extends IQTestHandler {
           request.getElement().element(XMLConstants.PUBSUB_ELEM)
               .element(XMLConstants.SUBSCRIPTIONS_ELEM);
       subscriptions.addNamespace("bc", Buddycloud.NS);
-      subscriptions.addAttribute("bc:ephemeral", "sure");
+      subscriptions.addAttribute(new QName(
+          XMLConstants.EPHEMERAL, Namespace.get(Buddycloud.NS)), "sure");
       
       try {
         subscriptionsGet.process(element, jid, request, null);

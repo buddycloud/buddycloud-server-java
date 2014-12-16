@@ -11,7 +11,6 @@ import org.buddycloud.channelserver.Configuration;
 import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.packetHandler.iq.IQTestHandler;
 import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.JabberPubsub;
-import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.PubSubElementProcessor;
 import org.buddycloud.channelserver.pubsub.affiliation.Affiliations;
 import org.buddycloud.channelserver.pubsub.model.NodeMembership;
 import org.buddycloud.channelserver.pubsub.model.impl.NodeMembershipImpl;
@@ -19,6 +18,8 @@ import org.buddycloud.channelserver.pubsub.subscription.Subscriptions;
 import org.buddycloud.channelserver.utils.XMLConstants;
 import org.buddycloud.channelserver.utils.node.item.payload.Buddycloud;
 import org.dom4j.Element;
+import org.dom4j.Namespace;
+import org.dom4j.QName;
 import org.dom4j.tree.BaseElement;
 import org.junit.Before;
 import org.junit.Test;
@@ -427,7 +428,8 @@ public class AffiliationsGetTest extends IQTestHandler {
         request.getElement().element(XMLConstants.PUBSUB_ELEM)
             .element(XMLConstants.AFFILIATIONS_ELEM);
     affiliations.addNamespace("bc", Buddycloud.NS);
-    affiliations.addAttribute("bc:ephemeral", "true");
+    affiliations.addAttribute(new QName(
+        XMLConstants.EPHEMERAL, Namespace.get(Buddycloud.NS)), "true");
 
     try {
       affiliationsGet.process(element, jid, request, null);
@@ -460,7 +462,8 @@ public class AffiliationsGetTest extends IQTestHandler {
         request.getElement().element(XMLConstants.PUBSUB_ELEM)
             .element(XMLConstants.AFFILIATIONS_ELEM);
     affiliations.addNamespace("bc", Buddycloud.NS);
-    affiliations.addAttribute("bc:ephemeral", "sure");
+    affiliations.addAttribute(new QName(
+        XMLConstants.EPHEMERAL, Namespace.get(Buddycloud.NS)), "sure");
 
     try {
       affiliationsGet.process(element, jid, request, null);

@@ -45,11 +45,10 @@ public class SubscribeSet extends PubSubElementProcessorAbstract {
 
   public static final String INVALID_NODE_FORMAT = "invalid-node-format";
 
-  private final BlockingQueue<Packet> outQueue;
   private final ChannelManager channelManager;
 
   public SubscribeSet(BlockingQueue<Packet> outQueue, ChannelManager channelManager) {
-    this.outQueue = outQueue;
+    this.setOutQueue(outQueue);
     this.channelManager = channelManager;
 
     acceptedElementName = XMLConstants.SUBSCRIBE_ELEM;

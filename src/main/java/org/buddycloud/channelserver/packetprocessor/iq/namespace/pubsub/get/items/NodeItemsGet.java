@@ -36,8 +36,6 @@ public class NodeItemsGet extends PubSubElementProcessorAbstract {
 
     public static final int MAX_ITEMS_TO_RETURN = 50;
 
-    private final BlockingQueue<Packet> outQueue;
-
     private ChannelManager channelManager;
     private String node;
     private String firstItem;
@@ -56,7 +54,7 @@ public class NodeItemsGet extends PubSubElementProcessorAbstract {
     private JID actor;
 
     public NodeItemsGet(BlockingQueue<Packet> outQueue, ChannelManager channelManager) {
-        this.outQueue = outQueue;
+        setOutQueue(outQueue);
         setChannelManager(channelManager);
 
         this.acceptedElementName = XMLConstants.ITEMS_ELEM;

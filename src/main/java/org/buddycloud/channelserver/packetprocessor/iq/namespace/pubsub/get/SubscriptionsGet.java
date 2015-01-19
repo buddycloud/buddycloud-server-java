@@ -21,9 +21,6 @@ import org.xmpp.resultsetmanagement.ResultSet;
 
 public class SubscriptionsGet extends PubSubElementProcessorAbstract {
 
-    private final BlockingQueue<Packet> outQueue;
-    private ChannelManager channelManager;
-
     private IQ result;
     private String node;
     private JID actorJid;
@@ -31,12 +28,8 @@ public class SubscriptionsGet extends PubSubElementProcessorAbstract {
     private boolean ephemeral = false;
 
     public SubscriptionsGet(BlockingQueue<Packet> outQueue, ChannelManager channelManager) {
-        this.outQueue = outQueue;
-        this.channelManager = channelManager;
-    }
-
-    public void setChannelManager(ChannelManager dataStore) {
-        channelManager = dataStore;
+        setOutQueue(outQueue);
+        setChannelManager(channelManager);
     }
 
 

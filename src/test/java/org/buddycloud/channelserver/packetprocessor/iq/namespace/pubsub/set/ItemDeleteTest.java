@@ -52,8 +52,6 @@ public class ItemDeleteTest extends IQTestHandler {
         itemDelete = new ItemDelete(queue, channelManager);
         request = readStanzaAsIq("/iq/pubsub/item/delete/request.stanza");
 
-        itemDelete.setServerDomain("shakespeare.lit");
-
         element = new BaseElement("retract");
         element.addAttribute("node", node);
 

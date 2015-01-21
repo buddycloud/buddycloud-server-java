@@ -64,7 +64,6 @@ public class AffiliationEventTest extends IQTestHandler {
     queue = new LinkedBlockingQueue<Packet>();
     event = new AffiliationEvent(queue, channelManager);
     request = readStanzaAsIq("/iq/pubsub/affiliation/affiliationChange.stanza");
-    event.setServerDomain("shakespeare.lit");
 
     element = new BaseElement("affiliations");
     element.addAttribute("node", node);

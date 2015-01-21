@@ -55,7 +55,6 @@ public class SubscribeSetTest extends IQTestHandler {
     queue = new LinkedBlockingQueue<Packet>();
     subscribe = new SubscribeSet(queue, channelManager);
     request = readStanzaAsIq("/iq/pubsub/subscribe/request.stanza");
-    subscribe.setServerDomain("shakespeare.lit");
 
     element = new BaseElement("subscribe");
     element.addAttribute("node", node);

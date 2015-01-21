@@ -42,7 +42,7 @@ public class NodeCreate extends PubSubElementProcessorAbstract {
         if (null == actorJID) {
             actor = request.getFrom();
         }
-        if (!nodePresent()) {
+        if (!nodePresent() || !isNodeValid()) {
             outQueue.put(response);
             return;
         }
@@ -50,8 +50,7 @@ public class NodeCreate extends PubSubElementProcessorAbstract {
             makeRemoteRequest();
             return;
         }
-        if ((checkNodeExists()) || (!actorIsRegistered()) || (!nodeHandledByThisServer())) {
-
+        if ((checkNodeExists()) || (!actorIsRegistered())) {
             outQueue.put(response);
             return;
         }
@@ -100,14 +99,9 @@ public class NodeCreate extends PubSubElementProcessorAbstract {
         return true;
     }
 
-    private boolean nodeHandledByThisServer() {
+    private boolean isNodeValid() {
         if (!node.matches(NODE_REG_EX)) {
             setErrorCondition(PacketError.Type.modify, PacketError.Condition.bad_request);
-            return false;
-        }
-
-        if ((!node.contains("@" + getServerDomain())) && (!node.contains("@" + getTopicsDomain()))) {
-            setErrorCondition(PacketError.Type.modify, PacketError.Condition.not_acceptable);
             return false;
         }
         return true;

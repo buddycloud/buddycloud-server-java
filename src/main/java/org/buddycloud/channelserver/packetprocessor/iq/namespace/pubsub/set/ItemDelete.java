@@ -97,7 +97,8 @@ public class ItemDelete extends PubSubElementProcessorAbstract {
             reply = replies.next();
             channelManager.deleteNodeItemById(reply.getNodeId(), reply.getId());
 
-            sendNotifications(node, new GlobalItemIDImpl(new JID(this.getServerDomain()), reply.getNodeId(), reply.getId()));
+            sendNotifications(node, new GlobalItemIDImpl(new JID(
+                Configuration.getInstance().getServerDomain()), reply.getNodeId(), reply.getId()));
         }
     }
 
@@ -206,7 +207,8 @@ public class ItemDelete extends PubSubElementProcessorAbstract {
             if (GlobalItemIDImpl.isGlobalId(id)) {
                 itemId = GlobalItemIDImpl.fromBuddycloudString(id);
             } else {
-                itemId = new GlobalItemIDImpl(new JID(this.getServerDomain()), node, id);
+                itemId = new GlobalItemIDImpl(new JID(
+                    Configuration.getInstance().getServerDomain()), node, id);
             }
             return true;
         }

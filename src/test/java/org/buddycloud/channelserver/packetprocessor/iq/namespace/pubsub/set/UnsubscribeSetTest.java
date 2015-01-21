@@ -55,7 +55,6 @@ public class UnsubscribeSetTest extends IQTestHandler {
     queue = new LinkedBlockingQueue<Packet>();
     unsubscribe = new UnsubscribeSet(queue, channelManager);
     request = readStanzaAsIq("/iq/pubsub/unsubscribe/request.stanza");
-    unsubscribe.setServerDomain("shakespeare.lit");
 
     element = new BaseElement("unsubscribe");
     element.addAttribute("node", node);

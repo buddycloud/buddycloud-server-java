@@ -57,7 +57,6 @@ public class SubscriptionEventTest extends IQTestHandler {
         queue = new LinkedBlockingQueue<Packet>();
         event = new SubscriptionEvent(queue, dataStore);
         request = readStanzaAsIq("/iq/pubsub/subscribe/authorizationPendingGrantReply.stanza");
-        event.setServerDomain("shakespeare.lit");
 
         element = new BaseElement("subscriptions");
         element.addAttribute("node", node);

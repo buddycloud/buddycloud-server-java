@@ -59,7 +59,6 @@ public class PublishTest extends IQTestHandler {
         jid = new JID("juliet@shakespeare.lit/balcony");
         request = readStanzaAsIq("/iq/pubsub/publish/request.stanza");
 
-        publish.setServerDomain("shakespeare.lit");
         publish.setChannelManager(channelManager);
         publish.setEntryValidator(validateEntry);
 

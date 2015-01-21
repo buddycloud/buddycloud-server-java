@@ -49,7 +49,6 @@ public class NodeDeleteTest extends IQTestHandler {
 
     this.queue = new LinkedBlockingQueue<Packet>();
     this.nodeDelete = new NodeDelete(queue, channelManager);
-    this.nodeDelete.setServerDomain("shakespeare.lit");
     this.element = new BaseElement("delete");
     Configuration.getInstance().putProperty(Configuration.CONFIGURATION_LOCAL_DOMAIN_CHECKER,
         Boolean.TRUE.toString());
@@ -139,8 +138,13 @@ public class NodeDeleteTest extends IQTestHandler {
 
     String node = deleteEl.attributeValue("node");
     Mockito.when(channelManager.nodeExists(node)).thenReturn(true);
-    nodeDelete.setServerDomain("fake.domain");
+    
+    Configuration.getInstance().remove(
+        Configuration.CONFIGURATION_LOCAL_DOMAIN_CHECKER);
+    Configuration.getInstance().putProperty(
+        Configuration.CONFIGURATION_SERVER_DOMAIN, "shakespeare.lit");
 
+    JID jid = new JID("juliet@anon.shakespeare.lit");
     nodeDelete.process(deleteEl, jid, request, null);
     Packet response = queue.poll();
 
@@ -214,13 +218,14 @@ public class NodeDeleteTest extends IQTestHandler {
     String node = deleteEl.attributeValue("node");
     Mockito.when(channelManager.nodeExists(node)).thenReturn(true);
 
+    Configuration.getInstance().putProperty(
+        Configuration.CONFIGURATION_LOCAL_DOMAIN_CHECKER, Boolean.FALSE.toString());
+    
     nodeDelete.process(deleteEl, jid, request, null);
     Packet response = queue.poll();
 
-    PacketError error = response.getError();
-    Assert.assertNotNull(error);
-    Assert.assertEquals(PacketError.Type.modify, error.getType());
-    Assert.assertEquals(PacketError.Condition.not_acceptable, error.getCondition());
+    Assert.assertNull(response.getError());
+    Assert.assertNotNull(response.getElement().element("pubsub").element("actor"));
   }
 
   @Test

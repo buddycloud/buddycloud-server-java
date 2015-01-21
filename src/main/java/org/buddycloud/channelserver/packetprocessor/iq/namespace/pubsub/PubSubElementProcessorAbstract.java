@@ -38,8 +38,6 @@ public abstract class PubSubElementProcessorAbstract implements PubSubElementPro
     protected IQ response;
     protected IQ request;
     protected JID actor;
-    protected String serverDomain;
-    protected String topicsDomain;
     protected String node = null;
     protected Helper configurationHelper;
     protected Map<String, String> nodeConfiguration;
@@ -68,17 +66,6 @@ public abstract class PubSubElementProcessorAbstract implements PubSubElementPro
         this.channelManager = channelManager;
     }
 
-    public void setServerDomain(String domain) {
-        serverDomain = domain;
-    }
-
-    protected String getServerDomain() {
-        if (null == serverDomain) {
-            serverDomain = Configuration.getInstance().getProperty("server.domain");
-        }
-        return serverDomain;
-    }
-
     protected Collection<JID> getAdminUsers() {
         if (null == adminUsers) {
             adminUsers = Configuration.getInstance().getAdminUsers();
@@ -86,19 +73,8 @@ public abstract class PubSubElementProcessorAbstract implements PubSubElementPro
         return adminUsers;
     }
 
-    public void setTopicsDomain(String domain) {
-        topicsDomain = domain;
-    }
-
     public void setNode(String node) {
         this.node = node;
-    }
-
-    protected String getTopicsDomain() {
-        if (null == topicsDomain) {
-            topicsDomain = Configuration.getInstance().getProperty("server.domain.topics");
-        }
-        return topicsDomain;
     }
 
     public void setConfigurationHelper(Helper helper) {
@@ -200,7 +176,7 @@ public abstract class PubSubElementProcessorAbstract implements PubSubElementPro
     }
 
     protected boolean actorIsRegistered() {
-        if (actor.getDomain().equals(getServerDomain())) {
+        if (Configuration.getInstance().isLocalJID(actor)) {
             return true;
         } else {
             setErrorCondition(PacketError.Type.auth, PacketError.Condition.forbidden);

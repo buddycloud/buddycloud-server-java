@@ -46,8 +46,6 @@ public class NodeCreateTest extends IQTestHandler {
         jid = new JID("juliet@shakespeare.lit");
         request = readStanzaAsIq("/iq/pubsub/channel/create/request.stanza");
 
-        nodeCreate.setServerDomain("shakespeare.lit");
-
         element = new BaseElement("create");
         element.addAttribute("node", node);
     }
@@ -106,6 +104,11 @@ public class NodeCreateTest extends IQTestHandler {
     public void testUnauthenticatedUserCanNotCreateNode() throws Exception {
         JID jid = new JID("juliet@anon.shakespeare.lit");
 
+        Configuration.getInstance().remove(
+            Configuration.CONFIGURATION_LOCAL_DOMAIN_CHECKER);
+        Configuration.getInstance().putProperty(
+            Configuration.CONFIGURATION_SERVER_DOMAIN, "shakespeare.lit");
+        
         nodeCreate.process(element, jid, request, null);
         Packet response = queue.poll(100, TimeUnit.MILLISECONDS);
 
@@ -139,26 +142,24 @@ public class NodeCreateTest extends IQTestHandler {
     }
 
     @Test
-    public void testNewNodeMustBeOnADomainSupportedByCurrentServer()
-            throws Exception {
+    public void testNodeFromUnknownDomain() throws Exception {
         element.addAttribute("node", "/user/capulet@shakespearelit/posts");
 
-        nodeCreate.setTopicsDomain("topics.shakespeare.lit");
-
+        Configuration.getInstance().putProperty(
+            Configuration.CONFIGURATION_LOCAL_DOMAIN_CHECKER, Boolean.FALSE.toString());
+        
         nodeCreate.process(element, jid, request, null);
         Packet response = queue.poll(100, TimeUnit.MILLISECONDS);
 
-        PacketError error = response.getError();
-        Assert.assertNotNull(error);
-        Assert.assertEquals(PacketError.Type.modify, error.getType());
-        Assert.assertEquals(PacketError.Condition.not_acceptable, error.getCondition());
+        Assert.assertNull(response.getError());
+        Assert.assertNotNull(response.getElement().element("pubsub").element("actor"));
         /**
          * Add this check back in once Tinder supports xmlns on standard
          * conditions Assert.assertEquals(JabberPubsub.NS_XMPP_STANZAS,
          * error.getApplicationConditionNamespaceURI());
          */
     }
-
+    
     @Test
     public void testchannelManagerFailureReturnsInternalServerErrorResponse()
             throws Exception {
@@ -270,4 +271,5 @@ public class NodeCreateTest extends IQTestHandler {
          * error.getApplicationConditionNamespaceURI());
          */
     }
+    
 }

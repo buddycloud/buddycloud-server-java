@@ -50,8 +50,6 @@ public class NodeConfigureTest extends IQTestHandler {
         jid = new JID("juliet@shakespeare.lit");
         request = readStanzaAsIq("/iq/pubsub/channel/configure/request.stanza");
 
-        nodeConfigure.setServerDomain("shakespeare.lit");
-
         element = new BaseElement("create");
         element.addAttribute("node", "/user/capulet@shakespeare.lit/posts");
     }

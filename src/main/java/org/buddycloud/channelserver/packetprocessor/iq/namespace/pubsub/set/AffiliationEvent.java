@@ -12,6 +12,7 @@ import org.buddycloud.channelserver.packetprocessor.iq.namespace.pubsub.PubSubEl
 import org.buddycloud.channelserver.pubsub.affiliation.Affiliations;
 import org.buddycloud.channelserver.pubsub.model.NodeMembership;
 import org.buddycloud.channelserver.pubsub.model.NodeSubscription;
+import org.buddycloud.channelserver.pubsub.subscription.Subscriptions;
 import org.buddycloud.channelserver.utils.XMLConstants;
 import org.buddycloud.channelserver.utils.node.item.payload.Buddycloud;
 import org.dom4j.Document;
@@ -199,7 +200,8 @@ public class AffiliationEvent extends PubSubElementProcessorAbstract {
         channelManager.getNodeMembership(node,
             new JID(requestedAffiliationElement.attributeValue(XMLConstants.JID_ATTR)));
 
-    if (usersCurrentMembership.getAffiliation().equals(Affiliations.none)) {
+    if (usersCurrentMembership.getAffiliation().equals(Affiliations.none)
+        && usersCurrentMembership.getSubscription().equals(Subscriptions.none)) {
       setErrorCondition(PacketError.Type.modify, PacketError.Condition.unexpected_request);
       return false;
     }

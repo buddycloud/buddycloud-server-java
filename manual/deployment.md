@@ -13,7 +13,7 @@ Configuration to be set as per [configuration page](https://github.com/buddyclou
 ## Docker
 
 ```
-docker run -d buddycloud/channelserver
+docker run -d buddycloud/channel-server
 ```
 
 Configuration can be provided by mounting a data volume or via a database environment variable. See the [configuration page](https://github.com/buddycloud/buddycloud-server-java/blob/master/manual/configuration.md) for database instructions.

@@ -181,8 +181,9 @@ public class ItemDeleteTest extends IQTestHandler {
     }
 
     @Test
-    public void testItemWhichDoesntExistReturnsItemNotFoundError()
+    public void itemWhichDoesntExistReturnsItemNotFoundError()
             throws Exception {
+
         Mockito.when(channelManager.nodeExists(node)).thenReturn(true);
         Mockito.when(channelManager.getNodeItem(node, "item-id")).thenReturn(
                 null);
@@ -190,7 +191,7 @@ public class ItemDeleteTest extends IQTestHandler {
 
         itemDelete.process(element, jid, request, null);
 
-        Packet response = queue.poll(100, TimeUnit.MILLISECONDS);
+        Packet response = queue.poll();
 
         PacketError error = response.getError();
         Assert.assertNotNull(error);
@@ -285,12 +286,12 @@ public class ItemDeleteTest extends IQTestHandler {
         itemDelete.process(element, jid, request, null);
 
         Mockito.verify(channelManager).deleteNodeItemById(node, "item-id");
-        IQ response = (IQ) queue.poll(100, TimeUnit.MILLISECONDS);
+        IQ response = (IQ) queue.poll();
 
         Assert.assertEquals(IQ.Type.result.toString(), response.getElement()
                 .attribute("type").getValue());
         // Check that no notifications are sent
-        Packet notification = queue.poll(100, TimeUnit.MILLISECONDS);
+        Packet notification = queue.poll();
         Assert.assertNull(notification);
     }
 
@@ -484,5 +485,33 @@ public class ItemDeleteTest extends IQTestHandler {
         Assert.assertEquals("item-id",
                 notification.getElement().element("event").element("items")
                         .element("retract").attributeValue("id"));
+    }
+    
+    @Test
+    public void canDeleteItemUsingAFullItemId() throws Exception {
+
+        NodeItem nodeItem = new NodeItemImpl(node, "item-id", new Date(),
+                payload.replaceAll("romeo@shakespeare.lit",
+                        "juliet@shakespeare.lit"), "item-id");
+
+        Mockito.when(channelManager.nodeExists(node)).thenReturn(true);
+        Mockito.when(
+                channelManager.getNodeItem(Mockito.eq("/user/capulet@shakespeare.lit/posts"),
+                        Mockito.eq("item-id"))).thenReturn(nodeItem);
+
+        IQ request = toIq(readStanzaAsString("/iq/pubsub/item/delete/request-full-id.stanza"));
+        
+        itemDelete.setChannelManager(channelManager);
+
+        itemDelete.process(element, jid, request, null);
+
+        Mockito.verify(channelManager).deleteNodeItemById(node, "item-id");
+        IQ response = (IQ) queue.poll();
+
+        Assert.assertEquals(IQ.Type.result.toString(), response.getElement()
+                .attribute("type").getValue());
+        // Check that no notifications are sent
+        Packet notification = queue.poll();
+        Assert.assertNull(notification);
     }
 }

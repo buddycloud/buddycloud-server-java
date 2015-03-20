@@ -17,6 +17,7 @@ import org.buddycloud.channelserver.pubsub.model.NodeSubscription;
 import org.buddycloud.channelserver.pubsub.model.impl.GlobalItemIDImpl;
 import org.buddycloud.channelserver.pubsub.subscription.Subscriptions;
 import org.buddycloud.channelserver.utils.XMLConstants;
+import org.buddycloud.channelserver.utils.node.item.payload.Buddycloud;
 import org.dom4j.Element;
 import org.dom4j.Namespace;
 import org.dom4j.dom.DOMElement;
@@ -82,7 +83,10 @@ public class ItemDelete extends PubSubElementProcessorAbstract {
             setErrorCondition(PacketError.Type.modify, PacketError.Condition.bad_request);
         } catch (IllegalArgumentException e) {
             LOGGER.error(e);
-            setErrorCondition(PacketError.Type.modify, PacketError.Condition.bad_request);
+            createExtendedErrorReply(
+                PacketError.Type.modify, PacketError.Condition.bad_request,
+                "global-id-error", Buddycloud.NS_ERROR, e.getMessage()
+            );
         }
         outQueue.put(response);
     }

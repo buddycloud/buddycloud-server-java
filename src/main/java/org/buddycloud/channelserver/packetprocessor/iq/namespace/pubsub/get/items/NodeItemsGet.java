@@ -46,6 +46,7 @@ public class NodeItemsGet extends PubSubElementProcessorAbstract {
     private IQ reply;
     private Element resultSetManagement;
     private Element element;
+    private boolean parentOnly = false;
 
     private Map<String, String> nodeDetails;
 
@@ -205,7 +206,7 @@ public class NodeItemsGet extends PubSubElementProcessorAbstract {
         items.addAttribute(XMLConstants.NODE_ATTR, node);
 
         entry = null;
-        int totalEntriesCount = getNodeItems(items, maxItemsToReturn, afterItemId);
+        int totalEntriesCount = getNodeItems(items, maxItemsToReturn, afterItemId, parentOnly);
 
         if ((false == Configuration.getInstance().isLocalNode(node)) && (0 == rsmEntriesCount)) {
             LOGGER.debug("No results in cache for remote node, so " + "we're going federated to get more");
@@ -254,9 +255,9 @@ public class NodeItemsGet extends PubSubElementProcessorAbstract {
     /**
      * Get items nodes
      */
-    private int getNodeItems(Element items, int maxItemsToReturn, String afterItemId) throws NodeStoreException {
+    private int getNodeItems(Element items, int maxItemsToReturn, String afterItemId, boolean parentOnly) throws NodeStoreException {
 
-        CloseableIterator<NodeItem> itemIt = channelManager.getNodeItems(node, afterItemId, maxItemsToReturn);
+        CloseableIterator<NodeItem> itemIt = channelManager.getNodeItems(node, afterItemId, maxItemsToReturn, parentOnly);
         rsmEntriesCount = 0;
         if (itemIt == null) {
             return 0;

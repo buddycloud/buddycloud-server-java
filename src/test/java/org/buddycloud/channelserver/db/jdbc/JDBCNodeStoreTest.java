@@ -119,7 +119,7 @@ public class JDBCNodeStoreTest extends JDBCNodeStoreAbstract {
         dbTester.loadData("node_1");
 
         Iterator<NodeItem> result = store.getNodeItems(TEST_SERVER1_NODE1_ID,
-                TEST_SERVER1_NODE1_ITEM4_ID, 4);
+                TEST_SERVER1_NODE1_ITEM4_ID, 4, false);
 
         String[] expectedNodeIds = { TEST_SERVER1_NODE1_ITEM3_ID,
                 TEST_SERVER1_NODE1_ITEM2_ID, TEST_SERVER1_NODE1_ITEM1_ID };
@@ -163,7 +163,7 @@ public class JDBCNodeStoreTest extends JDBCNodeStoreAbstract {
         }
 
         CloseableIterator<NodeItem> result = store.getNodeItems(
-                TEST_SERVER1_NODE1_ID, "15", 3);
+                TEST_SERVER1_NODE1_ID, "15", 3, false);
 
         assertEquals("Incorrect node item returned", items[14], result.next());
         assertEquals("Incorrect node item returned", items[13], result.next());
@@ -176,7 +176,7 @@ public class JDBCNodeStoreTest extends JDBCNodeStoreAbstract {
         dbTester.loadData("node_1");
 
         Iterator<NodeItem> result = store.getNodeItems(TEST_SERVER1_NODE1_ID,
-                null, -1);
+                null, -1, false);
 
         String[] expectedNodeIds = { TEST_SERVER1_NODE1_ITEM5_ID,
                 TEST_SERVER1_NODE1_ITEM4_ID, TEST_SERVER1_NODE1_ITEM3_ID,
@@ -211,7 +211,7 @@ public class JDBCNodeStoreTest extends JDBCNodeStoreAbstract {
     public void testGetNodeItemsWithInvalidCountThrowsException()
             throws Exception {
         store.getNodeItems(TEST_SERVER1_NODE1_ID, TEST_SERVER1_NODE1_ITEM1_ID,
-                -2);
+                -2, false);
     }
 
     @Test
@@ -220,7 +220,7 @@ public class JDBCNodeStoreTest extends JDBCNodeStoreAbstract {
         dbTester.loadData("node_1");
 
         Iterator<NodeItem> result = store.getNodeItems(TEST_SERVER1_NODE1_ID,
-                "randomunknownitemid", 10);
+                "randomunknownitemid", 10, false);
 
         String[] expectedNodeIds = { TEST_SERVER1_NODE1_ITEM5_ID,
                 TEST_SERVER1_NODE1_ITEM4_ID, TEST_SERVER1_NODE1_ITEM3_ID,

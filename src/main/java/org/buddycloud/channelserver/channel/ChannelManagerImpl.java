@@ -113,9 +113,9 @@ public class ChannelManagerImpl implements ChannelManager {
   }
 
   @Override
-  public CloseableIterator<NodeItem> getNodeItems(String nodeId, String afterItemId, int count)
+  public CloseableIterator<NodeItem> getNodeItems(String nodeId, String afterItemId, int count, boolean parentOnly)
       throws NodeStoreException {
-    return nodeStore.getNodeItems(nodeId, afterItemId, count);
+    return nodeStore.getNodeItems(nodeId, afterItemId, count, parentOnly);
   }
 
   @Override

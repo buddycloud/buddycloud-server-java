@@ -208,7 +208,7 @@ public class NodeItemsGetTest extends IQTestHandler {
 
         Mockito.when(
                 channelManager.getNodeItems(Mockito.anyString(),
-                        Mockito.anyString(), Mockito.anyInt()))
+                        Mockito.anyString(), Mockito.anyInt(), Mockito.eq(false)))
                 .thenReturn(null);
         Mockito.when(channelManager.nodeExists(node)).thenReturn(true);
 
@@ -260,7 +260,7 @@ public class NodeItemsGetTest extends IQTestHandler {
         Mockito.doReturn(itemList)
                 .when(channelManager)
                 .getNodeItems(Mockito.anyString(), Mockito.anyString(),
-                        Mockito.anyInt());
+                        Mockito.anyInt(), Mockito.eq(false));
 
         Mockito.when(channelManager.nodeExists(node)).thenReturn(true);
 
@@ -310,7 +310,7 @@ public class NodeItemsGetTest extends IQTestHandler {
         Mockito.doReturn(itemList)
                 .when(channelManager)
                 .getNodeItems(Mockito.anyString(), Mockito.anyString(),
-                        Mockito.anyInt());
+                        Mockito.anyInt(), Mockito.eq(false));
 
         Mockito.when(channelManager.nodeExists(node)).thenReturn(true);
 
@@ -363,7 +363,7 @@ public class NodeItemsGetTest extends IQTestHandler {
         itemsGet.process(element, jid, request, rsm);
 
         verify(channelManager).getNodeItems(anyString(), eq("item-id"),
-                anyInt());
+                anyInt(), Mockito.eq(false));
     }
 
     @Test
@@ -380,7 +380,7 @@ public class NodeItemsGetTest extends IQTestHandler {
         itemsGet.process(element, jid, request, rsm);
 
         verify(channelManager).getNodeItems(anyString(), eq("item-id"),
-                anyInt());
+                anyInt(), Mockito.eq(false));
     }
 
     @Test
@@ -397,7 +397,7 @@ public class NodeItemsGetTest extends IQTestHandler {
 
         itemsGet.process(element, jid, request, rsm);
 
-        Packet p = queue.poll(100, TimeUnit.MILLISECONDS);
+        Packet p = queue.poll();
 
         assertEquals("Error expected", "error",
                 p.getElement().attributeValue("type"));

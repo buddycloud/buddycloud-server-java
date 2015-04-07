@@ -859,7 +859,7 @@ public class JDBCNodeStore implements NodeStore {
     }
 
     @Override
-    public CloseableIterator<NodeItem> getNodeItems(String nodeId, String afterItemId, int count) throws NodeStoreException {
+    public CloseableIterator<NodeItem> getNodeItems(String nodeId, String afterItemId, int count, boolean parentOnly) throws NodeStoreException {
         NodeItem afterItem = null;
 
         PreparedStatement stmt = null;
@@ -1154,7 +1154,7 @@ public class JDBCNodeStore implements NodeStore {
 
     @Override
     public CloseableIterator<NodeItem> getNodeItems(String nodeId) throws NodeStoreException {
-        return getNodeItems(nodeId, null, -1);
+        return getNodeItems(nodeId, null, -1, false);
     }
 
     @Override

@@ -120,10 +120,10 @@ public class NodeItemsGet extends PubSubElementProcessorAbstract {
         } catch (NodeStoreException e) {
             LOGGER.error(e);
             setErrorCondition(PacketError.Type.wait, PacketError.Condition.internal_server_error);
-        } /*catch (NullPointerException e) {
+        } catch (NullPointerException e) {
           LOGGER.error(e);
           setErrorCondition(PacketError.Type.modify, PacketError.Condition.bad_request);
-        }*/
+        }
         outQueue.put(reply);
     }
     

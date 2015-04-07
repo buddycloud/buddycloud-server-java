@@ -1312,7 +1312,7 @@ public class JDBCNodeStore implements NodeStore {
     }
 
     @Override
-    public int countNodeItems(String nodeId) throws NodeStoreException {
+    public int countNodeItems(String nodeId, boolean parentOnly) throws NodeStoreException {
         PreparedStatement selectStatement = null;
 
         try {
@@ -1537,7 +1537,7 @@ public class JDBCNodeStore implements NodeStore {
 
     @Override
     public boolean isCachedNode(String nodeId) throws NodeStoreException {
-        return ((this.countNodeItems(nodeId) > 0) && (true == this.isCachedNodeConfig(nodeId)));
+        return ((this.countNodeItems(nodeId, false) > 0) && (true == this.isCachedNodeConfig(nodeId)));
     }
 
     @Override

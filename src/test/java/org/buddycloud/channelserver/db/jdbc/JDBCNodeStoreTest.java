@@ -255,7 +255,7 @@ public class JDBCNodeStoreTest extends JDBCNodeStoreAbstract {
     public void testCountNodeItems() throws Exception {
         dbTester.loadData("node_1");
 
-        int result = store.countNodeItems(TEST_SERVER1_NODE1_ID);
+        int result = store.countNodeItems(TEST_SERVER1_NODE1_ID, false);
 
         assertEquals("Incorrect item count", 5, result);
     }
@@ -325,7 +325,7 @@ public class JDBCNodeStoreTest extends JDBCNodeStoreAbstract {
     public void testCountNodeItemsNonExistantNode() throws Exception {
         dbTester.loadData("node_1");
 
-        int result = store.countNodeItems("iamanodewhichdoesntexist");
+        int result = store.countNodeItems("iamanodewhichdoesntexist", false);
 
         assertEquals("Incorrect item count", 0, result);
     }
@@ -642,9 +642,9 @@ public class JDBCNodeStoreTest extends JDBCNodeStoreAbstract {
     public void testPurgeNodeItemsDeletesNodeItems() throws Exception {
 
         dbTester.loadData("node_1");
-        assertTrue(store.countNodeItems(TEST_SERVER1_NODE1_ID) > 0);
+        assertTrue(store.countNodeItems(TEST_SERVER1_NODE1_ID, false) > 0);
         store.purgeNodeItems(TEST_SERVER1_NODE1_ID);
-        assertEquals(0, store.countNodeItems(TEST_SERVER1_NODE1_ID));
+        assertEquals(0, store.countNodeItems(TEST_SERVER1_NODE1_ID, false));
     }
 
     @Test
@@ -652,10 +652,10 @@ public class JDBCNodeStoreTest extends JDBCNodeStoreAbstract {
             throws Exception {
 
         dbTester.loadData("node_1");
-        int itemCount = store.countNodeItems(TEST_SERVER1_NODE1_ID);
+        int itemCount = store.countNodeItems(TEST_SERVER1_NODE1_ID, false);
         assertTrue(itemCount > 0);
         store.purgeNodeItems(TEST_SERVER1_NODE2_ID); // <--- NODE **2**
-        assertEquals(itemCount, store.countNodeItems(TEST_SERVER1_NODE1_ID));
+        assertEquals(itemCount, store.countNodeItems(TEST_SERVER1_NODE1_ID, false));
     }
     
     @Test

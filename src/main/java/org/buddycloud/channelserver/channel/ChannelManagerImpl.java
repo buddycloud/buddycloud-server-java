@@ -152,8 +152,8 @@ public class ChannelManagerImpl implements ChannelManager {
   }
 
   @Override
-  public int countNodeItems(String nodeId) throws NodeStoreException {
-    return nodeStore.countNodeItems(nodeId);
+  public int countNodeItems(String nodeId, boolean parentOnly) throws NodeStoreException {
+    return nodeStore.countNodeItems(nodeId, parentOnly);
   }
 
   public boolean isCachedNode(String nodeId) throws NodeStoreException {

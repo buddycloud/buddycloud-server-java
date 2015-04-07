@@ -274,7 +274,7 @@ public class NodeItemsGet extends PubSubElementProcessorAbstract {
                 lastItem = nodeItem.getId();
             }
             LOGGER.debug("Including RSM there are " + rsmEntriesCount + " items for node " + node);
-            return channelManager.countNodeItems(node);
+            return channelManager.countNodeItems(node, parentOnly);
         } finally {
             itemIt.close();
         }

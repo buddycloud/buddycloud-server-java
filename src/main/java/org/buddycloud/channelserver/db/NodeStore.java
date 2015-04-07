@@ -340,10 +340,11 @@ public interface NodeStore {
      * Retrieves the number of items within a node.
      * 
      * @param nodeId the node id from which to retrieve the item count.
+     * @param parentOnly whether to include post item replies/comments in count
      * @return the entries count.
      * @throws NodeStoreException
      */
-    int countNodeItems(String nodeId) throws NodeStoreException;
+    int countNodeItems(String nodeId, boolean parentOnly) throws NodeStoreException;
 
     /**
      * Retrieves a single node item by the node item id.

@@ -1316,7 +1316,15 @@ public class JDBCNodeStore implements NodeStore {
         PreparedStatement selectStatement = null;
 
         try {
-            selectStatement = conn.prepareStatement(dialect.countItemsForNode());
+            String query = dialect.countItemsForNode();
+            String parentOnlySubstitution = "";
+            if (parentOnly) {
+              parentOnlySubstitution = "AND \"in_reply_to\" IS NULL";
+            }
+            System.out.println("\n\n\n\n\n" + query.replace("%parentOnly%", parentOnlySubstitution) + " " + parentOnly);
+            selectStatement = conn.prepareStatement(
+              query.replace("%parentOnly%", parentOnlySubstitution)
+            );
             selectStatement.setString(1, nodeId);
 
             java.sql.ResultSet rs = selectStatement.executeQuery();

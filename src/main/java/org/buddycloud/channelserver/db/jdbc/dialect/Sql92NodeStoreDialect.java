@@ -130,7 +130,7 @@ public class Sql92NodeStoreDialect implements NodeStoreSQLDialect {
     private static final String SELECT_COUNT_RECENT_ITEM_PARTS = "" + "(SELECT COUNT(\"id\") " + "FROM \"items\" " + "WHERE \"node\" = ? "
             + "AND \"updated\" > ? " + "%parentOnly% " + "LIMIT ?)";
 
-    private static final String COUNT_ITEMS_FOR_NODE = "SELECT COUNT(*)" + " FROM \"items\" WHERE \"node\" = ?";
+    private static final String COUNT_ITEMS_FOR_NODE = "SELECT COUNT(*)" + " FROM \"items\" WHERE \"node\" = ? %parentOnly%;";
 
     private static final String SELECT_ITEM_REPLIES = "" + "SELECT \"id\", \"node\", \"xml\", \"updated\", \"in_reply_to\", \"created\" "
             + "FROM \"items\" WHERE \"node\" = ? AND \"in_reply_to\" LIKE ? " + "AND \"updated\" > ? ORDER BY \"updated\" DESC";

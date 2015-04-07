@@ -259,6 +259,16 @@ public class JDBCNodeStoreTest extends JDBCNodeStoreAbstract {
 
         assertEquals("Incorrect item count", 5, result);
     }
+    
+    @Test
+    public void countNodeItemsWithNoReplies() throws Exception {
+      dbTester.loadData("node_1");
+      dbTester.loadData("node_4");
+
+      int result = store.countNodeItems(TEST_SERVER1_NODE1_ID, true);
+
+      assertEquals("Incorrect item count", 6, result);
+    }
 
     @Test
     public void testGetNewNodeItemsForUserBetweenDates() throws Exception {

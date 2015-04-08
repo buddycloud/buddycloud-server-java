@@ -161,8 +161,6 @@ public class NodeItemsGetTest extends IQTestHandler {
     public void testSubscriptionIncompatibleWithItemRetrievalReturnsExpectedStanza()
             throws Exception {
 
-        element.addAttribute("node", node);
-
         Mockito.when(channelManager.nodeExists(node)).thenReturn(true);
         Mockito.when(channelManager.getNodeMembership(node, jid)).thenReturn(
                 new NodeMembershipImpl(node, jid, Subscriptions.none,
@@ -196,8 +194,6 @@ public class NodeItemsGetTest extends IQTestHandler {
     public void testStandardNodeWithNoItemsReturnsNoItems() throws Exception {
 
         AccessModels accessModel = AccessModels.authorize;
-
-        element.addAttribute("node", node);
 
         NodeMembershipImpl membership = Mockito.mock(NodeMembershipImpl.class);
         Mockito.when(membership.getAffiliation()).thenReturn(
@@ -237,8 +233,6 @@ public class NodeItemsGetTest extends IQTestHandler {
     public void testUnparsableNodeEntryIsIgnoredInItemsResponse()
             throws Exception {
         AccessModels accessModel = AccessModels.authorize;
-
-        element.addAttribute("node", node);
 
         NodeMembershipImpl membership = Mockito.mock(NodeMembershipImpl.class);
         Mockito.when(membership.getAffiliation()).thenReturn(
@@ -347,8 +341,6 @@ public class NodeItemsGetTest extends IQTestHandler {
         rsm.addElement("after").setText(
                 "tag:denmark.lit,/user/" + node + "/posts,item-id");
 
-        element.addAttribute("node", node);
-
         Mockito.when(channelManager.nodeExists(anyString())).thenReturn(true);
 
         NodeMembershipImpl membership = Mockito.mock(NodeMembershipImpl.class);
@@ -371,8 +363,6 @@ public class NodeItemsGetTest extends IQTestHandler {
                 "http://jabber.org/protocol/rsm")));
 
         rsm.addElement("after").setText("item-id");
-
-        element.addAttribute("node", node);
 
         Mockito.when(channelManager.nodeExists(anyString())).thenReturn(true);
 
@@ -423,9 +413,6 @@ public class NodeItemsGetTest extends IQTestHandler {
         String id = "12345";
         String payload = "<entry>entry text</entry>";
 
-        element.addAttribute("node", node);
-        element.addElement("item").addAttribute("id", id);
-
         Mockito.when(channelManager.nodeExists(Mockito.anyString()))
                 .thenReturn(true);
 
@@ -459,8 +446,6 @@ public class NodeItemsGetTest extends IQTestHandler {
     public void settingParentOnlyToTrueRequestsParentOnlyItems() throws Exception {
 
       AccessModels accessModel = AccessModels.authorize;
-
-      element.addAttribute("node", node);
 
       NodeMembershipImpl membership = Mockito.mock(NodeMembershipImpl.class);
       Mockito.when(membership.getAffiliation()).thenReturn(
@@ -508,8 +493,6 @@ public class NodeItemsGetTest extends IQTestHandler {
 
       AccessModels accessModel = AccessModels.authorize;
 
-      element.addAttribute("node", node);
-
       NodeMembershipImpl membership = Mockito.mock(NodeMembershipImpl.class);
       Mockito.when(membership.getAffiliation()).thenReturn(
               Affiliations.member);
@@ -556,8 +539,6 @@ public class NodeItemsGetTest extends IQTestHandler {
 
       AccessModels accessModel = AccessModels.authorize;
 
-      element.addAttribute("node", node);
-
       NodeMembershipImpl membership = Mockito.mock(NodeMembershipImpl.class);
       Mockito.when(membership.getAffiliation()).thenReturn(
               Affiliations.member);
@@ -599,3 +580,4 @@ public class NodeItemsGetTest extends IQTestHandler {
               .nodeCount());
     }
 }
+

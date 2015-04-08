@@ -877,7 +877,7 @@ public class JDBCNodeStore implements NodeStore {
         
         String parentOnlySubstitution = "";
         if (parentOnly) {
-          parentOnlySubstitution = " AND \"in_reply_to\" IS NOT NULL ";
+          parentOnlySubstitution = " AND \"in_reply_to\" IS NULL ";
         }
         
         String query = null;

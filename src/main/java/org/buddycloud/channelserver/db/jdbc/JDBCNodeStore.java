@@ -1321,7 +1321,6 @@ public class JDBCNodeStore implements NodeStore {
             if (parentOnly) {
               parentOnlySubstitution = "AND \"in_reply_to\" IS NULL";
             }
-            System.out.println("\n\n\n\n\n" + query.replace("%parentOnly%", parentOnlySubstitution) + " " + parentOnly);
             selectStatement = conn.prepareStatement(
               query.replace("%parentOnly%", parentOnlySubstitution)
             );

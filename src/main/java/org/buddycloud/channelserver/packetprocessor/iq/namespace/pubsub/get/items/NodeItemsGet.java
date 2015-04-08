@@ -110,7 +110,7 @@ public class NodeItemsGet extends PubSubElementProcessorAbstract {
                 return;
             }
             xmlReader = new SAXReader();
-            if (element.element(XMLConstants.ITEM_ELEM) == null) {
+            if (null == items.element(XMLConstants.ITEM_ELEM)) {
                 getItems();
             } else {
                 if (!getItem()) {
@@ -135,8 +135,7 @@ public class NodeItemsGet extends PubSubElementProcessorAbstract {
     }
 
     private boolean getItem() throws Exception {
-        NodeItem nodeItem = channelManager.getNodeItem(node, element.element(XMLConstants.ITEM_ELEM).attributeValue(XMLConstants.ID_ATTR));
-
+        NodeItem nodeItem = channelManager.getNodeItem(node, items.element(XMLConstants.ITEM_ELEM).attributeValue(XMLConstants.ID_ATTR));
         if (nodeItem == null) {
             if (!Configuration.getInstance().isLocalNode(node)) {
                 makeRemoteRequest();
@@ -192,7 +191,7 @@ public class NodeItemsGet extends PubSubElementProcessorAbstract {
             parentOnly = true;
         }
         
-        String maxItems = element.attributeValue(XMLConstants.MAX_ITEMS_ATTR);
+        String maxItems = items.attributeValue(XMLConstants.MAX_ITEMS_ATTR);
 
         if (maxItems != null) {
             maxItemsToReturn = Integer.parseInt(maxItems);

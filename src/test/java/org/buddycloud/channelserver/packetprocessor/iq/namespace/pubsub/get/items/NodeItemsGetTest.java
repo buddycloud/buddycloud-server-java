@@ -416,29 +416,34 @@ public class NodeItemsGetTest extends IQTestHandler {
         Mockito.when(channelManager.nodeExists(Mockito.anyString()))
                 .thenReturn(true);
 
-        NodeItem item = new NodeItemImpl(node, id, new Date(), payload);
+        NodeItem dbItem = new NodeItemImpl(node, id, new Date(), payload);
         Mockito.when(
-                channelManager.getNodeItem(Mockito.anyString(),
-                        Mockito.anyString())).thenReturn(item);
+                channelManager.getNodeItem(Mockito.eq(node),
+                        Mockito.eq(id))).thenReturn(dbItem);
 
+        IQ request = this.request.createCopy();
+        Element item = request.getChildElement().element("items").addElement("item");
+        item.addAttribute("id", id);
+        System.out.println(request.toXML());
         itemsGet.process(element, jid, request, null);
-        Packet response = queue.poll();
+        IQ response = (IQ) queue.poll();
 
-        Element element = response.getElement();
+        Element element = response.getChildElement();
+        Element items = element.element("items");
 
-        Assert.assertEquals(IQ.Type.result.toString(),
-                element.attributeValue("type"));
-        Assert.assertEquals(node, element.element("pubsub").element("items")
+        Assert.assertEquals(IQ.Type.result,
+               response.getType());
+        Assert.assertEquals(node, items
                 .attributeValue("node"));
 
-        Assert.assertEquals(1, element.element("pubsub").element("items")
+        Assert.assertEquals(1, items
                 .nodeCount());
-        Assert.assertEquals(node, element.element("pubsub").element("items")
+        Assert.assertEquals(node, items
                 .attributeValue("node"));
-        Assert.assertEquals(id, element.element("pubsub").element("items")
+        Assert.assertEquals(id, items
                 .element("item").attributeValue("id"));
         Assert.assertEquals("entry text",
-                element.element("pubsub").element("items").element("item")
+                items.element("item")
                         .elementText("entry"));
     }
     

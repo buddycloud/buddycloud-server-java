@@ -859,7 +859,7 @@ public class JDBCNodeStore implements NodeStore {
     }
 
     @Override
-    public CloseableIterator<NodeItem> getNodeItems(String nodeId, String afterItemId, int count) throws NodeStoreException {
+    public CloseableIterator<NodeItem> getNodeItems(String nodeId, String afterItemId, int count, boolean parentOnly) throws NodeStoreException {
         NodeItem afterItem = null;
 
         PreparedStatement stmt = null;
@@ -869,16 +869,23 @@ public class JDBCNodeStore implements NodeStore {
         }
 
         String countSQL = "";
-
         if (count > -1) {
             countSQL = " OFFSET 0 LIMIT " + count;
         } else if (count < -1) {
             throw new IllegalArgumentException("Invalid value for parameter count: " + count);
         }
-
+        
+        String parentOnlySubstitution = "";
+        if (parentOnly) {
+          parentOnlySubstitution = " AND \"in_reply_to\" IS NULL ";
+        }
+        
+        String query = null;
         try {
             if (afterItem == null) {
-                stmt = conn.prepareStatement(dialect.selectItemsForNode() + countSQL);
+              query = dialect.selectItemsForNode()
+                  .replace("%parentOnly%", parentOnlySubstitution) + countSQL;
+                stmt = conn.prepareStatement(query);
                 stmt.setString(1, nodeId);
 
                 java.sql.ResultSet rs = stmt.executeQuery();
@@ -893,7 +900,9 @@ public class JDBCNodeStore implements NodeStore {
                     }
                 });
             } else {
-                stmt = conn.prepareStatement(dialect.selectItemsForNodeBeforeDate() + countSQL);
+              query = dialect.selectItemsForNodeBeforeDate()
+                  .replace("%parentOnly%", parentOnlySubstitution) + countSQL;
+                stmt = conn.prepareStatement(query);
                 stmt.setString(1, nodeId);
                 stmt.setTimestamp(2, new java.sql.Timestamp(afterItem.getUpdated().getTime()));
                 stmt.setTimestamp(3, new java.sql.Timestamp(afterItem.getUpdated().getTime()));
@@ -1154,7 +1163,7 @@ public class JDBCNodeStore implements NodeStore {
 
     @Override
     public CloseableIterator<NodeItem> getNodeItems(String nodeId) throws NodeStoreException {
-        return getNodeItems(nodeId, null, -1);
+        return getNodeItems(nodeId, null, -1, false);
     }
 
     @Override
@@ -1312,11 +1321,18 @@ public class JDBCNodeStore implements NodeStore {
     }
 
     @Override
-    public int countNodeItems(String nodeId) throws NodeStoreException {
+    public int countNodeItems(String nodeId, boolean parentOnly) throws NodeStoreException {
         PreparedStatement selectStatement = null;
 
         try {
-            selectStatement = conn.prepareStatement(dialect.countItemsForNode());
+            String query = dialect.countItemsForNode();
+            String parentOnlySubstitution = "";
+            if (parentOnly) {
+              parentOnlySubstitution = "AND \"in_reply_to\" IS NULL";
+            }
+            selectStatement = conn.prepareStatement(
+              query.replace("%parentOnly%", parentOnlySubstitution)
+            );
             selectStatement.setString(1, nodeId);
 
             java.sql.ResultSet rs = selectStatement.executeQuery();
@@ -1537,7 +1553,7 @@ public class JDBCNodeStore implements NodeStore {
 
     @Override
     public boolean isCachedNode(String nodeId) throws NodeStoreException {
-        return ((this.countNodeItems(nodeId) > 0) && (true == this.isCachedNodeConfig(nodeId)));
+        return ((this.countNodeItems(nodeId, false) > 0) && (true == this.isCachedNodeConfig(nodeId)));
     }
 
     @Override

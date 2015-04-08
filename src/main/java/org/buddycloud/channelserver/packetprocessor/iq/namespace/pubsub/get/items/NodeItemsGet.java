@@ -42,16 +42,18 @@ public class NodeItemsGet extends PubSubElementProcessorAbstract {
     private String lastItem;
     private SAXReader xmlReader;
     private Element entry;
-    private IQ requestIq;
     private IQ reply;
     private Element resultSetManagement;
     private Element element;
+    private boolean parentOnly = false;
 
     private Map<String, String> nodeDetails;
 
     private int rsmEntriesCount;
 
     private JID actor;
+
+    private Element items;
 
     public NodeItemsGet(BlockingQueue<Packet> outQueue, ChannelManager channelManager) {
         setOutQueue(outQueue);
@@ -66,31 +68,37 @@ public class NodeItemsGet extends PubSubElementProcessorAbstract {
 
     @Override
     public void process(Element elm, JID actorJID, IQ reqIQ, Element rsm) throws Exception {
-        node = elm.attributeValue(XMLConstants.NODE_ATTR);
-        requestIq = reqIQ;
+        request = reqIQ;
+
         reply = IQ.createResultIQ(reqIQ);
         element = elm;
         resultSetManagement = rsm;
 
-        if (!Configuration.getInstance().isLocalJID(requestIq.getFrom())) {
+        if (!Configuration.getInstance().isLocalJID(request.getFrom())) {
             reply.getElement().addAttribute(XMLConstants.REMOTE_SERVER_DISCOVER_ATTR, Boolean.FALSE.toString());
         }
 
-        boolean isCached = channelManager.isCachedNode(node);
-
-        this.actor = actorJID;
-        if (null == this.actor) {
-            this.actor = requestIq.getFrom();
-        }
-
-        if (!Configuration.getInstance().isLocalNode(node) && !isCached) {
-            LOGGER.debug("Node " + node + " is remote and not cached, off to get some data");
-
-            makeRemoteRequest();
-            return;
-        }
-
         try {
+                    
+          if (!isValidStanza()) {
+            outQueue.put(reply);
+            return;
+          }
+          
+          boolean isCached = channelManager.isCachedNode(node);
+
+          this.actor = actorJID;
+          if (null == this.actor) {
+              this.actor = request.getFrom();
+          }
+
+          if (!Configuration.getInstance().isLocalNode(node) && !isCached) {
+              LOGGER.debug("Node " + node + " is remote and not cached, off to get some data");
+
+              makeRemoteRequest();
+              return;
+          }
+          
             if (!checkNodeExists()) {
                 setErrorCondition(PacketError.Type.cancel, PacketError.Condition.item_not_found);
                 outQueue.put(reply);
@@ -102,7 +110,7 @@ public class NodeItemsGet extends PubSubElementProcessorAbstract {
                 return;
             }
             xmlReader = new SAXReader();
-            if (element.element(XMLConstants.ITEM_ELEM) == null) {
+            if (null == items.element(XMLConstants.ITEM_ELEM)) {
                 getItems();
             } else {
                 if (!getItem()) {
@@ -112,13 +120,22 @@ public class NodeItemsGet extends PubSubElementProcessorAbstract {
         } catch (NodeStoreException e) {
             LOGGER.error(e);
             setErrorCondition(PacketError.Type.wait, PacketError.Condition.internal_server_error);
+        } catch (NullPointerException e) {
+          LOGGER.error(e);
+          setErrorCondition(PacketError.Type.modify, PacketError.Condition.bad_request);
         }
         outQueue.put(reply);
     }
+    
+    protected boolean isValidStanza() {
+      Element pubsub = request.getElement().element(XMLConstants.PUBSUB_ELEM);
+      items = pubsub.element(XMLConstants.ITEMS_ELEM);
+      node = items.attributeValue(XMLConstants.NODE_ATTR);
+      return true;
+    }
 
     private boolean getItem() throws Exception {
-        NodeItem nodeItem = channelManager.getNodeItem(node, element.element(XMLConstants.ITEM_ELEM).attributeValue(XMLConstants.ID_ATTR));
-
+        NodeItem nodeItem = channelManager.getNodeItem(node, items.element(XMLConstants.ITEM_ELEM).attributeValue(XMLConstants.ID_ATTR));
         if (nodeItem == null) {
             if (!Configuration.getInstance().isLocalNode(node)) {
                 makeRemoteRequest();
@@ -137,12 +154,12 @@ public class NodeItemsGet extends PubSubElementProcessorAbstract {
 
     @Override
     protected void makeRemoteRequest() throws InterruptedException {
-        requestIq.setTo(new JID(node.split("/")[2]).getDomain());
-        if (null == requestIq.getElement().element(XMLConstants.PUBSUB_ELEM).element(XMLConstants.ACTOR_ELEM)) {
-            Element actor = requestIq.getElement().element(XMLConstants.PUBSUB_ELEM).addElement(XMLConstants.ACTOR_ELEM, Buddycloud.NS);
-            actor.addText(requestIq.getFrom().toBareJID());
+        request.setTo(new JID(node.split("/")[2]).getDomain());
+        if (null == request.getElement().element(XMLConstants.PUBSUB_ELEM).element(XMLConstants.ACTOR_ELEM)) {
+            Element actor = request.getElement().element(XMLConstants.PUBSUB_ELEM).addElement(XMLConstants.ACTOR_ELEM, Buddycloud.NS);
+            actor.addText(request.getFrom().toBareJID());
         }
-        outQueue.put(requestIq);
+        outQueue.put(request);
     }
 
     @Override
@@ -169,7 +186,12 @@ public class NodeItemsGet extends PubSubElementProcessorAbstract {
         int maxItemsToReturn = MAX_ITEMS_TO_RETURN;
         String afterItemId = null;
 
-        String maxItems = element.attributeValue(XMLConstants.MAX_ITEMS_ATTR);
+        String parentOnlyAttribute = request.getChildElement().element(XMLConstants.ITEMS_ELEM).attributeValue(XMLConstants.PARENT_ONLY_ATTR);
+        if ((null != parentOnlyAttribute) && ((Boolean.TRUE.toString().equals(parentOnlyAttribute)) || ("1".equals(parentOnlyAttribute)))) {
+            parentOnly = true;
+        }
+        
+        String maxItems = items.attributeValue(XMLConstants.MAX_ITEMS_ATTR);
 
         if (maxItems != null) {
             maxItemsToReturn = Integer.parseInt(maxItems);
@@ -205,7 +227,7 @@ public class NodeItemsGet extends PubSubElementProcessorAbstract {
         items.addAttribute(XMLConstants.NODE_ATTR, node);
 
         entry = null;
-        int totalEntriesCount = getNodeItems(items, maxItemsToReturn, afterItemId);
+        int totalEntriesCount = getNodeItems(items, maxItemsToReturn, afterItemId, parentOnly);
 
         if ((false == Configuration.getInstance().isLocalNode(node)) && (0 == rsmEntriesCount)) {
             LOGGER.debug("No results in cache for remote node, so " + "we're going federated to get more");
@@ -254,9 +276,9 @@ public class NodeItemsGet extends PubSubElementProcessorAbstract {
     /**
      * Get items nodes
      */
-    private int getNodeItems(Element items, int maxItemsToReturn, String afterItemId) throws NodeStoreException {
+    private int getNodeItems(Element items, int maxItemsToReturn, String afterItemId, boolean parentOnly) throws NodeStoreException {
 
-        CloseableIterator<NodeItem> itemIt = channelManager.getNodeItems(node, afterItemId, maxItemsToReturn);
+        CloseableIterator<NodeItem> itemIt = channelManager.getNodeItems(node, afterItemId, maxItemsToReturn, parentOnly);
         rsmEntriesCount = 0;
         if (itemIt == null) {
             return 0;
@@ -273,7 +295,7 @@ public class NodeItemsGet extends PubSubElementProcessorAbstract {
                 lastItem = nodeItem.getId();
             }
             LOGGER.debug("Including RSM there are " + rsmEntriesCount + " items for node " + node);
-            return channelManager.countNodeItems(node);
+            return channelManager.countNodeItems(node, parentOnly);
         } finally {
             itemIt.close();
         }

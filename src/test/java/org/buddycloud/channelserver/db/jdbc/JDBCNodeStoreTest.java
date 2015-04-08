@@ -119,7 +119,7 @@ public class JDBCNodeStoreTest extends JDBCNodeStoreAbstract {
         dbTester.loadData("node_1");
 
         Iterator<NodeItem> result = store.getNodeItems(TEST_SERVER1_NODE1_ID,
-                TEST_SERVER1_NODE1_ITEM4_ID, 4);
+                TEST_SERVER1_NODE1_ITEM4_ID, 4, false);
 
         String[] expectedNodeIds = { TEST_SERVER1_NODE1_ITEM3_ID,
                 TEST_SERVER1_NODE1_ITEM2_ID, TEST_SERVER1_NODE1_ITEM1_ID };
@@ -163,7 +163,7 @@ public class JDBCNodeStoreTest extends JDBCNodeStoreAbstract {
         }
 
         CloseableIterator<NodeItem> result = store.getNodeItems(
-                TEST_SERVER1_NODE1_ID, "15", 3);
+                TEST_SERVER1_NODE1_ID, "15", 3, false);
 
         assertEquals("Incorrect node item returned", items[14], result.next());
         assertEquals("Incorrect node item returned", items[13], result.next());
@@ -176,7 +176,7 @@ public class JDBCNodeStoreTest extends JDBCNodeStoreAbstract {
         dbTester.loadData("node_1");
 
         Iterator<NodeItem> result = store.getNodeItems(TEST_SERVER1_NODE1_ID,
-                null, -1);
+                null, -1, false);
 
         String[] expectedNodeIds = { TEST_SERVER1_NODE1_ITEM5_ID,
                 TEST_SERVER1_NODE1_ITEM4_ID, TEST_SERVER1_NODE1_ITEM3_ID,
@@ -211,7 +211,7 @@ public class JDBCNodeStoreTest extends JDBCNodeStoreAbstract {
     public void testGetNodeItemsWithInvalidCountThrowsException()
             throws Exception {
         store.getNodeItems(TEST_SERVER1_NODE1_ID, TEST_SERVER1_NODE1_ITEM1_ID,
-                -2);
+                -2, false);
     }
 
     @Test
@@ -220,7 +220,7 @@ public class JDBCNodeStoreTest extends JDBCNodeStoreAbstract {
         dbTester.loadData("node_1");
 
         Iterator<NodeItem> result = store.getNodeItems(TEST_SERVER1_NODE1_ID,
-                "randomunknownitemid", 10);
+                "randomunknownitemid", 10, false);
 
         String[] expectedNodeIds = { TEST_SERVER1_NODE1_ITEM5_ID,
                 TEST_SERVER1_NODE1_ITEM4_ID, TEST_SERVER1_NODE1_ITEM3_ID,
@@ -255,9 +255,19 @@ public class JDBCNodeStoreTest extends JDBCNodeStoreAbstract {
     public void testCountNodeItems() throws Exception {
         dbTester.loadData("node_1");
 
-        int result = store.countNodeItems(TEST_SERVER1_NODE1_ID);
+        int result = store.countNodeItems(TEST_SERVER1_NODE1_ID, false);
 
         assertEquals("Incorrect item count", 5, result);
+    }
+    
+    @Test
+    public void countNodeItemsWithNoReplies() throws Exception {
+      dbTester.loadData("node_1");
+      dbTester.loadData("node_4");
+
+      int result = store.countNodeItems(TEST_SERVER1_NODE1_ID, true);
+
+      assertEquals("Incorrect item count", 6, result);
     }
 
     @Test
@@ -325,7 +335,7 @@ public class JDBCNodeStoreTest extends JDBCNodeStoreAbstract {
     public void testCountNodeItemsNonExistantNode() throws Exception {
         dbTester.loadData("node_1");
 
-        int result = store.countNodeItems("iamanodewhichdoesntexist");
+        int result = store.countNodeItems("iamanodewhichdoesntexist", false);
 
         assertEquals("Incorrect item count", 0, result);
     }
@@ -642,9 +652,9 @@ public class JDBCNodeStoreTest extends JDBCNodeStoreAbstract {
     public void testPurgeNodeItemsDeletesNodeItems() throws Exception {
 
         dbTester.loadData("node_1");
-        assertTrue(store.countNodeItems(TEST_SERVER1_NODE1_ID) > 0);
+        assertTrue(store.countNodeItems(TEST_SERVER1_NODE1_ID, false) > 0);
         store.purgeNodeItems(TEST_SERVER1_NODE1_ID);
-        assertEquals(0, store.countNodeItems(TEST_SERVER1_NODE1_ID));
+        assertEquals(0, store.countNodeItems(TEST_SERVER1_NODE1_ID, false));
     }
 
     @Test
@@ -652,10 +662,10 @@ public class JDBCNodeStoreTest extends JDBCNodeStoreAbstract {
             throws Exception {
 
         dbTester.loadData("node_1");
-        int itemCount = store.countNodeItems(TEST_SERVER1_NODE1_ID);
+        int itemCount = store.countNodeItems(TEST_SERVER1_NODE1_ID, false);
         assertTrue(itemCount > 0);
         store.purgeNodeItems(TEST_SERVER1_NODE2_ID); // <--- NODE **2**
-        assertEquals(itemCount, store.countNodeItems(TEST_SERVER1_NODE1_ID));
+        assertEquals(itemCount, store.countNodeItems(TEST_SERVER1_NODE1_ID, false));
     }
     
     @Test

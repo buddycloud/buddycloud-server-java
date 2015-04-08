@@ -234,10 +234,11 @@ public interface NodeStore {
      * @param afterNodeId the itemId after which to retrieve items (exclusive, based on modified
      *        date).
      * @param count the maximum number of records to return.
+     * @param boolean whether to only retrieve parent items (i.e. no comments/replies)
      * @return an {@link Iterator} of the node entries.
      * @throws NodeStoreException
      */
-    CloseableIterator<NodeItem> getNodeItems(String nodeId, String afterItemId, int count) throws NodeStoreException;
+    CloseableIterator<NodeItem> getNodeItems(String nodeId, String afterItemId, int count, boolean parentOnly) throws NodeStoreException;
 
     /**
      * Get node items between two dates
@@ -339,10 +340,11 @@ public interface NodeStore {
      * Retrieves the number of items within a node.
      * 
      * @param nodeId the node id from which to retrieve the item count.
+     * @param parentOnly whether to include post item replies/comments in count
      * @return the entries count.
      * @throws NodeStoreException
      */
-    int countNodeItems(String nodeId) throws NodeStoreException;
+    int countNodeItems(String nodeId, boolean parentOnly) throws NodeStoreException;
 
     /**
      * Retrieves a single node item by the node item id.

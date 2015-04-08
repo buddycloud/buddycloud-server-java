@@ -107,14 +107,14 @@ public class Sql92NodeStoreDialect implements NodeStoreSQLDialect {
             + " FROM \"items\" WHERE \"node\" = ? AND \"id\" = ?";
 
     private static final String SELECT_ITEMS_FOR_NODE = "SELECT \"node\", \"id\", \"updated\", \"xml\", \"in_reply_to\", \"created\""
-            + " FROM \"items\" WHERE \"node\" = ? ORDER BY \"updated\" DESC, \"id\" ASC";
+            + " FROM \"items\" WHERE \"node\" = ? %parentOnly% ORDER BY \"updated\" DESC, \"id\" ASC";
 
     private static final String SELECT_ITEMS_FOR_NODE_AFTER_DATE = "SELECT \"node\", \"id\", \"updated\", \"xml\", \"in_reply_to\", \"created\""
             + " FROM \"items\" WHERE \"node\" = ? AND ( \"updated\" > ? OR ( \"updated\" = ? AND \"id\" > ? ) )"
             + " ORDER BY \"updated\" ASC, \"id\" DESC";
 
     private static final String SELECT_ITEMS_FOR_NODE_BEFORE_DATE = "SELECT \"node\", \"id\", \"updated\", \"xml\", \"in_reply_to\", \"created\""
-            + " FROM \"items\" WHERE \"node\" = ? AND ( \"updated\" < ? OR ( \"updated\" = ? AND \"id\" < ? ) )"
+            + " FROM \"items\" WHERE \"node\" = ? AND ( \"updated\" < ? OR ( \"updated\" = ? AND \"id\" < ? ) ) %parentOnly%"
             + " ORDER BY \"updated\" DESC, \"id\" ASC";
 
     private static final String SELECT_ITEMS_FOR_USER_BETWEEN_DATES = "" + "SELECT \"node\", \"id\", \"updated\", \"xml\", \"in_reply_to\", \"created\""
@@ -130,7 +130,7 @@ public class Sql92NodeStoreDialect implements NodeStoreSQLDialect {
     private static final String SELECT_COUNT_RECENT_ITEM_PARTS = "" + "(SELECT COUNT(\"id\") " + "FROM \"items\" " + "WHERE \"node\" = ? "
             + "AND \"updated\" > ? " + "%parentOnly% " + "LIMIT ?)";
 
-    private static final String COUNT_ITEMS_FOR_NODE = "SELECT COUNT(*)" + " FROM \"items\" WHERE \"node\" = ?";
+    private static final String COUNT_ITEMS_FOR_NODE = "SELECT COUNT(*)" + " FROM \"items\" WHERE \"node\" = ? %parentOnly%;";
 
     private static final String SELECT_ITEM_REPLIES = "" + "SELECT \"id\", \"node\", \"xml\", \"updated\", \"in_reply_to\", \"created\" "
             + "FROM \"items\" WHERE \"node\" = ? AND \"in_reply_to\" LIKE ? " + "AND \"updated\" > ? ORDER BY \"updated\" DESC";

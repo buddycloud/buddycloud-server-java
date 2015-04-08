@@ -375,7 +375,6 @@ public class RecentItemsGetTest extends IQTestHandler {
     public void whenRequestingParentOnlyCorrectFlagIsSetOnDatabaseRequest() throws Exception {
         Element rsm = new BaseElement(new QName("set", new Namespace("", "http://jabber.org/protocol/rsm")));
 
-
         element.addAttribute("node", "/user/francisco@denmark.lit/posts");
 
         IQ request = this.request.createCopy();

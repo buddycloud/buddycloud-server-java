@@ -869,16 +869,23 @@ public class JDBCNodeStore implements NodeStore {
         }
 
         String countSQL = "";
-
         if (count > -1) {
             countSQL = " OFFSET 0 LIMIT " + count;
         } else if (count < -1) {
             throw new IllegalArgumentException("Invalid value for parameter count: " + count);
         }
-
+        
+        String parentOnlySubstitution = "";
+        if (parentOnly) {
+          parentOnlySubstitution = " AND \"in_reply_to\" IS NOT NULL ";
+        }
+        
+        String query = null;
         try {
             if (afterItem == null) {
-                stmt = conn.prepareStatement(dialect.selectItemsForNode() + countSQL);
+              query = dialect.selectItemsForNode()
+                  .replace("%parentOnly%", parentOnlySubstitution) + countSQL;
+                stmt = conn.prepareStatement(query);
                 stmt.setString(1, nodeId);
 
                 java.sql.ResultSet rs = stmt.executeQuery();
@@ -893,7 +900,9 @@ public class JDBCNodeStore implements NodeStore {
                     }
                 });
             } else {
-                stmt = conn.prepareStatement(dialect.selectItemsForNodeBeforeDate() + countSQL);
+              query = dialect.selectItemsForNodeBeforeDate()
+                  .replace("%parentOnly%", parentOnlySubstitution) + countSQL;
+                stmt = conn.prepareStatement(query);
                 stmt.setString(1, nodeId);
                 stmt.setTimestamp(2, new java.sql.Timestamp(afterItem.getUpdated().getTime()));
                 stmt.setTimestamp(3, new java.sql.Timestamp(afterItem.getUpdated().getTime()));

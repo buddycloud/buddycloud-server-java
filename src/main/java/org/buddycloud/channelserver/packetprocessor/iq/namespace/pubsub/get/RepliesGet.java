@@ -87,14 +87,15 @@ public class RepliesGet extends PubSubElementProcessorAbstract {
     }
 
     protected void addRsmElement() throws NodeStoreException {
-        if (null == firstItemId) {
-            return;
-        }
+
         Element rsm = pubsub.addElement(XMLConstants.SET_ELEM);
         rsm.addNamespace("", NS_RSM);
-        rsm.addElement("first").setText(firstItemId);
-        rsm.addElement("last").setText(lastItemId);
-        rsm.addElement("count").setText(String.valueOf(channelManager.getCountNodeItemReplies(node, parentId)));
+        if (null != firstItemId) {
+            rsm.addElement("first").setText(firstItemId);
+            rsm.addElement("last").setText(lastItemId);
+        }
+        rsm.addElement("count").setText(
+            String.valueOf(channelManager.getCountNodeItemReplies(node, parentId)));
     }
 
     private void addReplies() throws NodeStoreException {

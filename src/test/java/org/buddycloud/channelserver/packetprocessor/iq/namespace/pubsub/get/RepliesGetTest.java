@@ -241,4 +241,32 @@ public class RepliesGetTest extends IQTestHandler {
         Assert.assertEquals("4", rsmResult.elementText("last"));
         Assert.assertEquals(String.valueOf(TOTAL_RESULTS), rsmResult.elementText("count"));
     }
+    
+    @Test
+    public void rsmStillAddedWhenThereAreNoResults() throws Exception {
+
+      Element rsm = request.getChildElement().addElement("set");
+      rsm.addNamespace("", RepliesGet.NS_RSM);
+      rsm.addElement("max").setText("4");
+      rsm.addElement("after").setText("1");
+
+      ArrayList<NodeItem> expectedResults = new ArrayList<NodeItem>();
+      Mockito.when(channelManager.getNodeItemReplies(Mockito.anyString(), Mockito.anyString(), Mockito.eq("1"), Mockito.eq(4))).thenReturn(
+              new ClosableIteratorImpl<NodeItem>(expectedResults.iterator()));
+      
+      Mockito.when(channelManager.getCountNodeItemReplies(Mockito.anyString(), Mockito.anyString())).thenReturn(0);
+
+      repliesGet.process(element, jid, request, null);
+      Packet response = queue.poll();
+
+      Element items = response.getElement().element("pubsub").element("items");
+
+      Assert.assertEquals("/user/channeluser@example.com/posts", items.attributeValue("node"));
+      Assert.assertEquals(0, items.elements("item").size());
+
+      Element rsmResult = response.getElement().element("pubsub").element("set");
+      Assert.assertNull(rsmResult.elementText("first"));
+      Assert.assertNull(rsmResult.elementText("last"));
+      Assert.assertEquals("0", rsmResult.elementText("count"));
+    }
 }

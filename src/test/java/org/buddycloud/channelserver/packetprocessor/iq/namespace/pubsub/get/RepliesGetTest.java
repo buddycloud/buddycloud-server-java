@@ -241,4 +241,30 @@ public class RepliesGetTest extends IQTestHandler {
         Assert.assertEquals("4", rsmResult.elementText("last"));
         Assert.assertEquals(String.valueOf(TOTAL_RESULTS), rsmResult.elementText("count"));
     }
+    
+    @Test
+    public void providingBeforeValueInRsmElementInvokesPastItemLookup() throws Exception {
+
+      Element rsm = request.getChildElement().addElement("set");
+      rsm.addNamespace("", RepliesGet.NS_RSM);
+      rsm.addElement("max").setText("4");
+      rsm.addElement("after").setText("1");
+      rsm.addElement("before").setText("2");
+
+      ArrayList<NodeItem> expectedResults = new ArrayList<NodeItem>();
+      expectedResults.add(new NodeItemImpl(TEST_NODE, "1", new Date(), "<entry>value1</entry>"));
+      expectedResults.add(new NodeItemImpl(TEST_NODE, "2", new Date(), "<entry>value2</entry>"));
+      expectedResults.add(new NodeItemImpl(TEST_NODE, "3", new Date(), "<entry>value3</entry>"));
+      expectedResults.add(new NodeItemImpl(TEST_NODE, "4", new Date(), "<entry>value4</entry>"));
+
+      Mockito.when(channelManager.getNodeItemReplies(Mockito.anyString(), Mockito.anyString(), Mockito.eq("1"), Mockito.eq(false), Mockito.eq(4))).thenReturn(
+              new ClosableIteratorImpl<NodeItem>(expectedResults.iterator()));
+
+      repliesGet.process(element, jid, request, null);
+      Packet response = queue.poll();
+
+      Element items = response.getElement().element("pubsub").element("items");
+
+      Assert.assertEquals(4, items.elements("item").size());
+    }
 }

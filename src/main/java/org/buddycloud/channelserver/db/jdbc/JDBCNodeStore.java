@@ -1181,7 +1181,6 @@ public class JDBCNodeStore implements NodeStore {
             if (null != rsmItem) {
                 since = getNodeItem(nodeId, rsmItem).getUpdated();
             }
-
             String query = dialect.selectItemReplies()
                 .replace("%beforeAfter%", afterReplacement);
             

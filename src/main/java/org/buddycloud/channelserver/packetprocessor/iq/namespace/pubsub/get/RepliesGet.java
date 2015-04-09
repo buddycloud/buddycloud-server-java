@@ -106,7 +106,7 @@ public class RepliesGet extends PubSubElementProcessorAbstract {
           after = false;
         }
         
-        CloseableIterator<NodeItem> items = channelManager.getNodeItemReplies(node, parentId, afterItemId, after, maxResults);
+        CloseableIterator<NodeItem> items = channelManager.getNodeItemReplies(node, parentId, rsmItem, after, maxResults);
         NodeItem item;
         Element entry;
         Element itemElement;

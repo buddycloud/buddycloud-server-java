@@ -391,7 +391,7 @@ public class JDBCNodeStoreTest extends JDBCNodeStoreAbstract {
         store.addNodeItem(testItem);
 
         ClosableIteratorImpl<NodeItem> items = store.getNodeItemReplies(
-                TEST_SERVER1_NODE1_ID, "a5", null, -1);
+                TEST_SERVER1_NODE1_ID, "a5", null, true, -1);
 
         int count = 0;
         NodeItem item = null;
@@ -421,7 +421,7 @@ public class JDBCNodeStoreTest extends JDBCNodeStoreAbstract {
         store.addNodeItem(testItem4);
 
         ClosableIteratorImpl<NodeItem> items = store.getNodeItemReplies(
-                TEST_SERVER1_NODE1_ID, "a5", "a7", 2);
+                TEST_SERVER1_NODE1_ID, "a5", "a7", true, 2);
 
         int count = 0;
         ArrayList<NodeItem> itemsResult = new ArrayList<NodeItem>();

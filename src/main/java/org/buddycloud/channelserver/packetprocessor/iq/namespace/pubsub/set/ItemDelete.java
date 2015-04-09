@@ -95,7 +95,7 @@ public class ItemDelete extends PubSubElementProcessorAbstract {
         if (null != nodeItem.getInReplyTo()) {
             return;
         }
-        ClosableIteratorImpl<NodeItem> replies = channelManager.getNodeItemReplies(node, itemId.getItemID(), null, -1);
+        ClosableIteratorImpl<NodeItem> replies = channelManager.getNodeItemReplies(node, itemId.getItemID(), null, true, -1);
         NodeItem reply = null;
         while (replies.hasNext()) {
             reply = replies.next();

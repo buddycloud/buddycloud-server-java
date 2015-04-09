@@ -99,7 +99,8 @@ public class RepliesGet extends PubSubElementProcessorAbstract {
 
     private void addReplies() throws NodeStoreException {
 
-        CloseableIterator<NodeItem> items = channelManager.getNodeItemReplies(node, parentId, afterItemId, maxResults);
+        boolean after = true;
+        CloseableIterator<NodeItem> items = channelManager.getNodeItemReplies(node, parentId, afterItemId, after, maxResults);
         NodeItem item;
         Element entry;
         Element itemElement;

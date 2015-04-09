@@ -47,6 +47,7 @@ public abstract class PubSubElementProcessorAbstract implements PubSubElementPro
     // RSM details
     protected int maxResults = -1;
     protected String afterItemId = null;
+    protected String beforeItemId;
 
     protected Element resultSetManagement;
     protected String firstItem;
@@ -267,8 +268,12 @@ public abstract class PubSubElementProcessorAbstract implements PubSubElementPro
             maxResults = Integer.parseInt(max.getTextTrim());
         }
         Element after;
+        Element before;
         if (null != (after = rsmElement.element("after"))) {
             afterItemId = after.getTextTrim();
+        }
+        if (null != (before = rsmElement.element("before"))) {
+            beforeItemId = before.getTextTrim();
         }
 
         return true;

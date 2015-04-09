@@ -125,8 +125,8 @@ public class ChannelManagerImpl implements ChannelManager {
 
   @Override
   public ClosableIteratorImpl<NodeItem> getNodeItemReplies(String nodeId, String itemId,
-      String afterItemId, int limit) throws NodeStoreException {
-    return nodeStore.getNodeItemReplies(nodeId, itemId, afterItemId, limit);
+      String afterItemId, boolean after, int limit) throws NodeStoreException {
+    return nodeStore.getNodeItemReplies(nodeId, itemId, afterItemId, after, limit);
   }
 
   @Override

@@ -391,7 +391,7 @@ public class JDBCNodeStoreTest extends JDBCNodeStoreAbstract {
         store.addNodeItem(testItem);
 
         ClosableIteratorImpl<NodeItem> items = store.getNodeItemReplies(
-                TEST_SERVER1_NODE1_ID, "a5", null, -1);
+                TEST_SERVER1_NODE1_ID, "a5", null, true, -1);
 
         int count = 0;
         NodeItem item = null;
@@ -421,7 +421,7 @@ public class JDBCNodeStoreTest extends JDBCNodeStoreAbstract {
         store.addNodeItem(testItem4);
 
         ClosableIteratorImpl<NodeItem> items = store.getNodeItemReplies(
-                TEST_SERVER1_NODE1_ID, "a5", "a7", 2);
+                TEST_SERVER1_NODE1_ID, "a5", "a7", true, 2);
 
         int count = 0;
         ArrayList<NodeItem> itemsResult = new ArrayList<NodeItem>();
@@ -433,6 +433,41 @@ public class JDBCNodeStoreTest extends JDBCNodeStoreAbstract {
         assertEquals(2, count);
         assertSameNodeItem(itemsResult.get(0), testItem4);
         assertSameNodeItem(itemsResult.get(1), testItem1);
+    }
+
+    @Test
+    public void canGetItemRepliesWithResultSetManagementPagingBackwards() throws Exception {
+
+        dbTester.loadData("node_1");
+        NodeItem testItem1 = new NodeItemImpl(TEST_SERVER1_NODE1_ID, "a6",
+                new Date(), "<entry>payload</entry>", "a5", new Date());
+        Thread.sleep(100);
+        NodeItem testItem2 = new NodeItemImpl(TEST_SERVER1_NODE1_ID, "a7",
+                new Date(), "<entry>payload</entry>", "a5", new Date());
+        Thread.sleep(100);
+        NodeItem testItem3 = new NodeItemImpl(TEST_SERVER1_NODE1_ID, "a8",
+                new Date(), "<entry>payload</entry>", "a5", new Date());
+        Thread.sleep(100);
+        NodeItem testItem4 = new NodeItemImpl(TEST_SERVER1_NODE1_ID, "a9",
+                new Date(), "<entry>payload</entry>", "/full-node-item-id-ref/a5", new Date());
+        store.addNodeItem(testItem1);
+        store.addNodeItem(testItem2);
+        store.addNodeItem(testItem3);
+        store.addNodeItem(testItem4);
+        
+        ClosableIteratorImpl<NodeItem> items = store.getNodeItemReplies(
+                TEST_SERVER1_NODE1_ID, "a5", "a8", false, 4);
+
+        int count = 0;
+        ArrayList<NodeItem> itemsResult = new ArrayList<NodeItem>();
+        while (items.hasNext()) {
+            ++count;
+            itemsResult.add(items.next());
+
+        }
+        assertEquals(2, count);
+        assertSameNodeItem(itemsResult.get(0), testItem1);
+        assertSameNodeItem(itemsResult.get(1), testItem2);
     }
 
     @Test

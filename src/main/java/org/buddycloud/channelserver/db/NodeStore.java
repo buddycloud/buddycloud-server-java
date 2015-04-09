@@ -268,7 +268,7 @@ public interface NodeStore {
      * @return
      * @throws NodeStoreException
      */
-    ClosableIteratorImpl<NodeItem> getNodeItemReplies(String nodeId, String itemId, String afterItemId, int limit) throws NodeStoreException;
+    ClosableIteratorImpl<NodeItem> getNodeItemReplies(String nodeId, String itemId, String rsmItemId, boolean after, int limit) throws NodeStoreException;
 
     /**
      * Get a count of the number of replies to an item

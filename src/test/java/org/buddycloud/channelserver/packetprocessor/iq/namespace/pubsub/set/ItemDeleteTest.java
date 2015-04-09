@@ -396,7 +396,7 @@ public class ItemDeleteTest extends IQTestHandler {
         Mockito.doThrow(Exception.class)
                 .when(channelManager)
                 .getNodeItemReplies(Mockito.anyString(), Mockito.anyString(),
-                        Mockito.anyString(), Mockito.anyInt());
+                        Mockito.anyString(), Mockito.anyBoolean(), Mockito.anyInt());
 
         Mockito.doReturn(new ResultSetImpl<NodeSubscription>(subscriptions))
                 .when(channelManager).getNodeSubscriptionListeners(node);
@@ -431,7 +431,7 @@ public class ItemDeleteTest extends IQTestHandler {
         Mockito.when(channelManager.getNodeItem(node, "item-id")).thenReturn(
                 nodeItem);
         Mockito.when(channelManager.getNodeItemReplies(Mockito.eq(node), Mockito.eq("item-id"),
-                        Mockito.anyString(), Mockito.eq(-1))).thenReturn(new ClosableIteratorImpl<NodeItem>(replies
+                        Mockito.anyString(), Mockito.anyBoolean(), Mockito.eq(-1))).thenReturn(new ClosableIteratorImpl<NodeItem>(replies
                                 .iterator()));
 
         Mockito.doReturn(new ResultSetImpl<NodeSubscription>(subscriptions))

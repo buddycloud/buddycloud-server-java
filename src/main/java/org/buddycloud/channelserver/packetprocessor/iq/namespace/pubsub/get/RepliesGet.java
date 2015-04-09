@@ -100,7 +100,14 @@ public class RepliesGet extends PubSubElementProcessorAbstract {
 
     private void addReplies() throws NodeStoreException {
 
-        CloseableIterator<NodeItem> items = channelManager.getNodeItemReplies(node, parentId, afterItemId, maxResults);
+        String rsmItem = afterItemId;
+        boolean after = true;
+        if (null != beforeItemId) {
+          rsmItem = beforeItemId;
+          after = false;
+        }
+        
+        CloseableIterator<NodeItem> items = channelManager.getNodeItemReplies(node, parentId, rsmItem, after, maxResults);
         NodeItem item;
         Element entry;
         Element itemElement;

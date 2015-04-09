@@ -160,7 +160,7 @@ public class RepliesGetTest extends IQTestHandler {
     @Test
     public void testNoRepliesReturnsEmptyStanza() throws Exception {
 
-        Mockito.when(channelManager.getNodeItemReplies(Mockito.anyString(), Mockito.anyString(), Mockito.anyString(), Mockito.anyInt())).thenReturn(
+        Mockito.when(channelManager.getNodeItemReplies(Mockito.anyString(), Mockito.anyString(), Mockito.anyString(), Mockito.eq(true), Mockito.anyInt())).thenReturn(
                 new ClosableIteratorImpl<NodeItem>(new ArrayList<NodeItem>().iterator()));
 
         repliesGet.process(element, jid, request, null);
@@ -178,7 +178,7 @@ public class RepliesGetTest extends IQTestHandler {
         expectedResults.add(new NodeItemImpl(TEST_NODE, "1", new Date(), "<entry>value1</entry>"));
         expectedResults.add(new NodeItemImpl(TEST_NODE, "2", new Date(), "<entry>value2</entry>"));
 
-        Mockito.when(channelManager.getNodeItemReplies(Mockito.anyString(), Mockito.anyString(), Mockito.anyString(), Mockito.anyInt())).thenReturn(
+        Mockito.when(channelManager.getNodeItemReplies(Mockito.anyString(), Mockito.anyString(), Mockito.anyString(), Mockito.eq(true), Mockito.anyInt())).thenReturn(
                 new ClosableIteratorImpl<NodeItem>(expectedResults.iterator()));
 
         repliesGet.process(element, jid, request, null);
@@ -198,7 +198,7 @@ public class RepliesGetTest extends IQTestHandler {
         expectedResults.add(new NodeItemImpl(TEST_NODE, "1", new Date(), "<entry>value1</entry>"));
         expectedResults.add(new NodeItemImpl(TEST_NODE, "2", new Date(), "<entry>value2"));
 
-        Mockito.when(channelManager.getNodeItemReplies(Mockito.anyString(), Mockito.anyString(), Mockito.anyString(), Mockito.anyInt())).thenReturn(
+        Mockito.when(channelManager.getNodeItemReplies(Mockito.anyString(), Mockito.anyString(), Mockito.anyString(), Mockito.eq(true), Mockito.anyInt())).thenReturn(
                 new ClosableIteratorImpl<NodeItem>(expectedResults.iterator()));
 
         repliesGet.process(element, jid, request, null);
@@ -225,7 +225,7 @@ public class RepliesGetTest extends IQTestHandler {
         expectedResults.add(new NodeItemImpl(TEST_NODE, "3", new Date(), "<entry>value3</entry>"));
         expectedResults.add(new NodeItemImpl(TEST_NODE, "4", new Date(), "<entry>value4</entry>"));
 
-        Mockito.when(channelManager.getNodeItemReplies(Mockito.anyString(), Mockito.anyString(), Mockito.eq("1"), Mockito.eq(4))).thenReturn(
+        Mockito.when(channelManager.getNodeItemReplies(Mockito.anyString(), Mockito.anyString(), Mockito.eq("1"), Mockito.eq(true), Mockito.eq(4))).thenReturn(
                 new ClosableIteratorImpl<NodeItem>(expectedResults.iterator()));
 
         repliesGet.process(element, jid, request, null);
@@ -241,7 +241,7 @@ public class RepliesGetTest extends IQTestHandler {
         Assert.assertEquals("4", rsmResult.elementText("last"));
         Assert.assertEquals(String.valueOf(TOTAL_RESULTS), rsmResult.elementText("count"));
     }
-    
+
     @Test
     public void rsmStillAddedWhenThereAreNoResults() throws Exception {
 
@@ -251,7 +251,7 @@ public class RepliesGetTest extends IQTestHandler {
       rsm.addElement("after").setText("1");
 
       ArrayList<NodeItem> expectedResults = new ArrayList<NodeItem>();
-      Mockito.when(channelManager.getNodeItemReplies(Mockito.anyString(), Mockito.anyString(), Mockito.eq("1"), Mockito.eq(4))).thenReturn(
+      Mockito.when(channelManager.getNodeItemReplies(Mockito.anyString(), Mockito.anyString(), Mockito.eq("1"), Mockito.eq(true), Mockito.eq(4))).thenReturn(
               new ClosableIteratorImpl<NodeItem>(expectedResults.iterator()));
       
       Mockito.when(channelManager.getCountNodeItemReplies(Mockito.anyString(), Mockito.anyString())).thenReturn(0);
@@ -269,4 +269,31 @@ public class RepliesGetTest extends IQTestHandler {
       Assert.assertNull(rsmResult.elementText("last"));
       Assert.assertEquals("0", rsmResult.elementText("count"));
     }
+
+    @Test
+    public void providingBeforeValueInRsmElementInvokesPastItemLookup() throws Exception {
+
+      Element rsm = request.getChildElement().addElement("set");
+      rsm.addNamespace("", RepliesGet.NS_RSM);
+      rsm.addElement("max").setText("4");
+      rsm.addElement("after").setText("1");
+      rsm.addElement("before").setText("2");
+
+      ArrayList<NodeItem> expectedResults = new ArrayList<NodeItem>();
+      expectedResults.add(new NodeItemImpl(TEST_NODE, "1", new Date(), "<entry>value1</entry>"));
+      expectedResults.add(new NodeItemImpl(TEST_NODE, "2", new Date(), "<entry>value2</entry>"));
+      expectedResults.add(new NodeItemImpl(TEST_NODE, "3", new Date(), "<entry>value3</entry>"));
+      expectedResults.add(new NodeItemImpl(TEST_NODE, "4", new Date(), "<entry>value4</entry>"));
+
+      Mockito.when(channelManager.getNodeItemReplies(Mockito.anyString(), Mockito.anyString(), Mockito.eq("2"), Mockito.eq(false), Mockito.eq(4))).thenReturn(
+              new ClosableIteratorImpl<NodeItem>(expectedResults.iterator()));
+
+      repliesGet.process(element, jid, request, null);
+      Packet response = queue.poll();
+
+      Element items = response.getElement().element("pubsub").element("items");
+
+      Assert.assertEquals(4, items.elements("item").size());
+    }
+    
 }

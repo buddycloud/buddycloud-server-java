@@ -1167,16 +1167,23 @@ public class JDBCNodeStore implements NodeStore {
     }
 
     @Override
-    public ClosableIteratorImpl<NodeItem> getNodeItemReplies(String nodeId, String itemId, String afterItemId, int limit) throws NodeStoreException {
+    public ClosableIteratorImpl<NodeItem> getNodeItemReplies(String nodeId, String itemId, String rsmItem, boolean after, int limit) throws NodeStoreException {
         PreparedStatement stmt = null;
 
         try {
-            Date since = new Date(0);
-            if (null != afterItemId) {
-                since = getNodeItem(nodeId, afterItemId).getUpdated();
+            Date since = new Date();
+            String afterReplacement = "<";
+            if (after) {
+              since = new Date(0);
+              afterReplacement = ">";
             }
-
-            String query = dialect.selectItemReplies();
+            
+            if (null != rsmItem) {
+                since = getNodeItem(nodeId, rsmItem).getUpdated();
+            }
+            String query = dialect.selectItemReplies()
+                .replace("%beforeAfter%", afterReplacement);
+            
             if (-1 != limit) {
                 query += " LIMIT ?";
             }

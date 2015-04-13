@@ -81,13 +81,7 @@ public class UserItemsGet extends PubSubElementProcessorAbstract {
     }
 
     protected void addRecentItems() throws NodeStoreException {
-      boolean after = true;
-      String rsmItem = afterItemId;
-      if (beforeItemId) {
-        after = false;
-        rsmItem = beforeItemId;
-      }
-        CloseableIterator<NodeItem> items = channelManager.getUserFeedItems(actor, maxAge, maxResults, rsmItem, after, parentOnly);
+        CloseableIterator<NodeItem> items = channelManager.getUserFeedItems(actor, maxAge, maxResults, afterItemId, parentOnly);
         String lastNodeId = "";
         Element itemsElement = null;
         while (items.hasNext()) {

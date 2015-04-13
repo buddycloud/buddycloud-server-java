@@ -60,6 +60,7 @@ public class SearchSet implements PacketProcessor<IQ> {
         try {
             runSearch();
         } catch (NodeStoreException e) {
+            LOGGER.error(e);
             sendErrorResponse(PacketError.Type.wait, PacketError.Condition.internal_server_error);
             return;
         }

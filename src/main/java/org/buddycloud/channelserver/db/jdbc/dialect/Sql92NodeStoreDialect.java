@@ -238,9 +238,9 @@ public class Sql92NodeStoreDialect implements NodeStoreSQLDialect {
 
     private static final String SELECT_NODE_THREADS = "SELECT \"node\", \"id\", \"updated\", \"xml\", \"in_reply_to\", "
             + "\"thread_id\", \"thread_updated\", \"created\" FROM \"items\"," + "(SELECT MAX(\"updated\") AS \"thread_updated\", \"thread_id\" FROM "
-            + "(SELECT \"updated\", " + "(CASE WHEN (\"in_reply_to\" IS NULL) THEN \"id\" ELSE \"in_reply_to\" END) AS \"thread_id\" "
+            + "(SELECT \"updated\", COALESCE(\"in_reply_to\",\"id\") AS \"thread_id\" "
             + "FROM \"items\" WHERE \"node\" = ?) AS \"_items\" " + "GROUP BY \"thread_id\" " + "HAVING MAX(\"updated\") < ? "
-            + "ORDER BY \"thread_updated\" DESC LIMIT ?) AS \"threads\" " + "WHERE \"in_reply_to\" = \"thread_id\" OR \"id\" = \"thread_id\" "
+            + "ORDER BY \"thread_updated\" DESC LIMIT ?) AS \"threads\" " + "WHERE COALESCE(\"in_reply_to\", \"id\") = \"thread_id\" "
             + "ORDER BY \"thread_updated\" DESC, \"updated\"";
 
     private static final String COUNT_NODE_THREADS = "SELECT COUNT(DISTINCT \"thread_id\") "

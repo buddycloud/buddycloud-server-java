@@ -4,9 +4,9 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
 
+import org.apache.commons.lang.StringUtils;
 import org.buddycloud.channelserver.channel.ChannelManager;
 import org.buddycloud.channelserver.packetprocessor.PacketProcessor;
-import org.buddycloud.channelserver.queue.UnknownFederatedPacketException;
 import org.buddycloud.channelserver.utils.XMLConstants;
 import org.buddycloud.channelserver.utils.node.item.payload.Buddycloud;
 import org.dom4j.Element;
@@ -14,42 +14,39 @@ import org.dom4j.Namespace;
 import org.dom4j.QName;
 import org.dom4j.dom.DOMElement;
 import org.xmpp.packet.IQ;
+import org.xmpp.packet.IQ.Type;
 import org.xmpp.packet.JID;
 import org.xmpp.packet.Packet;
 import org.xmpp.packet.PacketError;
-import org.xmpp.packet.IQ.Type;
 
 public abstract class PacketProcessorAbstract implements PacketProcessor<IQ> {
 
   protected BlockingQueue<Packet> outQueue;
   protected ChannelManager channelManager;
   protected List<PubSubElementProcessor> elementProcessors = new LinkedList<PubSubElementProcessor>();
-  
+
   protected Element pubsub;
   protected JID actor;
-  
-  protected void getActor(IQ reqIQ) throws InterruptedException, IllegalActorException {
+
+  protected void validateActor(IQ reqIQ) throws InterruptedException, IllegalActorException {
 
     if (pubsub.elementText(XMLConstants.ACTOR_ELEM) == null) {
       return;
     }
     actor = new JID(pubsub.elementText(XMLConstants.ACTOR_ELEM).trim());
-    String domain = actor.getDomain();
-    
-    String from = reqIQ.getFrom().getDomain();
-    int startPosition = from.length() - domain.length();
-    if (from.substring(startPosition).equals(domain)) {
+
+    if (StringUtils.endsWithIgnoreCase(reqIQ.getFrom().getDomain(), "." + actor.getDomain())) {
       return;
     }
     throw new IllegalActorException();
   }
-  
+
   @Override
   public void process(IQ reqIQ) throws Exception {
 
       pubsub = reqIQ.getChildElement();
       try {
-        getActor(reqIQ);
+        validateActor(reqIQ);
       } catch (IllegalActorException e) {
         sendPolicyViolationResponse(reqIQ);
         return;

@@ -4,10 +4,10 @@
        fields are mandatory. */
 
     "package": {
-        "buddycloud-server-java": "auto-upload", // Bintray package name
+        "name": "buddycloud-server-java", // Bintray package name
         "repo": "builds", // Bintray repository name
         "subject": "buddycloud", // Bintray subject (user or organization)
-        "desc": "built by Travis-ci",
+        "desc": "built by Travis-CI",
         "website_url": "https://github.com/buddycloud/buddycloud-server-java",
         "issue_tracker_url": "https://github.com/buddycloud/buddycloud-server-java/issues",
         "vcs_url": "https://github.com/buddycloud/buddycloud-server-java.git",

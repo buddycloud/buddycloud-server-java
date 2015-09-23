@@ -9,7 +9,7 @@ after_success:
 deploy:
   provider: bintray
   file: ".travis/bintray.json"
-env:
-  global:
-  - secure: BuWV1lQysxk2QqvccrjLAnf5eYlUdBbHAUbFLriVPVo8qcfT4uUVXu3/ywZwGX7SlWkRV33bRD3PNNORvDYpVC4boVH3vFFvLQ2hyBJS8kx6H7c5ak23X7uQ6D9M6TK5CdiVDOvhumqNwe8XSX4hS8FHO5Fow/SyioST0IMefG8=
-  - secure: tkAujasiCm9KFYPV3nX88YMF0ihyzxk/hLnfaVFzKV9gYRIQhpi51GAASHDoBcvHh5YE4oxd2hDcaOe4MD2AtZpRJWQtBW0WwuAzy1sk3lIaHrE3LETfrG1W81uKfXjwjsHLU+i+i2Tkl7I0oJEdrezNxah+76vpMcP0Z67iONI=
+  user:
+    secure: DQvbbQjwxtBEAxt3Pi9VDkfUndU2qDKntPs7CnmO2C37XFwxsUppzMrmvbh2TpeCxnHbiemctbQIvCNKt01UDqo/oEEPAUzpQkEr78iA60yriCItTGplrkiSYxGQCfUodD/YGoCh20n98f+P6rhoFn8mzzgmm1rDlYRdysE+oII=
+  key:
+    secure: YFla+XtiAvEYBYYIisdz+fkevWzufweser+VAXqd5F5Of/LZtKuPmS2bZjSiDD1w54hfLcsmKZhC/7JnxdstU7ta3WXilgiyZpTYIK223QV43YtMKtpmzi2eyXRCFUTW+8vghfrhN7yuVMI/tBZ9t6RwguUwkGESLkCypLadZPo=

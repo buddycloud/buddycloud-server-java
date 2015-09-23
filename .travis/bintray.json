@@ -1,8 +1,4 @@
 {
-    /* Bintray package information.
-       In case the package already exists on Bintray, only the name, repo and subject
-       fields are mandatory. */
-
     "package": {
         "name": "buddycloud-server-java", // Bintray package name
         "repo": "builds", // Bintray repository name
@@ -19,29 +15,20 @@
         "public_stats": false,
     },
 
-    /* Package version information.
-       In case the version already exists on Bintray, only the name fields is mandatory. */
-
     "version": {
-        "name": "latest",
-        "desc": "The latest auto-build version",
+        "name": "{name}",
+        "desc": "{desc}",
+        "released": "{date}",
         "vcs_tag": "latest",
         "gpgSign": false
     },
 
-    /* Configure the files you would like to upload to Bintray and their upload path.
-    You can define one or more groups of patterns.
-    Each group contains three patterns:
+    "files": [
+      {
+        "includePattern": "target/channelserver-(.*)-jar-with-dependencies.jar", 
+        "uploadPattern": "channelserver-with-dependencies.jar"
+      }
+      ],
 
-    includePattern: Pattern in the form of Ruby regular expression, indicating the path of files to be uploaded to Bintray.
-    excludePattern: Optional. Pattern in the form of Ruby regular expression, indicating the path of files to be removed from the list of files specified by the includePattern.
-    uploadPattern: Upload path on Bintray. The path can contain symbols in the form of $1, $2,... that are replaced with capturing groups defined in the include pattern.
-
-    Note: Regular expressions defined as part of the includePattern and excludePattern properties must be wrapped with brackets. */
-
-    "files":
-        [
-        {"includePattern": "target/channelserver-(.*)-jar-with-dependencies.jar", "uploadPattern": "channelserver-with-dependencies.jar"}
-        ],
-    "publish": true
+  "publish": true
 }

@@ -9,8 +9,6 @@ after_success:
 deploy:
   provider: bintray
   file: ".travis/bintray.json"
-  user: Bintray user
-  key: Bintray API key
 env:
   global:
   - secure: BuWV1lQysxk2QqvccrjLAnf5eYlUdBbHAUbFLriVPVo8qcfT4uUVXu3/ywZwGX7SlWkRV33bRD3PNNORvDYpVC4boVH3vFFvLQ2hyBJS8kx6H7c5ak23X7uQ6D9M6TK5CdiVDOvhumqNwe8XSX4hS8FHO5Fow/SyioST0IMefG8=

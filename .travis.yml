@@ -8,8 +8,10 @@ after_success:
   -Dcobertura.report.format=xml
 env:
   global:
-    secure: y2eA9GUJrzAhB4URuvN2GS0rflVXYoUhVxj1c2FSoL81rNrTnfop6RgF/xkePzeRjPM5RFSfxx+rPV3ew7GxKi38SKFBWS0X16KEAy4hVeUU8fQN5TZsGWAs1vQBS3pafZy83p6rqgKatIPNVLsJKKO4ATvShJhldO7IlmjPgmI=
-    secure: 1xcCOEQSTPZN8HURZve+tLhzONJoisjjqk659k1W771NEjzAfCFUbnOksXb/323UjXp2KFBuJcWFr4+5xG51D8VNP/FxeY2Uycr8AcaUh9bgJeXqXw3XoGBm+Wlrf/RhL67s1fqs9iGXZXrjrTYQccagDdVrxBmA8XRECmkqxP4=
+  - secure: OPka1kcKQuWnfZHzPe8bUxOHF4fPI69J9h4bPy95Omg/IrFrvGHPuhpNWRvz2GbGTu9hcN8s2POlBoFAKBk2DFJtNLgORJrll1c/N1+OWEBmfnpaxyp5V8JmcxqISJDwPA4MD5Os+ezzMN2/VXsTaImqnHd43nY4+3K8L1o4WD8=
+  - secure: N2eLGAMFSWFHgba6i9AW7agX6sIn/fWeF6ELWceTSwUi8ZN18tQqtUgcOGnlLJZPI5mHrqyAMSynxVh81ITaaSHdqRYLMyXnq2yGEG6UC9Ptw3OPf8DgyuDG9bbvMHsEtatJPy7iA1Ltn5KpZmVOkHy+1+BEoOG2G0TyaHpJJXE=
 deploy:
   provider: bintray
   file: ".travis/bintray.json"
+  user: "$BINTRAY_USER"
+  key: "$BINTRAY_API_KEY"

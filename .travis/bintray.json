@@ -41,7 +41,7 @@
 
     "files":
         [
-        {includePattern: "target/channelserver-(.*)-jar-with-dependencies.jar"}
+        {"includePattern": "target/channelserver-(.*)-jar-with-dependencies.jar", "uploadPattern": "channelserver-with-dependencies.jar"}
         ],
     "publish": true
 }

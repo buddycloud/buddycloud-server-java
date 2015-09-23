@@ -1,8 +1,17 @@
 language: java
 jdk:
-  - oraclejdk7
-  - openjdk6
-  - openjdk7
-
+- oraclejdk7
+- openjdk6
+- openjdk7
 after_success:
-  - mvn -DserviceJobId=$TRAVIS_JOB_ID clean cobertura:cobertura coveralls:cobertura -Dcobertura.report.format=xml
+- mvn -DserviceJobId=$TRAVIS_JOB_ID clean cobertura:cobertura coveralls:cobertura
+  -Dcobertura.report.format=xml
+deploy:
+  provider: bintray
+  file: ".travis/bintray.json"
+  user: Bintray user
+  key: Bintray API key
+env:
+  global:
+  - secure: BuWV1lQysxk2QqvccrjLAnf5eYlUdBbHAUbFLriVPVo8qcfT4uUVXu3/ywZwGX7SlWkRV33bRD3PNNORvDYpVC4boVH3vFFvLQ2hyBJS8kx6H7c5ak23X7uQ6D9M6TK5CdiVDOvhumqNwe8XSX4hS8FHO5Fow/SyioST0IMefG8=
+  - secure: tkAujasiCm9KFYPV3nX88YMF0ihyzxk/hLnfaVFzKV9gYRIQhpi51GAASHDoBcvHh5YE4oxd2hDcaOe4MD2AtZpRJWQtBW0WwuAzy1sk3lIaHrE3LETfrG1W81uKfXjwjsHLU+i+i2Tkl7I0oJEdrezNxah+76vpMcP0Z67iONI=

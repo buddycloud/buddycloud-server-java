@@ -9,12 +9,15 @@
         "vcs_url": "https://github.com/buddycloud/buddycloud-server-java.git",
         "github_use_tag_release_notes": true,
         "github_release_notes_file": "RELEASE.txt",
-        "licenses": ["Apache 2.0"],
-        "labels": ["buddycloud"],
+        "licenses": [
+            "Apache 2.0"
+        ],
+        "labels": [
+            "buddycloud"
+        ],
         "public_download_numbers": false,
-        "public_stats": false,
+        "public_stats": false
     },
-
     "version": {
         "name": "{name}",
         "desc": "{desc}",
@@ -22,13 +25,11 @@
         "vcs_tag": "latest",
         "gpgSign": false
     },
-
     "files": [
-      {
-        "includePattern": "target/channelserver-(.*)-jar-with-dependencies.jar", 
-        "uploadPattern": "channelserver-with-dependencies.jar"
-      }
-      ],
-
-  "publish": true
+        {
+            "includePattern": "target/channelserver-(.*)-jar-with-dependencies.jar",
+            "uploadPattern": "channelserver-with-dependencies.jar"
+        }
+    ],
+    "publish": true
 }

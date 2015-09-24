@@ -19,9 +19,9 @@
         "public_stats": false
     },
     "version": {
-        "name": "{name}",
-        "desc": "{desc}",
-        "released": "{date}",
+        "name": "{{name}}",
+        "desc": "{{desc}}",
+        "released": "{{date}}",
         "vcs_tag": "latest",
         "gpgSign": false
     },

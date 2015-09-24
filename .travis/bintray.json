@@ -1,8 +1,8 @@
 {
     "package": {
-        "name": "buddycloud-server-java", // Bintray package name
-        "repo": "builds", // Bintray repository name
-        "subject": "buddycloud", // Bintray subject (user or organization)
+        "name": "buddycloud-server-java",
+        "repo": "builds",
+        "subject": "buddycloud",
         "desc": "built by Travis-CI",
         "website_url": "https://github.com/buddycloud/buddycloud-server-java",
         "issue_tracker_url": "https://github.com/buddycloud/buddycloud-server-java/issues",

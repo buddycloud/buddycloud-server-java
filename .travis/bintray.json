@@ -19,16 +19,14 @@
         "public_stats": false
     },
     "version": {
-        "name": "{{name}}",
-        "desc": "{{desc}}",
-        "released": "{{date}}",
-        "vcs_tag": "latest",
+        "name": "latest",
+        "desc": "Latest Travis-CI build",
         "gpgSign": false
     },
     "files": [
         {
-            "includePattern": "target/channelserver-(.*)-jar-with-dependencies.jar",
-            "uploadPattern": "channelserver-with-dependencies.jar"
+            "includePattern": "target/channelserver-jar-with-dependencies.jar",
+            "uploadPattern": "channelserver-jar-with-dependencies.jar"
         }
     ],
     "publish": true

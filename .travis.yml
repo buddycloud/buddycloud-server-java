@@ -9,7 +9,7 @@ jdk:
 #- openjdk7
 
 after_success:
-- mvn -DserviceJobId=$TRAVIS_JOB_ID clean cobertura:cobertura coveralls:cobertura package
+- mvn -DserviceJobId=$TRAVIS_JOB_ID cobertura:cobertura coveralls:cobertura package
   -Dcobertura.report.format=xml
 
 env:

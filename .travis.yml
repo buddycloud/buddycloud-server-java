@@ -5,7 +5,7 @@ jdk:
 - openjdk6
 - openjdk7
 after_success:
-- mvn -DserviceJobId=$TRAVIS_JOB_ID clean cobertura:cobertura coveralls:cobertura
+- mvn -DserviceJobId=$TRAVIS_JOB_ID clean cobertura:cobertura coveralls:cobertura package
   -Dcobertura.report.format=xml
 env:
   global:

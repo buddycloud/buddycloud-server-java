@@ -19,7 +19,7 @@ env:
 
 before_deploy: 
  - "tar cvfz budducloud-channel-server.tgz target/channelserver-jar-with-dependencies.jar README.md postgres manual"
- - "shasum budducloud-channel-server.tgz  > source.hashes"
+ - "shasum -a 256 budducloud-channel-server.tgz  > file.hashes"
 deploy:
 - provider: bintray
   skip_cleanup: true

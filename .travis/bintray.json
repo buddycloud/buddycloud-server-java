@@ -20,7 +20,7 @@
     },
     "files": [
         {
-            "includePattern": "(.*)/channelserver-jar-with-dependencies.jar",
+            "includePattern": "(.*)/channelserver-(.*)-SNAPSHOT.jar",
             "uploadPattern": "channelserver-jar-with-dependencies.jar"
         }
     ],

@@ -20,8 +20,8 @@
     },
     "files": [
         {
-            "includePattern": "(.*)jar",
-            "uploadPattern": "channelserver-jar-with-dependencies.jar"
+            "includePattern": "budducloud-channel-server.tgz",
+            "uploadPattern": "budducloud-channel-server.tgz"
         }
     ],
     "publish": true

@@ -21,11 +21,13 @@
     "files": [
         {
             "includePattern": "budducloud-channel-server.tgz",
-            "uploadPattern":  "budducloud-channel-server.tgz"
+            "uploadPattern":  "budducloud-channel-server.tgz",
+            "matrixParams": { "override": 1 } 
         }, 
         {
             "includePattern": "source.hashes",
-            "uploadPattern":  "source.hashes"
+            "uploadPattern":  "source.hashes",
+            "matrixParams": { "override": 1 }
         }
     ],
     "publish": true

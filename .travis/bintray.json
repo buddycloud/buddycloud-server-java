@@ -21,7 +21,11 @@
     "files": [
         {
             "includePattern": "budducloud-channel-server.tgz",
-            "uploadPattern": "budducloud-channel-server.tgz"
+            "uploadPattern":  "budducloud-channel-server.tgz"
+        }, 
+        {
+            "includePattern": "source.hashes",
+            "uploadPattern":  "source.hashes"
         }
     ],
     "publish": true

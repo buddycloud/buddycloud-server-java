@@ -14,19 +14,19 @@ env:
 deploy:
   skip_cleanup: true
   - provider: bintray
-    file: ".travis/bintray.json"
-    user: "$BINTRAY_USER"
-    key: "$BINTRAY_API_KEY"
-    skip_cleanup: true
-    on:
-      branch: master
+  file: ".travis/bintray.json"
+  user: "$BINTRAY_USER"
+  key: "$BINTRAY_API_KEY"
+  skip_cleanup: true
+  on:
+    branch: master
   - provider: releases
-    api_key: "GITHUB OAUTH TOKEN"
-    file:
-      - "README.md"
-      - "target/"
-      - "mauual/"
-      - "postgres/"
-    on:
-      tags: true
-      branch: master
+  api_key: "GITHUB OAUTH TOKEN"
+  file:
+    - "README.md"
+    - "target/"
+    - "mauual/"
+    - "postgres/"
+  on:
+    tags: true
+    branch: master

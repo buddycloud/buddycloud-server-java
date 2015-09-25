@@ -1,32 +1,41 @@
 language: java
+
+# use the container build system
 sudo: false
+
 jdk:
 - oraclejdk7
-- openjdk6
-- openjdk7
+#- openjdk6
+#- openjdk7
+
 after_success:
 - mvn -DserviceJobId=$TRAVIS_JOB_ID clean cobertura:cobertura coveralls:cobertura package
   -Dcobertura.report.format=xml
+
 env:
   global:
   - secure: OPka1kcKQuWnfZHzPe8bUxOHF4fPI69J9h4bPy95Omg/IrFrvGHPuhpNWRvz2GbGTu9hcN8s2POlBoFAKBk2DFJtNLgORJrll1c/N1+OWEBmfnpaxyp5V8JmcxqISJDwPA4MD5Os+ezzMN2/VXsTaImqnHd43nY4+3K8L1o4WD8=
   - secure: N2eLGAMFSWFHgba6i9AW7agX6sIn/fWeF6ELWceTSwUi8ZN18tQqtUgcOGnlLJZPI5mHrqyAMSynxVh81ITaaSHdqRYLMyXnq2yGEG6UC9Ptw3OPf8DgyuDG9bbvMHsEtatJPy7iA1Ltn5KpZmVOkHy+1+BEoOG2G0TyaHpJJXE=
+
+before_deploy: "tar cvfz budducloud-channel-server.tgz target/channelserver-jar-with-dependencies.jar README.md postgres manual"
+
 deploy:
+- provider: bintray
   skip_cleanup: true
-  - provider: bintray
   file: ".travis/bintray.json"
   user: "$BINTRAY_USER"
   key: "$BINTRAY_API_KEY"
   skip_cleanup: true
   on:
-    branch: master
-  - provider: releases
-  api_key: "GITHUB OAUTH TOKEN"
+    branch: "master"
+- provider: releases
+  skip_cleanup: true
+  api_key: "GITHUB OAUTH TOKEN... to add later"
   file:
     - "README.md"
-    - "target/"
-    - "mauual/"
-    - "postgres/"
+    - "target"
+    - "manual"
+    - "postgres"
   on:
     tags: true
-    branch: master
+    branch: "master"

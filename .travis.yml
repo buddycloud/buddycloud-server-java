@@ -19,7 +19,7 @@ env:
 
 before_deploy: 
  - "tar cvfz buddycloud-channel-server.tgz target/channelserver-jar-with-dependencies.jar README.md postgres manual"
- - "shasum -a 256 budducloud-channel-server.tgz  > file.hashes"
+ - "shasum -a 256 buddycloud-channel-server.tgz  > file.hashes"
 deploy:
 - provider: bintray
   file: ".travis/bintray.json"

@@ -15,7 +15,7 @@
     },
     "version": {
         "name": "latest",
-        "desc": "Latest Travis-CI build",
+        "desc": "Latest Travis-CI build from the master branch",
         "gpgSign": false
     },
     "files": [

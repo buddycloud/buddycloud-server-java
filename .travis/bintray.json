@@ -1,7 +1,7 @@
 {
     "package": {
-        "name": "buddycloud-server-java",
-        "repo": "builds",
+        "name": "builds",
+        "repo": "buddycloud-server-java",
         "subject": "buddycloud",
         "desc": "built by Travis-CI",
         "website_url": "https://github.com/buddycloud/buddycloud-server-java",

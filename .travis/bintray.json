@@ -20,8 +20,8 @@
     },
     "files": [
         {
-            "includePattern": "buddycloud-channel-server.tgz",
-            "uploadPattern":  "buddycloud-channel-server.tgz",
+            "includePattern": "buddycloud-server-java.tgz",
+            "uploadPattern":  "buddycloud-server-java.tgz",
             "matrixParams": { "override": 1 } 
         }, 
         {

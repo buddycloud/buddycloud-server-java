@@ -22,7 +22,6 @@ before_deploy:
  - "shasum -a 256 budducloud-channel-server.tgz  > file.hashes"
 deploy:
 - provider: bintray
-  skip_cleanup: true
   file: ".travis/bintray.json"
   user: "$BINTRAY_USER"
   key: "$BINTRAY_API_KEY"

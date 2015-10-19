@@ -3,7 +3,7 @@
         "name": "builds",
         "repo": "buddycloud-server-java",
         "subject": "buddycloud",
-        "desc": "built by Travis-CI",
+        "desc": "master branch commits built by Travis-CI",
         "website_url": "https://github.com/buddycloud/buddycloud-server-java",
         "issue_tracker_url": "https://github.com/buddycloud/buddycloud-server-java/issues",
         "vcs_url": "https://github.com/buddycloud/buddycloud-server-java.git",
@@ -15,13 +15,13 @@
     },
     "version": {
         "name": "latest",
-        "desc": "Latest Travis-CI build from the master branch",
+        "desc": "master branch commits built by Travis-CI",
         "gpgSign": false
     },
     "files": [
         {
-            "includePattern": "budducloud-channel-server.tgz",
-            "uploadPattern":  "budducloud-channel-server.tgz",
+            "includePattern": "buddycloud-channel-server.tgz",
+            "uploadPattern":  "buddycloud-channel-server.tgz",
             "matrixParams": { "override": 1 } 
         }, 
         {
